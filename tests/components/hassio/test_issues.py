@@ -164,6 +164,31 @@ async def test_unhealthy_issues(
 
 
 @pytest.mark.usefixtures("all_setup_requests")
+@pytest.mark.parametrize("unhealthy_reason", list(UnhealthyReason))
+async def test_unhealthy_reasons(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+    unhealthy_reason: UnhealthyReason,
+) -> None:
+    """Test all unhealthy reasons in client library are properly made into repairs with a translation."""
+    mock_resolution_info(supervisor_client, unhealthy=[unhealthy_reason])
+
+    result = await async_setup_component(hass, "hassio", {})
+    assert result
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_repair_in_list(
+        msg["result"]["issues"], unhealthy=True, reason=unhealthy_reason.value
+    )
+
+
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_unsupported_issues(
     hass: HomeAssistant,
     supervisor_client: AsyncMock,
@@ -188,6 +213,34 @@ async def test_unsupported_issues(
         msg["result"]["issues"], unhealthy=False, reason="content_trust"
     )
     assert_repair_in_list(msg["result"]["issues"], unhealthy=False, reason="os")
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+@pytest.mark.parametrize(
+    "unsupported_reason",
+    [r for r in UnsupportedReason if r != UnsupportedReason.PRIVILEGED],
+)
+async def test_unsupported_reasons(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+    unsupported_reason: UnsupportedReason,
+) -> None:
+    """Test all unsupported reasons in client library are properly made into repairs with a translation."""
+    mock_resolution_info(supervisor_client, unsupported=[unsupported_reason])
+
+    result = await async_setup_component(hass, "hassio", {})
+    assert result
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_repair_in_list(
+        msg["result"]["issues"], unhealthy=False, reason=unsupported_reason.value
+    )
 
 
 @pytest.mark.usefixtures("all_setup_requests")
@@ -848,5 +901,206 @@ async def test_supervisor_issues_detached_addon_missing(
             "reference": "test",
             "addon": "test",
             "addon_url": "/hassio/addon/test",
+        },
+    )
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_disk_lifetime(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test supervisor issue for disk lifetime nearly exceeded."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, "hassio", {})
+    assert result
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "disk_lifetime",
+                    "context": "system",
+                    "reference": None,
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_issue_repair_in_list(
+        msg["result"]["issues"],
+        uuid=issue_uuid,
+        context="system",
+        type_="disk_lifetime",
+        fixable=False,
+        placeholders=None,
+    )
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_free_space(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test supervisor issue for too little free space remaining."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, "hassio", {})
+    assert result
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "free_space",
+                    "context": "system",
+                    "reference": None,
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_issue_repair_in_list(
+        msg["result"]["issues"],
+        uuid=issue_uuid,
+        context="system",
+        type_="free_space",
+        fixable=False,
+        placeholders={
+            "more_info_free_space": "https://www.home-assistant.io/more-info/free-space",
+            "free_space": "1.6",
+        },
+    )
+
+
+async def test_supervisor_issues_free_space_host_info_fail(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test supervisor issue for too little free space remaining without host info."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, "hassio", {})
+    assert result
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "free_space",
+                    "context": "system",
+                    "reference": None,
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_issue_repair_in_list(
+        msg["result"]["issues"],
+        uuid=issue_uuid,
+        context="system",
+        type_="free_space",
+        fixable=False,
+        placeholders={
+            "more_info_free_space": "https://www.home-assistant.io/more-info/free-space",
+            "free_space": "<2",
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    "all_setup_requests", [{"include_addons": True}], indirect=True
+)
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_addon_pwned(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test supervisor issue for pwned secret in an addon."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, "hassio", {})
+    assert result
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "pwned",
+                    "context": "addon",
+                    "reference": "test",
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_issue_repair_in_list(
+        msg["result"]["issues"],
+        uuid=issue_uuid,
+        context="addon",
+        type_="pwned",
+        fixable=False,
+        placeholders={
+            "reference": "test",
+            "addon": "test",
+            "addon_url": "/hassio/addon/test",
+            "more_info_pwned": "https://www.home-assistant.io/more-info/pwned-passwords",
         },
     )

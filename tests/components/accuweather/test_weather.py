@@ -107,24 +107,24 @@ async def test_unsupported_condition_icon_data(
 
 
 @pytest.mark.parametrize(
-    ("service"),
-    [SERVICE_GET_FORECASTS],
+    ("forecast_type"),
+    ["daily", "hourly"],
 )
 async def test_forecast_service(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_accuweather_client: AsyncMock,
-    service: str,
+    forecast_type: str,
 ) -> None:
     """Test multiple forecast."""
     await init_integration(hass)
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        service,
+        SERVICE_GET_FORECASTS,
         {
             "entity_id": "weather.home",
-            "type": "daily",
+            "type": forecast_type,
         },
         blocking=True,
         return_response=True,

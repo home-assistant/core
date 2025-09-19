@@ -143,7 +143,7 @@ async def test_ssdp_discovery(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == "very_unique_string"
-        assert result["title"] == "TV-Model"
+        assert result["title"] == "BRAVIA TV-Model"
         assert result["data"] == {
             CONF_HOST: "bravia-host",
             CONF_PIN: "1234",
@@ -340,7 +340,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == "very_unique_string"
-        assert result["title"] == "TV-Model"
+        assert result["title"] == "BRAVIA TV-Model"
         assert result["data"] == {
             CONF_HOST: "bravia-host",
             CONF_PIN: "1234",
@@ -381,7 +381,7 @@ async def test_create_entry_psk(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == "very_unique_string"
-        assert result["title"] == "TV-Model"
+        assert result["title"] == "BRAVIA TV-Model"
         assert result["data"] == {
             CONF_HOST: "bravia-host",
             CONF_PIN: "mypsk",

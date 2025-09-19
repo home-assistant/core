@@ -78,177 +78,206 @@ async def test_legacy_to_modern_config(
 
 
 @pytest.mark.parametrize(
-    ("legacy_fields", "old_attr", "new_attr", "attr_template"),
+    ("domain", "legacy_fields", "old_attr", "new_attr", "attr_template"),
     [
         (
+            "alarm_control_panel",
             ALARM_CONTROL_PANEL_LEGACY_FIELDS,
             "value_template",
             "state",
             "{{ 1 == 1 }}",
         ),
         (
+            "binary_sensor",
             BINARY_SENSOR_LEGACY_FIELDS,
             "value_template",
             "state",
             "{{ 1 == 1 }}",
         ),
         (
+            "cover",
             COVER_LEGACY_FIELDS,
             "value_template",
             "state",
             "{{ 1 == 1 }}",
         ),
         (
+            "cover",
             COVER_LEGACY_FIELDS,
             "position_template",
             "position",
             "{{ 100 }}",
         ),
         (
+            "cover",
             COVER_LEGACY_FIELDS,
             "tilt_template",
             "tilt",
             "{{ 100 }}",
         ),
         (
+            "fan",
             FAN_LEGACY_FIELDS,
             "value_template",
             "state",
             "{{ 1 == 1 }}",
         ),
         (
+            "fan",
             FAN_LEGACY_FIELDS,
             "direction_template",
             "direction",
             "{{ 1 == 1 }}",
         ),
         (
+            "fan",
             FAN_LEGACY_FIELDS,
             "oscillating_template",
             "oscillating",
             "{{ True }}",
         ),
         (
+            "fan",
             FAN_LEGACY_FIELDS,
             "percentage_template",
             "percentage",
             "{{ 100 }}",
         ),
         (
+            "fan",
             FAN_LEGACY_FIELDS,
             "preset_mode_template",
             "preset_mode",
             "{{ 'foo' }}",
         ),
         (
+            "fan",
             LIGHT_LEGACY_FIELDS,
             "value_template",
             "state",
             "{{ 1 == 1 }}",
         ),
         (
+            "light",
             LIGHT_LEGACY_FIELDS,
             "rgb_template",
             "rgb",
             "{{ (255,255,255) }}",
         ),
         (
+            "light",
             LIGHT_LEGACY_FIELDS,
             "rgbw_template",
             "rgbw",
             "{{ (255,255,255,255) }}",
         ),
         (
+            "light",
             LIGHT_LEGACY_FIELDS,
             "rgbww_template",
             "rgbww",
             "{{ (255,255,255,255,255) }}",
         ),
         (
+            "light",
             LIGHT_LEGACY_FIELDS,
             "effect_list_template",
             "effect_list",
             "{{ ['a', 'b'] }}",
         ),
         (
+            "light",
             LIGHT_LEGACY_FIELDS,
             "effect_template",
             "effect",
             "{{ 'a' }}",
         ),
         (
+            "light",
             LIGHT_LEGACY_FIELDS,
             "level_template",
             "level",
             "{{ 255 }}",
         ),
         (
+            "light",
             LIGHT_LEGACY_FIELDS,
             "max_mireds_template",
             "max_mireds",
             "{{ 255 }}",
         ),
         (
+            "light",
             LIGHT_LEGACY_FIELDS,
             "min_mireds_template",
             "min_mireds",
             "{{ 255 }}",
         ),
         (
+            "light",
             LIGHT_LEGACY_FIELDS,
             "supports_transition_template",
             "supports_transition",
             "{{ True }}",
         ),
         (
+            "light",
             LIGHT_LEGACY_FIELDS,
             "temperature_template",
             "temperature",
             "{{ 255 }}",
         ),
         (
+            "light",
             LIGHT_LEGACY_FIELDS,
             "white_value_template",
             "white_value",
             "{{ 255 }}",
         ),
         (
+            "light",
             LIGHT_LEGACY_FIELDS,
             "hs_template",
             "hs",
             "{{ (255, 255) }}",
         ),
         (
+            "light",
             LIGHT_LEGACY_FIELDS,
             "color_template",
             "hs",
             "{{ (255, 255) }}",
         ),
         (
+            "sensor",
             SENSOR_LEGACY_FIELDS,
             "value_template",
             "state",
             "{{ 1 == 1 }}",
         ),
         (
+            "sensor",
             SWITCH_LEGACY_FIELDS,
             "value_template",
             "state",
             "{{ 1 == 1 }}",
         ),
         (
+            "vacuum",
             VACUUM_LEGACY_FIELDS,
             "value_template",
             "state",
             "{{ 1 == 1 }}",
         ),
         (
+            "vacuum",
             VACUUM_LEGACY_FIELDS,
             "battery_level_template",
             "battery_level",
             "{{ 100 }}",
         ),
         (
+            "vacuum",
             VACUUM_LEGACY_FIELDS,
             "fan_speed_template",
             "fan_speed",
@@ -258,6 +287,7 @@ async def test_legacy_to_modern_config(
 )
 async def test_legacy_to_modern_configs(
     hass: HomeAssistant,
+    domain: str,
     legacy_fields,
     old_attr: str,
     new_attr: str,
@@ -274,7 +304,9 @@ async def test_legacy_to_modern_configs(
             old_attr: attr_template,
         }
     }
-    altered_configs = rewrite_legacy_to_modern_configs(hass, config, legacy_fields)
+    altered_configs = rewrite_legacy_to_modern_configs(
+        hass, domain, config, legacy_fields
+    )
 
     assert len(altered_configs) == 1
 
@@ -283,7 +315,7 @@ async def test_legacy_to_modern_configs(
             "availability": Template("{{ 1 == 1 }}", hass),
             "icon": Template("{{ 'mdi.abc' }}", hass),
             "name": Template("foo bar", hass),
-            "object_id": "foo",
+            "default_entity_id": f"{domain}.foo",
             "picture": Template("{{ 'mypicture.jpg' }}", hass),
             "unique_id": "foo-bar-entity",
             new_attr: Template(attr_template, hass),
@@ -292,14 +324,15 @@ async def test_legacy_to_modern_configs(
 
 
 @pytest.mark.parametrize(
-    "legacy_fields",
+    ("domain", "legacy_fields"),
     [
-        BINARY_SENSOR_LEGACY_FIELDS,
-        SENSOR_LEGACY_FIELDS,
+        ("binary_sensor", BINARY_SENSOR_LEGACY_FIELDS),
+        ("sensor", SENSOR_LEGACY_FIELDS),
     ],
 )
 async def test_friendly_name_template_legacy_to_modern_configs(
     hass: HomeAssistant,
+    domain: str,
     legacy_fields,
 ) -> None:
     """Test the conversion of friendly_name_tempalte in legacy template to modern template."""
@@ -312,7 +345,9 @@ async def test_friendly_name_template_legacy_to_modern_configs(
             "friendly_name_template": "{{ 'foo bar' }}",
         }
     }
-    altered_configs = rewrite_legacy_to_modern_configs(hass, config, legacy_fields)
+    altered_configs = rewrite_legacy_to_modern_configs(
+        hass, domain, config, legacy_fields
+    )
 
     assert len(altered_configs) == 1
 
@@ -320,7 +355,7 @@ async def test_friendly_name_template_legacy_to_modern_configs(
         {
             "availability": Template("{{ 1 == 1 }}", hass),
             "icon": Template("{{ 'mdi.abc' }}", hass),
-            "object_id": "foo",
+            "default_entity_id": f"{domain}.foo",
             "picture": Template("{{ 'mypicture.jpg' }}", hass),
             "unique_id": "foo-bar-entity",
             "name": Template("{{ 'foo bar' }}", hass),

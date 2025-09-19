@@ -5,7 +5,7 @@ from homeassistant.components.coinbase.const import (
     CONF_EXCHANGE_RATES,
     DOMAIN,
 )
-from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_API_VERSION
+from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -65,7 +65,7 @@ class MockGetAccountsV3:
         start = ids.index(cursor) if cursor else 0
 
         has_next = (target_end := start + 2) < len(MOCK_ACCOUNTS_RESPONSE_V3)
-        end = target_end if has_next else -1
+        end = target_end if has_next else len(MOCK_ACCOUNTS_RESPONSE_V3)
         next_cursor = ids[end] if has_next else ids[-1]
         self.accounts = {
             "accounts": MOCK_ACCOUNTS_RESPONSE_V3[start:end],
@@ -126,36 +126,10 @@ async def init_mock_coinbase(
         domain=DOMAIN,
         entry_id="080272b77a4f80c41b94d7cdc86fd826",
         unique_id=None,
-        title="Test User",
-        data={CONF_API_KEY: "123456", CONF_API_TOKEN: "AbCDeF"},
-        options={
-            CONF_CURRENCIES: currencies or [],
-            CONF_EXCHANGE_RATES: rates or [],
-        },
-    )
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return config_entry
-
-
-async def init_mock_coinbase_v3(
-    hass: HomeAssistant,
-    currencies: list[str] | None = None,
-    rates: list[str] | None = None,
-) -> MockConfigEntry:
-    """Init Coinbase integration for testing."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        entry_id="080272b77a4f80c41b94d7cdc86fd826",
-        unique_id=None,
         title="Test User v3",
         data={
             CONF_API_KEY: "organizations/123456",
             CONF_API_TOKEN: "AbCDeF",
-            CONF_API_VERSION: "v3",
         },
         options={
             CONF_CURRENCIES: currencies or [],

@@ -25,7 +25,7 @@
     "isSupported": true
   },
   "chargingCurrentLimit": {
-    "isSupported": true
+    "isSupported": false
   },
   "chargingPower": {
     "isSupported": true

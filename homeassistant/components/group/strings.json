@@ -66,9 +66,13 @@
       "light": {
         "title": "[%key:component::group::config::step::user::title%]",
         "data": {
+          "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
           "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "all": "[%key:component::group::config::step::binary_sensor::data_description::all%]"
         }
       },
       "lock": {
@@ -115,9 +119,13 @@
       "switch": {
         "title": "[%key:component::group::config::step::user::title%]",
         "data": {
+          "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
           "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "all": "[%key:component::group::config::step::binary_sensor::data_description::all%]"
         }
       }
     }

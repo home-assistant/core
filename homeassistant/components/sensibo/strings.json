@@ -77,22 +77,6 @@
       }
     },
     "select": {
-      "horizontalswing": {
-        "name": "Horizontal swing",
-        "state": {
-          "stopped": "[%key:common::state::off%]",
-          "fixedleft": "Fixed left",
-          "fixedcenterleft": "Fixed center left",
-          "fixedcenter": "Fixed center",
-          "fixedcenterright": "Fixed center right",
-          "fixedright": "Fixed right",
-          "fixedleftright": "Fixed left right",
-          "rangecenter": "Range center",
-          "rangefull": "Range full",
-          "rangeleft": "Range left",
-          "rangeright": "Range right"
-        }
-      },
       "light": {
         "name": "[%key:component::light::title%]",
         "state": {
@@ -153,14 +137,16 @@
             "name": "Horizontal swing",
             "state": {
               "stopped": "[%key:common::state::off%]",
-              "fixedleft": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedleft%]",
-              "fixedcenterleft": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenterleft%]",
-              "fixedcenter": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenter%]",
-              "fixedcenterright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenterright%]",
-              "fixedright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedright%]",
-              "fixedleftright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedleftright%]",
-              "rangecenter": "[%key:component::sensibo::entity::select::horizontalswing::state::rangecenter%]",
-              "rangefull": "[%key:component::sensibo::entity::select::horizontalswing::state::rangefull%]"
+              "fixedleft": "Fixed left",
+              "fixedcenterleft": "Fixed center left",
+              "fixedcenter": "Fixed center",
+              "fixedcenterright": "Fixed center right",
+              "fixedright": "Fixed right",
+              "fixedleftright": "Fixed left right",
+              "rangecenter": "Range center",
+              "rangefull": "Range full",
+              "rangeleft": "Range left",
+              "rangeright": "Range right"
             }
           },
           "light": {
@@ -239,14 +225,14 @@
             "name": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::name%]",
             "state": {
               "stopped": "[%key:common::state::off%]",
-              "fixedleft": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedleft%]",
-              "fixedcenterleft": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenterleft%]",
-              "fixedcenter": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenter%]",
-              "fixedcenterright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenterright%]",
-              "fixedright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedright%]",
-              "fixedleftright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedleftright%]",
-              "rangecenter": "[%key:component::sensibo::entity::select::horizontalswing::state::rangecenter%]",
-              "rangefull": "[%key:component::sensibo::entity::select::horizontalswing::state::rangefull%]"
+              "fixedleft": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::state::fixedleft%]",
+              "fixedcenterleft": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::state::fixedcenterleft%]",
+              "fixedcenter": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::state::fixedcenter%]",
+              "fixedcenterright": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::state::fixedcenterright%]",
+              "fixedright": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::state::fixedright%]",
+              "fixedleftright": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::state::fixedleftright%]",
+              "rangecenter": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::state::rangecenter%]",
+              "rangefull": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::state::rangefull%]"
             }
           },
           "light": {
@@ -383,7 +369,7 @@
               "rangetop": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::rangetop%]",
               "rangemiddle": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::rangemiddle%]",
               "rangebottom": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::rangebottom%]",
-              "rangefull": "[%key:component::sensibo::entity::select::horizontalswing::state::rangefull%]",
+              "rangefull": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::state::rangefull%]",
               "horizontal": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::swing::state::horizontal%]",
               "both": "[%key:component::climate::entity_component::_::state_attributes::swing_mode::state::both%]"
             }
@@ -391,16 +377,16 @@
           "swing_horizontal_mode": {
             "state": {
               "stopped": "[%key:common::state::off%]",
-              "fixedleft": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedleft%]",
-              "fixedcenterleft": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenterleft%]",
-              "fixedcenter": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenter%]",
-              "fixedcenterright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedcenterright%]",
-              "fixedright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedright%]",
-              "fixedleftright": "[%key:component::sensibo::entity::select::horizontalswing::state::fixedleftright%]",
-              "rangecenter": "[%key:component::sensibo::entity::select::horizontalswing::state::rangecenter%]",
-              "rangefull": "[%key:component::sensibo::entity::select::horizontalswing::state::rangefull%]",
-              "rangeleft": "[%key:component::sensibo::entity::select::horizontalswing::state::rangeleft%]",
-              "rangeright": "[%key:component::sensibo::entity::select::horizontalswing::state::rangeright%]"
+              "fixedleft": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::state::fixedleft%]",
+              "fixedcenterleft": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::state::fixedcenterleft%]",
+              "fixedcenter": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::state::fixedcenter%]",
+              "fixedcenterright": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::state::fixedcenterright%]",
+              "fixedright": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::state::fixedright%]",
+              "fixedleftright": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::state::fixedleftright%]",
+              "rangecenter": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::state::rangecenter%]",
+              "rangefull": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::state::rangefull%]",
+              "rangeleft": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::state::rangeleft%]",
+              "rangeright": "[%key:component::sensibo::entity::sensor::climate_react_low::state_attributes::horizontalswing::state::rangeright%]"
             }
           }
         }
@@ -589,12 +575,6 @@
     },
     "mode_not_exist": {
       "message": "The entity does not support the chosen mode"
-    }
-  },
-  "issues": {
-    "deprecated_entity_horizontalswing": {
-      "title": "The Sensibo {name} entity is deprecated",
-      "description": "The Sensibo entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts to use the `horizontal_swing` attribute part of the `climate` entity instead.\nDisable `{entity}` and reload the config entry or restart Home Assistant to fix this issue."
     }
   }
 }

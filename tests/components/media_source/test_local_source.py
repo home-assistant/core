@@ -164,19 +164,21 @@ async def test_upload_view(
     client = await hass_client()
 
     # Test normal upload
-    res = await client.post(
-        "/api/media_source/local_source/upload",
-        data={
-            "media_content_id": "media-source://media_source/test_dir",
-            "file": get_file("logo.png"),
-        },
-    )
+    with patch.object(Path, "mkdir", autospec=True, return_value=None) as mock_mkdir:
+        res = await client.post(
+            "/api/media_source/local_source/upload",
+            data={
+                "media_content_id": "media-source://media_source/test_dir",
+                "file": get_file("logo.png"),
+            },
+        )
 
     assert res.status == 200
     data = await res.json()
     assert data["media_content_id"] == "media-source://media_source/test_dir/logo.png"
     uploaded_path = Path(temp_dir) / "logo.png"
     assert uploaded_path.is_file()
+    mock_mkdir.assert_called_once()
 
     resolved = await media_source.async_resolve_media(
         hass, data["media_content_id"], target_media_player=None
@@ -187,8 +189,6 @@ async def test_upload_view(
 
     # Test with bad media source ID
     for bad_id in (
-        # Subdir doesn't exist
-        "media-source://media_source/test_dir/some-other-dir",
         # Main dir doesn't exist
         "media-source://media_source/test_dir2",
         # Location is invalid
@@ -339,7 +339,7 @@ async def test_remove_file(
 
         msg = await client.receive_json()
 
-        assert not msg["success"]
+        assert not msg["success"], bad_id
         assert msg["error"]["code"] == err
 
     assert extra_id_file.exists()

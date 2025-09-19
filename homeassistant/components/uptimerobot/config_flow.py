@@ -116,3 +116,30 @@ class UptimeRobotConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        if not user_input:
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=STEP_USER_DATA_SCHEMA,
+            )
+
+        self._async_abort_entries_match(
+            {CONF_API_KEY: reconfigure_entry.data[CONF_API_KEY]}
+        )
+
+        errors, account = await self._validate_input(user_input)
+        if account:
+            await self.async_set_unique_id(str(account.user_id))
+            self._abort_if_unique_id_configured()
+            return self.async_update_reload_and_abort(
+                reconfigure_entry, data_updates=user_input
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )

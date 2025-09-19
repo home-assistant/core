@@ -299,11 +299,23 @@ class ZWaveMultilevelSwitchCover(CoverPositionMixin):
 
         # Entity class attributes
         self._attr_device_class = CoverDeviceClass.WINDOW
-        if self.info.platform_hint and self.info.platform_hint.startswith("shutter"):
+        if (
+            isinstance(self.info, ZwaveDiscoveryInfo)
+            and self.info.platform_hint
+            and self.info.platform_hint.startswith("shutter")
+        ):
             self._attr_device_class = CoverDeviceClass.SHUTTER
-        elif self.info.platform_hint and self.info.platform_hint.startswith("blind"):
+        elif (
+            isinstance(self.info, ZwaveDiscoveryInfo)
+            and self.info.platform_hint
+            and self.info.platform_hint.startswith("blind")
+        ):
             self._attr_device_class = CoverDeviceClass.BLIND
-        elif self.info.platform_hint and self.info.platform_hint.startswith("gate"):
+        elif (
+            isinstance(self.info, ZwaveDiscoveryInfo)
+            and self.info.platform_hint
+            and self.info.platform_hint.startswith("gate")
+        ):
             self._attr_device_class = CoverDeviceClass.GATE
 
 

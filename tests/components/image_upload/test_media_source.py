@@ -1,5 +1,6 @@
 """Test image_upload media source."""
 
+from pathlib import Path
 import tempfile
 from unittest.mock import patch
 
@@ -79,6 +80,7 @@ async def test_resolving(
     assert item is not None
     assert item.url == f"/api/image/serve/{image_id}/original"
     assert item.mime_type == "image/png"
+    assert item.path == Path(hass.config.path("image")) / image_id / "original"
 
     invalid_id = "aabbccddeeff"
     with pytest.raises(

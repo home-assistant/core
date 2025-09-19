@@ -604,6 +604,9 @@
       "bubble_soak": {
         "name": "Bubble Soak"
       },
+      "display_lighting": {
+        "name": "Display lighting"
+      },
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
       },

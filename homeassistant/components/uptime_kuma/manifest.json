@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/uptime_kuma",
   "iot_class": "cloud_polling",
   "loggers": ["pythonkuma"],
-  "quality_scale": "bronze",
+  "quality_scale": "platinum",
   "requirements": ["pythonkuma==0.3.1"]
 }

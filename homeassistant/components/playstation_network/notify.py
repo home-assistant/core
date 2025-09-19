@@ -18,7 +18,7 @@ from homeassistant.components.notify import (
     NotifyEntity,
     NotifyEntityDescription,
 )
-from homeassistant.config_entries import ConfigSubentry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -27,7 +27,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import (
     PlaystationNetworkConfigEntry,
-    PlaystationNetworkFriendDataCoordinator,
+    PlaystationNetworkFriendlistCoordinator,
     PlaystationNetworkGroupsUpdateCoordinator,
 )
 from .entity import PlaystationNetworkServiceEntity
@@ -50,8 +50,10 @@ async def async_setup_entry(
     """Set up the notify entity platform."""
 
     coordinator = config_entry.runtime_data.groups
+    friends_list = config_entry.runtime_data.friends_list
 
     groups_added: set[str] = set()
+    friends_added: set[str] = set()
     entity_registry = er.async_get(hass)
 
     @callback
@@ -78,16 +80,32 @@ async def async_setup_entry(
     coordinator.async_add_listener(add_entities)
     add_entities()
 
-    for subentry_id, friend_coordinator in config_entry.runtime_data.friends.items():
-        async_add_entities(
-            [
-                PlaystationNetworkDirectMessageNotifyEntity(
-                    friend_coordinator,
-                    config_entry.subentries[subentry_id],
-                )
-            ],
-            config_subentry_id=subentry_id,
-        )
+    @callback
+    def add_dm_entities() -> None:
+        nonlocal friends_added
+
+        new_friends = set(friends_list.psn.friends_list.keys()) - friends_added
+        if new_friends:
+            async_add_entities(
+                [
+                    PlaystationNetworkDirectMessageNotifyEntity(
+                        friends_list, account_id
+                    )
+                    for account_id in new_friends
+                ],
+            )
+            friends_added |= new_friends
+        deleted_friends = friends_added - set(coordinator.psn.friends_list.keys())
+        for account_id in deleted_friends:
+            if entity_id := entity_registry.async_get_entity_id(
+                NOTIFY_DOMAIN,
+                DOMAIN,
+                f"{coordinator.config_entry.unique_id}_{account_id}_{PlaystationNetworkNotify.DIRECT_MESSAGE}",
+            ):
+                entity_registry.async_remove(entity_id)
+
+    friends_list.async_add_listener(add_dm_entities)
+    add_dm_entities()
 
 
 class PlaystationNetworkNotifyBaseEntity(PlaystationNetworkServiceEntity, NotifyEntity):
@@ -95,12 +113,17 @@ class PlaystationNetworkNotifyBaseEntity(PlaystationNetworkServiceEntity, Notify
 
     group: Group | None = None
 
-    def send_message(self, message: str, title: str | None = None) -> None:
-        """Send a message."""
+    def _send_message(self, message: str) -> None:
+        """Send message."""
         if TYPE_CHECKING:
             assert self.group
+        self.group.send_message(message)
+
+    def send_message(self, message: str, title: str | None = None) -> None:
+        """Send a message."""
+
         try:
-            self.group.send_message(message)
+            self._send_message(message)
         except PSNAWPNotFoundError as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -138,7 +161,7 @@ class PlaystationNetworkNotifyEntity(PlaystationNetworkNotifyBaseEntity):
             key=group_id,
             translation_key=PlaystationNetworkNotify.GROUP_MESSAGE,
             translation_placeholders={
-                "group_name": group_details["groupName"]["value"]
+                CONF_NAME: group_details["groupName"]["value"]
                 or ", ".join(
                     member["onlineId"]
                     for member in group_details["members"]
@@ -153,27 +176,29 @@ class PlaystationNetworkNotifyEntity(PlaystationNetworkNotifyBaseEntity):
 class PlaystationNetworkDirectMessageNotifyEntity(PlaystationNetworkNotifyBaseEntity):
     """Representation of a PlayStation Network notify entity for sending direct messages."""
 
-    coordinator: PlaystationNetworkFriendDataCoordinator
+    coordinator: PlaystationNetworkFriendlistCoordinator
 
     def __init__(
         self,
-        coordinator: PlaystationNetworkFriendDataCoordinator,
-        subentry: ConfigSubentry,
+        coordinator: PlaystationNetworkFriendlistCoordinator,
+        account_id: str,
     ) -> None:
         """Initialize a notification entity."""
-
+        self.account_id = account_id
         self.entity_description = NotifyEntityDescription(
-            key=PlaystationNetworkNotify.DIRECT_MESSAGE,
+            key=f"{account_id}_{PlaystationNetworkNotify.DIRECT_MESSAGE}",
             translation_key=PlaystationNetworkNotify.DIRECT_MESSAGE,
+            translation_placeholders={
+                CONF_NAME: coordinator.psn.friends_list[account_id].online_id
+            },
+            entity_registry_enabled_default=False,
         )
 
-        super().__init__(coordinator, self.entity_description, subentry)
+        super().__init__(coordinator, self.entity_description)
 
-    def send_message(self, message: str, title: str | None = None) -> None:
-        """Send a message."""
-
+    def _send_message(self, message: str) -> None:
         if not self.group:
             self.group = self.coordinator.psn.psn.group(
-                users_list=[self.coordinator.user]
+                users_list=[self.coordinator.psn.friends_list[self.account_id]]
             )
-        super().send_message(message, title)
+        super()._send_message(message)

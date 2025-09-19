@@ -17,6 +17,14 @@
           "mode": "[%key:common::config_flow::data::mode%]",
           "name": "[%key:common::config_flow::data::name%]"
         },
+        "data_description": {
+          "api_key": "API key for the OpenWeatherMap integration",
+          "language": "Language for the OpenWeatherMap content",
+          "latitude": "Latitude of the location",
+          "longitude": "Longitude of the location",
+          "mode": "Mode for the OpenWeatherMap API",
+          "name": "Name for this OpenWeatherMap location"
+        },
         "description": "To generate an API key, please refer to the [integration documentation]({doc_url})"
       }
     }
@@ -27,6 +35,10 @@
         "data": {
           "language": "[%key:common::config_flow::data::language%]",
           "mode": "[%key:common::config_flow::data::mode%]"
+        },
+        "data_description": {
+          "language": "[%key:component::openweathermap::config::step::user::data_description::language%]",
+          "mode": "[%key:component::openweathermap::config::step::user::data_description::mode%]"
         }
       }
     }

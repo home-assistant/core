@@ -15,6 +15,7 @@ from volvocarsapi.models import (
     VolvoAuthException,
     VolvoCarsApiBaseModel,
     VolvoCarsValue,
+    VolvoCarsValueStatusField,
     VolvoCarsVehicle,
 )
 
@@ -28,12 +29,23 @@ from .const import DATA_BATTERY_CAPACITY, DOMAIN
 VERY_SLOW_INTERVAL = 60
 SLOW_INTERVAL = 15
 MEDIUM_INTERVAL = 2
+FAST_INTERVAL = 1
 
 _LOGGER = logging.getLogger(__name__)
 
 
 type VolvoConfigEntry = ConfigEntry[tuple[VolvoBaseCoordinator, ...]]
 type CoordinatorData = dict[str, VolvoCarsApiBaseModel | None]
+
+
+def _is_invalid_api_field(field: VolvoCarsApiBaseModel | None) -> bool:
+    if not field:
+        return True
+
+    if isinstance(field, VolvoCarsValueStatusField) and field.status == "ERROR":
+        return True
+
+    return False
 
 
 class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
@@ -121,7 +133,13 @@ class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
                     translation_key="update_failed",
                 ) from result
 
-            data |= cast(CoordinatorData, result)
+            api_data = cast(CoordinatorData, result)
+            data |= {
+                key: field
+                for key, field in api_data.items()
+                if not _is_invalid_api_field(field)
+            }
+
             valid = True
 
         # Raise an error if not a single API call succeeded
@@ -170,9 +188,13 @@ class VolvoVerySlowIntervalCoordinator(VolvoBaseCoordinator):
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
         return [
+            self.api.async_get_brakes_status,
             self.api.async_get_diagnostics,
+            self.api.async_get_engine_warnings,
             self.api.async_get_odometer,
             self.api.async_get_statistics,
+            self.api.async_get_tyre_states,
+            self.api.async_get_warnings,
         ]
 
     async def _async_update_data(self) -> CoordinatorData:
@@ -243,13 +265,79 @@ class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
             "Volvo medium interval coordinator",
         )
 
+        self._supported_capabilities: list[str] = []
+
     async def _async_determine_api_calls(
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
+        api_calls: list[Any] = []
+
         if self.vehicle.has_battery_engine():
             capabilities = await self.api.async_get_energy_capabilities()
 
             if capabilities.get("isSupported", False):
-                return [self.api.async_get_energy_state]
 
-        return []
+                def _normalize_key(key: str) -> str:
+                    return "chargingStatus" if key == "chargingSystemStatus" else key
+
+                self._supported_capabilities = [
+                    _normalize_key(key)
+                    for key, value in capabilities.items()
+                    if isinstance(value, dict) and value.get("isSupported", False)
+                ]
+
+                api_calls.append(self._async_get_energy_state)
+
+        if self.vehicle.has_combustion_engine():
+            api_calls.append(self.api.async_get_engine_status)
+
+        return api_calls
+
+    async def _async_get_energy_state(
+        self,
+    ) -> dict[str, VolvoCarsValueStatusField | None]:
+        def _mark_ok(
+            field: VolvoCarsValueStatusField | None,
+        ) -> VolvoCarsValueStatusField | None:
+            if field:
+                field.status = "OK"
+
+            return field
+
+        energy_state = await self.api.async_get_energy_state()
+
+        return {
+            key: _mark_ok(value)
+            for key, value in energy_state.items()
+            if key in self._supported_capabilities
+        }
+
+
+class VolvoFastIntervalCoordinator(VolvoBaseCoordinator):
+    """Volvo coordinator with fast update rate."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: VolvoConfigEntry,
+        api: VolvoCarsApi,
+        vehicle: VolvoCarsVehicle,
+    ) -> None:
+        """Initialize the coordinator."""
+
+        super().__init__(
+            hass,
+            entry,
+            api,
+            vehicle,
+            timedelta(minutes=FAST_INTERVAL),
+            "Volvo fast interval coordinator",
+        )
+
+    async def _async_determine_api_calls(
+        self,
+    ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
+        return [
+            self.api.async_get_doors_status,
+            self.api.async_get_window_states,
+        ]

@@ -20,6 +20,12 @@ _MODEL_SPECIFIC_RESPONSES = {
         "statistics",
         "vehicle",
     ],
+    "xc60_phev_2020": [
+        "energy_capabilities",
+        "energy_state",
+        "statistics",
+        "vehicle",
+    ],
     "xc90_petrol_2019": ["commands", "statistics", "vehicle"],
 }
 

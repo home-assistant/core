@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import LIGHT_LUX, UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -41,11 +42,13 @@ SENSORS: Final = (
             if device.sensors[_key].scale == "CELSIUS"
             else UnitOfTemperature.FAHRENHEIT
         ),
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AmazonSensorEntityDescription(
         key="illuminance",
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 

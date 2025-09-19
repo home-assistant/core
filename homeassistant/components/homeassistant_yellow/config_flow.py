@@ -92,7 +92,7 @@ class YellowFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
             firmware_name="Zigbee",
             expected_installed_firmware_type=ApplicationType.EZSP,
             step_id="install_zigbee_firmware",
-            next_step_id="confirm_zigbee",
+            next_step_id="pre_confirm_zigbee",
         )
 
     async def async_step_install_thread_firmware(

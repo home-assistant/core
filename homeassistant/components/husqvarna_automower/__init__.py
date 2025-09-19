@@ -21,6 +21,7 @@ PLATFORMS: list[Platform] = [
     Platform.BUTTON,
     Platform.CALENDAR,
     Platform.DEVICE_TRACKER,
+    Platform.EVENT,
     Platform.LAWN_MOWER,
     Platform.NUMBER,
     Platform.SELECT,

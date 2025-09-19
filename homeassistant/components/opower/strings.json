@@ -10,7 +10,7 @@
         }
       },
       "credentials": {
-        "title": "Enter Credentials",
+        "title": "Enter credentials",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -34,7 +34,7 @@
       },
       "mfa_code": {
         "title": "Enter security code",
-        "description": "A security code has been sent via your selected method. Please enter it below to complete login.",
+        "description": "Please enter the security code below to complete login.",
         "data": {
           "mfa_code": "Security code"
         },
@@ -70,6 +70,17 @@
     "return_to_grid_migration": {
       "title": "Return to grid statistics for account: {utility_account_id}",
       "description": "We found negative values in your existing consumption statistics, likely because you have solar. We split those in separate return statistics for a better experience in the Energy dashboard.\n\nPlease visit the [Energy configuration page]({energy_settings}) to add the following statistics in the **Return to grid** section:\n\n{target_ids}\n\nOnce you have added them, ignore this issue."
+    },
+    "unsupported_utility": {
+      "title": "Unsupported utility: {utility}",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::opower::issues::unsupported_utility::title%]",
+            "description": "The utility `{utility}` used by entry `{title}` is no longer supported by the Opower integration. Select **Submit** to remove this integration entry now."
+          }
+        }
+      }
     }
   },
   "entity": {

@@ -36,7 +36,6 @@ async def test_switch(
     reolink_host: MagicMock,
 ) -> None:
     """Test switch entity."""
-    reolink_host.camera_name.return_value = TEST_CAM_NAME
     reolink_host.audio_record.return_value = True
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
@@ -108,7 +107,6 @@ async def test_host_switch(
     reolink_host: MagicMock,
 ) -> None:
     """Test host switch entity."""
-    reolink_host.camera_name.return_value = TEST_CAM_NAME
     reolink_host.email_enabled.return_value = True
     reolink_host.is_hub = False
     reolink_host.supported.return_value = True

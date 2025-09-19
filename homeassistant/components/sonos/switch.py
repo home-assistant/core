@@ -19,7 +19,9 @@ from homeassistant.helpers.event import async_track_time_change
 
 from .alarms import SonosAlarms
 from .const import (
+    ATTR_SPEECH_ENHANCEMENT_ENABLED,
     DOMAIN,
+    MODEL_SONOS_ARC_ULTRA,
     SONOS_ALARMS_UPDATED,
     SONOS_CREATE_ALARM,
     SONOS_CREATE_SWITCHES,
@@ -59,6 +61,7 @@ ALL_FEATURES = (
     ATTR_SURROUND_ENABLED,
     ATTR_STATUS_LIGHT,
 )
+ALL_SUBST_FEATURES = (ATTR_SPEECH_ENHANCEMENT_ENABLED,)
 
 COORDINATOR_FEATURES = ATTR_CROSSFADE
 
@@ -68,6 +71,14 @@ POLL_REQUIRED = (
 )
 
 WEEKEND_DAYS = (0, 6)
+
+# Mapping of model names to feature attributes that need to be substituted.
+# This is used to handle differences in attributes across Sonos models.
+MODEL_FEATURE_SUBSTITUTIONS: dict[str, dict[str, str]] = {
+    MODEL_SONOS_ARC_ULTRA: {
+        ATTR_SPEECH_ENHANCEMENT: ATTR_SPEECH_ENHANCEMENT_ENABLED,
+    },
+}
 
 
 async def async_setup_entry(
@@ -92,6 +103,13 @@ async def async_setup_entry(
 
     def available_soco_attributes(speaker: SonosSpeaker) -> list[str]:
         features = []
+        for feature_type in ALL_SUBST_FEATURES:
+            try:
+                if (state := getattr(speaker.soco, feature_type, None)) is not None:
+                    setattr(speaker, feature_type, state)
+            except SoCoSlaveException:
+                pass
+
         for feature_type in ALL_FEATURES:
             try:
                 if (state := getattr(speaker.soco, feature_type, None)) is not None:
@@ -107,12 +125,23 @@ async def async_setup_entry(
             available_soco_attributes, speaker
         )
         for feature_type in available_features:
+            attribute_key = MODEL_FEATURE_SUBSTITUTIONS.get(
+                speaker.model_name.upper(), {}
+            ).get(feature_type, feature_type)
             _LOGGER.debug(
-                "Creating %s switch on %s",
+                "Creating %s switch on %s attribute %s",
                 feature_type,
                 speaker.zone_name,
+                attribute_key,
             )
-            entities.append(SonosSwitchEntity(feature_type, speaker, config_entry))
+            entities.append(
+                SonosSwitchEntity(
+                    feature_type=feature_type,
+                    attribute_key=attribute_key,
+                    speaker=speaker,
+                    config_entry=config_entry,
+                )
+            )
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -127,11 +156,15 @@ class SonosSwitchEntity(SonosPollingEntity, SwitchEntity):
     """Representation of a Sonos feature switch."""
 
     def __init__(
-        self, feature_type: str, speaker: SonosSpeaker, config_entry: SonosConfigEntry
+        self,
+        feature_type: str,
+        attribute_key: str,
+        speaker: SonosSpeaker,
+        config_entry: SonosConfigEntry,
     ) -> None:
         """Initialize the switch."""
         super().__init__(speaker, config_entry)
-        self.feature_type = feature_type
+        self.attribute_key = attribute_key
         self.needs_coordinator = feature_type in COORDINATOR_FEATURES
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_translation_key = feature_type
@@ -149,15 +182,15 @@ class SonosSwitchEntity(SonosPollingEntity, SwitchEntity):
     @soco_error()
     def poll_state(self) -> None:
         """Poll the current state of the switch."""
-        state = getattr(self.soco, self.feature_type)
-        setattr(self.speaker, self.feature_type, state)
+        state = getattr(self.soco, self.attribute_key)
+        setattr(self.speaker, self.attribute_key, state)
 
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
         if self.needs_coordinator and not self.speaker.is_coordinator:
-            return cast(bool, getattr(self.speaker.coordinator, self.feature_type))
-        return cast(bool, getattr(self.speaker, self.feature_type))
+            return cast(bool, getattr(self.speaker.coordinator, self.attribute_key))
+        return cast(bool, getattr(self.speaker, self.attribute_key))
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
@@ -175,7 +208,7 @@ class SonosSwitchEntity(SonosPollingEntity, SwitchEntity):
         else:
             soco = self.soco
         try:
-            setattr(soco, self.feature_type, enable)
+            setattr(soco, self.attribute_key, enable)
         except SoCoUPnPException as exc:
             _LOGGER.warning("Could not toggle %s: %s", self.entity_id, exc)
 

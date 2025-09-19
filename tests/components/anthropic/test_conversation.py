@@ -728,6 +728,7 @@ async def test_redacted_thinking(
     hass: HomeAssistant,
     mock_config_entry_with_extended_thinking: MockConfigEntry,
     mock_init_component,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test extended thinking with redacted thinking blocks."""
     with patch(
@@ -756,8 +757,8 @@ async def test_redacted_thinking(
     chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
         result.conversation_id
     )
-    assert len(chat_log.content) == 3
-    assert chat_log.content[2].content == "How can I help you today?"
+    # Don't test the prompt because it's not deterministic
+    assert chat_log.content[1:] == snapshot
 
 
 @patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")

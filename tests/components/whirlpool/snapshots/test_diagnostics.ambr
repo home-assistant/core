@@ -51,7 +51,7 @@
       'subentries': list([
       ]),
       'title': 'Mock Title',
-      'unique_id': None,
+      'unique_id': '**REDACTED**',
       'version': 1,
     }),
   })

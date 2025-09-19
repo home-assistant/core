@@ -65,7 +65,10 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMon
                 if device := device_registry.async_get_device(
                     identifiers={(DOMAIN, monitor_id)}
                 ):
-                    device_registry.async_remove_device(device.id)
+                    device_registry.async_update_device(
+                        device_id=device.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
 
         # If there are new monitors, we should reload the config entry so we can
         # create new devices and entities.

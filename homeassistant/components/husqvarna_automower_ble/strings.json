@@ -4,18 +4,49 @@
     "step": {
       "user": {
         "data": {
-          "address": "Device BLE address"
+          "address": "Device BLE address",
+          "pin": "Mower PIN"
+        },
+        "data_description": {
+          "pin": "The PIN used to secure the mower"
         }
       },
-      "confirm": {
-        "description": "Do you want to set up {name}? Make sure the mower is in pairing mode"
+      "bluetooth_confirm": {
+        "description": "Do you want to set up {name}?\nMake sure the mower is in pairing mode.",
+        "data": {
+          "pin": "[%key:component::husqvarna_automower_ble::config::step::user::data::pin%]"
+        },
+        "data_description": {
+          "pin": "[%key:component::husqvarna_automower_ble::config::step::user::data_description::pin%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Please confirm the PIN for {name}.",
+        "data": {
+          "pin": "[%key:component::husqvarna_automower_ble::config::step::user::data::pin%]"
+        },
+        "data_description": {
+          "pin": "[%key:component::husqvarna_automower_ble::config::step::user::data_description::pin%]"
+        }
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "Ensure the mower is in pairing mode and try again. It can take a few attempts.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "not_allowed": "Unable to read data from the mower, this usually means it is not paired",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "Unable to pair with device, ensure the PIN is correct and the mower is in pairing mode",
+      "invalid_pin": "The PIN must be a number"
+    }
+  },
+  "exceptions": {
+    "pin_required": {
+      "message": "PIN is required for {domain_name}"
     }
   }
 }

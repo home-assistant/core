@@ -6,7 +6,7 @@ from typing import Any
 
 from androidtvremote2 import AndroidTVRemote, ConnectionClosed
 
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -28,8 +28,6 @@ class AndroidTVRemoteBaseEntity(Entity):
     ) -> None:
         """Initialize the entity."""
         self._api = api
-        self._host = config_entry.data[CONF_HOST]
-        self._name = config_entry.data[CONF_NAME]
         self._apps: dict[str, Any] = config_entry.options.get(CONF_APPS, {})
         self._attr_unique_id = config_entry.unique_id
         self._attr_is_on = api.is_on
@@ -39,7 +37,7 @@ class AndroidTVRemoteBaseEntity(Entity):
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, config_entry.data[CONF_MAC])},
             identifiers={(DOMAIN, config_entry.unique_id)},
-            name=self._name,
+            name=config_entry.data[CONF_NAME],
             manufacturer=device_info["manufacturer"],
             model=device_info["model"],
         )

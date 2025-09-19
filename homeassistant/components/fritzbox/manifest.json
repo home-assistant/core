@@ -1,6 +1,6 @@
 {
   "domain": "fritzbox",
-  "name": "AVM FRITZ!SmartHome",
+  "name": "FRITZ!SmartHome",
   "codeowners": ["@mib1185", "@flabbamann"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/fritzbox",

@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_TYPE,
 )
@@ -434,12 +435,13 @@ async def async_attach_trigger(
 
     if trigger_platform == VALUE_UPDATED_PLATFORM_TYPE:
         zwave_js_config = {
-            state.CONF_PLATFORM: trigger_platform,
-            CONF_DEVICE_ID: config[CONF_DEVICE_ID],
+            CONF_OPTIONS: {
+                CONF_DEVICE_ID: config[CONF_DEVICE_ID],
+            },
         }
         copy_available_params(
             config,
-            zwave_js_config,
+            zwave_js_config[CONF_OPTIONS],
             [
                 ATTR_COMMAND_CLASS,
                 ATTR_PROPERTY,
@@ -453,7 +455,7 @@ async def async_attach_trigger(
             hass, zwave_js_config
         )
         return await attach_value_updated_trigger(
-            hass, zwave_js_config, action, trigger_info
+            hass, zwave_js_config[CONF_OPTIONS], action, trigger_info
         )
 
     raise HomeAssistantError(f"Unhandled trigger type {trigger_type}")

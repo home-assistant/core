@@ -194,6 +194,7 @@ async def test_get_action_capabilities(
                     {
                         "name": "brightness_pct",
                         "optional": True,
+                        "required": False,
                         "type": "float",
                         "valueMax": 100,
                         "valueMin": 0,
@@ -219,6 +220,7 @@ async def test_get_action_capabilities(
                     {
                         "name": "brightness_pct",
                         "optional": True,
+                        "required": False,
                         "type": "float",
                         "valueMax": 100,
                         "valueMin": 0,
@@ -238,6 +240,7 @@ async def test_get_action_capabilities(
                     {
                         "name": "flash",
                         "optional": True,
+                        "required": False,
                         "type": "select",
                         "options": [("short", "short"), ("long", "long")],
                     }
@@ -256,6 +259,7 @@ async def test_get_action_capabilities(
                     {
                         "name": "flash",
                         "optional": True,
+                        "required": False,
                         "type": "select",
                         "options": [("short", "short"), ("long", "long")],
                     }
@@ -341,6 +345,7 @@ async def test_get_action_capabilities_features(
                     {
                         "name": "brightness_pct",
                         "optional": True,
+                        "required": False,
                         "type": "float",
                         "valueMax": 100,
                         "valueMin": 0,
@@ -366,6 +371,7 @@ async def test_get_action_capabilities_features(
                     {
                         "name": "brightness_pct",
                         "optional": True,
+                        "required": False,
                         "type": "float",
                         "valueMax": 100,
                         "valueMin": 0,
@@ -385,6 +391,7 @@ async def test_get_action_capabilities_features(
                     {
                         "name": "flash",
                         "optional": True,
+                        "required": False,
                         "type": "select",
                         "options": [("short", "short"), ("long", "long")],
                     }
@@ -403,6 +410,7 @@ async def test_get_action_capabilities_features(
                     {
                         "name": "flash",
                         "optional": True,
+                        "required": False,
                         "type": "select",
                         "options": [("short", "short"), ("long", "long")],
                     }

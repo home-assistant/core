@@ -1,0 +1,56 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "YINMIK Water Quality Tester",
+  "category": "szjcy",
+  "product_id": "u5xgcpcngk3pfxb4",
+  "product_name": "YINMIK Water Quality Tester",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2025-09-02T06:27:22+00:00",
+  "create_time": "2025-09-02T06:27:22+00:00",
+  "update_time": "2025-09-02T06:27:22+00:00",
+  "function": {},
+  "status_range": {
+    "tds_in": {
+      "type": "Integer",
+      "value": {
+        "unit": "ppt",
+        "min": 0,
+        "max": 100000,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 0,
+        "max": 800,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "tds_in": 476,
+    "temp_current": 412,
+    "battery_percentage": 0
+  },
+  "set_up": false,
+  "support_local": true
+}

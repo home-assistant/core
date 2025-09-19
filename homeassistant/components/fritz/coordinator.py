@@ -120,7 +120,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.fritz_guest_wifi: FritzGuestWLAN = None
         self.fritz_hosts: FritzHosts = None
         self.fritz_status: FritzStatus = None
-        self.hass = hass
         self.host = host
         self.mesh_role = MeshRoles.NONE
         self.mesh_wifi_uplink = False
@@ -152,7 +151,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             configuration_url=f"http://{self.host}",
             connections={(dr.CONNECTION_NETWORK_MAC, self.mac)},
             identifiers={(DOMAIN, self.unique_id)},
-            manufacturer="AVM",
+            manufacturer="FRITZ!",
             model=self.model,
             name=self.config_entry.title,
             sw_version=self.current_firmware,
@@ -472,7 +471,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         dr.async_get(self.hass).async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             connections={(CONNECTION_NETWORK_MAC, dev_mac)},
-            default_manufacturer="AVM",
+            default_manufacturer="FRITZ!",
             default_model="FRITZ!Box Tracked device",
             default_name=device.hostname,
             via_device=(DOMAIN, self.unique_id),

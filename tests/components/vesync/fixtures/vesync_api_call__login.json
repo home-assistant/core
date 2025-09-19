@@ -1,9 +1,0 @@
-{
-  "traceId": "0000000000",
-  "code": 0,
-  "msg": "request success",
-  "result": {
-    "accountID": "9999999",
-    "token": "TOKEN"
-  }
-}

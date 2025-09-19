@@ -328,6 +328,9 @@
       "block_zoom": {
         "name": "Block Zoom"
       },
+      "bypass_age_verification": {
+        "name": "Bypass age verification"
+      },
       "cache_boost": {
         "name": "Cache boost"
       },

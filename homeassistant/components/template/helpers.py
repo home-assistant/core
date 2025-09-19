@@ -38,7 +38,7 @@ from .const import (
     CONF_ATTRIBUTES,
     CONF_AVAILABILITY,
     CONF_AVAILABILITY_TEMPLATE,
-    CONF_OBJECT_ID,
+    CONF_DEFAULT_ENTITY_ID,
     CONF_PICTURE,
     DOMAIN,
 )
@@ -141,13 +141,14 @@ def rewrite_legacy_to_modern_config(
 
 def rewrite_legacy_to_modern_configs(
     hass: HomeAssistant,
+    domain: str,
     entity_cfg: dict[str, dict],
     extra_legacy_fields: dict[str, str],
 ) -> list[dict]:
     """Rewrite legacy configuration definitions to modern ones."""
     entities = []
     for object_id, entity_conf in entity_cfg.items():
-        entity_conf = {**entity_conf, CONF_OBJECT_ID: object_id}
+        entity_conf = {**entity_conf, CONF_DEFAULT_ENTITY_ID: f"{domain}.{object_id}"}
 
         entity_conf = rewrite_legacy_to_modern_config(
             hass, entity_conf, extra_legacy_fields
@@ -196,7 +197,7 @@ async def async_setup_template_platform(
         if legacy_fields is not None:
             if legacy_key:
                 configs = rewrite_legacy_to_modern_configs(
-                    hass, config[legacy_key], legacy_fields
+                    hass, domain, config[legacy_key], legacy_fields
                 )
             else:
                 configs = [rewrite_legacy_to_modern_config(hass, config, legacy_fields)]

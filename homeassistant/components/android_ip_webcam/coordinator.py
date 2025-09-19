@@ -30,10 +30,9 @@ class AndroidIPCamDataUpdateCoordinator(DataUpdateCoordinator[None]):
         cam: PyDroidIPCam,
     ) -> None:
         """Initialize the Android IP Webcam."""
-        self.hass = hass
         self.cam = cam
         super().__init__(
-            self.hass,
+            hass,
             _LOGGER,
             config_entry=config_entry,
             name=f"{DOMAIN} {config_entry.data[CONF_HOST]}",

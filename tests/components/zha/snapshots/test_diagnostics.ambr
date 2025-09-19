@@ -36,6 +36,7 @@
         }),
         'network_key': '**REDACTED**',
         'nwk_addresses': dict({
+          '11:22:33:44:55:66:77:88': 4660,
         }),
         'nwk_manager_id': 0,
         'nwk_update_id': 0,

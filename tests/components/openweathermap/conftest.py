@@ -77,8 +77,8 @@ def owm_client_mock() -> Generator[AsyncMock]:
         cloud_coverage=75,
         visibility=10000,
         wind_speed=9.83,
+        wind_gust=11.81,
         wind_bearing=199,
-        wind_gust=None,
         rain={"1h": 1.21},
         snow=None,
         condition=WeatherCondition(

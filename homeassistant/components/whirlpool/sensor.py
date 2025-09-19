@@ -24,6 +24,7 @@ from homeassistant.util.dt import utcnow
 from . import WhirlpoolConfigEntry
 from .entity import WhirlpoolEntity
 
+PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(minutes=5)
 
 WASHER_TANK_FILL = {

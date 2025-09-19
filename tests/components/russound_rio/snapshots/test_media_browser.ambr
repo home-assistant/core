@@ -1,0 +1,75 @@
+# serializer version: 1
+# name: test_browse_media_root
+  list([
+    dict({
+      'can_expand': True,
+      'can_play': False,
+      'can_search': False,
+      'children_media_class': None,
+      'media_class': 'directory',
+      'media_content_id': '',
+      'media_content_type': 'presets',
+      'thumbnail': 'https://brands.home-assistant.io/_/russound_rio/logo.png',
+      'title': 'Presets',
+    }),
+  ])
+# ---
+# name: test_browse_presets
+  list([
+    dict({
+      'can_expand': False,
+      'can_play': True,
+      'can_search': False,
+      'children_media_class': None,
+      'media_class': 'channel',
+      'media_content_id': '1,1',
+      'media_content_type': 'preset',
+      'thumbnail': None,
+      'title': 'WOOD',
+    }),
+    dict({
+      'can_expand': False,
+      'can_play': True,
+      'can_search': False,
+      'children_media_class': None,
+      'media_class': 'channel',
+      'media_content_id': '1,2',
+      'media_content_type': 'preset',
+      'thumbnail': None,
+      'title': '89.7 MHz FM',
+    }),
+    dict({
+      'can_expand': False,
+      'can_play': True,
+      'can_search': False,
+      'children_media_class': None,
+      'media_class': 'channel',
+      'media_content_id': '1,7',
+      'media_content_type': 'preset',
+      'thumbnail': None,
+      'title': 'WWKR',
+    }),
+    dict({
+      'can_expand': False,
+      'can_play': True,
+      'can_search': False,
+      'children_media_class': None,
+      'media_class': 'channel',
+      'media_content_id': '1,8',
+      'media_content_type': 'preset',
+      'thumbnail': None,
+      'title': 'WKLA',
+    }),
+    dict({
+      'can_expand': False,
+      'can_play': True,
+      'can_search': False,
+      'children_media_class': None,
+      'media_class': 'channel',
+      'media_content_id': '1,11',
+      'media_content_type': 'preset',
+      'thumbnail': None,
+      'title': 'WGN',
+    }),
+  ])
+# ---

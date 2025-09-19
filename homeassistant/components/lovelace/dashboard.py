@@ -215,12 +215,12 @@ class LovelaceYAML(LovelaceConfig):
 
     async def async_load(self, force: bool) -> dict[str, Any]:
         """Load config."""
-        config, json = await self._async_load_or_cached(force)
+        config, _json = await self._async_load_or_cached(force)
         return config
 
     async def async_json(self, force: bool) -> json_fragment:
         """Return JSON representation of the config."""
-        config, json = await self._async_load_or_cached(force)
+        _config, json = await self._async_load_or_cached(force)
         return json
 
     async def _async_load_or_cached(

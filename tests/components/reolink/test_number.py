@@ -16,7 +16,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import TEST_NVR_NAME
+from .conftest import TEST_CAM_NAME, TEST_NVR_NAME
 
 from tests.common import MockConfigEntry
 
@@ -34,7 +34,7 @@ async def test_number(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.NUMBER}.{TEST_NVR_NAME}_volume"
+    entity_id = f"{Platform.NUMBER}.{TEST_CAM_NAME}_volume"
 
     assert hass.states.get(entity_id).state == "80"
 
@@ -79,7 +79,7 @@ async def test_smart_ai_number(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.NUMBER}.{TEST_NVR_NAME}_AI_crossline_zone1_sensitivity"
+    entity_id = f"{Platform.NUMBER}.{TEST_CAM_NAME}_AI_crossline_zone1_sensitivity"
 
     assert hass.states.get(entity_id).state == "80"
 

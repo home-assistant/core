@@ -17,6 +17,7 @@ from homeassistant.components.blueprint import (
 )
 from homeassistant.components.button import DOMAIN as DOMAIN_BUTTON
 from homeassistant.components.cover import DOMAIN as DOMAIN_COVER
+from homeassistant.components.event import DOMAIN as DOMAIN_EVENT
 from homeassistant.components.fan import DOMAIN as DOMAIN_FAN
 from homeassistant.components.image import DOMAIN as DOMAIN_IMAGE
 from homeassistant.components.light import DOMAIN as DOMAIN_LIGHT
@@ -25,6 +26,7 @@ from homeassistant.components.number import DOMAIN as DOMAIN_NUMBER
 from homeassistant.components.select import DOMAIN as DOMAIN_SELECT
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
+from homeassistant.components.update import DOMAIN as DOMAIN_UPDATE
 from homeassistant.components.vacuum import DOMAIN as DOMAIN_VACUUM
 from homeassistant.components.weather import DOMAIN as DOMAIN_WEATHER
 from homeassistant.config import async_log_schema_error, config_without_domain
@@ -53,6 +55,7 @@ from . import (
     binary_sensor as binary_sensor_platform,
     button as button_platform,
     cover as cover_platform,
+    event as event_platform,
     fan as fan_platform,
     image as image_platform,
     light as light_platform,
@@ -61,6 +64,7 @@ from . import (
     select as select_platform,
     sensor as sensor_platform,
     switch as switch_platform,
+    update as update_platform,
     vacuum as vacuum_platform,
     weather as weather_platform,
 )
@@ -124,6 +128,9 @@ CONFIG_SECTION_SCHEMA = vol.All(
             vol.Optional(DOMAIN_COVER): vol.All(
                 cv.ensure_list, [cover_platform.COVER_YAML_SCHEMA]
             ),
+            vol.Optional(DOMAIN_EVENT): vol.All(
+                cv.ensure_list, [event_platform.EVENT_YAML_SCHEMA]
+            ),
             vol.Optional(DOMAIN_FAN): vol.All(
                 cv.ensure_list, [fan_platform.FAN_YAML_SCHEMA]
             ),
@@ -147,6 +154,9 @@ CONFIG_SECTION_SCHEMA = vol.All(
             ),
             vol.Optional(DOMAIN_SWITCH): vol.All(
                 cv.ensure_list, [switch_platform.SWITCH_YAML_SCHEMA]
+            ),
+            vol.Optional(DOMAIN_UPDATE): vol.All(
+                cv.ensure_list, [update_platform.UPDATE_YAML_SCHEMA]
             ),
             vol.Optional(DOMAIN_VACUUM): vol.All(
                 cv.ensure_list, [vacuum_platform.VACUUM_YAML_SCHEMA]
@@ -278,7 +288,7 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             )
             definitions.extend(
                 rewrite_legacy_to_modern_configs(
-                    hass, template_config[old_key], legacy_fields
+                    hass, new_key, template_config[old_key], legacy_fields
                 )
             )
             template_config = TemplateConfig({**template_config, new_key: definitions})

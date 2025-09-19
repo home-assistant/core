@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaus.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "01155072c4dd573f92b8",
   "name": "Apollo light",
   "category": "cz",
   "product_id": "0g1fmqh6d5io7lcn",

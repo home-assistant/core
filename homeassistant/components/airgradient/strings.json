@@ -61,7 +61,7 @@
       "display_pm_standard": {
         "name": "Display PM standard",
         "state": {
-          "ugm3": "µg/m³",
+          "ugm3": "μg/m³",
           "us_aqi": "US AQI"
         }
       },

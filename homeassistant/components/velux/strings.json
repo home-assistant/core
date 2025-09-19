@@ -27,5 +27,12 @@
       "name": "Reboot gateway",
       "description": "Reboots the KLF200 Gateway."
     }
+  },
+  "entity": {
+    "binary_sensor": {
+      "rain_sensor": {
+        "name": "Rain sensor"
+      }
+    }
   }
 }

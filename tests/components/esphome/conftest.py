@@ -517,9 +517,30 @@ async def _mock_generic_device_entry(
     mock_client.list_entities_services = AsyncMock(
         return_value=mock_list_entities_services
     )
-    mock_client.subscribe_states = _subscribe_states
-    mock_client.subscribe_service_calls = _subscribe_service_calls
-    mock_client.subscribe_home_assistant_states = _subscribe_home_assistant_states
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(mock_device.device_info, *mock_list_entities_services)
+    )
+
+    def _subscribe_home_assistant_states_and_services(
+        *,
+        on_state: Callable[[EntityState], None],
+        on_service_call: Callable[[HomeassistantServiceCall], None],
+        on_state_sub: Callable[[str, str | None], None],
+        on_state_request: Callable[[str, str | None], None],
+    ) -> None:
+        """Subscribe to states and service calls."""
+        mock_device.set_state_callback(on_state)
+        mock_device.set_service_call_callback(on_service_call)
+        mock_device.set_home_assistant_state_subscription_callback(
+            on_state_sub, on_state_request
+        )
+        # Set the initial states
+        for state in states:
+            on_state(state)
+
+    mock_client.subscribe_home_assistant_states_and_services = (
+        _subscribe_home_assistant_states_and_services
+    )
     mock_client.subscribe_logs = _subscribe_logs
 
     try_connect_done = Event()

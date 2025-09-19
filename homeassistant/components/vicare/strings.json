@@ -182,6 +182,9 @@
       "dhw_storage_top_temperature": {
         "name": "DHW storage top temperature"
       },
+      "dhw_storage_middle_temperature": {
+        "name": "DHW storage middle temperature"
+      },
       "dhw_storage_bottom_temperature": {
         "name": "DHW storage bottom temperature"
       },

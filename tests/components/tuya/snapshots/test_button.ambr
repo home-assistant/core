@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][button.v20_reset_duster_cloth-entry]
+# name: test_platform_setup_and_discovery[button.v20_reset_duster_cloth-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -30,11 +30,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reset_duster_cloth',
-    'unique_id': 'tuya.bfa951ca98fcf64fddqlmtreset_duster_cloth',
+    'unique_id': 'tuya.zrrraytdoanz33rldsreset_duster_cloth',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][button.v20_reset_duster_cloth-state]
+# name: test_platform_setup_and_discovery[button.v20_reset_duster_cloth-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'V20 Reset duster cloth',
@@ -47,7 +47,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][button.v20_reset_edge_brush-entry]
+# name: test_platform_setup_and_discovery[button.v20_reset_edge_brush-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -78,11 +78,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reset_edge_brush',
-    'unique_id': 'tuya.bfa951ca98fcf64fddqlmtreset_edge_brush',
+    'unique_id': 'tuya.zrrraytdoanz33rldsreset_edge_brush',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][button.v20_reset_edge_brush-state]
+# name: test_platform_setup_and_discovery[button.v20_reset_edge_brush-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'V20 Reset edge brush',
@@ -95,7 +95,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][button.v20_reset_filter-entry]
+# name: test_platform_setup_and_discovery[button.v20_reset_filter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -126,11 +126,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reset_filter',
-    'unique_id': 'tuya.bfa951ca98fcf64fddqlmtreset_filter',
+    'unique_id': 'tuya.zrrraytdoanz33rldsreset_filter',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][button.v20_reset_filter-state]
+# name: test_platform_setup_and_discovery[button.v20_reset_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'V20 Reset filter',
@@ -143,7 +143,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][button.v20_reset_map-entry]
+# name: test_platform_setup_and_discovery[button.v20_reset_map-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -174,11 +174,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reset_map',
-    'unique_id': 'tuya.bfa951ca98fcf64fddqlmtreset_map',
+    'unique_id': 'tuya.zrrraytdoanz33rldsreset_map',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][button.v20_reset_map-state]
+# name: test_platform_setup_and_discovery[button.v20_reset_map-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'V20 Reset map',
@@ -191,7 +191,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][button.v20_reset_roll_brush-entry]
+# name: test_platform_setup_and_discovery[button.v20_reset_roll_brush-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -222,11 +222,11 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reset_roll_brush',
-    'unique_id': 'tuya.bfa951ca98fcf64fddqlmtreset_roll_brush',
+    'unique_id': 'tuya.zrrraytdoanz33rldsreset_roll_brush',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][button.v20_reset_roll_brush-state]
+# name: test_platform_setup_and_discovery[button.v20_reset_roll_brush-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'V20 Reset roll brush',

@@ -14,7 +14,8 @@ from tests.common import load_json_array_fixture, load_json_object_fixture
 def mock_accuweather_client() -> Generator[AsyncMock]:
     """Mock a AccuWeather client."""
     current = load_json_object_fixture("current_conditions_data.json", DOMAIN)
-    forecast = load_json_array_fixture("forecast_data.json", DOMAIN)
+    daily_forecast = load_json_array_fixture("daily_forecast_data.json", DOMAIN)
+    hourly_forecast = load_json_array_fixture("hourly_forecast_data.json", DOMAIN)
     location = load_json_object_fixture("location_data.json", DOMAIN)
 
     with (
@@ -29,7 +30,8 @@ def mock_accuweather_client() -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.async_get_location.return_value = location
         client.async_get_current_conditions.return_value = current
-        client.async_get_daily_forecast.return_value = forecast
+        client.async_get_daily_forecast.return_value = daily_forecast
+        client.async_get_hourly_forecast.return_value = hourly_forecast
         client.location_key = "0123456"
         client.requests_remaining = 10
 

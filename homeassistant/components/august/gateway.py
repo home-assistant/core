@@ -1,30 +1,43 @@
 """Handle August connection setup and authentication."""
 
-from typing import Any
+import logging
+from pathlib import Path
 
-from yalexs.const import DEFAULT_BRAND
+from aiohttp import ClientSession
+from yalexs.authenticator_common import Authentication, AuthenticationState
 from yalexs.manager.gateway import Gateway
 
-from homeassistant.const import CONF_USERNAME
+from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import (
-    CONF_ACCESS_TOKEN_CACHE_FILE,
-    CONF_BRAND,
-    CONF_INSTALL_ID,
-    CONF_LOGIN_METHOD,
-)
+_LOGGER = logging.getLogger(__name__)
 
 
 class AugustGateway(Gateway):
     """Handle the connection to August."""
 
-    def config_entry(self) -> dict[str, Any]:
-        """Config entry."""
-        assert self._config is not None
-        return {
-            CONF_BRAND: self._config.get(CONF_BRAND, DEFAULT_BRAND),
-            CONF_LOGIN_METHOD: self._config[CONF_LOGIN_METHOD],
-            CONF_USERNAME: self._config[CONF_USERNAME],
-            CONF_INSTALL_ID: self._config.get(CONF_INSTALL_ID),
-            CONF_ACCESS_TOKEN_CACHE_FILE: self._access_token_cache_file,
-        }
+    def __init__(
+        self,
+        config_path: Path,
+        aiohttp_session: ClientSession,
+        oauth_session: config_entry_oauth2_flow.OAuth2Session,
+    ) -> None:
+        """Init the connection."""
+        super().__init__(config_path, aiohttp_session)
+        self._oauth_session = oauth_session
+
+    async def async_get_access_token(self) -> str:
+        """Get access token."""
+        await self._oauth_session.async_ensure_token_valid()
+        return self._oauth_session.token["access_token"]
+
+    async def async_refresh_access_token_if_needed(self) -> None:
+        """Refresh the access token if needed."""
+        await self._oauth_session.async_ensure_token_valid()
+
+    async def async_authenticate(self) -> Authentication:
+        """Authenticate with the details provided to setup."""
+        await self._oauth_session.async_ensure_token_valid()
+        self.authentication = Authentication(
+            AuthenticationState.AUTHENTICATED, None, None, None
+        )
+        return self.authentication

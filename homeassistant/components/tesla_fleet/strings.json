@@ -442,7 +442,7 @@
         "name": "Odometer"
       },
       "island_status": {
-        "name": "Grid Status",
+        "name": "Grid status",
         "state": {
           "island_status_unknown": "Unknown",
           "on_grid": "[%key:common::state::connected%]",
@@ -452,7 +452,7 @@
         }
       },
       "storm_mode_active": {
-        "name": "Storm Watch active"
+        "name": "Storm watch active"
       },
       "vehicle_state_tpms_pressure_fl": {
         "name": "Tire pressure front left"

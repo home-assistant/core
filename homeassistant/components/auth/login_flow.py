@@ -92,7 +92,11 @@ from homeassistant.components.http.ban import (
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.network import is_cloud_connection
+from homeassistant.helpers.network import (
+    NoURLAvailableError,
+    get_url,
+    is_cloud_connection,
+)
 from homeassistant.util.network import is_local
 
 from . import indieauth
@@ -125,11 +129,18 @@ class WellKnownOAuthInfoView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Return the well known OAuth2 authorization info."""
+        hass = request.app[KEY_HASS]
+        # Some applications require absolute urls, so we prefer using the
+        # current requests url if possible, with fallback to a relative url.
+        try:
+            url_prefix = get_url(hass, require_current_request=True)
+        except NoURLAvailableError:
+            url_prefix = ""
         return self.json(
             {
-                "authorization_endpoint": "/auth/authorize",
-                "token_endpoint": "/auth/token",
-                "revocation_endpoint": "/auth/revoke",
+                "authorization_endpoint": f"{url_prefix}/auth/authorize",
+                "token_endpoint": f"{url_prefix}/auth/token",
+                "revocation_endpoint": f"{url_prefix}/auth/revoke",
                 "response_types_supported": ["code"],
                 "service_documentation": (
                     "https://developers.home-assistant.io/docs/auth_api"
@@ -199,23 +210,19 @@ class AuthProvidersView(HomeAssistantView):
         )
 
 
-def _prepare_result_json(
-    result: AuthFlowResult,
-) -> AuthFlowResult:
-    """Convert result to JSON."""
+def _prepare_result_json(result: AuthFlowResult) -> dict[str, Any]:
+    """Convert result to JSON serializable dict."""
     if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
-        data = result.copy()
-        data.pop("result")
-        data.pop("data")
-        return data
+        return {
+            key: val for key, val in result.items() if key not in ("result", "data")
+        }
 
     if result["type"] != data_entry_flow.FlowResultType.FORM:
-        return result
+        return result  # type: ignore[return-value]
 
-    data = result.copy()
-
-    if (schema := data["data_schema"]) is None:
-        data["data_schema"] = []  # type: ignore[typeddict-item]  # json result type
+    data = dict(result)
+    if (schema := result["data_schema"]) is None:
+        data["data_schema"] = []
     else:
         data["data_schema"] = voluptuous_serialize.convert(schema)
 

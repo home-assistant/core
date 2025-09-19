@@ -1,4 +1,53 @@
 # serializer version: 1
+# name: test_binary_sensors[binary_sensor.05_111111111111_sensed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.05_111111111111_sensed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensed',
+    'platform': 'onewire',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensed',
+    'unique_id': '/05.111111111111/sensed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.05_111111111111_sensed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_file': '/05.111111111111/sensed',
+      'friendly_name': '05.111111111111 Sensed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.05_111111111111_sensed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_binary_sensors[binary_sensor.12_111111111111_sensed_a-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

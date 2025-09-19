@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 import json
+import logging
 from typing import Any
 from unittest.mock import patch
 
@@ -395,6 +396,15 @@ async def test_status_with_deprecated_battery_feature(
     assert issue.issue_domain == "vacuum"
     assert issue.translation_key == "deprecated_vacuum_battery_feature"
     assert issue.translation_placeholders == {"entity_id": "vacuum.mqtttest"}
+    assert not [
+        record
+        for record in caplog.records
+        if record.name == "homeassistant.helpers.frame"
+        and record.levelno >= logging.WARNING
+    ]
+    assert (
+        "mqtt' is setting the battery_level which has been deprecated"
+    ) not in caplog.text
 
 
 @pytest.mark.parametrize(

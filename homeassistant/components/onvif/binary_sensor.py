@@ -74,7 +74,7 @@ class ONVIFBinarySensor(ONVIFBaseEntity, RestoreEntity, BinarySensorEntity):
                 BinarySensorDeviceClass, entry.original_device_class
             )
             self._attr_entity_category = entry.entity_category
-            self._attr_name = entry.name
+            self._attr_name = entry.name or entry.original_name
         else:
             event = device.events.get_uid(uid)
             assert event

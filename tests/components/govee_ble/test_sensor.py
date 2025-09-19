@@ -183,7 +183,7 @@ async def test_gvh5106(hass: HomeAssistant) -> None:
     pm25_sensor_attributes = pm25_sensor.attributes
     assert pm25_sensor.state == "0"
     assert pm25_sensor_attributes[ATTR_FRIENDLY_NAME] == "H5106 4E05 Pm25"
-    assert pm25_sensor_attributes[ATTR_UNIT_OF_MEASUREMENT] == "µg/m³"
+    assert pm25_sensor_attributes[ATTR_UNIT_OF_MEASUREMENT] == "μg/m³"
     assert pm25_sensor_attributes[ATTR_STATE_CLASS] == "measurement"
 
     assert await hass.config_entries.async_unload(entry.entry_id)

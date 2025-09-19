@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "03010850c44f33966362",
   "name": "Stoel",
   "category": "dj",
   "product_id": "zakhnlpdiu0ycdxn",

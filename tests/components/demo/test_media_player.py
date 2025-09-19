@@ -55,7 +55,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import DATA_CLIENTSESSION, _make_key
 from homeassistant.setup import async_setup_component
 
-from tests.typing import ClientSessionGenerator
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_ENTITY_ID = "media_player.walkman"
 
@@ -563,3 +563,32 @@ async def test_grouping(hass: HomeAssistant) -> None:
     )
     state = hass.states.get(walkman)
     assert state.attributes.get(ATTR_GROUP_MEMBERS) == []
+
+
+async def test_browse(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the media player browse."""
+    entity = "media_player.browse"
+
+    await async_setup_component(hass, "media_source", {"media_source": {}})
+    assert await async_setup_component(
+        hass, MP_DOMAIN, {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    websocket_client = await hass_ws_client(hass)
+    await websocket_client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": entity,
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["title"] == "media"
+    assert msg["result"]["media_class"] == "directory"
+    assert len(msg["result"]["children"])

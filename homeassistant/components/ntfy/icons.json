@@ -5,6 +5,11 @@
         "default": "mdi:console-line"
       }
     },
+    "event": {
+      "subscribe": {
+        "default": "mdi:message-outline"
+      }
+    },
     "sensor": {
       "messages": {
         "default": "mdi:message-arrow-right-outline"
@@ -66,6 +71,11 @@
       "tier": {
         "default": "mdi:star"
       }
+    }
+  },
+  "services": {
+    "publish": {
+      "service": "mdi:send"
     }
   }
 }

@@ -317,18 +317,26 @@ async def test_energy_site_refresh_error(
 
 
 # Test Energy History Coordinator
-@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
+@pytest.mark.parametrize(("side_effect"), [side_effect for side_effect, _ in ERRORS])
 async def test_energy_history_refresh_error(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_energy_history: AsyncMock,
     side_effect: TeslaFleetError,
-    state: ConfigEntryState,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator refresh with an error."""
-    mock_energy_history.side_effect = side_effect
     await setup_platform(hass, normal_config_entry)
-    assert normal_config_entry.state is state
+    assert normal_config_entry.state is ConfigEntryState.LOADED
+
+    # Now test that the coordinator handles errors during refresh
+    mock_energy_history.side_effect = side_effect
+    freezer.tick(ENERGY_HISTORY_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The coordinator should handle the error gracefully
+    assert normal_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_energy_live_refresh_ratelimited(
@@ -410,20 +418,20 @@ async def test_energy_history_refresh_ratelimited(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_energy_history.call_count == 2
+    assert mock_energy_history.call_count == 1
 
     freezer.tick(ENERGY_HISTORY_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should not call for another 10 seconds
-    assert mock_energy_history.call_count == 2
+    assert mock_energy_history.call_count == 1
 
     freezer.tick(ENERGY_HISTORY_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_energy_history.call_count == 3
+    assert mock_energy_history.call_count == 2
 
 
 async def test_init_region_issue(

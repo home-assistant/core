@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "XXX",
   "name": "Ceiling Fan With Light",
   "category": "fs",
   "product_id": "g0ewlb1vmwqljzji",
