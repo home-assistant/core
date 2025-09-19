@@ -71,3 +71,46 @@ class YardianConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the reconfigure step for updating host/token."""
+        errors: dict[str, str] = {}
+
+        entry_id = self.context.get("entry_id")
+        entry = self.hass.config_entries.async_get_entry(entry_id) if entry_id else None
+        if entry is None:
+            return self.async_abort(reason="unknown")
+
+        if user_input is not None:
+            try:
+                device_info = await self.async_fetch_device_info(
+                    user_input["host"], user_input["access_token"]
+                )
+            except NotAuthorizedException:
+                errors["base"] = "invalid_auth"
+            except NetworkException:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception during reconfigure")
+                errors["base"] = "unknown"
+            else:
+                if device_info.get("yid") != entry.data.get("yid"):
+                    errors["base"] = "unknown"
+                else:
+                    self.hass.config_entries.async_update_entry(
+                        entry,
+                        data=entry.data
+                        | {
+                            CONF_HOST: user_input[CONF_HOST],
+                            CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN],
+                        },
+                    )
+                    return self.async_abort(reason="reconfigure_successful")
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+        )
