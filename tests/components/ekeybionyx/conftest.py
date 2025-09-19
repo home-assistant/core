@@ -12,29 +12,29 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+def dummy_systems(
+    num_systems: int, free_wh: int, used_wh: int, own_system: bool = True
+) -> list[dict]:
+    """Create dummy systems."""
+    return [
+        {
+            "systemName": f"System {i + 1}",
+            "systemId": f"946DA01F-9ABD-4D9D-80C7-02AF85C822A{i + 8}",
+            "ownSystem": own_system,
+            "functionWebhookQuotas": {"free": free_wh, "used": used_wh},
+        }
+        for i in range(num_systems)
+    ]
+
+
 @pytest.fixture(name="system")
 def mock_systems(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Fixture to setup fake requests made to Ekey Bionyx API during config flow."""
-    aioclient_mock.request(
-        "GET",
+    aioclient_mock.get(
         "https://api.bionyx.io/3rd-party/api/systems",
-        status=HTTPStatus.OK,
-        json=[
-            {
-                "systemName": "A simple string containing 0 to 128 word, space and punctuation characters.",
-                "systemId": "946DA01F-9ABD-4D9D-80C7-02AF85C822A8",
-                "ownSystem": True,
-                "functionWebhookQuotas": {"free": 5, "used": 0},
-            },
-            {
-                "systemName": "A simple string containing 0 to 128 word, space and punctuation characters.",
-                "systemId": "946DA01F-9ABD-4D9D-80C7-02AF85C822A9",
-                "ownSystem": True,
-                "functionWebhookQuotas": {"free": 5, "used": 0},
-            },
-        ],
+        json=dummy_systems(2, 5, 0),
     )
 
 
@@ -43,18 +43,9 @@ def mock_no_own_systems(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Fixture to setup fake requests made to Ekey Bionyx API during config flow."""
-    aioclient_mock.request(
-        "GET",
+    aioclient_mock.get(
         "https://api.bionyx.io/3rd-party/api/systems",
-        status=HTTPStatus.OK,
-        json=[
-            {
-                "systemName": "A simple string containing 0 to 128 word, space and punctuation characters.",
-                "systemId": "946DA01F-9ABD-4D9D-80C7-02AF85C822A8",
-                "ownSystem": False,
-                "functionWebhookQuotas": {"free": 1, "used": 0},
-            }
-        ],
+        json=dummy_systems(1, 1, 0, False),
     )
 
 
@@ -63,8 +54,7 @@ def mock_no_response(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Fixture to setup fake requests made to Ekey Bionyx API during config flow."""
-    aioclient_mock.request(
-        "GET",
+    aioclient_mock.get(
         "https://api.bionyx.io/3rd-party/api/systems",
         status=HTTPStatus.INTERNAL_SERVER_ERROR,
     )
@@ -75,18 +65,9 @@ def mock_no_available_webhooks(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Fixture to setup fake requests made to Ekey Bionyx API during config flow."""
-    aioclient_mock.request(
-        "GET",
+    aioclient_mock.get(
         "https://api.bionyx.io/3rd-party/api/systems",
-        status=HTTPStatus.OK,
-        json=[
-            {
-                "systemName": "A simple string containing 0 to 128 word, space and punctuation characters.",
-                "systemId": "946DA01F-9ABD-4D9D-80C7-02AF85C822A8",
-                "ownSystem": True,
-                "functionWebhookQuotas": {"free": 0, "used": 0},
-            }
-        ],
+        json=dummy_systems(1, 0, 0),
     )
 
 
@@ -95,18 +76,9 @@ def mock_already_set_up(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Fixture to setup fake requests made to Ekey Bionyx API during config flow."""
-    aioclient_mock.request(
-        "GET",
+    aioclient_mock.get(
         "https://api.bionyx.io/3rd-party/api/systems",
-        status=HTTPStatus.OK,
-        json=[
-            {
-                "systemName": "A simple string containing 0 to 128 word, space and punctuation characters.",
-                "systemId": "946DA01F-9ABD-4D9D-80C7-02AF85C822A8",
-                "ownSystem": True,
-                "functionWebhookQuotas": {"free": 0, "used": 1},
-            }
-        ],
+        json=dummy_systems(1, 0, 1),
     )
 
 
@@ -115,10 +87,8 @@ def mock_webhooks(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Fixture to setup fake requests made to Ekey Bionyx API during config flow."""
-    aioclient_mock.request(
-        "GET",
+    aioclient_mock.get(
         "https://api.bionyx.io/3rd-party/api/systems/946DA01F-9ABD-4D9D-80C7-02AF85C822A8/function-webhooks",
-        status=HTTPStatus.OK,
         json=[
             {
                 "functionWebhookId": "946DA01F-9ABD-4D9D-80C7-02AF85C822B9",
@@ -137,8 +107,7 @@ def mock_webhook_deletion(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Fixture to setup fake requests made to Ekey Bionyx API during config flow."""
-    aioclient_mock.request(
-        "DELETE",
+    aioclient_mock.delete(
         "https://api.bionyx.io/3rd-party/api/systems/946DA01F-9ABD-4D9D-80C7-02AF85C822A8/function-webhooks/946DA01F-9ABD-4D9D-80C7-02AF85C822B9",
         status=HTTPStatus.ACCEPTED,
     )
@@ -149,8 +118,7 @@ def mock_add_webhook(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Fixture to setup fake requests made to Ekey Bionyx API during config flow."""
-    aioclient_mock.request(
-        "POST",
+    aioclient_mock.post(
         "https://api.bionyx.io/3rd-party/api/systems/946DA01F-9ABD-4D9D-80C7-02AF85C822A8/function-webhooks",
         status=HTTPStatus.CREATED,
         json={

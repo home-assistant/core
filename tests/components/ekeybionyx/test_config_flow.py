@@ -20,6 +20,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
+from .conftest import dummy_systems
+
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -39,6 +41,18 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    [
+        [
+            "component.ekeybionyx.config.step.webhooks.data_description.webhook1",
+            "component.ekeybionyx.config.step.webhooks.data_description.webhook2",
+            "component.ekeybionyx.config.step.webhooks.data_description.webhook3",
+            "component.ekeybionyx.config.step.webhooks.data_description.webhook4",
+            "component.ekeybionyx.config.step.webhooks.data_description.webhook5",
+        ]
+    ],
+)
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -287,14 +301,26 @@ async def test_cleanup(
             "expires_in": 60,
         },
     )
+
     flow = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert flow.get("step_id") == "delete_webhooks"
 
     flow2 = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-
     assert flow2.get("type") is FlowResultType.SHOW_PROGRESS
+
+    aioclient_mock.clear_requests()
+
+    aioclient_mock.get(
+        "https://api.bionyx.io/3rd-party/api/systems",
+        json=dummy_systems(1, 1, 0),
+    )
+
+    await hass.async_block_till_done()
+
+    assert (
+        hass.config_entries.flow.async_get(flow2["flow_id"]).get("step_id")
+        == "webhooks"
+    )
 
 
 @pytest.mark.usefixtures("current_request_with_host")

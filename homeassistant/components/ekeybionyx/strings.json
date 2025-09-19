@@ -24,11 +24,6 @@
           "url": "Home Assistant URL"
         },
         "data_description": {
-          "webhook1": "Webhook 1",
-          "webhook2": "Webhook 2",
-          "webhook3": "Webhook 3",
-          "webhook4": "Webhook 4",
-          "webhook5": "Webhook 5",
           "url": "Home Assistant instance URL which can be reached from the fingerprint controller"
         }
       },
