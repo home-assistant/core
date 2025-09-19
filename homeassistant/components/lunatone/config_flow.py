@@ -1,6 +1,5 @@
 """Config flow for Lunatone."""
 
-import logging
 from typing import Any, Final
 
 import aiohttp
@@ -17,8 +16,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA: Final[vol.Schema] = vol.Schema(
     {vol.Required(CONF_URL, default="http://"): cv.string},
