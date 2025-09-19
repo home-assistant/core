@@ -29,6 +29,7 @@ from PIL import Image
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -44,14 +45,20 @@ from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import JsonObjectType, load_json_object
 
-from .const import ATTR_FORMAT, ATTR_IMAGES, CONF_ROOMS_REGEX, DOMAIN, FORMAT_HTML
+from .const import (
+    ATTR_FORMAT,
+    ATTR_IMAGES,
+    CONF_HOMESERVER,
+    CONF_ROOMS_REGEX,
+    DOMAIN,
+    FORMAT_HTML,
+)
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
 SESSION_FILE = ".matrix.conf"
 
-CONF_HOMESERVER: Final = "homeserver"
 CONF_ROOMS: Final = "rooms"
 CONF_COMMANDS: Final = "commands"
 CONF_WORD: Final = "word"
@@ -115,8 +122,34 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Matrix bot component."""
+    if DOMAIN not in config:
+        return True
+
     config = config[DOMAIN]
 
+    # Check if there are existing config entries for this user
+    existing_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.data.get(CONF_USERNAME) == config[CONF_USERNAME]
+    ]
+
+    if not existing_entries:
+        # No existing config entry, create one from YAML
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    CONF_HOMESERVER: config[CONF_HOMESERVER],
+                    CONF_USERNAME: config[CONF_USERNAME],
+                    CONF_PASSWORD: config[CONF_PASSWORD],
+                    CONF_VERIFY_SSL: config[CONF_VERIFY_SSL],
+                },
+            )
+        )
+
+    # Still set up the YAML config for backward compatibility
     hass.data[DOMAIN] = MatrixBot(
         hass,
         os.path.join(hass.config.path(), SESSION_FILE),
@@ -130,6 +163,39 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_setup_services(hass)
 
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Matrix from a config entry."""
+    # For config entry setup, we'll use minimal configuration
+    # Users can add rooms and commands via services or future UI
+    matrix_bot = MatrixBot(
+        hass,
+        os.path.join(hass.config.path(), f".matrix_{entry.entry_id}.conf"),
+        entry.data[CONF_HOMESERVER],
+        entry.data[CONF_VERIFY_SSL],
+        entry.data[CONF_USERNAME],
+        entry.data[CONF_PASSWORD],
+        [],  # No rooms configured initially
+        [],  # No commands configured initially
+    )
+
+    # Store in runtime_data for quality scale compliance
+    entry.runtime_data = matrix_bot
+    hass.data[DOMAIN] = matrix_bot
+
+    async_setup_services(hass)
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    # Close the MatrixBot stored in runtime_data
+    if hasattr(entry, "runtime_data") and entry.runtime_data:
+        await entry.runtime_data.async_close()
+
+    hass.data.pop(DOMAIN, None)
     return True
 
 
@@ -516,3 +582,8 @@ class MatrixBot:
             service.data[ATTR_TARGET],
             service.data.get(ATTR_DATA),
         )
+
+    async def async_close(self) -> None:
+        """Close the Matrix client."""
+        if self._client is not None:
+            await self._client.close()

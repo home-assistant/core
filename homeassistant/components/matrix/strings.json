@@ -1,4 +1,56 @@
 {
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Matrix",
+        "description": "Configure your Matrix account",
+        "data": {
+          "homeserver": "Homeserver URL",
+          "username": "Username",
+          "password": "Password",
+          "verify_ssl": "Verify SSL certificate"
+        },
+        "data_description": {
+          "homeserver": "The URL of your Matrix homeserver (e.g. https://matrix.org)",
+          "username": "Your Matrix username including the domain (e.g. @user:matrix.org)",
+          "password": "Your Matrix account password",
+          "verify_ssl": "Whether to verify the SSL certificate of your homeserver"
+        }
+      },
+      "import": {
+        "title": "Import Matrix configuration",
+        "description": "Import existing Matrix configuration from YAML"
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate Matrix",
+        "description": "Update your Matrix credentials for {username} on {homeserver}",
+        "data": {
+          "homeserver": "Homeserver URL",
+          "username": "Username",
+          "password": "Password",
+          "verify_ssl": "Verify SSL certificate"
+        },
+        "data_description": {
+          "homeserver": "The URL of your Matrix homeserver (e.g. https://matrix.org)",
+          "username": "Your Matrix username including the domain (e.g. @user:matrix.org)",
+          "password": "Your Matrix account password",
+          "verify_ssl": "Whether to verify the SSL certificate of your homeserver"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the Matrix server",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "Account is already configured",
+      "cannot_connect": "Failed to connect to the Matrix server during import",
+      "import_failed": "Failed to import configuration",
+      "wrong_account": "You must use the same account that was originally configured",
+      "reauth_successful": "Re-authentication was successful"
+    }
+  },
   "services": {
     "send_message": {
       "name": "Send message",
