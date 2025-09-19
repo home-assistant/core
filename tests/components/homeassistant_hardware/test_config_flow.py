@@ -22,6 +22,9 @@ from homeassistant.components.homeassistant_hardware.firmware_config_flow import
     BaseFirmwareConfigFlow,
     BaseFirmwareOptionsFlow,
 )
+from homeassistant.components.homeassistant_hardware.helpers import (
+    async_firmware_update_context,
+)
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
@@ -301,18 +304,21 @@ def mock_firmware_info(
         expected_installed_firmware_type: ApplicationType,
         bootloader_reset_type: str | None = None,
         progress_callback: Callable[[int, int], None] | None = None,
+        *,
+        domain: str = "homeassistant_hardware",
     ) -> FirmwareInfo:
-        await asyncio.sleep(0)
-        progress_callback(0, 100)
-        await asyncio.sleep(0)
-        progress_callback(50, 100)
-        await asyncio.sleep(0)
-        progress_callback(100, 100)
+        async with async_firmware_update_context(hass, device, domain):
+            await asyncio.sleep(0)
+            progress_callback(0, 100)
+            await asyncio.sleep(0)
+            progress_callback(50, 100)
+            await asyncio.sleep(0)
+            progress_callback(100, 100)
 
-        if flashed_firmware_info is None:
-            raise HomeAssistantError("Failed to probe the firmware after flashing")
+            if flashed_firmware_info is None:
+                raise HomeAssistantError("Failed to probe the firmware after flashing")
 
-        return flashed_firmware_info
+            return flashed_firmware_info
 
     with (
         patch(
