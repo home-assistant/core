@@ -203,7 +203,7 @@ async def get_programs(call: ServiceCall) -> ServiceResponse:
                             else {}
                         ),
                     }
-                    if item["parameters"]
+                    if item.get("parameters")
                     else {}
                 ),
             }

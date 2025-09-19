@@ -14,11 +14,7 @@ from psnawp_api.models.trophies import (
 )
 import pytest
 
-from homeassistant.components.playstation_network.const import (
-    CONF_ACCOUNT_ID,
-    CONF_NPSSO,
-    DOMAIN,
-)
+from homeassistant.components.playstation_network.const import CONF_NPSSO, DOMAIN
 from homeassistant.config_entries import ConfigSubentryData
 
 from tests.common import MockConfigEntry
@@ -40,7 +36,7 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id=PSN_ID,
         subentries_data=[
             ConfigSubentryData(
-                data={CONF_ACCOUNT_ID: "fren-psn-id"},
+                data={},
                 subentry_id="ABCDEF",
                 subentry_type="friend",
                 title="PublicUniversalFriend",
@@ -188,6 +184,7 @@ def mock_psnawpapi(mock_user: MagicMock) -> Generator[MagicMock]:
         fren = MagicMock(
             spec=User, account_id="fren-psn-id", online_id="PublicUniversalFriend"
         )
+        fren.get_presence.return_value = mock_user.get_presence.return_value
 
         client.user.return_value.friends_list.return_value = [fren]
 

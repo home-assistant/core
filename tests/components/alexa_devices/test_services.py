@@ -8,7 +8,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.alexa_devices.const import DOMAIN
 from homeassistant.components.alexa_devices.services import (
     ATTR_SOUND,
-    ATTR_SOUND_VARIANT,
     ATTR_TEXT_COMMAND,
     SERVICE_SOUND_NOTIFICATION,
     SERVICE_TEXT_COMMAND,
@@ -58,8 +57,7 @@ async def test_send_sound_service(
         DOMAIN,
         SERVICE_SOUND_NOTIFICATION,
         {
-            ATTR_SOUND: "chimes_bells",
-            ATTR_SOUND_VARIANT: 1,
+            ATTR_SOUND: "bell_02",
             ATTR_DEVICE_ID: device_entry.id,
         },
         blocking=True,
@@ -103,7 +101,7 @@ async def test_send_text_service(
     ("sound", "device_id", "translation_key", "translation_placeholders"),
     [
         (
-            "chimes_bells",
+            "bell_02",
             "fake_device_id",
             "invalid_device_id",
             {"device_id": "fake_device_id"},
@@ -114,7 +112,6 @@ async def test_send_text_service(
             "invalid_sound_value",
             {
                 "sound": "wrong_sound_name",
-                "variant": "1",
             },
         ),
     ],
@@ -146,7 +143,6 @@ async def test_invalid_parameters(
             SERVICE_SOUND_NOTIFICATION,
             {
                 ATTR_SOUND: sound,
-                ATTR_SOUND_VARIANT: 1,
                 ATTR_DEVICE_ID: device_id,
             },
             blocking=True,
@@ -183,8 +179,7 @@ async def test_config_entry_not_loaded(
             DOMAIN,
             SERVICE_SOUND_NOTIFICATION,
             {
-                ATTR_SOUND: "chimes_bells",
-                ATTR_SOUND_VARIANT: 1,
+                ATTR_SOUND: "bell_02",
                 ATTR_DEVICE_ID: device_entry.id,
             },
             blocking=True,

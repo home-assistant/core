@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import asyncio
 
-from aiohttp import ClientResponseError
 from volvocarsapi.api import VolvoCarsApi
-from volvocarsapi.models import VolvoAuthException, VolvoCarsVehicle
+from volvocarsapi.models import VolvoApiException, VolvoAuthException, VolvoCarsVehicle
 
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -25,6 +24,7 @@ from .api import VolvoAuth
 from .const import CONF_VIN, DOMAIN, PLATFORMS
 from .coordinator import (
     VolvoConfigEntry,
+    VolvoFastIntervalCoordinator,
     VolvoMediumIntervalCoordinator,
     VolvoSlowIntervalCoordinator,
     VolvoVerySlowIntervalCoordinator,
@@ -38,7 +38,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> boo
     vehicle = await _async_load_vehicle(api)
 
     # Order is important! Faster intervals must come first.
+    # Different interval coordinators are in place to keep the number
+    # of requests under 5000 per day. This lets users use the same
+    # API key for two vehicles (as the limit is 10000 per day).
     coordinators = (
+        VolvoFastIntervalCoordinator(hass, entry, api, vehicle),
         VolvoMediumIntervalCoordinator(hass, entry, api, vehicle),
         VolvoSlowIntervalCoordinator(hass, entry, api, vehicle),
         VolvoVerySlowIntervalCoordinator(hass, entry, api, vehicle),
@@ -64,21 +68,21 @@ async def _async_auth_and_create_api(
     oauth_session = OAuth2Session(hass, entry, implementation)
     web_session = async_get_clientsession(hass)
     auth = VolvoAuth(web_session, oauth_session)
-
-    try:
-        await auth.async_get_access_token()
-    except ClientResponseError as err:
-        if err.status in (400, 401):
-            raise ConfigEntryAuthFailed from err
-
-        raise ConfigEntryNotReady from err
-
-    return VolvoCarsApi(
+    api = VolvoCarsApi(
         web_session,
         auth,
         entry.data[CONF_API_KEY],
         entry.data[CONF_VIN],
     )
+
+    try:
+        await api.async_get_access_token()
+    except VolvoAuthException as err:
+        raise ConfigEntryAuthFailed from err
+    except VolvoApiException as err:
+        raise ConfigEntryNotReady from err
+
+    return api
 
 
 async def _async_load_vehicle(api: VolvoCarsApi) -> VolvoCarsVehicle:
