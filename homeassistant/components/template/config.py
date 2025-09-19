@@ -177,7 +177,7 @@ TEMPLATE_BLUEPRINT_SCHEMA = vol.All(
 
 
 def _merge_section_variables(config: ConfigType, section_variables: ConfigType) -> None:
-    """Merges or creates the variables inside config with section_variables."""
+    """Merges a configurations variables with the section variables."""
     if (variables := config.pop(CONF_VARIABLES, None)) and isinstance(variables, dict):
         config[CONF_VARIABLES] = {**section_variables, **variables}
     else:
