@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components.file import DOMAIN as FILE_DOMAIN
+from homeassistant.components.file import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -39,7 +39,7 @@ async def setup_ha_file_integration(hass: HomeAssistant):
     """Set up Home Assistant and load File integration."""
     await async_setup_component(
         hass,
-        FILE_DOMAIN,
-        {FILE_DOMAIN: {}},
+        DOMAIN,
+        {DOMAIN: {}},
     )
     await hass.async_block_till_done()
