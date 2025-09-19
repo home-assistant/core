@@ -1163,6 +1163,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "cync": {
+      "name": "Cync",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "dacia": {
       "name": "Dacia",
       "integration_type": "virtual",
