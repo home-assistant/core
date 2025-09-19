@@ -4,15 +4,17 @@ from __future__ import annotations
 
 import logging
 
+from dbus_fast import AuthError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-
 from .coordinator import RejseplanenDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,6 +32,21 @@ async def async_setup_entry(
     _LOGGER.debug(
         "Setting up Rejseplanen integration for entry: %s", config_entry.entry_id
     )
+    # Test the connection/setup BEFORE forwarding to platforms
+    coordinator: RejseplanenDataUpdateCoordinator = RejseplanenDataUpdateCoordinator(
+        hass,
+        config_entry,
+    )
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except (ConnectionError, TimeoutError, AuthError) as err:
+        raise ConfigEntryNotReady(f"Unable to connect to Rejseplanen: {err}") from err
+
+    # Store coordinator
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
+        "coordinator": coordinator
+    }
+
     await hass.config_entries.async_forward_entry_setups(
         config_entry, [Platform.SENSOR]
     )
