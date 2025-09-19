@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.satel_integra.const import DEFAULT_PORT, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_CODE, CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
 
@@ -28,13 +28,15 @@ def mock_satel() -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.satel_integra.AsyncSatel",
             autospec=True,
-        ) as mock_client,
+        ) as client,
         patch(
-            "homeassistant.components.satel_integra.config_flow.AsyncSatel",
-            new=mock_client,
+            "homeassistant.components.satel_integra.config_flow.AsyncSatel", new=client
         ),
     ):
-        client = mock_client.return_value
+        client.return_value.partition_states = {}
+        client.return_value.violated_outputs = []
+        client.return_value.violated_zones = []
+        client.return_value.connect.return_value = True
 
         yield client
 
@@ -46,4 +48,6 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="192.168.0.2",
         data={CONF_HOST: "192.168.0.2", CONF_PORT: DEFAULT_PORT},
+        options={CONF_CODE: 1111},
+        entry_id="SATEL_INTEGRA_CONFIG_ENTRY_1",
     )
