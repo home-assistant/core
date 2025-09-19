@@ -247,7 +247,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==41.0.0
+aioesphomeapi==41.3.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -325,7 +325,7 @@ aionanoleaf==0.2.1
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.5.5
+aiontfy==0.6.0
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -735,6 +735,9 @@ colorlog==6.9.0
 # homeassistant.components.color_extractor
 colorthief==0.2.1
 
+# homeassistant.components.compit
+compit-inext-api==0.2.1
+
 # homeassistant.components.concord232
 concord232==0.15.1
 
@@ -1063,7 +1066,7 @@ google-cloud-speech==2.31.1
 google-cloud-texttospeech==2.25.1
 
 # homeassistant.components.google_generative_ai_conversation
-google-genai==1.29.0
+google-genai==1.38.0
 
 # homeassistant.components.google_travel_time
 google-maps-routing==0.6.15
@@ -1177,7 +1180,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.80
+holidays==0.81
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250903.5
@@ -1634,7 +1637,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.15.4
+opower==0.15.5
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2156,7 +2159,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.5.4
+pymiele==0.5.5
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
@@ -2254,7 +2257,7 @@ pypaperless==4.1.1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.8.10
+pypck==0.8.12
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -2525,7 +2528,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.18.2
+python-roborock==2.44.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.44
@@ -2685,7 +2688,7 @@ renault-api==0.4.0
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.15.0
+reolink-aio==0.15.1
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2827,7 +2830,7 @@ soco==0.30.11
 solaredge-local==0.2.3
 
 # homeassistant.components.solarlog
-solarlog_cli==0.5.0
+solarlog_cli==0.6.0
 
 # homeassistant.components.solax
 solax==3.2.3
@@ -2889,7 +2892,7 @@ surepy==0.9.0
 swisshydrodata==0.1.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==2.7.0
+switchbot-api==2.8.0
 
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
@@ -3041,7 +3044,7 @@ universal-silabs-flasher==0.0.32
 upb-lib==0.6.1
 
 # homeassistant.components.upcloud
-upcloud-api==2.6.0
+upcloud-api==2.8.0
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
@@ -3068,6 +3071,9 @@ velbus-aio==2025.8.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.21
+
+# homeassistant.components.victron_remote_monitoring
+victron-vrm==0.1.7
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0
@@ -3180,7 +3186,7 @@ yalexs-ble==3.1.2
 
 # homeassistant.components.august
 # homeassistant.components.yale
-yalexs==9.0.1
+yalexs==9.2.0
 
 # homeassistant.components.yeelight
 yeelight==0.7.16
@@ -3216,7 +3222,7 @@ zeroconf==0.147.2
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.70
+zha==0.0.71
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
