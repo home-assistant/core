@@ -20,24 +20,24 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ATTR_CAMERA_LIGHT_MODE,
+    ATTR_EVENT_TYPE,
     ATTR_PERSON,
     ATTR_PERSONS,
     CAMERA_LIGHT_MODES,
     CONF_URL_SECURITY,
     DATA_CAMERAS,
+    DATA_DEVICE_IDS,
     DATA_EVENTS,
     DOMAIN,
+    EVENT_TYPE_CAMERA_DISCONNECTION,
+    EVENT_TYPE_CAMERA_OFF,
+    EVENT_TYPE_CAMERA_ON,
     EVENT_TYPE_LIGHT_MODE,
-    EVENT_TYPE_OFF,
-    EVENT_TYPE_ON,
     MANUFACTURER,
     NETATMO_CREATE_CAMERA,
     SERVICE_SET_CAMERA_LIGHT,
     SERVICE_SET_PERSON_AWAY,
     SERVICE_SET_PERSONS_HOME,
-    WEBHOOK_LIGHT_MODE,
-    WEBHOOK_NACAMERA_CONNECTION,
-    WEBHOOK_PUSH_TYPE,
 )
 from .data_handler import EVENT, HOME, SIGNAL_NAME, NetatmoDevice
 from .entity import NetatmoModuleEntity
@@ -123,7 +123,12 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         """Entity created."""
         await super().async_added_to_hass()
 
-        for event_type in (EVENT_TYPE_LIGHT_MODE, EVENT_TYPE_OFF, EVENT_TYPE_ON):
+        for event_type in (
+            EVENT_TYPE_LIGHT_MODE,
+            EVENT_TYPE_CAMERA_DISCONNECTION,
+            EVENT_TYPE_CAMERA_OFF,
+            EVENT_TYPE_CAMERA_ON,
+        ):
             self.async_on_remove(
                 async_dispatcher_connect(
                     self.hass,
@@ -132,33 +137,55 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
                 )
             )
 
+        self.hass.data[DOMAIN][DATA_DEVICE_IDS][self.device.entity_id] = (
+            self.device.name
+        )
         self.hass.data[DOMAIN][DATA_CAMERAS][self.device.entity_id] = self.device.name
 
     @callback
     def handle_event(self, event: dict) -> None:
         """Handle webhook events."""
         data = event["data"]
+        event_type = data.get(ATTR_EVENT_TYPE)
 
         if not data.get("camera_id"):
+            _LOGGER.debug("Event has no camera ID, returning")
+            return
+
+        if not data.get("home_id"):
+            _LOGGER.debug("Event has no home ID, returning")
+            return
+
+        if not event_type:
+            _LOGGER.debug("Event has no type, returning")
             return
 
         if (
             data["home_id"] == self.home.entity_id
             and data["camera_id"] == self.device.entity_id
         ):
-            if data[WEBHOOK_PUSH_TYPE] in ("NACamera-off", "NACamera-disconnection"):
+            if event_type in [EVENT_TYPE_CAMERA_DISCONNECTION, EVENT_TYPE_CAMERA_OFF]:
                 self._attr_is_streaming = False
                 self._monitoring = False
-            elif data[WEBHOOK_PUSH_TYPE] in (
-                "NACamera-on",
-                WEBHOOK_NACAMERA_CONNECTION,
-            ):
+            elif event_type == EVENT_TYPE_CAMERA_ON:
                 self._attr_is_streaming = True
                 self._monitoring = True
-            elif data[WEBHOOK_PUSH_TYPE] == WEBHOOK_LIGHT_MODE:
-                self._light_state = data["sub_type"]
-                self._attr_extra_state_attributes.update(
-                    {"light_state": self._light_state}
+            elif event_type == EVENT_TYPE_LIGHT_MODE:
+                if data.get("sub_type"):
+                    self._light_state = data["sub_type"]
+                    self._attr_extra_state_attributes.update(
+                        {"light_state": self._light_state}
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Camera %s has received light mode event without sub_type",
+                        data["camera_id"],
+                    )
+            else:
+                _LOGGER.debug(
+                    "Camera %s has received unexpected event as type %s",
+                    data["camera_id"],
+                    event_type,
                 )
 
             self.async_write_ha_state()
