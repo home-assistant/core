@@ -54,7 +54,7 @@ ADDON_DISCOVERY_INFO = {
 
 ESPHOME_DISCOVERY_INFO = ESPHomeServiceInfo(
     name="mock-name",
-    mac_address="AA:BB:CC:DD:EE:FF",
+    zwave_home_id=1234,
     ip_address="192.168.1.100",
     port=6053,
 )
@@ -1277,6 +1277,7 @@ async def test_esphome_discovery(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
+    assert result["result"].unique_id == str(ESPHOME_DISCOVERY_INFO.zwave_home_id)
     assert result["data"] == {
         "url": "ws://host1:3001",
         "usb_path": None,

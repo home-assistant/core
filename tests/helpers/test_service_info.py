@@ -28,7 +28,7 @@ def test_esphome_socket_path() -> None:
     """Test ESPHomeServiceInfo socket_path property."""
     info = ESPHomeServiceInfo(
         name="Hello World",
-        mac_address="AA:BB:CC:DD:EE:FF",
+        zwave_home_id=123456789,
         ip_address="192.168.1.100",
         port=6053,
     )

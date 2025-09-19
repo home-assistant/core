@@ -16,7 +16,7 @@ class ESPHomeServiceInfo(BaseServiceInfo):
     """Prepared info from ESPHome entries."""
 
     name: str
-    mac_address: str
+    zwave_home_id: int
     ip_address: str
     port: int
     noise_psk: str | None = None
