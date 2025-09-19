@@ -12,6 +12,10 @@ from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.device import Device
 from zigpy.exceptions import TransientConnectionError
 
+from homeassistant.components.homeassistant_hardware.helpers import (
+    async_is_firmware_update_in_progress,
+    async_register_firmware_update_in_progress,
+)
 from homeassistant.components.zha.const import (
     CONF_BAUDRATE,
     CONF_FLOW_CONTROL,
@@ -311,3 +315,44 @@ async def test_timezone_update(
 
     assert hass.config.time_zone == "America/New_York"
     assert gateway.config.local_timezone == zoneinfo.ZoneInfo("America/New_York")
+
+
+async def test_setup_firmware_update_in_progress(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that ZHA setup is blocked when firmware update is in progress."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+
+    config_entry.add_to_hass(hass)
+    device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+
+    # Register a firmware update in progress for the device
+    async_register_firmware_update_in_progress(hass, device_path, "skyconnect")
+
+    # ZHA setup should fail and the config entry should be in retry state
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # Verify the config entry is not loaded and is in setup retry state
+    assert config_entry.state.name == "SETUP_RETRY"
+
+
+async def test_setup_no_firmware_update_in_progress(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+) -> None:
+    """Test that ZHA setup proceeds normally when no firmware update is in progress."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+
+    config_entry.add_to_hass(hass)
+    device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+
+    # Verify no firmware update is in progress
+    assert not async_is_firmware_update_in_progress(hass, device_path)
+
+    # ZHA setup should proceed normally
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # Verify the config entry is loaded
+    assert config_entry.state.name == "LOADED"
