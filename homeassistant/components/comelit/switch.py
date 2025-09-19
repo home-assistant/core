@@ -39,9 +39,9 @@ async def async_setup_entry(
     )
     async_add_entities(entities)
 
-    known_devices: dict[str, set[int]] = {}
-    known_devices[IRRIGATION] = set()
-    known_devices[OTHER] = set()
+    known_devices: dict[str, set[int]] = {
+        dev_type: set() for dev_type in (IRRIGATION, OTHER)
+    }
 
     def _check_device() -> None:
         for dev_type in (IRRIGATION, OTHER):
