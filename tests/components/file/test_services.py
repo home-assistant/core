@@ -3,9 +3,9 @@
 from unittest.mock import MagicMock
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.file import DOMAIN as FILE_DOMAIN
+from homeassistant.components.file import DOMAIN
 from homeassistant.components.file.services import (
     ATTR_FILE_ENCODING,
     ATTR_FILE_NAME,
@@ -33,7 +33,7 @@ async def test_read_file(
 ) -> None:
     """Test reading files in supported formats."""
     result = await hass.services.async_call(
-        FILE_DOMAIN,
+        DOMAIN,
         SERVICE_READ_FILE,
         {
             ATTR_FILE_NAME: file_name,
@@ -54,7 +54,7 @@ async def test_read_file_disallowed_path(
 
     with pytest.raises(HomeAssistantError) as hae:
         _ = await hass.services.async_call(
-            FILE_DOMAIN,
+            DOMAIN,
             SERVICE_READ_FILE,
             {
                 ATTR_FILE_NAME: file_name,
@@ -76,7 +76,7 @@ async def test_read_file_bad_encoding_option(
 
     with pytest.raises(ServiceValidationError) as sve:
         _ = await hass.services.async_call(
-            FILE_DOMAIN,
+            DOMAIN,
             SERVICE_READ_FILE,
             {
                 ATTR_FILE_NAME: file_name,
@@ -106,7 +106,7 @@ async def test_read_file_decoding_error(
     """Test decoding errors are handled correctly."""
     with pytest.raises(HomeAssistantError) as hae:
         _ = await hass.services.async_call(
-            FILE_DOMAIN,
+            DOMAIN,
             SERVICE_READ_FILE,
             {
                 ATTR_FILE_NAME: file_name,
@@ -129,7 +129,7 @@ async def test_read_file_dne(
 
     with pytest.raises(HomeAssistantError) as hae:
         _ = await hass.services.async_call(
-            FILE_DOMAIN,
+            DOMAIN,
             SERVICE_READ_FILE,
             {
                 ATTR_FILE_NAME: file_name,

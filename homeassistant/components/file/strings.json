@@ -76,6 +76,9 @@
     },
     "file_not_found": {
       "message": "File {filename} not found."
+    },
+    "file_read_error": {
+      "message": "Error reading {filename}."
     }
   },
   "services": {
