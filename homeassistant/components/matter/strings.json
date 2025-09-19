@@ -216,6 +216,9 @@
       "led_indicator_intensity_on": {
         "name": "LED on intensity"
       },
+      "unoccupied_heating_temperature_setpoint": {
+          "name": "Unoccupied temperature setpoint"
+      },
       "valve_configuration_and_control_default_open_duration": {
         "name": "Default open duration"
       }
