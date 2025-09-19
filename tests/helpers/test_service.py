@@ -1,7 +1,7 @@
 """Test service helpers."""
 
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from copy import deepcopy
 import dataclasses
 import io
@@ -1785,7 +1785,28 @@ async def test_register_admin_service_return_response(
     assert result == {"test-reply": "test-value1"}
 
 
-async def test_domain_control_not_async(hass: HomeAssistant, mock_entities) -> None:
+_DEPRECATED_VERIFY_DOMAIN_CONTROL_MESSAGE = (
+    "The deprecated argument hass was passed to verify_domain_control. It will be"
+    " removed in HA Core 2026.10. Use verify_domain_control without hass argument"
+    " instead"
+)
+
+
+@pytest.mark.parametrize(
+    # Check that with or without hass behaves the same
+    ("decorator", "in_caplog"),
+    [
+        (service.verify_domain_control, True),  # old pass-through
+        (lambda _, domain: service.verify_domain_control(domain), False),  # new
+    ],
+)
+async def test_domain_control_not_async(
+    hass: HomeAssistant,
+    mock_entities,
+    decorator: Callable[[HomeAssistant, str], Any],
+    in_caplog: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test domain verification in a service call with an unknown user."""
     calls = []
 
@@ -1794,10 +1815,26 @@ async def test_domain_control_not_async(hass: HomeAssistant, mock_entities) -> N
         calls.append(call)
 
     with pytest.raises(exceptions.HomeAssistantError):
-        service.verify_domain_control(hass, "test_domain")(mock_service_log)
+        decorator(hass, "test_domain")(mock_service_log)
+
+    assert (_DEPRECATED_VERIFY_DOMAIN_CONTROL_MESSAGE in caplog.text) == in_caplog
 
 
-async def test_domain_control_unknown(hass: HomeAssistant, mock_entities) -> None:
+@pytest.mark.parametrize(
+    # Check that with or without hass behaves the same
+    ("decorator", "in_caplog"),
+    [
+        (service.verify_domain_control, True),  # old pass-through
+        (lambda _, domain: service.verify_domain_control(domain), False),  # new
+    ],
+)
+async def test_domain_control_unknown(
+    hass: HomeAssistant,
+    mock_entities,
+    decorator: Callable[[HomeAssistant, str], Any],
+    in_caplog: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test domain verification in a service call with an unknown user."""
     calls = []
 
@@ -1809,9 +1846,7 @@ async def test_domain_control_unknown(hass: HomeAssistant, mock_entities) -> Non
         "homeassistant.helpers.entity_registry.async_get",
         return_value=Mock(entities=mock_entities),
     ):
-        protected_mock_service = service.verify_domain_control(hass, "test_domain")(
-            mock_service_log
-        )
+        protected_mock_service = decorator(hass, "test_domain")(mock_service_log)
 
         hass.services.async_register(
             "test_domain", "test_service", protected_mock_service, schema=None
@@ -1827,9 +1862,23 @@ async def test_domain_control_unknown(hass: HomeAssistant, mock_entities) -> Non
             )
         assert len(calls) == 0
 
+    assert (_DEPRECATED_VERIFY_DOMAIN_CONTROL_MESSAGE in caplog.text) == in_caplog
 
+
+@pytest.mark.parametrize(
+    # Check that with or without hass behaves the same
+    ("decorator", "in_caplog"),
+    [
+        (service.verify_domain_control, True),  # old pass-through
+        (lambda _, domain: service.verify_domain_control(domain), False),  # new
+    ],
+)
 async def test_domain_control_unauthorized(
-    hass: HomeAssistant, hass_read_only_user: MockUser
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    decorator: Callable[[HomeAssistant, str], Any],
+    in_caplog: bool,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test domain verification in a service call with an unauthorized user."""
     mock_registry(
@@ -1849,9 +1898,7 @@ async def test_domain_control_unauthorized(
         """Define a protected service."""
         calls.append(call)
 
-    protected_mock_service = service.verify_domain_control(hass, "test_domain")(
-        mock_service_log
-    )
+    protected_mock_service = decorator(hass, "test_domain")(mock_service_log)
 
     hass.services.async_register(
         "test_domain", "test_service", protected_mock_service, schema=None
@@ -1868,9 +1915,23 @@ async def test_domain_control_unauthorized(
 
     assert len(calls) == 0
 
+    assert (_DEPRECATED_VERIFY_DOMAIN_CONTROL_MESSAGE in caplog.text) == in_caplog
 
+
+@pytest.mark.parametrize(
+    # Check that with or without hass behaves the same
+    ("decorator", "in_caplog"),
+    [
+        (service.verify_domain_control, True),  # old pass-through
+        (lambda _, domain: service.verify_domain_control(domain), False),  # new
+    ],
+)
 async def test_domain_control_admin(
-    hass: HomeAssistant, hass_admin_user: MockUser
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    decorator: Callable[[HomeAssistant, str], Any],
+    in_caplog: bool,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test domain verification in a service call with an admin user."""
     mock_registry(
@@ -1890,9 +1951,7 @@ async def test_domain_control_admin(
         """Define a protected service."""
         calls.append(call)
 
-    protected_mock_service = service.verify_domain_control(hass, "test_domain")(
-        mock_service_log
-    )
+    protected_mock_service = decorator(hass, "test_domain")(mock_service_log)
 
     hass.services.async_register(
         "test_domain", "test_service", protected_mock_service, schema=None
@@ -1908,8 +1967,23 @@ async def test_domain_control_admin(
 
     assert len(calls) == 1
 
+    assert (_DEPRECATED_VERIFY_DOMAIN_CONTROL_MESSAGE in caplog.text) == in_caplog
 
-async def test_domain_control_no_user(hass: HomeAssistant) -> None:
+
+@pytest.mark.parametrize(
+    # Check that with or without hass behaves the same
+    ("decorator", "in_caplog"),
+    [
+        (service.verify_domain_control, True),  # old pass-through
+        (lambda _, domain: service.verify_domain_control(domain), False),  # new
+    ],
+)
+async def test_domain_control_no_user(
+    hass: HomeAssistant,
+    decorator: Callable[[HomeAssistant, str], Any],
+    in_caplog: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test domain verification in a service call with no user."""
     mock_registry(
         hass,
@@ -1928,9 +2002,7 @@ async def test_domain_control_no_user(hass: HomeAssistant) -> None:
         """Define a protected service."""
         calls.append(call)
 
-    protected_mock_service = service.verify_domain_control(hass, "test_domain")(
-        mock_service_log
-    )
+    protected_mock_service = decorator(hass, "test_domain")(mock_service_log)
 
     hass.services.async_register(
         "test_domain", "test_service", protected_mock_service, schema=None
@@ -1945,6 +2017,8 @@ async def test_domain_control_no_user(hass: HomeAssistant) -> None:
     )
 
     assert len(calls) == 1
+
+    assert (_DEPRECATED_VERIFY_DOMAIN_CONTROL_MESSAGE in caplog.text) == in_caplog
 
 
 async def test_extract_from_service_available_device(hass: HomeAssistant) -> None:
