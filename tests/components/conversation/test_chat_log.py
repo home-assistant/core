@@ -161,15 +161,6 @@ async def test_dynamic_time_injection(
 ) -> None:
     """Test that dynamic time injection works correctly."""
 
-    class MyTool(llm.Tool):
-        """Test tool."""
-
-        name = "test_tool"
-        description = "Test function"
-        parameters = vol.Schema(
-            {vol.Optional("param1", description="Test parameters"): str}
-        )
-
     class MyAPI(llm.API):
         """Test API."""
 
@@ -177,7 +168,7 @@ async def test_dynamic_time_injection(
             self, llm_context: llm.LLMContext
         ) -> llm.APIInstance:
             """Return a list of tools."""
-            return llm.APIInstance(self, "My API Prompt", llm_context, [MyTool()])
+            return llm.APIInstance(self, "My API Prompt", llm_context, [])
 
     not_assist_1_api = MyAPI(hass=hass, id="not-assist-1", name="Not Assist 1")
     llm.async_register_api(hass, not_assist_1_api)
