@@ -408,6 +408,22 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
+            key="ThermostatUnoccupiedHeatingSetpoint",
+            name=None,
+            translation_key="unoccupied_heating_temperature_setpoint",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_to_ha=lambda x: None if x is None else x / 100,
+            ha_to_device=lambda x: round(x * 100),
+            mode=NumberMode.SLIDER,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
             key="InovelliLEDIndicatorIntensityOff",
             entity_category=EntityCategory.CONFIG,
             translation_key="led_indicator_intensity_off",
