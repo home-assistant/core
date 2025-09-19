@@ -78,6 +78,8 @@ CHANGABLE_HEATING_PROGRAMS = [
     HeatingProgram.ECO,
 ]
 
+SERVICE_REBOOT_GATEWAY = "reboot_gateway"
+
 
 def _build_entities(
     device_list: list[ViCareDevice],
@@ -107,6 +109,11 @@ async def async_setup_entry(
         SERVICE_SET_VICARE_MODE,
         {vol.Required(SERVICE_SET_VICARE_MODE_ATTR_MODE): cv.string},
         "set_vicare_mode",
+    )
+    platform.async_register_entity_service(
+        SERVICE_REBOOT_GATEWAY,
+        None,
+        "reboot_gateway",
     )
 
     async_add_entities(
@@ -342,3 +349,13 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
             raise ValueError(f"Cannot set invalid vicare mode: {vicare_mode}.")
 
         self._api.setMode(vicare_mode)
+
+    def reboot_gateway(self) -> None:
+        """Service function to reboot the gateway device of the target."""
+        _LOGGER.debug("Service reboot_gateway called")
+        response = self._api.service.reboot_gateway()
+        if "data" not in response or not response["data"]["success"]:
+            _LOGGER.error(
+                "Vicare reboot_gateway action failed, server response: %s", response
+            )
+        _LOGGER.debug("Response from reboot_gateway: %s", response)

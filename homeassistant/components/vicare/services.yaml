@@ -16,3 +16,9 @@ set_vicare_mode:
             - "forcedReduced"
             - "heating"
             - "standby"
+
+reboot_gateway:
+  target:
+    entity:
+      integration: vicare
+      domain: climate

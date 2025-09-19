@@ -525,6 +525,10 @@
           "description": "For supported values, see the `vicare_modes` attribute of the climate entity."
         }
       }
+    },
+    "reboot_gateway": {
+      "name": "Reboot Gateway Device",
+      "description": "Reboot the gateway device of the target."
     }
   }
 }
