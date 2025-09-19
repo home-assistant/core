@@ -21,7 +21,7 @@ from .const import DOMAIN, SCAN_INTERVAL_MINUTES
 _LOGGER = logging.getLogger(__name__)
 
 
-class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
+class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard | None]):
     """Class to manage fetching data from the Rejseplanen API."""
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
@@ -31,7 +31,7 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
             py_rejseplan_version.version,
         )
         self.api = departuresAPIClient(auth_key=config_entry.data["authentication"])
-        self._stop_ids: set[str] = set()
+        self._stop_ids: set[int] = set()
 
         super().__init__(
             hass,
@@ -41,14 +41,10 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
             config_entry=config_entry,
         )
 
-    async def _async_update_data(self) -> DepartureBoard:
+    async def _async_update_data(self) -> DepartureBoard | None:
         """Update data via library."""
         try:
             return await self.hass.async_add_executor_job(self._fetch_data)
-
-        except NoStopsRegisteredError as error:
-            _LOGGER.debug("No stops registered, skipping data fetch: %s", error)
-            raise UpdateFailed(error) from error
         except (
             api_error.RPAPIError,
             http_error.RPHTTPError,
@@ -77,19 +73,22 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
 
         return int(diff.total_seconds() // 60)
 
-    def add_stop_id(self, stop_id: str):
+    def add_stop_id(self, stop_id: int):
         """Add a stop ID to the coordinator."""
         self._stop_ids.add(stop_id)
 
-    def remove_stop_id(self, stop_id: str):
+    def remove_stop_id(self, stop_id: int):
         """Remove a stop ID from the coordinator."""
         self._stop_ids.discard(stop_id)
 
-    def _fetch_data(self) -> DepartureBoard:
+    def _fetch_data(self) -> DepartureBoard | None:
         """Fetch data from Rejseplanen API."""
         if not self._stop_ids:
             _LOGGER.debug("No stop IDs registered, skipping data fetch")
-            raise NoStopsRegisteredError
+            _LOGGER.warning(
+                "No stops registered, Please add a stop through the UI configuration. Data not fetched"
+            )
+            return None
         _LOGGER.debug("Fetching data for stop IDs: %s", self._stop_ids)
         # Get all departures for this stop
         departure_board, _ = self.api.get_departures(list(self._stop_ids))
@@ -106,9 +105,11 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
         if not self.data:
             return []
 
-        departures = getattr(self.data, "departures", None)
-        if departures is None:
-            departures = self.data.get("departures", [])
+        if hasattr(self.data, "departures"):
+            departures = self.data.departures
+        else:
+            return []
+
         filtered_data = [
             departure for departure in departures if departure.stopExtId == stop_id
         ]
@@ -120,7 +121,7 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard]):
 
         if departure_type_filter:
             filtered_data = [
-                d for d in filtered_data if d.product.catOut in departure_type_filter
+                d for d in filtered_data if (d.product.cls & departure_type_filter)
             ]
 
         # Sort by due_in time

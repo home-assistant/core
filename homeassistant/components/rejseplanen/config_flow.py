@@ -1,8 +1,5 @@
 """Config flow for Rejseplanen integration."""
 
-import json
-from typing import Any
-
 from py_rejseplan.api.base import baseAPIClient as Rejseplanen
 import voluptuous as vol
 
@@ -19,10 +16,12 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 
 from .const import (
-    BUS_TYPES,
     CONF_AUTHENTICATION,
     CONF_DEPARTURE_TYPE,
     CONF_DIRECTION,
@@ -30,9 +29,9 @@ from .const import (
     CONF_ROUTE,
     CONF_STOP_ID,
     DEFAULT_STOP_NAME,
+    DEPARTURE_TYPE_OPTIONS,
+    DEPARTURE_TYPE_TO_CLASS,
     DOMAIN,
-    METRO_TYPES,
-    TRAIN_TYPES,
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -45,21 +44,20 @@ CONFIG_STOP_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_STOP_ID): NumberSelector(
             NumberSelectorConfig(
-                mode=NumberSelectorMode.BOX, min=1, max=99999999, step=1
+                mode=NumberSelectorMode.BOX, min=1, max=999999999, step=1
             ),
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_STOP_NAME): str,
-        vol.Optional(CONF_DIRECTION, default=[]): list[str],
+        vol.Optional(CONF_DIRECTION, default=[]): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                multiple=True,
+            )
+        ),
         vol.Optional(
             CONF_DEPARTURE_TYPE,
             default=[],
-        ): cv.multi_select(
-            {
-                **{bus_type: f"Bus {bus_type}" for bus_type in BUS_TYPES},
-                **{train_type: f"Train {train_type}" for train_type in TRAIN_TYPES},
-                **{metro_type: f"Metro {metro_type}" for metro_type in METRO_TYPES},
-            }
-        ),
+        ): cv.multi_select(DEPARTURE_TYPE_OPTIONS),
     }
 )
 
@@ -126,23 +124,20 @@ class RejseplanenSubentryStopFlow(ConfigSubentryFlow):
         stop_id = int(user_input[CONF_STOP_ID])
         name = user_input[CONF_NAME]
 
-        unique_parts: dict[str, str | list[Any]] = {
-            "route": user_input.get(CONF_ROUTE, []),
-            "direction": user_input.get(CONF_DIRECTION, []),
-            "departure_type": user_input.get(CONF_DEPARTURE_TYPE, []),
-        }
-        unique_str = json.dumps(unique_parts, sort_keys=True, separators=(",", ":"))
-        # unique_hash = hashlib.sha256(unique_str.encode()).hexdigest()[:8]
-        unique_id = f"{stop_id}-{unique_str}"
+        selected_keys: str | list = user_input.get(CONF_DEPARTURE_TYPE, [])
+        departure_types = [
+            DEPARTURE_TYPE_TO_CLASS[key]
+            for key in selected_keys
+            if key in DEPARTURE_TYPE_TO_CLASS
+        ]
 
         return self.async_create_entry(
             title=name,
             data={
                 CONF_STOP_ID: stop_id,
                 CONF_NAME: name,
-                CONF_DEPARTURE_TYPE: user_input.get(CONF_DEPARTURE_TYPE, []),
+                CONF_DEPARTURE_TYPE: departure_types,
                 CONF_DIRECTION: user_input.get(CONF_DIRECTION, []),
                 CONF_ROUTE: user_input.get(CONF_ROUTE, []),
             },
-            unique_id=unique_id,
         )

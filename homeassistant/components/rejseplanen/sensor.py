@@ -39,6 +39,7 @@ from .const import (
     CONF_STOP_ID,
     DEFAULT_STOP_NAME,
     DOMAIN,
+    TransportClass,
 )
 from .coordinator import RejseplanenDataUpdateCoordinator
 from .entity import RejseplanenUpdaterStatusSensor
@@ -61,11 +62,11 @@ async def async_setup_entry(
         hass.data[DOMAIN] = {}
 
     entry_data = hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
-    coordinator: RejseplanenDataUpdateCoordinator = RejseplanenDataUpdateCoordinator(
-        hass,
-        config_entry,
-    )
-    entry_data["coordinator"] = coordinator
+    # coordinator: RejseplanenDataUpdateCoordinator = RejseplanenDataUpdateCoordinator(
+    #     hass,
+    #     config_entry,
+    # )
+    coordinator = entry_data.get("coordinator")
 
     # Only add the updater status sensor for the main entry
     if config_entry.domain == DOMAIN:
@@ -133,8 +134,36 @@ class RejseplanenTransportSensor(
         self.coordinator.add_stop_id(stop_id)
         self._unsub_interval: Callable[[], None] | None = None
         self._attr_unique_id = unique_id
+        self._departure_type_bitflag = self._calculate_departure_type_bitflag(
+            departure_type
+        )
         """Initialize the sensor's state."""
         self._attr_native_value = self.native_value
+
+    def _calculate_departure_type_bitflag(self, departure_types: list) -> int | None:
+        """Calculate bitflag from departure type list."""
+        if not departure_types:
+            return None
+
+        bitflag = 0
+        for transport_class in departure_types:
+            if isinstance(transport_class, int):
+                # If already an int (TransportClass enum value)
+                bitflag |= transport_class
+            elif isinstance(transport_class, TransportClass):
+                # If TransportClass enum instance
+                bitflag |= transport_class.value
+            elif isinstance(transport_class, str):
+                # If string, try to convert to TransportClass enum
+                try:
+                    enum_value = TransportClass[transport_class.upper()]
+                    bitflag |= enum_value.value
+                except KeyError:
+                    _LOGGER.warning("Unknown departure type: %s", transport_class)
+            else:
+                _LOGGER.warning("Invalid departure type format: %s", transport_class)
+
+        return bitflag if bitflag > 0 else None
 
     @property
     def native_value(self) -> StateType:
@@ -222,17 +251,16 @@ class RejseplanenTransportSensor(
         )
         self.async_write_ha_state()
 
-    def _get_filtered_departures(self) -> list[dict[str, Any]]:
+    def _get_filtered_departures(self) -> list[Departure]:
         """Get filtered departures based on the configured parameters."""
         route_filter = self._route if self._route else None
         direction_filter = self._direction if self._direction else None
-        departure_type_filter = self._departure_type if self._departure_type else None
 
         return self.coordinator.get_filtered_departures(
             stop_id=self._stop_id,
             route_filter=route_filter,
             direction_filter=direction_filter,
-            departure_type_filter=departure_type_filter,
+            departure_type_filter=self._departure_type_bitflag,
         )
 
     @staticmethod
