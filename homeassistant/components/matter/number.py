@@ -417,9 +417,7 @@ DISCOVERY_SCHEMAS = [
             mode=NumberMode.SLIDER,
         ),
         entity_class=MatterNumber,
-        required_attributes=(
-            clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
-        ),
+        required_attributes=(clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,),
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
