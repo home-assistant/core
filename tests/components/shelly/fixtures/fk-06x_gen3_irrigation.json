@@ -1,0 +1,436 @@
+{
+  "config": {
+    "ble": {
+      "enable": false,
+      "rpc": {
+        "enable": false
+      }
+    },
+    "boolean:200": {
+      "access": "crw",
+      "default_value": false,
+      "id": 200,
+      "meta": {
+        "cloud": ["log"],
+        "svc": {
+          "dpId": 101
+        },
+        "ui": {
+          "view": "toggle"
+        }
+      },
+      "name": "Zone 1",
+      "owner": "service:0",
+      "persisted": false,
+      "role": "zone0"
+    },
+    "boolean:201": {
+      "access": "crw",
+      "default_value": false,
+      "id": 201,
+      "meta": {
+        "cloud": ["log"],
+        "svc": {
+          "dpId": 102
+        },
+        "ui": {
+          "view": "toggle"
+        }
+      },
+      "name": "Zone 2",
+      "owner": "service:0",
+      "persisted": false,
+      "role": "zone1"
+    },
+    "boolean:202": {
+      "access": "crw",
+      "default_value": false,
+      "id": 202,
+      "meta": {
+        "cloud": ["log"],
+        "svc": {
+          "dpId": 103
+        },
+        "ui": {
+          "view": "toggle"
+        }
+      },
+      "name": "Zone 3",
+      "owner": "service:0",
+      "persisted": false,
+      "role": "zone2"
+    },
+    "boolean:203": {
+      "access": "crw",
+      "default_value": false,
+      "id": 203,
+      "meta": {
+        "cloud": ["log"],
+        "svc": {
+          "dpId": 104
+        },
+        "ui": {
+          "view": "toggle"
+        }
+      },
+      "name": "Zone 4",
+      "owner": "service:0",
+      "persisted": false,
+      "role": "zone3"
+    },
+    "boolean:204": {
+      "access": "crw",
+      "default_value": false,
+      "id": 204,
+      "meta": {
+        "cloud": ["log"],
+        "svc": {
+          "dpId": 105
+        },
+        "ui": {
+          "view": "toggle"
+        }
+      },
+      "name": "Zone 5",
+      "owner": "service:0",
+      "persisted": false,
+      "role": "zone4"
+    },
+    "boolean:205": {
+      "access": "crw",
+      "default_value": false,
+      "id": 205,
+      "meta": {
+        "cloud": ["log"],
+        "svc": {
+          "dpId": 106
+        },
+        "ui": {
+          "view": "toggle"
+        }
+      },
+      "name": "Zone 6",
+      "owner": "service:0",
+      "persisted": false,
+      "role": "zone5"
+    },
+    "bthome": {},
+    "cloud": {
+      "enable": false,
+      "server": "wss://repo.shelly.cloud:6022/jrpc"
+    },
+    "enum:200": {
+      "access": "crw",
+      "default_value": "none",
+      "id": 200,
+      "meta": {
+        "ui": {
+          "titles": {
+            "none": "None",
+            "seq_0": "All"
+          },
+          "view": "select"
+        }
+      },
+      "name": "Active Sequence",
+      "options": ["none", "seq_0"],
+      "owner": "service:0",
+      "persisted": false,
+      "role": "active_sequence"
+    },
+    "mqtt": {
+      "client_id": "irrigation-aabbccddeeff",
+      "enable": false,
+      "enable_control": true,
+      "enable_rpc": true,
+      "rpc_ntf": true,
+      "server": "mqtt.test.server",
+      "ssl_ca": null,
+      "status_ntf": false,
+      "topic_prefix": "irrigation-aabbccddeeff",
+      "use_client_cert": false,
+      "user": null
+    },
+    "number:200": {
+      "access": "cr",
+      "default_value": 0,
+      "id": 200,
+      "max": 100,
+      "meta": {
+        "cloud": ["measurement", "log"],
+        "ui": {
+          "unit": "°C",
+          "view": "label"
+        }
+      },
+      "min": -50,
+      "name": "Average Temperature",
+      "owner": "service:0",
+      "persisted": false,
+      "role": "average_temperature"
+    },
+    "number:201": {
+      "access": "cr",
+      "default_value": 0,
+      "id": 201,
+      "max": 99999,
+      "meta": {
+        "cloud": ["measurement", "log"],
+        "ui": {
+          "unit": "mm/m2",
+          "view": "label"
+        }
+      },
+      "min": 0,
+      "name": "Rainfall last 24h",
+      "owner": "service:0",
+      "persisted": false,
+      "role": "last_precipitation"
+    },
+    "object:200": {
+      "access": "crw",
+      "id": 200,
+      "meta": null,
+      "name": "Zones status",
+      "owner": "service:0",
+      "role": "zones_status"
+    },
+    "service:0": {
+      "base_temp": 20,
+      "duration_offset": 0,
+      "id": 0,
+      "limit_zones": 2,
+      "seq_rev": 11,
+      "weather_api": false,
+      "zones": [
+        {
+          "duration": 10,
+          "name": "Zone Name 1",
+          "water_amount": 10
+        },
+        {
+          "duration": 11,
+          "name": "Zone Name 2",
+          "water_amount": 10
+        },
+        {
+          "duration": 10,
+          "name": "Zone Name 3",
+          "water_amount": 10
+        },
+        {
+          "duration": 10,
+          "name": null,
+          "water_amount": 10
+        },
+        {
+          "duration": 10,
+          "name": null,
+          "water_amount": 10
+        },
+        {
+          "duration": 10,
+          "name": null,
+          "water_amount": 10
+        }
+      ]
+    },
+    "sys": {
+      "cfg_rev": 46,
+      "debug": {
+        "file_level": null,
+        "level": 2,
+        "mqtt": {
+          "enable": false
+        },
+        "udp": {
+          "addr": null
+        },
+        "websocket": {
+          "enable": false
+        }
+      },
+      "device": {
+        "discoverable": true,
+        "eco_mode": false,
+        "fw_id": "20241121-103618/1.4.99-xt-prod1-gc6448fb",
+        "mac": "AABBCCDDEEFF",
+        "name": "Test Name"
+      },
+      "location": {
+        "lat": 32.1772,
+        "lon": 34.9039,
+        "tz": "Asia/Tel_Aviv"
+      },
+      "rpc_udp": {
+        "dst_addr": null,
+        "listen_port": null
+      },
+      "sntp": {
+        "server": "sntp.test.server"
+      },
+      "ui_data": {}
+    },
+    "wifi": {
+      "sta": {
+        "ssid": "Wifi-Network-Name",
+        "is_open": false,
+        "enable": true,
+        "ipv4mode": "dhcp",
+        "ip": null,
+        "netmask": null,
+        "gw": null,
+        "nameserver": null
+      }
+    },
+    "ws": {
+      "enable": false,
+      "server": null,
+      "ssl_ca": "ca.pem"
+    }
+  },
+  "shelly": {
+    "app": "XT1",
+    "auth_domain": null,
+    "auth_en": false,
+    "fw_id": "20241121-103618/1.4.99-xt-prod1-gc6448fb",
+    "gen": 3,
+    "id": "irrigation-aabbccddeeff",
+    "jti": "0000C100000A",
+    "jwt": {
+      "aud": "XT1",
+      "f": 1,
+      "iat": 1739274795,
+      "jti": "0000C100000A",
+      "n": "Irrigation controller FK-06X",
+      "p": "Irrigation",
+      "url": "https://frankever.com/",
+      "v": 1,
+      "xt1": {
+        "svc0": {
+          "type": "irrigation-controller"
+        }
+      }
+    },
+    "mac": "AABBCCDDEEFF",
+    "model": "S3XT-0S",
+    "name": "Test Name",
+    "slot": 0,
+    "svc0": {
+      "build_id": "20250305-144715/c28f621",
+      "type": "irrigation-controller",
+      "ver": "0.7.0-irrigation-prod0"
+    },
+    "ver": "1.4.99-xt-prod1"
+  },
+  "status": {
+    "ble": {},
+    "boolean:200": {
+      "value": false
+    },
+    "boolean:201": {
+      "value": false
+    },
+    "boolean:202": {
+      "value": false
+    },
+    "boolean:203": {
+      "value": false
+    },
+    "boolean:204": {
+      "value": false
+    },
+    "boolean:205": {
+      "value": false
+    },
+    "bthome": {
+      "errors": ["bluetooth_disabled"]
+    },
+    "cloud": {
+      "connected": false
+    },
+    "enum:200": {
+      "value": "none"
+    },
+    "mqtt": {
+      "connected": false
+    },
+    "number:200": {
+      "value": 0
+    },
+    "number:201": {
+      "value": 0
+    },
+    "object:200": {
+      "value": {
+        "zone0": {
+          "duration": 10,
+          "source": "rpc",
+          "started_at": 1757947186153.368
+        },
+        "zone1": {
+          "duration": 11,
+          "source": "rpc",
+          "started_at": 1757947188242.7039
+        },
+        "zone2": {
+          "duration": 10,
+          "source": "init",
+          "started_at": null
+        },
+        "zone3": {
+          "duration": 10,
+          "source": "init",
+          "started_at": null
+        },
+        "zone4": {
+          "duration": 10,
+          "source": "init",
+          "started_at": null
+        },
+        "zone5": {
+          "duration": 10,
+          "source": "rpc",
+          "started_at": 1757947190878.225
+        }
+      }
+    },
+    "service:0": {
+      "etag": "56436ed1f373df7e91e8c79588ccbcb0",
+      "state": "running",
+      "stats": {
+        "mem": 1363,
+        "mem_peak": 1590
+      }
+    },
+    "sys": {
+      "available_updates": {},
+      "btrelay_rev": 0,
+      "cfg_rev": 46,
+      "fs_free": 565248,
+      "fs_size": 1048576,
+      "kvs_rev": 1,
+      "last_sync_ts": 1757950062,
+      "mac": "AABBCCDDEEFF",
+      "ram_free": 103824,
+      "ram_min_free": 83204,
+      "ram_size": 252672,
+      "reset_reason": 1,
+      "restart_required": false,
+      "schedule_rev": 17,
+      "time": "18:32",
+      "unixtime": 1757950362,
+      "uptime": 1080367,
+      "webhook_rev": 1
+    },
+    "wifi": {
+      "rssi": -38,
+      "ssid": "Wifi-Network-Name",
+      "sta_ip": "192.168.2.24",
+      "status": "got ip"
+    },
+    "ws": {
+      "connected": false
+    }
+  }
+}
