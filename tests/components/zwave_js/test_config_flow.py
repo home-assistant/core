@@ -3179,6 +3179,32 @@ async def different_device_server_version(*args):
             0,
             different_device_server_version,
         ),
+        (
+            {},
+            {
+                "device": "/test",
+                "socket": None,
+                "network_key": "old123",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
+            },
+            {
+                "usb_path": "",
+                "socket_path": "esphome://mock-host:6053",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            0,
+            different_device_server_version,
+        ),
     ],
 )
 async def test_reconfigure_different_device(

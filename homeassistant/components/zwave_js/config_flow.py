@@ -1248,10 +1248,16 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Failed to get USB ports: %s", err)
             return self.async_abort(reason="usb_ports_failed")
 
+        # Insert empty option in ports to allow setting a socket
+        ports = {
+            "": "Use Socket",
+            **ports,
+        }
+
         data_schema = vol.Schema(
             {
-                vol.Optional(CONF_USB_PATH, default=usb_path): vol.In(ports),
-                vol.Optional(CONF_SOCKET_PATH, default=socket_path or ""): str,
+                vol.Required(CONF_USB_PATH, default=usb_path): vol.In(ports),
+                vol.Required(CONF_SOCKET_PATH, default=socket_path or ""): str,
                 vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
                 vol.Optional(
                     CONF_S2_ACCESS_CONTROL_KEY, default=s2_access_control_key
