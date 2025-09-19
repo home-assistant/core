@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .const import TEST_SERIAL_NUMBER
+from .const import TEST_DEVICE_1_SN
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -83,7 +83,7 @@ async def test_offline_device(
     entity_id = "sensor.echo_test_temperature"
 
     mock_amazon_devices_client.get_devices_data.return_value[
-        TEST_SERIAL_NUMBER
+        TEST_DEVICE_1_SN
     ].online = False
 
     await setup_integration(hass, mock_config_entry)
@@ -92,7 +92,7 @@ async def test_offline_device(
     assert state.state == STATE_UNAVAILABLE
 
     mock_amazon_devices_client.get_devices_data.return_value[
-        TEST_SERIAL_NUMBER
+        TEST_DEVICE_1_SN
     ].online = True
 
     freezer.tick(SCAN_INTERVAL)
@@ -133,7 +133,7 @@ async def test_unit_of_measurement(
     entity_id = f"sensor.echo_test_{sensor}"
 
     mock_amazon_devices_client.get_devices_data.return_value[
-        TEST_SERIAL_NUMBER
+        TEST_DEVICE_1_SN
     ].sensors = {sensor: AmazonDeviceSensor(name=sensor, value=api_value, scale=scale)}
 
     await setup_integration(hass, mock_config_entry)

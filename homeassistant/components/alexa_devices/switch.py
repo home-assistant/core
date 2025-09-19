@@ -48,12 +48,22 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        AmazonSwitchEntity(coordinator, serial_num, switch_desc)
-        for switch_desc in SWITCHES
-        for serial_num in coordinator.data
-        if switch_desc.subkey in coordinator.data[serial_num].capabilities
-    )
+    known_devices: set[str] = set()
+
+    def _check_device() -> None:
+        current_devices = set(coordinator.data)
+        new_devices = current_devices - known_devices
+        if new_devices:
+            known_devices.update(new_devices)
+            async_add_entities(
+                AmazonSwitchEntity(coordinator, serial_num, switch_desc)
+                for switch_desc in SWITCHES
+                for serial_num in new_devices
+                if switch_desc.subkey in coordinator.data[serial_num].capabilities
+            )
+
+    _check_device()
+    entry.async_on_unload(coordinator.async_add_listener(_check_device))
 
 
 class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
