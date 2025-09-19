@@ -6,8 +6,8 @@ from typing import Any
 import voluptuous as vol
 from voluptuous import Schema
 
-from homeassistant.core import Context, HomeAssistant
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import TemplateVarsType
 
@@ -96,11 +96,13 @@ async def async_call_action_from_config(
     }
 
     if service == ACTION_COVER_TOGGLE:
-      _LOGGER.debug("Rufe Service cover.%s mit %s auf", service, service_data)
-      await hass.services.async_call(COVER_DOMAIN, service, service_data, context=context)
+        _LOGGER.debug("Rufe Service cover.%s mit %s auf", service, service_data)
+        await hass.services.async_call(
+            COVER_DOMAIN, service, service_data, context=context
+        )
     else:
-      _LOGGER.debug("Rufe Service hausbus.%s mit %s auf", service, service_data)
-      await hass.services.async_call(DOMAIN, service, service_data, context=context)
+        _LOGGER.debug("Rufe Service hausbus.%s mit %s auf", service, service_data)
+        await hass.services.async_call(DOMAIN, service, service_data, context=context)
 
 
 # ----------------------------
