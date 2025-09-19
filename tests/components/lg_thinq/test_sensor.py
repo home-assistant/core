@@ -3,6 +3,7 @@
 from datetime import UTC, datetime, time, timedelta
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,7 +17,7 @@ from . import setup_integration
 
 from tests.common import (
     MockConfigEntry,
-    async_fire_time_changed_exact,
+    async_fire_time_changed,
     async_load_json_object_fixture,
     snapshot_platform,
 )
@@ -57,9 +58,10 @@ async def test_update_energy_entity(
     device_fixture: str,
     energy_fixture: str,
     energy_usage: int,
-    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update energy entity."""
+    hass.config.time_zone = "UTC"
     with patch(
         "homeassistant.components.lg_thinq.sensor.random.randint", return_value=1
     ):
@@ -74,12 +76,8 @@ async def test_update_energy_entity(
             hass, f"{device_fixture}/energy_{energy_fixture}.json", DOMAIN
         )
     )
-    async_fire_time_changed_exact(
-        hass, datetime.combine(utcnow() + timedelta(days=1), time(1, 1))
-    )
-    await hass.async_block_till_done()
-
-    entity_registry.async_update_entity(entity_id)
+    freezer.move_to(datetime.combine(utcnow() + timedelta(days=1), time(1, 1)))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
