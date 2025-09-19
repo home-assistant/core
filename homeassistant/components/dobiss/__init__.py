@@ -129,6 +129,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
     else:
         _LOGGER.warning("Unload failed")
 
@@ -252,10 +254,12 @@ class HADobiss:
             data["method"] = method["method"]
             async_dispatcher_send(self.hass, DOMAIN, data)
 
-        for service in SERVICE_TO_METHOD.items():
-            schema = SERVICE_TO_METHOD[service]["schema"]
+        for service_name, service_data in SERVICE_TO_METHOD.items():
             self.hass.services.async_register(
-                DOMAIN, service, service_handler, schema=schema
+                DOMAIN,
+                service_name,
+                service_handler,
+                schema=service_data["schema"],
             )
 
         return True

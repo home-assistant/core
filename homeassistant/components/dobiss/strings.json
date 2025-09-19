@@ -6,7 +6,14 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "secret": "Secret API",
+          "secure": "Secure"
+        },
+        "data_description": {
+          "secret": "Enter the secret API key",
+          "host": "Enter the IP or cloud domain",
+          "secure": "Use a secure connection"
         }
       }
     },
@@ -27,7 +34,16 @@
           "ignore_zigbee_devices": "Ignore Zigbee devices",
           "send_end_position_cover": "Set cover end position after move",
           "cover_closetime": "Time it takes for covers to close completely (0 to disable)",
-          "use_timed_covers": "Configure supported covers as timed covers"
+          "use_timed_covers": "Configure supported covers as timed covers",
+          "websocket_timeout": "Timeout for Websocket connection"
+        },
+        "data_description": {
+          "invert_binary_sensor": "Invert binary sensor state",
+          "ignore_zigbee_devices": "Ignore Zigbee devices",
+          "send_end_position_cover": "Set cover end position after move",
+          "cover_closetime": "Time it takes for covers to close completely (0 to disable)",
+          "use_timed_covers": "Configure supported covers as timed covers",
+          "websocket_timeout": "Timeout for Websocket connection"
         }
       }
     }

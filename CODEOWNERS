@@ -360,6 +360,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/dnsip/ @gjohansson-ST
 /tests/components/dnsip/ @gjohansson-ST
 /homeassistant/components/dobiss/ @koen-fermax
+/tests/components/dobiss/ @koen-fermax
 /homeassistant/components/doorbird/ @oblogic7 @bdraco @flacjacket
 /tests/components/doorbird/ @oblogic7 @bdraco @flacjacket
 /homeassistant/components/dormakaba_dkey/ @emontnemery
