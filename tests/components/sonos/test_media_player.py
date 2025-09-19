@@ -1380,7 +1380,6 @@ async def test_position_updates(
     freezetime = datetime(2024, 1, 1, 12, 0, 0, 0, tzinfo=UTC)
     with freeze_time(freezetime) as frozen_time:
         async_fire_time_changed(hass, freezetime)
-        now = datetime.now(UTC)
         await hass.async_block_till_done(wait_background_tasks=True)
 
         entity_id = "media_player.zone_a"
@@ -1389,7 +1388,7 @@ async def test_position_updates(
         assert state.attributes[ATTR_MEDIA_POSITION] == 42
         # updated_at should be recent
         updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
-        assert updated_at == now
+        assert updated_at == freezetime
 
         # Position only updated by 1 second; should not update attributes
         new_track_info = current_track_info.copy()
