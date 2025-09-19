@@ -186,35 +186,46 @@ async def test_no_auth_provided(recorder_mock: Recorder, hass: HomeAssistant) ->
 
 
 @pytest.mark.parametrize(
-    ("api_setup", "expected_error"),
+    ("get_details_setup", "expected_error"),
     [
-        ({"return_value": {"details": {"status": "NOK"}}}, "site_not_active"),
-        ({"return_value": {}}, "invalid_api_key"),
-        ({"side_effect": TimeoutError()}, "cannot_connect"),
-        ({"side_effect": ClientError()}, "cannot_connect"),
+        (AsyncMock(return_value={"details": {"status": "NOK"}}), "site_not_active"),
+        (AsyncMock(return_value={}), "invalid_api_key"),
+        (AsyncMock(side_effect=TimeoutError()), "cannot_connect"),
+        (AsyncMock(side_effect=ClientError()), "cannot_connect"),
     ],
 )
 async def test_api_key_errors(
     recorder_mock: Recorder,
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     solaredge_api: Mock,
-    api_setup: dict,
+    get_details_setup: AsyncMock,
     expected_error: str,
 ) -> None:
     """Test API key validation errors."""
-    if "side_effect" in api_setup:
-        solaredge_api.get_details.side_effect = api_setup["side_effect"]
-    else:
-        solaredge_api.get_details.return_value = api_setup["return_value"]
+    solaredge_api.get_details = get_details_setup
 
+    user_input = {CONF_NAME: NAME, CONF_API_KEY: API_KEY, CONF_SITE_ID: SITE_ID}
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_NAME: NAME, CONF_API_KEY: API_KEY, CONF_SITE_ID: SITE_ID},
+        data=user_input,
     )
 
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {CONF_SITE_ID: expected_error}
+
+    # Make sure the config flow is able to recover from above error
+    solaredge_api.get_details = AsyncMock(
+        return_value={"details": {"status": "active"}}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("data") == {CONF_API_KEY: API_KEY, CONF_SITE_ID: SITE_ID}
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
@@ -242,15 +253,29 @@ async def test_web_login_errors(
     )
 
     solaredge_web_api.async_get_equipment.side_effect = api_exception
+    user_input = {
+        CONF_NAME: NAME,
+        CONF_SITE_ID: SITE_ID,
+        CONF_USERNAME: USERNAME,
+        CONF_PASSWORD: PASSWORD,
+    }
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_NAME: NAME,
-            CONF_SITE_ID: SITE_ID,
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-        },
+        result["flow_id"], user_input
     )
 
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": expected_error}
+
+    # Make sure the config flow is able to recover from above error
+    solaredge_web_api.async_get_equipment.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("data") == {
+        CONF_SITE_ID: SITE_ID,
+        CONF_USERNAME: USERNAME,
+        CONF_PASSWORD: PASSWORD,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
