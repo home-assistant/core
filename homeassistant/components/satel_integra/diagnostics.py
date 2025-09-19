@@ -1,4 +1,4 @@
-"""Diagnostics support for SMA."""
+"""Diagnostics support for Satel Integra."""
 
 from __future__ import annotations
 
