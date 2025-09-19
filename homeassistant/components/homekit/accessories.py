@@ -14,6 +14,11 @@ from pyhap.iid_manager import IIDManager
 from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
+from homeassistant.components.climate import (
+    ATTR_FAN_MODES,
+    ATTR_SWING_MODES,
+    ClimateEntityFeature,
+)
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.lawn_mower import LawnMowerEntityFeature
 from homeassistant.components.media_player import MediaPlayerDeviceClass
@@ -152,7 +157,18 @@ def get_accessory(  # noqa: C901
         a_type = "BinarySensor"
 
     elif state.domain == "climate":
-        a_type = "Thermostat"
+        # Use HeaterCooler (one tile with fan-speed & swing) if entity supports it
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if (
+            features & ClimateEntityFeature.FAN_MODE
+            or features & ClimateEntityFeature.SWING_MODE
+        ) and (
+            state.attributes.get(ATTR_FAN_MODES)  # non-empty list
+            or state.attributes.get(ATTR_SWING_MODES)
+        ):
+            a_type = "HeaterCooler"
+        else:
+            a_type = "Thermostat"
 
     elif state.domain == "cover":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
