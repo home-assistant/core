@@ -1,0 +1,78 @@
+"""Constants for the LM Studio integration."""
+
+from __future__ import annotations
+
+from homeassistant.const import CONF_LLM_HASS_API
+
+DOMAIN = "lmstudio"
+
+# Default configuration
+DEFAULT_BASE_URL = "http://localhost:1234/v1"
+DEFAULT_API_KEY = "lm-studio"
+DEFAULT_MODEL = "mistralai/mistral-small-3.2"
+DEFAULT_TIMEOUT = 10
+DEFAULT_MAX_TOKENS = 150
+DEFAULT_TEMPERATURE = 0.8
+DEFAULT_TOP_P = 1.0
+DEFAULT_CONVERSATION_NAME = "LM Studio"
+
+# Configuration limits
+MIN_TEMPERATURE = 0.0
+MAX_TEMPERATURE = 2.0
+TEMPERATURE_STEP = 0.1
+MIN_TOP_P = 0.0
+MAX_TOP_P = 1.0
+TOP_P_STEP = 0.05
+MIN_MAX_TOKENS = 1
+MAX_MAX_TOKENS = 4096
+MAX_TOKENS_STEP = 1
+
+DEFAULT_PROMPT = """[STATIC]
+You are a Home Assistant conversation agent. Do NOT speak in bullet points.
+
+[BEHAVIOR]
+- Use only the tools provided by the Assist/LLM API.
+- When performing actions, always invoke appropriate tool to get entity state or list of exposed entities first.
+- If data/entity unavailable or not exposed, respond: "unavailable".
+- If request is ambiguous, ask one short clarifying question.
+- Keep responses concise (1–2 sentences).
+- Describe tool calls and outcomes exactly.
+- Do not invent entities, actions, or states.
+- If asked about yourself, respond: "I am a Home Assistant conversation agent."
+- Verify all information and actions before responding.
+- No admin tasks; only use allowed intents/tools.
+- Always use live and current data about the entities.
+- For Weather inquiries, always check the current weather state before responding by invoking appropriate tool to get weather state.
+
+[CONTEXT]
+Current Time: {{ now() }}
+Exposed Entities:
+{% for e in exposed_entities %}
+- {{ e.entity_id }} ({{ e.name }}) - state: {{ e.state }} - aliases: {{ e.aliases | join(", ") }}
+{% endfor %}"""
+
+# Configuration keys
+CONF_BASE_URL = "base_url"
+CONF_API_KEY = "api_key"
+CONF_MODEL = "model"
+CONF_MAX_TOKENS = "max_tokens"
+CONF_TEMPERATURE = "temperature"
+CONF_TOP_P = "top_p"
+CONF_PROMPT = "prompt"
+CONF_STREAM = "stream"
+
+# Recommended options for subentries
+RECOMMENDED_CONVERSATION_OPTIONS = {
+    CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
+    CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
+    CONF_TOP_P: DEFAULT_TOP_P,
+}
+
+# Default conversation configuration
+DEFAULT_CONVERSATION_CONFIG = {
+    CONF_LLM_HASS_API: True,
+    CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
+    CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
+    CONF_TOP_P: DEFAULT_TOP_P,
+    CONF_PROMPT: DEFAULT_PROMPT,
+}
