@@ -7,12 +7,12 @@
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "secret": "Secret API",
+          "secret": "[%key:common::config_flow::data::api_key%]",
           "secure": "Secure"
         },
         "data_description": {
-          "secret": "Enter the secret API key",
-          "host": "Enter the IP or cloud domain",
+          "secret": "You can find the secret API key in the general settings page of your NXT server",
+          "host": "IP address or cloud domain of your NXT server",
           "secure": "Use a secure connection"
         }
       }
