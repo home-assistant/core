@@ -485,6 +485,30 @@ class RpcShellyCctLight(RpcShellyLightBase):
         return cast(int, self.status["ct"])
 
 
+class RpcShellyRgbCctLight(RpcShellyLightBase):
+    """Entity that controls a RGBCCT light on RPC based Shelly devices."""
+
+    _component = "RGBCCT"
+
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.RGB}
+    _attr_supported_features = LightEntityFeature.TRANSITION
+    _attr_min_color_temp_kelvin = KELVIN_MIN_VALUE_WHITE
+    _attr_max_color_temp_kelvin = KELVIN_MAX_VALUE
+
+    @property
+    def color_temp_kelvin(self) -> int:
+        """Return the CT color value in Kelvin."""
+        return cast(int, self.status["ct"])
+
+    @property
+    def color_mode(self) -> str:
+        """Return the color mode."""
+        if self.status["mode"] == "cct":
+            return ColorMode.COLOR_TEMP
+
+        return ColorMode.RGB
+
+
 class RpcShellyRgbLight(RpcShellyLightBase):
     """Entity that controls a RGB light on RPC based Shelly devices."""
 
@@ -528,6 +552,11 @@ LIGHTS: Final = {
         key="rgb",
         sub_key="output",
         entity_class=RpcShellyRgbLight,
+    ),
+    "rgbcct": RpcEntityDescription(
+        key="rgbcct",
+        sub_key="output",
+        entity_class=RpcShellyRgbCctLight,
     ),
     "rgbw": RpcEntityDescription(
         key="rgbw",
