@@ -489,13 +489,15 @@ class RuntimeEntryData:
         if not device_info.zwave_proxy_feature_flags:
             return
 
+        assert self.client.connected_address
+
         discovery_flow.async_create_flow(
             hass,
             "zwave_js",
             {"source": config_entries.SOURCE_ESPHOME},
             ESPHomeServiceInfo(
                 name=device_info.name,
-                ip_address=self.client.address,
+                ip_address=self.client.connected_address,
                 port=self.client.port,
                 noise_psk=self.client.noise_psk,
                 mac_address=device_info.mac_address,
