@@ -36,8 +36,7 @@ async def async_setup_entry(
         [
             LunatoneLight(coordinator_devices, device.id, info_api.serial_number)
             for device in devices_api.devices
-        ],
-        update_before_add=True,
+        ]
     )
 
 
