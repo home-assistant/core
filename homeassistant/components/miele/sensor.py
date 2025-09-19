@@ -901,7 +901,6 @@ class MieleProgramIdSensor(MieleSensor):
     def options(self) -> list[str]:
         """Return the options list for the actual device type."""
         return sorted(PROGRAM_IDS.get(self.device.device_type, {}).keys())
-        # return sorted(set(STATE_PROGRAM_IDS.get(self.device.device_type, {}).values()))
 
 
 class MieleTimeSensor(MieleRestorableSensor):

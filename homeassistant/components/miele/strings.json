@@ -337,8 +337,6 @@
       "program_id": {
         "name": "Program",
         "state": {
-          "one_tray": "1 tray",
-          "two_trays": "2 trays",
           "amaranth": "Amaranth",
           "almond_macaroons_1_tray": "Almond macaroons (1 tray)",
           "almond_macaroons_2_trays": "Almond macaroons (2 trays)",
@@ -523,8 +521,8 @@
           "drop_cookies_1_tray": "Drop cookies (1 tray)",
           "drop_cookies_2_trays": "Drop cookies (2 trays)",
           "dark_garments": "Dark garments",
-          "decrystallise_honey": "Decrystallise honey",
           "dark_mixed_grain_bread": "Dark mixed grain bread",
+          "decrystallise_honey": "Decrystallise honey",
           "defrost": "Defrost",
           "defrosting_with_microwave": "Defrosting with microwave",
           "defrosting_with_steam": "Defrosting with steam",
