@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
+from datetime import datetime
 
 from openwrt.ubus import Ubus
 import voluptuous as vol
@@ -13,12 +14,22 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.dt import DEFAULT_TIME_ZONE
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_SSL = False
+DEFAULT_VERIFY_SSL = True
 
 CONF_DHCP_SOFTWARE = "dhcp_software"
 DEFAULT_DHCP_SOFTWARE = "dnsmasq"
@@ -32,6 +43,8 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_DHCP_SOFTWARE, default=DEFAULT_DHCP_SOFTWARE): vol.In(
             DHCP_SOFTWARES
         ),
+        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
 
@@ -81,14 +94,16 @@ class UbusDeviceScanner(DeviceScanner):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
+        self.ssl = config[CONF_SSL]
+        self.verify_ssl = config[CONF_VERIFY_SSL]
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
         self.last_results = {}
-        self.url = f"http://{self.host}/ubus"
+        self.url = f"{'https' if self.ssl else 'http'}://{self.host}/ubus"
 
-        self.ubus = Ubus(self.url, self.username, self.password)
+        self.ubus = Ubus(self.url, self.username, self.password, verify=self.verify_ssl)
         self.hostapd = []
-        self.mac2name = None
+        self.mac2attrs = None
         self.success_init = self.ubus.connect() is not None
 
     def scan_devices(self):
@@ -96,23 +111,32 @@ class UbusDeviceScanner(DeviceScanner):
         self._update_info()
         return self.last_results
 
-    def _generate_mac2name(self):
-        """Return empty MAC to name dict. Overridden if DHCP server is set."""
-        self.mac2name = {}
+    def _generate_mac2attrs(self):
+        """Return empty MAC to attributes dict. Overridden if DHCP server is set."""
+        self.mac2attrs = {}
 
     @_refresh_on_access_denied
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        if self.mac2name is None:
-            self._generate_mac2name()
-        if self.mac2name is None:
-            # Generation of mac2name dictionary failed
+        if self.mac2attrs is None:
+            self._generate_mac2attrs()
+        if self.mac2attrs is None:
+            # Generation of mac2attrs dictionary failed
             return None
-        return self.mac2name.get(device.upper(), None)
+        attrs = self.mac2attrs.get(device.upper(), None)
+        if attrs is None:
+            return None
+        return attrs.get("name", None)
 
-    async def async_get_extra_attributes(self, device: str) -> dict[str, str]:
-        """Return the host to distinguish between multiple routers."""
-        return {"host": self.host}
+    @_refresh_on_access_denied
+    def get_extra_attributes(self, device: str) -> dict[str, str]:            
+        """Return the attributes of the given device or {} if we don't know."""
+        if self.mac2attrs is None:
+            self._generate_mac2attrs()
+        if self.mac2attrs is None:
+            # Generation of mac2attrs dictionary failed
+            return {}
+        return self.mac2attrs.get(device.upper(), {})
 
     @_refresh_on_access_denied
     def _update_info(self):
@@ -141,6 +165,9 @@ class UbusDeviceScanner(DeviceScanner):
                     if device["authorized"]:
                         self.last_results.append(key)
 
+        # Update attributes
+        self._generate_mac2attrs()
+
         return bool(results)
 
 
@@ -150,39 +177,52 @@ class DnsmasqUbusDeviceScanner(UbusDeviceScanner):
     def __init__(self, config):
         """Initialize the scanner."""
         super().__init__(config)
-        self.leasefile = None
+        self.leasefiles = None
 
-    def _generate_mac2name(self):
-        if self.leasefile is None:
+    def _generate_mac2attrs(self):
+        if self.leasefiles is None:
             if result := self.ubus.get_uci_config("dhcp", "dnsmasq"):
                 values = result["values"].values()
-                self.leasefile = next(iter(values))["leasefile"]
+                self.leasefiles = [value["leasefile"] for value in values if "leasefile" in value]
             else:
                 return
 
-        result = self.ubus.file_read(self.leasefile)
-        if result:
-            self.mac2name = {}
-            for line in result["data"].splitlines():
-                hosts = line.split(" ")
-                self.mac2name[hosts[1].upper()] = hosts[3]
-        else:
-            # Error, handled in the ubus.file_read()
-            return
+        for i, leasefile in enumerate(self.leasefiles):
+            result = self.ubus.file_read(leasefile)
+            if result:
+                if i == 0: self.mac2attrs = {}
+                for line in result["data"].splitlines():
+                    hosts = line.split(" ")
+                    mac = hosts[1].upper()
+                    expiry = datetime.fromtimestamp(int(hosts[0]), tz=DEFAULT_TIME_ZONE)
+                    # If multiple leases for the same MAC, select the one with the latest expiry
+                    if mac not in self.mac2attrs or expiry > self.mac2attrs[mac]["expiry"]: 
+                        self.mac2attrs[mac] = {
+                            "host": self.host,
+                            "name": hosts[3],
+                            "mac": mac,
+                            "ip": hosts[2],
+                            "expiry": expiry
+                        }
 
 
 class OdhcpdUbusDeviceScanner(UbusDeviceScanner):
     """Implement the Ubus device scanning for the odhcp DHCP server."""
 
-    def _generate_mac2name(self):
+    def _generate_mac2attrs(self):
         if result := self.ubus.get_dhcp_method("ipv4leases"):
-            self.mac2name = {}
+            self.mac2attrs = {}
             for device in result["device"].values():
                 for lease in device["leases"]:
                     mac = lease["mac"]  # mac = aabbccddeeff
                     # Convert it to expected format with colon
                     mac = ":".join(mac[i : i + 2] for i in range(0, len(mac), 2))
-                    self.mac2name[mac.upper()] = lease["hostname"]
+                    self.mac2attrs[mac.upper()] = {
+                        "host": self.host,  
+                        "name": lease["hostname"],
+                        "mac": mac.upper(),
+                        "ip": lease["address"]
+                    }
         else:
             # Error, handled in the ubus.get_dhcp_method()
             return
