@@ -13,6 +13,7 @@ from zigpy.config import CONF_DATABASE, CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
 
 from homeassistant.components.homeassistant_hardware.helpers import (
+    async_is_firmware_update_in_progress,
     async_notify_firmware_info,
     async_register_firmware_info_provider,
 )
@@ -133,6 +134,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # Load and cache device trigger information early
     device_registry = dr.async_get(hass)
     radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
+
+    # Check if firmware update is in progress for this device
+    device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+    if async_is_firmware_update_in_progress(hass, device_path):
+        raise ConfigEntryNotReady(
+            f"Firmware update in progress for device {device_path}"
+        )
 
     async with radio_mgr.create_zigpy_app(connect=False) as app:
         for dev in app.devices.values():

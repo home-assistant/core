@@ -33,7 +33,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 
-from .const import OTBR_DOMAIN, ZHA_DOMAIN
+from .const import DOMAIN, OTBR_DOMAIN, ZHA_DOMAIN
 from .util import (
     ApplicationType,
     FirmwareInfo,
