@@ -25,7 +25,7 @@ ACTION_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-ACTION_COVER_TOGGLE = "cover.toggle"
+ACTION_COVER_TOGGLE = "toggle"
 
 
 # ----------------------------
@@ -54,6 +54,7 @@ async def async_get_actions(
                 hausbus_special_type,
             )
 
+            # add cover.toggle as device action to make it appear in automation ui
             if hausbus_type == "HausbusCover":
                 addAction(ACTION_COVER_TOGGLE, name, device_id, ent.entity_id, actions)
 
