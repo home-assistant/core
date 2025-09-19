@@ -148,6 +148,9 @@
       },
       "evse_charging_switch": {
         "default": "mdi:ev-station"
+      },
+      "privacy_mode_button": {
+        "default": "mdi:shield-lock"
       }
     }
   }
