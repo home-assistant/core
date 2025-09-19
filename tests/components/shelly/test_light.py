@@ -934,7 +934,7 @@ async def test_rpc_cct_light_without_ct_range(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test RPC CCT light."""
+    """Test RPC CCT light without ct_range in the light config."""
     entity_id = f"{LIGHT_DOMAIN}.living_room_lamp"
 
     config = deepcopy(mock_rpc_device.config)
