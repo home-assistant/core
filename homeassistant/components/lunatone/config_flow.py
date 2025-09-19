@@ -45,11 +45,11 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
             url = user_input[CONF_URL]
             data = {CONF_URL: url}
             self._async_abort_entries_match(data)
-            auth = Auth(
+            auth_api = Auth(
                 session=async_get_clientsession(self.hass),
                 base_url=url,
             )
-            info_api = Info(auth)
+            info_api = Info(auth_api)
             try:
                 await info_api.async_update()
             except aiohttp.InvalidUrlClientError:
