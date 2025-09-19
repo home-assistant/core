@@ -4,15 +4,13 @@ from __future__ import annotations
 
 from ast import literal_eval
 import asyncio
-import base64
 import collections.abc
-from collections.abc import Callable, Generator, Iterable, MutableSequence
+from collections.abc import Callable, Generator, Iterable
 from contextlib import AbstractContextManager
 from contextvars import ContextVar
 from copy import deepcopy
 from datetime import date, datetime, time, timedelta
 from functools import cache, lru_cache, partial, wraps
-import hashlib
 import json
 import logging
 import math
@@ -20,7 +18,6 @@ from operator import contains
 import pathlib
 import random
 import re
-import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
 from types import CodeType, TracebackType
@@ -34,12 +31,11 @@ from typing import (
     cast,
     overload,
 )
-from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
 from awesomeversion import AwesomeVersion
 import jinja2
-from jinja2 import pass_context, pass_environment, pass_eval_context
+from jinja2 import pass_context, pass_eval_context
 from jinja2.runtime import AsyncLoopContext, LoopContext
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
@@ -71,32 +67,26 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.loader import bind_hass
-from homeassistant.util import (
-    convert,
-    dt as dt_util,
-    location as location_util,
-    slugify as slugify_util,
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    floor_registry as fr,
+    issue_registry as ir,
+    label_registry as lr,
+    location as loc_helper,
 )
+from homeassistant.helpers.deprecation import deprecated_function
+from homeassistant.helpers.singleton import singleton
+from homeassistant.helpers.translation import async_translate_state
+from homeassistant.helpers.typing import TemplateVarsType
+from homeassistant.loader import bind_hass
+from homeassistant.util import convert, dt as dt_util, location as location_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
-
-from . import (
-    area_registry,
-    device_registry,
-    entity_registry,
-    floor_registry as fr,
-    issue_registry,
-    label_registry,
-    location as loc_helper,
-)
-from .deprecation import deprecated_function
-from .singleton import singleton
-from .translation import async_translate_state
-from .typing import TemplateVarsType
 
 if TYPE_CHECKING:
     from _typeshed import OptExcInfo
@@ -210,7 +200,7 @@ def async_setup(hass: HomeAssistant) -> bool:
             if new_size > current_size:
                 lru.set_size(new_size)
 
-    from .event import async_track_time_interval  # noqa: PLC0415
+    from homeassistant.helpers.event import async_track_time_interval  # noqa: PLC0415
 
     cancel = async_track_time_interval(
         hass, _async_adjust_lru_sizes, timedelta(minutes=10)
@@ -525,7 +515,10 @@ class Template:
         Note: A valid hass instance should always be passed in. The hass parameter
         will be non optional in Home Assistant Core 2025.10.
         """
-        from .frame import ReportBehavior, report_usage  # noqa: PLC0415
+        from homeassistant.helpers.frame import (  # noqa: PLC0415
+            ReportBehavior,
+            report_usage,
+        )
 
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
@@ -973,7 +966,7 @@ class StateTranslated:
         state_value = state.state
         domain = state.domain
         device_class = state.attributes.get("device_class")
-        entry = entity_registry.async_get(self._hass).async_get(entity_id)
+        entry = er.async_get(self._hass).async_get(entity_id)
         platform = None if entry is None else entry.platform
         translation_key = None if entry is None else entry.translation_key
 
@@ -1274,7 +1267,7 @@ def forgiving_boolean[_T](
     """Try to convert value to a boolean."""
     try:
         # Import here, not at top-level to avoid circular import
-        from . import config_validation as cv  # noqa: PLC0415
+        from homeassistant.helpers import config_validation as cv  # noqa: PLC0415
 
         return cv.boolean(value)
     except vol.Invalid:
@@ -1299,7 +1292,7 @@ def result_as_boolean(template_result: Any | None) -> bool:
 def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
     """Expand out any groups and zones into entity states."""
     # circular import.
-    from . import entity as entity_helper  # noqa: PLC0415
+    from homeassistant.helpers import entity as entity_helper  # noqa: PLC0415
 
     search = list(args)
     found = {}
@@ -1341,8 +1334,8 @@ def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
 
 def device_entities(hass: HomeAssistant, _device_id: str) -> Iterable[str]:
     """Get entity ids for entities tied to a device."""
-    entity_reg = entity_registry.async_get(hass)
-    entries = entity_registry.async_entries_for_device(entity_reg, _device_id)
+    entity_reg = er.async_get(hass)
+    entries = er.async_entries_for_device(entity_reg, _device_id)
     return [entry.entity_id for entry in entries]
 
 
@@ -1360,19 +1353,17 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
 
     # first try if there are any config entries with a matching title
     entities: list[str] = []
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     for entry in hass.config_entries.async_entries():
         if entry.title != entry_name:
             continue
-        entries = entity_registry.async_entries_for_config_entry(
-            ent_reg, entry.entry_id
-        )
+        entries = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
         entities.extend(entry.entity_id for entry in entries)
     if entities:
         return entities
 
     # fallback to just returning all entities for a domain
-    from .entity import entity_sources  # noqa: PLC0415
+    from homeassistant.helpers.entity import entity_sources  # noqa: PLC0415
 
     return [
         entity_id
@@ -1383,7 +1374,7 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
 
 def config_entry_id(hass: HomeAssistant, entity_id: str) -> str | None:
     """Get an config entry ID from an entity ID."""
-    entity_reg = entity_registry.async_get(hass)
+    entity_reg = er.async_get(hass)
     if entity := entity_reg.async_get(entity_id):
         return entity.config_entry_id
     return None
@@ -1391,12 +1382,12 @@ def config_entry_id(hass: HomeAssistant, entity_id: str) -> str | None:
 
 def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
     """Get a device ID from an entity ID or device name."""
-    entity_reg = entity_registry.async_get(hass)
+    entity_reg = er.async_get(hass)
     entity = entity_reg.async_get(entity_id_or_device_name)
     if entity is not None:
         return entity.device_id
 
-    dev_reg = device_registry.async_get(hass)
+    dev_reg = dr.async_get(hass)
     return next(
         (
             device_id
@@ -1410,13 +1401,13 @@ def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
 
 def device_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     """Get the device name from an device id, or entity id."""
-    device_reg = device_registry.async_get(hass)
+    device_reg = dr.async_get(hass)
     if device := device_reg.async_get(lookup_value):
         return device.name_by_user or device.name
 
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     # Import here, not at top-level to avoid circular import
-    from . import config_validation as cv  # noqa: PLC0415
+    from homeassistant.helpers import config_validation as cv  # noqa: PLC0415
 
     try:
         cv.entity_id(lookup_value)
@@ -1432,7 +1423,7 @@ def device_name(hass: HomeAssistant, lookup_value: str) -> str | None:
 
 def device_attr(hass: HomeAssistant, device_or_entity_id: str, attr_name: str) -> Any:
     """Get the device specific attribute."""
-    device_reg = device_registry.async_get(hass)
+    device_reg = dr.async_get(hass)
     if not isinstance(device_or_entity_id, str):
         raise TemplateError("Must provide a device or entity ID")
     device = None
@@ -1475,14 +1466,14 @@ def is_device_attr(
 
 def issues(hass: HomeAssistant) -> dict[tuple[str, str], dict[str, Any]]:
     """Return all open issues."""
-    current_issues = issue_registry.async_get(hass).issues
+    current_issues = ir.async_get(hass).issues
     # Use JSON for safe representation
     return {k: v.to_json() for (k, v) in current_issues.items()}
 
 
 def issue(hass: HomeAssistant, domain: str, issue_id: str) -> dict[str, Any] | None:
     """Get issue by domain and issue_id."""
-    result = issue_registry.async_get(hass).async_get_issue(domain, issue_id)
+    result = ir.async_get(hass).async_get_issue(domain, issue_id)
     if result:
         return result.to_json()
     return None
@@ -1505,7 +1496,7 @@ def floor_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
         return floors_list[0].floor_id
 
     if aid := area_id(hass, lookup_value):
-        area_reg = area_registry.async_get(hass)
+        area_reg = ar.async_get(hass)
         if area := area_reg.async_get_area(aid):
             return area.floor_id
 
@@ -1519,7 +1510,7 @@ def floor_name(hass: HomeAssistant, lookup_value: str) -> str | None:
         return floor.name
 
     if aid := area_id(hass, lookup_value):
-        area_reg = area_registry.async_get(hass)
+        area_reg = ar.async_get(hass)
         if (
             (area := area_reg.async_get_area(aid))
             and area.floor_id
@@ -1542,8 +1533,8 @@ def floor_areas(hass: HomeAssistant, floor_id_or_name: str) -> Iterable[str]:
     if _floor_id is None:
         return []
 
-    area_reg = area_registry.async_get(hass)
-    entries = area_registry.async_entries_for_floor(area_reg, _floor_id)
+    area_reg = ar.async_get(hass)
+    entries = ar.async_entries_for_floor(area_reg, _floor_id)
     return [entry.id for entry in entries if entry.id]
 
 
@@ -1558,12 +1549,12 @@ def floor_entities(hass: HomeAssistant, floor_id_or_name: str) -> Iterable[str]:
 
 def areas(hass: HomeAssistant) -> Iterable[str | None]:
     """Return all areas."""
-    return list(area_registry.async_get(hass).areas)
+    return list(ar.async_get(hass).areas)
 
 
 def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     """Get the area ID from an area name, alias, device id, or entity id."""
-    area_reg = area_registry.async_get(hass)
+    area_reg = ar.async_get(hass)
     lookup_str = str(lookup_value)
     if area := area_reg.async_get_area_by_name(lookup_str):
         return area.id
@@ -1571,10 +1562,10 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     if areas_list:
         return areas_list[0].id
 
-    ent_reg = entity_registry.async_get(hass)
-    dev_reg = device_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
     # Import here, not at top-level to avoid circular import
-    from . import config_validation as cv  # noqa: PLC0415
+    from homeassistant.helpers import config_validation as cv  # noqa: PLC0415
 
     try:
         cv.entity_id(lookup_value)
@@ -1596,7 +1587,7 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     return None
 
 
-def _get_area_name(area_reg: area_registry.AreaRegistry, valid_area_id: str) -> str:
+def _get_area_name(area_reg: ar.AreaRegistry, valid_area_id: str) -> str:
     """Get area name from valid area ID."""
     area = area_reg.async_get_area(valid_area_id)
     assert area
@@ -1605,14 +1596,14 @@ def _get_area_name(area_reg: area_registry.AreaRegistry, valid_area_id: str) -> 
 
 def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     """Get the area name from an area id, device id, or entity id."""
-    area_reg = area_registry.async_get(hass)
+    area_reg = ar.async_get(hass)
     if area := area_reg.async_get_area(lookup_value):
         return area.name
 
-    dev_reg = device_registry.async_get(hass)
-    ent_reg = entity_registry.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
     # Import here, not at top-level to avoid circular import
-    from . import config_validation as cv  # noqa: PLC0415
+    from homeassistant.helpers import config_validation as cv  # noqa: PLC0415
 
     try:
         cv.entity_id(lookup_value)
@@ -1649,19 +1640,18 @@ def area_entities(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
         _area_id = area_id_or_name
     if _area_id is None:
         return []
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     entity_ids = [
-        entry.entity_id
-        for entry in entity_registry.async_entries_for_area(ent_reg, _area_id)
+        entry.entity_id for entry in er.async_entries_for_area(ent_reg, _area_id)
     ]
-    dev_reg = device_registry.async_get(hass)
+    dev_reg = dr.async_get(hass)
     # We also need to add entities tied to a device in the area that don't themselves
     # have an area specified since they inherit the area from the device.
     entity_ids.extend(
         [
             entity.entity_id
-            for device in device_registry.async_entries_for_area(dev_reg, _area_id)
-            for entity in entity_registry.async_entries_for_device(ent_reg, device.id)
+            for device in dr.async_entries_for_area(dev_reg, _area_id)
+            for entity in er.async_entries_for_device(ent_reg, device.id)
             if entity.area_id is None
         ]
     )
@@ -1679,21 +1669,21 @@ def area_devices(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
         _area_id = area_id(hass, area_id_or_name)
     if _area_id is None:
         return []
-    dev_reg = device_registry.async_get(hass)
-    entries = device_registry.async_entries_for_area(dev_reg, _area_id)
+    dev_reg = dr.async_get(hass)
+    entries = dr.async_entries_for_area(dev_reg, _area_id)
     return [entry.id for entry in entries]
 
 
 def labels(hass: HomeAssistant, lookup_value: Any = None) -> Iterable[str | None]:
     """Return all labels, or those from a area ID, device ID, or entity ID."""
-    label_reg = label_registry.async_get(hass)
+    label_reg = lr.async_get(hass)
     if lookup_value is None:
         return list(label_reg.labels)
 
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
 
     # Import here, not at top-level to avoid circular import
-    from . import config_validation as cv  # noqa: PLC0415
+    from homeassistant.helpers import config_validation as cv  # noqa: PLC0415
 
     lookup_value = str(lookup_value)
 
@@ -1706,12 +1696,12 @@ def labels(hass: HomeAssistant, lookup_value: Any = None) -> Iterable[str | None
             return list(entity.labels)
 
     # Check if this could be a device ID
-    dev_reg = device_registry.async_get(hass)
+    dev_reg = dr.async_get(hass)
     if device := dev_reg.async_get(lookup_value):
         return list(device.labels)
 
     # Check if this could be a area ID
-    area_reg = area_registry.async_get(hass)
+    area_reg = ar.async_get(hass)
     if area := area_reg.async_get_area(lookup_value):
         return list(area.labels)
 
@@ -1720,7 +1710,7 @@ def labels(hass: HomeAssistant, lookup_value: Any = None) -> Iterable[str | None
 
 def label_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
     """Get the label ID from a label name."""
-    label_reg = label_registry.async_get(hass)
+    label_reg = lr.async_get(hass)
     if label := label_reg.async_get_label_by_name(str(lookup_value)):
         return label.label_id
     return None
@@ -1728,7 +1718,7 @@ def label_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
 
 def label_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     """Get the label name from a label ID."""
-    label_reg = label_registry.async_get(hass)
+    label_reg = lr.async_get(hass)
     if label := label_reg.async_get_label(lookup_value):
         return label.name
     return None
@@ -1736,7 +1726,7 @@ def label_name(hass: HomeAssistant, lookup_value: str) -> str | None:
 
 def label_description(hass: HomeAssistant, lookup_value: str) -> str | None:
     """Get the label description from a label ID."""
-    label_reg = label_registry.async_get(hass)
+    label_reg = lr.async_get(hass)
     if label := label_reg.async_get_label(lookup_value):
         return label.description
     return None
@@ -1755,8 +1745,8 @@ def label_areas(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
     """Return areas for a given label ID or name."""
     if (_label_id := _label_id_or_name(hass, label_id_or_name)) is None:
         return []
-    area_reg = area_registry.async_get(hass)
-    entries = area_registry.async_entries_for_label(area_reg, _label_id)
+    area_reg = ar.async_get(hass)
+    entries = ar.async_entries_for_label(area_reg, _label_id)
     return [entry.id for entry in entries]
 
 
@@ -1764,8 +1754,8 @@ def label_devices(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
     """Return device IDs for a given label ID or name."""
     if (_label_id := _label_id_or_name(hass, label_id_or_name)) is None:
         return []
-    dev_reg = device_registry.async_get(hass)
-    entries = device_registry.async_entries_for_label(dev_reg, _label_id)
+    dev_reg = dr.async_get(hass)
+    entries = dr.async_entries_for_label(dev_reg, _label_id)
     return [entry.id for entry in entries]
 
 
@@ -1773,8 +1763,8 @@ def label_entities(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
     """Return entities for a given label ID or name."""
     if (_label_id := _label_id_or_name(hass, label_id_or_name)) is None:
         return []
-    ent_reg = entity_registry.async_get(hass)
-    entries = entity_registry.async_entries_for_label(ent_reg, _label_id)
+    ent_reg = er.async_get(hass)
+    entries = er.async_entries_for_label(ent_reg, _label_id)
     return [entry.entity_id for entry in entries]
 
 
@@ -1913,7 +1903,7 @@ def distance(hass: HomeAssistant, *args: Any) -> float | None:
 
 def is_hidden_entity(hass: HomeAssistant, entity_id: str) -> bool:
     """Test if an entity is hidden."""
-    entity_reg = entity_registry.async_get(hass)
+    entity_reg = er.async_get(hass)
     entry = entity_reg.async_get(entity_id)
     return entry is not None and entry.hidden
 
@@ -2050,119 +2040,9 @@ def as_function(macro: jinja2.runtime.Macro) -> Callable[..., Any]:
     return wrapper
 
 
-def logarithm(value, base=math.e, default=_SENTINEL):
-    """Filter and function to get logarithm of the value with a specific base."""
-    try:
-        base_float = float(base)
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("log", base)
-        return default
-    try:
-        value_float = float(value)
-        return math.log(value_float, base_float)
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("log", value)
-        return default
-
-
-def sine(value, default=_SENTINEL):
-    """Filter and function to get sine of the value."""
-    try:
-        return math.sin(float(value))
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("sin", value)
-        return default
-
-
-def cosine(value, default=_SENTINEL):
-    """Filter and function to get cosine of the value."""
-    try:
-        return math.cos(float(value))
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("cos", value)
-        return default
-
-
-def tangent(value, default=_SENTINEL):
-    """Filter and function to get tangent of the value."""
-    try:
-        return math.tan(float(value))
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("tan", value)
-        return default
-
-
-def arc_sine(value, default=_SENTINEL):
-    """Filter and function to get arc sine of the value."""
-    try:
-        return math.asin(float(value))
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("asin", value)
-        return default
-
-
-def arc_cosine(value, default=_SENTINEL):
-    """Filter and function to get arc cosine of the value."""
-    try:
-        return math.acos(float(value))
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("acos", value)
-        return default
-
-
-def arc_tangent(value, default=_SENTINEL):
-    """Filter and function to get arc tangent of the value."""
-    try:
-        return math.atan(float(value))
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("atan", value)
-        return default
-
-
-def arc_tangent2(*args, default=_SENTINEL):
-    """Filter and function to calculate four quadrant arc tangent of y / x.
-
-    The parameters to atan2 may be passed either in an iterable or as separate arguments
-    The default value may be passed either as a positional or in a keyword argument
-    """
-    try:
-        if 1 <= len(args) <= 2 and isinstance(args[0], (list, tuple)):
-            if len(args) == 2 and default is _SENTINEL:
-                # Default value passed as a positional argument
-                default = args[1]
-            args = args[0]
-        elif len(args) == 3 and default is _SENTINEL:
-            # Default value passed as a positional argument
-            default = args[2]
-
-        return math.atan2(float(args[0]), float(args[1]))
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("atan2", args)
-        return default
-
-
 def version(value):
     """Filter and function to get version object of the value."""
     return AwesomeVersion(value)
-
-
-def square_root(value, default=_SENTINEL):
-    """Filter and function to get square root of the value."""
-    try:
-        return math.sqrt(float(value))
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("sqrt", value)
-        return default
 
 
 def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True, default=_SENTINEL):
@@ -2318,118 +2198,6 @@ def fail_when_undefined(value):
     return value
 
 
-def min_max_from_filter(builtin_filter: Any, name: str) -> Any:
-    """Convert a built-in min/max Jinja filter to a global function.
-
-    The parameters may be passed as an iterable or as separate arguments.
-    """
-
-    @pass_environment
-    @wraps(builtin_filter)
-    def wrapper(environment: jinja2.Environment, *args: Any, **kwargs: Any) -> Any:
-        if len(args) == 0:
-            raise TypeError(f"{name} expected at least 1 argument, got 0")
-
-        if len(args) == 1:
-            if isinstance(args[0], Iterable):
-                return builtin_filter(environment, args[0], **kwargs)
-
-            raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
-
-        return builtin_filter(environment, args, **kwargs)
-
-    return pass_environment(wrapper)
-
-
-def average(*args: Any, default: Any = _SENTINEL) -> Any:
-    """Filter and function to calculate the arithmetic mean.
-
-    Calculates of an iterable or of two or more arguments.
-
-    The parameters may be passed as an iterable or as separate arguments.
-    """
-    if len(args) == 0:
-        raise TypeError("average expected at least 1 argument, got 0")
-
-    # If first argument is iterable and more than 1 argument provided but not a named
-    # default, then use 2nd argument as default.
-    if isinstance(args[0], Iterable):
-        average_list = args[0]
-        if len(args) > 1 and default is _SENTINEL:
-            default = args[1]
-    elif len(args) == 1:
-        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
-    else:
-        average_list = args
-
-    try:
-        return statistics.fmean(average_list)
-    except (TypeError, statistics.StatisticsError):
-        if default is _SENTINEL:
-            raise_no_default("average", args)
-        return default
-
-
-def median(*args: Any, default: Any = _SENTINEL) -> Any:
-    """Filter and function to calculate the median.
-
-    Calculates median of an iterable of two or more arguments.
-
-    The parameters may be passed as an iterable or as separate arguments.
-    """
-    if len(args) == 0:
-        raise TypeError("median expected at least 1 argument, got 0")
-
-    # If first argument is a list or tuple and more than 1 argument provided but not a named
-    # default, then use 2nd argument as default.
-    if isinstance(args[0], Iterable):
-        median_list = args[0]
-        if len(args) > 1 and default is _SENTINEL:
-            default = args[1]
-    elif len(args) == 1:
-        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
-    else:
-        median_list = args
-
-    try:
-        return statistics.median(median_list)
-    except (TypeError, statistics.StatisticsError):
-        if default is _SENTINEL:
-            raise_no_default("median", args)
-        return default
-
-
-def statistical_mode(*args: Any, default: Any = _SENTINEL) -> Any:
-    """Filter and function to calculate the statistical mode.
-
-    Calculates mode of an iterable of two or more arguments.
-
-    The parameters may be passed as an iterable or as separate arguments.
-    """
-    if not args:
-        raise TypeError("statistical_mode expected at least 1 argument, got 0")
-
-    # If first argument is a list or tuple and more than 1 argument provided but not a named
-    # default, then use 2nd argument as default.
-    if len(args) == 1 and isinstance(args[0], Iterable):
-        mode_list = args[0]
-    elif isinstance(args[0], list | tuple):
-        mode_list = args[0]
-        if len(args) > 1 and default is _SENTINEL:
-            default = args[1]
-    elif len(args) == 1:
-        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
-    else:
-        mode_list = args
-
-    try:
-        return statistics.mode(mode_list)
-    except (TypeError, statistics.StatisticsError):
-        if default is _SENTINEL:
-            raise_no_default("statistical_mode", args)
-        return default
-
-
 def forgiving_float(value, default=_SENTINEL):
     """Try to convert value to a float."""
     try:
@@ -2477,31 +2245,6 @@ def is_number(value):
     return True
 
 
-def _is_list(value: Any) -> bool:
-    """Return whether a value is a list."""
-    return isinstance(value, list)
-
-
-def _is_set(value: Any) -> bool:
-    """Return whether a value is a set."""
-    return isinstance(value, set)
-
-
-def _is_tuple(value: Any) -> bool:
-    """Return whether a value is a tuple."""
-    return isinstance(value, tuple)
-
-
-def _to_set(value: Any) -> set[Any]:
-    """Convert value to set."""
-    return set(value)
-
-
-def _to_tuple(value):
-    """Convert value to tuple."""
-    return tuple(value)
-
-
 def _is_datetime(value: Any) -> bool:
     """Return whether a value is a datetime."""
     return isinstance(value, datetime)
@@ -2510,61 +2253,6 @@ def _is_datetime(value: Any) -> bool:
 def _is_string_like(value: Any) -> bool:
     """Return whether a value is a string or string like object."""
     return isinstance(value, (str, bytes, bytearray))
-
-
-def regex_match(value, find="", ignorecase=False):
-    """Match value using regex."""
-    if not isinstance(value, str):
-        value = str(value)
-    flags = re.IGNORECASE if ignorecase else 0
-    return bool(_regex_cache(find, flags).match(value))
-
-
-_regex_cache = lru_cache(maxsize=128)(re.compile)
-
-
-def regex_replace(value="", find="", replace="", ignorecase=False):
-    """Replace using regex."""
-    if not isinstance(value, str):
-        value = str(value)
-    flags = re.IGNORECASE if ignorecase else 0
-    return _regex_cache(find, flags).sub(replace, value)
-
-
-def regex_search(value, find="", ignorecase=False):
-    """Search using regex."""
-    if not isinstance(value, str):
-        value = str(value)
-    flags = re.IGNORECASE if ignorecase else 0
-    return bool(_regex_cache(find, flags).search(value))
-
-
-def regex_findall_index(value, find="", index=0, ignorecase=False):
-    """Find all matches using regex and then pick specific match index."""
-    return regex_findall(value, find, ignorecase)[index]
-
-
-def regex_findall(value, find="", ignorecase=False):
-    """Find all matches using regex."""
-    if not isinstance(value, str):
-        value = str(value)
-    flags = re.IGNORECASE if ignorecase else 0
-    return _regex_cache(find, flags).findall(value)
-
-
-def bitwise_and(first_value, second_value):
-    """Perform a bitwise and operation."""
-    return first_value & second_value
-
-
-def bitwise_or(first_value, second_value):
-    """Perform a bitwise or operation."""
-    return first_value | second_value
-
-
-def bitwise_xor(first_value, second_value):
-    """Perform a bitwise xor operation."""
-    return first_value ^ second_value
 
 
 def struct_pack(value: Any | None, format_string: str) -> bytes | None:
@@ -2606,32 +2294,6 @@ def struct_unpack(value: bytes, format_string: str, offset: int = 0) -> Any | No
 def from_hex(value: str) -> bytes:
     """Perform hex string decode."""
     return bytes.fromhex(value)
-
-
-def base64_encode(value: str | bytes) -> str:
-    """Perform base64 encode."""
-    if isinstance(value, str):
-        value = value.encode("utf-8")
-    return base64.b64encode(value).decode("utf-8")
-
-
-def base64_decode(value: str, encoding: str | None = "utf-8") -> str | bytes:
-    """Perform base64 decode."""
-    decoded = base64.b64decode(value)
-    if encoding:
-        return decoded.decode(encoding)
-
-    return decoded
-
-
-def ordinal(value):
-    """Perform ordinal conversion."""
-    suffixes = ["th", "st", "nd", "rd"] + ["th"] * 6  # codespell:ignore nd
-    return str(value) + (
-        suffixes[(int(str(value)[-1])) % 10]
-        if int(str(value)[-2:]) % 100 not in range(11, 14)
-        else "th"
-    )
 
 
 def from_json(value, default=_SENTINEL):
@@ -2780,16 +2442,6 @@ def time_until(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -
     return dt_util.get_time_remaining(value, precision)
 
 
-def urlencode(value):
-    """Urlencode dictionary and return as UTF-8 string."""
-    return urllib_urlencode(value).encode("utf-8")
-
-
-def slugify(value, separator="_"):
-    """Convert a string into a slug, such as what is used for entity ids."""
-    return slugify_util(value, separator=separator)
-
-
 def iif(
     value: Any, if_true: Any = True, if_false: Any = False, if_none: Any = _SENTINEL
 ) -> Any:
@@ -2810,96 +2462,9 @@ def iif(
     return if_false
 
 
-def shuffle(*args: Any, seed: Any = None) -> MutableSequence[Any]:
-    """Shuffle a list, either with a seed or without."""
-    if not args:
-        raise TypeError("shuffle expected at least 1 argument, got 0")
-
-    # If first argument is iterable and more than 1 argument provided
-    # but not a named seed, then use 2nd argument as seed.
-    if isinstance(args[0], Iterable):
-        items = list(args[0])
-        if len(args) > 1 and seed is None:
-            seed = args[1]
-    elif len(args) == 1:
-        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
-    else:
-        items = list(args)
-
-    if seed:
-        r = random.Random(seed)
-        r.shuffle(items)
-    else:
-        random.shuffle(items)
-    return items
-
-
 def typeof(value: Any) -> Any:
     """Return the type of value passed to debug types."""
     return value.__class__.__name__
-
-
-def flatten(value: Iterable[Any], levels: int | None = None) -> list[Any]:
-    """Flattens list of lists."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(f"flatten expected a list, got {type(value).__name__}")
-
-    flattened: list[Any] = []
-    for item in value:
-        if isinstance(item, Iterable) and not isinstance(item, str):
-            if levels is None:
-                flattened.extend(flatten(item))
-            elif levels >= 1:
-                flattened.extend(flatten(item, levels=(levels - 1)))
-            else:
-                flattened.append(item)
-        else:
-            flattened.append(item)
-    return flattened
-
-
-def intersect(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
-    """Return the common elements between two lists."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(f"intersect expected a list, got {type(value).__name__}")
-    if not isinstance(other, Iterable) or isinstance(other, str):
-        raise TypeError(f"intersect expected a list, got {type(other).__name__}")
-
-    return list(set(value) & set(other))
-
-
-def difference(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
-    """Return elements in first list that are not in second list."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(f"difference expected a list, got {type(value).__name__}")
-    if not isinstance(other, Iterable) or isinstance(other, str):
-        raise TypeError(f"difference expected a list, got {type(other).__name__}")
-
-    return list(set(value) - set(other))
-
-
-def union(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
-    """Return all unique elements from both lists combined."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(f"union expected a list, got {type(value).__name__}")
-    if not isinstance(other, Iterable) or isinstance(other, str):
-        raise TypeError(f"union expected a list, got {type(other).__name__}")
-
-    return list(set(value) | set(other))
-
-
-def symmetric_difference(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
-    """Return elements that are in either list but not in both."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(
-            f"symmetric_difference expected a list, got {type(value).__name__}"
-        )
-    if not isinstance(other, Iterable) or isinstance(other, str):
-        raise TypeError(
-            f"symmetric_difference expected a list, got {type(other).__name__}"
-        )
-
-    return list(set(value) ^ set(other))
 
 
 def combine(*args: Any, recursive: bool = False) -> dict[Any, Any]:
@@ -2926,26 +2491,6 @@ def combine(*args: Any, recursive: bool = False) -> dict[Any, Any]:
             result |= arg
 
     return result
-
-
-def md5(value: str) -> str:
-    """Generate md5 hash from a string."""
-    return hashlib.md5(value.encode()).hexdigest()
-
-
-def sha1(value: str) -> str:
-    """Generate sha1 hash from a string."""
-    return hashlib.sha1(value.encode()).hexdigest()
-
-
-def sha256(value: str) -> str:
-    """Generate sha256 hash from a string."""
-    return hashlib.sha256(value.encode()).hexdigest()
-
-
-def sha512(value: str) -> str:
-    """Generate sha512 hash from a string."""
-    return hashlib.sha512(value.encode()).hexdigest()
 
 
 class TemplateContextManager(AbstractContextManager):
@@ -3096,64 +2641,42 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         """Initialise template environment."""
         super().__init__(undefined=make_logging_undefined(strict, log_fn))
         self.hass = hass
+        self.limited = limited
         self.template_cache: weakref.WeakValueDictionary[
             str | jinja2.nodes.Template, CodeType | None
         ] = weakref.WeakValueDictionary()
         self.add_extension("jinja2.ext.loopcontrols")
         self.add_extension("jinja2.ext.do")
+        self.add_extension("homeassistant.helpers.template.extensions.Base64Extension")
+        self.add_extension(
+            "homeassistant.helpers.template.extensions.CollectionExtension"
+        )
+        self.add_extension("homeassistant.helpers.template.extensions.CryptoExtension")
+        self.add_extension("homeassistant.helpers.template.extensions.MathExtension")
+        self.add_extension("homeassistant.helpers.template.extensions.RegexExtension")
+        self.add_extension("homeassistant.helpers.template.extensions.StringExtension")
 
-        self.globals["acos"] = arc_cosine
+        self.globals["apply"] = apply
         self.globals["as_datetime"] = as_datetime
         self.globals["as_function"] = as_function
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timedelta"] = as_timedelta
         self.globals["as_timestamp"] = forgiving_as_timestamp
-        self.globals["asin"] = arc_sine
-        self.globals["atan"] = arc_tangent
-        self.globals["atan2"] = arc_tangent2
-        self.globals["average"] = average
         self.globals["bool"] = forgiving_boolean
         self.globals["combine"] = combine
-        self.globals["cos"] = cosine
-        self.globals["difference"] = difference
-        self.globals["e"] = math.e
-        self.globals["flatten"] = flatten
         self.globals["float"] = forgiving_float
         self.globals["iif"] = iif
         self.globals["int"] = forgiving_int
-        self.globals["intersect"] = intersect
         self.globals["is_number"] = is_number
-        self.globals["log"] = logarithm
-        self.globals["max"] = min_max_from_filter(self.filters["max"], "max")
-        self.globals["md5"] = md5
-        self.globals["median"] = median
         self.globals["merge_response"] = merge_response
-        self.globals["min"] = min_max_from_filter(self.filters["min"], "min")
         self.globals["pack"] = struct_pack
-        self.globals["pi"] = math.pi
-        self.globals["set"] = _to_set
-        self.globals["sha1"] = sha1
-        self.globals["sha256"] = sha256
-        self.globals["sha512"] = sha512
-        self.globals["shuffle"] = shuffle
-        self.globals["sin"] = sine
-        self.globals["slugify"] = slugify
-        self.globals["sqrt"] = square_root
-        self.globals["statistical_mode"] = statistical_mode
         self.globals["strptime"] = strptime
-        self.globals["symmetric_difference"] = symmetric_difference
-        self.globals["tan"] = tangent
-        self.globals["tau"] = math.pi * 2
         self.globals["timedelta"] = timedelta
-        self.globals["tuple"] = _to_tuple
         self.globals["typeof"] = typeof
-        self.globals["union"] = union
         self.globals["unpack"] = struct_unpack
-        self.globals["urlencode"] = urlencode
         self.globals["version"] = version
         self.globals["zip"] = zip
 
-        self.filters["acos"] = arc_cosine
         self.filters["add"] = add
         self.filters["apply"] = apply
         self.filters["as_datetime"] = as_datetime
@@ -3161,59 +2684,26 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["as_local"] = dt_util.as_local
         self.filters["as_timedelta"] = as_timedelta
         self.filters["as_timestamp"] = forgiving_as_timestamp
-        self.filters["asin"] = arc_sine
-        self.filters["atan"] = arc_tangent
-        self.filters["atan2"] = arc_tangent2
-        self.filters["average"] = average
-        self.filters["base64_decode"] = base64_decode
-        self.filters["base64_encode"] = base64_encode
-        self.filters["bitwise_and"] = bitwise_and
-        self.filters["bitwise_or"] = bitwise_or
-        self.filters["bitwise_xor"] = bitwise_xor
         self.filters["bool"] = forgiving_boolean
         self.filters["combine"] = combine
         self.filters["contains"] = contains
-        self.filters["cos"] = cosine
-        self.filters["difference"] = difference
-        self.filters["flatten"] = flatten
         self.filters["float"] = forgiving_float_filter
         self.filters["from_json"] = from_json
         self.filters["from_hex"] = from_hex
         self.filters["iif"] = iif
         self.filters["int"] = forgiving_int_filter
-        self.filters["intersect"] = intersect
         self.filters["is_defined"] = fail_when_undefined
         self.filters["is_number"] = is_number
-        self.filters["log"] = logarithm
-        self.filters["md5"] = md5
-        self.filters["median"] = median
         self.filters["multiply"] = multiply
         self.filters["ord"] = ord
-        self.filters["ordinal"] = ordinal
         self.filters["pack"] = struct_pack
         self.filters["random"] = random_every_time
-        self.filters["regex_findall_index"] = regex_findall_index
-        self.filters["regex_findall"] = regex_findall
-        self.filters["regex_match"] = regex_match
-        self.filters["regex_replace"] = regex_replace
-        self.filters["regex_search"] = regex_search
         self.filters["round"] = forgiving_round
-        self.filters["sha1"] = sha1
-        self.filters["sha256"] = sha256
-        self.filters["sha512"] = sha512
-        self.filters["shuffle"] = shuffle
-        self.filters["sin"] = sine
-        self.filters["slugify"] = slugify
-        self.filters["sqrt"] = square_root
-        self.filters["statistical_mode"] = statistical_mode
-        self.filters["symmetric_difference"] = symmetric_difference
-        self.filters["tan"] = tangent
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
         self.filters["timestamp_utc"] = timestamp_utc
         self.filters["to_json"] = to_json
         self.filters["typeof"] = typeof
-        self.filters["union"] = union
         self.filters["unpack"] = struct_unpack
         self.filters["version"] = version
 
@@ -3221,12 +2711,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.tests["contains"] = contains
         self.tests["datetime"] = _is_datetime
         self.tests["is_number"] = is_number
-        self.tests["list"] = _is_list
-        self.tests["match"] = regex_match
-        self.tests["search"] = regex_search
-        self.tests["set"] = _is_set
         self.tests["string_like"] = _is_string_like
-        self.tests["tuple"] = _is_tuple
 
         if hass is None:
             return
