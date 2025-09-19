@@ -4,12 +4,35 @@ from __future__ import annotations
 
 from contextlib import suppress
 import io
+import re
 import wave
+import voluptuous as vol
 
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import LOGGER
 
+
+def is_valid_voices(voices: dict[str, str] | None = None):
+    """Validate the voices option.
+
+    Args:
+        voices: A dictionary mapping voice names to language codes.
+
+    Returns:
+        True if voices is a valid dictionary of string keys and string values,
+        False otherwise.
+    """
+    if not voices:
+        return False
+    
+    DICT_STR_STR_SCHEMA = vol.Schema({str: str})
+    try:
+        DICT_STR_STR_SCHEMA(voices)
+    except vol.Invalid:
+        return False
+
+    return True
 
 def convert_to_wav(audio_data: bytes, mime_type: str) -> bytes:
     """Generate a WAV file header for the given audio data and parameters.
