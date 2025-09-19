@@ -33,11 +33,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
+    device_registry as dr,
     discovery_flow,
     entity_platform,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.start import async_at_start
@@ -59,8 +60,9 @@ from .const import (
     DEFAULT_VOLUME_STEP,
     DISCOVERY_TASK,
     DOMAIN,
-    KNOWN_PLAYERS,
-    KNOWN_SERVERS,
+    SERVER_MANUFACTURER,
+    SERVER_MODEL,
+    SERVER_MODEL_ID,
     SIGNAL_PLAYER_DISCOVERED,
     SQUEEZEBOX_SOURCE_STRINGS,
 )
@@ -125,9 +127,52 @@ async def async_setup_entry(
     """Set up the Squeezebox media_player platform from a server config entry."""
 
     # Add media player entities when discovered
-    async def _player_discovered(player: SqueezeBoxPlayerUpdateCoordinator) -> None:
-        _LOGGER.debug("Setting up media_player entity for player %s", player)
-        async_add_entities([SqueezeBoxMediaPlayerEntity(player)])
+    async def _player_discovered(
+        coordinator: SqueezeBoxPlayerUpdateCoordinator,
+    ) -> None:
+        player = coordinator.player
+        _LOGGER.debug("Setting up media_player device and entity for player %s", player)
+        device_registry = dr.async_get(hass)
+        server_device = device_registry.async_get_device(
+            identifiers={(DOMAIN, coordinator.server_uuid)},
+        )
+
+        name = player.name
+        model = player.model
+        manufacturer = player.creator
+        model_id = player.model_type
+        sw_version = ""
+        # Why? so we nicely merge with a server and a player linked by a MAC server is not all info lost
+        if (
+            server_device
+            and (CONNECTION_NETWORK_MAC, format_mac(player.player_id))
+            in server_device.connections
+        ):
+            _LOGGER.debug("Shared server & player device %s", server_device)
+            name = server_device.name
+            sw_version = server_device.sw_version or sw_version
+            model = SERVER_MODEL + "/" + model if model else SERVER_MODEL
+            manufacturer = (
+                SERVER_MANUFACTURER + " / " + manufacturer
+                if manufacturer
+                else SERVER_MANUFACTURER
+            )
+            model_id = SERVER_MODEL_ID + "/" + model_id if model_id else SERVER_MODEL_ID
+
+        device = device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, player.player_id)},
+            connections={(CONNECTION_NETWORK_MAC, player.player_id)},
+            name=name,
+            model=model,
+            manufacturer=manufacturer,
+            model_id=model_id,
+            hw_version=player.firmware,
+            sw_version=sw_version,
+            via_device=(DOMAIN, coordinator.server_uuid),
+        )
+        _LOGGER.debug("Creating / Updating player device %s", device)
+        async_add_entities([SqueezeBoxMediaPlayerEntity(coordinator)])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_PLAYER_DISCOVERED, _player_discovered)
@@ -181,10 +226,7 @@ def get_announce_timeout(extra: dict) -> int | None:
 
 
 class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
-    """Representation of the media player features of a SqueezeBox device.
-
-    Wraps a pysqueezebox.Player() object.
-    """
+    """Representation of the media player features of a SqueezeBox device."""
 
     _attr_supported_features = (
         MediaPlayerEntityFeature.BROWSE_MEDIA
@@ -241,9 +283,11 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     @property
     def browse_limit(self) -> int:
-        """Return the step to be used for volume up down."""
-        return self.coordinator.config_entry.options.get(
-            CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
+        """Return the max number of items to return from browse."""
+        return int(
+            self.coordinator.config_entry.options.get(
+                CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
+            )
         )
 
     @property
@@ -267,17 +311,22 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
         return None
 
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        await self._browse_data.async_init(self._player, self.browse_limit)
+
     async def async_will_remove_from_hass(self) -> None:
         """Remove from list of known players when removed from hass."""
-        known_servers = self.hass.data[DOMAIN][KNOWN_SERVERS]
-        known_players = known_servers[self.coordinator.server_uuid][KNOWN_PLAYERS]
-        known_players.remove(self.coordinator.player.player_id)
+        self.coordinator.config_entry.runtime_data.known_player_ids.remove(
+            self.coordinator.player.player_id
+        )
 
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        if self._player.volume:
-            return int(float(self._player.volume)) / 100.0
+        if self._player.volume is not None:
+            return float(self._player.volume) / 100.0
 
         return None
 
@@ -386,7 +435,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        volume_percent = str(int(volume * 100))
+        volume_percent = str(round(volume * 100))
         await self._player.async_set_volume(volume_percent)
         await self.coordinator.async_refresh()
 
@@ -558,7 +607,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         _media_content_type_list = (
             query.media_content_type.lower().replace(", ", ",").split(",")
             if query.media_content_type
-            else ["albums", "tracks", "artists", "genres"]
+            else ["albums", "tracks", "artists", "genres", "playlists"]
         )
 
         if query.media_content_type and set(_media_content_type_list).difference(

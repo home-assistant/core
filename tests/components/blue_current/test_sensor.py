@@ -7,16 +7,9 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import init_integration
+from . import DEFAULT_CHARGE_POINT, init_integration
 
 from tests.common import MockConfigEntry
-
-charge_point = {
-    "evse_id": "101",
-    "model_type": "",
-    "name": "",
-}
-
 
 charge_point_status = {
     "actual_v1": 14,
@@ -97,7 +90,7 @@ async def test_sensors_created(
         hass,
         config_entry,
         "sensor",
-        charge_point,
+        DEFAULT_CHARGE_POINT,
         charge_point_status | charge_point_status_timestamps,
         grid,
     )
@@ -116,7 +109,7 @@ async def test_sensors(
 ) -> None:
     """Test the underlying sensors."""
     await init_integration(
-        hass, config_entry, "sensor", charge_point, charge_point_status, grid
+        hass, config_entry, "sensor", DEFAULT_CHARGE_POINT, charge_point_status, grid
     )
 
     for entity_id, key in charge_point_entity_ids.items():
