@@ -91,6 +91,7 @@ async def test_discover_zwave() -> None:
     device_info = Mock(
         mac_address="mock-device-info-mac",
         zwave_proxy_feature_flags=1,
+        zwave_home_id=1234,
     )
     device_info.name = "mock-device-infoname"
 
@@ -108,7 +109,7 @@ async def test_discover_zwave() -> None:
             {"source": "esphome"},
             ESPHomeServiceInfo(
                 name="mock-device-infoname",
-                mac_address="mock-device-info-mac",
+                zwave_home_id=1234,
                 ip_address="mock-client-address",
                 port=1234,
                 noise_psk=None,
