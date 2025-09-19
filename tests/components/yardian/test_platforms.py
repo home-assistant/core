@@ -369,4 +369,3 @@ async def test_disabled_by_default_entities(hass: HomeAssistant) -> None:
         assert reg_entry is not None and reg_entry.disabled
         assert reg_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
         assert reg_entry.entity_category is EntityCategory.DIAGNOSTIC
-
