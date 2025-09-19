@@ -10,6 +10,7 @@ from thinqconnect import ThinQAPIException
 from thinqconnect.devices.const import Location
 from thinqconnect.integration import PropertyState
 
+from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -58,6 +59,9 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
             self._attr_translation_key = (
                 f"{entity_description.translation_key}_for_location"
             )
+        # For determining control conditions according to device's state per location
+        # attributes are state, operation_mode, device_is_on, power_on_enabled, remote_control_enabled
+        self.device_state = coordinator.api.get_device_state(self.location)
 
     @property
     def data(self) -> PropertyState:
@@ -106,3 +110,36 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
             if on_fail_method:
                 on_fail_method()
             raise ServiceValidationError(exc) from exc
+
+    def check_control_condition(
+        self, switch: str | None = None, state_condition: list[str] | None = None
+    ) -> bool:
+        """For determining control conditions according to device's state."""
+        if self.device_state is None:
+            # There are no restrictions on controlling devices that do not have a current_state
+            return True
+        # Check 1)is_on, 2)remote_control_enabled, 3)state_condition
+        if switch == SERVICE_TURN_OFF:
+            return True
+        if switch == SERVICE_TURN_ON and not self.device_state.power_on_enabled:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="power_on_command_not_supported",
+            )
+        if switch != SERVICE_TURN_ON and not self.device_state.device_is_on:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="command_not_supported_in_power_off",
+            )
+        if not self.device_state.remote_control_enabled:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="command_not_supported_in_remote_off",
+            )
+        if state_condition and self.device_state.state not in state_condition:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="command_not_supported_in_state",
+                translation_placeholders={"state": self.device_state.state},
+            )
+        return True
