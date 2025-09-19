@@ -355,3 +355,63 @@ def test_collection_error_handling(hass: HomeAssistant) -> None:
     # Test shuffle with no arguments
     with pytest.raises(TemplateError, match="shuffle expected at least 1 argument"):
         template.Template("{{ shuffle() }}", hass).async_render()
+
+
+@pytest.mark.parametrize(
+    ("value_template", "expected"),
+    [
+        (
+            "{{ ['Elm11', 'Elm12', 'Elm2', 'elm0', 'elm1', 'elm10', 'elm13', 'elm9'] | natural_sort }}",
+            ["Elm2", "Elm11", "Elm12", "elm0", "elm1", "elm9", "elm10", "elm13"],
+        ),
+        (
+            "{{ ['2 ft 7 in', '1 ft 5 in', '10 ft 2 in', '2 ft 11 in', '7 ft 6 in'] | natural_sort }}",
+            ["1 ft 5 in", "2 ft 7 in", "2 ft 11 in", "7 ft 6 in", "10 ft 2 in"],
+        ),
+        (
+            "{{ ['5','1','31','23','9','22','11'] | natural_sort }}",
+            ["1", "5", "9", "11", "22", "23", "31"],
+        ),
+        (
+            "{{ ['5','1','31','23','9','22','11'] | natural_sort(reverse=True) }}",
+            ["31", "23", "22", "11", "9", "5", "1"],
+        ),
+        (
+            "{{  [{'average': '15,b2','background_color': '#A2C62B'},{'average': '11,a1','background_color': '#4EC2EE'},{'average': '14,a1','background_color': '#00C2EE'}]  | natural_sort(key='average') }}",
+            [
+                {"average": "11,a1", "background_color": "#4EC2EE"},
+                {"average": "14,a1", "background_color": "#00C2EE"},
+                {"average": "15,b2", "background_color": "#A2C62B"},
+            ],
+        ),
+        (
+            "{{ [['a', 'num4'], ['b', 'num8'], ['c', 'num2']] | natural_sort(key=1) }}",
+            [["c", "num2"], ["a", "num4"], ["b", "num8"]],
+        ),
+        (
+            "{{ ['apple', 'Apple', 'banana', 'Banana', 'corn', 'Corn'] | natural_sort }}",
+            ["Apple", "Banana", "Corn", "apple", "banana", "corn"],
+        ),
+        (
+            "{{ ['apple', 'Apple', 'banana', 'Banana', 'corn', 'Corn'] | natural_sort(alg='ns.LOWERCASEFIRST') }}",
+            ["apple", "banana", "corn", "Apple", "Banana", "Corn"],
+        ),
+        (
+            "{{ ['1.5', '0.1', '-2.0', '9.8', '6.0'] | natural_sort(alg='ns.SIGNED')}}",
+            ["-2.0", "0.1", "1.5", "6.0", "9.8"],
+        ),
+        (
+            "{{ ['1.5', '0.1', '-2.0', '9.8', '6.0'] | natural_sort(alg='SIGNED', reverse=True) }}",
+            ["9.8", "6.0", "1.5", "0.1", "-2.0"],
+        ),
+        (
+            "{{ ['a50', 'a5.034e1', 'a51.', 'a+50.300', 'a+50.4'] | natural_sort(alg='ns.FLOAT | ns.SIGNED')}}",
+            ["a50", "a+50.300", "a5.034e1", "a+50.4", "a51."],
+        ),
+    ],
+)
+def test_natural_sort(
+    hass: HomeAssistant, value_template: str, expected: list[Any]
+) -> None:
+    """Test natural sort filter and function."""
+    assert template.Template(value_template, hass).async_render() == expected
