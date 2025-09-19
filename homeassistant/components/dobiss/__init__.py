@@ -5,16 +5,11 @@ import logging
 from typing import Any
 
 from dobissapi import DobissAPI
-import voluptuous as vol
 
-from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.config_validation import entity_ids
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     CONF_COVER_CLOSETIME,
@@ -38,57 +33,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
-SERVICE_ACTION_REQUEST = "action_request"
-SERVICE_STATUS_REQUEST = "status_request"
-SERVICE_FORCE_UPDATE = "force_update"
-SERVICE_TURN_ON = "turn_on"
-
-ATTR_ADDRESS = "address"
-ATTR_CHANNEL = "channel"
-ATTR_ACTION = "action"
-ATTR_OPTION1 = "option1"
-ATTR_OPTION2 = "option2"
-ATTR_DELAYON = "delayon"
-ATTR_DELAYOFF = "delayoff"
-ATTR_FROMPIR = "from_pir"
-
-ACTION_REQUEST_SCHEMA = vol.Schema(
-    vol.All(
-        {
-            vol.Required(ATTR_ADDRESS): vol.Coerce(int),
-            vol.Required(ATTR_CHANNEL): vol.Coerce(int),
-            vol.Required(ATTR_ACTION): vol.Coerce(int),
-            vol.Optional(ATTR_OPTION1): vol.Any(int),
-            vol.Optional(ATTR_OPTION2): vol.Any(int),
-        }
-    )
-)
-STATUS_REQUEST_SCHEMA = vol.Schema(
-    vol.All(
-        {
-            vol.Optional(ATTR_ADDRESS): vol.Coerce(int),
-            vol.Optional(ATTR_CHANNEL): vol.Coerce(int),
-        }
-    )
-)
-TURN_ON_SCHEMA = vol.Schema(
-    vol.All(
-        {
-            vol.Required(ATTR_ENTITY_ID): vol.Coerce(entity_ids),
-            vol.Optional(ATTR_BRIGHTNESS): vol.Coerce(int),
-            vol.Optional(ATTR_DELAYON): vol.Coerce(int),
-            vol.Optional(ATTR_DELAYOFF): vol.Coerce(int),
-            vol.Optional(ATTR_FROMPIR): cv.boolean,
-        }
-    )
-)
-
-SERVICE_TO_METHOD = {
-    SERVICE_TURN_ON: {"method": "turn_on_service", "schema": TURN_ON_SCHEMA}
-}
-
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
 
 async def async_setup(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the dobiss component."""
@@ -108,8 +52,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not await client.async_setup():
         _LOGGER.warning("Dobiss setup failed")
         return False
-
-    # entry.add_update_listener(async_reload_entry)
 
     return True
 
@@ -179,10 +121,10 @@ class HADobiss:
                 self.api.websocket_timeout = None
             else:
                 self.api.websocket_timeout = websocket_timeout
+
             devices = self.api.get_all_devices()
             self.hass.data[DOMAIN][self.config_entry.entry_id][DEVICES] = devices
 
-            # logger.setLevel(logging.DEBUG)
             await self.api.discovery()
             self.hass.async_create_task(self.api.dobiss_monitor())
 
@@ -200,67 +142,6 @@ class HADobiss:
         await self.hass.config_entries.async_forward_entry_setups(
             self.config_entry, PLATFORMS
         )
-
-        async def handle_action_request(call):
-            """Handle action_request service."""
-            dobiss = self.api
-            writedata = {
-                ATTR_ADDRESS: call.data.get(ATTR_ADDRESS),
-                ATTR_CHANNEL: call.data.get(ATTR_CHANNEL),
-                ATTR_ACTION: call.data.get(ATTR_ACTION),
-            }
-            if ATTR_OPTION1 in call.data:
-                writedata[ATTR_OPTION1] = call.data.get(ATTR_OPTION1)
-            if ATTR_OPTION2 in call.data:
-                writedata[ATTR_OPTION2] = call.data.get(ATTR_OPTION2)
-            _LOGGER.info("Sending action request %s", writedata)
-            response = await dobiss.request(writedata)
-            _LOGGER.info(await response.json())
-
-        async def handle_status_request(call):
-            """Handle status_request service."""
-            dobiss = self.api
-            response = await dobiss.status(
-                call.data.get(ATTR_ADDRESS), call.data.get(ATTR_CHANNEL)
-            )
-            _LOGGER.info(await response.json())
-
-        async def handle_force_update(call):
-            """Handle status_request service."""
-            dobiss = self.api
-            await dobiss.update_all(force=True)
-
-        self.hass.services.async_register(
-            DOMAIN,
-            SERVICE_FORCE_UPDATE,
-            handle_force_update,
-        )
-        self.hass.services.async_register(
-            DOMAIN,
-            SERVICE_ACTION_REQUEST,
-            handle_action_request,
-            schema=ACTION_REQUEST_SCHEMA,
-        )
-        self.hass.services.async_register(
-            DOMAIN,
-            SERVICE_STATUS_REQUEST,
-            handle_status_request,
-            schema=STATUS_REQUEST_SCHEMA,
-        )
-
-        async def service_handler(service):
-            method = SERVICE_TO_METHOD.get(service.service)
-            data = service.data.copy()
-            data["method"] = method["method"]
-            async_dispatcher_send(self.hass, DOMAIN, data)
-
-        for service_name, service_data in SERVICE_TO_METHOD.items():
-            self.hass.services.async_register(
-                DOMAIN,
-                service_name,
-                service_handler,
-                schema=service_data["schema"],
-            )
 
         return True
 
@@ -289,15 +170,6 @@ class HADobiss:
     @staticmethod
     async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
         """Handle options update."""
-        # dobiss = hass.data[DOMAIN][entry.entry_id][KEY_API].api
-        # websocket_timeout = entry.options.get(CONF_WEBSOCKET_TIMEOUT, DEFAULT_WEBSOCKET_TIMEOUT)
-        # _LOGGER.debug(f"(update_listener) Setting websocket timeout to {websocket_timeout}")
-        # if websocket_timeout == 0:
-        #    dobiss.websocket_timeout = None
-        # else:
-        #    dobiss.websocket_timeout = websocket_timeout
-        # await dobiss.update_all(force=True)
-
         if entry.source == SOURCE_IMPORT:
             return
         await hass.config_entries.async_reload(entry.entry_id)
