@@ -65,10 +65,10 @@
   "entity": {
     "binary_sensor": {
       "keyboard_focused": {
-        "name": "Keyboard focused",
+        "name": "Keyboard focus",
         "state": {
-          "on": "Focused",
-          "off": "Not focused"
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]"
         }
       }
     }
