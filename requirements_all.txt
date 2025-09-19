@@ -271,7 +271,7 @@ aiohasupervisor==0.3.2
 aiohomeconnect==0.19.0
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.15
+aiohomekit==3.2.17
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -528,7 +528,7 @@ arris-tg2492lg==2.2.0
 asmog==0.0.6
 
 # homeassistant.components.asuswrt
-asusrouter==1.20.1
+asusrouter==1.21.0
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
@@ -655,7 +655,7 @@ bluemaestro-ble==0.4.1
 bluetooth-adapters==2.1.0
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.5.2
+bluetooth-auto-recovery==1.5.3
 
 # homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
@@ -1131,7 +1131,7 @@ ha-philipsjs==3.2.2
 ha-silabs-firmware-client==0.2.0
 
 # homeassistant.components.habitica
-habiticalib==0.4.3
+habiticalib==0.4.5
 
 # homeassistant.components.bluetooth
 habluetooth==5.6.4
@@ -1175,7 +1175,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.79
+holidays==0.81
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250903.5
@@ -1241,7 +1241,7 @@ igloohome-api==0.1.1
 ihcsdk==2.8.5
 
 # homeassistant.components.imeon_inverter
-imeon_inverter_api==0.3.16
+imeon_inverter_api==0.4.0
 
 # homeassistant.components.imgw_pib
 imgw_pib==1.5.4
@@ -1629,7 +1629,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.15.4
+opower==0.15.5
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1962,7 +1962,7 @@ pyegps==0.2.5
 
 # homeassistant.components.emoncms
 # homeassistant.components.emoncms_history
-pyemoncms==0.1.2
+pyemoncms==0.1.3
 
 # homeassistant.components.enphase_envoy
 pyenphase==2.3.0
@@ -2103,7 +2103,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.0.11
+pylamarzocco==2.1.0
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -3090,7 +3090,7 @@ wallbox==0.9.0
 watchdog==6.0.0
 
 # homeassistant.components.waterfurnace
-waterfurnace==1.1.0
+waterfurnace==1.2.0
 
 # homeassistant.components.watergate
 watergate-local-api==2024.4.1
