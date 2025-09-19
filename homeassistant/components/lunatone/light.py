@@ -32,7 +32,6 @@ async def async_setup_entry(
     info_api = coordinator_info.info_api
     devices_api = coordinator_devices.devices_api
 
-    # Add devices
     async_add_entities(
         [
             LunatoneLight(coordinator_devices, device.id, info_api.serial_number)
