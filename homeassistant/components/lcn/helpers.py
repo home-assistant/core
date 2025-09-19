@@ -11,6 +11,7 @@ from typing import cast
 
 import pypck
 from pypck.connection import PchkConnectionManager
+from pypck.device import DeviceConnection
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -48,7 +49,7 @@ class LcnRuntimeData:
     connection: PchkConnectionManager
     """Connection to PCHK host."""
 
-    device_connections: dict[str, DeviceConnectionType]
+    device_connections: dict[str, DeviceConnection]
     """Logical addresses of devices connected to the host."""
 
     add_entities_callbacks: dict[str, Callable[[Iterable[ConfigType]], None]]
@@ -59,7 +60,6 @@ class LcnRuntimeData:
 type LcnConfigEntry = ConfigEntry[LcnRuntimeData]
 
 type AddressType = tuple[int, int, bool]
-type DeviceConnectionType = pypck.module.ModuleConnection | pypck.module.GroupConnection
 
 type InputType = type[pypck.inputs.Input]
 
@@ -82,11 +82,11 @@ DOMAIN_LOOKUP = {
 
 def get_device_connection(
     hass: HomeAssistant, address: AddressType, config_entry: LcnConfigEntry
-) -> DeviceConnectionType:
+) -> DeviceConnection:
     """Return a lcn device_connection."""
     host_connection = config_entry.runtime_data.connection
     addr = pypck.lcn_addr.LcnAddr(*address)
-    return host_connection.get_address_conn(addr)
+    return host_connection.get_device_connection(addr)
 
 
 def get_resource(domain_name: str, domain_data: ConfigType) -> str:
@@ -246,7 +246,7 @@ def register_lcn_address_devices(
 
 
 async def async_update_device_config(
-    device_connection: DeviceConnectionType, device_config: ConfigType
+    device_connection: DeviceConnection, device_config: ConfigType
 ) -> None:
     """Fill missing values in device_config with infos from LCN bus."""
     # fetch serial info if device is module
