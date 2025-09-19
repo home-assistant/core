@@ -13,7 +13,7 @@ from homeassistant.components.esphome import DOMAIN
 from homeassistant.components.esphome.entry_data import RuntimeEntryData
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import discovery_flow, entity_registry as er
 from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 
 from .conftest import MockGenericDeviceEntryType
@@ -82,7 +82,7 @@ async def test_discover_zwave() -> None:
         "mock-id",
         "mock-title",
         Mock(
-            address="mock-client-address",
+            connected_address="mock-client-address",
             port=1234,
             noise_psk=None,
         ),
@@ -113,5 +113,9 @@ async def test_discover_zwave() -> None:
                 port=1234,
                 noise_psk=None,
             ),
-            discovery_key="mock-device-info-mac",
+            discovery_key=discovery_flow.DiscoveryKey(
+                domain="esphome",
+                key="mock-device-info-mac",
+                version=1,
+            ),
         )
