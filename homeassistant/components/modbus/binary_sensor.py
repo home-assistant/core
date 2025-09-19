@@ -29,7 +29,7 @@ from .const import (
     CONF_SLAVE_COUNT,
     CONF_VIRTUAL_COUNT,
 )
-from .entity import BasePlatform
+from .entity import ModbusBaseEntity
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -59,7 +59,7 @@ async def async_setup_platform(
     async_add_entities(sensors)
 
 
-class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
+class ModbusBinarySensor(ModbusBaseEntity, RestoreEntity, BinarySensorEntity):
     """Modbus binary sensor."""
 
     def __init__(
