@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_COUNT,
     CONF_HOST,
     CONF_NAME,
+    CONF_OFFSET,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_STRUCTURE,
@@ -25,16 +26,23 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import (
+    CONF_CURRENT_TEMP_OFFSET,
+    CONF_CURRENT_TEMP_SCALE,
     CONF_DATA_TYPE,
     CONF_FAN_MODE_VALUES,
+    CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
     CONF_SWING_MODE_VALUES,
+    CONF_TARGET_TEMP_OFFSET,
+    CONF_TARGET_TEMP_SCALE,
     CONF_VIRTUAL_COUNT,
     DEFAULT_HUB,
+    DEFAULT_OFFSET,
+    DEFAULT_SCALE,
     DEFAULT_SCAN_INTERVAL,
     MODBUS_DOMAIN as DOMAIN,
     PLATFORMS,
@@ -240,6 +248,37 @@ def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
 
     for key in reversed(errors):
         del config[CONF_FAN_MODE_VALUES][key]
+    return config
+
+
+def ensure_and_check_conflicting_scales_and_offsets(config: dict[str, Any]) -> dict:
+    """Check for conflicts in scale/offset and ensure target/current temp scale/offset is set."""
+    config_keys = [
+        (CONF_SCALE, CONF_TARGET_TEMP_SCALE, CONF_CURRENT_TEMP_SCALE, DEFAULT_SCALE),
+        (
+            CONF_OFFSET,
+            CONF_TARGET_TEMP_OFFSET,
+            CONF_CURRENT_TEMP_OFFSET,
+            DEFAULT_OFFSET,
+        ),
+    ]
+
+    for generic_key, target_key, current_key, default_value in config_keys:
+        if generic_key in config and (target_key in config or current_key in config):
+            raise vol.Invalid(
+                f"Cannot use {target_key} or {current_key} with {generic_key} in the same configuration."
+            )
+
+        if generic_key in config:
+            value = config.pop(generic_key)
+            config[target_key] = value
+            config[current_key] = value
+
+        if target_key not in config or config[target_key] == 0:
+            config[target_key] = default_value
+        if current_key not in config or config[current_key] == 0:
+            config[current_key] = default_value
+
     return config
 
 
