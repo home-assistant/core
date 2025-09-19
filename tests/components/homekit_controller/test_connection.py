@@ -639,7 +639,7 @@ async def test_async_setup_handles_unparsable_response(
             """Mock that raises ValueError to simulate unparsable response."""
             raise ValueError(
                 "Unable to parse text",
-                "Error processing token: filename. Filename missing or too long?",
+                ("Error processing token: filename. Filename missing or too long?"),
             )
 
         # Set up the platform and add paired device
@@ -661,7 +661,8 @@ async def test_async_setup_handles_unparsable_response(
         with mock.patch.object(
             pairing, "get_characteristics", mock_get_characteristics
         ):
-            # Set up the config entry (this will trigger async_setup with poll_all=True)
+            # Set up the config entry - this will trigger async_setup
+            # with poll_all=True
             await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()
 
@@ -672,7 +673,8 @@ async def test_async_setup_handles_unparsable_response(
         )
         assert "Error processing token: filename" in caplog.text
 
-        # Verify that setup completed (entities were still created despite the polling error)
-        # The light entity should exist even though initial polling failed
+        # Verify that setup completed - entities were still created
+        # despite the polling error. The light entity should exist even
+        # though initial polling failed
         state = hass.states.get("light.testdevice")
         assert state is not None
