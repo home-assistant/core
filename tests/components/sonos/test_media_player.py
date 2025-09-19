@@ -90,6 +90,8 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
 
+from tests.common import async_fire_time_changed
+
 
 @pytest.fixture(autouse=True)
 def mock_token() -> Generator[MagicMock]:
@@ -1375,7 +1377,9 @@ async def test_position_updates(
     soco.get_current_track_info.return_value = current_track_info
     soco.avTransport.subscribe.return_value.callback(media_event)
 
-    with freeze_time("2024-01-01T12:00:00Z") as frozen_time:
+    freezetime = datetime(2024, 1, 1, 12, 0, 0, 0, tzinfo=UTC)
+    with freeze_time(freezetime) as frozen_time:
+        async_fire_time_changed(hass, freezetime)
         now = datetime.now(UTC)
         await hass.async_block_till_done(wait_background_tasks=True)
 
