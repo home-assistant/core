@@ -176,6 +176,14 @@ TEMPLATE_BLUEPRINT_SCHEMA = vol.All(
 )
 
 
+def _merge_section_variables(config: ConfigType, section_variables: ConfigType) -> None:
+    """Merges or creates the variables inside config with section_variables."""
+    if (variables := config.pop(CONF_VARIABLES, None)) and isinstance(variables, dict):
+        config[CONF_VARIABLES] = {**section_variables, **variables}
+    else:
+        config[CONF_VARIABLES] = section_variables
+
+
 async def _async_resolve_template_config(
     hass: HomeAssistant,
     config: ConfigType,
@@ -209,17 +217,7 @@ async def _async_resolve_template_config(
             # retain CONF_VARIABLES because the variables are always executed between
             # the trigger and action.
             if CONF_TRIGGERS not in config and CONF_VARIABLES in config:
-                section_variables = config.pop(CONF_VARIABLES)
-                platform_variables = config[platform].pop(CONF_VARIABLES, {})
-
-                # State based template entities have 2 layers of variables. Variables at
-                # the section level and variables at the entity level should be merged
-                # together at the entity level. Entity variables take precedence over
-                # section variables.
-                config[platform][CONF_VARIABLES] = {
-                    **section_variables,
-                    **platform_variables,
-                }
+                _merge_section_variables(config[platform], config.pop(CONF_VARIABLES))
 
         raw_config = dict(config)
 
@@ -238,14 +236,7 @@ async def _async_resolve_template_config(
                     platform_config = [platform_config]
 
                 for entity_config in platform_config:
-                    entity_config[CONF_VARIABLES] = (
-                        {
-                            **section_variables,
-                            **entity_config.pop(CONF_VARIABLES),
-                        }
-                        if CONF_VARIABLES in entity_config
-                        else section_variables
-                    )
+                    _merge_section_variables(entity_config, section_variables)
 
     template_config = TemplateConfig(CONFIG_SECTION_SCHEMA(config))
     template_config.raw_blueprint_inputs = raw_blueprint_inputs
