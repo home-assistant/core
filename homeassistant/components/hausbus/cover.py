@@ -85,6 +85,7 @@ class HausbusCover(HausbusEntity, CoverEntity):
             CoverEntityFeature.OPEN
             | CoverEntityFeature.CLOSE
             | CoverEntityFeature.STOP
+            | CoverEntityFeature.TOGGLE
             | CoverEntityFeature.SET_POSITION
         )
         self._attr_reports_position = (
