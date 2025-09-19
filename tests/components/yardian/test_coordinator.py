@@ -13,13 +13,14 @@ from homeassistant.components.yardian.coordinator import (
     YardianCombinedState,
     YardianUpdateCoordinator,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from tests.common import MockConfigEntry
 
 
 @pytest.mark.asyncio
-async def test_coordinator_combines_state(hass):
+async def test_coordinator_combines_state(hass: HomeAssistant) -> None:
     """Coordinator returns combined state from device and operation info."""
 
     entry = MockConfigEntry(
@@ -53,7 +54,7 @@ async def test_coordinator_combines_state(hass):
 
 
 @pytest.mark.asyncio
-async def test_coordinator_raises_auth_failed(hass):
+async def test_coordinator_raises_auth_failed(hass: HomeAssistant) -> None:
     """Coordinator raises ConfigEntryAuthFailed on invalid auth."""
 
     entry = MockConfigEntry(
