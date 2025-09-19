@@ -1,0 +1,37 @@
+# serializer version: 1
+# name: test_diagnostics_snapshot
+  dict({
+    'device': dict({
+      'model': None,
+      'name': 'Yardian Smart Sprinkler',
+      'serialNumber': None,
+      'yid': '**REDACTED**',
+    }),
+    'oper_info': dict({
+      'fFreezePrevent': 1,
+      'iRainDelay': 3600,
+      'iSensorDelay': 5,
+      'iStandby': 0,
+      'iWaterHammerDuration': 2,
+      'region': 'US',
+    }),
+    'state': dict({
+      'active_zones': list([
+        0,
+      ]),
+      'zones': list([
+        list([
+          'Zone 1',
+          1,
+        ]),
+        list([
+          'Zone 2',
+          0,
+        ]),
+        list([
+          'Zone 3',
+          1,
+        ]),
+      ]),
+    }),
+  })
