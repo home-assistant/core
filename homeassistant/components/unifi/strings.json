@@ -2,6 +2,20 @@
   "config": {
     "flow_title": "{site} ({host})",
     "step": {
+      "reconfigure": {
+        "title": "Reconfigure UniFi Network",
+        "description": "Update the connection settings for your UniFi Network controller.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your UniFi Network."
+        }
+      },
       "site": {
         "data": {
           "site": "Site ID"
@@ -25,11 +39,13 @@
     "error": {
       "faulty_credentials": "[%key:common::config_flow::error::invalid_auth%]",
       "service_unavailable": "[%key:common::config_flow::error::cannot_connect%]",
+      "site_not_found": "The configured site could not be found on the controller",
       "unknown_client_mac": "No client available on that MAC address"
     },
     "abort": {
       "already_configured": "UniFi Network site is already configured",
       "configuration_updated": "Configuration updated",
+      "reconfigure_successful": "Successfully reconfigured UniFi Network",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },

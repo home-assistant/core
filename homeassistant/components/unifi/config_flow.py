@@ -215,6 +215,77 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            self.config = {
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+                CONF_PORT: user_input[CONF_PORT],
+                CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                CONF_SITE_ID: reconfigure_entry.data[CONF_SITE_ID],
+            }
+
+            try:
+                hub = await get_unifi_api(self.hass, MappingProxyType(self.config))
+                await hub.sites.update()
+                self.sites = hub.sites
+
+            except AuthenticationRequired:
+                return self.async_show_form(
+                    step_id="reconfigure",
+                    data_schema=self._get_reconfigure_schema(reconfigure_entry),
+                    errors={"base": "faulty_credentials"},
+                )
+
+            except CannotConnect:
+                return self.async_show_form(
+                    step_id="reconfigure",
+                    data_schema=self._get_reconfigure_schema(reconfigure_entry),
+                    errors={"base": "service_unavailable"},
+                )
+
+            # Verify we can access the same site
+            site_id = reconfigure_entry.unique_id
+            if site_id is None or site_id not in self.sites:
+                return self.async_show_form(
+                    step_id="reconfigure",
+                    data_schema=self._get_reconfigure_schema(reconfigure_entry),
+                    errors={"base": "site_not_found"},
+                )
+
+            return self.async_update_reload_and_abort(
+                reconfigure_entry,
+                data_updates=self.config,
+                reason="reconfigure_successful",
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self._get_reconfigure_schema(reconfigure_entry),
+        )
+
+    def _get_reconfigure_schema(self, config_entry: UnifiConfigEntry) -> vol.Schema:
+        """Get the reconfigure schema."""
+        return vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=config_entry.data[CONF_HOST]): str,
+                vol.Required(
+                    CONF_USERNAME, default=config_entry.data[CONF_USERNAME]
+                ): str,
+                vol.Required(CONF_PASSWORD): str,
+                vol.Required(CONF_PORT, default=config_entry.data[CONF_PORT]): int,
+                vol.Required(
+                    CONF_VERIFY_SSL, default=config_entry.data[CONF_VERIFY_SSL]
+                ): bool,
+            }
+        )
+
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
