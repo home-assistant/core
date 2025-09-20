@@ -203,7 +203,6 @@ DISCOVERY_SCHEMAS = [
             device_types.Refrigerator,
             device_types.RoboticVacuumCleaner,
             device_types.RoomAirConditioner,
-            device_types.Speaker,
         ),
     ),
     MatterDiscoverySchema(
