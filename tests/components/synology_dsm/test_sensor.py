@@ -49,7 +49,9 @@ def mock_dsm_with_usb():
         dsm.storage = Mock(
             get_disk=mock_dsm_storage_get_disk,
             disks_ids=["sata1", "sata2", "sata3"],
+            disk_temp=Mock(return_value=42),
             get_volume=mock_dsm_storage_get_volume,
+            volume_disk_temp_avg=Mock(return_value=42),
             volume_size_used=Mock(return_value=12000138625024),
             volume_percentage_used=Mock(return_value=38),
             volumes_ids=["volume_1"],
