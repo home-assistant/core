@@ -41,6 +41,11 @@
       "buttons_enabled": {
         "default": "mdi:gesture-tap"
       }
+    },
+    "number": {
+      "group_volume": {
+        "default": "mdi:volume-high"
+      }
     }
   },
   "services": {
