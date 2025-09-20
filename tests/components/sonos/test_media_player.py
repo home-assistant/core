@@ -1,7 +1,7 @@
 """Tests for the Sonos Media Player platform."""
 
 from collections.abc import Generator
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -1364,6 +1364,7 @@ async def test_service_update_alarm_dne(
     assert soco.alarmClock.UpdateAlarm.call_count == 0
 
 
+@pytest.mark.freeze_time("2024-01-01T12:00:00Z")
 async def test_position_updates(
     hass: HomeAssistant,
     soco: MockSoCo,
@@ -1373,45 +1374,42 @@ async def test_position_updates(
 ) -> None:
     """Test the media player position updates."""
 
-    freezetime = datetime(2024, 1, 1, 12, 0, 0, 0, tzinfo=UTC)
-    with freeze_time(freezetime) as frozen_time:
-        soco.get_current_track_info.return_value = current_track_info
-        soco.avTransport.subscribe.return_value.callback(media_event)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    soco.get_current_track_info.return_value = current_track_info
+    soco.avTransport.subscribe.return_value.callback(media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-        entity_id = "media_player.zone_a"
-        state = hass.states.get(entity_id)
+    entity_id = "media_player.zone_a"
+    state = hass.states.get(entity_id)
 
-        assert state.attributes[ATTR_MEDIA_POSITION] == 42
-        # updated_at should be recent
-        updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
-        assert updated_at == freezetime
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
+    # updated_at should be recent
+    updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
+    assert updated_at == datetime.now(UTC)
 
-        # Position only updated by 1 second; should not update attributes
-        new_track_info = current_track_info.copy()
-        new_track_info["position"] = "00:00:43"
-        soco.get_current_track_info.return_value = new_track_info
-        new_media_event = SonosMockEvent(
-            soco, soco.avTransport, media_event.variables.copy()
-        )
-        new_media_event.variables["position"] = "00:00:43"
-        frozen_time.tick(delta=timedelta(seconds=1))
+    # Position only updated by 1 second; should not update attributes
+    new_track_info = current_track_info.copy()
+    new_track_info["position"] = "00:00:43"
+    soco.get_current_track_info.return_value = new_track_info
+    new_media_event = SonosMockEvent(
+        soco, soco.avTransport, media_event.variables.copy()
+    )
+    new_media_event.variables["position"] = "00:00:43"
+    with freeze_time("2024-01-01T12:00:01Z"):
         soco.avTransport.subscribe.return_value.callback(new_media_event)
         await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
+    assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == updated_at
 
-        state = hass.states.get(entity_id)
-        assert state.attributes[ATTR_MEDIA_POSITION] == 42
-        assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == updated_at
-
-        # Position jumped by more than 1.5 seconds; should update position
-        new_track_info = current_track_info.copy()
-        new_track_info["position"] = "00:01:10"
-        soco.get_current_track_info.return_value = new_track_info
-        new_media_event = SonosMockEvent(
-            soco, soco.avTransport, media_event.variables.copy()
-        )
-        new_media_event.variables["position"] = "00:01:10"
-        frozen_time.tick(delta=timedelta(seconds=10))
+    # Position jumped by more than 1.5 seconds; should update position
+    new_track_info = current_track_info.copy()
+    new_track_info["position"] = "00:01:10"
+    soco.get_current_track_info.return_value = new_track_info
+    new_media_event = SonosMockEvent(
+        soco, soco.avTransport, media_event.variables.copy()
+    )
+    new_media_event.variables["position"] = "00:01:10"
+    with freeze_time("2024-01-01T12:00:11Z"):
         soco.avTransport.subscribe.return_value.callback(new_media_event)
         await hass.async_block_till_done(wait_background_tasks=True)
         state = hass.states.get(entity_id)
