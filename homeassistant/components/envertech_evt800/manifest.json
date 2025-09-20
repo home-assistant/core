@@ -1,0 +1,11 @@
+{
+  "domain": "envertech_evt800",
+  "name": "ENVERTECH EVT800",
+  "codeowners": ["@daniel-bergmann-00"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/envertech_evt800",
+  "iot_class": "local_polling",
+  "loggers": ["pyenvertechevt800"],
+  "quality_scale": "bronze",
+  "requirements": ["pyenvertechevt800==0.2.2"]
+}
