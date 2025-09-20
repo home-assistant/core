@@ -168,8 +168,7 @@ class RensonFan(RensonEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        if percentage is None:
-            percentage = 1
+        """If the percentage is None, turn manual level off (to auto)."""
 
         await self.async_set_percentage(percentage)
 
@@ -188,6 +187,8 @@ class RensonFan(RensonEntity, FanEntity):
 
         if percentage == 0:
             cmd = Level.HOLIDAY
+        elif percentage is None: # turn manual level off (to auto)
+            cmd = Level.OFF
         else:
             speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
             cmd = CMD_MAPPING[speed]
@@ -198,8 +199,13 @@ class RensonFan(RensonEntity, FanEntity):
             await self.hass.async_add_executor_job(
                 self.api.set_breeze, cmd, breeze_temp, True
             )
+
+            _LOGGER.debug("Set Breeze %s %s", cmd, breeze_temp)
+
         else:
             await self.hass.async_add_executor_job(self.api.set_manual_level, cmd)
+
+            _LOGGER.debug("Set Manual Level %s", cmd)
 
         await self.coordinator.async_request_refresh()
 
