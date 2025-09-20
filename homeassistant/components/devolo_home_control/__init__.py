@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from functools import partial
+import logging
 from typing import Any
 
 from devolo_home_control_api.exceptions.gateway import GatewayOfflineError
@@ -44,26 +45,29 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
     )
 
-    try:
-        zeroconf_instance = await zeroconf.async_get_instance(hass)
-        entry.runtime_data = []
-        for gateway_id in gateway_ids:
+    zeroconf_instance = await zeroconf.async_get_instance(hass)
+    entry.runtime_data = []
+    offline_gateways = 0
+    for gateway_id in gateway_ids:
+        try:
             entry.runtime_data.append(
                 await hass.async_add_executor_job(
                     partial(
                         HomeControl,
-                        gateway_id=str(gateway_id),
+                        gateway_id=gateway_id,
                         mydevolo_instance=mydevolo,
                         zeroconf_instance=zeroconf_instance,
                     )
                 )
             )
-    except GatewayOfflineError as err:
+        except GatewayOfflineError:
+            offline_gateways += 1
+    if len(gateway_ids) == offline_gateways:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="connection_failed",
-            translation_placeholders={"gateway_id": gateway_id},
-        ) from err
+            translation_placeholders={"gateway_id": ", ".join(gateway_ids)},
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -98,6 +102,10 @@ def configure_mydevolo(conf: Mapping[str, Any]) -> Mydevolo:
     mydevolo = Mydevolo()
     mydevolo.user = conf[CONF_USERNAME]
     mydevolo.password = conf[CONF_PASSWORD]
+
+    # With gateways being accessible locally only, there is not need to warn here.
+    logging.getLogger("Mydevolo").setLevel(logging.ERROR)
+
     return mydevolo
 
 
