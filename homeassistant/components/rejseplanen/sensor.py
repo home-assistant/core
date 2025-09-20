@@ -18,6 +18,7 @@ from homeassistant import const
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import StateType
@@ -65,7 +66,9 @@ async def async_setup_entry(
 
     # Only add the updater status sensor for the main entry
     if config_entry.domain == DOMAIN:
-        async_add_entities([RejseplanenDiagnosticSensor(coordinator)])
+        async_add_entities(
+            [RejseplanenDiagnosticSensor(coordinator, config_entry.entry_id)]
+        )
 
     for subentry_id, subentry in config_entry.subentries.items():
         _LOGGER.debug("Subentry %s with data: %s", subentry_id, subentry.data)
@@ -79,24 +82,44 @@ async def async_setup_entry(
         route = config.get(CONF_ROUTE, [])
         direction = config.get(CONF_DIRECTION, [])
         departure_type = config.get(CONF_DEPARTURE_TYPE, [])
-        unique_id = subentry.unique_id
 
         async_add_entities(
             [
                 RejseplanenTransportSensor(
                     coordinator=coordinator,
                     stop_id=stop_id,
+                    entry_id=coordinator.config_entry.entry_id,
                     name=name,
                     route=route,
                     direction=direction,
                     departure_type=departure_type,
-                    unique_id=unique_id,
                 )
             ],
             config_subentry_id=subentry_id,
         )
 
     await coordinator.async_config_entry_first_refresh()
+
+
+def _service_device_info(entry_id: str) -> DeviceInfo:
+    """Device representing the Rejseplanen service."""
+    return DeviceInfo(
+        identifiers={(DOMAIN, entry_id)},
+        name="Rejseplanen",
+        manufacturer="Rejseplanen",
+        model="Public transport API",
+        entry_type=DeviceEntryType.SERVICE,
+        configuration_url="https://www.rejseplanen.dk/",
+    )
+
+
+def _stop_device_info(entry_id: str, stop_id: int, stop_name: str | None) -> DeviceInfo:
+    """Child device for a specific stop, grouped via the service device."""
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{entry_id}-stop-{stop_id}")},
+        name=stop_name or f"Stop {stop_id}",
+        via_device=(DOMAIN, entry_id),  # Parent = service device
+    )
 
 
 class RejseplanenTransportSensor(SensorEntity):
@@ -109,11 +132,11 @@ class RejseplanenTransportSensor(SensorEntity):
         self,
         coordinator: RejseplanenDataUpdateCoordinator,
         stop_id: int,
+        entry_id: str,
         route: list[str],
         direction: list[str],
         departure_type: list[str],
         name: str | None,
-        unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
         self.coordinator: RejseplanenDataUpdateCoordinator = coordinator
@@ -124,7 +147,9 @@ class RejseplanenTransportSensor(SensorEntity):
         self._attr_name: str | None = name
         self.coordinator.add_stop_id(stop_id)
         self._unsub_interval: Callable[[], None] | None = None
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = f"{stop_id}_{name}_{departure_type}"
+        self._attr_device_info = _stop_device_info(entry_id, stop_id, name)
+
         self._departure_type_bitflag = self._calculate_departure_type_bitflag(
             departure_type
         )
@@ -303,11 +328,14 @@ class RejseplanenDiagnosticSensor(SensorEntity):
     _attr_unique_id = "rejseplanen_updater_status"
     _attr_entity_category = const.EntityCategory.DIAGNOSTIC
 
-    def __init__(self, coordinator: RejseplanenDataUpdateCoordinator) -> None:
+    def __init__(
+        self, coordinator: RejseplanenDataUpdateCoordinator, entry_id: str
+    ) -> None:
         """Initialize the diagnostic sensor."""
         self.coordinator = coordinator
         self._attr_native_value = None
         self._attr_extra_state_attributes = {}
+        self._attr_device_info = _service_device_info(entry_id)
 
         self._attr_available = False
         self._attr_extra_state_attributes = self.coordinator.diagnostics_attributes
