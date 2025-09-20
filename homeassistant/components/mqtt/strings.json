@@ -321,11 +321,11 @@
             "code_arm_required": "Code arm required",
             "code_disarm_required": "Code disarm required",
             "code_trigger_required": "Code trigger required",
+            "color_temp_template": "Color temperature template",
             "command_template": "Command template",
             "command_topic": "Command topic",
             "command_off_template": "Command \"off\" template",
             "command_on_template": "Command \"on\" template",
-            "color_temp_template": "Color temperature template",
             "force_update": "Force update",
             "green_template": "Green template",
             "last_reset_value_template": "Last reset value template",
@@ -358,11 +358,11 @@
             "code_arm_required": "If set, the code is required to arm the alarm. If not set, the code is not validated.",
             "code_disarm_required": "If set, the code is required to disarm the alarm. If not set, the code is not validated.",
             "code_trigger_required": "If set, the code is required to manually trigger the alarm. If not set, the code is not validated.",
+            "color_temp_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract color temperature in Kelvin from the state payload value. Expected result of the template is an integer.",
             "command_off_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) for \"off\" state changes. Available variables are: `state` and `transition`.",
             "command_on_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) for \"on\" state changes. Available variables: `state`, `brightness`, `color_temp`, `red`, `green`, `blue`, `hue`, `sat`, `flash`, `transition` and `effect`. Values `red`, `green`, `blue` and `brightness` are provided as integers from range 0-255. Value of `hue` is provided as float from range 0-360. Value of `sat` is provided as float from range 0-100. Value of `color_temp` is provided as integer representing Kelvin units.",
             "command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be published at the command topic. [Learn more.]({url}#command_template)",
             "command_topic": "The publishing topic that will be used to control the {platform} entity. [Learn more.]({url}#command_topic)",
-            "color_temp_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract color temperature in Kelvin from the state payload value. Expected result of the template is an integer.",
             "force_update": "Sends update events even if the value hasn’t changed. Useful if you want to have meaningful value graphs in history. [Learn more.]({url}#force_update)",
             "green_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract green color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "last_reset_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the last reset. When Last reset template is set, the State class option must be Total. [Learn more.]({url}#last_reset_value_template)",
@@ -1259,6 +1259,12 @@
       "options": {
         "config": "Config",
         "diagnostic": "Diagnostic"
+      }
+    },
+    "image_processing_mode": {
+      "options": {
+        "image_data": "Image data is received",
+        "image_url": "Image URL is received"
       }
     },
     "light_schema": {
