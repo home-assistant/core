@@ -149,11 +149,7 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             if self.client_device_id is None:
-                # Keep the same client id if we have one.
-                self.client_device_id = (
-                    entry.data.get(CONF_CLIENT_DEVICE_ID)
-                    or _generate_client_device_id()
-                )
+                self.client_device_id = _generate_client_device_id()
 
             new_input = {
                 **entry.data,
