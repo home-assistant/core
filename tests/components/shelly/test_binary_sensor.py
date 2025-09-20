@@ -542,7 +542,7 @@ async def test_rpc_flood_entities(
     """Test RPC flood sensor entities."""
     await init_integration(hass, 4)
 
-    for entity in ("flood", "mute"):
+    for entity in ("flood", "mute", "cable_unplugged"):
         entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_kitchen_{entity}"
 
         state = hass.states.get(entity_id)
@@ -591,3 +591,25 @@ async def test_rpc_presence_component(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_rpc_flood_cable_unplugged(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC flood cable unplugged entity."""
+    await init_integration(hass, 4)
+
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_kitchen_cable_unplugged"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    status = deepcopy(mock_rpc_device.status)
+    status["flood:0"]["errors"] = ["cable_unplugged"]
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
