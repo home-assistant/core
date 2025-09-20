@@ -21,6 +21,7 @@ from homeassistant.const import (
     PERCENTAGE,
     UV_INDEX,
     UnitOfLength,
+    UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
 )
@@ -158,6 +159,16 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         icon=None,
+        entity_registry_enabled_default=False,
+    ),
+    MetOfficeSensorEntityDescription(
+        key="pressure",
+        native_attr_name="mslp",
+        name="Pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.PA,
+        suggested_unit_of_measurement=UnitOfPressure.HPA,
         entity_registry_enabled_default=False,
     ),
 )
