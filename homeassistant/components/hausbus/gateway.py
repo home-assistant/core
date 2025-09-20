@@ -56,7 +56,7 @@ class HausbusGateway(IBusDataListener):
             str, Callable[[HausbusEntity], Coroutine[Any, Any, None]]
         ] = {}
 
-    async def createDiscoveryButton(self):
+    async def create_discovery_button(self):
         """Creates a Button to manually start device discovery."""
 
         async def discovery_callback():

@@ -117,7 +117,7 @@ class ConfigFlow(IBusDataListener, config_entries.ConfigFlow, domain=DOMAIN):
             LOGGER.debug("No Haus-Bus config entries found, cannot discover devices")
             return self.async_abort(reason="no_config_entry")
 
-        gateway = entries[0].runtime_data.gateway
+        gateway = entries[0].runtime_data
 
         try:
             LOGGER.debug("Running device discovery via async_step_discovery")

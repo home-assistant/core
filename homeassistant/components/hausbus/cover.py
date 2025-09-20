@@ -46,7 +46,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up a cover from a config entry."""
 
-    gateway = config_entry.runtime_data.gateway
+    gateway = config_entry.runtime_data
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
