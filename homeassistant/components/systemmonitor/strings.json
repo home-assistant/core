@@ -100,6 +100,9 @@
       },
       "swap_use_percent": {
         "name": "Swap usage"
+      },
+      "process_num_fds": {
+        "name": "Open file descriptors {process}"
       }
     }
   }
