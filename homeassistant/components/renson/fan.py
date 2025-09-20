@@ -187,7 +187,7 @@ class RensonFan(RensonEntity, FanEntity):
 
         if percentage == 0:
             cmd = Level.HOLIDAY
-        elif percentage is None: # turn manual level off (to auto)
+        elif percentage is None:  # turn manual level off (to auto)
             cmd = Level.OFF
         else:
             speed = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
