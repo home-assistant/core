@@ -5201,7 +5201,7 @@ async def test_validate_statistics_unit_ignore_device_class(
             BATTERY_SENSOR_ATTRIBUTES,
             "%",
             None,
-            "%, <None>",
+            "%, <None>, ppb, ppm",
         ),
     ],
 )

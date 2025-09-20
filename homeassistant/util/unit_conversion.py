@@ -742,6 +742,8 @@ class UnitlessRatioConverter(BaseUnitConverter):
     }
     VALID_UNITS = {
         None,
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
         PERCENTAGE,
     }
 
