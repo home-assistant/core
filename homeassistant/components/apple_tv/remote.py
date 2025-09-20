@@ -5,7 +5,6 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-from propcache.api import cached_property
 from pyatv.const import InputAction
 
 from homeassistant.components.remote import (
@@ -42,7 +41,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Load Apple TV remote based on a config entry."""
-
     name: str = config_entry.data[CONF_NAME]
     # apple_tv config entries always have a unique id
     assert config_entry.unique_id is not None
@@ -53,8 +51,8 @@ async def async_setup_entry(
 class AppleTVRemote(AppleTVEntity, RemoteEntity):
     """Device that sends commands to an Apple TV."""
 
-    @cached_property
-    def is_on(self) -> bool | None:
+    @property
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self.atv is not None
 
