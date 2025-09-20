@@ -98,6 +98,7 @@ async def test_options(
     hass.states.async_set("sensor.input", 10, {"unit_of_measurement": "dog"})
     hass.states.async_set("sensor.valid", 10, {"unit_of_measurement": "dog"})
     hass.states.async_set("sensor.invalid", 10, {"unit_of_measurement": "cat"})
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
@@ -114,6 +115,11 @@ async def test_options(
         "sensor.input",
         "sensor.valid",
     ]
+
+    state = hass.states.get(f"{platform}.my_derivative")
+    assert state.attributes["unit_of_measurement"] == "kdog/min"
+    hass.states.async_set("sensor.valid", 10, {"unit_of_measurement": "cat"})
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
