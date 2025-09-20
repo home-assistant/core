@@ -74,7 +74,8 @@
           "cycle_sensing": "Cycle sensing",
           "cycle_soaking": "Cycle soaking",
           "cycle_spinning": "Cycle spinning",
-          "cycle_washing": "Cycle washing"
+          "cycle_washing": "Cycle washing",
+          "door_open": "Door open"
         }
       },
       "dryer_state": {
@@ -104,7 +105,8 @@
           "cycle_sensing": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_sensing%]",
           "cycle_soaking": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_soaking%]",
           "cycle_spinning": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_spinning%]",
-          "cycle_washing": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_washing%]"
+          "cycle_washing": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_washing%]",
+          "door_open": "[%key:component::whirlpool::entity::sensor::washer_state::state::door_open%]"
         }
       },
       "whirlpool_tank": {
@@ -120,6 +122,99 @@
       },
       "end_time": {
         "name": "End time"
+      },
+      "oven_state": {
+        "name": "Oven state",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "preheating": "Preheating",
+          "cooking": "Cooking",
+          "not_present": "Not present"
+        }
+      },
+      "oven_state_upper": {
+        "name": "Upper oven state",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "preheating": "[%key:component::whirlpool::entity::sensor::oven_state::state::preheating%]",
+          "cooking": "[%key:component::whirlpool::entity::sensor::oven_state::state::cooking%]",
+          "not_present": "[%key:component::whirlpool::entity::sensor::oven_state::state::not_present%]"
+        }
+      },
+      "oven_state_lower": {
+        "name": "Lower oven state",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "preheating": "[%key:component::whirlpool::entity::sensor::oven_state::state::preheating%]",
+          "cooking": "[%key:component::whirlpool::entity::sensor::oven_state::state::cooking%]",
+          "not_present": "[%key:component::whirlpool::entity::sensor::oven_state::state::not_present%]"
+        }
+      },
+      "oven_cook_mode": {
+        "name": "Oven cook mode",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "bake": "Bake",
+          "convection_bake": "Convection bake",
+          "broil": "Broil",
+          "convection_broil": "Convection broil",
+          "convection_roast": "Convection roast",
+          "keep_warm": "Keep warm",
+          "air_fry": "Air fry"
+        }
+      },
+      "oven_cook_mode_upper": {
+        "name": "Upper oven cook mode",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "bake": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::bake%]",
+          "convection_bake": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::convection_bake%]",
+          "broil": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::broil%]",
+          "convection_broil": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::convection_broil%]",
+          "convection_roast": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::convection_roast%]",
+          "keep_warm": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::keep_warm%]",
+          "air_fry": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::air_fry%]"
+        }
+      },
+      "oven_cook_mode_lower": {
+        "name": "Lower oven cook mode",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "bake": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::bake%]",
+          "convection_bake": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::convection_bake%]",
+          "broil": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::broil%]",
+          "convection_broil": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::convection_broil%]",
+          "convection_roast": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::convection_roast%]",
+          "keep_warm": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::keep_warm%]",
+          "air_fry": "[%key:component::whirlpool::entity::sensor::oven_cook_mode::state::air_fry%]"
+        }
+      },
+      "oven_current_temperature": {
+        "name": "Oven current temperature"
+      },
+      "oven_current_temperature_upper": {
+        "name": "Upper oven current temperature"
+      },
+      "oven_current_temperature_lower": {
+        "name": "Lower oven current temperature"
+      },
+      "oven_target_temperature": {
+        "name": "Oven target temperature"
+      },
+      "oven_target_temperature_upper": {
+        "name": "Upper oven target temperature"
+      },
+      "oven_target_temperature_lower": {
+        "name": "Lower oven target temperature"
+      },
+      "oven_end_time": {
+        "name": "Oven end time"
+      },
+      "oven_end_time_upper": {
+        "name": "Upper oven end time"
+      },
+      "oven_end_time_lower": {
+        "name": "Lower oven end time"
       }
     }
   },

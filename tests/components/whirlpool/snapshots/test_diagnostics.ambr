@@ -22,6 +22,11 @@
         }),
       }),
       'ovens': dict({
+        'Oven': dict({
+          'category': 'oven',
+          'data_model': 'oven',
+          'model_number': '12345',
+        }),
       }),
       'washers': dict({
         'Washer': dict({
