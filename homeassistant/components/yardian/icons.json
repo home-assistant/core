@@ -1,14 +1,48 @@
 {
   "entity": {
-    "switch": {
-      "switch": {
-        "default": "mdi:water"
+    "binary_sensor": {
+      "watering_running": {
+        "default": "mdi:sprinkler",
+        "state": {
+          "on": "mdi:sprinkler",
+          "off": "mdi:sprinkler-variant"
+        }
+      },
+      "standby": {
+        "default": "mdi:pause-circle"
+      },
+      "freeze_prevent": {
+        "default": "mdi:snowflake-alert"
+      },
+      "zone_enabled": {
+        "default": "mdi:toggle-switch",
+        "state": {
+          "on": "mdi:toggle-switch",
+          "off": "mdi:toggle-switch-off"
+        }
+      }
+    },
+    "sensor": {
+      "rain_delay": {
+        "default": "mdi:timer-sand"
+      },
+      "active_zone_count": {
+        "default": "mdi:counter"
+      },
+      "sensor_delay": {
+        "default": "mdi:timer-sand"
+      },
+      "water_hammer_duration": {
+        "default": "mdi:hammer"
+      },
+      "region": {
+        "default": "mdi:earth"
       }
     }
   },
   "services": {
     "start_irrigation": {
-      "service": "mdi:water"
+      "service": "mdi:sprinkler"
     }
   }
 }

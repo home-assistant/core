@@ -20,6 +20,39 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "watering_running": {
+        "name": "Watering running"
+      },
+      "standby": {
+        "name": "Standby"
+      },
+      "freeze_prevent": {
+        "name": "Freeze prevent"
+      },
+      "zone_enabled": {
+        "name": "Zone {zone} enabled"
+      }
+    },
+    "sensor": {
+      "rain_delay": {
+        "name": "Rain delay"
+      },
+      "active_zone_count": {
+        "name": "Active zone count"
+      },
+      "sensor_delay": {
+        "name": "Sensor delay"
+      },
+      "water_hammer_duration": {
+        "name": "Water hammer duration"
+      },
+      "region": {
+        "name": "Region"
+      }
+    }
+  },
   "services": {
     "start_irrigation": {
       "name": "Start irrigation",
