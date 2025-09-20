@@ -696,7 +696,7 @@ async def test_no_duplicate_names(hass: HomeAssistant, do_config) -> None:
             },
             {
                 CONF_TYPE: TCP,
-                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_HOST: TEST_MODBUS_HOST + "_1",
                 CONF_PORT: TEST_PORT_TCP,
                 CONF_NAME: f"{TEST_MODBUS_NAME} 2",
                 CONF_SENSORS: [
@@ -715,6 +715,32 @@ async def test_no_duplicate_names(hass: HomeAssistant, do_config) -> None:
                 CONF_PARITY: "E",
                 CONF_STOPBITS: 1,
                 CONF_NAME: f"{TEST_MODBUS_NAME} 3",
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
+            },
+        ],
+        [
+            {
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
+            },
+            {
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP + 10,
+                CONF_NAME: f"{TEST_MODBUS_NAME} 2",
                 CONF_SENSORS: [
                     {
                         CONF_NAME: "dummy",
@@ -753,10 +779,111 @@ async def test_no_duplicate_names(hass: HomeAssistant, do_config) -> None:
         },
     ],
 )
-async def test_config_modbus(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus_with_pymodbus
+async def test_config_modbus(hass: HomeAssistant, mock_modbus_with_pymodbus) -> None:
+    """Run configuration test for modbus."""
+    assert len(hass.data[DOMAIN])
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        [
+            {
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
+            },
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: SERIAL,
+                CONF_BAUDRATE: 9600,
+                CONF_BYTESIZE: 8,
+                CONF_METHOD: "rtu",
+                CONF_PORT: TEST_PORT_SERIAL,
+                CONF_PARITY: "E",
+                CONF_STOPBITS: 1,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
+            },
+        ],
+        [
+            {
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
+            },
+            {
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_NAME: TEST_MODBUS_NAME + "_1",
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
+            },
+        ],
+        [
+            {
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_TYPE: SERIAL,
+                CONF_BAUDRATE: 9600,
+                CONF_BYTESIZE: 8,
+                CONF_METHOD: "rtu",
+                CONF_PORT: TEST_PORT_SERIAL,
+                CONF_PARITY: "E",
+                CONF_STOPBITS: 1,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
+            },
+            {
+                CONF_NAME: TEST_MODBUS_NAME + "_1",
+                CONF_TYPE: SERIAL,
+                CONF_BAUDRATE: 9600,
+                CONF_BYTESIZE: 8,
+                CONF_METHOD: "rtu",
+                CONF_PORT: TEST_PORT_SERIAL,
+                CONF_PARITY: "E",
+                CONF_STOPBITS: 1,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 9999,
+                    }
+                ],
+            },
+        ],
+    ],
+)
+async def test_config_wrong_modbus(
+    hass: HomeAssistant, mock_modbus_with_pymodbus
 ) -> None:
     """Run configuration test for modbus."""
+    assert len(hass.data[DOMAIN]) == 1
 
 
 VALUE = "value"
