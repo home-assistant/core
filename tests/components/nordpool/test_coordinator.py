@@ -58,7 +58,7 @@ async def test_coordinator(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert mock_data.call_count == 1
         state = hass.states.get("sensor.nord_pool_se3_current_price")
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == "0.92505"
 
     with (
         patch(
@@ -72,7 +72,7 @@ async def test_coordinator(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert mock_data.call_count == 1
         state = hass.states.get("sensor.nord_pool_se3_current_price")
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == "0.94949"
         assert "Authentication error" in caplog.text
 
     with (
@@ -103,7 +103,7 @@ async def test_coordinator(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert mock_data.call_count == 1
         state = hass.states.get("sensor.nord_pool_se3_current_price")
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == "1.25889"
         assert "error" in caplog.text
 
     with (
@@ -118,7 +118,7 @@ async def test_coordinator(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert mock_data.call_count == 1
         state = hass.states.get("sensor.nord_pool_se3_current_price")
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == "1.81645"
         assert "error" in caplog.text
 
     with (
@@ -133,7 +133,7 @@ async def test_coordinator(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert mock_data.call_count == 1
         state = hass.states.get("sensor.nord_pool_se3_current_price")
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == "2.51265"
         assert "Response error" in caplog.text
 
     freezer.tick(timedelta(hours=1))
@@ -141,3 +141,16 @@ async def test_coordinator(
     await hass.async_block_till_done()
     state = hass.states.get("sensor.nord_pool_se3_current_price")
     assert state.state == "1.81983"
+
+    with (
+        patch(
+            "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
+            side_effect=NordPoolError("error"),
+        ) as mock_data,
+    ):
+        freezer.tick(timedelta(hours=48))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_data.call_count == 1
+        state = hass.states.get("sensor.nord_pool_se3_current_price")
+        assert state.state == STATE_UNAVAILABLE

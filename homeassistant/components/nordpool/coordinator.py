@@ -73,8 +73,15 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
             self.hass, self.fetch_data, self.get_next_interval(dt_util.utcnow())
         )
         data = await self.api_call()
+
         if data and data.entries:
-            self.async_set_updated_data(data)
+            current_day = dt_util.utcnow().strftime("%Y-%m-%d")
+            for entry in data.entries:
+                if entry.requested_date == current_day:
+                    LOGGER.debug("Data for current day found")
+                    self.async_set_updated_data(data)
+                    return
+        self.async_set_update_error(NordPoolEmptyResponseError("No current day data"))
 
     async def api_call(self, retry: int = 3) -> DeliveryPeriodsData | None:
         """Make api call to retrieve data with retry if failure."""
@@ -96,16 +103,10 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
             aiohttp.ClientError,
         ) as error:
             LOGGER.debug("Connection error: %s", error)
-            self.async_set_update_error(error)
+            if self.data is None:
+                self.async_set_update_error(error)  # type: ignore[unreachable]
+            return self.data
 
-        if data:
-            current_day = dt_util.utcnow().strftime("%Y-%m-%d")
-            for entry in data.entries:
-                if entry.requested_date == current_day:
-                    LOGGER.debug("Data for current day found")
-                    return data
-
-        self.async_set_update_error(NordPoolEmptyResponseError("No current day data"))
         return data
 
     def merge_price_entries(self) -> list[DeliveryPeriodEntry]:
