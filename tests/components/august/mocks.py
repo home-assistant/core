@@ -48,6 +48,13 @@ from tests.common import MockConfigEntry, load_fixture
 
 USER_ID = "a76c25e5-49aa-4c14-cd0c-48a6931e2081"
 
+# Default capabilities for locks
+_DEFAULT_CAPABILITIES = {
+    "unlatch": False,
+    "doorSense": True,
+    "batteryType": "AA",
+}
+
 
 def _mock_get_config(
     brand: Brand = Brand.YALE_AUGUST, jwt: str | None = None
@@ -341,6 +348,15 @@ async def make_mock_api(
     api_instance.async_get_user = AsyncMock(return_value={"UserID": "abc"})
     api_instance.async_unlatch_async = AsyncMock()
     api_instance.async_unlatch = AsyncMock()
+
+    # Mock capabilities endpoint
+    async def mock_get_lock_capabilities(token, serial_number):
+        """Mock the capabilities endpoint response."""
+        return {"lock": _DEFAULT_CAPABILITIES}
+
+    api_instance.async_get_lock_capabilities = AsyncMock(
+        side_effect=mock_get_lock_capabilities
+    )
 
     return api_instance
 

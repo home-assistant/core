@@ -104,17 +104,6 @@ class AirConEntity(WhirlpoolEntity, ClimateEntity):
         return self._appliance.get_current_humidity()
 
     @property
-    def target_humidity(self) -> int:
-        """Return the humidity we try to reach."""
-        return self._appliance.get_humidity()
-
-    async def async_set_humidity(self, humidity: int) -> None:
-        """Set new target humidity."""
-        AirConEntity._check_service_request(
-            await self._appliance.set_humidity(humidity)
-        )
-
-    @property
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, fan."""
         if not self._appliance.get_power_on():

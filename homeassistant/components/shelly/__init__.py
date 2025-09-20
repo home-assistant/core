@@ -59,6 +59,7 @@ from .coordinator import (
 from .repairs import (
     async_manage_ble_scanner_firmware_unsupported_issue,
     async_manage_outbound_websocket_incorrectly_enabled_issue,
+    async_manage_wall_display_firmware_unsupported_issue,
 )
 from .utils import (
     async_create_issue_unsupported_firmware,
@@ -328,6 +329,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
+        async_manage_wall_display_firmware_unsupported_issue(hass, entry)
         async_manage_ble_scanner_firmware_unsupported_issue(
             hass,
             entry,

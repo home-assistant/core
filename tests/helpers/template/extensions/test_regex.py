@@ -193,7 +193,7 @@ def test_regex_with_non_string_input(hass: HomeAssistant) -> None:
     """Test regex functions with non-string input (automatic conversion)."""
     # Test with integer
     tpl = template.Template(
-        """
+        r"""
 {{ 12345 | regex_match('\\d+') }}
             """,
         hass,
@@ -202,7 +202,7 @@ def test_regex_with_non_string_input(hass: HomeAssistant) -> None:
 
     # Test with list (string conversion)
     tpl = template.Template(
-        """
+        r"""
 {{ [1, 2, 3] | regex_search('\\d') }}
             """,
         hass,

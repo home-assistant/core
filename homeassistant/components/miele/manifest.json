@@ -8,7 +8,7 @@
   "iot_class": "cloud_push",
   "loggers": ["pymiele"],
   "quality_scale": "platinum",
-  "requirements": ["pymiele==0.5.4"],
+  "requirements": ["pymiele==0.5.5"],
   "single_config_entry": true,
   "zeroconf": ["_mieleathome._tcp.local."]
 }

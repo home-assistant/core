@@ -23,7 +23,7 @@ from .const import (
     CONF_STATUS_REGISTER,
     CONF_STATUS_REGISTER_TYPE,
 )
-from .entity import BasePlatform
+from .entity import ModbusBaseEntity
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -42,7 +42,7 @@ async def async_setup_platform(
     async_add_entities(ModbusCover(hass, hub, config) for config in covers)
 
 
-class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
+class ModbusCover(ModbusBaseEntity, CoverEntity, RestoreEntity):
     """Representation of a Modbus cover."""
 
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
