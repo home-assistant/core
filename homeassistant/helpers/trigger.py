@@ -18,8 +18,10 @@ from homeassistant.const import (
     CONF_ALIAS,
     CONF_ENABLED,
     CONF_ID,
+    CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_SELECTOR,
+    CONF_TARGET,
     CONF_VARIABLES,
 )
 from homeassistant.core import (
@@ -74,17 +76,17 @@ TRIGGERS: HassKey[dict[str, str]] = HassKey("triggers")
 
 # Basic schemas to sanity check the trigger descriptions,
 # full validation is done by hassfest.triggers
-_FIELD_SCHEMA = vol.Schema(
+_FIELD_DESCRIPTION_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_SELECTOR): selector.validate_selector,
     },
     extra=vol.ALLOW_EXTRA,
 )
 
-_TRIGGER_SCHEMA = vol.Schema(
+_TRIGGER_DESCRIPTION_SCHEMA = vol.Schema(
     {
         vol.Optional("target"): TargetSelector.CONFIG_SCHEMA,
-        vol.Optional("fields"): vol.Schema({str: _FIELD_SCHEMA}),
+        vol.Optional("fields"): vol.Schema({str: _FIELD_DESCRIPTION_SCHEMA}),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -97,10 +99,10 @@ def starts_with_dot(key: str) -> str:
     return key
 
 
-_TRIGGERS_SCHEMA = vol.Schema(
+_TRIGGERS_DESCRIPTION_SCHEMA = vol.Schema(
     {
         vol.Remove(vol.All(str, starts_with_dot)): object,
-        cv.underscore_slug: vol.Any(None, _TRIGGER_SCHEMA),
+        cv.underscore_slug: vol.Any(None, _TRIGGER_DESCRIPTION_SCHEMA),
     }
 )
 
@@ -165,11 +167,41 @@ async def _register_trigger_platform(
             _LOGGER.exception("Error while notifying trigger platform listener")
 
 
+_TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
+    {
+        vol.Optional(CONF_OPTIONS): object,
+        vol.Optional(CONF_TARGET): cv.TARGET_FIELDS,
+    }
+)
+
+
 class Trigger(abc.ABC):
     """Trigger class."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
-        """Initialize trigger."""
+    @classmethod
+    async def async_validate_complete_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate complete config.
+
+        The complete config includes fields that are generic to all triggers,
+        such as the alias or the ID.
+        This method should be overridden by triggers that need to migrate
+        from the old-style config.
+        """
+        config = _TRIGGER_SCHEMA(config)
+
+        specific_config: ConfigType = {}
+        for key in (CONF_OPTIONS, CONF_TARGET):
+            if key in config:
+                specific_config[key] = config.pop(key)
+        specific_config = await cls.async_validate_config(hass, specific_config)
+
+        for key in (CONF_OPTIONS, CONF_TARGET):
+            if key in specific_config:
+                config[key] = specific_config[key]
+
+        return config
 
     @classmethod
     @abc.abstractmethod
@@ -177,6 +209,9 @@ class Trigger(abc.ABC):
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
+
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+        """Initialize trigger."""
 
     @abc.abstractmethod
     async def async_attach(
@@ -357,6 +392,29 @@ class PluggableAction:
                 await task
 
 
+def move_top_level_schema_fields_to_options(
+    config: ConfigType, options_schema_dict: dict[vol.Marker, Any]
+) -> ConfigType:
+    """Move top-level fields to options.
+
+    This function is used to help migrating old-style configs to new-style configs.
+    If options is already present, the config is returned as-is.
+    """
+    if CONF_OPTIONS in config:
+        return config
+
+    config = config.copy()
+    options = config.setdefault(CONF_OPTIONS, {})
+
+    # Move top-level fields to options
+    for key_marked in options_schema_dict:
+        key = key_marked.schema
+        if key in config:
+            options[key] = config.pop(key)
+
+    return config
+
+
 async def _async_get_trigger_platform(
     hass: HomeAssistant, trigger_key: str
 ) -> tuple[str, TriggerProtocol]:
@@ -390,7 +448,7 @@ async def async_validate_trigger_config(
             )
             if not (trigger := trigger_descriptors.get(relative_trigger_key)):
                 raise vol.Invalid(f"Invalid trigger '{trigger_key}' specified")
-            conf = await trigger.async_validate_config(hass, conf)
+            conf = await trigger.async_validate_complete_config(hass, conf)
         elif hasattr(platform, "async_validate_trigger_config"):
             conf = await platform.async_validate_trigger_config(hass, conf)
         else:
@@ -537,7 +595,7 @@ def _load_triggers_file(integration: Integration) -> dict[str, Any]:
     try:
         return cast(
             dict[str, Any],
-            _TRIGGERS_SCHEMA(
+            _TRIGGERS_DESCRIPTION_SCHEMA(
                 load_yaml_dict(str(integration.file_path / "triggers.yaml"))
             ),
         )
