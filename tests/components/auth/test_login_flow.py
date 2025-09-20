@@ -417,6 +417,7 @@ async def test_well_known_auth_info(
     )
     assert resp.status == 200
     assert await resp.json() == {
+        "issuer": expected_url_prefix,
         "authorization_endpoint": f"{expected_url_prefix}/auth/authorize",
         "token_endpoint": f"{expected_url_prefix}/auth/token",
         "revocation_endpoint": f"{expected_url_prefix}/auth/revoke",
