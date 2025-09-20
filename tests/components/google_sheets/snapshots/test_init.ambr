@@ -1,0 +1,15 @@
+# serializer version: 1
+# name: test_fetch_sheet
+  dict({
+    'range': list([
+      list([
+        'a',
+        'b',
+      ]),
+      list([
+        'c',
+        'd',
+      ]),
+    ]),
+  })
+# ---

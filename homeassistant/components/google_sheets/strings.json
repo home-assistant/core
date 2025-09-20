@@ -59,6 +59,24 @@
           "description": "Data to be appended to the worksheet. This puts the values on new rows underneath the matching column (key). Any new key is placed on the top of a new column."
         }
       }
+    },
+    "fetch_sheet": {
+      "name": "Fetch from sheet",
+      "description": "Fetches data from a worksheet in Google Sheets.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::google_sheets::services::append_sheet::fields::config_entry::name%]",
+          "description": "The sheet to fetch data from."
+        },
+        "worksheet": {
+          "name": "[%key:component::google_sheets::services::append_sheet::fields::worksheet::name%]",
+          "description": "[%key:component::google_sheets::services::append_sheet::fields::worksheet::description%]"
+        },
+        "rows": {
+          "name": "Rows",
+          "description": "Maximum number of rows to be fetched from the worksheet."
+        }
+      }
     }
   }
 }
