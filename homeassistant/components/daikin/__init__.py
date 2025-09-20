@@ -23,11 +23,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.util.ssl import client_context_no_verify
 
-from .const import KEY_MAC, TIMEOUT
+from . import services
+from .const import DOMAIN, KEY_MAC, TIMEOUT
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
 
@@ -66,13 +66,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bo
     await async_migrate_unique_id(hass, entry, device)
 
     entry.runtime_data = coordinator
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Register Daikin custom services
+    await services.async_setup_services(hass)
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if not unload_ok:
+        return False
+
+    if DOMAIN in hass.data:
+        hass.data[DOMAIN].pop(entry.entry_id, None)
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
+            await services.async_unload_services(hass)
+
+    return True
 
 
 async def async_migrate_unique_id(
