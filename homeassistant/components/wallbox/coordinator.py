@@ -139,7 +139,10 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=UPDATE_INTERVAL),
+            update_interval=timedelta(
+                seconds=UPDATE_INTERVAL
+                * len(hass.config_entries.async_loaded_entries(DOMAIN))
+            ),
         )
 
     def authenticate(self) -> None:
