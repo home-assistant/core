@@ -86,6 +86,11 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         translation_key="online_status",
         entity_registry_enabled_default=False,
     ),
+    "mode": SensorEntityDescription(
+        key="mode",
+        translation_key="mode",
+        entity_registry_enabled_default=False,
+    ),
 }
 
 
