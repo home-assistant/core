@@ -1,4 +1,4 @@
-"""Setup config flow for Actron Neo integration."""
+"""Setup config flow for Actron Air integration."""
 
 import asyncio
 from typing import Any
@@ -13,7 +13,7 @@ from .const import _LOGGER, DOMAIN
 
 
 class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Actron Air Neo."""
+    """Handle a config flow for Actron Air."""
 
     def __init__(self) -> None:
         """Initialize the config flow."""

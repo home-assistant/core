@@ -47,7 +47,7 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "actronair": {
+    "actron_air": {
       "name": "Actron Air",
       "integration_type": "hub",
       "config_flow": true,

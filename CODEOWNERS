@@ -46,8 +46,8 @@ build.json @home-assistant/supervisor
 /tests/components/accuweather/ @bieniu
 /homeassistant/components/acmeda/ @atmurray
 /tests/components/acmeda/ @atmurray
-/homeassistant/components/actronair/ @kclif9 @JagadishDhanamjayam
-/tests/components/actronair/ @kclif9 @JagadishDhanamjayam
+/homeassistant/components/actron_air/ @kclif9 @JagadishDhanamjayam
+/tests/components/actron_air/ @kclif9 @JagadishDhanamjayam
 /homeassistant/components/adax/ @danielhiversen @lazytarget
 /tests/components/adax/ @danielhiversen @lazytarget
 /homeassistant/components/adguard/ @frenck

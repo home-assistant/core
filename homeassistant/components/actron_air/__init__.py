@@ -1,4 +1,4 @@
-"""The Actron Air Neo integration."""
+"""The Actron Air integration."""
 
 from actron_neo_api import (
     ActronAirNeoACSystem,
@@ -21,7 +21,7 @@ PLATFORM = [Platform.CLIMATE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ActronNeoConfigEntry) -> bool:
-    """Set up Actron Air Neo integration from a config entry."""
+    """Set up Actron Air integration from a config entry."""
 
     api = ActronNeoAPI(refresh_token=entry.data[CONF_API_TOKEN])
     systems: list[ActronAirNeoACSystem] = []
@@ -30,10 +30,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronNeoConfigEntry) ->
         systems = await api.get_ac_systems()
         await api.update_status()
     except ActronNeoAuthError:
-        _LOGGER.error("Authentication error while setting up Actron Neo integration")
+        _LOGGER.error("Authentication error while setting up Actron Air integration")
         raise
     except ActronNeoAPIError as err:
-        _LOGGER.error("API error while setting up Actron Neo integration: %s", err)
+        _LOGGER.error("API error while setting up Actron Air integration: %s", err)
         raise
 
     system_coordinators: dict[str, ActronNeoSystemCoordinator] = {}

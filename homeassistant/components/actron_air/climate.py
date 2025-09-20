@@ -1,4 +1,4 @@
-"""Climate platform for Actron Air Neo integration."""
+"""Climate platform for Actron Air integration."""
 
 from typing import Any
 

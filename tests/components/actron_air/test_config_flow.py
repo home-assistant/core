@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from actron_neo_api import ActronNeoAuthError
 import pytest
 
-from homeassistant.components.actronair.config_flow import ActronNeoConfigFlow
+from homeassistant.components.actron_air.config_flow import ActronNeoConfigFlow
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 

@@ -1,4 +1,6 @@
-"""Coordinator for Actron Air Neo integration."""
+"""Coordinator for Actron Air integration."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
@@ -23,7 +25,7 @@ class ActronNeoRuntimeData:
     """Runtime data for the Actron Air Neo integration."""
 
     api: ActronNeoAPI
-    system_coordinators: dict[str, "ActronNeoSystemCoordinator"]
+    system_coordinators: dict[str, ActronNeoSystemCoordinator]
 
 
 type ActronNeoConfigEntry = ConfigEntry[ActronNeoRuntimeData]

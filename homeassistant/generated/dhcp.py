@@ -9,7 +9,7 @@ from typing import Final
 
 DHCP: Final[list[dict[str, str | bool]]] = [
     {
-        "domain": "actronair",
+        "domain": "actron_air",
         "hostname": "neo-*",
         "macaddress": "FC0FE7*",
     },
