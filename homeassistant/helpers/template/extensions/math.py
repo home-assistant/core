@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, NoReturn
 import jinja2
 from jinja2 import pass_environment
 
-from homeassistant.helpers.template import template_cv
+from homeassistant.helpers.template.context import template_cv
 
 from .base import BaseTemplateExtension, TemplateFunction
 
