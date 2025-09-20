@@ -1,10 +1,10 @@
 """Test helpers for Miele."""
 
 from collections.abc import AsyncGenerator, Generator
-from datetime import UTC, datetime
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun import freeze_time
 from pymiele import MieleAction, MieleDevices
 import pytest
 
@@ -185,8 +185,7 @@ async def push_data_and_actions(
 
 
 @pytest.fixture
-def mock_now() -> Generator[MagicMock]:
+def mock_date() -> Generator[MagicMock]:
     """Fixture to mock homeassistant.util.dt.utcnow()."""
-    fixed_now = datetime(2025, 5, 31, 12, 30, tzinfo=UTC)
-    with patch("homeassistant.util.dt.utcnow", return_value=fixed_now) as mock:
-        yield mock
+    with freeze_time("2025-05-31 12:30:00+00:00"):
+        yield

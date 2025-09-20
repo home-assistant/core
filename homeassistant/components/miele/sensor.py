@@ -21,7 +21,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
-    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
     UnitOfEnergy,
@@ -869,12 +868,14 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
         # recover last value from cache when adding entity
         last_value = await self.async_get_last_state()
         last_data = await self.async_get_last_sensor_data()
-        if (
-            last_value
-            and last_data
-            and last_value.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-        ):
-            self._attr_native_value = last_data.native_value
+        if last_value and last_data and last_value.state != STATE_UNKNOWN:
+            self._restore_last_value(last_data.native_value)
+
+    def _restore_last_value(
+        self, native_value: StateType | date | datetime | Decimal
+    ) -> None:
+        """Restore the last value from cache."""
+        self._attr_native_value = native_value
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
@@ -1031,6 +1032,15 @@ class MieleAbsoluteTimeSensor(MieleRestorableSensor):
 
     _previous_value: StateType | date | datetime | Decimal = None
 
+    def _restore_last_value(
+        self, native_value: StateType | date | datetime | Decimal
+    ) -> None:
+        """Specialized restore of last value for tests only, as freezegun restores a dict."""
+        if isinstance(native_value, dict) and "isoformat" in native_value:  # type: ignore[unreachable]
+            self._attr_native_value = datetime.fromisoformat(native_value["isoformat"])  # type: ignore[unreachable]
+        else:
+            super()._restore_last_value(native_value)
+
     def _update_last_value(self) -> None:
         """Update the last value of the sensor."""
         current_value = self.entity_description.value_fn(self.device)
@@ -1040,13 +1050,12 @@ class MieleAbsoluteTimeSensor(MieleRestorableSensor):
         # the value too often, we keep the cached value if it differs
         # less than 90s from the new value
         if (
-            self._previous_value is not None
-            and current_value is not None
-            and current_value not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            isinstance(self._previous_value, datetime)
+            and isinstance(current_value, datetime)
             and (
-                cast(datetime, self._previous_value) - timedelta(seconds=90)
-                < cast(datetime, current_value)
-                < cast(datetime, self._previous_value) + timedelta(seconds=90)
+                self._previous_value - timedelta(seconds=90)
+                < current_value
+                < self._previous_value + timedelta(seconds=90)
             )
         ) or current_status == StateStatus.PROGRAM_ENDED:
             pass
