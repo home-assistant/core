@@ -138,6 +138,16 @@ class MetEireannWeather(
         """Return the wind direction."""
         return self.coordinator.data.current_weather_data.get("wind_bearing")
 
+    @property
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind gust speed in native units."""
+        return self.coordinator.data.current_weather_data.get("wind_gust")
+
+    @property
+    def cloud_coverage(self) -> float | None:
+        """Return the cloud coverage."""
+        return self.coordinator.data.current_weather_data.get("cloudiness")
+
     def _forecast(self, hourly: bool) -> list[Forecast]:
         """Return the forecast array."""
         if hourly:

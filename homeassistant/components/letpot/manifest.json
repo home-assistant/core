@@ -8,5 +8,5 @@
   "iot_class": "cloud_push",
   "loggers": ["letpot"],
   "quality_scale": "bronze",
-  "requirements": ["letpot==0.5.0"]
+  "requirements": ["letpot==0.6.2"]
 }

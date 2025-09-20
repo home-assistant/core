@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Eq3ConfigEntry) -> bool:
             f"[{eq3_config.mac_address}] Device could not be found"
         )
 
-    thermostat = Thermostat(mac_address=device)  # type: ignore[arg-type]
+    thermostat = Thermostat(device)
 
     entry.runtime_data = Eq3ConfigEntryData(
         eq3_config=eq3_config, thermostat=thermostat

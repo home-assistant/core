@@ -1149,7 +1149,7 @@ async def test_strategy_no_network_settings(
     """Test formation strategy when no network settings are present."""
     mock_app.load_network_info = MagicMock(side_effect=NetworkNotFormed())
 
-    result, port = await pick_radio(RadioType.ezsp)
+    result, _port = await pick_radio(RadioType.ezsp)
     assert (
         config_flow.FORMATION_REUSE_SETTINGS
         not in result["data_schema"].schema["next_step_id"].container
@@ -1160,7 +1160,7 @@ async def test_formation_strategy_form_new_network(
     pick_radio: RadioPicker, mock_app: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test forming a new network."""
-    result, port = await pick_radio(RadioType.ezsp)
+    result, _port = await pick_radio(RadioType.ezsp)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -1180,7 +1180,7 @@ async def test_formation_strategy_form_initial_network(
     """Test forming a new network, with no previous settings on the radio."""
     mock_app.load_network_info = AsyncMock(side_effect=NetworkNotFormed())
 
-    result, port = await pick_radio(RadioType.ezsp)
+    result, _port = await pick_radio(RadioType.ezsp)
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={"next_step_id": config_flow.FORMATION_FORM_INITIAL_NETWORK},
@@ -1234,7 +1234,7 @@ async def test_formation_strategy_reuse_settings(
     pick_radio: RadioPicker, mock_app: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test reusing existing network settings."""
-    result, port = await pick_radio(RadioType.ezsp)
+    result, _port = await pick_radio(RadioType.ezsp)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -1270,7 +1270,7 @@ async def test_formation_strategy_restore_manual_backup_non_ezsp(
     hass: HomeAssistant,
 ) -> None:
     """Test restoring a manual backup on non-EZSP coordinators."""
-    result, port = await pick_radio(RadioType.znp)
+    result, _port = await pick_radio(RadioType.znp)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -1306,7 +1306,7 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
     hass: HomeAssistant,
 ) -> None:
     """Test restoring a manual backup on EZSP coordinators (overwrite IEEE)."""
-    result, port = await pick_radio(RadioType.ezsp)
+    result, _port = await pick_radio(RadioType.ezsp)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -1349,7 +1349,7 @@ async def test_formation_strategy_restore_manual_backup_ezsp(
     hass: HomeAssistant,
 ) -> None:
     """Test restoring a manual backup on EZSP coordinators (don't overwrite IEEE)."""
-    result, port = await pick_radio(RadioType.ezsp)
+    result, _port = await pick_radio(RadioType.ezsp)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -1390,7 +1390,7 @@ async def test_formation_strategy_restore_manual_backup_invalid_upload(
     pick_radio: RadioPicker, mock_app: AsyncMock, hass: HomeAssistant
 ) -> None:
     """Test restoring a manual backup but an invalid file is uploaded."""
-    result, port = await pick_radio(RadioType.ezsp)
+    result, _port = await pick_radio(RadioType.ezsp)
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -1450,7 +1450,7 @@ async def test_formation_strategy_restore_automatic_backup_ezsp(
     backup = mock_app.backups.backups[1]  # pick the second one
     backup.is_compatible_with = MagicMock(return_value=False)
 
-    result, port = await pick_radio(RadioType.ezsp)
+    result, _port = await pick_radio(RadioType.ezsp)
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={"next_step_id": (config_flow.FORMATION_CHOOSE_AUTOMATIC_BACKUP)},
@@ -1503,7 +1503,7 @@ async def test_formation_strategy_restore_automatic_backup_non_ezsp(
     backup = mock_app.backups.backups[1]  # pick the second one
     backup.is_compatible_with = MagicMock(return_value=False)
 
-    result, port = await pick_radio(RadioType.znp)
+    result, _port = await pick_radio(RadioType.znp)
 
     with patch(
         "homeassistant.config_entries.ConfigFlow.show_advanced_options",
@@ -1556,7 +1556,7 @@ async def test_ezsp_restore_without_settings_change_ieee(
     with patch.object(
         mock_app, "load_network_info", MagicMock(side_effect=NetworkNotFormed())
     ):
-        result, port = await pick_radio(RadioType.ezsp)
+        result, _port = await pick_radio(RadioType.ezsp)
 
     # Set the network state, it'll be picked up later after the load "succeeds"
     mock_app.state.node_info = backup.node_info

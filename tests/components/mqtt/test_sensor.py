@@ -15,9 +15,11 @@ import pytest
 from homeassistant.components import mqtt, sensor
 from homeassistant.components.mqtt.sensor import MQTT_SENSOR_ATTRIBUTES_BLOCKED
 from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfElectricPotential,
     UnitOfTemperature,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
@@ -904,6 +906,116 @@ async def test_invalid_unit_of_measurement(
     # Assert the sensor is not created
     state = hass.states.get("sensor.test")
     assert state is None
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "device_class": "voltage",
+                    "unit_of_measurement": "\u00b5V",  # microVolt
+                }
+            }
+        }
+    ],
+)
+async def test_device_class_with_equivalent_unit_of_measurement_received(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test device_class with equivalent unit of measurement."""
+    assert await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", "100")
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == "100"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        is UnitOfElectricPotential.MICROVOLT
+    )
+
+    caplog.clear()
+
+    discovery_payload = {
+        "name": "bla",
+        "state_topic": "test-topic2",
+        "device_class": "voltage",
+        "unit_of_measurement": "\u00b5V",
+    }
+    # Now discover a sensor with an altarantive mu char
+    async_fire_mqtt_message(
+        hass, "homeassistant/sensor/bla/config", json.dumps(discovery_payload)
+    )
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "test-topic2", "21")
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.bla")
+    assert state is not None
+    assert state.state == "21"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        is UnitOfElectricPotential.MICROVOLT
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
+                    "unit_of_measurement": "\u00b5V",
+                }
+            }
+        }
+    ],
+)
+async def test_equivalent_unit_of_measurement_received_without_device_class(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test device_class with equivalent unit of measurement."""
+    assert await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", "100")
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == "100"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        is UnitOfElectricPotential.MICROVOLT
+    )
+
+    caplog.clear()
+
+    discovery_payload = {
+        "name": "bla",
+        "state_topic": "test-topic2",
+        "unit_of_measurement": "\u00b5V",
+    }
+    # Now discover an invalid sensor
+    async_fire_mqtt_message(
+        hass, "homeassistant/sensor/bla/config", json.dumps(discovery_payload)
+    )
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "test-topic2", "21")
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.bla")
+    assert state is not None
+    assert state.state == "21"
+    assert (
+        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        is UnitOfElectricPotential.MICROVOLT
+    )
 
 
 @pytest.mark.parametrize(

@@ -12,5 +12,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/husqvarna_automower_ble",
   "iot_class": "local_polling",
-  "requirements": ["automower-ble==0.2.1"]
+  "requirements": ["automower-ble==0.2.7", "gardena-bluetooth==1.6.0"]
 }

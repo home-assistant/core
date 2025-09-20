@@ -6,6 +6,10 @@ reset_accessory:
     entity: {}
 
 unpair:
-  target:
-    device:
-      integration: homekit
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          multiple: true
+          integration: homekit

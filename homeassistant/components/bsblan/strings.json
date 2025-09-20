@@ -41,6 +41,11 @@
           "passkey": "[%key:component::bsblan::config::step::user::data::passkey%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "passkey": "[%key:component::bsblan::config::step::user::data_description::passkey%]",
+          "username": "[%key:component::bsblan::config::step::user::data_description::username%]",
+          "password": "[%key:component::bsblan::config::step::user::data_description::password%]"
         }
       }
     },
@@ -66,15 +71,24 @@
     },
     "set_operation_mode_error": {
       "message": "An error occurred while setting the operation mode"
+    },
+    "setup_connection_error": {
+      "message": "Failed to retrieve static device data from BSB-Lan device at {host}"
+    },
+    "setup_auth_error": {
+      "message": "Authentication failed while retrieving static device data"
+    },
+    "setup_general_error": {
+      "message": "An unknown error occurred while retrieving static device data"
     }
   },
   "entity": {
     "sensor": {
       "current_temperature": {
-        "name": "Current Temperature"
+        "name": "Current temperature"
       },
       "outside_temperature": {
-        "name": "Outside Temperature"
+        "name": "Outside temperature"
       }
     }
   }

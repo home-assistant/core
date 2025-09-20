@@ -376,6 +376,7 @@ async def test_get_action_capabilities(
         {
             "name": "cycle",
             "optional": True,
+            "required": False,
             "type": "boolean",
             "default": True,
         },
@@ -391,6 +392,7 @@ async def test_get_action_capabilities(
         {
             "name": "cycle",
             "optional": True,
+            "required": False,
             "type": "boolean",
             "default": True,
         },
@@ -476,6 +478,7 @@ async def test_get_action_capabilities_legacy(
         {
             "name": "cycle",
             "optional": True,
+            "required": False,
             "type": "boolean",
             "default": True,
         },
@@ -491,6 +494,7 @@ async def test_get_action_capabilities_legacy(
         {
             "name": "cycle",
             "optional": True,
+            "required": False,
             "type": "boolean",
             "default": True,
         },

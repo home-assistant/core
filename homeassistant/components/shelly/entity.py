@@ -290,7 +290,6 @@ class BlockEntityDescription(EntityDescription):
     available: Callable[[Block], bool] | None = None
     # Callable (settings, block), return true if entity should be removed
     removal_condition: Callable[[dict, Block], bool] | None = None
-    extra_state_attributes: Callable[[Block], dict | None] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -493,14 +492,6 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, Entity):
             return available
 
         return self.entity_description.available(self.block)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes."""
-        if self.entity_description.extra_state_attributes is None:
-            return None
-
-        return self.entity_description.extra_state_attributes(self.block)
 
 
 class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):

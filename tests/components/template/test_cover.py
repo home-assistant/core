@@ -239,6 +239,7 @@ async def setup_position_cover(
             {
                 TEST_OBJECT_ID: {
                     **COVER_ACTIONS,
+                    "set_cover_position": SET_COVER_POSITION,
                     "position_template": position_template,
                 }
             },
@@ -249,6 +250,7 @@ async def setup_position_cover(
             count,
             {
                 **NAMED_COVER_ACTIONS,
+                "set_cover_position": SET_COVER_POSITION,
                 "position": position_template,
             },
         )
@@ -258,6 +260,7 @@ async def setup_position_cover(
             count,
             {
                 **NAMED_COVER_ACTIONS,
+                "set_cover_position": SET_COVER_POSITION,
                 "position": position_template,
             },
         )
@@ -565,6 +568,7 @@ async def test_template_position(
     position: int | None,
     expected: str,
     caplog: pytest.LogCaptureFixture,
+    calls: list[ServiceCall],
 ) -> None:
     """Test the position_template attribute."""
     hass.states.async_set(TEST_STATE_ENTITY_ID, CoverState.OPEN)
@@ -579,6 +583,19 @@ async def test_template_position(
     assert state.attributes.get("current_position") == position
     assert state.state == expected
     assert "ValueError" not in caplog.text
+
+    # Test to make sure optimistic is not set with only a position template.
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID, "position": 10},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.attributes.get("current_position") == position
+    assert state.state == expected
 
 
 @pytest.mark.parametrize("count", [1])
@@ -611,8 +628,35 @@ async def test_template_position(
     ],
 )
 @pytest.mark.usefixtures("setup_cover")
-async def test_template_not_optimistic(hass: HomeAssistant) -> None:
+async def test_template_not_optimistic(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+) -> None:
     """Test the is_closed attribute."""
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_UNKNOWN
+
+    # Test to make sure optimistic is not set with only a position template.
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_UNKNOWN
+
+    # Test to make sure optimistic is not set with only a position template.
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_UNKNOWN
 

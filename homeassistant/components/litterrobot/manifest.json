@@ -13,5 +13,5 @@
   "iot_class": "cloud_push",
   "loggers": ["pylitterbot"],
   "quality_scale": "bronze",
-  "requirements": ["pylitterbot==2024.2.3"]
+  "requirements": ["pylitterbot==2024.2.4"]
 }

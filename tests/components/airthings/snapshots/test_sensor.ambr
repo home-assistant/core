@@ -263,7 +263,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2960000001_pm1',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_device_types[view_plus][sensor.living_room_pm1-state]
@@ -272,7 +272,7 @@
       'device_class': 'pm1',
       'friendly_name': 'Living Room PM1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_pm1',
@@ -319,7 +319,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '2960000001_pm25',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_device_types[view_plus][sensor.living_room_pm2_5-state]
@@ -328,7 +328,7 @@
       'device_class': 'pm25',
       'friendly_name': 'Living Room PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_pm2_5',

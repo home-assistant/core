@@ -5,6 +5,8 @@ blueprint:
     trigger_event:
       selector:
         text:
+          multiline: false
+          multiple: false
     service_to_call:
     a_number:
       selector:

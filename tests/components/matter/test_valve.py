@@ -133,3 +133,22 @@ async def test_valve(
         command=clusters.ValveConfigurationAndControl.Commands.Open(targetLevel=100),
     )
     matter_client.send_device_command.reset_mock()
+
+    # test using set_position action to close valve
+    await hass.services.async_call(
+        "valve",
+        "set_valve_position",
+        {
+            "entity_id": entity_id,
+            "position": 0,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.ValveConfigurationAndControl.Commands.Close(),
+    )
+    matter_client.send_device_command.reset_mock()

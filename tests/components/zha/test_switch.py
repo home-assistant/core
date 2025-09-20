@@ -1,8 +1,10 @@
 """Test ZHA switch."""
 
+from collections.abc import Callable, Coroutine
 from unittest.mock import call, patch
 
 import pytest
+from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
 import zigpy.zcl.foundation as zcl_f
@@ -40,7 +42,11 @@ def switch_platform_only():
         yield
 
 
-async def test_switch(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None:
+async def test_switch(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
     """Test ZHA switch platform."""
 
     await setup_zha()

@@ -35,6 +35,7 @@ from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import selector
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
@@ -88,11 +89,35 @@ ADDON_USER_INPUT_MAP = {
     CONF_ADDON_LR_S2_AUTHENTICATED_KEY: CONF_LR_S2_AUTHENTICATED_KEY,
 }
 
+CONF_ADDON_RF_REGION = "rf_region"
+
+EXAMPLE_SERVER_URL = "ws://localhost:3000"
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
 
 NETWORK_TYPE_NEW = "new"
 NETWORK_TYPE_EXISTING = "existing"
+ZWAVE_JS_SERVER_INSTRUCTIONS = (
+    "https://www.home-assistant.io/integrations/zwave_js/"
+    "#advanced-installation-instructions"
+)
+ZWAVE_JS_UI_MIGRATION_INSTRUCTIONS = (
+    "https://www.home-assistant.io/integrations/zwave_js/"
+    "#how-to-migrate-from-one-adapter-to-a-new-adapter-using-z-wave-js-ui"
+)
+
+RF_REGIONS = [
+    "Australia/New Zealand",
+    "China",
+    "Europe",
+    "Hong Kong",
+    "India",
+    "Israel",
+    "Japan",
+    "Korea",
+    "Russia",
+    "USA",
+]
 
 
 def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
@@ -186,10 +211,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.backup_data: bytes | None = None
         self.backup_filepath: Path | None = None
         self.use_addon = False
+        self._addon_config_updates: dict[str, Any] = {}
         self._migrating = False
         self._reconfigure_config_entry: ZwaveJSConfigEntry | None = None
         self._usb_discovery = False
         self._recommended_install = False
+        self._rf_region: str | None = None
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
@@ -227,6 +254,21 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Start Z-Wave JS add-on."""
+        if self.hass.config.country is None and (
+            not self._rf_region or self._rf_region == "Automatic"
+        ):
+            # If the country is not set, we need to check the RF region add-on config.
+            addon_info = await self._async_get_addon_info()
+            rf_region: str | None = addon_info.options.get(CONF_ADDON_RF_REGION)
+            self._rf_region = rf_region
+            if rf_region is None or rf_region == "Automatic":
+                # If the RF region is not set, we need to ask the user to select it.
+                return await self.async_step_rf_region()
+        if config_updates := self._addon_config_updates:
+            # If we have updates to the add-on config, set them before starting the add-on.
+            self._addon_config_updates = {}
+            await self._async_set_addon_config(config_updates)
+
         if not self.start_task:
             self.start_task = self.hass.async_create_task(self._async_start_addon())
 
@@ -446,7 +488,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 None,
             )
             if not self._reconfigure_config_entry:
-                return self.async_abort(reason="addon_required")
+                return self.async_abort(
+                    reason="addon_required",
+                    description_placeholders={
+                        "zwave_js_ui_migration": ZWAVE_JS_UI_MIGRATION_INSTRUCTIONS,
+                    },
+                )
 
         vid = discovery_info.vid
         pid = discovery_info.pid
@@ -520,7 +567,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a manual configuration."""
         if user_input is None:
             return self.async_show_form(
-                step_id="manual", data_schema=get_manual_schema({})
+                step_id="manual",
+                data_schema=get_manual_schema({}),
+                description_placeholders={
+                    "example_server_url": EXAMPLE_SERVER_URL,
+                    "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
+                },
             )
 
         errors = {}
@@ -549,7 +601,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._async_create_entry_from_vars()
 
         return self.async_show_form(
-            step_id="manual", data_schema=get_manual_schema(user_input), errors=errors
+            step_id="manual",
+            data_schema=get_manual_schema(user_input),
+            description_placeholders={
+                "example_server_url": EXAMPLE_SERVER_URL,
+                "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
+            },
+            errors=errors,
         )
 
     async def async_step_hassio(
@@ -603,6 +661,33 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._usb_discovery:
             return await self.async_step_on_supervisor({CONF_USE_ADDON: True})
         return await self.async_step_on_supervisor()
+
+    async def async_step_rf_region(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle RF region selection step."""
+        if user_input is not None:
+            # Store the selected RF region
+            self._addon_config_updates[CONF_ADDON_RF_REGION] = self._rf_region = (
+                user_input["rf_region"]
+            )
+            return await self.async_step_start_addon()
+
+        schema = vol.Schema(
+            {
+                vol.Required("rf_region"): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=RF_REGIONS,
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="rf_region",
+            data_schema=schema,
+        )
 
     async def async_step_on_supervisor(
         self, user_input: dict[str, Any] | None = None
@@ -703,7 +788,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
                 }
 
-                await self._async_set_addon_config(addon_config_updates)
+                self._addon_config_updates = addon_config_updates
                 return await self.async_step_start_addon()
 
             # Network already exists, go to security keys step
@@ -774,7 +859,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
             }
 
-            await self._async_set_addon_config(addon_config_updates)
+            self._addon_config_updates = addon_config_updates
             return await self.async_step_start_addon()
 
         data_schema = vol.Schema(
@@ -890,7 +975,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
         if not self._usb_discovery and not config_entry.data.get(CONF_USE_ADDON):
-            return self.async_abort(reason="addon_required")
+            return self.async_abort(
+                reason="addon_required",
+                description_placeholders={
+                    "zwave_js_ui_migration": ZWAVE_JS_UI_MIGRATION_INSTRUCTIONS,
+                },
+            )
 
         try:
             driver = self._get_driver()
@@ -974,7 +1064,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if self.usb_path:
                 # USB discovery was used, so the device is already known.
-                await self._async_set_addon_config({CONF_ADDON_DEVICE: self.usb_path})
+                self._addon_config_updates[CONF_ADDON_DEVICE] = self.usb_path
                 return await self.async_step_start_addon()
             # Now that the old controller is gone, we can scan for serial ports again
             return await self.async_step_choose_serial_port()
@@ -1002,6 +1092,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="manual_reconfigure",
                 data_schema=get_manual_schema({CONF_URL: config_entry.data[CONF_URL]}),
+                description_placeholders={
+                    "example_server_url": EXAMPLE_SERVER_URL,
+                    "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
+                },
             )
 
         errors = {}
@@ -1032,6 +1126,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="manual_reconfigure",
             data_schema=get_manual_schema(user_input),
+            description_placeholders={
+                "example_server_url": EXAMPLE_SERVER_URL,
+                "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
+            },
             errors=errors,
         )
 
@@ -1098,6 +1196,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
             }
 
+            addon_config_updates = self._addon_config_updates | addon_config_updates
+            self._addon_config_updates = {}
             await self._async_set_addon_config(addon_config_updates)
 
             if addon_info.state == AddonState.RUNNING and not self.restart_addon:
@@ -1169,7 +1269,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Choose a serial port."""
         if user_input is not None:
             self.usb_path = user_input[CONF_USB_PATH]
-            await self._async_set_addon_config({CONF_ADDON_DEVICE: self.usb_path})
+            self._addon_config_updates[CONF_ADDON_DEVICE] = self.usb_path
             return await self.async_step_start_addon()
 
         try:

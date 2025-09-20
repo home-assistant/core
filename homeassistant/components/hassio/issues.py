@@ -10,7 +10,12 @@ from typing import Any, NotRequired, TypedDict
 from uuid import UUID
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import ContextType, Issue as SupervisorIssue
+from aiohasupervisor.models import (
+    ContextType,
+    Issue as SupervisorIssue,
+    UnhealthyReason,
+    UnsupportedReason,
+)
 
 from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -36,17 +41,21 @@ from .const import (
     EVENT_SUPERVISOR_EVENT,
     EVENT_SUPERVISOR_UPDATE,
     EVENT_SUPPORTED_CHANGED,
+    EXTRA_PLACEHOLDERS,
     ISSUE_KEY_ADDON_BOOT_FAIL,
     ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
+    ISSUE_KEY_ADDON_PWNED,
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
+    ISSUE_KEY_SYSTEM_FREE_SPACE,
     PLACEHOLDER_KEY_ADDON,
     PLACEHOLDER_KEY_ADDON_URL,
+    PLACEHOLDER_KEY_FREE_SPACE,
     PLACEHOLDER_KEY_REFERENCE,
     REQUEST_REFRESH_DELAY,
     UPDATE_KEY_SUPERVISOR,
 )
-from .coordinator import get_addons_info
+from .coordinator import get_addons_info, get_host_info
 from .handler import HassIO, get_supervisor_client
 
 ISSUE_KEY_UNHEALTHY = "unhealthy"
@@ -59,38 +68,9 @@ INFO_URL_UNSUPPORTED = "https://www.home-assistant.io/more-info/unsupported"
 
 PLACEHOLDER_KEY_REASON = "reason"
 
-UNSUPPORTED_REASONS = {
-    "apparmor",
-    "connectivity_check",
-    "content_trust",
-    "dbus",
-    "dns_server",
-    "docker_configuration",
-    "docker_version",
-    "cgroup_version",
-    "job_conditions",
-    "lxc",
-    "network_manager",
-    "os",
-    "os_agent",
-    "restart_policy",
-    "software",
-    "source_mods",
-    "supervisor_version",
-    "systemd",
-    "systemd_journal",
-    "systemd_resolved",
-}
 # Some unsupported reasons also mark the system as unhealthy. If the unsupported reason
 # provides no additional information beyond the unhealthy one then skip that repair.
 UNSUPPORTED_SKIP_REPAIR = {"privileged"}
-UNHEALTHY_REASONS = {
-    "docker",
-    "supervisor",
-    "setup",
-    "privileged",
-    "untrusted",
-}
 
 # Keys (type + context) of issues that when found should be made into a repair
 ISSUE_KEYS_FOR_REPAIRS = {
@@ -101,6 +81,9 @@ ISSUE_KEYS_FOR_REPAIRS = {
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
+    "issue_system_disk_lifetime",
+    ISSUE_KEY_SYSTEM_FREE_SPACE,
+    ISSUE_KEY_ADDON_PWNED,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -201,7 +184,7 @@ class SupervisorIssues:
     def unhealthy_reasons(self, reasons: set[str]) -> None:
         """Set unhealthy reasons. Create or delete repairs as necessary."""
         for unhealthy in reasons - self.unhealthy_reasons:
-            if unhealthy in UNHEALTHY_REASONS:
+            if unhealthy in UnhealthyReason:
                 translation_key = f"{ISSUE_KEY_UNHEALTHY}_{unhealthy}"
                 translation_placeholders = None
             else:
@@ -233,7 +216,7 @@ class SupervisorIssues:
     def unsupported_reasons(self, reasons: set[str]) -> None:
         """Set unsupported reasons. Create or delete repairs as necessary."""
         for unsupported in reasons - UNSUPPORTED_SKIP_REPAIR - self.unsupported_reasons:
-            if unsupported in UNSUPPORTED_REASONS:
+            if unsupported in UnsupportedReason:
                 translation_key = f"{ISSUE_KEY_UNSUPPORTED}_{unsupported}"
                 translation_placeholders = None
             else:
@@ -264,11 +247,17 @@ class SupervisorIssues:
     def add_issue(self, issue: Issue) -> None:
         """Add or update an issue in the list. Create or update a repair if necessary."""
         if issue.key in ISSUE_KEYS_FOR_REPAIRS:
-            placeholders: dict[str, str] | None = None
-            if issue.reference:
-                placeholders = {PLACEHOLDER_KEY_REFERENCE: issue.reference}
+            placeholders: dict[str, str] = {}
+            if not issue.suggestions and issue.key in EXTRA_PLACEHOLDERS:
+                placeholders |= EXTRA_PLACEHOLDERS[issue.key]
 
-                if issue.key == ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING:
+            if issue.reference:
+                placeholders[PLACEHOLDER_KEY_REFERENCE] = issue.reference
+
+                if issue.key in {
+                    ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
+                    ISSUE_KEY_ADDON_PWNED,
+                }:
                     placeholders[PLACEHOLDER_KEY_ADDON_URL] = (
                         f"/hassio/addon/{issue.reference}"
                     )
@@ -280,6 +269,19 @@ class SupervisorIssues:
                     else:
                         placeholders[PLACEHOLDER_KEY_ADDON] = issue.reference
 
+            elif issue.key == ISSUE_KEY_SYSTEM_FREE_SPACE:
+                host_info = get_host_info(self._hass)
+                if (
+                    host_info
+                    and "data" in host_info
+                    and "disk_free" in host_info["data"]
+                ):
+                    placeholders[PLACEHOLDER_KEY_FREE_SPACE] = str(
+                        host_info["data"]["disk_free"]
+                    )
+                else:
+                    placeholders[PLACEHOLDER_KEY_FREE_SPACE] = "<2"
+
             async_create_issue(
                 self._hass,
                 DOMAIN,
@@ -287,7 +289,7 @@ class SupervisorIssues:
                 is_fixable=bool(issue.suggestions),
                 severity=IssueSeverity.WARNING,
                 translation_key=issue.key,
-                translation_placeholders=placeholders,
+                translation_placeholders=placeholders or None,
             )
 
         self._issues[issue.uuid] = issue

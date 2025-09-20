@@ -88,7 +88,7 @@
       "message": "Honeywell set temperature failed: invalid temperature {temperature}"
     },
     "temp_failed_range": {
-      "message": "Honeywell set temperature failed: temperature out of range. Mode: {mode}, Heat Temperuature: {heat}, Cool Temperature: {cool}"
+      "message": "Honeywell set temperature failed: temperature out of range. Mode: {mode}, Heat temperature: {heat}, Cool temperature: {cool}"
     },
     "set_hold_failed": {
       "message": "Honeywell could not set permanent hold"

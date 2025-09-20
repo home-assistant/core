@@ -172,7 +172,7 @@ async def test_pump_level(
     # CurrentLevel on LevelControl cluster
     state = hass.states.get("number.mock_pump_setpoint")
     assert state
-    assert state.state == "127.0"
+    assert state.state == "100.0"
 
     set_node_attribute(matter_node, 1, 8, 0, 100)
     await trigger_subscription_callback(hass, matter_client)
@@ -212,7 +212,7 @@ async def test_microwave_oven(
     """Test Cooktime for microwave oven."""
 
     # Cooktime on MicrowaveOvenControl cluster (1/96/2)
-    state = hass.states.get("number.microwave_oven_cook_time")
+    state = hass.states.get("number.microwave_oven_cooking_time")
     assert state
     assert state.state == "30"
 
@@ -221,7 +221,7 @@ async def test_microwave_oven(
         "number",
         "set_value",
         {
-            "entity_id": "number.microwave_oven_cook_time",
+            "entity_id": "number.microwave_oven_cooking_time",
             "value": 60,  # 60 seconds
         },
         blocking=True,

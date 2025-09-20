@@ -3,6 +3,24 @@
     "flow_title": "{name} ({address})",
     "step": {
       "user": {
+        "description": "One or more of your Bluetooth adapters is using passive scanning, which may not discover all SwitchBot devices. Would you like to sign in to your SwitchBot account to download device information and automate discovery? If you're not sure, we recommend signing in.",
+        "menu_options": {
+          "cloud_login": "Sign in to SwitchBot account",
+          "select_device": "Continue without signing in"
+        }
+      },
+      "cloud_login": {
+        "description": "Please provide your SwitchBot app username and password. This data won't be saved and is only used to retrieve device model information to automate discovery. Usernames and passwords are case-sensitive.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::switchbot::config::step::encrypted_auth::data_description::username%]",
+          "password": "[%key:component::switchbot::config::step::encrypted_auth::data_description::password%]"
+        }
+      },
+      "select_device": {
         "data": {
           "address": "MAC address"
         },
@@ -270,7 +288,30 @@
               "rose": "Rose",
               "colorful": "Colorful",
               "flickering": "Flickering",
-              "breathing": "Breathing"
+              "breathing": "Breathing",
+              "romance": "Romance",
+              "energy": "Energy",
+              "heartbeat": "Heartbeat",
+              "party": "Party",
+              "dynamic": "Dynamic",
+              "mystery": "Mystery",
+              "lightning": "Lightning",
+              "rock": "Rock",
+              "starlight": "Starlight",
+              "valentine_day": "Valentine's Day",
+              "dream": "Dream",
+              "alarm": "Alarm",
+              "fireworks": "Fireworks",
+              "waves": "Waves",
+              "rainbow": "Rainbow",
+              "game": "Game",
+              "meditation": "Meditation",
+              "starlit_sky": "Starlit Sky",
+              "sleep": "Sleep",
+              "movie": "Movie",
+              "sunrise": "Sunrise",
+              "new_year": "New Year",
+              "cherry_blossom": "Cherry Blossom"
             }
           }
         }

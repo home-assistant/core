@@ -59,7 +59,7 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 DEVICE_UPDATE_INTERVAL = timedelta(seconds=60)
-FIRMWARE_UPDATE_INTERVAL = timedelta(hours=12)
+FIRMWARE_UPDATE_INTERVAL = timedelta(hours=24)
 NUM_CRED_ERRORS = 3
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -322,7 +322,7 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove a device from a config entry."""
     host: ReolinkHost = config_entry.runtime_data.host
-    (device_uid, ch, is_chime) = get_device_uid_and_ch(device, host)
+    (_device_uid, ch, is_chime) = get_device_uid_and_ch(device, host)
 
     if is_chime:
         await host.api.get_state(cmd="GetDingDongList")
@@ -431,7 +431,9 @@ def migrate_entity_ids(
         if (DOMAIN, host.unique_id) in device.identifiers:
             remove_ids = True  # NVR/Hub in identifiers, keep that one, remove others
         for old_id in device.identifiers:
-            (old_device_uid, old_ch, old_is_chime) = get_device_uid_and_ch(old_id, host)
+            (old_device_uid, _old_ch, _old_is_chime) = get_device_uid_and_ch(
+                old_id, host
+            )
             if (
                 not old_device_uid
                 or old_device_uid[0] != host.unique_id

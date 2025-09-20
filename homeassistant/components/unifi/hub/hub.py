@@ -39,7 +39,7 @@ class UnifiHub:
         self.hass = hass
         self.api = api
         self.config = UnifiConfig.from_config_entry(config_entry)
-        self.entity_loader = UnifiEntityLoader(self)
+        self.entity_loader = UnifiEntityLoader(self, config_entry)
         self._entity_helper = UnifiEntityHelper(hass, api)
         self.websocket = UnifiWebsocket(hass, api, self.signal_reachable)
 

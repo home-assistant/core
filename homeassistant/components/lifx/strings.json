@@ -149,6 +149,10 @@
           "name": "[%key:component::lifx::services::effect_pulse::fields::period::name%]",
           "description": "Duration between color changes."
         },
+        "transition": {
+          "name": "Transition",
+          "description": "Duration of the transition between colors."
+        },
         "change": {
           "name": "Change",
           "description": "Hue movement per period, in degrees on a color wheel."

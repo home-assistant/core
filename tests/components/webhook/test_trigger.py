@@ -333,3 +333,47 @@ async def test_webhook_reload(
 
     assert len(events) == 2
     assert events[1].data["hello"] == "yo2 world"
+
+
+async def test_webhook_template(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test triggering with a template webhook."""
+    # Set up fake cloud
+    hass.config.components.add("cloud")
+
+    events = []
+
+    @callback
+    def store_event(event):
+        """Help store events."""
+        events.append(event)
+
+    hass.bus.async_listen("test_success", store_event)
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "platform": "webhook",
+                    "webhook_id": "webhook-{{ sqrt(9)|round }}",
+                    "local_only": True,
+                },
+                "action": {
+                    "event": "test_success",
+                    "event_data_template": {"hello": "yo {{ trigger.data.hello }}"},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+
+    await client.post("/api/webhook/webhook-3", data={"hello": "world"})
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data["hello"] == "yo world"

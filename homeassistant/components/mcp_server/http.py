@@ -126,7 +126,8 @@ class ModelContextProtocolSSEView(HomeAssistantView):
             async with anyio.create_task_group() as tg:
                 tg.start_soon(sse_reader)
                 await server.run(read_stream, write_stream, options)
-                return response
+
+            return response
 
 
 class ModelContextProtocolMessagesView(HomeAssistantView):

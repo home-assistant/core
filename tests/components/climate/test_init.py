@@ -232,7 +232,7 @@ async def test_temperature_features_is_valid(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Set temperature action was used with the target temperature parameter but the entity does not support it",
+        match="Set temperature action was used with the 'Target temperature' parameter but the entity does not support it",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -246,7 +246,7 @@ async def test_temperature_features_is_valid(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Set temperature action was used with the target temperature low/high parameter but the entity does not support it",
+        match="Set temperature action was used with the 'Lower/Upper target temperature' parameter but the entity does not support it",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -702,7 +702,7 @@ async def test_target_temp_high_higher_than_low(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Target temperature low can not be higher than Target temperature high",
+        match="'Lower target temperature' can not be higher than 'Upper target temperature'",
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
@@ -716,6 +716,6 @@ async def test_target_temp_high_higher_than_low(
         )
     assert (
         str(exc.value)
-        == "Target temperature low can not be higher than Target temperature high"
+        == "'Lower target temperature' can not be higher than 'Upper target temperature'"
     )
     assert exc.value.translation_key == "low_temp_higher_than_high_temp"

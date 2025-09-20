@@ -18,11 +18,11 @@ mkdir -p config
 
 if [ ! -n "$VIRTUAL_ENV" ]; then
   if [ -x "$(command -v uv)" ]; then
-    uv venv venv
+    uv venv .venv
   else
-    python3 -m venv venv
+    python3 -m venv .venv
   fi
-  source venv/bin/activate
+  source .venv/bin/activate
 fi
 
 if ! [ -x "$(command -v uv)" ]; then
@@ -32,12 +32,10 @@ fi
 script/bootstrap
 
 pre-commit install
-uv pip install -e . --config-settings editable_mode=compat --constraint homeassistant/package_constraints.txt
-python3 -m script.translations develop --all
 
 hass --script ensure_config -c config
 
-if ! grep -R "logger" config/configuration.yaml >> /dev/null;then
+if ! grep -R "logger" config/configuration.yaml >> /dev/null; then
 echo "
 logger:
   default: info

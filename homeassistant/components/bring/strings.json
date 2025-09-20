@@ -164,10 +164,6 @@
       "name": "[%key:component::notify::services::notify::name%]",
       "description": "Sends a mobile push notification to members of a shared Bring! list.",
       "fields": {
-        "entity_id": {
-          "name": "List",
-          "description": "Bring! list whose members (except sender) will be notified."
-        },
         "message": {
           "name": "Notification type",
           "description": "Type of push notification to send to list members."

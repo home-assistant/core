@@ -29,7 +29,7 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType, WorkMode
 from .entity import TuyaEntity
 from .models import IntegerTypeData
-from .util import remap_value
+from .util import get_dpcode, remap_value
 
 
 @dataclass
@@ -73,6 +73,15 @@ class TuyaLightEntityDescription(LightEntityDescription):
 
 
 LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
+    # White noise machine
+    "bzyd": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            name=None,
+            color_mode=DPCode.WORK_MODE,
+            color_data=DPCode.COLOUR_DATA,
+        ),
+    ),
     # Curtain Switch
     # https://developer.tuya.com/en/docs/iot/category-clkg?id=Kaiuz0gitil39
     "clkg": (
@@ -515,9 +524,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         color_modes: set[ColorMode] = {ColorMode.ONOFF}
 
         # Determine DPCodes
-        self._color_mode_dpcode = self.find_dpcode(
-            description.color_mode, prefer_function=True
-        )
+        self._color_mode_dpcode = get_dpcode(self.device, description.color_mode)
 
         if int_type := self.find_dpcode(
             description.brightness, dptype=DPType.INTEGER, prefer_function=True
@@ -532,8 +539,8 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
             )
 
         if (
-            dpcode := self.find_dpcode(description.color_data, prefer_function=True)
-        ) and self.get_dptype(dpcode) == DPType.JSON:
+            dpcode := get_dpcode(self.device, description.color_data)
+        ) and self.get_dptype(dpcode, prefer_function=True) == DPType.JSON:
             self._color_data_dpcode = dpcode
             color_modes.add(ColorMode.HS)
             if dpcode in self.device.function:
@@ -665,8 +672,11 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 },
             ]
 
-        elif ATTR_BRIGHTNESS in kwargs and self._brightness:
-            brightness = kwargs[ATTR_BRIGHTNESS]
+        elif self._brightness and (ATTR_BRIGHTNESS in kwargs or ATTR_WHITE in kwargs):
+            if ATTR_BRIGHTNESS in kwargs:
+                brightness = kwargs[ATTR_BRIGHTNESS]
+            else:
+                brightness = kwargs[ATTR_WHITE]
 
             # If there is a min/max value, the brightness is actually limited.
             # Meaning it is actually not on a 0-255 scale.

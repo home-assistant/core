@@ -1,6 +1,6 @@
 """The tests for the go2rtc component."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 import logging
 from typing import NamedTuple
 from unittest.mock import AsyncMock, Mock, patch
@@ -29,6 +29,11 @@ from homeassistant.components.camera import (
     WebRTCSendMessage,
     async_get_image,
 )
+from homeassistant.components.camera.const import DATA_CAMERA_PREFS
+from homeassistant.components.camera.prefs import (
+    CameraPreferences,
+    DynamicStreamSettings,
+)
 from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
 from homeassistant.components.go2rtc import HomeAssistant, WebRTCProvider
 from homeassistant.components.go2rtc.const import (
@@ -37,6 +42,7 @@ from homeassistant.components.go2rtc.const import (
     DOMAIN,
     RECOMMENDED_VERSION,
 )
+from homeassistant.components.stream import Orientation
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.exceptions import HomeAssistantError
@@ -696,3 +702,208 @@ async def test_generic_workaround(
             f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
         ],
     )
+
+
+async def _test_camera_orientation(
+    hass: HomeAssistant,
+    camera: MockCamera,
+    orientation: Orientation,
+    rest_client: AsyncMock,
+    expected_stream_source: str,
+    camera_fn: Callable[[HomeAssistant, MockCamera], Awaitable[None]],
+) -> None:
+    """Test camera orientation handling in go2rtc provider."""
+    # Ensure go2rtc provider is initialized
+    assert isinstance(camera._webrtc_provider, WebRTCProvider)
+
+    prefs = CameraPreferences(hass)
+    await prefs.async_load()
+    hass.data[DATA_CAMERA_PREFS] = prefs
+
+    # Set the specific orientation for this test by directly setting the dynamic stream settings
+    test_settings = DynamicStreamSettings(orientation=orientation, preload_stream=False)
+    prefs._dynamic_stream_settings_by_entity_id[camera.entity_id] = test_settings
+
+    # Call the camera function that should trigger stream update
+    await camera_fn(hass, camera)
+
+    # Verify the stream was configured correctly
+    rest_client.streams.add.assert_called_once_with(
+        camera.entity_id,
+        [
+            expected_stream_source,
+            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+        ],
+    )
+
+
+async def _test_camera_orientation_webrtc(
+    hass: HomeAssistant,
+    camera: MockCamera,
+    orientation: Orientation,
+    rest_client: AsyncMock,
+    expected_stream_source: str,
+) -> None:
+    """Test camera orientation handling in go2rtc provider on WebRTC stream."""
+
+    async def camera_fn(hass: HomeAssistant, camera: MockCamera) -> None:
+        """Mock function to simulate WebRTC offer handling."""
+        receive_message_callback = Mock()
+        await camera.async_handle_async_webrtc_offer(
+            OFFER_SDP, "test_session", receive_message_callback
+        )
+
+    await _test_camera_orientation(
+        hass,
+        camera,
+        orientation,
+        rest_client,
+        expected_stream_source,
+        camera_fn,
+    )
+
+
+async def _test_camera_orientation_get_image(
+    hass: HomeAssistant,
+    camera: MockCamera,
+    orientation: Orientation,
+    rest_client: AsyncMock,
+    expected_stream_source: str,
+) -> None:
+    """Test camera orientation handling in go2rtc provider on get_image."""
+
+    async def camera_fn(hass: HomeAssistant, camera: MockCamera) -> None:
+        """Mock function to simulate get_image handling."""
+        rest_client.get_jpeg_snapshot.return_value = b"image_bytes"
+        # Get image which should trigger stream update with orientation
+        await async_get_image(hass, camera.entity_id)
+
+    await _test_camera_orientation(
+        hass,
+        camera,
+        orientation,
+        rest_client,
+        expected_stream_source,
+        camera_fn,
+    )
+
+
+@pytest.mark.usefixtures("init_integration", "ws_client")
+@pytest.mark.parametrize(
+    ("orientation", "expected_stream_source"),
+    [
+        (
+            Orientation.MIRROR,
+            "ffmpeg:rtsp://stream#video=h264#audio=copy#raw=-vf hflip",
+        ),
+        (
+            Orientation.ROTATE_180,
+            "ffmpeg:rtsp://stream#video=h264#audio=copy#rotate=180",
+        ),
+        (Orientation.FLIP, "ffmpeg:rtsp://stream#video=h264#audio=copy#raw=-vf vflip"),
+        (
+            Orientation.ROTATE_LEFT_AND_FLIP,
+            "ffmpeg:rtsp://stream#video=h264#audio=copy#raw=-vf transpose=2,vflip",
+        ),
+        (
+            Orientation.ROTATE_LEFT,
+            "ffmpeg:rtsp://stream#video=h264#audio=copy#rotate=-90",
+        ),
+        (
+            Orientation.ROTATE_RIGHT_AND_FLIP,
+            "ffmpeg:rtsp://stream#video=h264#audio=copy#raw=-vf transpose=1,vflip",
+        ),
+        (
+            Orientation.ROTATE_RIGHT,
+            "ffmpeg:rtsp://stream#video=h264#audio=copy#rotate=90",
+        ),
+        (Orientation.NO_TRANSFORM, "rtsp://stream"),
+    ],
+)
+@pytest.mark.parametrize(
+    "test_fn",
+    [
+        _test_camera_orientation_webrtc,
+        _test_camera_orientation_get_image,
+    ],
+)
+async def test_stream_orientation(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+    orientation: Orientation,
+    expected_stream_source: str,
+    test_fn: Callable[
+        [HomeAssistant, MockCamera, Orientation, AsyncMock, str], Awaitable[None]
+    ],
+) -> None:
+    """Test WebRTC provider applies correct orientation filters."""
+    camera = init_test_integration
+
+    await test_fn(
+        hass,
+        camera,
+        orientation,
+        rest_client,
+        expected_stream_source,
+    )
+
+
+@pytest.mark.usefixtures("init_integration", "ws_client")
+@pytest.mark.parametrize(
+    "test_fn",
+    [
+        _test_camera_orientation_webrtc,
+        _test_camera_orientation_get_image,
+    ],
+)
+async def test_stream_orientation_stream_source_starts_ffmpeg(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+    test_fn: Callable[
+        [HomeAssistant, MockCamera, Orientation, AsyncMock, str], Awaitable[None]
+    ],
+) -> None:
+    """Test WebRTC provider applies correct orientation filters when a stream source already starts with ffmpeg."""
+    camera = init_test_integration
+    camera.set_stream_source("ffmpeg:rtsp://test.stream")
+
+    await test_fn(
+        hass,
+        camera,
+        Orientation.ROTATE_LEFT,
+        rest_client,
+        "ffmpeg:rtsp://test.stream#video=h264#audio=copy#rotate=-90",
+    )
+
+
+@pytest.mark.usefixtures("init_integration", "ws_client")
+@pytest.mark.parametrize(
+    "test_fn",
+    [
+        _test_camera_orientation_webrtc,
+        _test_camera_orientation_get_image,
+    ],
+)
+async def test_stream_orientation_with_generic_camera(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+    test_fn: Callable[
+        [HomeAssistant, MockCamera, Orientation, AsyncMock, str], Awaitable[None]
+    ],
+) -> None:
+    """Test WebRTC provider with orientation and generic camera platform."""
+    camera = init_test_integration
+    camera.set_stream_source("https://test.stream/video.m3u8")
+
+    # Test WebRTC offer handling with generic platform
+    with patch.object(camera.platform.platform_data, "platform_name", "generic"):
+        await test_fn(
+            hass,
+            camera,
+            Orientation.FLIP,
+            rest_client,
+            "ffmpeg:https://test.stream/video.m3u8#video=h264#audio=copy#raw=-vf vflip",
+        )

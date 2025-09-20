@@ -1357,6 +1357,46 @@ async def test_wrap_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None
     assert hass.states.get(ENTITY_ID).state == expected
 
 
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 201,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    ("config_addon", "register_words", "expected"),
+    [
+        (
+            {
+                CONF_SWAP: CONF_SWAP_WORD,
+                CONF_DATA_TYPE: DataType.UINT32,
+            },
+            [0x0102, 0x0304],
+            "50594050",
+        ),
+    ],
+)
+async def test_wrap_regs_ok_sensor(
+    hass: HomeAssistant, mock_modbus_ha, mock_do_cycle, expected
+) -> None:
+    """Run test for sensor struct."""
+    assert hass.states.get(ENTITY_ID).state == expected
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).state == expected
+
+
 @pytest.fixture(name="mock_restore")
 async def mock_restore(hass: HomeAssistant) -> None:
     """Mock restore cache."""

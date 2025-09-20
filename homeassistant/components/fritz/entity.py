@@ -125,7 +125,7 @@ class FritzBoxBaseCoordinatorEntity(CoordinatorEntity[AvmWrapper]):
             configuration_url=f"http://{self.coordinator.host}",
             connections={(dr.CONNECTION_NETWORK_MAC, self.coordinator.mac)},
             identifiers={(DOMAIN, self.coordinator.unique_id)},
-            manufacturer="AVM",
+            manufacturer="FRITZ!",
             model=self.coordinator.model,
             name=self._device_name,
             sw_version=self.coordinator.current_firmware,

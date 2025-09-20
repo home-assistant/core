@@ -53,7 +53,7 @@ def mock_update_fixture():
 @pytest.fixture(name="validate_config_entry")
 def validate_config_entry_fixture(mock_update):
     """Return valid config entry."""
-    mock_update.return_value = None
+    mock_update.return_value = []
     return mock_update
 
 

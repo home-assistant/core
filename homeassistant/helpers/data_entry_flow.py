@@ -31,27 +31,27 @@ class _BaseFlowManagerView(HomeAssistantView, Generic[_FlowManagerT]):
 
     def _prepare_result_json(
         self, result: data_entry_flow.FlowResult
-    ) -> data_entry_flow.FlowResult:
-        """Convert result to JSON."""
+    ) -> dict[str, Any]:
+        """Convert result to JSON serializable dict."""
         if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
-            data = result.copy()
             assert "result" not in result
-            data.pop("data")
-            data.pop("context")
-            return data
+            return {
+                key: val
+                for key, val in result.items()
+                if key not in ("data", "context")
+            }
+
+        data = dict(result)
 
         if "data_schema" not in result:
-            return result
+            return data
 
-        data = result.copy()
-
-        if (schema := data["data_schema"]) is None:
-            data["data_schema"] = []  # type: ignore[typeddict-item]  # json result type
+        if (schema := result["data_schema"]) is None:
+            data["data_schema"] = []
         else:
             data["data_schema"] = voluptuous_serialize.convert(
                 schema, custom_serializer=cv.custom_serializer
             )
-
         return data
 
 

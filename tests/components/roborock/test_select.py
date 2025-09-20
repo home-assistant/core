@@ -1,7 +1,7 @@
 """Test Roborock Select platform."""
 
 import copy
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from roborock.exceptions import RoborockException
@@ -37,36 +37,30 @@ async def test_update_success(
     setup_entry: MockConfigEntry,
     entity_id: str,
     value: str,
+    mock_send_message: Mock,
 ) -> None:
     """Test allowed changing values for select entities."""
     # Ensure that the entity exist, as these test can pass even if there is no entity.
     assert hass.states.get(entity_id) is not None
-    with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_message"
-    ) as mock_send_message:
-        await hass.services.async_call(
-            "select",
-            SERVICE_SELECT_OPTION,
-            service_data={"option": value},
-            blocking=True,
-            target={"entity_id": entity_id},
-        )
+    await hass.services.async_call(
+        "select",
+        SERVICE_SELECT_OPTION,
+        service_data={"option": value},
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
     assert mock_send_message.assert_called_once
 
 
+@pytest.mark.parametrize("send_message_side_effect", [RoborockException])
 async def test_update_failure(
     hass: HomeAssistant,
     bypass_api_fixture,
     setup_entry: MockConfigEntry,
+    mock_send_message: Mock,
 ) -> None:
     """Test that changing a value will raise a homeassistanterror when it fails."""
-    with (
-        patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_message",
-            side_effect=RoborockException(),
-        ),
-        pytest.raises(HomeAssistantError, match="Error while calling SET_MOP_MOD"),
-    ):
+    with pytest.raises(HomeAssistantError, match="Error while calling SET_MOP_MOD"):
         await hass.services.async_call(
             "select",
             SERVICE_SELECT_OPTION,

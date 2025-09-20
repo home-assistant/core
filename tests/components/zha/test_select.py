@@ -1,9 +1,11 @@
 """Test ZHA select entities."""
 
+from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general, security
 
@@ -49,8 +51,8 @@ def select_select_only():
 async def test_select(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test ZHA select platform."""
 
@@ -127,8 +129,8 @@ async def test_select(
 async def test_select_restore_state(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
     restored_state: str,
     expected_state: str,
 ) -> None:

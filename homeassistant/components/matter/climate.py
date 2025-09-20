@@ -296,24 +296,22 @@ class MatterClimate(MatterEntity, ClimateEntity):
             if running_state_value := self.get_matter_attribute_value(
                 clusters.Thermostat.Attributes.ThermostatRunningState
             ):
-                match running_state_value:
-                    case (
-                        ThermostatRunningState.Heat | ThermostatRunningState.HeatStage2
-                    ):
-                        self._attr_hvac_action = HVACAction.HEATING
-                    case (
-                        ThermostatRunningState.Cool | ThermostatRunningState.CoolStage2
-                    ):
-                        self._attr_hvac_action = HVACAction.COOLING
-                    case (
-                        ThermostatRunningState.Fan
-                        | ThermostatRunningState.FanStage2
-                        | ThermostatRunningState.FanStage3
-                    ):
-                        self._attr_hvac_action = HVACAction.FAN
-                    case _:
-                        self._attr_hvac_action = HVACAction.OFF
-
+                if running_state_value & (
+                    ThermostatRunningState.Heat | ThermostatRunningState.HeatStage2
+                ):
+                    self._attr_hvac_action = HVACAction.HEATING
+                elif running_state_value & (
+                    ThermostatRunningState.Cool | ThermostatRunningState.CoolStage2
+                ):
+                    self._attr_hvac_action = HVACAction.COOLING
+                elif running_state_value & (
+                    ThermostatRunningState.Fan
+                    | ThermostatRunningState.FanStage2
+                    | ThermostatRunningState.FanStage3
+                ):
+                    self._attr_hvac_action = HVACAction.FAN
+                else:
+                    self._attr_hvac_action = HVACAction.OFF
         # update target temperature high/low
         supports_range = (
             self._attr_supported_features

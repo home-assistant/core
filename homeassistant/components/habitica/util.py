@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict, fields
 import datetime
 from math import floor
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from dateutil.rrule import (
     DAILY,
@@ -21,7 +21,7 @@ from dateutil.rrule import (
     YEARLY,
     rrule,
 )
-from habiticalib import ContentData, Frequency, TaskData, UserData
+from habiticalib import ContentData, Frequency, GroupData, QuestBoss, TaskData, UserData
 
 from homeassistant.util import dt as dt_util
 
@@ -183,4 +183,42 @@ def pending_damage(user: UserData, content: ContentData) -> float | None:
         if user.party.quest.key
         and content.quests[user.party.quest.key].boss is not None
         else None
+    )
+
+
+def quest_attributes(party: GroupData, content: ContentData) -> dict[str, Any]:
+    """Quest description."""
+    return {
+        "quest_details": content.quests[party.quest.key].notes
+        if party.quest.key
+        else None,
+        "quest_participants": f"{sum(x is True for x in party.quest.members.values())} / {party.memberCount}",
+    }
+
+
+def rage_attributes(party: GroupData, content: ContentData) -> dict[str, Any]:
+    """Display name of rage skill and description of it's effect in attributes."""
+    boss = quest_boss(party, content)
+    return {
+        "rage_skill": boss.rage.title if boss and boss.rage else None,
+        "effect": boss.rage.effect if boss and boss.rage else None,
+    }
+
+
+def quest_boss(party: GroupData, content: ContentData) -> QuestBoss | None:
+    """Quest boss."""
+
+    return content.quests[party.quest.key].boss if party.quest.key else None
+
+
+def collected_quest_items(party: GroupData, content: ContentData) -> dict[str, Any]:
+    """List collected quest items."""
+
+    return (
+        {
+            collect[k].text: f"{v} / {collect[k].count}"
+            for k, v in party.quest.progress.collect.items()
+        }
+        if party.quest.key and (collect := content.quests[party.quest.key].collect)
+        else {}
     )

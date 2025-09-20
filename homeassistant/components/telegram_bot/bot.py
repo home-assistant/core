@@ -101,13 +101,26 @@ _LOGGER = logging.getLogger(__name__)
 type TelegramBotConfigEntry = ConfigEntry[TelegramNotificationService]
 
 
+def _get_bot_info(bot: Bot, config_entry: ConfigEntry) -> dict[str, Any]:
+    return {
+        "config_entry_id": config_entry.entry_id,
+        "id": bot.id,
+        "first_name": bot.first_name,
+        "last_name": bot.last_name,
+        "username": bot.username,
+    }
+
+
 class BaseTelegramBot:
     """The base class for the telegram bot."""
 
-    def __init__(self, hass: HomeAssistant, config: TelegramBotConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config: TelegramBotConfigEntry, bot: Bot
+    ) -> None:
         """Initialize the bot base class."""
         self.hass = hass
         self.config = config
+        self._bot = bot
 
     @abstractmethod
     async def shutdown(self) -> None:
@@ -133,6 +146,8 @@ class BaseTelegramBot:
         else:
             _LOGGER.warning("Unhandled update: %s", update)
             return True
+
+        event_data["bot"] = _get_bot_info(self._bot, self.config)
 
         event_context = Context()
 
@@ -442,6 +457,9 @@ class TelegramNotificationService:
                     event_data[ATTR_MESSAGE_THREAD_ID] = kwargs_msg[
                         ATTR_MESSAGE_THREAD_ID
                     ]
+
+                event_data["bot"] = _get_bot_info(self.bot, self.config)
+
                 self.hass.bus.async_fire(
                     EVENT_TELEGRAM_SENT, event_data, context=context
                 )
@@ -598,6 +616,28 @@ class TelegramNotificationService:
             read_timeout=params[ATTR_TIMEOUT],
             context=context,
         )
+
+    async def send_chat_action(
+        self,
+        chat_action: str = "",
+        target: Any = None,
+        context: Context | None = None,
+        **kwargs: Any,
+    ) -> dict[int, int]:
+        """Send a chat action to pre-allowed chat IDs."""
+        result = {}
+        for chat_id in self.get_target_chat_ids(target):
+            _LOGGER.debug("Send action %s in chat ID %s", chat_action, chat_id)
+            is_successful = await self._send_msg(
+                self.bot.send_chat_action,
+                "Error sending action",
+                None,
+                chat_id=chat_id,
+                action=chat_action,
+                context=context,
+            )
+            result[chat_id] = is_successful
+        return result
 
     async def send_file(
         self,

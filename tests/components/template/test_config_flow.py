@@ -150,6 +150,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "event",
+            {"event_type": "{{ states('event.one') }}"},
+            "2024-07-09T00:00:00.000+00:00",
+            {"one": "single", "two": "double"},
+            {},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {},
+        ),
+        (
             "fan",
             {"state": "{{ states('fan.one') }}"},
             "on",
@@ -237,6 +247,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
             {},
             {},
+            {},
+        ),
+        (
+            "update",
+            {"installed_version": "{{ states('update.one') }}"},
+            "off",
+            {"one": "2.0", "two": "1.0"},
+            {},
+            {"latest_version": "{{ '2.0' }}"},
+            {"latest_version": "{{ '2.0' }}"},
             {},
         ),
         (
@@ -363,6 +383,12 @@ async def test_config_flow(
             {"set_cover_position": []},
         ),
         (
+            "event",
+            {"event_type": "{{ 'single' }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+        ),
+        (
             "fan",
             {"state": "{{ states('fan.one') }}"},
             {"turn_on": [], "turn_off": []},
@@ -423,6 +449,12 @@ async def test_config_flow(
             {"state": "{{ states('select.one') }}"},
             {"options": "{{ ['off', 'on', 'auto'] }}"},
             {"options": "{{ ['off', 'on', 'auto'] }}"},
+        ),
+        (
+            "update",
+            {"installed_version": "{{ states('update.one') }}"},
+            {"latest_version": "{{ '2.0' }}"},
+            {"latest_version": "{{ '2.0' }}"},
         ),
         (
             "vacuum",
@@ -583,6 +615,16 @@ async def test_config_flow_device(
             "state",
         ),
         (
+            "event",
+            {"event_type": "{{ states('event.one') }}"},
+            {"event_type": "{{ states('event.two') }}"},
+            ["2024-07-09T00:00:00.000+00:00", "2024-07-09T00:00:00.000+00:00"],
+            {"one": "single", "two": "double"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            "event_type",
+        ),
+        (
             "fan",
             {"state": "{{ states('fan.one') }}"},
             {"state": "{{ states('fan.two') }}"},
@@ -688,6 +730,16 @@ async def test_config_flow_device(
             {},
             {},
             "value_template",
+        ),
+        (
+            "update",
+            {"installed_version": "{{ states('update.one') }}"},
+            {"installed_version": "{{ states('update.two') }}"},
+            ["off", "on"],
+            {"one": "2.0", "two": "1.0"},
+            {"latest_version": "{{ '2.0' }}"},
+            {"latest_version": "{{ '2.0' }}"},
+            "installed_version",
         ),
         (
             "vacuum",
@@ -1470,6 +1522,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"set_cover_position": []},
         ),
         (
+            "event",
+            {"event_type": "{{ 'single' }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+        ),
+        (
             "fan",
             {"state": "{{ states('fan.one') }}"},
             {"turn_on": [], "turn_off": []},
@@ -1537,6 +1595,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"value_template": "{{ false }}"},
             {},
             {},
+        ),
+        (
+            "update",
+            {"installed_version": "{{ states('update.one') }}"},
+            {"latest_version": "{{ '2.0' }}"},
+            {"latest_version": "{{ '2.0' }}"},
         ),
         (
             "vacuum",

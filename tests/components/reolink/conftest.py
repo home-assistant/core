@@ -43,7 +43,6 @@ TEST_PORT = 1234
 TEST_NVR_NAME = "test_reolink_name"
 TEST_CAM_NAME = "test_reolink_cam"
 TEST_NVR_NAME2 = "test2_reolink_name"
-TEST_CAM_NAME = "test_reolink_cam"
 TEST_USE_HTTPS = True
 TEST_HOST_MODEL = "RLN8-410"
 TEST_ITEM_NUMBER = "P000"
@@ -117,7 +116,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.supported.return_value = True
     host_mock.item_number.return_value = TEST_ITEM_NUMBER
     host_mock.camera_model.return_value = TEST_CAM_MODEL
-    host_mock.camera_name.return_value = TEST_NVR_NAME
+    host_mock.camera_name.return_value = TEST_CAM_NAME
     host_mock.camera_hardware_version.return_value = "IPC_00001"
     host_mock.camera_sw_version.return_value = "v1.1.0.0.0.0000"
     host_mock.camera_sw_version_update_required.return_value = False
@@ -128,7 +127,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.session_active = True
     host_mock.timeout = 60
     host_mock.renewtimer.return_value = 600
-    host_mock.wifi_connection = False
+    host_mock.wifi_connection.return_value = False
     host_mock.wifi_signal.return_value = -45
     host_mock.whiteled_mode_list.return_value = []
     host_mock.post_recording_time_list.return_value = []
@@ -146,6 +145,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     # enums
     host_mock.whiteled_mode.return_value = 1
     host_mock.whiteled_mode_list.return_value = ["off", "auto"]
+    host_mock.whiteled_color_temperature.return_value = 3000
     host_mock.doorbell_led.return_value = "Off"
     host_mock.doorbell_led_list.return_value = ["stayoff", "auto"]
     host_mock.auto_track_method.return_value = 3
@@ -167,6 +167,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.baichuan.get_privacy_mode = AsyncMock()
     host_mock.baichuan.set_privacy_mode = AsyncMock()
     host_mock.baichuan.set_scene = AsyncMock()
+    host_mock.baichuan.set_floodlight = AsyncMock()
     host_mock.baichuan.mac_address.return_value = TEST_MAC_CAM
     host_mock.baichuan.privacy_mode.return_value = False
     host_mock.baichuan.day_night_state.return_value = "day"

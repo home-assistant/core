@@ -22,5 +22,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["eq3btsmart"],
-  "requirements": ["eq3btsmart==2.1.0", "bleak-esphome==3.1.0"]
+  "requirements": ["eq3btsmart==2.3.0"]
 }

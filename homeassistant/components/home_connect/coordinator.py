@@ -659,17 +659,3 @@ class HomeConnectCoordinator(
             )
 
         return False
-
-    async def reset_execution_tracker(self, appliance_ha_id: str) -> None:
-        """Reset the execution tracker for a specific appliance."""
-        self._execution_tracker.pop(appliance_ha_id, None)
-        appliance_info = await self.client.get_specific_appliance(appliance_ha_id)
-
-        appliance_data = await self._get_appliance_data(
-            appliance_info, self.data.get(appliance_info.ha_id)
-        )
-        self.data[appliance_ha_id].update(appliance_data)
-        for listener, context in self._special_listeners.values():
-            if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED not in context:
-                listener()
-        self._call_all_event_listeners_for_appliance(appliance_ha_id)

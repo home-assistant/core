@@ -8,7 +8,21 @@
           "type": "Type of the printer"
         },
         "data_description": {
-          "host": "The hostname or IP address of the Brother printer to control."
+          "host": "The hostname or IP address of the Brother printer to control.",
+          "type": "Brother printer type: ink or laser."
+        },
+        "sections": {
+          "advanced_settings": {
+            "name": "Advanced settings",
+            "data": {
+              "port": "[%key:common::config_flow::data::port%]",
+              "community": "SNMP Community"
+            },
+            "data_description": {
+              "port": "The SNMP port of the Brother printer.",
+              "community": "A simple password for devices to communicate to each other."
+            }
+          }
         }
       },
       "zeroconf_confirm": {
@@ -16,6 +30,22 @@
         "title": "Discovered Brother Printer",
         "data": {
           "type": "[%key:component::brother::config::step::user::data::type%]"
+        },
+        "data_description": {
+          "type": "[%key:component::brother::config::step::user::data_description::type%]"
+        },
+        "sections": {
+          "advanced_settings": {
+            "name": "Advanced settings",
+            "data": {
+              "port": "[%key:common::config_flow::data::port%]",
+              "community": "SNMP Community"
+            },
+            "data_description": {
+              "port": "The SNMP port of the Brother printer.",
+              "community": "A simple password for devices to communicate to each other."
+            }
+          }
         }
       },
       "reconfigure": {
@@ -25,6 +55,19 @@
         },
         "data_description": {
           "host": "[%key:component::brother::config::step::user::data_description::host%]"
+        },
+        "sections": {
+          "advanced_settings": {
+            "name": "Advanced settings",
+            "data": {
+              "port": "[%key:common::config_flow::data::port%]",
+              "community": "SNMP Community"
+            },
+            "data_description": {
+              "port": "The SNMP port of the Brother printer.",
+              "community": "A simple password for devices to communicate to each other."
+            }
+          }
         }
       }
     },

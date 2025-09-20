@@ -6,11 +6,11 @@ import logging
 from typing import Any
 
 from airos.exceptions import (
-    ConnectionAuthenticationError,
-    ConnectionSetupError,
-    DataMissingError,
-    DeviceConnectionError,
-    KeyDataMissingError,
+    AirOSConnectionAuthenticationError,
+    AirOSConnectionSetupError,
+    AirOSDataMissingError,
+    AirOSDeviceConnectionError,
+    AirOSKeyDataMissingError,
 )
 import voluptuous as vol
 
@@ -19,7 +19,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .coordinator import AirOS
+from .coordinator import AirOS8
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             # with no option in the web UI to change or upload a custom certificate.
             session = async_get_clientsession(self.hass, verify_ssl=False)
 
-            airos_device = AirOS(
+            airos_device = AirOS8(
                 host=user_input[CONF_HOST],
                 username=user_input[CONF_USERNAME],
                 password=user_input[CONF_PASSWORD],
@@ -59,13 +59,13 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                 airos_data = await airos_device.status()
 
             except (
-                ConnectionSetupError,
-                DeviceConnectionError,
+                AirOSConnectionSetupError,
+                AirOSDeviceConnectionError,
             ):
                 errors["base"] = "cannot_connect"
-            except (ConnectionAuthenticationError, DataMissingError):
+            except (AirOSConnectionAuthenticationError, AirOSDataMissingError):
                 errors["base"] = "invalid_auth"
-            except KeyDataMissingError:
+            except AirOSKeyDataMissingError:
                 errors["base"] = "key_data_missing"
             except Exception:
                 _LOGGER.exception("Unexpected exception")

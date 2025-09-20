@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import struct
 from typing import Any, cast
 
@@ -44,6 +43,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
 from .const import (
+    _LOGGER,
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_WRITE_COIL,
@@ -101,10 +101,8 @@ from .const import (
     CONF_WRITE_REGISTERS,
     DataType,
 )
-from .entity import BaseStructPlatform
+from .entity import ModbusStructEntity
 from .modbus import ModbusHub
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -133,7 +131,7 @@ async def async_setup_platform(
     async_add_entities(ModbusThermostat(hass, hub, config) for config in climates)
 
 
-class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
+class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
     """Representation of a Modbus Thermostat."""
 
     _attr_supported_features = (
@@ -365,7 +363,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                         )
                     break
 
-        await self._async_update_write_state()
+        await self.async_local_update(cancel_pending_update=True)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -387,7 +385,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                     CALL_TYPE_WRITE_REGISTER,
                 )
 
-        await self._async_update_write_state()
+        await self.async_local_update(cancel_pending_update=True)
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing mode."""
@@ -410,7 +408,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                             CALL_TYPE_WRITE_REGISTER,
                         )
                     break
-        await self._async_update_write_state()
+        await self.async_local_update(cancel_pending_update=True)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -465,13 +463,10 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 CALL_TYPE_WRITE_REGISTERS,
             )
         self._attr_available = result is not None
-        await self._async_update_write_state()
+        await self.async_local_update(cancel_pending_update=True)
 
     async def _async_update(self) -> None:
         """Update Target & Current Temperature."""
-        # remark "now" is a dummy parameter to avoid problems with
-        # async_track_time_interval
-
         self._attr_target_temperature = await self._async_read_register(
             CALL_TYPE_REGISTER_HOLDING,
             self._target_temperature_register[
@@ -495,6 +490,11 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                     if hvac_mode == value:
                         self._attr_hvac_mode = mode
                         break
+        else:
+            # since there are no hvac_mode_register, this
+            # integration should not touch the attr.
+            # However it lacks in the climate component.
+            self._attr_hvac_mode = HVACMode.AUTO
 
         # Read the HVAC action register if defined
         if self._hvac_action_register is not None:

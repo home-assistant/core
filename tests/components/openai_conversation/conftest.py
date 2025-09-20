@@ -94,7 +94,7 @@ def mock_config_entry_with_reasoning_model(
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         next(iter(mock_config_entry.subentries.values())),
-        data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST, CONF_CHAT_MODEL: "o4-mini"},
+        data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST, CONF_CHAT_MODEL: "gpt-5-mini"},
     )
     return mock_config_entry
 

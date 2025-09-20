@@ -14,14 +14,12 @@ from .coordinator import AmazonConfigEntry
 
 ATTR_TEXT_COMMAND = "text_command"
 ATTR_SOUND = "sound"
-ATTR_SOUND_VARIANT = "sound_variant"
 SERVICE_TEXT_COMMAND = "send_text_command"
 SERVICE_SOUND_NOTIFICATION = "send_sound"
 
 SCHEMA_SOUND_SERVICE = vol.Schema(
     {
         vol.Required(ATTR_SOUND): cv.string,
-        vol.Required(ATTR_SOUND_VARIANT): cv.positive_int,
         vol.Required(ATTR_DEVICE_ID): cv.string,
     },
 )
@@ -75,17 +73,14 @@ async def _async_execute_action(call: ServiceCall, attribute: str) -> None:
     coordinator = config_entry.runtime_data
 
     if attribute == ATTR_SOUND:
-        variant: int = call.data[ATTR_SOUND_VARIANT]
-        pad = "_" if variant > 10 else "_0"
-        file = f"{value}{pad}{variant!s}"
-        if value not in SOUNDS_LIST or variant > SOUNDS_LIST[value]:
+        if value not in SOUNDS_LIST:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_sound_value",
-                translation_placeholders={"sound": value, "variant": str(variant)},
+                translation_placeholders={"sound": value},
             )
         await coordinator.api.call_alexa_sound(
-            coordinator.data[device.serial_number], file
+            coordinator.data[device.serial_number], value
         )
     elif attribute == ATTR_TEXT_COMMAND:
         await coordinator.api.call_alexa_text_command(
