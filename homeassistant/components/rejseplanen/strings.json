@@ -1,0 +1,35 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up Rejseplanen data service."
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "invalid_auth": "Invalid authentication key"
+    }
+  },
+  "config_subentries": {
+    "stop": {
+      "entry_type": "Stop",
+      "step": {
+        "user": {
+          "description": "Set up stop subentry for Rejseplanen, see the [documentation](https://www.home-assistant.io/integrations/rejseplanen/) for information on obtaining the stop id.",
+          "title": "Add Stop"
+        }
+      },
+      "initiate_flow": {
+        "user": "Add stop"
+      }
+    }
+  },
+  "issues": {
+    "yaml_deprecated": {
+      "title": "YAML configuration detected",
+      "description": "You have configured Rejseplanen in configuration.yaml. This method is deprecated and will be ignored. Please use the UI to configure the integration. To solve this issue, remove the platform configuration from the configuration.yaml."
+    }
+  }
+}
