@@ -53,3 +53,4 @@ voluptuous-openapi==0.1.0
 yarl==1.20.1
 webrtc-models==0.3.0
 zeroconf==0.147.0
+tqdm>=4.67.1

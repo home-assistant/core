@@ -3448,6 +3448,12 @@
         "zwave"
       ]
     },
+    "level_lock": {
+      "name": "Level Lock",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "lg": {
       "name": "LG",
       "integrations": {

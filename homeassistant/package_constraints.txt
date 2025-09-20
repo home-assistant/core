@@ -65,6 +65,7 @@ securetar==2025.2.1
 SQLAlchemy==2.0.41
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
+tqdm>=4.67.1
 typing-extensions>=4.14.0,<5.0
 ulid-transform==1.4.0
 urllib3>=2.0
