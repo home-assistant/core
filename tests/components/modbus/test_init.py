@@ -1331,7 +1331,7 @@ async def test_integration_reload(
     state_sensor_1 = hass.states.get("sensor.dummy")
     state_sensor_2 = hass.states.get("sensor.dummy_2")
     assert state_sensor_1
-    assert not state_sensor_2
+    assert state_sensor_2  # continues due to UIID !
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
     await hass.async_block_till_done()
@@ -1364,8 +1364,8 @@ async def test_integration_reload(
     assert "Modbus not present anymore" in caplog.text
     state_sensor_1 = hass.states.get("sensor.dummy")
     state_sensor_2 = hass.states.get("sensor.dummy_2")
-    assert not state_sensor_1
-    assert not state_sensor_2
+    assert state_sensor_1  # continues due to UIID !
+    assert state_sensor_2  # continues due to UIID !
 
 
 @pytest.mark.parametrize("do_config", [{}])

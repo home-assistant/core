@@ -29,7 +29,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
@@ -290,6 +290,18 @@ class ModbusHub:
             self._msg_wait = 30 / 1000
         else:
             self._msg_wait = 0
+
+        self.device_connection = dr.async_get(hass).async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={
+                (
+                    DOMAIN,
+                    f"{entry.data.get(CONF_HOST, '')} {entry.data[CONF_PORT]}",
+                )
+            },
+            name=self.name,
+            model="modbus connection",
+        )
 
     def _log_error(self, text: str) -> None:
         if text == self._last_log_error:
