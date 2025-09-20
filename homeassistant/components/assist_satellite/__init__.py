@@ -37,6 +37,7 @@ from .entity import (
     AssistSatelliteConfiguration,
     AssistSatelliteEntity,
     AssistSatelliteEntityDescription,
+    AssistSatelliteState,
     AssistSatelliteWakeWord,
 )
 from .errors import SatelliteBusyError
@@ -50,6 +51,7 @@ __all__ = [
     "AssistSatelliteEntity",
     "AssistSatelliteEntityDescription",
     "AssistSatelliteEntityFeature",
+    "AssistSatelliteState",
     "AssistSatelliteWakeWord",
     "SatelliteBusyError",
 ]
