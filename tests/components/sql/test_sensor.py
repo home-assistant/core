@@ -39,7 +39,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -109,6 +108,33 @@ async def test_query_value_template(
     }
 
 
+async def test_template_query(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the SQL sensor with a query template."""
+    config = {
+        "db_url": "sqlite://",
+        "query": "SELECT {% if states('sensor.input1')=='on' %} 5 {% else %} 6 {% endif %} as value",
+        "column": "value",
+        "name": "count_tables",
+        "value_template": "{{ value | int }}",
+    }
+    await init_integration(hass, config)
+
+    state = hass.states.get("sensor.count_tables")
+    assert state.state == "6"
+
+    hass.states.async_set("sensor.input1", "on")
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.count_tables")
+    assert state.state == "5"
+
+
 async def test_query_value_template_invalid(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
@@ -122,6 +148,59 @@ async def test_query_value_template_invalid(
 
     state = hass.states.get("sensor.count_tables")
     assert state.state == "5.01"
+
+
+async def test_broken_template_query(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the SQL sensor with a query template which is broken."""
+    config = {
+        "db_url": "sqlite://",
+        "query": "SELECT {{ 5 as value",
+        "column": "value",
+        "name": "count_tables",
+        "value_template": "{{ value | int }}",
+    }
+    await init_integration(hass, config)
+
+    state = hass.states.get("sensor.count_tables")
+    assert not state
+
+
+async def test_broken_template_query_2(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the SQL sensor with a query template."""
+    hass.states.async_set("sensor.input1", "5")
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    config = {
+        "db_url": "sqlite://",
+        "query": "SELECT {{ states.sensor.input1.state | int / 1000}} as value",
+        "column": "value",
+        "name": "count_tables",
+    }
+    await init_integration(hass, config)
+
+    state = hass.states.get("sensor.count_tables")
+    assert state.state == "0.005"
+
+    hass.states.async_set("sensor.input1", "on")
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.count_tables")
+    assert state.state == "0.005"
+    assert (
+        "Error rendering query SELECT {{ states.sensor.input1.state"
+        " | int / 1000}} as value LIMIT 1;: Invalid template" in caplog.text
+    )
 
 
 async def test_query_limit(recorder_mock: Recorder, hass: HomeAssistant) -> None:
@@ -638,17 +717,14 @@ async def test_query_recover_from_rollback(
         CONF_UNIQUE_ID: "very_unique_id",
     }
     await init_integration(hass, title="Select value SQL query", options=options)
-    platforms = async_get_platforms(hass, "sql")
-    sql_entity = platforms[0].entities["sensor.select_value_sql_query"]
 
     state = hass.states.get("sensor.select_value_sql_query")
     assert state.state == "5"
     assert state.attributes["value"] == 5
 
-    with patch.object(
-        sql_entity,
-        "_lambda_stmt",
-        _generate_lambda_stmt("Faulty syntax create operational issue"),
+    with patch(
+        "homeassistant.components.sql.sensor._generate_lambda_stmt",
+        return_value=_generate_lambda_stmt("Faulty syntax create operational issue"),
     ):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)

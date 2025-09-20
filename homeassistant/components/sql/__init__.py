@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import sqlparse
 import voluptuous as vol
 
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
@@ -26,6 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
@@ -40,28 +40,28 @@ from .const import (
     DOMAIN,
     PLATFORMS,
 )
-from .util import redact_credentials
+from .util import check_and_render_sql_query, redact_credentials
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_sql_select(value: str) -> str:
+def validate_sql_select(value: Template) -> Template:
     """Validate that value is a SQL SELECT query."""
-    if len(query := sqlparse.parse(value.lstrip().lstrip(";"))) > 1:
-        raise vol.Invalid("Multiple SQL queries are not supported")
-    if len(query) == 0 or (query_type := query[0].get_type()) == "UNKNOWN":
-        raise vol.Invalid("Invalid SQL query")
-    if query_type != "SELECT":
-        _LOGGER.debug("The SQL query %s is of type %s", query, query_type)
-        raise vol.Invalid("Only SELECT queries allowed")
-    return str(query[0])
+    try:
+        assert value.hass
+        check_and_render_sql_query(value.hass, value)
+    except ValueError as err:
+        raise vol.Invalid(str(err)) from err
+    return value
 
 
 QUERY_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_COLUMN_NAME): cv.string,
         vol.Required(CONF_NAME): cv.template,
-        vol.Required(CONF_QUERY): vol.All(cv.string, validate_sql_select),
+        vol.Required(CONF_QUERY): vol.All(
+            cv.template, ValueTemplate.from_template, validate_sql_select
+        ),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
             cv.template, ValueTemplate.from_template
