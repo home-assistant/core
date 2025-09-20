@@ -82,11 +82,26 @@ def assert_condition_trace(expected):
             assert_element(condition_trace[key][index], element, path)
 
 
-async def test_invalid_condition(hass: HomeAssistant) -> None:
-    """Test if invalid condition raises."""
-    with pytest.raises(HomeAssistantError):
-        await condition.async_from_config(
-            hass,
+@pytest.mark.parametrize(
+    ("config", "error"),
+    [
+        (
+            {"condition": 123},
+            "Unexpected value for condition: '123'. Expected a condition, "
+            "a list of conditions or a valid template",
+        )
+    ],
+)
+async def test_invalid_condition(hass: HomeAssistant, config: dict, error: str) -> None:
+    """Test if validating an invalid condition raises."""
+    with pytest.raises(vol.Invalid, match=error):
+        cv.CONDITION_SCHEMA(config)
+
+
+@pytest.mark.parametrize(
+    ("config", "error"),
+    [
+        (
             {
                 "condition": "invalid",
                 "conditions": [
@@ -97,7 +112,15 @@ async def test_invalid_condition(hass: HomeAssistant) -> None:
                     },
                 ],
             },
+            'Invalid condition "invalid" specified',
         )
+    ],
+)
+async def test_unknown_condition(hass: HomeAssistant, config: dict, error: str) -> None:
+    """Test if creating an unknown condition raises."""
+    config = cv.CONDITION_SCHEMA(config)
+    with pytest.raises(HomeAssistantError, match=error):
+        await condition.async_from_config(hass, config)
 
 
 async def test_and_condition(hass: HomeAssistant) -> None:
@@ -2385,7 +2408,15 @@ async def test_async_get_all_descriptions(
 ) -> None:
     """Test async_get_all_descriptions."""
     device_automation_condition_descriptions = """
-        _device: {}
+        _device:
+          fields:
+            entity:
+              selector:
+                entity:
+                  filter:
+                    domain: alarm_control_panel
+                    supported_features:
+                      - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
         """
 
     assert await async_setup_component(hass, DOMAIN_SUN, {})
@@ -2427,14 +2458,28 @@ async def test_async_get_all_descriptions(
             "fields": {
                 "after": {
                     "example": "sunrise",
-                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                    "selector": {
+                        "select": {
+                            "custom_value": False,
+                            "multiple": False,
+                            "options": ["sunrise", "sunset"],
+                            "sort": False,
+                        }
+                    },
                 },
-                "after_offset": {"selector": {"time": None}},
+                "after_offset": {"selector": {"time": {}}},
                 "before": {
                     "example": "sunrise",
-                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                    "selector": {
+                        "select": {
+                            "custom_value": False,
+                            "multiple": False,
+                            "options": ["sunrise", "sunset"],
+                            "sort": False,
+                        }
+                    },
                 },
-                "before_offset": {"selector": {"time": None}},
+                "before_offset": {"selector": {"time": {}}},
             }
         }
     }
@@ -2456,21 +2501,50 @@ async def test_async_get_all_descriptions(
         new_descriptions = await condition.async_get_all_descriptions(hass)
     assert new_descriptions is not descriptions
     assert new_descriptions == {
-        "device": {
-            "fields": {},
-        },
         "sun": {
             "fields": {
                 "after": {
                     "example": "sunrise",
-                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                    "selector": {
+                        "select": {
+                            "custom_value": False,
+                            "multiple": False,
+                            "options": ["sunrise", "sunset"],
+                            "sort": False,
+                        }
+                    },
                 },
-                "after_offset": {"selector": {"time": None}},
+                "after_offset": {"selector": {"time": {}}},
                 "before": {
                     "example": "sunrise",
-                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                    "selector": {
+                        "select": {
+                            "custom_value": False,
+                            "multiple": False,
+                            "options": ["sunrise", "sunset"],
+                            "sort": False,
+                        }
+                    },
                 },
-                "before_offset": {"selector": {"time": None}},
+                "before_offset": {"selector": {"time": {}}},
+            }
+        },
+        "device": {
+            "fields": {
+                "entity": {
+                    "selector": {
+                        "entity": {
+                            "filter": [
+                                {
+                                    "domain": ["alarm_control_panel"],
+                                    "supported_features": [1],
+                                }
+                            ],
+                            "multiple": False,
+                            "reorder": False,
+                        },
+                    },
+                },
             }
         },
     }

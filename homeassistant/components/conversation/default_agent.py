@@ -35,7 +35,7 @@ from hassil.recognize import (
 )
 from hassil.string_matcher import UnmatchedRangeEntity, UnmatchedTextEntity
 from hassil.trie import Trie
-from hassil.util import merge_dict
+from hassil.util import merge_dict, remove_punctuation
 from home_assistant_intents import (
     ErrorKey,
     FuzzyConfig,
@@ -68,13 +68,9 @@ from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.util import language as language_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
+from .agent_manager import get_agent_manager
 from .chat_log import AssistantContent, ChatLog
-from .const import (
-    DATA_DEFAULT_ENTITY,
-    DEFAULT_EXPOSED_ATTRIBUTES,
-    DOMAIN,
-    ConversationEntityFeature,
-)
+from .const import DOMAIN, ConversationEntityFeature
 from .entity import ConversationEntity
 from .models import ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
@@ -82,6 +78,8 @@ from .trace import ConversationTraceEventType, async_conversation_trace_append
 _LOGGER = logging.getLogger(__name__)
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
 _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
+
+_DEFAULT_EXPOSED_ATTRIBUTES = {"device_class"}
 
 REGEX_TYPE = type(re.compile(""))
 TRIGGER_CALLBACK_TYPE = Callable[
@@ -209,9 +207,9 @@ async def async_setup_default_agent(
     config_intents: dict[str, Any],
 ) -> None:
     """Set up entity registry listener for the default agent."""
-    entity = DefaultAgent(hass, config_intents)
-    await entity_component.async_add_entities([entity])
-    hass.data[DATA_DEFAULT_ENTITY] = entity
+    agent = DefaultAgent(hass, config_intents)
+    await entity_component.async_add_entities([agent])
+    await get_agent_manager(hass).async_setup_default_agent(agent)
 
     @core.callback
     def async_entity_state_listener(
@@ -327,12 +325,10 @@ class DefaultAgent(ConversationEntity):
 
         if self._exposed_names_trie is not None:
             # Filter by input string
-            text_lower = user_input.text.strip().lower()
+            text = remove_punctuation(user_input.text).strip().lower()
             slot_lists["name"] = TextSlotList(
                 name="name",
-                values=[
-                    result[2] for result in self._exposed_names_trie.find(text_lower)
-                ],
+                values=[result[2] for result in self._exposed_names_trie.find(text)],
             )
 
         start = time.monotonic()
@@ -373,7 +369,6 @@ class DefaultAgent(ConversationEntity):
             response = intent.IntentResponse(
                 language=user_input.language or self.hass.config.language
             )
-            response.response_type = intent.IntentResponseType.ACTION_DONE
             response.async_set_speech(response_text)
 
         if response is None:
@@ -473,6 +468,7 @@ class DefaultAgent(ConversationEntity):
                 language,
                 assistant=DOMAIN,
                 device_id=user_input.device_id,
+                satellite_id=user_input.satellite_id,
                 conversation_agent_id=user_input.agent_id,
             )
         except intent.MatchFailedError as match_error:
@@ -848,7 +844,7 @@ class DefaultAgent(ConversationEntity):
             context = {"domain": state.domain}
             if state.attributes:
                 # Include some attributes
-                for attr in DEFAULT_EXPOSED_ATTRIBUTES:
+                for attr in _DEFAULT_EXPOSED_ATTRIBUTES:
                     if attr not in state.attributes:
                         continue
                     context[attr] = state.attributes[attr]
@@ -1263,7 +1259,7 @@ class DefaultAgent(ConversationEntity):
         name_list = TextSlotList.from_tuples(exposed_entity_names, allow_template=False)
         for name_value in name_list.values:
             assert isinstance(name_value.text_in, TextChunk)
-            name_text = name_value.text_in.text.strip().lower()
+            name_text = remove_punctuation(name_value.text_in.text).strip().lower()
             self._exposed_names_trie.insert(name_text, name_value)
 
         self._slot_lists = {

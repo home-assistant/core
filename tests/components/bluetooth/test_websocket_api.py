@@ -7,6 +7,7 @@ from unittest.mock import ANY, patch
 
 from bleak_retry_connector import Allocations
 from freezegun import freeze_time
+from habluetooth import BluetoothScanningMode
 import pytest
 
 from homeassistant.components.bluetooth import DOMAIN
@@ -440,4 +441,126 @@ async def test_subscribe_scanner_details_invalid_config_entry_id(
         response = await client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == "invalid_config_entry_id"
-    assert response["error"]["message"] == "Invalid config entry id: non_existent"
+    assert response["error"]["message"] == "Config entry non_existent not found"
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subscribe_scanner_state(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test bluetooth subscribe_scanner_state."""
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "bluetooth/subscribe_scanner_state",
+        }
+    )
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert response["success"]
+
+    # Should receive initial state for existing scanner
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert response["event"] == {
+        "source": "00:00:00:00:00:01",
+        "adapter": "hci0",
+        "current_mode": "active",
+        "requested_mode": "active",
+    }
+
+    # Register a new scanner
+    manager = _get_manager()
+    hci3_scanner = FakeScanner("AA:BB:CC:DD:EE:33", "hci3")
+    cancel_hci3 = manager.async_register_hass_scanner(hci3_scanner)
+
+    # Simulate a mode change
+    hci3_scanner.current_mode = BluetoothScanningMode.ACTIVE
+    hci3_scanner.requested_mode = BluetoothScanningMode.ACTIVE
+    manager.scanner_mode_changed(hci3_scanner)
+
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert response["event"] == {
+        "source": "AA:BB:CC:DD:EE:33",
+        "adapter": "hci3",
+        "current_mode": "active",
+        "requested_mode": "active",
+    }
+
+    cancel_hci3()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subscribe_scanner_state_specific_scanner(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test bluetooth subscribe_scanner_state for a specific source address."""
+    # Register the scanner first
+    manager = _get_manager()
+    hci3_scanner = FakeScanner("AA:BB:CC:DD:EE:33", "hci3")
+    cancel_hci3 = manager.async_register_hass_scanner(hci3_scanner)
+
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="AA:BB:CC:DD:EE:33")
+    entry.add_to_hass(hass)
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "bluetooth/subscribe_scanner_state",
+            "config_entry_id": entry.entry_id,
+        }
+    )
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert response["success"]
+
+    # Should receive initial state
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert response["event"] == {
+        "source": "AA:BB:CC:DD:EE:33",
+        "adapter": "hci3",
+        "current_mode": None,
+        "requested_mode": None,
+    }
+
+    # Simulate a mode change
+    hci3_scanner.current_mode = BluetoothScanningMode.PASSIVE
+    hci3_scanner.requested_mode = BluetoothScanningMode.ACTIVE
+    manager.scanner_mode_changed(hci3_scanner)
+
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert response["event"] == {
+        "source": "AA:BB:CC:DD:EE:33",
+        "adapter": "hci3",
+        "current_mode": "passive",
+        "requested_mode": "active",
+    }
+
+    cancel_hci3()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subscribe_scanner_state_invalid_config_entry_id(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test bluetooth subscribe_scanner_state for an invalid config entry id."""
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "bluetooth/subscribe_scanner_state",
+            "config_entry_id": "non_existent",
+        }
+    )
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_config_entry_id"
+    assert response["error"]["message"] == "Config entry non_existent not found"
