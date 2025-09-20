@@ -1,22 +1,13 @@
 """Config flow tests for the Actron Air Integration."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 from actron_neo_api import ActronNeoAuthError
 import pytest
 
-from homeassistant.components.actron_air.config_flow import ActronNeoConfigFlow
+from homeassistant.components.actron_air.config_flow import ActronAirConfigFlow
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
-
-
-@pytest.fixture
-def mock_actron_api():
-    """Mock the ActronNeoAPI class."""
-    with patch(
-        "custom_components.actronair.config_flow.ActronNeoAPI", autospec=True
-    ) as mock_api:
-        yield mock_api
 
 
 @pytest.fixture
@@ -57,7 +48,7 @@ async def test_user_flow_oauth2_success(mock_hass, mock_actron_api) -> None:
     mock_api_instance.refresh_token_value = "test_refresh_token"
 
     # Create config flow instance with mocked methods
-    flow = ActronNeoConfigFlow()
+    flow = ActronAirConfigFlow()
     flow.hass = mock_hass
     flow.async_set_unique_id = AsyncMock()
     flow._abort_if_unique_id_configured = Mock()
@@ -118,7 +109,7 @@ async def test_user_flow_oauth2_pending(mock_hass, mock_actron_api) -> None:
     mock_api_instance.poll_for_token = AsyncMock(return_value=None)
 
     # Create config flow instance
-    flow = ActronNeoConfigFlow()
+    flow = ActronAirConfigFlow()
     flow.hass = mock_hass
     flow.async_show_form = Mock(
         side_effect=[
@@ -164,7 +155,7 @@ async def test_user_flow_oauth2_error(mock_hass, mock_actron_api) -> None:
     )
 
     # Create config flow instance
-    flow = ActronNeoConfigFlow()
+    flow = ActronAirConfigFlow()
     flow.hass = mock_hass
     flow.async_abort = Mock(return_value={"type": "abort", "reason": "oauth2_error"})
 
@@ -196,7 +187,7 @@ async def test_user_flow_token_polling_error(mock_hass, mock_actron_api) -> None
     )
 
     # Create config flow instance
-    flow = ActronNeoConfigFlow()
+    flow = ActronAirConfigFlow()
     flow.hass = mock_hass
     flow.async_show_form = Mock(
         side_effect=[
