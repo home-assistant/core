@@ -50,6 +50,8 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_PICK_FIRMWARE_THREAD = "pick_firmware_thread"
 STEP_PICK_FIRMWARE_ZIGBEE = "pick_firmware_zigbee"
+STEP_PICK_FIRMWARE_THREAD_MIGRATE = "pick_firmware_thread_migrate"
+STEP_PICK_FIRMWARE_ZIGBEE_MIGRATE = "pick_firmware_zigbee_migrate"
 
 
 class PickedFirmwareType(StrEnum):
@@ -124,11 +126,23 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Pick Thread or Zigbee firmware."""
+        # Determine if ZHA or Thread are already configured to present migrate options
+        zha_entries = self.hass.config_entries.async_entries(ZHA_DOMAIN)
+        otbr_entries = self.hass.config_entries.async_entries(OTBR_DOMAIN)
+
         return self.async_show_menu(
             step_id="pick_firmware",
             menu_options=[
-                STEP_PICK_FIRMWARE_ZIGBEE,
-                STEP_PICK_FIRMWARE_THREAD,
+                (
+                    STEP_PICK_FIRMWARE_ZIGBEE_MIGRATE
+                    if zha_entries
+                    else STEP_PICK_FIRMWARE_ZIGBEE
+                ),
+                (
+                    STEP_PICK_FIRMWARE_THREAD_MIGRATE
+                    if otbr_entries
+                    else STEP_PICK_FIRMWARE_THREAD
+                ),
             ],
             description_placeholders=self._get_translation_placeholders(),
         )
@@ -274,6 +288,45 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
         return self.async_show_progress_done(next_step_id=next_step_id)
 
+    async def _configure_and_start_otbr_addon(self) -> None:
+        """Configure and start the OTBR addon."""
+
+        # Before we start the addon, confirm that the correct firmware is running
+        # and populate `self._probed_firmware_info` with the correct information
+        if not await self._probe_firmware_info(probe_methods=(ApplicationType.SPINEL,)):
+            raise AbortFlow(
+                "unsupported_firmware",
+                description_placeholders=self._get_translation_placeholders(),
+            )
+
+        otbr_manager = get_otbr_addon_manager(self.hass)
+        addon_info = await self._async_get_addon_info(otbr_manager)
+
+        assert self._device is not None
+        new_addon_config = {
+            **addon_info.options,
+            "device": self._device,
+            "baudrate": 460800,
+            "flow_control": True,
+            "autoflash_firmware": False,
+        }
+
+        _LOGGER.debug("Reconfiguring OTBR addon with %s", new_addon_config)
+
+        try:
+            await otbr_manager.async_set_addon_options(new_addon_config)
+        except AddonError as err:
+            _LOGGER.error(err)
+            raise AbortFlow(
+                "addon_set_config_failed",
+                description_placeholders={
+                    **self._get_translation_placeholders(),
+                    "addon_name": otbr_manager.addon_name,
+                },
+            ) from err
+
+        await otbr_manager.async_start_addon_waiting()
+
     async def async_step_firmware_download_failed(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -374,6 +427,12 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self._picked_firmware_type = PickedFirmwareType.ZIGBEE
         return await self.async_step_zigbee_installation_type()
 
+    async def async_step_pick_firmware_zigbee_migrate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pick Zigbee firmware. Migration is automatic."""
+        return await self.async_step_pick_firmware_zigbee()
+
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -453,18 +512,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
             return await self.async_step_install_otbr_addon()
 
         if addon_info.state == AddonState.RUNNING:
-            # We only fail setup if we have an instance of OTBR running *and* it's
-            # pointing to different hardware
-            if addon_info.options["device"] != self._device:
-                return self.async_abort(
-                    reason="otbr_addon_already_running",
-                    description_placeholders={
-                        **self._get_translation_placeholders(),
-                        "addon_name": otbr_manager.addon_name,
-                    },
-                )
-
-            # Otherwise, stop the addon before continuing to flash firmware
+            # Stop the addon before continuing to flash firmware
             await otbr_manager.async_stop_addon()
 
         return None
@@ -475,6 +523,12 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         """Pick Thread firmware."""
         self._picked_firmware_type = PickedFirmwareType.THREAD
         return await self._async_continue_picked_firmware()
+
+    async def async_step_pick_firmware_thread_migrate(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Pick Thread firmware. Migration is automatic."""
+        return await self.async_step_pick_firmware_thread()
 
     async def async_step_install_thread_firmware(
         self, user_input: dict[str, Any] | None = None
@@ -527,43 +581,8 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         otbr_manager = get_otbr_addon_manager(self.hass)
 
         if not self.addon_start_task:
-            # Before we start the addon, confirm that the correct firmware is running
-            # and populate `self._probed_firmware_info` with the correct information
-            if not await self._probe_firmware_info(
-                probe_methods=(ApplicationType.SPINEL,)
-            ):
-                return self.async_abort(
-                    reason="unsupported_firmware",
-                    description_placeholders=self._get_translation_placeholders(),
-                )
-
-            addon_info = await self._async_get_addon_info(otbr_manager)
-
-            assert self._device is not None
-            new_addon_config = {
-                **addon_info.options,
-                "device": self._device,
-                "baudrate": 460800,
-                "flow_control": True,
-                "autoflash_firmware": False,
-            }
-
-            _LOGGER.debug("Reconfiguring OTBR addon with %s", new_addon_config)
-
-            try:
-                await otbr_manager.async_set_addon_options(new_addon_config)
-            except AddonError as err:
-                _LOGGER.error(err)
-                raise AbortFlow(
-                    "addon_set_config_failed",
-                    description_placeholders={
-                        **self._get_translation_placeholders(),
-                        "addon_name": otbr_manager.addon_name,
-                    },
-                ) from err
-
             self.addon_start_task = self.hass.async_create_task(
-                otbr_manager.async_start_addon_waiting()
+                self._configure_and_start_otbr_addon()
             )
 
         if not self.addon_start_task.done():
@@ -582,7 +601,9 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         except (AddonError, AbortFlow) as err:
             _LOGGER.error(err)
             self._failed_addon_name = otbr_manager.addon_name
-            self._failed_addon_reason = "addon_start_failed"
+            self._failed_addon_reason = (
+                err.reason if isinstance(err, AbortFlow) else "addon_start_failed"
+            )
             return self.async_show_progress_done(next_step_id="addon_operation_failed")
         finally:
             self.addon_start_task = None

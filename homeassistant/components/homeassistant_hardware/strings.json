@@ -7,11 +7,15 @@
           "description": "You can use your {model} for a Zigbee or Thread network. Please check what type of devices you want to add to Home Assistant. You can always change this later.",
           "menu_options": {
             "pick_firmware_zigbee": "Use as Zigbee adapter",
-            "pick_firmware_thread": "Use as Thread adapter"
+            "pick_firmware_thread": "Use as Thread adapter",
+            "pick_firmware_zigbee_migrate": "Migrate Zigbee to a new adapter",
+            "pick_firmware_thread_migrate": "Migrate Thread to a new adapter"
           },
           "menu_option_descriptions": {
             "pick_firmware_zigbee": "Most common protocol.",
-            "pick_firmware_thread": "Often used for Matter over Thread devices."
+            "pick_firmware_thread": "Often used for Matter over Thread devices.",
+            "pick_firmware_zigbee_migrate": "This will move your Zigbee network to the new adapter.",
+            "pick_firmware_thread_migrate": "This will migrate your Thread Border Router to the new adapter."
           }
         },
         "confirm_zigbee": {

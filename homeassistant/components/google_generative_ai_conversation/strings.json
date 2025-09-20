@@ -150,10 +150,16 @@
       }
     }
   },
+  "issues": {
+    "deprecated_generate_content": {
+      "title": "Deprecated 'generate_content' action",
+      "description": "Action 'google_generative_ai_conversation.generate_content' is deprecated and will be removed in the 2026.4.0 release. Please use the 'ai_task.generate_data' action instead"
+    }
+  },
   "services": {
     "generate_content": {
-      "name": "Generate content",
-      "description": "Generate content from a prompt consisting of text and optionally images",
+      "name": "Generate content (deprecated)",
+      "description": "Generate content from a prompt consisting of text and optionally images (deprecated)",
       "fields": {
         "prompt": {
           "name": "Prompt",

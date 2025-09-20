@@ -281,47 +281,6 @@ async def test_config_flow_thread_addon_info_fails(hass: HomeAssistant) -> None:
     "ignore_translations_for_mock_domains",
     ["test_firmware_domain"],
 )
-async def test_config_flow_thread_addon_already_configured(hass: HomeAssistant) -> None:
-    """Test failure case when the Thread addon is already running."""
-    result = await hass.config_entries.flow.async_init(
-        TEST_DOMAIN, context={"source": "hardware"}
-    )
-
-    with mock_firmware_info(
-        hass,
-        probe_app_type=ApplicationType.EZSP,
-        otbr_addon_info=AddonInfo(
-            available=True,
-            hostname=None,
-            options={
-                "device": TEST_DEVICE + "2",  # A different device
-            },
-            state=AddonState.RUNNING,
-            update_available=False,
-            version="1.0.0",
-        ),
-    ) as (mock_otbr_manager, _):
-        mock_otbr_manager.async_install_addon_waiting = AsyncMock(
-            side_effect=AddonError()
-        )
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
-        )
-
-        # Cannot install addon
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "otbr_addon_already_running"
-
-
-@pytest.mark.parametrize(
-    "ignore_translations_for_mock_domains",
-    ["test_firmware_domain"],
-)
 async def test_config_flow_thread_addon_install_fails(hass: HomeAssistant) -> None:
     """Test failure case when flasher addon cannot be installed."""
     result = await hass.config_entries.flow.async_init(

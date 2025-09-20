@@ -18,11 +18,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     Event,
-    HassJob,
     HassJobType,
     HomeAssistant,
     ServiceCall,
-    ServiceResponse,
     SupportsResponse,
     callback,
 )
@@ -31,14 +29,7 @@ from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util.hass_dict import HassKey
 
-from . import (
-    config_validation as cv,
-    device_registry as dr,
-    discovery,
-    entity,
-    entity_registry as er,
-    service,
-)
+from . import device_registry as dr, discovery, entity, entity_registry as er, service
 from .entity_platform import EntityPlatform, async_calculate_suggested_object_id
 from .typing import ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
 
@@ -250,43 +241,6 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         """
         return await service.async_extract_entities(
             self.hass, self.entities, service_call, expand_group
-        )
-
-    @callback
-    def async_register_legacy_entity_service(
-        self,
-        name: str,
-        schema: VolDictType | VolSchemaType,
-        func: str | Callable[..., Any],
-        required_features: list[int] | None = None,
-        supports_response: SupportsResponse = SupportsResponse.NONE,
-    ) -> None:
-        """Register an entity service with a legacy response format."""
-        if isinstance(schema, dict):
-            schema = cv.make_entity_service_schema(schema)
-
-        service_func: str | HassJob[..., Any]
-        service_func = func if isinstance(func, str) else HassJob(func)
-
-        async def handle_service(
-            call: ServiceCall,
-        ) -> ServiceResponse:
-            """Handle the service."""
-
-            result = await service.entity_service_call(
-                self.hass, self._entities, service_func, call, required_features
-            )
-
-            if result:
-                if len(result) > 1:
-                    raise HomeAssistantError(
-                        "Deprecated service call matched more than one entity"
-                    )
-                return result.popitem()[1]
-            return None
-
-        self.hass.services.async_register(
-            self.domain, name, handle_service, schema, supports_response
         )
 
     @callback

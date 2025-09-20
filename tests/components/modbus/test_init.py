@@ -8,7 +8,7 @@ This file is responsible for testing:
     const.py
     modbus.py
     validators.py
-    baseplatform.py (only BasePlatform)
+    entity.py (only ModbusBaseEntity)
 
 It uses binary_sensors/sensors to do black box testing of the read calls.
 """
