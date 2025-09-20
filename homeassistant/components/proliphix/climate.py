@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
-import proliphix
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -23,9 +23,15 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import ProliphixConfigEntry
+from .const import DOMAIN
 
 ATTR_FAN = "fan"
 
@@ -45,50 +51,72 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Proliphix thermostats."""
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    host = config.get(CONF_HOST)
 
-    pdp = proliphix.PDP(host, username, password)
-    pdp.update()
+    # Handle YAML import by creating config entry
+    asyncio.run_coroutine_threadsafe(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "import"},
+            data=config,
+        ),
+        hass.loop,
+    )
 
-    add_entities([ProliphixThermostat(pdp)], True)
+    # Create repair issue for deprecated YAML configuration
+    ir.create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Proliphix",
+        },
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ProliphixConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Proliphix thermostat from a config entry."""
+    async_add_entities([ProliphixThermostat(entry)], True)
 
 
 class ProliphixThermostat(ClimateEntity):
     """Representation a Proliphix thermostat."""
 
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF]
     _attr_precision = PRECISION_TENTHS
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
-    def __init__(self, pdp):
+    def __init__(self, entry: ProliphixConfigEntry) -> None:
         """Initialize the thermostat."""
-        self._pdp = pdp
-        self._name = None
+        self._pdp = entry.runtime_data
+        self._attr_name = self._pdp.name
+        self._attr_unique_id = entry.entry_id
 
     def update(self) -> None:
         """Update the data from the thermostat."""
         self._pdp.update()
-        self._name = self._pdp.name
 
     @property
-    def name(self):
-        """Return the name of the thermostat."""
-        return self._name
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         return {ATTR_FAN: self._pdp.fan_state}
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._pdp.cur_temp
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._pdp.setback
 
@@ -112,11 +140,6 @@ class ProliphixThermostat(ClimateEntity):
         if self._pdp.is_cooling:
             return HVACMode.COOL
         return HVACMode.OFF
-
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return available HVAC modes."""
-        return []
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
