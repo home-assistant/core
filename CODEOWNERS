@@ -1731,8 +1731,8 @@ build.json @home-assistant/supervisor
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvo/ @thomasddn
 /tests/components/volvo/ @thomasddn
-/homeassistant/components/volvooncall/ @molobrakos
-/tests/components/volvooncall/ @molobrakos
+/homeassistant/components/volvooncall/ @molobrakos @svrooij
+/tests/components/volvooncall/ @molobrakos @svrooij
 /homeassistant/components/wake_on_lan/ @ntilley905
 /tests/components/wake_on_lan/ @ntilley905
 /homeassistant/components/wake_word/ @home-assistant/core @synesthesiam
