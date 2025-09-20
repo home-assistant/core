@@ -6,12 +6,12 @@ from collections.abc import Iterable
 from functools import wraps
 import math
 import statistics
-from typing import TYPE_CHECKING, Any, NoReturn
+from typing import TYPE_CHECKING, Any
 
 import jinja2
 from jinja2 import pass_environment
 
-from homeassistant.helpers.template.context import template_cv
+from homeassistant.helpers.template.helpers import raise_no_default
 
 from .base import BaseTemplateExtension, TemplateFunction
 
@@ -20,15 +20,6 @@ if TYPE_CHECKING:
 
 # Sentinel object for default parameter
 _SENTINEL = object()
-
-
-def raise_no_default(function: str, value: Any) -> NoReturn:
-    """Log warning if no default is specified."""
-    template, action = template_cv.get() or ("", "rendering or compiling")
-    raise ValueError(
-        f"Template error: {function} got invalid input '{value}' when {action} template"
-        f" '{template}' but no default was specified"
-    )
 
 
 class MathExtension(BaseTemplateExtension):
