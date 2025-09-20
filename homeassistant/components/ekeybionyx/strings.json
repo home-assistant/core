@@ -28,11 +28,11 @@
         }
       },
       "delete_webhooks": {
-        "description": "Webhook configuration inconsistent. Webhooks with Home Assistant were already configured. If you continue they will be marked for removal."
+        "description": "Webhooks with Home Assistant were already configured. If you continue they will be removed."
       }
     },
     "progress": {
-      "check_deletion_status": "Please go to the ekey Bionyx app and confirm the deletion of the webhooks. This may take a few minutes."
+      "check_deletion_status": "Please go to the ekey Bionyx app and confirm the deletion of the webhooks."
     },
     "error": {
       "invalid_name": "Name is invalid",
