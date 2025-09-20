@@ -32,6 +32,7 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard | No
         )
         self.api = departuresAPIClient(auth_key=config_entry.data["authentication"])
         self._stop_ids: set[int] = set()
+        self.last_update_success_time: datetime | None = None
 
         super().__init__(
             hass,
@@ -44,7 +45,7 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard | No
     async def _async_update_data(self) -> DepartureBoard | None:
         """Update data via library."""
         try:
-            return await self.hass.async_add_executor_job(self._fetch_data)
+            board = await self.hass.async_add_executor_job(self._fetch_data)
         except (
             api_error.RPAPIError,
             http_error.RPHTTPError,
@@ -61,6 +62,22 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard | No
         except Exception as error:
             _LOGGER.error("Error fetching data for stop %s: %s", self._stop_ids, error)
             raise UpdateFailed(error) from error
+
+        self.last_update_success_time = dt_util.now()
+        return board
+
+    @property
+    def diagnostics_attributes(self) -> dict:
+        """Coordinator-level diagnostics for the status entity."""
+        return {
+            "last_update_time": self.last_update_success_time,
+            "registered_stop_ids": sorted(self._stop_ids),
+            "update_interval": (
+                int(self.update_interval.total_seconds())
+                if self.update_interval
+                else None
+            ),
+        }
 
     def due_in_minutes(self, timestamp) -> int:
         """Get the time in minutes from a timestamp.
@@ -84,7 +101,6 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard | No
     def _fetch_data(self) -> DepartureBoard | None:
         """Fetch data from Rejseplanen API."""
         if not self._stop_ids:
-            _LOGGER.debug("No stop IDs registered, skipping data fetch")
             _LOGGER.warning(
                 "No stops registered, Please add a stop through the UI configuration. Data not fetched"
             )

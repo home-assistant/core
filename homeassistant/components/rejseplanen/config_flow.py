@@ -140,4 +140,5 @@ class RejseplanenSubentryStopFlow(ConfigSubentryFlow):
                 CONF_DIRECTION: user_input.get(CONF_DIRECTION, []),
                 CONF_ROUTE: user_input.get(CONF_ROUTE, []),
             },
+            unique_id=f"{stop_id}_{name}_{departure_types}",
         )

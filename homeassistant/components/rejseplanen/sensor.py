@@ -6,7 +6,7 @@ https://help.rejseplanen.dk/hc/en-us/articles/214174465-Rejseplanen-s-API
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from datetime import date as Date, datetime, time as Time, timedelta
 import logging
 from typing import Any
@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_DUE_AT,
@@ -42,7 +42,6 @@ from .const import (
     TransportClass,
 )
 from .coordinator import RejseplanenDataUpdateCoordinator
-from .entity import RejseplanenUpdaterStatusSensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,17 +61,11 @@ async def async_setup_entry(
         hass.data[DOMAIN] = {}
 
     entry_data = hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
-    # coordinator: RejseplanenDataUpdateCoordinator = RejseplanenDataUpdateCoordinator(
-    #     hass,
-    #     config_entry,
-    # )
     coordinator = entry_data.get("coordinator")
 
     # Only add the updater status sensor for the main entry
     if config_entry.domain == DOMAIN:
-        async_add_entities(
-            [RejseplanenUpdaterStatusSensor(coordinator, config_entry.entry_id)]
-        )
+        async_add_entities([RejseplanenDiagnosticSensor(coordinator)])
 
     for subentry_id, subentry in config_entry.subentries.items():
         _LOGGER.debug("Subentry %s with data: %s", subentry_id, subentry.data)
@@ -106,9 +99,7 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
 
-class RejseplanenTransportSensor(
-    CoordinatorEntity[RejseplanenDataUpdateCoordinator], SensorEntity
-):
+class RejseplanenTransportSensor(SensorEntity):
     """Implementation of Rejseplanen transport sensor."""
 
     _attr_attribution = "Data provided by rejseplanen.dk"
@@ -116,21 +107,21 @@ class RejseplanenTransportSensor(
 
     def __init__(
         self,
-        coordinator,
-        stop_id,
-        route,
-        direction,
-        departure_type,
-        name,
-        unique_id=None,
+        coordinator: RejseplanenDataUpdateCoordinator,
+        stop_id: int,
+        route: list[str],
+        direction: list[str],
+        departure_type: list[str],
+        name: str | None,
+        unique_id: str | None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._stop_id = stop_id
-        self._route = route
-        self._direction = direction
-        self._departure_type = departure_type
-        self._attr_name = name
+        self.coordinator: RejseplanenDataUpdateCoordinator = coordinator
+        self._stop_id: int = stop_id
+        self._route: list[str] = route
+        self._direction: list[str] = direction
+        self._departure_type: list[str] = departure_type
+        self._attr_name: str | None = name
         self.coordinator.add_stop_id(stop_id)
         self._unsub_interval: Callable[[], None] | None = None
         self._attr_unique_id = unique_id
@@ -138,7 +129,8 @@ class RejseplanenTransportSensor(
             departure_type
         )
         """Initialize the sensor's state."""
-        self._attr_native_value = self.native_value
+        self._attr_native_unit_of_measurement = const.UnitOfTime.MINUTES
+        self._attr_native_value = self._compute_native_value()
 
     def _calculate_departure_type_bitflag(self, departure_types: list) -> int | None:
         """Calculate bitflag from departure type list."""
@@ -165,8 +157,7 @@ class RejseplanenTransportSensor(
 
         return bitflag if bitflag > 0 else None
 
-    @property
-    def native_value(self) -> StateType:
+    def _compute_native_value(self) -> StateType:
         """Return the state of the sensor."""
         departures: list[Departure] = self._get_filtered_departures()
         if departures:
@@ -176,8 +167,7 @@ class RejseplanenTransportSensor(
             return self.due_in(date=next_date, time=next_time)
         return None
 
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
+    def _compute_extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         departures: list[Departure] = self._get_filtered_departures()
         if not departures:
@@ -207,11 +197,6 @@ class RejseplanenTransportSensor(
 
         return attributes
 
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit this state is expressed in."""
-        return const.UnitOfTime.MINUTES
-
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added to hass."""
         await super().async_added_to_hass()
@@ -221,6 +206,7 @@ class RejseplanenTransportSensor(
             timedelta(minutes=1),
             name=f"rejseplanen_{self._attr_unique_id}_minute_tick",
         )
+        self.coordinator.async_add_listener(self._handle_coordinator_update)
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal of the sensor from Home Assistant."""
@@ -235,10 +221,17 @@ class RejseplanenTransportSensor(
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+        """Callback triggered when the coordinator updates data.
+
+        This method is registered with the update coordinator and called whenever
+        new data is fetched for the configured stop. It ensures the entity state
+        is updated in Home Assistant after each coordinator refresh.
+        """
         _LOGGER.debug(
             "Coordinator update callback triggered for sensor %s", self._attr_unique_id
         )
+        self._attr_native_value = self._compute_native_value()
+        self._attr_extra_state_attributes = self._compute_extra_state_attributes()
         self.async_write_ha_state()
 
     @callback
@@ -299,3 +292,62 @@ class RejseplanenTransportSensor(
         departure_time = datetime.combine(date, time).replace(tzinfo=tz)
         due_in_seconds = (departure_time - now).total_seconds()
         return round(due_in_seconds / 60) if due_in_seconds > 0 else 0
+
+
+class RejseplanenDiagnosticSensor(SensorEntity):
+    """Implementation of Rejseplanen diagnostic sensor."""
+
+    _attr_attribution = "Data provided by rejseplanen.dk"
+    _attr_icon = "mdi:information-outline"
+    _attr_name = "Rejseplanen Updater Status"
+    _attr_unique_id = "rejseplanen_updater_status"
+    _attr_entity_category = const.EntityCategory.DIAGNOSTIC
+
+    def __init__(self, coordinator: RejseplanenDataUpdateCoordinator) -> None:
+        """Initialize the diagnostic sensor."""
+        self.coordinator = coordinator
+        self._attr_native_value = None
+        self._attr_extra_state_attributes = {}
+
+        self._attr_available = False
+        self._attr_extra_state_attributes = self.coordinator.diagnostics_attributes
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks when entity is added to hass."""
+        await super().async_added_to_hass()
+        self.coordinator.async_add_listener(self._handle_coordinator_update)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Callback triggered when the coordinator updates data.
+
+        This method is registered with the update coordinator and called whenever
+        new data is fetched for the configured stop. It ensures the entity state
+        is updated in Home Assistant after each coordinator refresh.
+        """
+        _LOGGER.debug(
+            "Coordinator update callback triggered for sensor %s", self._attr_unique_id
+        )
+        if (
+            not self.coordinator.last_update_success_time
+            and not self.coordinator.update_interval
+        ):
+            self._attr_available = False
+            self._attr_native_value = "offline"
+            self._attr_extra_state_attributes = {}
+            self.async_write_ha_state()
+            return
+
+        is_available = self.coordinator.last_update_success_time is not None and (
+            self.coordinator.update_interval is None
+            or (
+                self.coordinator.last_update_success_time
+                + self.coordinator.update_interval
+                >= dt_util.utcnow()
+            )
+        )
+        self._attr_available = is_available
+
+        self._attr_native_value = "online" if is_available else "offline"
+        self._attr_extra_state_attributes = self.coordinator.diagnostics_attributes
+        self.async_write_ha_state()
