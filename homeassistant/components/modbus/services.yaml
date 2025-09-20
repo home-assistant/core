@@ -18,6 +18,12 @@ write_coil:
         number:
           min: 1
           max: 255
+    device_address:
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 255
     hub:
       example: "hub1"
       default: "modbus_hub"
@@ -32,6 +38,12 @@ write_register:
           min: 0
           max: 65535
     slave:
+      required: false
+      selector:
+        number:
+          min: 1
+          max: 255
+    device_address:
       required: false
       selector:
         number:
