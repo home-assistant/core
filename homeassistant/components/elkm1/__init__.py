@@ -229,7 +229,7 @@ def _setup_elk_config(conf: dict[str, Any]) -> dict[str, Any]:
         for item, max_ in ELK_ELEMENTS.items():
             config[item] = {
                 "enabled": conf[item][CONF_ENABLED],
-                "included": [False] * max_,
+                "included": [not conf[item]["include"]] * max_,
             }
             try:
                 _included(conf[item]["include"], True, config[item]["included"])

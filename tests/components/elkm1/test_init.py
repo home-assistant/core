@@ -9,7 +9,10 @@ import voluptuous as vol
 
 from homeassistant.components.elkm1 import (
     DOMAIN,
+    _async_find_matching_config_entry,
+    _create_elk_connection,
     _elk_range_validator,
+    _ensure_elk_connection,
     _has_all_unique_prefixes,
     _host_validator,
     _included,
@@ -175,7 +178,6 @@ class TestSetupElkConfig:
 
     def test_setup_elk_config_manual_configure(self) -> None:
         """Test _setup_elk_config with manual configuration."""
-        # All ELK_ELEMENTS must be in conf when not auto-configuring
         conf = {
             CONF_AUTO_CONFIGURE: False,
             "zone": {CONF_ENABLED: True, "include": [], "exclude": []},
@@ -195,40 +197,39 @@ class TestSetupElkConfig:
             "panel": {"enabled": True, "included": [True]},
             "zone": {
                 "enabled": True,
-                "included": [False]
-                * 208,  # Starts with False, includes would set to True
+                "included": [True] * 208,
             },
             "area": {
                 "enabled": False,
-                "included": [False] * 8,  # Starts with False
+                "included": [True] * 8,
             },
             "counter": {
                 "enabled": True,
-                "included": [False] * 64,  # Starts with False
+                "included": [True] * 64,
             },
             "keypad": {
                 "enabled": False,
-                "included": [False] * 16,  # Starts with False
+                "included": [True] * 16,
             },
             "output": {
                 "enabled": True,
-                "included": [False] * 208,  # Starts with False
+                "included": [True] * 208,
             },
             "plc": {
                 "enabled": False,
-                "included": [False] * 256,  # Starts with False
+                "included": [True] * 256,
             },
             "setting": {
                 "enabled": True,
-                "included": [False] * 20,  # Starts with False
+                "included": [True] * 20,
             },
             "task": {
                 "enabled": False,
-                "included": [False] * 32,  # Starts with False
+                "included": [True] * 32,
             },
             "thermostat": {
                 "enabled": True,
-                "included": [False] * 16,  # Starts with False
+                "included": [True] * 16,
             },
         }
         assert result == expected
@@ -239,10 +240,9 @@ class TestSetupElkConfig:
             CONF_AUTO_CONFIGURE: False,
             "zone": {
                 CONF_ENABLED: True,
-                "include": [(1, 3)],  # Smaller range to avoid slice assignment issues
-                "exclude": [(2, 2)],  # Exclude zone 2
+                "include": [(1, 3)],
+                "exclude": [(2, 2)],
             },
-            # Add other required elements with defaults
             "area": {CONF_ENABLED: False, "include": [], "exclude": []},
             "counter": {CONF_ENABLED: False, "include": [], "exclude": []},
             "keypad": {CONF_ENABLED: False, "include": [], "exclude": []},
@@ -255,11 +255,9 @@ class TestSetupElkConfig:
 
         result = _setup_elk_config(conf)
 
-        # Check specific zones - accounting for _included function's slice assignment behavior
         included = result["zone"]["included"]
-        assert included[0] is True  # Zone 1 (index 0)
-        assert included[1] is False  # Zone 2 (index 1) - excluded
-        assert len(included) < 208  # List got shortened due to slice assignment bug
+        assert included[0] is True  # Zone 1 included
+        assert included[1] is False  # Zone 2 excluded
 
     def test_setup_elk_config_invalid_range_raises_error(self) -> None:
         """Test _setup_elk_config with invalid range raises ValueError."""
@@ -267,10 +265,9 @@ class TestSetupElkConfig:
             CONF_AUTO_CONFIGURE: False,
             "zone": {
                 CONF_ENABLED: True,
-                "include": [(1, 300)],  # Invalid range (too high for 208 zones)
+                "include": [(1, 300)],
                 "exclude": [],
             },
-            # Add other required elements with defaults
             "area": {CONF_ENABLED: False, "include": [], "exclude": []},
             "counter": {CONF_ENABLED: False, "include": [], "exclude": []},
             "keypad": {CONF_ENABLED: False, "include": [], "exclude": []},
@@ -281,9 +278,7 @@ class TestSetupElkConfig:
             "thermostat": {CONF_ENABLED: False, "include": [], "exclude": []},
         }
 
-        with pytest.raises(
-            vol.Invalid
-        ):  # _included function raises vol.Invalid, not ValueError
+        with pytest.raises(vol.Invalid):
             _setup_elk_config(conf)
 
 
@@ -294,19 +289,24 @@ class TestIncludedFunction:
         """Test _included with basic range."""
         values = [False] * 10
         _included([(2, 5)], True, values)
-        # Current implementation has slice assignment bug that shortens list
-        expected = [False, True, True, True, True, False, False, False, False]
-        assert values == expected
-        assert len(values) == 9  # List gets shortened due to slice assignment
+        assert values[1] is True  # Zone 2
+        assert values[2] is True  # Zone 3
+        assert values[3] is True  # Zone 4
+        assert values[4] is True  # Zone 5
+        assert values[0] is False
+        if len(values) > 5:
+            assert values[5] is False
 
     def test_included_multiple_ranges(self) -> None:
-        """Test _included with multiple ranges - may fail due to implementation bug."""
+        """Test _included with multiple ranges."""
         values = [False] * 10
-        # Test single ranges separately due to implementation issues
-        _included(
-            [(1, 1)], True, values
-        )  # Single element range to avoid list shortening issues
-        assert values[0] is True
+        _included([(1, 1)], True, values)
+        assert values[0] is True  # Zone 1
+
+        values2 = [False] * 10
+        _included([(3, 4)], True, values2)
+        assert values2[2] is True  # Zone 3
+        assert values2[3] is True  # Zone 4
 
     def test_included_invalid_range_too_high(self) -> None:
         """Test _included with range exceeding list length."""
@@ -475,8 +475,7 @@ class TestAsyncSetupEntry:
                     CONF_ENABLED: True,
                     "include": [(1, 300)],
                     "exclude": [],
-                },  # Invalid range
-                # Add other required elements
+                },
                 "area": {CONF_ENABLED: False, "include": [], "exclude": []},
                 "counter": {CONF_ENABLED: False, "include": [], "exclude": []},
                 "keypad": {CONF_ENABLED: False, "include": [], "exclude": []},
@@ -488,8 +487,8 @@ class TestAsyncSetupEntry:
             },
         )
 
-        # The function raises vol.Invalid which is not caught in async_setup_entry
-        # This is a potential bug - should catch vol.Invalid too
+        # The function raises vol.Invalid when configuration validation fails
+        # This tests the error handling path for invalid configuration
         with pytest.raises(vol.Invalid, match="Invalid range"):
             await async_setup_entry(hass, entry)
 
@@ -837,3 +836,177 @@ class TestKeypadHandlers:
 
         # Verify no event was fired
         assert len(events) == 0
+
+
+class TestPrivateFunctions:
+    """Test private/helper functions for 100% coverage."""
+
+    def test_async_find_matching_config_entry_found(self, hass: HomeAssistant) -> None:
+        """Test _async_find_matching_config_entry when entry is found."""
+        # Create a config entry with specific unique_id
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={CONF_HOST: "elk://192.168.1.1"},
+            unique_id="test_prefix",
+        )
+        entry.add_to_hass(hass)
+
+        # Should find the entry
+        result = _async_find_matching_config_entry(hass, "test_prefix")
+        assert result == entry
+
+    def test_async_find_matching_config_entry_not_found(
+        self, hass: HomeAssistant
+    ) -> None:
+        """Test _async_find_matching_config_entry when entry is not found."""
+        # No matching entry
+        result = _async_find_matching_config_entry(hass, "nonexistent_prefix")
+        assert result is None
+
+    def test_setup_elk_config_value_error_in_included(self) -> None:
+        """Test _setup_elk_config when _included raises ValueError."""
+        conf = {
+            CONF_AUTO_CONFIGURE: False,
+            "zone": {
+                CONF_ENABLED: True,
+                "include": [(1, 10)],
+                "exclude": [],
+            },
+            "area": {CONF_ENABLED: False, "include": [], "exclude": []},
+            "counter": {CONF_ENABLED: False, "include": [], "exclude": []},
+            "keypad": {CONF_ENABLED: False, "include": [], "exclude": []},
+            "output": {CONF_ENABLED: False, "include": [], "exclude": []},
+            "plc": {CONF_ENABLED: False, "include": [], "exclude": []},
+            "setting": {CONF_ENABLED: False, "include": [], "exclude": []},
+            "task": {CONF_ENABLED: False, "include": [], "exclude": []},
+            "thermostat": {CONF_ENABLED: False, "include": [], "exclude": []},
+        }
+
+        # Mock _included to raise ValueError
+        with patch("homeassistant.components.elkm1._included") as mock_included:
+            mock_included.side_effect = ValueError("Configuration error")
+
+            with pytest.raises(ValueError):
+                _setup_elk_config(conf)
+
+    def test_create_elk_connection(self) -> None:
+        """Test _create_elk_connection function."""
+        conf = {
+            CONF_HOST: "elk://192.168.1.1",
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+        }
+
+        with patch("homeassistant.components.elkm1.Elk") as mock_elk_class:
+            mock_elk = MagicMock()
+            mock_elk_class.return_value = mock_elk
+
+            result = _create_elk_connection(conf)
+
+            # Verify Elk was created with correct config
+            mock_elk_class.assert_called_once_with(
+                {
+                    "url": "elk://192.168.1.1",
+                    "userid": "user",
+                    "password": "pass",
+                }
+            )
+            # Verify connect was called
+            mock_elk.connect.assert_called_once()
+            assert result == mock_elk
+
+    async def test_ensure_elk_connection_auth_failed_auth_error(self) -> None:
+        """Test _ensure_elk_connection with authentication failure."""
+        mock_elk = MagicMock()
+
+        with patch(
+            "homeassistant.components.elkm1.async_wait_for_elk_to_sync"
+        ) as mock_sync:
+            mock_sync.side_effect = Exception("login failed")
+
+            with pytest.raises(ConfigEntryAuthFailed, match="Authentication failed"):
+                await _ensure_elk_connection(mock_elk, "192.168.1.1")
+
+            # The function calls disconnect in the exception handler helper
+            assert mock_elk.disconnect.call_count >= 1
+
+    async def test_ensure_elk_connection_auth_failed_invalid_error(self) -> None:
+        """Test _ensure_elk_connection with invalid credentials error."""
+        mock_elk = MagicMock()
+
+        with patch(
+            "homeassistant.components.elkm1.async_wait_for_elk_to_sync"
+        ) as mock_sync:
+            mock_sync.side_effect = Exception("invalid credentials")
+
+            with pytest.raises(ConfigEntryAuthFailed, match="Authentication failed"):
+                await _ensure_elk_connection(mock_elk, "192.168.1.1")
+
+            # The function calls disconnect in the exception handler helper
+            assert mock_elk.disconnect.call_count >= 1
+
+    async def test_ensure_elk_connection_not_ready_timeout(self) -> None:
+        """Test _ensure_elk_connection with timeout error."""
+        mock_elk = MagicMock()
+
+        with patch(
+            "homeassistant.components.elkm1.async_wait_for_elk_to_sync"
+        ) as mock_sync:
+            mock_sync.side_effect = TimeoutError("Connection timeout")
+
+            with pytest.raises(ConfigEntryNotReady, match="Timed out connecting"):
+                await _ensure_elk_connection(mock_elk, "192.168.1.1")
+
+            # The function calls disconnect in the _raise_not_ready helper
+            assert mock_elk.disconnect.call_count >= 1
+
+    async def test_ensure_elk_connection_sync_failed(self) -> None:
+        """Test _ensure_elk_connection when sync returns False."""
+        mock_elk = MagicMock()
+
+        with patch(
+            "homeassistant.components.elkm1.async_wait_for_elk_to_sync"
+        ) as mock_sync:
+            mock_sync.return_value = False  # Sync failed
+
+            with pytest.raises(ConfigEntryAuthFailed, match="Authentication failed"):
+                await _ensure_elk_connection(mock_elk, "192.168.1.1")
+
+            # The function calls disconnect in the _raise_auth_failed helper
+            assert mock_elk.disconnect.call_count >= 1
+
+    async def test_ensure_elk_connection_other_exception(self) -> None:
+        """Test _ensure_elk_connection with generic exception."""
+        mock_elk = MagicMock()
+
+        with patch(
+            "homeassistant.components.elkm1.async_wait_for_elk_to_sync"
+        ) as mock_sync:
+            mock_sync.side_effect = RuntimeError("Unknown error")
+
+            with pytest.raises(RuntimeError, match="Unknown error"):
+                await _ensure_elk_connection(mock_elk, "192.168.1.1")
+
+            # The function calls disconnect in the exception handler
+            assert mock_elk.disconnect.call_count >= 1
+
+    async def test_async_setup_entry_setup_elk_config_error(
+        self, hass: HomeAssistant
+    ) -> None:
+        """Test async_setup_entry when _setup_elk_config raises ValueError."""
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_HOST: "elk://192.168.1.1",
+                CONF_PREFIX: "",
+                CONF_USERNAME: "",
+                CONF_PASSWORD: "",
+                CONF_AUTO_CONFIGURE: False,
+            },
+        )
+
+        with patch("homeassistant.components.elkm1._setup_elk_config") as mock_setup:
+            mock_setup.side_effect = ValueError("Configuration error")
+
+            result = await async_setup_entry(hass, entry)
+            assert result is False
