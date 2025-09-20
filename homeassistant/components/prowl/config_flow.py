@@ -10,11 +10,7 @@ from typing import Any
 import prowlpy
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    CONN_CLASS_CLOUD_POLL,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 
 from .const import DOMAIN
@@ -26,7 +22,6 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for the Prowl component."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
     def __init__(self) -> None:
         """Initialize the config flow."""

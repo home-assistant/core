@@ -5,22 +5,16 @@ import logging
 import prowlpy
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN, PLATFORMS
 from .notify import PLATFORM_SCHEMA, ProwlNotificationEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 __all__ = ["DOMAIN", "PLATFORM_SCHEMA"]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Prowl integration."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -50,10 +44,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed("Failed to validate Prowl API key ({ex})") from ex
 
     entry.runtime_data = prowl
-    await hass.config_entries.async_forward_entry_setups(entry, [Platform.NOTIFY])
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+type ProwlConfigEntry = ConfigEntry[ProwlNotificationEntity]
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ProwlConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, [Platform.NOTIFY])
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

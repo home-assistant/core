@@ -1,7 +1,6 @@
 {
   "domain": "prowl",
   "name": "Prowl",
-  "after_dependencies": ["notify"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/prowl",
