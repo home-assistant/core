@@ -1,4 +1,5 @@
 rules:
+  # Bronze
   action-setup:
     status: exempt
     comment: This integration does not provide actions.
@@ -27,3 +28,65 @@ rules:
     status: exempt
     comment: This integration does not connect to any device or service.
   unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable:
+    status: exempt
+    comment: This integration has no way of knowing if the fingerprint reader is offline.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: This integration has no way of knowing if the fingerprint reader is offline.
+  parallel-updates:
+    status: exempt
+    comment: This integration does not poll.
+  reauthentication-flow:
+    status: exempt
+    comment: This integration does not store the tokens.
+  test-coverage: todo
+
+  # Gold
+  devices:
+    status: exempt
+    comment: This integration does not connect to any device or service.
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: This integration does not support discovery.
+  discovery:
+    status: exempt
+    comment: This integration does not support discovery.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: done
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: This integration does not connect to any device or service.
+  entity-category: todo
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: This integration has no entities that should be disabled by default.
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues: todo
+  stale-devices:
+    status: exempt
+    comment: This integration does not connect to any device or service.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo
