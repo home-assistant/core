@@ -505,7 +505,7 @@ class ESPHomeManager:
 
         api_version = cli.api_version
         assert api_version is not None, "API version must be set"
-        entry_data.async_on_connect(device_info, api_version)
+        entry_data.async_on_connect(hass, device_info, api_version)
 
         await self._handle_dynamic_encryption_key(device_info)
 

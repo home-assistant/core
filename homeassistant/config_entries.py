@@ -100,6 +100,7 @@ _LOGGER = logging.getLogger(__name__)
 SOURCE_BLUETOOTH = "bluetooth"
 SOURCE_DHCP = "dhcp"
 SOURCE_DISCOVERY = "discovery"
+SOURCE_ESPHOME = "esphome"
 SOURCE_HARDWARE = "hardware"
 SOURCE_HASSIO = "hassio"
 SOURCE_HOMEKIT = "homekit"
@@ -2336,8 +2337,9 @@ class ConfigEntries:
         entry: ConfigEntry,
         *,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        discovery_keys: MappingProxyType[str, tuple[DiscoveryKey, ...]]
-        | UndefinedType = UNDEFINED,
+        discovery_keys: (
+            MappingProxyType[str, tuple[DiscoveryKey, ...]] | UndefinedType
+        ) = UNDEFINED,
         minor_version: int | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
@@ -2373,8 +2375,9 @@ class ConfigEntries:
         entry: ConfigEntry,
         *,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        discovery_keys: MappingProxyType[str, tuple[DiscoveryKey, ...]]
-        | UndefinedType = UNDEFINED,
+        discovery_keys: (
+            MappingProxyType[str, tuple[DiscoveryKey, ...]] | UndefinedType
+        ) = UNDEFINED,
         minor_version: int | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
@@ -2728,7 +2731,10 @@ class ConfigEntries:
                 continue
             issues.add(issue.issue_id)
 
-        for domain, unique_ids in self._entries._domain_unique_id_index.items():  # noqa: SLF001
+        for (
+            domain,
+            unique_ids,
+        ) in self._entries._domain_unique_id_index.items():  # noqa: SLF001
             for unique_id, entries in unique_ids.items():
                 # We might mutate the list of entries, so we need a copy to not mess up
                 # the index

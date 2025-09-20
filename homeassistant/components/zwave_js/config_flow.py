@@ -37,6 +37,7 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 from homeassistant.helpers.hassio import is_hassio
+from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -52,6 +53,7 @@ from .const import (
     CONF_ADDON_S2_ACCESS_CONTROL_KEY,
     CONF_ADDON_S2_AUTHENTICATED_KEY,
     CONF_ADDON_S2_UNAUTHENTICATED_KEY,
+    CONF_ADDON_SOCKET,
     CONF_INTEGRATION_CREATED_ADDON,
     CONF_KEEP_OLD_DEVICES,
     CONF_LR_S2_ACCESS_CONTROL_KEY,
@@ -60,6 +62,7 @@ from .const import (
     CONF_S2_ACCESS_CONTROL_KEY,
     CONF_S2_AUTHENTICATED_KEY,
     CONF_S2_UNAUTHENTICATED_KEY,
+    CONF_SOCKET_PATH,
     CONF_USB_PATH,
     CONF_USE_ADDON,
     DOMAIN,
@@ -81,6 +84,7 @@ ADDON_SETUP_TIMEOUT_ROUNDS = 40
 
 ADDON_USER_INPUT_MAP = {
     CONF_ADDON_DEVICE: CONF_USB_PATH,
+    CONF_ADDON_SOCKET: CONF_SOCKET_PATH,
     CONF_ADDON_S0_LEGACY_KEY: CONF_S0_LEGACY_KEY,
     CONF_ADDON_S2_ACCESS_CONTROL_KEY: CONF_S2_ACCESS_CONTROL_KEY,
     CONF_ADDON_S2_AUTHENTICATED_KEY: CONF_S2_AUTHENTICATED_KEY,
@@ -129,7 +133,7 @@ def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
 def get_on_supervisor_schema(user_input: dict[str, Any]) -> vol.Schema:
     """Return a schema for the on Supervisor step."""
     default_use_addon = user_input[CONF_USE_ADDON]
-    return vol.Schema({vol.Optional(CONF_USE_ADDON, default=default_use_addon): bool})
+    return vol.Schema({vol.Required(CONF_USE_ADDON, default=default_use_addon): bool})
 
 
 async def validate_input(hass: HomeAssistant, user_input: dict) -> VersionInfo:
@@ -197,6 +201,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.lr_s2_access_control_key: str | None = None
         self.lr_s2_authenticated_key: str | None = None
         self.usb_path: str | None = None
+        self.socket_path: str | None = None  # ESPHome socket
         self.ws_address: str | None = None
         self.restart_addon: bool = False
         # If we install the add-on we should uninstall it on entry remove.
@@ -214,7 +219,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._addon_config_updates: dict[str, Any] = {}
         self._migrating = False
         self._reconfigure_config_entry: ZwaveJSConfigEntry | None = None
-        self._usb_discovery = False
+        self._adapter_discovered = False
         self._recommended_install = False
         self._rf_region: str | None = None
 
@@ -542,7 +547,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             title = human_name.split(" - ")[0].strip()
         self.context["title_placeholders"] = {CONF_NAME: title}
 
-        self._usb_discovery = True
+        self._adapter_discovered = True
         if current_config_entries:
             return await self.async_step_confirm_usb_migration()
 
@@ -658,7 +663,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Select custom installation type."""
-        if self._usb_discovery:
+        if self._adapter_discovered:
             return await self.async_step_on_supervisor({CONF_USE_ADDON: True})
         return await self.async_step_on_supervisor()
 
@@ -739,7 +744,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             self.usb_path = user_input[CONF_USB_PATH]
             return await self.async_step_network_type()
 
-        if self._usb_discovery:
+        if self._adapter_discovered:
             return await self.async_step_network_type()
 
         usb_path = self.usb_path or ""
@@ -780,6 +785,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 addon_config_updates = {
                     CONF_ADDON_DEVICE: self.usb_path,
+                    CONF_ADDON_SOCKET: self.socket_path,
                     CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
                     CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
                     CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
@@ -851,6 +857,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
             addon_config_updates = {
                 CONF_ADDON_DEVICE: self.usb_path,
+                CONF_ADDON_SOCKET: self.socket_path,
                 CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
                 CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
                 CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
@@ -916,6 +923,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             updates={
                 CONF_URL: self.ws_address,
                 CONF_USB_PATH: self.usb_path,
+                CONF_SOCKET_PATH: self.socket_path,
                 CONF_S0_LEGACY_KEY: self.s0_legacy_key,
                 CONF_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
                 CONF_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
@@ -938,6 +946,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_URL: self.ws_address,
                 CONF_USB_PATH: self.usb_path,
+                CONF_SOCKET_PATH: self.socket_path,
                 CONF_S0_LEGACY_KEY: self.s0_legacy_key,
                 CONF_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
                 CONF_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
@@ -974,7 +983,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm the user wants to reset their current controller."""
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
-        if not self._usb_discovery and not config_entry.data.get(CONF_USE_ADDON):
+        if not self._adapter_discovered and not config_entry.data.get(CONF_USE_ADDON):
             return self.async_abort(
                 reason="addon_required",
                 description_placeholders={
@@ -1065,6 +1074,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             if self.usb_path:
                 # USB discovery was used, so the device is already known.
                 self._addon_config_updates[CONF_ADDON_DEVICE] = self.usb_path
+                self._addon_config_updates[CONF_ADDON_SOCKET] = None
                 return await self.async_step_start_addon()
             # Now that the old controller is gone, we can scan for serial ports again
             return await self.async_step_choose_serial_port()
@@ -1184,10 +1194,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             self.s2_unauthenticated_key = user_input[CONF_S2_UNAUTHENTICATED_KEY]
             self.lr_s2_access_control_key = user_input[CONF_LR_S2_ACCESS_CONTROL_KEY]
             self.lr_s2_authenticated_key = user_input[CONF_LR_S2_AUTHENTICATED_KEY]
-            self.usb_path = user_input[CONF_USB_PATH]
+            self.usb_path = user_input.get(CONF_USB_PATH)
+            self.socket_path = user_input.get(CONF_SOCKET_PATH)
 
             addon_config_updates = {
                 CONF_ADDON_DEVICE: self.usb_path,
+                CONF_ADDON_SOCKET: self.socket_path,
                 CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
                 CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
                 CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
@@ -1212,6 +1224,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_start_addon()
 
         usb_path = addon_config.get(CONF_ADDON_DEVICE, self.usb_path or "")
+        socket_path = addon_config.get(CONF_ADDON_SOCKET, self.socket_path or "")
         s0_legacy_key = addon_config.get(
             CONF_ADDON_S0_LEGACY_KEY, self.s0_legacy_key or ""
         )
@@ -1237,24 +1250,42 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Failed to get USB ports: %s", err)
             return self.async_abort(reason="usb_ports_failed")
 
+        # Insert empty option in ports to allow setting a socket
+        ports = {
+            "": "Use Socket",
+            **ports,
+        }
+
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_USB_PATH, default=usb_path): vol.In(ports),
-                vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
                 vol.Optional(
-                    CONF_S2_ACCESS_CONTROL_KEY, default=s2_access_control_key
+                    CONF_USB_PATH, description={"suggested_value": usb_path}
+                ): vol.In(ports),
+                vol.Optional(
+                    CONF_SOCKET_PATH, description={"suggested_value": socket_path}
                 ): str,
                 vol.Optional(
-                    CONF_S2_AUTHENTICATED_KEY, default=s2_authenticated_key
+                    CONF_S0_LEGACY_KEY, description={"suggested_value": s0_legacy_key}
                 ): str,
                 vol.Optional(
-                    CONF_S2_UNAUTHENTICATED_KEY, default=s2_unauthenticated_key
+                    CONF_S2_ACCESS_CONTROL_KEY,
+                    description={"suggested_value": s2_access_control_key},
                 ): str,
                 vol.Optional(
-                    CONF_LR_S2_ACCESS_CONTROL_KEY, default=lr_s2_access_control_key
+                    CONF_S2_AUTHENTICATED_KEY,
+                    description={"suggested_value": s2_authenticated_key},
                 ): str,
                 vol.Optional(
-                    CONF_LR_S2_AUTHENTICATED_KEY, default=lr_s2_authenticated_key
+                    CONF_S2_UNAUTHENTICATED_KEY,
+                    description={"suggested_value": s2_unauthenticated_key},
+                ): str,
+                vol.Optional(
+                    CONF_LR_S2_ACCESS_CONTROL_KEY,
+                    description={"suggested_value": lr_s2_access_control_key},
+                ): str,
+                vol.Optional(
+                    CONF_LR_S2_AUTHENTICATED_KEY,
+                    description={"suggested_value": lr_s2_authenticated_key},
                 ): str,
             }
         )
@@ -1268,8 +1299,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Choose a serial port."""
         if user_input is not None:
-            self.usb_path = user_input[CONF_USB_PATH]
+            self.usb_path = user_input.get(CONF_USB_PATH)
+            self.socket_path = user_input.get(CONF_SOCKET_PATH)
             self._addon_config_updates[CONF_ADDON_DEVICE] = self.usb_path
+            self._addon_config_updates[CONF_ADDON_SOCKET] = self.socket_path
             return await self.async_step_start_addon()
 
         try:
@@ -1286,10 +1319,16 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(usb.get_serial_by_id, old_usb_path),
             None,
         )
+        # Insert empty option in ports to allow setting a socket
+        ports = {
+            "": "Use Socket",
+            **ports,
+        }
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_USB_PATH): vol.In(ports),
+                vol.Optional(CONF_USB_PATH): vol.In(ports),
+                vol.Optional(CONF_SOCKET_PATH): str,
             }
         )
         return self.async_show_form(
@@ -1347,6 +1386,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 **config_entry.data,
                 CONF_URL: ws_address,
                 CONF_USB_PATH: self.usb_path,
+                CONF_SOCKET_PATH: self.socket_path,
                 CONF_S0_LEGACY_KEY: self.s0_legacy_key,
                 CONF_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
                 CONF_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
@@ -1396,6 +1436,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 CONF_URL: self.ws_address,
                 CONF_USB_PATH: self.usb_path,
+                CONF_SOCKET_PATH: self.socket_path,
                 CONF_S0_LEGACY_KEY: self.s0_legacy_key,
                 CONF_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
                 CONF_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
@@ -1408,6 +1449,28 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_abort(reason="reconfigure_successful")
+
+    async def async_step_esphome(
+        self, discovery_info: ESPHomeServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a ESPHome discovery."""
+        if not is_hassio(self.hass):
+            return self.async_abort(reason="not_hassio")
+
+        await self.async_set_unique_id(str(discovery_info.zwave_home_id))
+        self._abort_if_unique_id_configured(
+            {
+                CONF_ADDON_DEVICE: None,
+                CONF_SOCKET_PATH: discovery_info.socket_path,
+            }
+        )
+        self.socket_path = discovery_info.socket_path
+        self.context["title_placeholders"] = {
+            "title_placeholders": f"{discovery_info.name} via ESPHome"
+        }
+        self._adapter_discovered = True
+
+        return await self.async_step_installation_type()
 
     async def async_revert_addon_config(self, reason: str) -> ConfigFlowResult:
         """Abort the options flow.

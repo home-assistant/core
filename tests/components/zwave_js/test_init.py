@@ -898,6 +898,7 @@ async def test_start_addon(
     lr_s2_authenticated_key = "lr_s2_authenticated"
     addon_options = {
         "device": device,
+        "socket": None,
         "s0_legacy_key": s0_legacy_key,
         "s2_access_control_key": s2_access_control_key,
         "s2_authenticated_key": s2_authenticated_key,
