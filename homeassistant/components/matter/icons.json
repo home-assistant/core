@@ -17,6 +17,9 @@
       },
       "stop": {
         "default": "mdi:stop"
+      },
+      "self_test_request": {
+        "default": "mdi:refresh-auto"
       }
     },
     "fan": {
@@ -53,6 +56,15 @@
       },
       "current_phase": {
         "default": "mdi:state-machine"
+      },
+      "eve_weather_trend": {
+        "default": "mdi:weather",
+        "state": {
+          "sunny": "mdi:weather-sunny",
+          "cloudy": "mdi:weather-cloudy",
+          "rainy": "mdi:weather-rainy",
+          "stormy": "mdi:weather-windy"
+        }
       },
       "air_quality": {
         "default": "mdi:air-filter"
@@ -97,6 +109,9 @@
         "default": "mdi:battery-clock"
       },
       "esa_opt_out_state": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "esa_state": {
         "default": "mdi:home-lightning-bolt"
       },
       "evse_state": {

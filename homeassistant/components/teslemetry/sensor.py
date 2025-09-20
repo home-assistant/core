@@ -45,7 +45,7 @@ from .entity import (
     TeslemetryVehicleStreamEntity,
     TeslemetryWallConnectorEntity,
 )
-from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
+from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
 
@@ -1617,11 +1617,12 @@ async def async_setup_entry(
         if energysite.history_coordinator is not None
     )
 
-    entities.append(
-        TeslemetryCreditBalanceSensor(
-            entry.unique_id or entry.entry_id, entry.runtime_data
+    if entry.runtime_data.stream is not None:
+        entities.append(
+            TeslemetryCreditBalanceSensor(
+                entry.unique_id or entry.entry_id, entry.runtime_data.stream
+            )
         )
-    )
 
     async_add_entities(entities)
 
@@ -1840,12 +1841,12 @@ class TeslemetryCreditBalanceSensor(RestoreSensor):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_suggested_display_precision = 0
 
-    def __init__(self, uid: str, data: TeslemetryData) -> None:
+    def __init__(self, uid: str, stream: TeslemetryStream) -> None:
         """Initialize common aspects of a Teslemetry entity."""
 
         self._attr_translation_key = "credit_balance"
         self._attr_unique_id = f"{uid}_credit_balance"
-        self.stream = data.stream
+        self.stream = stream
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""

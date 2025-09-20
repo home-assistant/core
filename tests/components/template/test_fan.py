@@ -3,6 +3,7 @@
 from typing import Any
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import fan, template
@@ -21,10 +22,11 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import ConfigurationStyle
+from .conftest import ConfigurationStyle, async_get_flow_preview_state
 
-from tests.common import assert_setup_component
+from tests.common import MockConfigEntry, assert_setup_component
 from tests.components.fan import common
+from tests.typing import WebSocketGenerator
 
 TEST_OBJECT_ID = "test_fan"
 TEST_ENTITY_ID = f"fan.{TEST_OBJECT_ID}"
@@ -1881,3 +1883,91 @@ async def test_optimistic_option(hass: HomeAssistant) -> None:
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("count", "fan_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_OBJECT_ID,
+                "state": "{{ is_state('sensor.test_sensor', 'on') }}",
+                "turn_on": [],
+                "turn_off": [],
+                "optimistic": False,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_fan")
+async def test_not_optimistic(hass: HomeAssistant) -> None:
+    """Test optimistic yaml option set to false."""
+    await hass.services.async_call(
+        fan.DOMAIN,
+        "turn_on",
+        {"entity_id": TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
+
+
+async def test_setup_config_entry(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Tests creating a fan from a config entry."""
+
+    hass.states.async_set(
+        "sensor.test_sensor",
+        "on",
+        {},
+    )
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "state": "{{ states('sensor.test_sensor') }}",
+            "turn_on": [],
+            "turn_off": [],
+            "template_type": fan.DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("fan.my_template")
+    assert state is not None
+    assert state == snapshot
+
+
+async def test_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview."""
+
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        fan.DOMAIN,
+        {
+            "name": "My template",
+            "state": "{{ 'on' }}",
+            "turn_on": [],
+            "turn_off": [],
+        },
+    )
+
+    assert state["state"] == STATE_ON

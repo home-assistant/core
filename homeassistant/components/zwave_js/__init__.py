@@ -105,7 +105,6 @@ from .const import (
     CONF_USB_PATH,
     CONF_USE_ADDON,
     DOMAIN,
-    DRIVER_READY_TIMEOUT,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     EVENT_VALUE_UPDATED,
     LIB_LOGGER,
@@ -116,11 +115,7 @@ from .const import (
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_UPDATED_EVENT,
 )
-from .discovery import (
-    ZwaveDiscoveryInfo,
-    async_discover_node_values,
-    async_discover_single_value,
-)
+from .discovery import async_discover_node_values, async_discover_single_value
 from .helpers import (
     async_disable_server_logging_if_needed,
     async_enable_server_logging_if_needed,
@@ -132,10 +127,11 @@ from .helpers import (
     get_valueless_base_unique_id,
 )
 from .migrate import async_migrate_discovered_value
-from .models import ZwaveJSConfigEntry, ZwaveJSData
+from .models import PlatformZwaveDiscoveryInfo, ZwaveJSConfigEntry, ZwaveJSData
 from .services import async_setup_services
 
 CONNECT_TIMEOUT = 10
+DRIVER_READY_TIMEOUT = 60
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -147,6 +143,7 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+MIN_CONTROLLER_FIRMWARE_SDK_VERSION = AwesomeVersion("6.50.0")
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -367,6 +364,16 @@ class DriverEvents:
             )
         )
 
+        # listen for driver ready event to reload the config entry
+        self.config_entry.async_on_unload(
+            driver.on(
+                "driver ready",
+                lambda _: self.hass.config_entries.async_schedule_reload(
+                    self.config_entry.entry_id
+                ),
+            )
+        )
+
         # listen for new nodes being added to the mesh
         self.config_entry.async_on_unload(
             controller.on(
@@ -498,7 +505,7 @@ class ControllerEvents:
             )
         )
 
-        await self.async_check_preprovisioned_device(node)
+        await self.async_check_pre_provisioned_device(node)
 
         if node.is_controller_node:
             # Create a controller status sensor for each device
@@ -626,8 +633,8 @@ class ControllerEvents:
             f"{DOMAIN}.identify_controller.{dev_id[1]}",
         )
 
-    async def async_check_preprovisioned_device(self, node: ZwaveNode) -> None:
-        """Check if the node was preprovisioned and update the device registry."""
+    async def async_check_pre_provisioned_device(self, node: ZwaveNode) -> None:
+        """Check if the node was pre-provisioned and update the device registry."""
         provisioning_entry = (
             await self.driver_events.driver.controller.async_get_provisioning_entry(
                 node.node_id
@@ -637,29 +644,37 @@ class ControllerEvents:
             provisioning_entry
             and provisioning_entry.additional_properties
             and "device_id" in provisioning_entry.additional_properties
-        ):
-            preprovisioned_device = self.dev_reg.async_get(
-                provisioning_entry.additional_properties["device_id"]
+            and (
+                pre_provisioned_device := self.dev_reg.async_get(
+                    provisioning_entry.additional_properties["device_id"]
+                )
             )
+            and (dsk_identifier := (DOMAIN, f"provision_{provisioning_entry.dsk}"))
+            in pre_provisioned_device.identifiers
+        ):
+            driver = self.driver_events.driver
+            device_id = get_device_id(driver, node)
+            device_id_ext = get_device_id_ext(driver, node)
+            new_identifiers = pre_provisioned_device.identifiers.copy()
+            new_identifiers.remove(dsk_identifier)
+            new_identifiers.add(device_id)
+            if device_id_ext:
+                new_identifiers.add(device_id_ext)
 
-            if preprovisioned_device:
-                dsk = provisioning_entry.dsk
-                dsk_identifier = (DOMAIN, f"provision_{dsk}")
-
-                # If the pre-provisioned device has the DSK identifier, remove it
-                if dsk_identifier in preprovisioned_device.identifiers:
-                    driver = self.driver_events.driver
-                    device_id = get_device_id(driver, node)
-                    device_id_ext = get_device_id_ext(driver, node)
-                    new_identifiers = preprovisioned_device.identifiers.copy()
-                    new_identifiers.remove(dsk_identifier)
-                    new_identifiers.add(device_id)
-                    if device_id_ext:
-                        new_identifiers.add(device_id_ext)
-                    self.dev_reg.async_update_device(
-                        preprovisioned_device.id,
-                        new_identifiers=new_identifiers,
-                    )
+            if self.dev_reg.async_get_device(identifiers=new_identifiers):
+                # If a device entry is registered with the node ID based identifiers,
+                # just remove the device entry with the DSK identifier.
+                self.dev_reg.async_update_device(
+                    pre_provisioned_device.id,
+                    remove_config_entry_id=self.config_entry.entry_id,
+                )
+            else:
+                # Add the node ID based identifiers to the device entry
+                # with the DSK identifier and remove the DSK identifier.
+                self.dev_reg.async_update_device(
+                    pre_provisioned_device.id,
+                    new_identifiers=new_identifiers,
+                )
 
     async def async_register_node_in_dev_reg(self, node: ZwaveNode) -> dr.DeviceEntry:
         """Register node in dev reg."""
@@ -757,7 +772,7 @@ class NodeEvents:
         # Remove any old value ids if this is a reinterview.
         self.controller_events.discovered_value_ids.pop(device.id, None)
 
-        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo] = {}
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo] = {}
 
         # run discovery on all node values and create/update entities
         await asyncio.gather(
@@ -799,11 +814,19 @@ class NodeEvents:
             node.on("notification", self.async_on_notification)
         )
 
-        # Create a firmware update entity for each non-controller device that
+        # Create a firmware update entity for each device that
         # supports firmware updates
-        if not node.is_controller_node and any(
-            cc.id == CommandClass.FIRMWARE_UPDATE_MD.value
-            for cc in node.command_classes
+        controller = self.controller_events.driver_events.driver.controller
+        if (
+            not (is_controller_node := node.is_controller_node)
+            and any(
+                cc.id == CommandClass.FIRMWARE_UPDATE_MD.value
+                for cc in node.command_classes
+            )
+        ) or (
+            is_controller_node
+            and (sdk_version := controller.sdk_version) is not None
+            and sdk_version >= MIN_CONTROLLER_FIRMWARE_SDK_VERSION
         ):
             async_dispatcher_send(
                 self.hass,
@@ -831,8 +854,8 @@ class NodeEvents:
     async def async_handle_discovery_info(
         self,
         device: dr.DeviceEntry,
-        disc_info: ZwaveDiscoveryInfo,
-        value_updates_disc_info: dict[str, ZwaveDiscoveryInfo],
+        disc_info: PlatformZwaveDiscoveryInfo,
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
     ) -> None:
         """Handle discovery info and all dependent tasks."""
         platform = disc_info.platform
@@ -874,7 +897,9 @@ class NodeEvents:
         )
 
     async def async_on_value_added(
-        self, value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
+        self,
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
+        value: Value,
     ) -> None:
         """Fire value updated event."""
         # If node isn't ready or a device for this node doesn't already exist, we can
@@ -1009,7 +1034,9 @@ class NodeEvents:
 
     @callback
     def async_on_value_updated_fire_event(
-        self, value_updates_disc_info: dict[str, ZwaveDiscoveryInfo], value: Value
+        self,
+        value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
+        value: Value,
     ) -> None:
         """Fire value updated event."""
         # Get the discovery info for the value that was updated. If there is
@@ -1065,23 +1092,32 @@ async def client_listen(
     try:
         await client.listen(driver_ready)
     except BaseZwaveJSServerError as err:
-        if entry.state is not ConfigEntryState.LOADED:
+        if entry.state is ConfigEntryState.SETUP_IN_PROGRESS:
             raise
         LOGGER.error("Client listen failed: %s", err)
     except Exception as err:
         # We need to guard against unknown exceptions to not crash this task.
         LOGGER.exception("Unexpected exception: %s", err)
-        if entry.state is not ConfigEntryState.LOADED:
+        if entry.state is ConfigEntryState.SETUP_IN_PROGRESS:
             raise
+
+    if hass.is_stopping or entry.state is ConfigEntryState.UNLOAD_IN_PROGRESS:
+        return
+
+    if entry.state is ConfigEntryState.SETUP_IN_PROGRESS:
+        raise HomeAssistantError("Listen task ended unexpectedly")
 
     # The entry needs to be reloaded since a new driver state
     # will be acquired on reconnect.
     # All model instances will be replaced when the new state is acquired.
-    if not hass.is_stopping:
-        if entry.state is not ConfigEntryState.LOADED:
-            raise HomeAssistantError("Listen task ended unexpectedly")
+    if entry.state.recoverable:
         LOGGER.debug("Disconnected from server. Reloading integration")
         hass.config_entries.async_schedule_reload(entry.entry_id)
+    else:
+        LOGGER.error(
+            "Disconnected from server. Cannot recover entry %s",
+            entry.title,
+        )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> bool:

@@ -46,7 +46,7 @@ async def test_datadog_setup_full(hass: HomeAssistant) -> None:
 
         assert mock_dogstatsd.call_count == 1
         assert mock_dogstatsd.call_args == mock.call(
-            host="host", port=123, namespace="foo"
+            host="host", port=123, namespace="foo", disable_telemetry=True
         )
 
 
@@ -65,7 +65,7 @@ async def test_datadog_setup_defaults(hass: HomeAssistant) -> None:
 
         assert mock_dogstatsd.call_count == 1
         assert mock_dogstatsd.call_args == mock.call(
-            host="localhost", port=8125, namespace="hass"
+            host="localhost", port=8125, namespace="hass", disable_telemetry=True
         )
 
 

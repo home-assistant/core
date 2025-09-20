@@ -15,6 +15,7 @@ from homeassistant.components.lock import (
     LockEntityFeature,
     LockState,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
     CONF_NAME,
@@ -26,19 +27,27 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
-from .helpers import async_setup_template_platform
-from .template_entity import (
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
+)
+from .schemas import (
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    TemplateEntity,
     make_template_entity_common_modern_schema,
 )
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 CONF_CODE_FORMAT_TEMPLATE = "code_format_template"
@@ -66,7 +75,7 @@ LOCK_COMMON_SCHEMA = vol.Schema(
 )
 
 LOCK_YAML_SCHEMA = LOCK_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
-    make_template_entity_common_modern_schema(DEFAULT_NAME).schema
+    make_template_entity_common_modern_schema(LOCK_DOMAIN, DEFAULT_NAME).schema
 )
 
 PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
@@ -81,6 +90,10 @@ PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     }
 ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
+
+LOCK_CONFIG_ENTRY_SCHEMA = LOCK_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
+)
 
 
 async def async_setup_platform(
@@ -99,6 +112,35 @@ async def async_setup_platform(
         async_add_entities,
         discovery_info,
         LEGACY_FIELDS,
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateLockEntity,
+        LOCK_CONFIG_ENTRY_SCHEMA,
+    )
+
+
+@callback
+def async_create_preview_lock(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> StateLockEntity:
+    """Create a preview."""
+    return async_setup_template_preview(
+        hass,
+        name,
+        config,
+        StateLockEntity,
+        LOCK_CONFIG_ENTRY_SCHEMA,
     )
 
 
