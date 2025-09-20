@@ -7,6 +7,9 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "invalid_auth": "Invalid authentication key"
     }
   },
   "config_subentries": {
