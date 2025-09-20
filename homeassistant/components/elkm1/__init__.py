@@ -368,7 +368,7 @@ def _included(ranges: list[tuple[int, int]], set_to: bool, values: list[bool]) -
     for rng in ranges:
         if not (rng[0] >= 1 and rng[0] <= rng[1] and rng[1] <= len(values)):
             raise vol.Invalid(f"Invalid range {rng}")
-        values[rng[0] - 1 : rng[1] + 1] = [set_to] * (rng[1] - rng[0] + 1)
+        values[rng[0] - 1 : rng[1]] = [set_to] * (rng[1] - rng[0] + 1)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bool:
