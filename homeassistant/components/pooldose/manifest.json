@@ -3,6 +3,11 @@
   "name": "SEKO PoolDose",
   "codeowners": ["@lmaertin"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "kommspot"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/pooldose",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
