@@ -41,7 +41,8 @@
           "type": "[%key:component::history_stats::config::step::user::data::type%]",
           "start": "Start",
           "end": "End",
-          "duration": "Duration"
+          "duration": "Duration",
+          "state_class": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]"
         },
         "data_description": {
           "entity_id": "[%key:component::history_stats::config::step::user::data_description::entity_id%]",
@@ -49,7 +50,8 @@
           "type": "[%key:component::history_stats::config::step::user::data_description::type%]",
           "start": "When to start the measure (timestamp or datetime). Can be a template.",
           "end": "When to stop the measure (timestamp or datetime). Can be a template",
-          "duration": "Duration of the measure."
+          "duration": "Duration of the measure.",
+          "state_class": "The state class for statistics calculation."
         }
       }
     }
@@ -70,7 +72,8 @@
           "type": "[%key:component::history_stats::config::step::user::data::type%]",
           "start": "[%key:component::history_stats::config::step::options::data::start%]",
           "end": "[%key:component::history_stats::config::step::options::data::end%]",
-          "duration": "[%key:component::history_stats::config::step::options::data::duration%]"
+          "duration": "[%key:component::history_stats::config::step::options::data::duration%]",
+          "state_class": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]"
         },
         "data_description": {
           "entity_id": "[%key:component::history_stats::config::step::user::data_description::entity_id%]",
@@ -78,7 +81,8 @@
           "type": "[%key:component::history_stats::config::step::user::data_description::type%]",
           "start": "[%key:component::history_stats::config::step::options::data_description::start%]",
           "end": "[%key:component::history_stats::config::step::options::data_description::end%]",
-          "duration": "[%key:component::history_stats::config::step::options::data_description::duration%]"
+          "duration": "[%key:component::history_stats::config::step::options::data_description::duration%]",
+          "state_class": "The state class for statistics calculation. Changing the state class will require statistics to be reset."
         }
       }
     }
@@ -89,6 +93,12 @@
         "time": "Time",
         "ratio": "Ratio",
         "count": "Count"
+      }
+    },
+    "state_class": {
+      "options": {
+        "measurement": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::measurement%]",
+        "total_increasing": "[%key:component::sensor::entity_component::_::state_attributes::state_class::state::total_increasing%]"
       }
     }
   },

@@ -9,6 +9,7 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.components.sensor import CONF_STATE_CLASS, SensorStateClass
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -39,6 +40,7 @@ from .const import (
     CONF_PERIOD_KEYS,
     CONF_START,
     CONF_TYPE_KEYS,
+    CONF_TYPE_RATIO,
     CONF_TYPE_TIME,
     DEFAULT_NAME,
     DOMAIN,
@@ -101,10 +103,27 @@ async def get_state_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
 async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     """Return schema for options step."""
     entity_id = handler.options[CONF_ENTITY_ID]
-    return _get_options_schema_with_entity_id(entity_id)
+    conf_type = handler.options[CONF_TYPE]
+    return _get_options_schema_with_entity_id(entity_id, conf_type)
 
 
-def _get_options_schema_with_entity_id(entity_id: str) -> vol.Schema:
+def _get_options_schema_with_entity_id(entity_id: str, type: str) -> vol.Schema:
+    state_class: vol.Schemable = {}
+    if type != CONF_TYPE_RATIO:
+        state_class = {
+            vol.Required(
+                CONF_STATE_CLASS, default=SensorStateClass.MEASUREMENT
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=[
+                        SensorStateClass.MEASUREMENT,
+                        SensorStateClass.TOTAL_INCREASING,
+                    ],
+                    translation_key=CONF_STATE_CLASS,
+                    mode=SelectSelectorMode.DROPDOWN,
+                ),
+            ),
+        }
     return vol.Schema(
         {
             vol.Optional(CONF_ENTITY_ID): EntitySelector(
@@ -131,7 +150,7 @@ def _get_options_schema_with_entity_id(entity_id: str) -> vol.Schema:
                 DurationSelectorConfig(enable_day=True, allow_negative=False)
             ),
         }
-    )
+    ).extend(state_class)
 
 
 CONFIG_FLOW = {
@@ -200,6 +219,7 @@ async def ws_start_preview(
         config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
         entity_id = options[CONF_ENTITY_ID]
         name = options[CONF_NAME]
+        conf_type = options[CONF_TYPE]
     else:
         flow_status = hass.config_entries.options.async_get(msg["flow_id"])
         config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
@@ -207,6 +227,7 @@ async def ws_start_preview(
             raise HomeAssistantError("Config entry not found")
         entity_id = config_entry.options[CONF_ENTITY_ID]
         name = config_entry.options[CONF_NAME]
+        conf_type = config_entry.options[CONF_TYPE]
 
     @callback
     def async_preview_updated(
@@ -232,7 +253,7 @@ async def ws_start_preview(
 
     validated_data: Any = None
     try:
-        validated_data = (_get_options_schema_with_entity_id(entity_id))(
+        validated_data = (_get_options_schema_with_entity_id(entity_id, conf_type))(
             msg["user_input"]
         )
     except vol.Invalid as ex:
@@ -254,6 +275,7 @@ async def ws_start_preview(
     start = validated_data.get(CONF_START)
     end = validated_data.get(CONF_END)
     duration = validated_data.get(CONF_DURATION)
+    state_class = validated_data.get(CONF_STATE_CLASS)
 
     history_stats = HistoryStats(
         hass,
@@ -273,6 +295,7 @@ async def ws_start_preview(
         name=name,
         unique_id=None,
         source_entity_id=entity_id,
+        state_class=state_class,
     )
     preview_entity.hass = hass
 
