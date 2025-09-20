@@ -1,0 +1,70 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Soria",
+  "category": "znnbq",
+  "product_id": "0kllybtbzftaee7y",
+  "product_name": "Soria",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2025-07-12T07:19:59+00:00",
+  "create_time": "2025-07-12T07:19:59+00:00",
+  "update_time": "2025-07-12T07:19:59+00:00",
+  "function": {
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["power_off", "inverter_power", "grid_power", "battery_power"]
+      }
+    }
+  },
+  "status_range": {
+    "reverse_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "power_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW",
+        "min": 0,
+        "max": 900000,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["power_off", "inverter_power", "grid_power", "battery_power"]
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -40,
+        "max": 150,
+        "scale": 1,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "reverse_energy_total": 10821,
+    "power_total": 19060,
+    "work_mode": "power_off",
+    "temp_current": 28
+  },
+  "set_up": true,
+  "support_local": true
+}
