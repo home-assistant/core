@@ -1,0 +1,175 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config_entry_data': dict({
+      'host': '192.168.0.2',
+      'port': 7094,
+    }),
+    'config_entry_options': dict({
+      'code': '**REDACTED**',
+    }),
+    'entities': list([
+      dict({
+        'aliases': list([
+        ]),
+        'area_id': None,
+        'capabilities': None,
+        'categories': dict({
+        }),
+        'config_entry_id': 'SATEL_INTEGRA_CONFIG_ENTRY_1',
+        'config_subentry_id': 'ID_PARTITION',
+        'device_class': None,
+        'device_id': None,
+        'disabled_by': None,
+        'entity_category': None,
+        'entity_id': 'alarm_control_panel.home',
+        'has_entity_name': False,
+        'hidden_by': None,
+        'icon': None,
+        'labels': list([
+        ]),
+        'name': None,
+        'options': dict({
+        }),
+        'original_device_class': None,
+        'original_icon': None,
+        'original_name': 'Home',
+        'platform': 'satel_integra',
+        'translation_key': None,
+        'unique_id': 'satel_alarm_panel_1',
+      }),
+      dict({
+        'aliases': list([
+        ]),
+        'area_id': None,
+        'capabilities': None,
+        'categories': dict({
+        }),
+        'config_entry_id': 'SATEL_INTEGRA_CONFIG_ENTRY_1',
+        'config_subentry_id': 'ID_ZONE',
+        'device_class': None,
+        'device_id': None,
+        'disabled_by': None,
+        'entity_category': None,
+        'entity_id': 'binary_sensor.zone_1',
+        'has_entity_name': False,
+        'hidden_by': None,
+        'icon': None,
+        'labels': list([
+        ]),
+        'name': None,
+        'options': dict({
+        }),
+        'original_device_class': 'motion',
+        'original_icon': None,
+        'original_name': 'Zone 1',
+        'platform': 'satel_integra',
+        'translation_key': None,
+        'unique_id': 'satel_zone_1',
+      }),
+      dict({
+        'aliases': list([
+        ]),
+        'area_id': None,
+        'capabilities': None,
+        'categories': dict({
+        }),
+        'config_entry_id': 'SATEL_INTEGRA_CONFIG_ENTRY_1',
+        'config_subentry_id': 'ID_OUTPUT',
+        'device_class': None,
+        'device_id': None,
+        'disabled_by': None,
+        'entity_category': None,
+        'entity_id': 'binary_sensor.output_1',
+        'has_entity_name': False,
+        'hidden_by': None,
+        'icon': None,
+        'labels': list([
+        ]),
+        'name': None,
+        'options': dict({
+        }),
+        'original_device_class': 'safety',
+        'original_icon': None,
+        'original_name': 'Output 1',
+        'platform': 'satel_integra',
+        'translation_key': None,
+        'unique_id': 'satel_output_1',
+      }),
+      dict({
+        'aliases': list([
+        ]),
+        'area_id': None,
+        'capabilities': None,
+        'categories': dict({
+        }),
+        'config_entry_id': 'SATEL_INTEGRA_CONFIG_ENTRY_1',
+        'config_subentry_id': 'ID_SWITCHABLE_OUTPUT',
+        'device_class': None,
+        'device_id': None,
+        'disabled_by': None,
+        'entity_category': None,
+        'entity_id': 'switch.switchable_output_1',
+        'has_entity_name': False,
+        'hidden_by': None,
+        'icon': None,
+        'labels': list([
+        ]),
+        'name': None,
+        'options': dict({
+        }),
+        'original_device_class': None,
+        'original_icon': None,
+        'original_name': 'Switchable Output 1',
+        'platform': 'satel_integra',
+        'translation_key': None,
+        'unique_id': 'satel_switch_1',
+      }),
+    ]),
+    'subentries': dict({
+      'ID_OUTPUT': dict({
+        'data': dict({
+          'name': 'Output 1',
+          'output_number': 1,
+          'type': 'safety',
+        }),
+        'subentry_id': 'ID_OUTPUT',
+        'subentry_type': 'output',
+        'title': 'Output 1',
+        'unique_id': 'output_1',
+      }),
+      'ID_PARTITION': dict({
+        'data': dict({
+          'arm_home_mode': 1,
+          'name': 'Home',
+          'partition_number': 1,
+        }),
+        'subentry_id': 'ID_PARTITION',
+        'subentry_type': 'partition',
+        'title': 'Home',
+        'unique_id': 'partition_1',
+      }),
+      'ID_SWITCHABLE_OUTPUT': dict({
+        'data': dict({
+          'name': 'Switchable Output 1',
+          'switchable_output_number': 1,
+        }),
+        'subentry_id': 'ID_SWITCHABLE_OUTPUT',
+        'subentry_type': 'switchable_output',
+        'title': 'Switchable Output 1',
+        'unique_id': 'switchable_output_1',
+      }),
+      'ID_ZONE': dict({
+        'data': dict({
+          'name': 'Zone 1',
+          'type': 'motion',
+          'zone_number': 1,
+        }),
+        'subentry_id': 'ID_ZONE',
+        'subentry_type': 'zone',
+        'title': 'Zone 1',
+        'unique_id': 'zone_1',
+      }),
+    }),
+  })
+# ---
