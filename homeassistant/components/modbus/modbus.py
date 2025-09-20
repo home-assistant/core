@@ -16,6 +16,7 @@ from pymodbus.framer import FramerType
 from pymodbus.pdu import ModbusPDU
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_STATE,
     CONF_DELAY,
@@ -137,6 +138,16 @@ async def async_modbus_setup(
         config[DOMAIN] = check_config(hass, config[DOMAIN])
         if not config[DOMAIN]:
             return False
+        for hub_config in config[DOMAIN]:
+            connection = f"{hub_config.get(CONF_HOST)} - {hub_config[CONF_PORT]}"
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_IMPORT},
+                    data={CONF_NAME: hub_config[CONF_NAME], CONF_METHOD: connection},
+                )
+            )
+
     if DATA_MODBUS_HUBS in hass.data and config[DOMAIN] == []:
         hubs = hass.data[DATA_MODBUS_HUBS]
         for hub in hubs.values():
