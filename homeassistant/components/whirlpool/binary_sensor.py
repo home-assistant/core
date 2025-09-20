@@ -36,6 +36,14 @@ WASHER_DRYER_SENSORS: list[WhirlpoolBinarySensorEntityDescription] = [
     )
 ]
 
+OVEN_SENSORS: list[WhirlpoolBinarySensorEntityDescription] = [
+    WhirlpoolBinarySensorEntityDescription(
+        key="door",
+        device_class=BinarySensorDeviceClass.DOOR,
+        value_fn=lambda appliance: appliance.get_door_opened(),
+    )
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -57,7 +65,15 @@ async def async_setup_entry(
         for description in WASHER_DRYER_SENSORS
     ]
 
-    async_add_entities([*washer_binary_sensors, *dryer_binary_sensors])
+    oven_binary_sensors = [
+        WhirlpoolBinarySensor(oven, description)
+        for oven in appliances_manager.ovens
+        for description in OVEN_SENSORS
+    ]
+
+    async_add_entities(
+        [*washer_binary_sensors, *dryer_binary_sensors, *oven_binary_sensors]
+    )
 
 
 class WhirlpoolBinarySensor(WhirlpoolEntity, BinarySensorEntity):
