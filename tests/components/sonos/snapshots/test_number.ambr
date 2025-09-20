@@ -28,7 +28,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:volume-high',
+    'original_icon': None,
     'original_name': 'Group volume',
     'platform': 'sonos',
     'previous_unique_id': None,
@@ -43,7 +43,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Zone A Group volume',
-      'icon': 'mdi:volume-high',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.SLIDER: 'slider'>,
