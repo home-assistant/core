@@ -56,7 +56,7 @@
       'supported_color_modes': list([
         <ColorMode.RGB: 'rgb'>,
       ]),
-      'supported_features': 0,
+      'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
         0.136,
         0.04,

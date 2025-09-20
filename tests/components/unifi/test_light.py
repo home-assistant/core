@@ -50,7 +50,7 @@ DEVICE_WITH_LED = {
     "led_override": "on",
     "led_override_color": "#0000ff",
     "led_override_color_brightness": 80,
-    "supports_led_ring": True,
+    "hw_caps": 2,
 }
 
 DEVICE_WITHOUT_LED = {
@@ -65,7 +65,7 @@ DEVICE_WITHOUT_LED = {
     "state": 1,
     "type": "usw",
     "version": "4.0.42.10433",
-    "supports_led_ring": False,
+    "hw_caps": 0,
 }
 
 DEVICE_LED_OFF = {
@@ -83,7 +83,7 @@ DEVICE_LED_OFF = {
     "led_override": "off",
     "led_override_color": "#ffffff",
     "led_override_color_brightness": 0,
-    "supports_led_ring": True,
+    "hw_caps": 2,
 }
 
 

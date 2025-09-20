@@ -17,6 +17,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityDescription,
+    LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -133,7 +134,7 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
     ) -> None:
         """Initialize UniFi light entity."""
         super().__init__(obj_id, hub, description)
-        self._attr_supported_features = 0  # type: ignore[assignment]
+        self._attr_supported_features = LightEntityFeature(0)
         self._attr_color_mode = ColorMode.RGB
         self._attr_supported_color_modes = {ColorMode.RGB}
 
@@ -170,10 +171,11 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
                 (device.led_override_color_brightness / 100) * 255
             )
         elif self._attr_is_on:
-            self._attr_brightness = 255
+            self._attr_brightness = None
         else:
             self._attr_brightness = 0
 
+        default_rgb_color = (255, 255, 255)
         if device.led_override_color:
             color_hex = device.led_override_color.lstrip("#")
             if len(color_hex) == 6:
@@ -181,8 +183,8 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
                     rgb_values = [int(color_hex[i : i + 2], 16) for i in (0, 2, 4)]
                     self._attr_rgb_color = (rgb_values[0], rgb_values[1], rgb_values[2])
                 except ValueError:
-                    self._attr_rgb_color = (255, 255, 255)
+                    self._attr_rgb_color = default_rgb_color
             else:
-                self._attr_rgb_color = (255, 255, 255)
+                self._attr_rgb_color = default_rgb_color
         else:
-            self._attr_rgb_color = (255, 255, 255)
+            self._attr_rgb_color = default_rgb_color
