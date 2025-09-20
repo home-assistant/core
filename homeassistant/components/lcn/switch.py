@@ -1,6 +1,7 @@
 """Support for LCN switches."""
 
 from collections.abc import Iterable
+from datetime import timedelta
 from functools import partial
 from typing import Any
 
@@ -17,6 +18,7 @@ from .entity import LcnEntity
 from .helpers import InputType, LcnConfigEntry
 
 PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(minutes=1)
 
 
 def add_lcn_switch_entities(
@@ -77,18 +79,6 @@ class LcnOutputSwitch(LcnEntity, SwitchEntity):
 
         self.output = pypck.lcn_defs.OutputPort[config[CONF_DOMAIN_DATA][CONF_OUTPUT]]
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(self.output)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.cancel_status_request_handler(self.output)
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if not await self.device_connection.dim_output(self.output.value, 100, 0):
@@ -102,6 +92,12 @@ class LcnOutputSwitch(LcnEntity, SwitchEntity):
             return
         self._attr_is_on = False
         self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
+        await self.device_connection.request_status_output(
+            self.output, SCAN_INTERVAL.seconds
+        )
 
     def input_received(self, input_obj: InputType) -> None:
         """Set switch state when LCN input object (command) is received."""
@@ -126,18 +122,6 @@ class LcnRelaySwitch(LcnEntity, SwitchEntity):
 
         self.output = pypck.lcn_defs.RelayPort[config[CONF_DOMAIN_DATA][CONF_OUTPUT]]
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(self.output)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.cancel_status_request_handler(self.output)
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         states = [pypck.lcn_defs.RelayStateModifier.NOCHANGE] * 8
@@ -155,6 +139,10 @@ class LcnRelaySwitch(LcnEntity, SwitchEntity):
             return
         self._attr_is_on = False
         self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
+        await self.device_connection.request_status_relays(SCAN_INTERVAL.seconds)
 
     def input_received(self, input_obj: InputType) -> None:
         """Set switch state when LCN input object (command) is received."""
@@ -179,22 +167,6 @@ class LcnRegulatorLockSwitch(LcnEntity, SwitchEntity):
         ]
         self.reg_id = pypck.lcn_defs.Var.to_set_point_id(self.setpoint_variable)
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(
-                self.setpoint_variable
-            )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.cancel_status_request_handler(
-                self.setpoint_variable
-            )
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if not await self.device_connection.lock_regulator(self.reg_id, True):
@@ -208,6 +180,12 @@ class LcnRegulatorLockSwitch(LcnEntity, SwitchEntity):
             return
         self._attr_is_on = False
         self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
+        await self.device_connection.request_status_variable(
+            self.setpoint_variable, SCAN_INTERVAL.seconds
+        )
 
     def input_received(self, input_obj: InputType) -> None:
         """Set switch state when LCN input object (command) is received."""
@@ -234,18 +212,6 @@ class LcnKeyLockSwitch(LcnEntity, SwitchEntity):
         self.table_id = ord(self.key.name[0]) - 65
         self.key_id = int(self.key.name[1]) - 1
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(self.key)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.cancel_status_request_handler(self.key)
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         states = [pypck.lcn_defs.KeyLockStateModifier.NOCHANGE] * 8
@@ -267,6 +233,10 @@ class LcnKeyLockSwitch(LcnEntity, SwitchEntity):
 
         self._attr_is_on = False
         self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
+        await self.device_connection.request_status_locked_keys(SCAN_INTERVAL.seconds)
 
     def input_received(self, input_obj: InputType) -> None:
         """Set switch state when LCN input object (command) is received."""

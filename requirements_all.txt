@@ -2257,7 +2257,7 @@ pypaperless==4.1.1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.8.12
+pypck==0.9.2
 
 # homeassistant.components.pglab
 pypglab==0.0.5
