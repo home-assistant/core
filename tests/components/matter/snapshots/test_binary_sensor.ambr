@@ -97,7 +97,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[door_lock][binary_sensor.mock_door_lock_battery-entry]
+# name: test_binary_sensors[door_lock][binary_sensor.mock_door_lock_battery_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -110,7 +110,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.mock_door_lock_battery',
+    'entity_id': 'binary_sensor.mock_door_lock_battery_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -122,7 +122,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Battery',
+    'original_name': 'Battery (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -132,21 +132,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[door_lock][binary_sensor.mock_door_lock_battery-state]
+# name: test_binary_sensors[door_lock][binary_sensor.mock_door_lock_battery_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Mock Door Lock Battery',
+      'friendly_name': 'Mock Door Lock Battery (1)',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_door_lock_battery',
+    'entity_id': 'binary_sensor.mock_door_lock_battery_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[door_lock_with_unbolt][binary_sensor.mock_door_lock_battery-entry]
+# name: test_binary_sensors[door_lock_with_unbolt][binary_sensor.mock_door_lock_battery_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -159,7 +159,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.mock_door_lock_battery',
+    'entity_id': 'binary_sensor.mock_door_lock_battery_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -171,7 +171,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Battery',
+    'original_name': 'Battery (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -181,14 +181,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[door_lock_with_unbolt][binary_sensor.mock_door_lock_battery-state]
+# name: test_binary_sensors[door_lock_with_unbolt][binary_sensor.mock_door_lock_battery_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Mock Door Lock Battery',
+      'friendly_name': 'Mock Door Lock Battery (1)',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.mock_door_lock_battery',
+    'entity_id': 'binary_sensor.mock_door_lock_battery_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
