@@ -61,7 +61,11 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self.login_task.done():
             _LOGGER.debug("Login task is done, checking results")
-            if self.login_task.exception():
+            if exception := self.login_task.exception():
+                if isinstance(exception, CannotConnect):
+                    return self.async_show_progress_done(
+                        next_step_id="connection_error"
+                    )
                 return self.async_show_progress_done(next_step_id="timeout")
             return self.async_show_progress_done(next_step_id="finish_login")
 
@@ -104,6 +108,19 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle timeout from progress step."""
         if user_input is None:
             return self.async_show_form(step_id="timeout")
+
+        # Reset state and try again
+        self._api = None
+        self._device_code = None
+        self.login_task = None
+        return await self.async_step_user()
+
+    async def async_step_connection_error(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle connection error from progress step."""
+        if user_input is None:
+            return self.async_show_form(step_id="connection_error")
 
         # Reset state and try again
         self._api = None

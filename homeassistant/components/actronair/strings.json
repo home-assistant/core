@@ -8,6 +8,11 @@
         "title": "Authorization timeout",
         "description": "The authorization process timed out. Please try again.",
         "data": {}
+      },
+      "connection_error": {
+        "title": "Connection error",
+        "description": "Failed to connect to Actron Air. Please check your internet connection and try again.",
+        "data": {}
       }
     },
     "progress": {
@@ -18,7 +23,7 @@
     },
     "abort": {
       "oauth2_error": "Failed to start OAuth2 flow",
-      "already_configured": "Account is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
   }
 }
