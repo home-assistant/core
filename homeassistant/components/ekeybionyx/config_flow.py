@@ -246,11 +246,11 @@ class OAuth2FlowHandler(
         """Check if webhooks have been deleted."""
         while True:
             self._data["systems"] = await self._data["api"].get_systems()
-            system = [
+            self._data["system"] = [
                 s
                 for s in self._data["systems"]
                 if s.system_id == self._data["system"].system_id
             ][0]
-            if system.function_webhook_quotas["used"] == 0:
+            if self._data["system"].function_webhook_quotas["used"] == 0:
                 break
             await asyncio.sleep(5)
