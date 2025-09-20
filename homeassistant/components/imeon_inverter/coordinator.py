@@ -12,6 +12,7 @@ from imeon_inverter_api.inverter import Inverter
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import TIMEOUT
@@ -48,7 +49,7 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
             config_entry=entry,
         )
 
-        self._api = Inverter(entry.data[CONF_HOST])
+        self._api = Inverter(entry.data[CONF_HOST], async_get_clientsession(hass))
 
     @property
     def api(self) -> Inverter:
