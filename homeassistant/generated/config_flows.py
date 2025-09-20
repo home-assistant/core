@@ -310,6 +310,7 @@ FLOWS = {
         "ipma",
         "ipp",
         "iqvia",
+        "irm_kmi",
         "iron_os",
         "iskra",
         "islamic_prayer_times",
