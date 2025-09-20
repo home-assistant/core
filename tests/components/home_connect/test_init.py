@@ -172,18 +172,18 @@ async def test_token_refresh_error(
     ],
 )
 async def test_client_error(
-    client_with_exception: MagicMock,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     exception: HomeConnectError,
     expected_state: ConfigEntryState,
 ) -> None:
     """Test client errors during setup integration."""
-    client_with_exception.get_home_appliances.return_value = None
-    client_with_exception.get_home_appliances.side_effect = exception
-    assert not await integration_setup(client_with_exception)
+    client.get_home_appliances.return_value = None
+    client.get_home_appliances.side_effect = exception
+    assert not await integration_setup(client)
     assert config_entry.state == expected_state
-    assert client_with_exception.get_home_appliances.call_count == 1
+    assert client.get_home_appliances.call_count == 1
 
 
 @pytest.mark.parametrize(

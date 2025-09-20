@@ -21,7 +21,7 @@ from homeassistant.helpers.issue_registry import (
 
 from .common import setup_home_connect_entry
 from .const import DOMAIN
-from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
+from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 from .utils import get_dict_from_home_connect_error
 
@@ -37,14 +37,13 @@ TIME_ENTITIES = (
 
 
 def _get_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     return [
-        HomeConnectTimeEntity(entry.runtime_data, appliance, description)
+        HomeConnectTimeEntity(appliance_coordinator, description)
         for description in TIME_ENTITIES
-        if description.key in appliance.settings
+        if description.key in appliance_coordinator.data.settings
     ]
 
 

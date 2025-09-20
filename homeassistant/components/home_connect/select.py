@@ -36,11 +36,7 @@ from .const import (
     VENTING_LEVEL_OPTIONS,
     WARMING_LEVEL_OPTIONS,
 )
-from .coordinator import (
-    HomeConnectApplianceData,
-    HomeConnectConfigEntry,
-    HomeConnectCoordinator,
-)
+from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity, constraint_fetcher
 from .utils import bsh_key_to_translation_key, get_dict_from_home_connect_error
 
@@ -302,36 +298,34 @@ PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS = (
 
 
 def _get_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     return [
         *(
             [
-                HomeConnectProgramSelectEntity(entry.runtime_data, appliance, desc)
+                HomeConnectProgramSelectEntity(appliance_coordinator, desc)
                 for desc in PROGRAM_SELECT_ENTITY_DESCRIPTIONS
             ]
-            if appliance.programs
+            if appliance_coordinator.data.programs
             else []
         ),
         *[
-            HomeConnectSelectEntity(entry.runtime_data, appliance, desc)
+            HomeConnectSelectEntity(appliance_coordinator, desc)
             for desc in SELECT_ENTITY_DESCRIPTIONS
-            if desc.key in appliance.settings
+            if desc.key in appliance_coordinator.data.settings
         ],
     ]
 
 
 def _get_option_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectOptionEntity]:
     """Get a list of entities."""
     return [
-        HomeConnectSelectOptionEntity(entry.runtime_data, appliance, desc)
+        HomeConnectSelectOptionEntity(appliance_coordinator, desc)
         for desc in PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS
-        if desc.key in appliance.options
+        if desc.key in appliance_coordinator.data.options
     ]
 
 
@@ -356,14 +350,12 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
 
     def __init__(
         self,
-        coordinator: HomeConnectCoordinator,
-        appliance: HomeConnectApplianceData,
+        appliance_coordinator: HomeConnectApplianceCoordinator,
         desc: HomeConnectProgramSelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(
-            coordinator,
-            appliance,
+            appliance_coordinator,
             desc,
         )
         self.set_options()
@@ -393,7 +385,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         self.async_on_remove(
             self.coordinator.async_add_listener(
                 self.refresh_options,
-                (self.appliance.info.ha_id, EventKey.BSH_COMMON_APPLIANCE_CONNECTED),
+                EventKey.BSH_COMMON_APPLIANCE_CONNECTED,
             )
         )
 
@@ -434,15 +426,13 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
 
     def __init__(
         self,
-        coordinator: HomeConnectCoordinator,
-        appliance: HomeConnectApplianceData,
+        appliance_coordinator: HomeConnectApplianceCoordinator,
         desc: HomeConnectSelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
         self._original_option_keys = set(desc.values_translation_key)
         super().__init__(
-            coordinator,
-            appliance,
+            appliance_coordinator,
             desc,
         )
 
@@ -511,15 +501,13 @@ class HomeConnectSelectOptionEntity(HomeConnectOptionEntity, SelectEntity):
 
     def __init__(
         self,
-        coordinator: HomeConnectCoordinator,
-        appliance: HomeConnectApplianceData,
+        appliance_coordinator: HomeConnectApplianceCoordinator,
         desc: HomeConnectSelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
         self._original_option_keys = set(desc.values_translation_key)
         super().__init__(
-            coordinator,
-            appliance,
+            appliance_coordinator,
             desc,
         )
 
