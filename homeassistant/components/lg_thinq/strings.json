@@ -923,6 +923,15 @@
       },
       "cycle_count_for_location": {
         "name": "{location} cycles"
+      },
+      "energy_usage_yesterday": {
+        "name": "Energy yesterday"
+      },
+      "energy_usage_this_month": {
+        "name": "Energy this month"
+      },
+      "energy_usage_last_month": {
+        "name": "Energy last month"
       }
     },
     "select": {

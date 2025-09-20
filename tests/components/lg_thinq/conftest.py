@@ -118,10 +118,18 @@ def mock_thinq_mqtt_client() -> Generator[None]:
         "washer",
     ]
 )
-def device_fixture(
-    mock_thinq_api: AsyncMock, request: pytest.FixtureRequest
-) -> Generator[str]:
+def device_fixture(request: pytest.FixtureRequest) -> Generator[str]:
     """Return every device."""
+    return request.param
+
+
+def energy_fixture(request: pytest.FixtureRequest) -> Generator[str]:
+    """Return energy period."""
+    return request.param
+
+
+def energy_usage(request: pytest.FixtureRequest) -> Generator[str]:
+    """Return energy usage per period."""
     return request.param
 
 
@@ -137,5 +145,7 @@ def devices(mock_thinq_api: AsyncMock, device_fixture: str) -> Generator[AsyncMo
     mock_thinq_api.async_get_device_status.return_value = load_json_object_fixture(
         f"{device_fixture}/status.json", DOMAIN
     )
-    mock_thinq_api.async_get_device_energy_profile.return_value = MagicMock()
+    mock_thinq_api.async_get_device_energy_profile.return_value = (
+        load_json_object_fixture(f"{device_fixture}/energy_profile.json", DOMAIN)
+    )
     return mock_thinq_api
