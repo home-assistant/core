@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "switch": {
+      "bit": {
+        "default": "mdi:power-socket-eu"
+      },
+      "simple_relay": {
+        "default": "mdi:power-socket-eu"
+      },
+      "relay": {
+        "default": "mdi:power-socket-eu"
+      }
+    }
+  }
+}
