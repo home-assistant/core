@@ -54,7 +54,7 @@ class VolvoEntity(CoordinatorEntity[VolvoBaseCoordinator]):
             coordinator.config_entry.data[CONF_VIN], description.key
         )
 
-        vehicle = coordinator.vehicle
+        vehicle = coordinator.context.vehicle
         model = (
             f"{vehicle.description.model} ({vehicle.model_year})"
             if vehicle.fuel_type == "NONE"
