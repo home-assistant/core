@@ -33,14 +33,13 @@ from .const import (
     CONST_OVERLAY_TADO_OPTIONS,
     DOMAIN,
 )
-from .coordinator import TadoDataUpdateCoordinator, TadoMobileDeviceUpdateCoordinator
+from .coordinator import TadoDataUpdateCoordinator
 from .models import TadoData
 from .services import async_setup_services
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
-    Platform.DEVICE_TRACKER,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.WATER_HEATER,
@@ -48,7 +47,6 @@ PLATFORMS = [
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=4)
 SCAN_INTERVAL = timedelta(minutes=5)
-SCAN_MOBILE_DEVICE_INTERVAL = timedelta(seconds=30)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -102,10 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
     coordinator = TadoDataUpdateCoordinator(hass, entry, tado)
     await coordinator.async_config_entry_first_refresh()
 
-    mobile_coordinator = TadoMobileDeviceUpdateCoordinator(hass, entry, tado)
-    await mobile_coordinator.async_config_entry_first_refresh()
-
-    entry.runtime_data = TadoData(coordinator, mobile_coordinator)
+    entry.runtime_data = TadoData(coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
