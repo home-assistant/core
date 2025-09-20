@@ -26,7 +26,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import get_hub
 from .const import _LOGGER, CONF_SLAVE_COUNT, CONF_VIRTUAL_COUNT
-from .entity import BaseStructPlatform
+from .entity import ModbusStructEntity
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -56,7 +56,7 @@ async def async_setup_platform(
     async_add_entities(sensors)
 
 
-class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
+class ModbusRegisterSensor(ModbusStructEntity, RestoreSensor, SensorEntity):
     """Modbus register sensor."""
 
     def __init__(
@@ -181,6 +181,10 @@ class SlaveSensor(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         result = self.coordinator.data
-        self._attr_native_value = result[self._idx] if result else None
-        self._attr_available = result is not None
+        if not result or self._idx >= len(result):
+            self._attr_native_value = None
+            self._attr_available = False
+        else:
+            self._attr_native_value = result[self._idx]
+            self._attr_available = True
         super()._handle_coordinator_update()

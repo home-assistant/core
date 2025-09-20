@@ -8,6 +8,7 @@
     "unit_mana_points": "MP",
     "unit_experience_points": "XP",
     "unit_items": "items",
+    "unit_rage": "rage",
     "config_entry_description": "Select the Habitica account to update a task.",
     "task_description": "The name (or task ID) of the task you want to update.",
     "rename_name": "Rename",
@@ -459,6 +460,22 @@
       "collected_items": {
         "name": "Collected quest items",
         "unit_of_measurement": "[%key:component::habitica::common::unit_items%]"
+      },
+      "boss_rage_limit": {
+        "name": "Boss rage limit break",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_rage%]",
+        "state_attributes": {
+          "rage_skill": {
+            "name": "Rage skill"
+          },
+          "effect": {
+            "name": "Effect"
+          }
+        }
+      },
+      "boss_rage": {
+        "name": "Boss rage",
+        "unit_of_measurement": "[%key:component::habitica::common::unit_rage%]"
       }
     },
     "switch": {

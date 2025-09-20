@@ -158,9 +158,9 @@ NUMBER_ENTITIES = (
         native_step=1,
         native_min_value=0,
         native_max_value=100,
-        supported=lambda api, ch: api.supported(ch, "volume_speek"),
-        value=lambda api, ch: api.volume_speek(ch),
-        method=lambda api, ch, value: api.set_volume(ch, volume_speek=int(value)),
+        supported=lambda api, ch: api.supported(ch, "volume_speak"),
+        value=lambda api, ch: api.volume_speak(ch),
+        method=lambda api, ch, value: api.set_volume(ch, volume_speak=int(value)),
     ),
     ReolinkNumberEntityDescription(
         key="volume_doorbell",
@@ -502,7 +502,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_brightness",
         cmd_key="GetImage",
-        cmd_id=26,
+        cmd_id=[26, 78],
         translation_key="image_brightness",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -516,7 +516,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_contrast",
         cmd_key="GetImage",
-        cmd_id=26,
+        cmd_id=[26, 78],
         translation_key="image_contrast",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -530,7 +530,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_saturation",
         cmd_key="GetImage",
-        cmd_id=26,
+        cmd_id=[26, 78],
         translation_key="image_saturation",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -544,7 +544,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_sharpness",
         cmd_key="GetImage",
-        cmd_id=26,
+        cmd_id=[26, 78],
         translation_key="image_sharpness",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -558,7 +558,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_hue",
         cmd_key="GetImage",
-        cmd_id=26,
+        cmd_id=[26, 78],
         translation_key="image_hue",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -852,7 +852,6 @@ async def async_setup_entry(
     entities.extend(
         ReolinkChimeNumberEntity(reolink_data, chime, entity_description)
         for entity_description in CHIME_NUMBER_ENTITIES
-        for chime in api.chime_list
         for chime in api.chime_list
         if chime.channel is not None
     )
