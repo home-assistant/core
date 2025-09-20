@@ -117,7 +117,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders=api_versions,
             )
 
-        await self.async_set_unique_id(serial_number)
+        await self.async_set_unique_id(serial_number, raise_on_progress=False)
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=f"PoolDose {serial_number}",
