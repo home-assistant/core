@@ -33,6 +33,12 @@ def _async_pilot_builder(**kwargs: Any) -> PilotBuilder:
     """Create the PilotBuilder for turn on."""
     brightness = kwargs.get(ATTR_BRIGHTNESS)
 
+    if ATTR_EFFECT in kwargs:
+        scene_id = get_id_from_scene_name(kwargs[ATTR_EFFECT])
+        if scene_id == 1000:  # rhythm
+            return PilotBuilder()
+        return PilotBuilder(brightness=brightness, scene=scene_id)
+
     if ATTR_RGBWW_COLOR in kwargs:
         return PilotBuilder(brightness=brightness, rgbww=kwargs[ATTR_RGBWW_COLOR])
 
@@ -45,11 +51,7 @@ def _async_pilot_builder(**kwargs: Any) -> PilotBuilder:
             colortemp=kwargs[ATTR_COLOR_TEMP_KELVIN],
         )
 
-    if ATTR_EFFECT in kwargs:
-        scene_id = get_id_from_scene_name(kwargs[ATTR_EFFECT])
-        if scene_id == 1000:  # rhythm
-            return PilotBuilder()
-        return PilotBuilder(brightness=brightness, scene=scene_id)
+    
 
     return PilotBuilder(brightness=brightness)
 
@@ -69,7 +71,6 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
 
     _attr_name = None
     _fixed_color_mode: ColorMode | None = None
-
     def __init__(self, wiz_data: WizData, name: str) -> None:
         """Initialize an WiZLight."""
         super().__init__(wiz_data, name)
