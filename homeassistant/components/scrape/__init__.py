@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine
+from copy import deepcopy
 from datetime import timedelta
 import logging
 from types import MappingProxyType
@@ -155,7 +156,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
         # Don't migrate from future version
         return False
 
-    if entry.version == 1 and entry.minor_version == 1:
+    if entry.version == 1:
         old_to_new_sensor_id = {}
         for sensor_config in entry.options[SENSOR_DOMAIN]:
             # Create a new sub config entry per sensor
@@ -216,7 +217,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
                     new_unique_id=new_unique_id,
                 )
 
-        # Use the new sub config entry id as the unique id for the sensor device
+        # Use the new sub config entry id as the identifier for the sensor device
         device_reg = dr.async_get(hass)
         devices = dr.async_entries_for_config_entry(device_reg, entry.entry_id)
         for device in devices:
@@ -225,13 +226,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
                     continue
                 if identifier in old_to_new_sensor_id:
                     subentry_id = old_to_new_sensor_id[identifier]
-                    new_identifiers: set[tuple[str, str]] = set()
-                    new_identifiers.update(
-                        (s1, old_to_new_sensor_id[s2])
-                        if s1 == DOMAIN and s2 in old_to_new_sensor_id
-                        else (s1, s2)
-                        for s1, s2 in device.identifiers
-                    )
+                    new_identifiers = deepcopy(device.identifiers)
+                    new_identifiers.remove((domain, identifier))
+                    new_identifiers.add((domain, old_to_new_sensor_id[identifier]))
                     _LOGGER.debug(
                         "Migrating device %s with identifiers %s to new identifiers %s",
                         device.id,
@@ -249,7 +246,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
                             entry.entry_id
                         )
                     ) and None in sub_entries:
-                        # Remove None from the subentries if exist
+                        # Removing None from the list of subentries
+                        # as the device should only belong to the subentry
+                        # and not the main config entry
                         device_reg.async_update_device(
                             device.id,
                             remove_config_entry_id=entry.entry_id,
@@ -282,7 +281,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> 
             new_config_entry_data,
         )
         hass.config_entries.async_update_entry(
-            entry, minor_version=2, options=new_config_entry_data
+            entry, version=2, options=new_config_entry_data
         )
 
     return True
