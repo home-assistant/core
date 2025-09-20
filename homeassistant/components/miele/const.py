@@ -286,6 +286,7 @@ class ProgramPhaseOven(MieleEnum, missing_to_none=True):
     process_running = 3074
     process_finished = 3078
     energy_save = 3084
+    pre_heating = 3099
 
 
 class ProgramPhaseWarmingDrawer(MieleEnum, missing_to_none=True):
@@ -375,6 +376,7 @@ class ProgramPhaseSteamOvenCombi(MieleEnum, missing_to_none=True):
     process_running = 3074, 7938
     process_finished = 3078, 7942
     energy_save = 3084
+    pre_heating = 3099
 
     steam_reduction = 3863
     waiting_for_start = 7939
