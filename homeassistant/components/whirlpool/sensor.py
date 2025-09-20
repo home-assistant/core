@@ -8,6 +8,7 @@ from typing import override
 
 from whirlpool.appliance import Appliance
 from whirlpool.dryer import Dryer, MachineState as DryerMachineState
+from whirlpool.oven import CavityState, CookMode, Oven
 from whirlpool.washer import MachineState as WasherMachineState, Washer
 
 from homeassistant.components.sensor import (
@@ -88,6 +89,9 @@ STATE_CYCLE_SOAKING = "cycle_soaking"
 STATE_CYCLE_SPINNING = "cycle_spinning"
 STATE_CYCLE_WASHING = "cycle_washing"
 
+OVEN_STATES = [f"oven_{state.name.lower()}" for state in CavityState]
+COOK_MODES = [f"cook_{state.name.lower()}" for state in CookMode]
+
 
 def washer_state(washer: Washer) -> str | None:
     """Determine correct states for a washer."""
@@ -121,6 +125,16 @@ def dryer_state(dryer: Dryer) -> str | None:
             return STATE_CYCLE_SENSING
 
     return DRYER_MACHINE_STATE.get(machine_state)
+
+
+def oven_state(machine: Oven) -> str | None:
+    """Determine correct states for an oven."""
+    return f"oven_{machine.get_cavity_state().name.lower()}"
+
+
+def cook_mode(machine: Oven) -> str | None:
+    """Determine correct states for an oven."""
+    return f"cook_{machine.get_cook_mode().name.lower()}"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -172,8 +186,24 @@ DRYER_SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         value_fn=dryer_state,
     ),
 )
+OVEN_SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
+    WhirlpoolSensorEntityDescription(
+        key="state",
+        translation_key="whirlpool_machine",
+        device_class=SensorDeviceClass.ENUM,
+        options=OVEN_STATES,
+        value_fn=oven_state,
+    ),
+    WhirlpoolSensorEntityDescription(
+        key="state",
+        translation_key="whirlpool_machine",
+        device_class=SensorDeviceClass.ENUM,
+        options=COOK_MODES,
+        value_fn=cook_mode,
+    ),
+)
 
-WASHER_DRYER_TIME_SENSORS: tuple[SensorEntityDescription] = (
+WASHER_DRYER_OVEN_TIME_SENSORS: tuple[SensorEntityDescription] = (
     SensorEntityDescription(
         key="timeremaining",
         translation_key="end_time",
@@ -200,7 +230,7 @@ async def async_setup_entry(
     washer_time_sensors = [
         WasherTimeSensor(washer, description)
         for washer in appliances_manager.washers
-        for description in WASHER_DRYER_TIME_SENSORS
+        for description in WASHER_DRYER_OVEN_TIME_SENSORS
     ]
 
     dryer_sensors = [
@@ -212,15 +242,26 @@ async def async_setup_entry(
     dryer_time_sensors = [
         DryerTimeSensor(dryer, description)
         for dryer in appliances_manager.dryers
-        for description in WASHER_DRYER_TIME_SENSORS
+        for description in WASHER_DRYER_OVEN_TIME_SENSORS
     ]
-
+    oven_sensors = [
+        WhirlpoolSensor(oven, description)
+        for oven in appliances_manager.ovens
+        for description in OVEN_SENSORS
+    ]
+    oven_time_sensors = [
+        OvenTimeSensor(oven, description)
+        for oven in appliances_manager.ovens
+        for description in WASHER_DRYER_OVEN_TIME_SENSORS
+    ]
     async_add_entities(
         [
             *washer_sensors,
             *washer_time_sensors,
             *dryer_sensors,
             *dryer_time_sensors,
+            *oven_sensors,
+            *oven_time_sensors,
         ]
     )
 
@@ -333,3 +374,51 @@ class DryerTimeSensor(WasherDryerTimeSensorBase):
     def _is_machine_state_running(self) -> bool:
         """Return true if the machine is in a running state."""
         return self._appliance.get_machine_state() is DryerMachineState.RunningMainCycle
+
+
+class OvenTimeSensor(WhirlpoolEntity, RestoreSensor):
+    """Class for Whirlpool oven time sensors."""
+
+    _attr_should_poll = True
+    _appliance: Oven
+
+    def __init__(self, appliance: Oven, description: SensorEntityDescription) -> None:
+        """Initialize the oven sensor."""
+        super().__init__(appliance, unique_id_suffix=f"-{description.key}")
+        self.entity_description = description
+
+        self._running: bool | None = None
+        self._value: datetime | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Register attribute updates callback."""
+        if restored_data := await self.async_get_last_sensor_data():
+            if isinstance(restored_data.native_value, datetime):
+                self._value = restored_data.native_value
+        await super().async_added_to_hass()
+
+    async def async_update(self) -> None:
+        """Update status of Whirlpool."""
+        await self._appliance.fetch_data()
+
+    @override
+    @property
+    def native_value(self) -> datetime | None:
+        """Calculate the time stamp for completion."""
+        machine_state = self._appliance.get_cavity_state()
+
+        now = utcnow()
+
+        if machine_state is CavityState.Standby and self._running:
+            self._running = False
+            self._value = now
+
+        if machine_state is CavityState.Cooking:
+            self._running = True
+            new_timestamp = now + timedelta(seconds=self._appliance.get_cook_time())
+            if self._value is None or (
+                isinstance(self._value, datetime)
+                and abs(new_timestamp - self._value) > timedelta(seconds=60)
+            ):
+                self._value = new_timestamp
+        return self._value
