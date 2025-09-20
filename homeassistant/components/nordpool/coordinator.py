@@ -13,7 +13,6 @@ from pynordpool import (
     DeliveryPeriodEntry,
     DeliveryPeriodsData,
     NordPoolClient,
-    NordPoolEmptyResponseError,
     NordPoolError,
     NordPoolResponseError,
 )
@@ -22,7 +21,7 @@ from homeassistant.const import CONF_CURRENCY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_AREAS, DOMAIN, LOGGER
@@ -67,13 +66,12 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
             self.unsub()
             self.unsub = None
 
-    async def fetch_data(self, now: datetime) -> None:
+    async def fetch_data(self, now: datetime, initial: bool = False) -> None:
         """Fetch data from Nord Pool."""
         self.unsub = async_track_point_in_utc_time(
             self.hass, self.fetch_data, self.get_next_interval(dt_util.utcnow())
         )
         data = await self.api_call()
-
         if data and data.entries:
             current_day = dt_util.utcnow().strftime("%Y-%m-%d")
             for entry in data.entries:
@@ -81,7 +79,13 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
                     LOGGER.debug("Data for current day found")
                     self.async_set_updated_data(data)
                     return
-        self.async_set_update_error(NordPoolEmptyResponseError("No current day data"))
+        if data and not data.entries and not initial:
+            # Empty response, use cache
+            LOGGER.debug("No data entries received")
+            return
+        self.async_set_update_error(
+            UpdateFailed(translation_domain=DOMAIN, translation_key="no_day_data")
+        )
 
     async def api_call(self, retry: int = 3) -> DeliveryPeriodsData | None:
         """Make api call to retrieve data with retry if failure."""
@@ -104,7 +108,13 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
         ) as error:
             LOGGER.debug("Connection error: %s", error)
             if self.data is None:
-                self.async_set_update_error(error)  # type: ignore[unreachable]
+                self.async_set_update_error(  # type: ignore[unreachable]
+                    UpdateFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="could_not_fetch_data",
+                        translation_placeholders={"error": str(error)},
+                    )
+                )
             return self.data
 
         return data

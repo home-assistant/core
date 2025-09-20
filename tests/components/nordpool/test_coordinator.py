@@ -88,7 +88,7 @@ async def test_coordinator(
         # Empty responses does not raise
         assert mock_data.call_count == 3
         state = hass.states.get("sensor.nord_pool_se3_current_price")
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == "0.94949"
         assert "Empty response" in caplog.text
 
     with (
@@ -154,3 +154,4 @@ async def test_coordinator(
         assert mock_data.call_count == 1
         state = hass.states.get("sensor.nord_pool_se3_current_price")
         assert state.state == STATE_UNAVAILABLE
+        assert "Data for current day is missing" in caplog.text
