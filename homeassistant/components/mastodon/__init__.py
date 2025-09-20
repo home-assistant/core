@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
-from mastodon.Mastodon import Account, Instance, InstanceV2, Mastodon, MastodonError
+from mastodon.Mastodon import (
+    Account,
+    Instance,
+    InstanceV2,
+    Mastodon,
+    MastodonError,
+    MastodonNotFoundError,
+)
 
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -105,7 +112,11 @@ def setup_mastodon(
         entry.data[CONF_ACCESS_TOKEN],
     )
 
-    instance = client.instance()
+    try:
+        instance = client.instance_v2()
+    except MastodonNotFoundError:
+        instance = client.instance_v1()
+
     account = client.account_verify_credentials()
 
     return client, instance, account

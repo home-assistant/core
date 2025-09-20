@@ -1,6 +1,7 @@
 """Common fixtures for the Ecovacs tests."""
 
 from collections.abc import AsyncGenerator, Generator
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -134,6 +135,7 @@ def mock_vacbot(device_fixture: str) -> Generator[Mock]:
         vacbot.lifespanEvents = EventEmitter()
         vacbot.errorEvents = EventEmitter()
         vacbot.battery_status = None
+        vacbot.charge_status = None
         vacbot.fan_speed = None
         vacbot.components = {}
         yield vacbot
@@ -159,6 +161,7 @@ def platforms() -> Platform | list[Platform]:
 @pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
     mock_config_entry: MockConfigEntry,
     mock_authenticator: Mock,
     mock_mqtt_client: Mock,
@@ -177,6 +180,12 @@ async def init_integration(
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
+
+        # No errors should be logged during setup
+        assert not [t for t in caplog.record_tuples if t[1] >= logging.ERROR], (
+            "Errors during integration setup"
+        )
+
         yield mock_config_entry
 
 
