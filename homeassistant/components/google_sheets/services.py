@@ -98,8 +98,8 @@ def _fetch_from_sheet(
 
     worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
     rows = -1 * call.data[ROWS]
-    all_rows = worksheet.get_values("A1:ZZ")
-    return {"range": all_rows[rows:]}
+    all_values = worksheet.get_values()
+    return {"range": all_values[rows:]}
 
 
 async def _async_append_to_sheet(call: ServiceCall) -> None:
