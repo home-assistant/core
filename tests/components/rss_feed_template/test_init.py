@@ -26,6 +26,7 @@ async def mock_http_client(
                     {
                         "title": "item title is {{states.test.test2.state}}",
                         "description": "desc {{states.test.test3.state}}",
+                        "link": "link {{states.test.test4.state}}",
                     }
                 ],
             }
@@ -47,6 +48,7 @@ async def test_get_rss_feed(mock_http_client, hass: HomeAssistant) -> None:
     hass.states.async_set("test.test1", "a_state_1")
     hass.states.async_set("test.test2", "a_state_2")
     hass.states.async_set("test.test3", "a_state_3")
+    hass.states.async_set("test.test4", "a_state_4")
 
     resp = await mock_http_client.get("/api/rss_template/testfeed")
     assert resp.status == HTTPStatus.OK
@@ -57,6 +59,8 @@ async def test_get_rss_feed(mock_http_client, hass: HomeAssistant) -> None:
     feed_title = xml.find("./channel/title").text
     item_title = xml.find("./channel/item/title").text
     item_description = xml.find("./channel/item/description").text
+    item_link = xml.find("./channel/item/link").text
     assert feed_title == "feed title is a_state_1"
     assert item_title == "item title is a_state_2"
     assert item_description == "desc a_state_3"
+    assert item_link == "link a_state_4"
