@@ -125,11 +125,10 @@ async def test_config_flow(
         result["flow_id"], user_input={CONF_API_TOKEN: "test-token"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert pvpc_aioclient_mock.call_count == 2
     await hass.async_block_till_done()
     state = hass.states.get("sensor.esios_pvpc")
     check_valid_state(state, tariff=TARIFFS[1])
-    assert pvpc_aioclient_mock.call_count == 4
+    assert pvpc_aioclient_mock.call_count == 3
     assert state.attributes["period"] == "P3"
     assert state.attributes["next_period"] == "P2"
     assert state.attributes["available_power"] == 4600
@@ -150,7 +149,7 @@ async def test_config_flow(
     state = hass.states.get("sensor.esios_pvpc")
     check_valid_state(state, tariff=TARIFFS[0], value="unavailable")
     assert "period" not in state.attributes
-    assert pvpc_aioclient_mock.call_count == 6
+    assert pvpc_aioclient_mock.call_count == 5
 
     # disable api token in options
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -162,9 +161,8 @@ async def test_config_flow(
         user_input={ATTR_POWER: 3.0, ATTR_POWER_P3: 4.6, CONF_USE_API_TOKEN: False},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert pvpc_aioclient_mock.call_count == 6
     await hass.async_block_till_done()
-    assert pvpc_aioclient_mock.call_count == 7
+    assert pvpc_aioclient_mock.call_count == 6
 
     state = hass.states.get("sensor.esios_pvpc")
     state_inyection = hass.states.get("sensor.esios_injection_price")
