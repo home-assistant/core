@@ -3,25 +3,14 @@
 from datetime import timedelta
 import logging
 
-import PyTado
-import PyTado.exceptions
-from PyTado.interface import Tado
+from tadoasync import Tado
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    APPLICATION_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    Platform,
-    __version__ as HA_VERSION,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -72,37 +61,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
 
     _async_import_options_from_data_if_missing(hass, entry)
 
-    _LOGGER.debug("Setting up Tado connection")
-    _LOGGER.debug(
-        "Creating tado instance with refresh token: %s",
-        entry.data[CONF_REFRESH_TOKEN],
+    _LOGGER.debug("Refresh token: %s", entry.data[CONF_REFRESH_TOKEN])
+
+    client = Tado(
+        refresh_token=entry.data[CONF_REFRESH_TOKEN],
+        session=async_get_clientsession(hass),
+        debug=True,  # TODO: remove debug=True later
     )
+    await client.async_init()
 
-    def create_tado_instance() -> tuple[Tado, str]:
-        """Create a Tado instance, this time with a previously obtained refresh token."""
-        tado = Tado(
-            saved_refresh_token=entry.data[CONF_REFRESH_TOKEN],
-            user_agent=f"{APPLICATION_NAME}/{HA_VERSION}",
-        )
-        return tado, tado.device_activation_status()
-
-    try:
-        tado, device_status = await hass.async_add_executor_job(create_tado_instance)
-    except PyTado.exceptions.TadoWrongCredentialsException as err:
-        raise ConfigEntryError(f"Invalid Tado credentials. Error: {err}") from err
-    except PyTado.exceptions.TadoException as err:
-        raise ConfigEntryNotReady(f"Error during Tado setup: {err}") from err
-    if device_status != "COMPLETED":
-        raise ConfigEntryAuthFailed(
-            f"Device login flow status is {device_status}. Starting re-authentication."
-        )
-
-    _LOGGER.debug("Tado connection established")
-
-    coordinator = TadoDataUpdateCoordinator(hass, entry, tado)
+    coordinator = TadoDataUpdateCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
 
-    mobile_coordinator = TadoMobileDeviceUpdateCoordinator(hass, entry, tado)
+    mobile_coordinator = TadoMobileDeviceUpdateCoordinator(hass, entry, client)
     await mobile_coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = TadoData(coordinator, mobile_coordinator)

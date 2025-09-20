@@ -1,6 +1,6 @@
 """Constant values for the Tado component."""
 
-from PyTado.const import (
+from tadoasync.const import (
     CONST_HVAC_COOL,
     CONST_HVAC_DRY,
     CONST_HVAC_FAN,

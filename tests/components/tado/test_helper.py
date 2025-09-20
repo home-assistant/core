@@ -2,8 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
-from PyTado.interface import Tado
 import pytest
+from tadoasync import Tado
 
 from homeassistant.components.tado import CONF_REFRESH_TOKEN, TadoDataUpdateCoordinator
 from homeassistant.components.tado.const import (

@@ -25,7 +25,7 @@ def decide_overlay_mode(
     # If default is Tado default then look it up
     if overlay_mode == CONST_OVERLAY_TADO_DEFAULT:
         overlay_mode = (
-            coordinator.data["zone"][zone_id].default_overlay_termination_type
+            coordinator.data.zones[str(zone_id)].default_overlay_termination_type
             or CONST_OVERLAY_TADO_MODE
         )
 
