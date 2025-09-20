@@ -1,0 +1,46 @@
+force_update:
+
+turn_on:
+  fields:
+    entity_id:
+      example: light.bureel
+      required: true
+    brightness:
+      example: 25
+      advanced: true
+    delayon:
+      example: 10
+      required: false
+    delayoff:
+      example: 60
+      required: false
+    from_pir:
+      advanced: true
+      example: true
+
+action_request:
+  fields:
+    address:
+      example: 1
+      required: true
+    channel:
+      example: 1
+      required: true
+    action:
+      example: 2
+      required: true
+    option1:
+      example: 50
+      required: false
+    option2:
+      example: 50
+      required: false
+
+status_request:
+  fields:
+    address:
+      example: 1
+      required: true
+    channel:
+      example: 1
+      required: false
