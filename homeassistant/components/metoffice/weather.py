@@ -270,10 +270,13 @@ class MetOfficeWeather(
             self.forecast_coordinators["daily"],
         )
         timesteps = coordinator.data.timesteps
+        start_datetime = datetime.now(tz=timesteps[0]["time"].tzinfo).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
         return [
             _build_daily_forecast_data(timestep)
             for timestep in timesteps
-            if timestep["time"] > datetime.now(tz=timesteps[0]["time"].tzinfo)
+            if timestep["time"] >= start_datetime
         ]
 
     @callback
@@ -285,10 +288,13 @@ class MetOfficeWeather(
         )
 
         timesteps = coordinator.data.timesteps
+        start_datetime = datetime.now(tz=timesteps[0]["time"].tzinfo).replace(
+            minute=0, second=0, microsecond=0
+        )
         return [
             _build_hourly_forecast_data(timestep)
             for timestep in timesteps
-            if timestep["time"] > datetime.now(tz=timesteps[0]["time"].tzinfo)
+            if timestep["time"] >= start_datetime
         ]
 
     @callback
@@ -299,8 +305,11 @@ class MetOfficeWeather(
             self.forecast_coordinators["twice_daily"],
         )
         timesteps = coordinator.data.timesteps
+        start_datetime = datetime.now(tz=timesteps[0]["time"].tzinfo).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
         return [
             _build_twice_daily_forecast_data(timestep)
             for timestep in timesteps
-            if timestep["time"] > datetime.now(tz=timesteps[0]["time"].tzinfo)
+            if timestep["time"] >= start_datetime
         ]
