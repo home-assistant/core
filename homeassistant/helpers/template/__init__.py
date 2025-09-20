@@ -82,6 +82,7 @@ from .context import (
     template_context_manager,
     template_cv,
 )
+from .helpers import raise_no_default
 from .render_info import RenderInfo, render_info_cv
 
 if TYPE_CHECKING:
@@ -1816,15 +1817,6 @@ def utcnow(hass: HomeAssistant) -> datetime:
         render_info.has_time = True
 
     return dt_util.utcnow()
-
-
-def raise_no_default(function: str, value: Any) -> NoReturn:
-    """Log warning if no default is specified."""
-    template, action = template_cv.get() or ("", "rendering or compiling")
-    raise ValueError(
-        f"Template error: {function} got invalid input '{value}' when {action} template"
-        f" '{template}' but no default was specified"
-    )
 
 
 def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
