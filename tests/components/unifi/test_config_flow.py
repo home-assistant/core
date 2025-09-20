@@ -1,7 +1,7 @@
 """Test UniFi Network config flow."""
 
 import socket
-from unittest.mock import PropertyMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import aiounifi
 import pytest
@@ -37,6 +37,7 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from .conftest import ConfigEntryFactoryType
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 CLIENTS = [{"mac": "00:00:00:00:00:01"}]
 
@@ -605,3 +606,175 @@ async def test_discover_unifi_negative(hass: HomeAssistant) -> None:
     """Verify negative run of UniFi discovery."""
     with patch("socket.gethostbyname", side_effect=socket.gaierror):
         assert await _async_discover_unifi(hass) is None
+
+
+@pytest.mark.usefixtures("mock_default_requests")
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test successful reconfiguration flow."""
+    config_entry = config_entry_setup
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Test that the form has correct defaults
+    data_schema = result["data_schema"]
+    assert data_schema({CONF_PASSWORD: "new_pass"}) == {
+        CONF_HOST: "1.2.3.4",
+        CONF_USERNAME: "username",
+        CONF_PASSWORD: "new_pass",
+        CONF_PORT: 1234,
+        CONF_VERIFY_SSL: False,
+    }
+
+    # Mock requests for the new host/port
+    new_url = "https://5.6.7.8:8443"
+    aioclient_mock.get(new_url, status=302)  # UniFi OS check
+    aioclient_mock.post(
+        f"{new_url}/api/login",
+        json={"data": "login successful", "meta": {"rc": "ok"}},
+        headers={"content-type": "application/json"},
+    )
+    aioclient_mock.get(
+        f"{new_url}/api/self/sites",
+        json={
+            "meta": {"rc": "OK"},
+            "data": [
+                {"desc": "Site name", "name": "site_id", "role": "admin", "_id": "1"}
+            ],
+        },
+        headers={"content-type": "application/json"},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "5.6.7.8",
+            CONF_USERNAME: "new_user",
+            CONF_PASSWORD: "new_pass",
+            CONF_PORT: 8443,
+            CONF_VERIFY_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_HOST] == "5.6.7.8"
+    assert config_entry.data[CONF_USERNAME] == "new_user"
+    assert config_entry.data[CONF_PASSWORD] == "new_pass"
+    assert config_entry.data[CONF_PORT] == 8443
+    assert config_entry.data[CONF_VERIFY_SSL] is False
+    assert config_entry.data[CONF_SITE_ID] == "site_id"  # Should remain unchanged
+
+
+@pytest.mark.usefixtures("mock_default_requests")
+async def test_reconfigure_flow_invalid_credentials(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test reconfiguration flow with invalid credentials."""
+    config_entry = config_entry_setup
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Mock requests for authentication failure
+    new_url = "https://1.2.3.4:1234"
+    aioclient_mock.get(new_url, status=302)  # UniFi OS check
+
+    with patch("aiounifi.Controller.login", side_effect=aiounifi.errors.Unauthorized):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "1.2.3.4",
+                CONF_USERNAME: "username",
+                CONF_PASSWORD: "wrong_password",
+                CONF_PORT: 1234,
+                CONF_VERIFY_SSL: True,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "faulty_credentials"}
+
+
+@pytest.mark.usefixtures("mock_default_requests")
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
+) -> None:
+    """Test reconfiguration flow when unable to connect."""
+    config_entry = config_entry_setup
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch("aiounifi.Controller.login", side_effect=aiounifi.errors.RequestError):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "1.2.3.4",
+                CONF_USERNAME: "username",
+                CONF_PASSWORD: "password",
+                CONF_PORT: 1234,
+                CONF_VERIFY_SSL: True,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "service_unavailable"}
+
+
+@pytest.mark.usefixtures("mock_default_requests")
+async def test_reconfigure_flow_site_not_found(
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
+) -> None:
+    """Test reconfiguration flow when site is not found on new controller."""
+    config_entry = config_entry_setup
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Mock a controller that doesn't have the required site
+    with patch(
+        "homeassistant.components.unifi.config_flow.get_unifi_api"
+    ) as mock_get_api:
+        mock_hub = mock_get_api.return_value
+        mock_sites = MagicMock()
+
+        # Mock the async update method
+        async def async_update():
+            pass
+
+        mock_sites.update = async_update
+
+        mock_hub.sites = mock_sites
+        mock_sites.__contains__ = lambda self, key: False  # No sites available
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "1.2.3.4",
+                CONF_USERNAME: "username",
+                CONF_PASSWORD: "password",
+                CONF_PORT: 1234,
+                CONF_VERIFY_SSL: True,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "site_not_found"}
