@@ -213,6 +213,12 @@
       },
       "energy_battery_consumed": {
         "name": "Today battery-consumed energy"
+      },
+      "forecast_cons_remaining_today": {
+        "name": "Forecast remaining energy consumption for today"
+      },
+      "forecast_prod_remaining_today": {
+        "name": "Forecast remaining energy production for today"
       }
     },
     "select": {
