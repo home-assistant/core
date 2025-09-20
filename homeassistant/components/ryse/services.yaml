@@ -1,0 +1,12 @@
+pair_device:
+  description: "Scan for a BLE device that starts pairing and automatically connect"
+unpair_device:
+  description: "Unpair the RYSE BLE device"
+read_info:
+  description: "Read data from the RYSE BLE device"
+send_raw_data:
+  description: "Send raw data to the RYSE BLE device"
+  fields:
+    data:
+      description: "Data to send in hex format"
+      example: "01020304"
