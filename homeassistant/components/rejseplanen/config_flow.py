@@ -87,6 +87,10 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=CONFIG_SCHEMA,
                 description_placeholders={"name": "Rejseplanen"},
             )
+
+        if self._async_current_entries():
+            return self.async_abort(reason="already_configured")
+
         await self.async_set_unique_id(user_input[CONF_AUTHENTICATION])
         self._abort_if_unique_id_configured()
 

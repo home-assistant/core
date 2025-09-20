@@ -32,20 +32,22 @@ async def async_setup_entry(
     _LOGGER.debug(
         "Setting up Rejseplanen integration for entry: %s", config_entry.entry_id
     )
-    # Test the connection/setup BEFORE forwarding to platforms
-    coordinator: RejseplanenDataUpdateCoordinator = RejseplanenDataUpdateCoordinator(
-        hass,
-        config_entry,
+    coordinator: RejseplanenDataUpdateCoordinator | None = getattr(
+        config_entry, "runtime_data", None
     )
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except (ConnectionError, TimeoutError, AuthError) as err:
-        raise ConfigEntryNotReady(f"Unable to connect to Rejseplanen: {err}") from err
-
-    # Store coordinator
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
-        "coordinator": coordinator
-    }
+    if coordinator is None:
+        coordinator = RejseplanenDataUpdateCoordinator(
+            hass,
+            config_entry,
+        )
+        config_entry.runtime_data = coordinator
+        # Test the connection/setup BEFORE forwarding to platforms
+        try:
+            await coordinator.async_config_entry_first_refresh()
+        except (ConnectionError, TimeoutError, AuthError) as err:
+            raise ConfigEntryNotReady(
+                f"Unable to connect to Rejseplanen: {err}"
+            ) from err
 
     await hass.config_entries.async_forward_entry_setups(
         config_entry, [Platform.SENSOR]

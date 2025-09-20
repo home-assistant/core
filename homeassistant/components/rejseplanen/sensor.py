@@ -57,24 +57,22 @@ async def async_setup_entry(
     _LOGGER.info(
         "Setting up Rejseplanen transport sensor for entry: %s", config_entry.entry_id
     )
+    coordinator: RejseplanenDataUpdateCoordinator | None = getattr(
+        config_entry, "runtime_data", None
+    )
+    if coordinator is None:
+        # Defensive fallback if setup order changes
+        coordinator = RejseplanenDataUpdateCoordinator(hass, config_entry)
+        setattr(config_entry, "runtime_data", coordinator)
+        await coordinator.async_config_entry_first_refresh()
 
-    if hass.data.get(DOMAIN) is None:
-        hass.data[DOMAIN] = {}
-
-    entry_data = hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
-    coordinator = entry_data.get("coordinator")
-
-    # Only add the updater status sensor for the main entry
-    if config_entry.domain == DOMAIN:
-        async_add_entities(
-            [RejseplanenDiagnosticSensor(coordinator, config_entry.entry_id)]
-        )
+    # Add the single diagnostic/status sensor under the service device
+    async_add_entities(
+        [RejseplanenDiagnosticSensor(coordinator, config_entry.entry_id)]
+    )
 
     for subentry_id, subentry in config_entry.subentries.items():
         _LOGGER.debug("Subentry %s with data: %s", subentry_id, subentry.data)
-
-        entry_data = hass.data[DOMAIN][config_entry.entry_id]
-        coordinator = entry_data["coordinator"]
 
         config = subentry.data
         name = config.get(CONF_NAME, DEFAULT_STOP_NAME)
@@ -88,7 +86,7 @@ async def async_setup_entry(
                 RejseplanenTransportSensor(
                     coordinator=coordinator,
                     stop_id=stop_id,
-                    entry_id=coordinator.config_entry.entry_id,
+                    entry_id=config_entry.entry_id,
                     name=name,
                     route=route,
                     direction=direction,
@@ -98,7 +96,7 @@ async def async_setup_entry(
             config_subentry_id=subentry_id,
         )
 
-    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_refresh()
 
 
 def _service_device_info(entry_id: str) -> DeviceInfo:
@@ -338,7 +336,9 @@ class RejseplanenDiagnosticSensor(SensorEntity):
         self._attr_device_info = _service_device_info(entry_id)
 
         self._attr_available = False
-        self._attr_extra_state_attributes = self.coordinator.diagnostics_attributes
+        self._attr_extra_state_attributes = (
+            self.coordinator.diagnostics_attributes if self.coordinator else {}
+        )
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added to hass."""
