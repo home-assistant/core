@@ -569,14 +569,25 @@ class ChatLog:
         if llm_api:
             prompt_parts.append(llm_api.api_prompt)
 
-        prompt_parts.append(
-            await self._async_expand_prompt_template(
-                llm_context,
-                llm.BASE_PROMPT,
-                llm_context.language,
-                user_name,
+        llm_api_ids = (
+            (
+                [api.id for api in llm_api.api.llm_apis]
+                if isinstance(llm_api.api, llm.MergedAPI)
+                else [llm_api.api.id]
             )
+            if llm_api
+            else []
         )
+
+        if llm.LLM_API_ASSIST not in llm_api_ids:
+            prompt_parts.append(
+                await self._async_expand_prompt_template(
+                    llm_context,
+                    llm.BASE_PROMPT,
+                    llm_context.language,
+                    user_name,
+                )
+            )
 
         if extra_system_prompt := (
             # Take new system prompt if one was given
