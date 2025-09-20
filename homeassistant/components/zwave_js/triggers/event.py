@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import functools
+from typing import Any
 
 from pydantic import ValidationError
 import voluptuous as vol
@@ -126,7 +127,7 @@ class EventTrigger(Trigger):
     """Z-Wave JS event trigger."""
 
     _hass: HomeAssistant
-    _options: ConfigType
+    _options: dict[str, Any]
 
     _event_source: str
     _event_name: str
@@ -139,11 +140,13 @@ class EventTrigger(Trigger):
 
     @classmethod
     async def async_validate_complete_config(
-        cls, hass: HomeAssistant, config: ConfigType
+        cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
         """Validate complete config."""
-        config = move_top_level_schema_fields_to_options(config, _OPTIONS_SCHEMA_DICT)
-        return await super().async_validate_complete_config(hass, config)
+        complete_config = move_top_level_schema_fields_to_options(
+            complete_config, _OPTIONS_SCHEMA_DICT
+        )
+        return await super().async_validate_complete_config(hass, complete_config)
 
     @classmethod
     async def async_validate_config(
@@ -170,10 +173,11 @@ class EventTrigger(Trigger):
 
         return config
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+    def __init__(self, hass: HomeAssistant, config: Trigger.Config) -> None:
         """Initialize trigger."""
         self._hass = hass
-        self._options = config[CONF_OPTIONS]
+        assert config.options is not None
+        self._options = config.options
 
     async def async_attach(
         self,

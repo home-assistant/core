@@ -178,9 +178,17 @@ _TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 class Trigger(abc.ABC):
     """Trigger class."""
 
+    @dataclass(slots=True, frozen=True)
+    class Config:
+        """Trigger config."""
+
+        key: str  # The key used to identify the trigger, e.g. "zwave.event"
+        target: dict[str, Any] | None = None
+        options: dict[str, Any] | None = None
+
     @classmethod
     async def async_validate_complete_config(
-        cls, hass: HomeAssistant, config: ConfigType
+        cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
         """Validate complete config.
 
@@ -189,19 +197,19 @@ class Trigger(abc.ABC):
         This method should be overridden by triggers that need to migrate
         from the old-style config.
         """
-        config = _TRIGGER_SCHEMA(config)
+        complete_config = _TRIGGER_SCHEMA(complete_config)
 
         specific_config: ConfigType = {}
         for key in (CONF_OPTIONS, CONF_TARGET):
-            if key in config:
-                specific_config[key] = config.pop(key)
+            if key in complete_config:
+                specific_config[key] = complete_config.pop(key)
         specific_config = await cls.async_validate_config(hass, specific_config)
 
         for key in (CONF_OPTIONS, CONF_TARGET):
             if key in specific_config:
-                config[key] = specific_config[key]
+                complete_config[key] = specific_config[key]
 
-        return config
+        return complete_config
 
     @classmethod
     @abc.abstractmethod
@@ -210,7 +218,7 @@ class Trigger(abc.ABC):
     ) -> ConfigType:
         """Validate config."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+    def __init__(self, hass: HomeAssistant, config: Config) -> None:
         """Initialize trigger."""
 
     @abc.abstractmethod
@@ -552,7 +560,15 @@ async def async_initialize_triggers(
             relative_trigger_key = get_relative_description_key(
                 platform_domain, trigger_key
             )
-            trigger = trigger_descriptors[relative_trigger_key](hass, conf)
+            trigger_cls = trigger_descriptors[relative_trigger_key]
+            trigger = trigger_cls(
+                hass,
+                Trigger.Config(
+                    key=trigger_key,
+                    target=conf.get(CONF_TARGET),
+                    options=conf.get(CONF_OPTIONS),
+                ),
+            )
             coro = trigger.async_attach(action_wrapper, info)
         else:
             coro = platform.async_attach_trigger(hass, conf, action_wrapper, info)
