@@ -4,8 +4,6 @@
     tuple(
       dict({
         'account_name': 'Echo Test',
-        'appliance_id': 'G1234567890123456789012345678A',
-        'bluetooth_state': True,
         'capabilities': list([
           'AUDIO_PLAYER',
           'MICROPHONE',
@@ -16,12 +14,18 @@
         'device_family': 'mine',
         'device_owner_customer_id': 'amazon_ower_id',
         'device_type': 'echo',
-        'do_not_disturb': False,
+        'endpoint_id': 'G1234567890123456789012345678A',
         'entity_id': '11111111-2222-3333-4444-555555555555',
         'online': True,
-        'response_style': None,
         'sensors': dict({
+          'dnd': dict({
+            'error': False,
+            'name': 'dnd',
+            'scale': None,
+            'value': False,
+          }),
           'temperature': dict({
+            'error': False,
             'name': 'temperature',
             'scale': 'CELSIUS',
             'value': '22.5',
@@ -41,8 +45,6 @@
     tuple(
       dict({
         'account_name': 'Echo Test',
-        'appliance_id': 'G1234567890123456789012345678A',
-        'bluetooth_state': True,
         'capabilities': list([
           'AUDIO_PLAYER',
           'MICROPHONE',
@@ -53,12 +55,18 @@
         'device_family': 'mine',
         'device_owner_customer_id': 'amazon_ower_id',
         'device_type': 'echo',
-        'do_not_disturb': False,
+        'endpoint_id': 'G1234567890123456789012345678A',
         'entity_id': '11111111-2222-3333-4444-555555555555',
         'online': True,
-        'response_style': None,
         'sensors': dict({
+          'dnd': dict({
+            'error': False,
+            'name': 'dnd',
+            'scale': None,
+            'value': False,
+          }),
           'temperature': dict({
+            'error': False,
             'name': 'temperature',
             'scale': 'CELSIUS',
             'value': '22.5',
