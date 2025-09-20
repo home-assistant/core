@@ -80,7 +80,7 @@
   },
   "exceptions": {
     "service_target_not_found": {
-      "message": "No Daikin devices matched the service target. Specify an entity or config entry."
+      "message": "No Daikin devices matched the action's target. Specify an entity or config entry."
     },
     "service_entry_not_found": {
       "message": "Daikin config entry {entry_id} is not loaded."
