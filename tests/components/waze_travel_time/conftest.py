@@ -13,7 +13,9 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_config")
-async def mock_config_fixture(hass: HomeAssistant, data, options):
+async def mock_config_fixture(
+    hass: HomeAssistant, data, options, mock_find_coordinates
+):
     """Mock a Waze Travel Time config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -25,6 +27,26 @@ async def mock_config_fixture(hass: HomeAssistant, data, options):
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+@pytest.fixture(name="mock_find_coordinates")
+def mock_find_coordinates_fixture() -> str:
+    """Mock find_coordinates to return test coordinates."""
+
+    def mock_find_coordinates_side_effect(hass: HomeAssistant, location: str):
+        locations = {
+            "location1": "48.8588255,2.2646343",
+            "location2": "40.4375354,-3.9913465",
+            "location3": "45.4623097,8.8659286",
+            "location4": "52.3530239,4.2802622",
+        }
+        return locations.get(location, location)
+
+    with patch(
+        "homeassistant.components.waze_travel_time.coordinator.find_coordinates",
+        side_effect=mock_find_coordinates_side_effect,
+    ) as mock_coords:
+        yield mock_coords
 
 
 @pytest.fixture(name="mock_update")
