@@ -12,7 +12,7 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import _LOGGER, DOMAIN
 
 
-class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
+class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Actron Air."""
 
     def __init__(self) -> None:
