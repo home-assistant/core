@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
@@ -66,17 +66,26 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
-        """Handle a simple DHCP discovery: abort if already configured, else show a confirmation dialog."""
-
-        # test outputs, use MAC later to complete the connection attribute of existing devices
-        _LOGGER.debug("DHCP discovery IP address  %s", discovery_info.ip)
-        _LOGGER.debug("DHCP discovery MAC address %s", discovery_info.macaddress)
+        """Handle DHCP discovery by validating device and updating MAC connection."""
         serial_number, _, _ = await self._validate_host(discovery_info.ip)
         if not serial_number:
             return self.async_abort(reason="no_serial_number")
 
         await self.async_set_unique_id(serial_number)
-        self._abort_if_unique_id_configured()
+
+        # Add MAC address as connection to device registry if device exists
+        device_registry = dr.async_get(self.hass)
+        device = device_registry.async_get_device({(DOMAIN, serial_number)})
+        if device:
+            device_registry.async_update_device(
+                device.id,
+                new_connections={("network_mac", discovery_info.macaddress)},
+            )
+
+        # Conditionally update IP and abort if entry exists
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+
+        # Continue with new device flow
         self._discovered_ip = discovery_info.ip
         return self.async_show_form(
             step_id="dhcp_confirm",

@@ -10,6 +10,7 @@ from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import RequestStatus
@@ -275,3 +276,257 @@ async def test_dhcp_no_serial_number(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_serial_number"
+
+
+@pytest.mark.parametrize(
+    ("client_status"),
+    [
+        (RequestStatus.HOST_UNREACHABLE),
+        (RequestStatus.PARAMS_FETCH_FAILED),
+        (RequestStatus.UNKNOWN_ERROR),
+    ],
+)
+async def test_dhcp_connection_errors(
+    hass: HomeAssistant,
+    mock_pooldose_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    client_status: str,
+) -> None:
+    """Test that the DHCP flow aborts on connection errors."""
+    mock_pooldose_client.connect.return_value = client_status
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.0.123", hostname="kommspot", macaddress="a4e57caabbcc"
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_serial_number"
+
+    # Reset for other tests
+    mock_pooldose_client.connect.return_value = RequestStatus.SUCCESS
+
+
+@pytest.mark.parametrize(
+    ("api_status"),
+    [
+        (RequestStatus.NO_DATA),
+        (RequestStatus.API_VERSION_UNSUPPORTED),
+    ],
+)
+async def test_dhcp_api_errors(
+    hass: HomeAssistant,
+    mock_pooldose_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    api_status: str,
+) -> None:
+    """Test that the DHCP flow aborts on API errors."""
+    mock_pooldose_client.check_apiversion_supported.return_value = (api_status, {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.0.123", hostname="kommspot", macaddress="a4e57caabbcc"
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_serial_number"
+
+    # Reset for other tests
+    mock_pooldose_client.check_apiversion_supported.return_value = (
+        RequestStatus.SUCCESS,
+        {},
+    )
+
+
+async def test_dhcp_adds_mac_connection(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test that DHCP flow adds MAC address as connection to device registry."""
+    # Create a config entry
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="TEST123456789",
+        data={CONF_HOST: "192.168.1.100"},
+    )
+    entry.add_to_hass(hass)
+
+    # Create device in registry
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "TEST123456789")},
+        name="PoolDose TEST123456789",
+        manufacturer="Seko",
+        model="POOL DOSE",
+    )
+    assert device is not None
+
+    # Verify initial state has no MAC connection
+    mac_conn = ("network_mac", "a4e57caabbcc")
+    assert mac_conn not in device.connections
+
+    # Simulate DHCP discovery event
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.0.123", hostname="kommspot", macaddress="a4e57caabbcc"
+        ),
+    )
+
+    # Verify flow aborts as device is already configured
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Verify MAC address was added to device registry
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "TEST123456789")})
+    assert device is not None
+    assert mac_conn in device.connections
+
+    # Verify host was updated in config entry
+    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert updated_entry is not None
+    assert updated_entry.data[CONF_HOST] == "192.168.0.123"
+
+
+async def test_dhcp_mac_connection_not_duplicated(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test that DHCP flow does not add duplicate MAC connections."""
+    # Create and load a config entry with MAC connection already in device registry
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="TEST123456789",
+        data={CONF_HOST: "192.168.1.100"},
+    )
+    entry.add_to_hass(hass)
+
+    # Create device in registry
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "TEST123456789")},
+        name="PoolDose TEST123456789",
+        manufacturer="Seko",
+        model="POOL DOSE",
+    )
+    assert device is not None
+
+    # Setup entry and add MAC connection
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    device_registry.async_update_device(
+        device.id, new_connections={("network_mac", "a4e57caabbcc")}
+    )
+
+    # Verify initial state has MAC connection
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "TEST123456789")})
+    assert ("network_mac", "a4e57caabbcc") in device.connections
+    connection_count = len(device.connections)
+
+    # Simulate DHCP discovery event with same MAC
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.0.123", hostname="kommspot", macaddress="a4e57caabbcc"
+        ),
+    )
+
+    # Verify flow aborts as device is already configured
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Verify no duplicate MAC connection was added (connections are still the same)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "TEST123456789")})
+    assert len(device.connections) == connection_count
+
+
+async def test_dhcp_updates_host(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test that DHCP discovery updates the host if it has changed."""
+    # Create and load a config entry
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="TEST123456789",
+        data={CONF_HOST: "192.168.1.100"},
+    )
+    entry.add_to_hass(hass)
+
+    # Create device in registry to match the implementation
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "TEST123456789")},
+        name="PoolDose TEST123456789",
+        manufacturer="Seko",
+        model="POOL DOSE",
+    )
+    assert device is not None
+
+    # Verify initial host IP
+    assert entry.data[CONF_HOST] == "192.168.1.100"
+
+    # Simulate DHCP discovery event with different IP
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.0.123", hostname="kommspot", macaddress="a4e57caabbcc"
+        ),
+    )
+
+    # Verify flow aborts as device is already configured
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Verify host was updated in the config entry
+    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert updated_entry.data[CONF_HOST] == "192.168.0.123"
+
+    # Verify MAC was added as a connection
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "TEST123456789")})
+    assert device is not None
+    assert ("network_mac", "a4e57caabbcc") in device.connections
+
+
+async def test_duplicate_dhcp_entries_not_allowed(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test that the same device cannot be configured twice via DHCP."""
+    # First DHCP discovery creates a config entry
+    result1 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.0.123", hostname="kommspot", macaddress="a4e57caabbcc"
+        ),
+    )
+    assert result1["type"] is FlowResultType.FORM
+    assert result1["step_id"] == "dhcp_confirm"
+
+    # Complete the first flow
+    result2 = await hass.config_entries.flow.async_configure(result1["flow_id"], {})
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "PoolDose TEST123456789"
+
+    # Try to set up the same device again with different IP
+    result3 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.0.124", hostname="kommspot", macaddress="a4e57caabbcc"
+        ),
+    )
+    # Flow should abort as the device is already configured
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "already_configured"
+
+    # Verify the host was updated in the config entry
+    entry = hass.config_entries.async_get_entry(result2["result"].entry_id)
+    assert entry.data[CONF_HOST] == "192.168.0.124"
