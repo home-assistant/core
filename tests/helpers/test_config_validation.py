@@ -1455,6 +1455,56 @@ def test_key_value_schemas_with_default() -> None:
     schema({"mode": "{{ 1 + 1}}"})
 
 
+@pytest.mark.usefixtures("hass")
+def test_key_value_schemas_with_default_no_list_alternatives() -> None:
+    """Test key value schemas."""
+    schema = vol.Schema(
+        cv.key_value_schemas(
+            "mode",
+            {
+                "number": vol.Schema({"mode": "number", "data": int}),
+                "string": vol.Schema({"mode": "string", "data": str}),
+            },
+            vol.Schema({"mode": cv.dynamic_template}),
+            "a cool template",
+            list_alternatives=False,
+        )
+    )
+
+    with pytest.raises(vol.Invalid) as excinfo:
+        schema(True)
+    assert str(excinfo.value) == "Expected a dictionary"
+
+    for mode in None, {"a": "dict"}, "invalid":
+        with pytest.raises(vol.Invalid) as excinfo:
+            schema({"mode": mode})
+        assert (
+            str(excinfo.value)
+            == f"Unexpected value for mode: '{mode}'. Expected a cool template"
+        )
+
+
+@pytest.mark.usefixtures("hass")
+def test_key_value_schemas_without_default_no_list_alternatives() -> None:
+    """Test key value schemas."""
+    with pytest.raises(ValueError) as excinfo:
+        vol.Schema(
+            cv.key_value_schemas(
+                "mode",
+                {
+                    "number": vol.Schema({"mode": "number", "data": int}),
+                    "string": vol.Schema({"mode": "string", "data": str}),
+                },
+                vol.Schema({"mode": cv.dynamic_template}),
+                list_alternatives=False,
+            )
+        )
+    assert (
+        str(excinfo.value)
+        == "default_description must be provided if list_alternatives is False"
+    )
+
+
 @pytest.mark.parametrize(
     ("config", "error"),
     [
@@ -1462,6 +1512,11 @@ def test_key_value_schemas_with_default() -> None:
         ({"wait_template": "{{ invalid"}, "invalid template"),
         # The validation error message could be improved to explain that this is not
         # a valid shorthand template
+        (
+            {"condition": 123},
+            "Unexpected value for condition: '123'. Expected a condition, a list of "
+            "conditions or a valid template",
+        ),
         (
             {"condition": "not", "conditions": "not a dynamic template"},
             "Expected a dictionary",
