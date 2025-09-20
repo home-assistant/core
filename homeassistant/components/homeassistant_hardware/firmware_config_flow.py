@@ -33,7 +33,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 
-from .const import OTBR_DOMAIN, ZHA_DOMAIN
+from .const import DOMAIN, OTBR_DOMAIN, ZHA_DOMAIN
 from .util import (
     ApplicationType,
     FirmwareInfo,
@@ -264,6 +264,11 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                     bootloader_reset_type=None,
                     progress_callback=lambda offset, total: self.async_update_progress(
                         offset / total
+                    ),
+                    domain=(
+                        self._config_entry.domain
+                        if hasattr(self, "_config_entry")
+                        else DOMAIN
                     ),
                 ),
                 f"Flash {firmware_name} firmware",

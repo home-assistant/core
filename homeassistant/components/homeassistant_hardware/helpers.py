@@ -1,15 +1,20 @@
 """Home Assistant Hardware integration helpers."""
 
+from __future__ import annotations
+
 from collections import defaultdict
 from collections.abc import AsyncIterator, Awaitable, Callable
+from contextlib import asynccontextmanager
 import logging
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
 from . import DATA_COMPONENT
-from .util import FirmwareInfo
+
+if TYPE_CHECKING:
+    from .util import FirmwareInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +56,7 @@ class HardwareInfoDispatcher:
         self._notification_callbacks: defaultdict[
             str, set[Callable[[FirmwareInfo], None]]
         ] = defaultdict(set)
+        self._active_firmware_updates: dict[str, str] = {}
 
     def register_firmware_info_provider(
         self, domain: str, platform: HardwareFirmwareInfoModule
@@ -118,6 +124,36 @@ class HardwareInfoDispatcher:
                 if fw_info is not None:
                     yield fw_info
 
+    def register_firmware_update_in_progress(
+        self, device: str, source_domain: str
+    ) -> None:
+        """Register that a firmware update is in progress for a device."""
+        if device in self._active_firmware_updates:
+            current_domain = self._active_firmware_updates[device]
+            raise ValueError(
+                f"Firmware update already in progress for {device} by {current_domain}"
+            )
+        self._active_firmware_updates[device] = source_domain
+
+    def unregister_firmware_update_in_progress(
+        self, device: str, source_domain: str
+    ) -> None:
+        """Unregister a firmware update for a device."""
+        if device not in self._active_firmware_updates:
+            raise ValueError(f"No firmware update in progress for {device}")
+
+        if self._active_firmware_updates[device] != source_domain:
+            current_domain = self._active_firmware_updates[device]
+            raise ValueError(
+                f"Firmware update for {device} is owned by {current_domain}, not {source_domain}"
+            )
+
+        del self._active_firmware_updates[device]
+
+    def is_firmware_update_in_progress(self, device: str) -> bool:
+        """Check if a firmware update is in progress for a device."""
+        return device in self._active_firmware_updates
+
 
 @hass_callback
 def async_register_firmware_info_provider(
@@ -141,3 +177,42 @@ def async_notify_firmware_info(
 ) -> Awaitable[None]:
     """Notify the dispatcher of new firmware information."""
     return hass.data[DATA_COMPONENT].notify_firmware_info(domain, firmware_info)
+
+
+@hass_callback
+def async_register_firmware_update_in_progress(
+    hass: HomeAssistant, device: str, source_domain: str
+) -> None:
+    """Register that a firmware update is in progress for a device."""
+    return hass.data[DATA_COMPONENT].register_firmware_update_in_progress(
+        device, source_domain
+    )
+
+
+@hass_callback
+def async_unregister_firmware_update_in_progress(
+    hass: HomeAssistant, device: str, source_domain: str
+) -> None:
+    """Unregister a firmware update for a device."""
+    return hass.data[DATA_COMPONENT].unregister_firmware_update_in_progress(
+        device, source_domain
+    )
+
+
+@hass_callback
+def async_is_firmware_update_in_progress(hass: HomeAssistant, device: str) -> bool:
+    """Check if a firmware update is in progress for a device."""
+    return hass.data[DATA_COMPONENT].is_firmware_update_in_progress(device)
+
+
+@asynccontextmanager
+async def async_firmware_update_context(
+    hass: HomeAssistant, device: str, source_domain: str
+) -> AsyncIterator[None]:
+    """Register a device as having its firmware being actively updated."""
+    async_register_firmware_update_in_progress(hass, device, source_domain)
+
+    try:
+        yield
+    finally:
+        async_unregister_firmware_update_in_progress(hass, device, source_domain)
