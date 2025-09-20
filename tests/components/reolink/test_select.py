@@ -149,6 +149,7 @@ async def test_host_scene_select(
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
+@pytest.mark.parametrize("channel", [0, None])
 async def test_chime_select(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -156,8 +157,11 @@ async def test_chime_select(
     reolink_host: MagicMock,
     reolink_chime: Chime,
     entity_registry: er.EntityRegistry,
+    channel: int | None,
 ) -> None:
     """Test chime select entity."""
+    reolink_chime.channel = channel
+
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SELECT]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
