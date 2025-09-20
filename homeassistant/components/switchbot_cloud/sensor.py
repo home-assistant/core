@@ -119,7 +119,6 @@ LIGHTLEVEL_DESCRIPTION = SensorEntityDescription(
     state_class=SensorStateClass.MEASUREMENT,
 )
 
-
 SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Bot": (BATTERY_DESCRIPTION,),
     "Battery Circulator Fan": (BATTERY_DESCRIPTION,),
@@ -189,6 +188,11 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Contact Sensor": (BATTERY_DESCRIPTION,),
     "Water Detector": (BATTERY_DESCRIPTION,),
     "Humidifier": (TEMPERATURE_DESCRIPTION,),
+    "Climate Panel": (
+        TEMPERATURE_DESCRIPTION,
+        HUMIDITY_DESCRIPTION,
+        BATTERY_DESCRIPTION,
+    ),
 }
 
 
@@ -226,7 +230,6 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
-
         if isinstance(
             self.entity_description,
             SwitchbotCloudSensorEntityDescription,

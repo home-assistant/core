@@ -209,5 +209,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_entity": {
+      "title": "{name} is deprecated",
+      "description": "The Litter-Robot entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your dashboards, automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
+    }
   }
 }

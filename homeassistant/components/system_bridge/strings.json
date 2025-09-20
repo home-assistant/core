@@ -78,6 +78,9 @@
       "processes": {
         "name": "Processes"
       },
+      "power_usage": {
+        "name": "Power usage"
+      },
       "load": {
         "name": "Load"
       },

@@ -30,7 +30,7 @@ from .const import (
     LIGHT_MODBUS_SCALE_MAX,
     LIGHT_MODBUS_SCALE_MIN,
 )
-from .entity import BaseSwitch
+from .entity import ModbusToggleEntity
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -49,7 +49,7 @@ async def async_setup_platform(
     async_add_entities(ModbusLight(hass, hub, config) for config in lights)
 
 
-class ModbusLight(BaseSwitch, LightEntity):
+class ModbusLight(ModbusToggleEntity, LightEntity):
     """Class representing a Modbus light."""
 
     def __init__(
