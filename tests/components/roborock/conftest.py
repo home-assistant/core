@@ -87,7 +87,7 @@ def bypass_api_client_fixture() -> None:
 
 
 @pytest.fixture(name="bypass_api_fixture")
-def bypass_api_fixture(bypass_api_client_fixture: Any) -> None:
+def bypass_api_fixture(bypass_api_client_fixture: Any, mock_send_message: Mock) -> None:
     """Skip calls to the API."""
     with (
         patch("homeassistant.components.roborock.RoborockMqttClientV1.async_connect"),
@@ -116,7 +116,7 @@ def bypass_api_fixture(bypass_api_client_fixture: Any) -> None:
             return_value=MAP_DATA,
         ),
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_message"
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1._send_message"
         ),
         patch("homeassistant.components.roborock.RoborockMqttClientV1._wait_response"),
         patch(

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import replace
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, Platform
@@ -64,15 +65,36 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
         translation_key="pipeline",
         entity_category=EntityCategory.CONFIG,
     )
+
     _attr_should_poll = False
     _attr_current_option = OPTION_PREFERRED
     _attr_options = [OPTION_PREFERRED]
 
-    def __init__(self, hass: HomeAssistant, domain: str, unique_id_prefix: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        domain: str,
+        unique_id_prefix: str,
+        index: int = 0,
+    ) -> None:
         """Initialize a pipeline selector."""
+        if index < 1:
+            # Keep compatibility
+            key_suffix = ""
+            placeholder = ""
+        else:
+            key_suffix = f"_{index + 1}"
+            placeholder = f" {index + 1}"
+
+        self.entity_description = replace(
+            self.entity_description,
+            key=f"pipeline{key_suffix}",
+            translation_placeholders={"index": placeholder},
+        )
+
         self._domain = domain
         self._unique_id_prefix = unique_id_prefix
-        self._attr_unique_id = f"{unique_id_prefix}-pipeline"
+        self._attr_unique_id = f"{unique_id_prefix}-{self.entity_description.key}"
         self.hass = hass
         self._update_options()
 
@@ -87,7 +109,7 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
         )
 
         state = await self.async_get_last_state()
-        if state is not None and state.state in self.options:
+        if (state is not None) and (state.state in self.options):
             self._attr_current_option = state.state
 
         if self.registry_entry and (device_id := self.registry_entry.device_id):
@@ -97,7 +119,7 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
 
             def cleanup() -> None:
                 """Clean up registered device."""
-                pipeline_data.pipeline_devices.pop(device_id)
+                pipeline_data.pipeline_devices.pop(device_id, None)
 
             self.async_on_remove(cleanup)
 
