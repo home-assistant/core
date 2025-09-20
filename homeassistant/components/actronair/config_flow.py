@@ -103,16 +103,15 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_timeout(
-        self, user_input: dict[str, Any] | None = None
+        self,
+        user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
-        """Handle timeout from progress step."""
+        """Handle issues that need transition await from progress step."""
         if user_input is None:
-            return self.async_show_form(step_id="timeout")
-
-        # Reset state and try again
-        self._api = None
-        self._device_code = None
-        self.login_task = None
+            return self.async_show_form(
+                step_id="timeout",
+            )
+        del self.login_task
         return await self.async_step_user()
 
     async def async_step_connection_error(
