@@ -55,18 +55,17 @@ async def async_device_led_control_fn(
 
     status = "on" if kwargs.get("turn_on", device.led_override == "on") else "off"
 
-    brightness = None
-    if ATTR_BRIGHTNESS in kwargs:
-        brightness = int((kwargs[ATTR_BRIGHTNESS] / 255) * 100)
-    elif device.led_override_color_brightness is not None:
-        brightness = device.led_override_color_brightness
+    brightness = (
+        int((kwargs[ATTR_BRIGHTNESS] / 255) * 100)
+        if ATTR_BRIGHTNESS in kwargs
+        else device.led_override_color_brightness
+    )
 
-    color = None
-    if ATTR_RGB_COLOR in kwargs:
-        rgb = kwargs[ATTR_RGB_COLOR]
-        color = f"#{rgb[0]:02x}{rgb[1]:02x}{rgb[2]:02x}"
-    elif device.led_override_color:
-        color = device.led_override_color
+    color = (
+        f"#{kwargs[ATTR_RGB_COLOR][0]:02x}{kwargs[ATTR_RGB_COLOR][1]:02x}{kwargs[ATTR_RGB_COLOR][2]:02x}"
+        if ATTR_RGB_COLOR in kwargs
+        else device.led_override_color
+    )
 
     await hub.api.request(
         DeviceSetLedStatus.create(
@@ -76,6 +75,24 @@ async def async_device_led_control_fn(
             color=color,
         )
     )
+
+
+def _parse_hex_color(
+    hex_color: str | None, default: tuple[int, int, int]
+) -> tuple[int, int, int]:
+    """Parse hex color string to RGB tuple."""
+    if not hex_color:
+        return default
+
+    color_hex = hex_color.lstrip("#")
+    if len(color_hex) != 6:
+        return default
+
+    try:
+        rgb_values = [int(color_hex[i : i + 2], 16) for i in (0, 2, 4)]
+        return (rgb_values[0], rgb_values[1], rgb_values[2])
+    except ValueError:
+        return default
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -166,25 +183,14 @@ class UnifiLightEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         self._attr_is_on = description.is_on_fn(self.hub, device_obj)
         self._attr_color_mode = ColorMode.RGB
 
-        if device.led_override_color_brightness is not None:
-            self._attr_brightness = int(
-                (device.led_override_color_brightness / 100) * 255
-            )
-        elif self._attr_is_on:
-            self._attr_brightness = None
-        else:
-            self._attr_brightness = 0
+        self._attr_brightness = (
+            int((device.led_override_color_brightness / 100) * 255)
+            if device.led_override_color_brightness is not None
+            else None
+        )
 
-        default_rgb_color = (255, 255, 255)
-        if device.led_override_color:
-            color_hex = device.led_override_color.lstrip("#")
-            if len(color_hex) == 6:
-                try:
-                    rgb_values = [int(color_hex[i : i + 2], 16) for i in (0, 2, 4)]
-                    self._attr_rgb_color = (rgb_values[0], rgb_values[1], rgb_values[2])
-                except ValueError:
-                    self._attr_rgb_color = default_rgb_color
-            else:
-                self._attr_rgb_color = default_rgb_color
-        else:
-            self._attr_rgb_color = default_rgb_color
+        self._attr_rgb_color = (
+            _parse_hex_color(device.led_override_color, (255, 255, 255))
+            if self._attr_is_on
+            else None
+        )
