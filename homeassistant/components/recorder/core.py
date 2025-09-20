@@ -87,6 +87,7 @@ from .models import (
     UnsupportedDialect,
 )
 from .pool import POOL_SIZE, MutexPool, RecorderPool
+from .recorded_entities import DATA_RECORDED_ENTITIES
 from .table_managers.event_data import EventDataManager
 from .table_managers.event_types import EventTypeManager
 from .table_managers.recorder_runs import RecorderRunsManager
@@ -204,6 +205,7 @@ class Recorder(threading.Thread):
         # by is_entity_recorder and the sensor recorder.
         self.entity_filter = entity_filter
         self.exclude_event_types = exclude_event_types
+        self.unrecorded_entities: set[str] = set()
 
         self.schema_version = 0
         self._commits_without_expire = 0
@@ -293,7 +295,6 @@ class Recorder(threading.Thread):
     @callback
     def async_initialize(self) -> None:
         """Initialize the recorder."""
-        entity_filter = self.entity_filter
         exclude_event_types = self.exclude_event_types
         queue_put = self._queue.put_nowait
 
@@ -303,20 +304,22 @@ class Recorder(threading.Thread):
             if event.event_type in exclude_event_types:
                 return
 
-            if entity_filter is None or not (
+            unrecorded_entities = self.unrecorded_entities
+
+            if not unrecorded_entities or not (
                 entity_id := event.data.get(ATTR_ENTITY_ID)
             ):
                 queue_put(event)
                 return
 
             if isinstance(entity_id, str):
-                if entity_filter(entity_id):
+                if entity_id not in unrecorded_entities:
                     queue_put(event)
                 return
 
             if isinstance(entity_id, list):
                 for eid in entity_id:
-                    if entity_filter(eid):
+                    if eid not in unrecorded_entities:
                         queue_put(event)
                         return
                 return
@@ -449,7 +452,8 @@ class Recorder(threading.Thread):
 
     @callback
     def _async_hass_started(self, hass: HomeAssistant) -> None:
-        """Notify that hass has started."""
+        """Import entity filter and notify that hass has started."""
+        hass.data[DATA_RECORDED_ENTITIES].async_import_entity_filter(self.entity_filter)
         self._hass_started.set_result(None)
 
     @callback

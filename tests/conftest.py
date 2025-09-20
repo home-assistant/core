@@ -438,9 +438,19 @@ def bcrypt_cost() -> Generator[None]:
 
 
 @pytest.fixture
-def hass_storage() -> Generator[dict[str, Any]]:
+def hass_storage_data() -> Generator[dict[str, Any]]:
+    """Fixture to provide initial storage data.
+
+    Parametrize to provide custom data, e.g:
+    @pytest.mark.parametrize("hass_storage_data", [{"domain.store": {"key": "value"}}])
+    """
+    return {}
+
+
+@pytest.fixture
+def hass_storage(hass_storage_data) -> Generator[dict[str, Any]]:
     """Fixture to mock storage."""
-    with mock_storage() as stored_data:
+    with mock_storage(hass_storage_data) as stored_data:
         yield stored_data
 
 
