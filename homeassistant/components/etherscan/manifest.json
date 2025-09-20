@@ -1,7 +1,7 @@
 {
   "domain": "etherscan",
   "name": "Etherscan",
-  "codeowners": [],
+  "codeowners": ["@IvanGodinez21"],
   "documentation": "https://www.home-assistant.io/integrations/etherscan",
   "iot_class": "cloud_polling",
   "loggers": ["pyetherscan"],
