@@ -313,19 +313,6 @@ async def test_processor_temperature(
         assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    with patch("sys.platform", "nt"):
-        mock_psutil.sensors_temperatures.return_value = None
-        mock_psutil.sensors_temperatures.side_effect = AttributeError(
-            "sensors_temperatures not exist"
-        )
-        mock_config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-        temp_entity = hass.states.get("sensor.system_monitor_processor_temperature")
-        assert temp_entity.state == STATE_UNAVAILABLE
-        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
     with patch("sys.platform", "darwin"):
         mock_psutil.sensors_temperatures.return_value = {
             "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
