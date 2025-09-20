@@ -5,8 +5,16 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.satel_integra.const import DEFAULT_PORT, DOMAIN
-from homeassistant.const import CONF_CODE, CONF_HOST, CONF_PORT
+from homeassistant.components.satel_integra.const import DOMAIN
+
+from . import (
+    MOCK_CONFIG_DATA,
+    MOCK_CONFIG_OPTIONS,
+    MOCK_OUTPUT_SUBENTRY,
+    MOCK_PARTITION_SUBENTRY,
+    MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
+    MOCK_ZONE_SUBENTRY,
+)
 
 from tests.common import MockConfigEntry
 
@@ -41,13 +49,27 @@ def mock_satel() -> Generator[AsyncMock]:
         yield client
 
 
-@pytest.fixture(name="config_entry")
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Mock satel configuration entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         title="192.168.0.2",
-        data={CONF_HOST: "192.168.0.2", CONF_PORT: DEFAULT_PORT},
-        options={CONF_CODE: 1111},
+        data=MOCK_CONFIG_DATA,
+        options=MOCK_CONFIG_OPTIONS,
         entry_id="SATEL_INTEGRA_CONFIG_ENTRY_1",
     )
+
+
+@pytest.fixture
+def mock_config_entry_with_subentries(
+    mock_config_entry: MockConfigEntry,
+) -> MockConfigEntry:
+    """Mock satel configuration entry."""
+    mock_config_entry.subentries = {
+        MOCK_PARTITION_SUBENTRY.subentry_id: MOCK_PARTITION_SUBENTRY,
+        MOCK_ZONE_SUBENTRY.subentry_id: MOCK_ZONE_SUBENTRY,
+        MOCK_OUTPUT_SUBENTRY.subentry_id: MOCK_OUTPUT_SUBENTRY,
+        MOCK_SWITCHABLE_OUTPUT_SUBENTRY.subentry_id: MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
+    }
+    return mock_config_entry
