@@ -21,9 +21,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, ENVERTECH_EVT800_COORDINATOR, ENVERTECH_EVT800_OBJECT
+from . import EnvertechEVT800ConfigEntry
+from .coordinator import EnvertechEVT800Coordinator
 from .entity import EnvertechEVT800Entity
 
 SENSORS: dict[str, SensorEntityDescription] = {
@@ -164,14 +164,13 @@ SENSORS: dict[str, SensorEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EnvertechEVT800ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Envertech EVT800 sensors."""
-    envertech_data = hass.data[DOMAIN][config_entry.entry_id]
 
-    evt800: pyenvertechevt800.EnvertechEVT800 = envertech_data[ENVERTECH_EVT800_OBJECT]
-    coordinator: DataUpdateCoordinator = envertech_data[ENVERTECH_EVT800_COORDINATOR]
+    evt800: pyenvertechevt800.EnvertechEVT800 = config_entry.runtime_data.client
+    coordinator: EnvertechEVT800Coordinator = config_entry.runtime_data
 
     entities = []
     for name, description in SENSORS.items():
@@ -196,7 +195,7 @@ class EnvertechEVT800Sensor(EnvertechEVT800Entity, SensorEntity):
     def __init__(
         self,
         evt800: pyenvertechevt800.EnvertechEVT800,
-        coordinator: DataUpdateCoordinator,
+        coordinator: EnvertechEVT800Coordinator,
         config_entry: ConfigEntry[Any],
         description: SensorEntityDescription | None,
         name: str,

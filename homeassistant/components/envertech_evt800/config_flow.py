@@ -4,7 +4,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_TYPE
 from homeassistant.helpers import config_validation as cv
 
@@ -21,7 +21,7 @@ SCHEMA_DEVICE = vol.Schema(
 )
 
 
-class EnvertecFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class EnvertechFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Envertech EVT800."""
 
     VERSION = 1
@@ -37,7 +37,7 @@ class EnvertecFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """First step in config flow."""
         errors: dict[str, str] = {}
         if user_input is not None:
