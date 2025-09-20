@@ -31,6 +31,29 @@ DUE_DATE_LANG: Final = "due_date_lang"
 REMINDER_DATE_STRING: Final = "reminder_date_string"
 # Service Call: The language of REMINDER_DATE_STRING
 REMINDER_DATE_LANG: Final = "reminder_date_lang"
+# Service Call: The user to be reminded of this task
+REMINDER_USERS: Final = "reminder_users"
+# Service Call: The zone in which to be reminded of this task
+REMINDER_ZONE: Final = "reminder_zone"
+# Service Call: An alias name for the location.
+REMINDER_LOCATION_NAME: Final = "reminder_location_name"
+# Service Call: The latitude of the location in which to be reminded of this task
+REMINDER_LATITUDE: Final = "reminder_latitude"
+# Service Call: The longitude of the location in which to be reminded of this task
+REMINDER_LONGITUDE: Final = "reminder_longitude"
+# Service Call: The radius of the location in which to be reminded of this task
+REMINDER_RADIUS: Final = "reminder_radius"
+# Service Call: Whether the location reminder should trigger when entering or leaving the location
+REMINDER_LOCATION_DIRECTION: Final = "reminder_location_direction"
+# Service Call: The REMINDER_LOCATION_DIRECTION option for entering the location
+REMINDER_LOCATION_DIRECTION_ENTER: Final = "on_enter"
+# Service Call: The REMINDER_LOCATION_DIRECTION option for leaving the location
+REMINDER_LOCATION_DIRECTION_LEAVE: Final = "on_leave"
+# Service Call: The available options of REMINDER_LOCATION_DIRECTION
+REMINDER_LOCATION_VALID_DIRECTIONS: Final = [
+    REMINDER_LOCATION_DIRECTION_ENTER,
+    REMINDER_LOCATION_DIRECTION_LEAVE,
+]
 # Service Call: The available options of DUE_DATE_LANG
 DUE_DATE_VALID_LANGS: Final = [
     "en",
@@ -80,6 +103,8 @@ PROJECT_NAME: Final = "project"
 PROJECTS: Final = "projects"
 # Section Name: What Section of the Project do you want to add the Task to?
 SECTION_NAME: Final = "section"
+# Service Call: Should the section be created if it doesn't exist?
+CREATE_SECTION: Final = "create_section"
 # Calendar Platform: When does a calendar event start?
 START: Final = "start"
 # Calendar Platform: What is the next calendar event about?
