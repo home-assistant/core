@@ -91,6 +91,12 @@
       },
       "water_forecast": {
         "default": "mdi:water-outline"
+      },
+      "start": {
+        "default": "mdi:clock-start"
+      },
+      "finish": {
+        "default": "mdi:clock-end"
       }
     },
     "switch": {
