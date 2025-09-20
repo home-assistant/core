@@ -268,7 +268,7 @@ async def test_migrate_matching_port_config_entry_not_loaded(
 
 
 @patch(
-    "homeassistant.components.zha.radio_manager.ZhaRadioManager.async_restore_backup_step_1",
+    "homeassistant.components.zha.radio_manager.ZhaRadioManager.restore_backup",
     side_effect=OSError,
 )
 async def test_migrate_matching_port_retry(

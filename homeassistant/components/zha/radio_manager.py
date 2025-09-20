@@ -40,21 +40,16 @@ from .const import (
 )
 from .helpers import get_zha_data
 
-# Only the common radio types will be autoprobed, ordered by new device popularity.
-# XBee takes too long to probe since it scans through all possible bauds and likely has
-# very few users to begin with.
-AUTOPROBE_RADIOS = (
-    RadioType.ezsp,
-    RadioType.znp,
-    RadioType.deconz,
-    RadioType.zigate,
-)
-
 RECOMMENDED_RADIOS = (
     RadioType.ezsp,
     RadioType.znp,
     RadioType.deconz,
 )
+
+# Only the common radio types will be autoprobed, ordered by new device popularity.
+# XBee takes too long to probe since it scans through all possible bauds and likely has
+# very few users to begin with.
+AUTOPROBE_RADIOS = RECOMMENDED_RADIOS
 
 CONNECT_DELAY_S = 1.0
 RETRY_DELAY_S = 1.0
@@ -158,6 +153,16 @@ class ZhaRadioManager:
 
         return mgr
 
+    @property
+    def zigpy_database_path(self) -> str:
+        """Path to `zigbee.db`."""
+        config = get_zha_data(self.hass).yaml_config
+
+        return config.get(
+            CONF_DATABASE,
+            self.hass.config.path(DEFAULT_DATABASE_NAME),
+        )
+
     @contextlib.asynccontextmanager
     async def connect_zigpy_app(self) -> AsyncIterator[ControllerApplication]:
         """Connect to the radio with the current config and then clean up."""
@@ -166,13 +171,12 @@ class ZhaRadioManager:
         config = get_zha_data(self.hass).yaml_config
         app_config = config.get(CONF_ZIGPY, {}).copy()
 
-        database_path = config.get(
-            CONF_DATABASE,
-            self.hass.config.path(DEFAULT_DATABASE_NAME),
-        )
+        database_path: str | None = self.zigpy_database_path
 
         # Don't create `zigbee.db` if it doesn't already exist
-        if not await self.hass.async_add_executor_job(os.path.exists, database_path):
+        if database_path is not None and not await self.hass.async_add_executor_job(
+            os.path.exists, database_path
+        ):
             database_path = None
 
         app_config[CONF_DATABASE] = database_path
@@ -191,16 +195,32 @@ class ZhaRadioManager:
             await asyncio.sleep(CONNECT_DELAY_S)
 
     async def restore_backup(
-        self, backup: zigpy.backups.NetworkBackup, **kwargs: Any
+        self,
+        backup: zigpy.backups.NetworkBackup | None = None,
+        *,
+        overwrite_ieee: bool = False,
+        **kwargs: Any,
     ) -> None:
         """Restore the provided network backup, passing through kwargs."""
+        if backup is None:
+            backup = self.chosen_backup
+
+        assert backup is not None
+
         if self.current_settings is not None and self.current_settings.supersedes(
-            self.chosen_backup
+            backup
         ):
             return
 
+        if overwrite_ieee:
+            backup = _allow_overwrite_ezsp_ieee(backup)
+
         async with self.connect_zigpy_app() as app:
             await app.connect()
+            await app.can_write_network_settings(
+                network_info=backup.network_info,
+                node_info=backup.node_info,
+            )
             await app.backups.restore_backup(backup, **kwargs)
 
     @staticmethod
@@ -242,6 +262,20 @@ class ZhaRadioManager:
 
         return ProbeResult.PROBING_FAILED
 
+    async def _async_read_backups_from_database(
+        self,
+    ) -> list[zigpy.backups.NetworkBackup]:
+        """Read the list of backups from the database, internal."""
+        async with self.connect_zigpy_app() as app:
+            backups = app.backups.backups.copy()
+            backups.sort(reverse=True, key=lambda b: b.backup_time)
+
+        return backups
+
+    async def async_read_backups_from_database(self) -> None:
+        """Read the list of backups from the database."""
+        self.backups = await self._async_read_backups_from_database()
+
     async def async_load_network_settings(
         self, *, create_backup: bool = False
     ) -> zigpy.backups.NetworkBackup | None:
@@ -273,6 +307,12 @@ class ZhaRadioManager:
 
     async def async_form_network(self) -> None:
         """Form a brand-new network."""
+
+        # When forming a new network, we delete the ZHA database to prevent old devices
+        # from appearing in an unusable state
+        with suppress(OSError):
+            await self.hass.async_add_executor_job(os.remove, self.zigpy_database_path)
+
         async with self.connect_zigpy_app() as app:
             await app.connect()
             await app.form_network()
@@ -282,56 +322,6 @@ class ZhaRadioManager:
         async with self.connect_zigpy_app() as app:
             await app.connect()
             await app.reset_network_info()
-
-    async def async_restore_backup_step_1(self) -> bool:
-        """Prepare restoring backup.
-
-        Returns True if async_restore_backup_step_2 should be called.
-        """
-        assert self.chosen_backup is not None
-
-        if self.radio_type != RadioType.ezsp:
-            await self.restore_backup(self.chosen_backup)
-            return False
-
-        # We have no way to partially load network settings if no network is formed
-        if self.current_settings is None:
-            # Since we are going to be restoring the backup anyways, write it to the
-            # radio without overwriting the IEEE but don't take a backup with these
-            # temporary settings
-            temp_backup = _prevent_overwrite_ezsp_ieee(self.chosen_backup)
-            await self.restore_backup(temp_backup, create_new=False)
-            await self.async_load_network_settings()
-
-            assert self.current_settings is not None
-
-        metadata = self.current_settings.network_info.metadata["ezsp"]
-
-        if (
-            self.current_settings.node_info.ieee == self.chosen_backup.node_info.ieee
-            or metadata["can_rewrite_custom_eui64"]
-            or not metadata["can_burn_userdata_custom_eui64"]
-        ):
-            # No point in prompting the user if the backup doesn't have a new IEEE
-            # address or if there is no way to overwrite the IEEE address a second time
-            await self.restore_backup(self.chosen_backup)
-
-            return False
-
-        return True
-
-    async def async_restore_backup_step_2(self, overwrite_ieee: bool) -> None:
-        """Restore backup and optionally overwrite IEEE."""
-        assert self.chosen_backup is not None
-
-        backup = self.chosen_backup
-
-        if overwrite_ieee:
-            backup = _allow_overwrite_ezsp_ieee(backup)
-
-        # If the user declined to overwrite the IEEE *and* we wrote the backup to
-        # their empty radio above, restoring it again would be redundant.
-        await self.restore_backup(backup)
 
 
 class ZhaMultiPANMigrationHelper:
@@ -442,9 +432,7 @@ class ZhaMultiPANMigrationHelper:
         # Restore the backup, permanently overwriting the device IEEE address
         for retry in range(MIGRATION_RETRIES):
             try:
-                if await self._radio_mgr.async_restore_backup_step_1():
-                    await self._radio_mgr.async_restore_backup_step_2(True)
-
+                await self._radio_mgr.restore_backup(overwrite_ieee=True)
                 break
             except OSError as err:
                 if retry >= MIGRATION_RETRIES - 1:
