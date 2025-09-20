@@ -18,5 +18,7 @@ ATTR_EXPIRE: Final = "expire"
 ATTR_TTL: Final = "ttl"
 ATTR_DATA: Final = "data"
 ATTR_TIMESTAMP: Final = "timestamp"
+ATTR_TAG: Final = "tag"
+ATTR_TAGS: Final = "tags"
 
 CONF_USER_KEY: Final = "user_key"

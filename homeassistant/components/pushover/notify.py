@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from pushover_complete import BadAPIRequestError, PushoverAPI
+import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -14,8 +15,9 @@ from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
@@ -26,6 +28,8 @@ from .const import (
     ATTR_PRIORITY,
     ATTR_RETRY,
     ATTR_SOUND,
+    ATTR_TAG,
+    ATTR_TAGS,
     ATTR_TIMESTAMP,
     ATTR_TTL,
     ATTR_URL,
@@ -36,8 +40,15 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+SERVICE_CANCEL = "cancel"
+SERVICE_CANCEL_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_TAG): cv.string,
+    }
+)
 
-async def async_get_service(
+
+def get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
@@ -61,6 +72,14 @@ class PushoverNotificationService(BaseNotificationService):
         self._hass = hass
         self._user_key = user_key
         self.pushover = pushover
+        self.receipt_tags: dict[str, list[str]] = {}
+
+        hass.services.register(
+            DOMAIN,
+            SERVICE_CANCEL,
+            self.cancel_message_service,
+            schema=SERVICE_CANCEL_SCHEMA,
+        )
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
@@ -77,7 +96,11 @@ class PushoverNotificationService(BaseNotificationService):
         callback_url = data.get(ATTR_CALLBACK_URL)
         timestamp = data.get(ATTR_TIMESTAMP)
         sound = data.get(ATTR_SOUND)
-        html = 1 if data.get(ATTR_HTML, False) else 0
+        html = bool(data.get(ATTR_HTML, False))
+        tags = data.get(ATTR_TAGS, [])
+
+        if isinstance(tags, str):
+            tags = [tags]
 
         # Check for attachment
         if (image := data.get(ATTR_ATTACHMENT)) is not None:
@@ -99,7 +122,7 @@ class PushoverNotificationService(BaseNotificationService):
                 image = None
 
         try:
-            self.pushover.send_message(
+            result = self.pushover.send_message(
                 user=self._user_key,
                 message=message,
                 device=",".join(kwargs.get(ATTR_TARGET, [])),
@@ -116,5 +139,46 @@ class PushoverNotificationService(BaseNotificationService):
                 html=html,
                 ttl=ttl,
             )
+            if "receipt" in result and tags:
+                receipt = result["receipt"]
+                self.receipt_tags[receipt] = tags
+                _LOGGER.debug("Receipt id is %s, tagged with: %s", receipt, tags)
+
         except BadAPIRequestError as err:
             raise HomeAssistantError(str(err)) from err
+
+    def cancel_message_service(self, service: ServiceCall):
+        """Cancel all notifications with a given tag or all if no specific tag is given."""
+        tag = service.data.get(ATTR_TAG, "")
+
+        if not self.receipt_tags:
+            _LOGGER.debug("There are no notifications to be canceled")
+            return
+
+        receipts: list[str] = []
+        if not tag:
+            _LOGGER.debug("Attempting to cancel all notifications")
+            receipts = list(self.receipt_tags.keys())
+        else:
+            _LOGGER.debug("Attempting to cancel all notifications with tag '%s'", tag)
+            for receipt, msg_tags in self.receipt_tags.items():
+                if tag in msg_tags:
+                    _LOGGER.debug(
+                        "Tag '%s' matches receipt %s with tags %s",
+                        tag,
+                        receipt,
+                        msg_tags,
+                    )
+                    receipts.append(receipt)
+
+        if not receipts:
+            _LOGGER.debug("Could not find any notifications with tag '%s'", tag)
+            return
+
+        for receipt in receipts:
+            try:
+                _LOGGER.debug("Canceling receipt %s", receipt)
+                self.pushover.cancel_receipt(receipt)
+            except BadAPIRequestError:
+                _LOGGER.exception("Error while trying to cancel receipt %s", receipt)
+            del self.receipt_tags[receipt]
