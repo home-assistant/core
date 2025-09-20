@@ -45,6 +45,20 @@ async def configure_prowl_through_yaml(
 
 
 @pytest.fixture
+async def prowl_notification_entity(
+    hass: HomeAssistant, mock_prowlpy: Mock, mock_prowlpy_config_entry: MockConfigEntry
+) -> Generator[MockConfigEntry]:
+    """Configure a Prowl Notification Entity."""
+    mock_prowlpy.verify_key.return_value = True
+
+    mock_prowlpy_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_prowlpy_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return mock_prowlpy_config_entry
+
+
+@pytest.fixture
 def mock_prowlpy() -> Generator[Mock]:
     """Mock the prowlpy library."""
 
@@ -57,7 +71,19 @@ def mock_prowlpy() -> Generator[Mock]:
 async def mock_prowlpy_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Fixture to create a mocked ConfigEntry."""
     # Load the notify component as our initialization depends on it.
-    await async_setup_component(hass, NOTIFY_DOMAIN, {NOTIFY_DOMAIN: []})
+    await async_setup_component(
+        hass,
+        NOTIFY_DOMAIN,
+        {
+            NOTIFY_DOMAIN: [
+                {
+                    "name": DOMAIN,
+                    "platform": DOMAIN,
+                    "api_key": TEST_API_KEY,
+                },
+            ]
+        },
+    )
     await hass.async_block_till_done()
 
     return MockConfigEntry(title="Mocked Prowl", domain=DOMAIN, data=CONF_INPUT)

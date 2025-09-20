@@ -50,6 +50,12 @@ async def test_load_reload_unload_config_entry(
             prowlpy.APIError("Not accepted: exceeded rate limit"),
             ConfigEntryState.SETUP_RETRY,
         ),
+        (
+            prowlpy.APIError(
+                "Not approved: The user has yet to approve your retrieve request"
+            ),
+            ConfigEntryState.SETUP_RETRY,
+        ),
         (prowlpy.APIError("Internal server error"), ConfigEntryState.SETUP_ERROR),
     ],
 )

@@ -17,6 +17,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
     NotifyEntity,
+    migrate_notify_issue,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
@@ -25,6 +26,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,12 +38,12 @@ async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> LegacyProwlNotificationService:
+) -> ProwlNotificationService:
     """Get the Prowl notification service."""
-    return LegacyProwlNotificationService(hass, config[CONF_API_KEY])
+    return ProwlNotificationService(hass, config[CONF_API_KEY])
 
 
-class LegacyProwlNotificationService(BaseNotificationService):
+class ProwlNotificationService(BaseNotificationService):
     """Implement the notification service for Prowl.
 
     This class is used for legacy configuration via configuration.yaml
@@ -53,6 +56,14 @@ class LegacyProwlNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send the message to the user."""
+        migrate_notify_issue(
+            self.hass,
+            DOMAIN,
+            "Prowl",
+            "2025.09.20",
+            service_name=self._service_name,
+        )
+
         data = kwargs.get(ATTR_DATA, {})
         if data is None:
             data = {}
@@ -111,15 +122,17 @@ class ProwlNotificationEntity(NotifyEntity):
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send the message."""
+        _LOGGER.debug("Sending Prowl notification from entity %s", self.name)
         try:
             async with asyncio.timeout(10):
                 await self._hass.async_add_executor_job(
                     partial(
-                        self._prowl.post,
-                        appName="Home-Assistant",
+                        self._prowl.send,
+                        application="Home-Assistant",
                         event=title or ATTR_TITLE_DEFAULT,
                         description=message,
                         priority=0,
+                        url=None,
                     )
                 )
         except TimeoutError as ex:
