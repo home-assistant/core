@@ -20,6 +20,16 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
+  "issues": {
+    "waze_travel_time_id_migration": {
+      "title": "Waze Travel Time entity_id migration",
+      "description": "The attributes of the Waze Travel Time sensor are now split into dedicated sensors.\n\nAs a result, the sensor indicating the remaining duration has changed its entity_id from `{old_entity_id}` to `{new_entity_id}`.\n\nPlease update your automations."
+    },
+    "waze_travel_time_splitted_attributes": {
+      "title": "Waze Travel Time attributes migration",
+      "description": "The attributes of the Waze Travel Time sensor are now split into dedicated sensors.\n\nThe old attributes will be maintained in the duration sensor until version 2026.4.\n\nPlease modify your automations to use the dedicated sensors instead of the attributes."
+    }
+  },
   "options": {
     "step": {
       "init": {

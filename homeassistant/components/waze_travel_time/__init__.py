@@ -16,6 +16,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -218,6 +219,19 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                         new_entity_id=new_entity_id,
                         new_unique_id=new_unique_id,
                     )
+                    async_create_issue(
+                        hass,
+                        DOMAIN,
+                        f"waze_travel_time_id_migration_{config_entry.entry_id}",
+                        is_fixable=False,
+                        is_persistent=True,
+                        severity=IssueSeverity.WARNING,
+                        translation_key="waze_travel_time_id_migration",
+                        translation_placeholders={
+                            "old_entity_id": old_entity_id,
+                            "new_entity_id": new_entity_id,
+                        },
+                    )
                 except ValueError:
                     _LOGGER.debug(
                         "Cannot change entity_id '%s', updating unique_id only",
@@ -227,6 +241,17 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                         old_entity_id,
                         new_unique_id=new_unique_id,
                     )
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    f"waze_travel_time_splitted_attributes_{config_entry.entry_id}",
+                    breaks_in_ha_version="2026.4.0",
+                    is_fixable=False,
+                    is_persistent=True,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="waze_travel_time_splitted_attributes",
+                )
+
             hass.config_entries.async_update_entry(config_entry, version=3)
 
     return True
