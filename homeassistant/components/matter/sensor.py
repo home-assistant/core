@@ -1145,6 +1145,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="ThermostatOutdoorTemperature",
+            translation_key="outdoor_temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             device_to_ha=lambda x: x / 100,
