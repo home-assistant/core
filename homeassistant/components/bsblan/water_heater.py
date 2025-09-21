@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from bsblan import BSBLANError
+from propcache.api import cached_property
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -71,14 +72,37 @@ class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
         self._attr_unique_id = format_mac(data.device.MAC)
         self._attr_operation_list = list(OPERATION_MODES_REVERSE.keys())
 
-        # Set temperature limits based on device capabilities
+        # Set temperature unit
         self._attr_temperature_unit = data.coordinator.client.get_temperature_unit
-        if data.coordinator.data.dhw.reduced_setpoint is not None:
-            self._attr_min_temp = data.coordinator.data.dhw.reduced_setpoint.value
-        if data.coordinator.data.dhw.nominal_setpoint_max is not None:
-            self._attr_max_temp = data.coordinator.data.dhw.nominal_setpoint_max.value
+        # Initialize available attribute to resolve multiple inheritance conflict
+        self._attr_available = True
 
-    @property
+        # Set temperature limits based on device capabilities
+        # For min_temp: Use reduced_setpoint from state data (fast polling)
+        if (
+            data.coordinator.data.dhw_config is not None
+            and data.coordinator.data.dhw_config.reduced_setpoint is not None
+            and hasattr(data.coordinator.data.dhw_config.reduced_setpoint, "value")
+        ):
+            self._attr_min_temp = float(
+                data.coordinator.data.dhw_config.reduced_setpoint.value
+            )
+        else:
+            self._attr_min_temp = 10.0  # Default minimum
+
+        # For max_temp: Use nominal_setpoint_max from config data (slow polling)
+        if (
+            data.coordinator.data.dhw_config is not None
+            and data.coordinator.data.dhw_config.nominal_setpoint_max is not None
+            and hasattr(data.coordinator.data.dhw_config.nominal_setpoint_max, "value")
+        ):
+            self._attr_max_temp = float(
+                data.coordinator.data.dhw_config.nominal_setpoint_max.value
+            )
+        else:
+            self._attr_max_temp = 65.0  # Default maximum
+
+    @cached_property
     def current_operation(self) -> str | None:
         """Return current operation."""
         if self.coordinator.data.dhw.operating_mode is None:
@@ -86,14 +110,14 @@ class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
         current_mode = self.coordinator.data.dhw.operating_mode.desc
         return OPERATION_MODES.get(current_mode)
 
-    @property
+    @cached_property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.coordinator.data.dhw.dhw_actual_value_top_temperature is None:
             return None
         return self.coordinator.data.dhw.dhw_actual_value_top_temperature.value
 
-    @property
+    @cached_property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.coordinator.data.dhw.nominal_setpoint is None:
