@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.components import conversation
+from homeassistant.components.conversation import async_get_agent, default_agent
 from homeassistant.components.shopping_list import intent as sl_intent
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
@@ -43,6 +44,7 @@ def mock_conversation_input(hass: HomeAssistant) -> conversation.ConversationInp
         conversation_id=None,
         agent_id="mock-agent-id",
         device_id=None,
+        satellite_id=None,
         language="en",
     )
 
@@ -73,4 +75,9 @@ async def sl_setup(hass: HomeAssistant):
 async def init_components(hass: HomeAssistant):
     """Initialize relevant components with empty configs."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, "conversation", {conversation.DOMAIN: {}})
+
+    # Disable fuzzy matching by default for tests
+    agent = async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+    agent.fuzzy_matching = False

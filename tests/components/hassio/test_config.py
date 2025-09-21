@@ -1,13 +1,16 @@
 """Test websocket API."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
-from uuid import UUID
+from uuid import UUID, uuid4
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
+from homeassistant.auth.models import User
+from homeassistant.components.hassio import HASSIO_USER_NAME
 from homeassistant.components.hassio.const import DATA_CONFIG_STORE, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -109,7 +112,24 @@ def mock_all(
     )
 
 
-@pytest.mark.usefixtures("hassio_env")
+@pytest.fixture
+def mock_hassio_user_id() -> Generator[None]:
+    """Mock the HASSIO user ID for snapshot testing."""
+    original_user_init = User.__init__
+
+    def mock_user_init(self, *args, **kwargs):
+        with patch("homeassistant.auth.models.uuid.uuid4") as mock_uuid:
+            if kwargs.get("name") == HASSIO_USER_NAME:
+                mock_uuid.return_value = UUID(bytes=b"very_very_random", version=4)
+            else:
+                mock_uuid.return_value = uuid4()
+            original_user_init(self, *args, **kwargs)
+
+    with patch.object(User, "__init__", mock_user_init):
+        yield
+
+
+@pytest.mark.usefixtures("hassio_env", "mock_hassio_user_id")
 @pytest.mark.parametrize(
     "storage_data",
     [
@@ -162,10 +182,7 @@ async def test_load_config_store(
     await hass.auth.async_create_refresh_token(user)
     await hass.auth.async_update_user(user, group_ids=[GROUP_ID_ADMIN])
 
-    with (
-        patch("homeassistant.components.hassio.config.STORE_DELAY_SAVE", 0),
-        patch("uuid.uuid4", return_value=UUID(bytes=b"very_very_random", version=4)),
-    ):
+    with patch("homeassistant.components.hassio.config.STORE_DELAY_SAVE", 0):
         assert await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
         await hass.async_block_till_done()
@@ -173,7 +190,7 @@ async def test_load_config_store(
     assert hass.data[DATA_CONFIG_STORE].data.to_dict() == snapshot
 
 
-@pytest.mark.usefixtures("hassio_env")
+@pytest.mark.usefixtures("hassio_env", "mock_hassio_user_id")
 async def test_save_config_store(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -182,10 +199,7 @@ async def test_save_config_store(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test saving the config store."""
-    with (
-        patch("homeassistant.components.hassio.config.STORE_DELAY_SAVE", 0),
-        patch("uuid.uuid4", return_value=UUID(bytes=b"very_very_random", version=4)),
-    ):
+    with patch("homeassistant.components.hassio.config.STORE_DELAY_SAVE", 0):
         assert await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
         await hass.async_block_till_done()

@@ -3,7 +3,8 @@
 import logging
 import threading
 
-import pychromecast
+import pychromecast.discovery
+import pychromecast.models
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP

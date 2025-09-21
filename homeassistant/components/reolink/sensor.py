@@ -16,7 +16,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -118,18 +123,33 @@ SENSORS = (
         value=lambda api, ch: api.baichuan.day_night_state(ch),
         supported=lambda api, ch: api.supported(ch, "day_night_state"),
     ),
+    ReolinkSensorEntityDescription(
+        key="wifi_signal",
+        cmd_key="115",
+        translation_key="wifi_signal",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        entity_registry_enabled_default=False,
+        value=lambda api, ch: api.wifi_signal(ch),
+        supported=lambda api, ch: api.supported(ch, "wifi"),
+    ),
 )
 
 HOST_SENSORS = (
     ReolinkHostSensorEntityDescription(
         key="wifi_signal",
-        cmd_key="GetWifiSignal",
+        cmd_id=464,
+        cmd_key="115",
         translation_key="wifi_signal",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_registry_enabled_default=False,
-        value=lambda api: api.wifi_signal,
-        supported=lambda api: api.supported(None, "wifi") and api.wifi_connection,
+        value=lambda api: api.wifi_signal(),
+        supported=lambda api: api.supported(None, "wifi") and api.wifi_connection(),
     ),
     ReolinkHostSensorEntityDescription(
         key="cpu_usage",

@@ -74,6 +74,8 @@ async def mock_osoenergy_client(mock_water_heater) -> Generator[AsyncMock]:
         mock_client().session = mock_session
 
         mock_hotwater = MagicMock()
+        mock_hotwater.enable_holiday_mode = AsyncMock(return_value=True)
+        mock_hotwater.disable_holiday_mode = AsyncMock(return_value=True)
         mock_hotwater.get_water_heater = AsyncMock(return_value=mock_water_heater)
         mock_hotwater.set_profile = AsyncMock(return_value=True)
         mock_hotwater.set_v40_min = AsyncMock(return_value=True)
