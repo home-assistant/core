@@ -141,6 +141,18 @@
       }
     },
     "sensor": {
+      "charger_state": {
+        "state": {
+          "charger_charging": "Charging",
+          "charger_end": "End",
+          "charger_fault": "Fault",
+          "charger_free": "Free",
+          "charger_free_fault": "Free fault",
+          "charger_insert": "Insert",
+          "charger_pause": "Pause",
+          "charger_wait": "Wait"
+        }
+      },
       "detected_objects": {
         "unit_of_measurement": "objects"
       },
