@@ -12,8 +12,8 @@
         },
         "data_description": {
           "host": "The hostname or IP address of the IP232 module on your network",
-          "port": "The port on which the IP232 module listens for clients (default: 2401)",
-          "scan_interval": "Time interval between updates in seconds (default: 60)",
+          "port": "The port on which the IP232 module listens for clients",
+          "scan_interval": "Time interval between updates in seconds",
           "infer_arming_state": "Infer the disarmed arming state only via system status events. This works around a bug with some panels (version less than 5.8) which emit empty status updates when they are armed"
         }
       }
