@@ -96,6 +96,9 @@ def bypass_api_fixture(bypass_api_client_fixture: Any) -> None:
             "homeassistant.components.roborock.coordinator.RoborockMqttClientV1._send_command"
         ),
         patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.async_connect"
+        ),
+        patch(
             "homeassistant.components.roborock.RoborockMqttClientV1.get_networking",
             return_value=NETWORK_INFO,
         ),
