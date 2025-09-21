@@ -162,7 +162,7 @@ async def test_resource_template(
     aioclient_mock: AiohttpClientMocker,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test setup with minimum configuration."""
+    """Test resource_template is evaluated on each scan."""
     hass.states.async_set("sensor.input_sensor", "localhost")
     aioclient_mock.get(
         "http://localhost",
