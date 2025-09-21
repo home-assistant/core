@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
-from types import MappingProxyType
 from typing import Any
 
 from elevenlabs import AsyncElevenLabs
@@ -25,13 +25,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import ElevenLabsConfigEntry
 from .const import (
     ATTR_MODEL,
-    CONF_OPTIMIZE_LATENCY,
     CONF_SIMILARITY,
     CONF_STABILITY,
     CONF_STYLE,
     CONF_USE_SPEAKER_BOOST,
     CONF_VOICE,
-    DEFAULT_OPTIMIZE_LATENCY,
     DEFAULT_SIMILARITY,
     DEFAULT_STABILITY,
     DEFAULT_STYLE,
@@ -43,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-def to_voice_settings(options: MappingProxyType[str, Any]) -> VoiceSettings:
+def to_voice_settings(options: Mapping[str, Any]) -> VoiceSettings:
     """Return voice settings."""
     return VoiceSettings(
         stability=options.get(CONF_STABILITY, DEFAULT_STABILITY),
@@ -75,9 +73,6 @@ async def async_setup_entry(
                 config_entry.entry_id,
                 config_entry.title,
                 voice_settings,
-                config_entry.options.get(
-                    CONF_OPTIMIZE_LATENCY, DEFAULT_OPTIMIZE_LATENCY
-                ),
             )
         ]
     )
@@ -98,7 +93,6 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         entry_id: str,
         title: str,
         voice_settings: VoiceSettings,
-        latency: int = 0,
     ) -> None:
         """Init ElevenLabs TTS service."""
         self._client = client
@@ -115,7 +109,6 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         if voice_indices:
             self._voices.insert(0, self._voices.pop(voice_indices[0]))
         self._voice_settings = voice_settings
-        self._latency = latency
 
         # Entity attributes
         self._attr_unique_id = entry_id
@@ -144,14 +137,14 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
         voice_id = options.get(ATTR_VOICE, self._default_voice_id)
         model = options.get(ATTR_MODEL, self._model.model_id)
         try:
-            audio = await self._client.generate(
+            audio = self._client.text_to_speech.convert(
                 text=message,
-                voice=voice_id,
-                optimize_streaming_latency=self._latency,
+                voice_id=voice_id,
                 voice_settings=self._voice_settings,
-                model=model,
+                model_id=model,
             )
             bytes_combined = b"".join([byte_seg async for byte_seg in audio])
+
         except ApiError as exc:
             _LOGGER.warning(
                 "Error during processing of TTS request %s", exc, exc_info=True

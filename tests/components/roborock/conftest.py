@@ -72,7 +72,7 @@ def bypass_api_client_fixture() -> None:
     """Skip calls to the API client."""
     with (
         patch(
-            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+            "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
             return_value=HOME_DATA,
         ),
         patch(
@@ -87,7 +87,7 @@ def bypass_api_client_fixture() -> None:
 
 
 @pytest.fixture(name="bypass_api_fixture")
-def bypass_api_fixture(bypass_api_client_fixture: Any) -> None:
+def bypass_api_fixture(bypass_api_client_fixture: Any, mock_send_message: Mock) -> None:
     """Skip calls to the API."""
     with (
         patch("homeassistant.components.roborock.RoborockMqttClientV1.async_connect"),
@@ -116,7 +116,7 @@ def bypass_api_fixture(bypass_api_client_fixture: Any) -> None:
             return_value=MAP_DATA,
         ),
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_message"
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1._send_message"
         ),
         patch("homeassistant.components.roborock.RoborockMqttClientV1._wait_response"),
         patch(
@@ -183,7 +183,7 @@ def bypass_api_fixture_v1_only(bypass_api_fixture) -> None:
     home_data_copy = deepcopy(HOME_DATA)
     home_data_copy.received_devices = []
     with patch(
-        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
+        "homeassistant.components.roborock.RoborockApiClient.get_home_data_v3",
         return_value=home_data_copy,
     ):
         yield

@@ -22,18 +22,13 @@ from .entity import FritzBoxDeviceEntity
 from .model import FritzEntityDescriptionMixinBase
 
 
-@dataclass(frozen=True)
-class FritzEntityDescriptionMixinBinarySensor(FritzEntityDescriptionMixinBase):
-    """BinarySensor description mixin for Fritz!Smarthome entities."""
-
-    is_on: Callable[[FritzhomeDevice], bool | None]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class FritzBinarySensorEntityDescription(
-    BinarySensorEntityDescription, FritzEntityDescriptionMixinBinarySensor
+    BinarySensorEntityDescription, FritzEntityDescriptionMixinBase
 ):
     """Description for Fritz!Smarthome binary sensor entities."""
+
+    is_on: Callable[[FritzhomeDevice], bool | None]
 
 
 BINARY_SENSOR_TYPES: Final[tuple[FritzBinarySensorEntityDescription, ...]] = (
@@ -59,6 +54,32 @@ BINARY_SENSOR_TYPES: Final[tuple[FritzBinarySensorEntityDescription, ...]] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         suitable=lambda device: device.device_lock is not None,
         is_on=lambda device: not device.device_lock,
+    ),
+    FritzBinarySensorEntityDescription(
+        key="battery_low",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suitable=lambda device: device.battery_low is not None,
+        is_on=lambda device: device.battery_low,
+        entity_registry_enabled_default=False,
+    ),
+    FritzBinarySensorEntityDescription(
+        key="holiday_active",
+        translation_key="holiday_active",
+        suitable=lambda device: device.holiday_active is not None,
+        is_on=lambda device: device.holiday_active,
+    ),
+    FritzBinarySensorEntityDescription(
+        key="summer_active",
+        translation_key="summer_active",
+        suitable=lambda device: device.summer_active is not None,
+        is_on=lambda device: device.summer_active,
+    ),
+    FritzBinarySensorEntityDescription(
+        key="window_open",
+        translation_key="window_open",
+        suitable=lambda device: device.window_open is not None,
+        is_on=lambda device: device.window_open,
     ),
 )
 

@@ -10,14 +10,16 @@ from pylamarzocco.models import (
     ThingDashboardConfig,
     ThingSchedulingSettings,
     ThingSettings,
+    ThingStatistics,
 )
+from pylamarzocco.util import InstallationKey
 import pytest
 
-from homeassistant.components.lamarzocco.const import DOMAIN
+from homeassistant.components.lamarzocco.const import CONF_INSTALLATION_KEY, DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
-from . import SERIAL_DICT, USER_INPUT, async_init_integration
+from . import MOCK_INSTALLATION_KEY, SERIAL_DICT, USER_INPUT, async_init_integration
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -30,11 +32,12 @@ def mock_config_entry(
     return MockConfigEntry(
         title="My LaMarzocco",
         domain=DOMAIN,
-        version=3,
+        version=4,
         data=USER_INPUT
         | {
-            CONF_ADDRESS: "00:00:00:00:00:00",
+            CONF_ADDRESS: "000000000000",
             CONF_TOKEN: "token",
+            CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
         },
         unique_id=mock_lamarzocco.serial_number,
     )
@@ -48,6 +51,22 @@ async def init_integration(
     await async_init_integration(hass, mock_config_entry)
 
     return mock_config_entry
+
+
+@pytest.fixture(autouse=True)
+def mock_generate_installation_key() -> Generator[MagicMock]:
+    """Return a mocked generate_installation_key."""
+    with (
+        patch(
+            "homeassistant.components.lamarzocco.generate_installation_key",
+            return_value=InstallationKey.from_json(MOCK_INSTALLATION_KEY),
+        ) as mock_generate,
+        patch(
+            "homeassistant.components.lamarzocco.config_flow.generate_installation_key",
+            new=mock_generate,
+        ),
+    ):
+        yield mock_generate
 
 
 @pytest.fixture
@@ -91,6 +110,7 @@ def mock_lamarzocco(device_fixture: ModelName) -> Generator[MagicMock]:
         config = load_json_object_fixture("config_gs3.json", DOMAIN)
     schedule = load_json_object_fixture("schedule.json", DOMAIN)
     settings = load_json_object_fixture("settings.json", DOMAIN)
+    statistics = load_json_object_fixture("statistics.json", DOMAIN)
 
     with (
         patch(
@@ -104,6 +124,7 @@ def mock_lamarzocco(device_fixture: ModelName) -> Generator[MagicMock]:
         machine_mock.dashboard = ThingDashboardConfig.from_dict(config)
         machine_mock.schedule = ThingSchedulingSettings.from_dict(schedule)
         machine_mock.settings = ThingSettings.from_dict(settings)
+        machine_mock.statistics = ThingStatistics.from_dict(statistics)
         machine_mock.dashboard.model_name = device_fixture
         machine_mock.to_dict.return_value = {
             "serial_number": machine_mock.serial_number,
@@ -125,3 +146,13 @@ def mock_ble_device() -> BLEDevice:
     return BLEDevice(
         "00:00:00:00:00:00", "GS_GS012345", details={"path": "path"}, rssi=50
     )
+
+
+@pytest.fixture
+def mock_websocket_terminated() -> Generator[bool]:
+    """Mock websocket terminated."""
+    with patch(
+        "homeassistant.components.lamarzocco.coordinator.LaMarzoccoUpdateCoordinator.websocket_terminated",
+        new=False,
+    ) as mock_websocket_terminated:
+        yield mock_websocket_terminated

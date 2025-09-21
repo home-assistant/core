@@ -7,9 +7,6 @@ from typing import cast
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
-from homeassistant.components.assist_pipeline.repair_flows import (
-    AssistInProgressDeprecatedRepairFlow,
-)
 from homeassistant.components.repairs import RepairsFlow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
@@ -99,8 +96,6 @@ async def async_create_fix_flow(
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create flow."""
-    if issue_id.startswith("assist_in_progress_deprecated"):
-        return AssistInProgressDeprecatedRepairFlow(data)
     if issue_id.startswith("device_conflict"):
         return DeviceConflictRepair(data)
     # If ESPHome adds confirm-only repairs in the future, this should be changed

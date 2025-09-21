@@ -4,8 +4,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast
 
-from pylamarzocco.const import BackFlushStatus, MachineState, WidgetType
-from pylamarzocco.models import BackFlush, BaseWidgetOutput, MachineStatus
+from pylamarzocco import LaMarzoccoMachine
+from pylamarzocco.const import BackFlushStatus, MachineState, ModelName, WidgetType
+from pylamarzocco.models import BackFlush, MachineStatus
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -30,7 +31,7 @@ class LaMarzoccoBinarySensorEntityDescription(
 ):
     """Description of a La Marzocco binary sensor."""
 
-    is_on_fn: Callable[[dict[WidgetType, BaseWidgetOutput]], bool | None]
+    is_on_fn: Callable[[LaMarzoccoMachine], bool | None]
 
 
 ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
@@ -38,7 +39,7 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         key="water_tank",
         translation_key="water_tank",
         device_class=BinarySensorDeviceClass.PROBLEM,
-        is_on_fn=lambda config: WidgetType.CM_NO_WATER in config,
+        is_on_fn=lambda machine: WidgetType.CM_NO_WATER in machine.dashboard.config,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     LaMarzoccoBinarySensorEntityDescription(
@@ -46,12 +47,12 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         translation_key="brew_active",
         device_class=BinarySensorDeviceClass.RUNNING,
         is_on_fn=(
-            lambda config: cast(
-                MachineStatus, config[WidgetType.CM_MACHINE_STATUS]
+            lambda machine: cast(
+                MachineStatus, machine.dashboard.config[WidgetType.CM_MACHINE_STATUS]
             ).status
             is MachineState.BREWING
         ),
-        available_fn=lambda device: device.websocket.connected,
+        available_fn=lambda coordinator: not coordinator.websocket_terminated,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     LaMarzoccoBinarySensorEntityDescription(
@@ -59,10 +60,26 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
         translation_key="backflush_enabled",
         device_class=BinarySensorDeviceClass.RUNNING,
         is_on_fn=(
-            lambda config: cast(BackFlush, config[WidgetType.CM_BACK_FLUSH]).status
-            is BackFlushStatus.REQUESTED
+            lambda machine: cast(
+                BackFlush,
+                machine.dashboard.config.get(
+                    WidgetType.CM_BACK_FLUSH, BackFlush(status=BackFlushStatus.OFF)
+                ),
+            ).status
+            in (BackFlushStatus.REQUESTED, BackFlushStatus.CLEANING)
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
+        supported_fn=lambda coordinator: (
+            coordinator.device.dashboard.model_name is not ModelName.GS3_MP
+        ),
+    ),
+    LaMarzoccoBinarySensorEntityDescription(
+        key="websocket_connected",
+        translation_key="websocket_connected",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        is_on_fn=(lambda machine: machine.websocket.connected),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -90,6 +107,4 @@ class LaMarzoccoBinarySensorEntity(LaMarzoccoEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self.entity_description.is_on_fn(
-            self.coordinator.device.dashboard.config
-        )
+        return self.entity_description.is_on_fn(self.coordinator.device)

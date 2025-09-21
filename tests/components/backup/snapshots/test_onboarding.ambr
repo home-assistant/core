@@ -23,7 +23,11 @@
           'instance_id': 'abc123',
           'with_automatic_settings': True,
         }),
+        'failed_addons': list([
+        ]),
         'failed_agent_ids': list([
+        ]),
+        'failed_folders': list([
         ]),
         'folders': list([
           'media',
@@ -50,7 +54,11 @@
           'instance_id': 'unknown_uuid',
           'with_automatic_settings': True,
         }),
+        'failed_addons': list([
+        ]),
         'failed_agent_ids': list([
+        ]),
+        'failed_folders': list([
         ]),
         'folders': list([
           'media',

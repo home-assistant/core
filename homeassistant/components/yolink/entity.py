@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from typing import Any
 
 from yolink.client_request import ClientRequest
-from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -45,7 +44,7 @@ class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
     def _handle_coordinator_update(self) -> None:
         """Update state."""
         data = self.coordinator.data
-        if data is not None:
+        if data is not None and len(data) > 0:
             self.update_entity_state(data)
 
     @property
@@ -64,13 +63,6 @@ class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
     def update_entity_state(self, state: dict) -> None:
         """Parse and update entity state, should be overridden."""
 
-    async def call_device(self, request: ClientRequest) -> None:
+    async def call_device(self, request: ClientRequest) -> dict[str, Any]:
         """Call device api."""
-        try:
-            # call_device will check result, fail by raise YoLinkClientError
-            await self.coordinator.device.call_device(request)
-        except YoLinkAuthFailError as yl_auth_err:
-            self.config_entry.async_start_reauth(self.hass)
-            raise HomeAssistantError(yl_auth_err) from yl_auth_err
-        except YoLinkClientError as yl_client_err:
-            raise HomeAssistantError(yl_client_err) from yl_client_err
+        return await self.coordinator.call_device(request)

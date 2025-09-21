@@ -218,7 +218,7 @@ class TrackerEntity(
 
     entity_description: TrackerEntityDescription
     _attr_latitude: float | None = None
-    _attr_location_accuracy: int = 0
+    _attr_location_accuracy: float = 0
     _attr_location_name: str | None = None
     _attr_longitude: float | None = None
     _attr_source_type: SourceType = SourceType.GPS
@@ -234,7 +234,7 @@ class TrackerEntity(
         return not self.should_poll
 
     @cached_property
-    def location_accuracy(self) -> int:
+    def location_accuracy(self) -> float:
         """Return the location accuracy of the device.
 
         Value in meters.

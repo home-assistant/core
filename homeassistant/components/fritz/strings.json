@@ -4,7 +4,9 @@
     "data_description_port": "Leave empty to use the default port.",
     "data_description_username": "Username for the FRITZ!Box.",
     "data_description_password": "Password for the FRITZ!Box.",
-    "data_description_ssl": "Use SSL to connect to the FRITZ!Box."
+    "data_description_ssl": "Use SSL to connect to the FRITZ!Box.",
+    "data_description_feature_device_tracking": "Enable or disable the network device tracking feature.",
+    "data_feature_device_tracking": "Enable network device tracking"
   },
   "config": {
     "flow_title": "{name}",
@@ -15,16 +17,18 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "ssl": "[%key:common::config_flow::data::ssl%]"
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "feature_device_tracking": "[%key:component::fritz::common::data_feature_device_tracking%]"
         },
         "data_description": {
           "username": "[%key:component::fritz::common::data_description_username%]",
           "password": "[%key:component::fritz::common::data_description_password%]",
-          "ssl": "[%key:component::fritz::common::data_description_ssl%]"
+          "ssl": "[%key:component::fritz::common::data_description_ssl%]",
+          "feature_device_tracking": "[%key:component::fritz::common::data_description_feature_device_tracking%]"
         }
       },
       "reauth_confirm": {
-        "title": "Updating FRITZ!Box Tools - credentials",
+        "title": "FRITZ!Box Tools - Update credentials",
         "description": "Update FRITZ!Box Tools credentials for: {host}.\n\nFRITZ!Box Tools is unable to log in to your FRITZ!Box.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
@@ -36,7 +40,7 @@
         }
       },
       "reconfigure": {
-        "title": "Updating FRITZ!Box Tools - configuration",
+        "title": "FRITZ!Box Tools - Update configuration",
         "description": "Update FRITZ!Box Tools configuration for: {host}.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -57,14 +61,16 @@
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "ssl": "[%key:common::config_flow::data::ssl%]"
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "feature_device_tracking": "[%key:component::fritz::common::data_feature_device_tracking%]"
         },
         "data_description": {
           "host": "[%key:component::fritz::common::data_description_host%]",
           "port": "[%key:component::fritz::common::data_description_port%]",
           "username": "[%key:component::fritz::common::data_description_username%]",
           "password": "[%key:component::fritz::common::data_description_password%]",
-          "ssl": "[%key:component::fritz::common::data_description_ssl%]"
+          "ssl": "[%key:component::fritz::common::data_description_ssl%]",
+          "feature_device_tracking": "[%key:component::fritz::common::data_description_feature_device_tracking%]"
         }
       }
     },
@@ -89,11 +95,13 @@
       "init": {
         "data": {
           "consider_home": "Seconds to consider a device at 'home'",
-          "old_discovery": "Enable old discovery method"
+          "old_discovery": "Enable old discovery method",
+          "feature_device_tracking": "[%key:component::fritz::common::data_feature_device_tracking%]"
         },
         "data_description": {
           "consider_home": "Time in seconds to consider a device at home. Default is 180 seconds.",
-          "old_discovery": "Enable old discovery method. This is needed for some scenarios."
+          "old_discovery": "Enable old discovery method. This is needed for some scenarios.",
+          "feature_device_tracking": "[%key:component::fritz::common::data_description_feature_device_tracking%]"
         }
       }
     }
@@ -166,6 +174,9 @@
       },
       "max_kb_s_sent": {
         "name": "Max connection upload throughput"
+      },
+      "cpu_temperature": {
+        "name": "CPU temperature"
       }
     }
   },
@@ -175,8 +186,8 @@
       "description": "Sets a new password for the guest Wi-Fi. The password must be between 8 and 63 characters long. If no additional parameter is set, the password will be auto-generated with a length of 12 characters.",
       "fields": {
         "device_id": {
-          "name": "Fritz!Box Device",
-          "description": "Select the Fritz!Box to configure."
+          "name": "FRITZ!Box device",
+          "description": "Select the FRITZ!Box to configure."
         },
         "password": {
           "name": "[%key:common::config_flow::data::password%]",
@@ -184,7 +195,7 @@
         },
         "length": {
           "name": "Password length",
-          "description": "Length of the new password. The password will be auto-generated, if no password is set."
+          "description": "Length of the new password. It will be auto-generated if no password is set."
         }
       }
     }
@@ -206,7 +217,7 @@
       "message": "Unable to establish a connection"
     },
     "update_failed": {
-      "message": "Error while uptaing the data: {error}"
+      "message": "Error while updating the data: {error}"
     }
   }
 }

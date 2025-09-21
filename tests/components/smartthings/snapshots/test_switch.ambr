@@ -27,6 +27,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '10e06a70-ee7d-4832-85e9-a0a06a7a05bd_main_switch_switch_switch',
@@ -46,7 +47,55 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_ice_maker-entry]
+# name: test_all_entities[da_ac_rac_01001][switch.aire_dormitorio_principal_display_lighting-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.aire_dormitorio_principal_display_lighting',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Display lighting',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'display_lighting',
+    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_samsungce.airConditionerLighting_lighting_lighting',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_rac_01001][switch.aire_dormitorio_principal_display_lighting-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aire Dormitorio Principal Display lighting',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.aire_dormitorio_principal_display_lighting',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_cubed_ice-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -59,7 +108,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.refrigerator_ice_maker',
+    'entity_id': 'switch.refrigerator_cubed_ice',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -71,26 +120,651 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Ice maker',
+    'original_name': 'Cubed ice',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ice_maker',
     'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_icemaker_switch_switch_switch',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_ice_maker-state]
+# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_cubed_ice-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Refrigerator Ice maker',
+      'friendly_name': 'Refrigerator Cubed ice',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.refrigerator_ice_maker',
+    'entity_id': 'switch.refrigerator_cubed_ice',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_power_cool-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.refrigerator_power_cool',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power cool',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_cool',
+    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_samsungce.powerCool_activated_activated',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_power_cool-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refrigerator Power cool',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.refrigerator_power_cool',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_power_freeze-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.refrigerator_power_freeze',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power freeze',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_freeze',
+    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_samsungce.powerFreeze_activated_activated',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_power_freeze-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refrigerator Power freeze',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.refrigerator_power_freeze',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_sabbath_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.refrigerator_sabbath_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sabbath mode',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sabbath_mode',
+    'unique_id': '7db87911-7dce-1cf2-7119-b953432a2f09_main_samsungce.sabbathMode_status_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_000001][switch.refrigerator_sabbath_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refrigerator Sabbath mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.refrigerator_sabbath_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_cubed_ice-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.refrigerator_cubed_ice',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cubed ice',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ice_maker',
+    'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_icemaker_switch_switch_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_cubed_ice-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refrigerator Cubed ice',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.refrigerator_cubed_ice',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_power_cool-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.refrigerator_power_cool',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power cool',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_cool',
+    'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_samsungce.powerCool_activated_activated',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_power_cool-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refrigerator Power cool',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.refrigerator_power_cool',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_power_freeze-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.refrigerator_power_freeze',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power freeze',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_freeze',
+    'unique_id': '7d3feb98-8a36-4351-c362-5e21ad3a78dd_main_samsungce.powerFreeze_activated_activated',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01001][switch.refrigerator_power_freeze-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Refrigerator Power freeze',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.refrigerator_power_freeze',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][switch.frigo_cubed_ice-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.frigo_cubed_ice',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cubed ice',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ice_maker',
+    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_icemaker_switch_switch_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][switch.frigo_cubed_ice-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Frigo Cubed ice',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.frigo_cubed_ice',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][switch.frigo_ice_bites-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.frigo_ice_bites',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ice Bites',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ice_maker_2',
+    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_icemaker-02_switch_switch_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][switch.frigo_ice_bites-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Frigo Ice Bites',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.frigo_ice_bites',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][switch.frigo_power_cool-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.frigo_power_cool',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power cool',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_cool',
+    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_samsungce.powerCool_activated_activated',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][switch.frigo_power_cool-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Frigo Power cool',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.frigo_power_cool',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][switch.frigo_power_freeze-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.frigo_power_freeze',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power freeze',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_freeze',
+    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_samsungce.powerFreeze_activated_activated',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][switch.frigo_power_freeze-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Frigo Power freeze',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.frigo_power_freeze',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][switch.frigo_sabbath_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.frigo_sabbath_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sabbath mode',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sabbath_mode',
+    'unique_id': '5758b2ec-563e-f39b-ec39-208e54aabf60_main_samsungce.sabbathMode_status_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011][switch.frigo_sabbath_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Frigo Sabbath mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.frigo_sabbath_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011_onedoor][switch.lodowka_power_cool-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.lodowka_power_cool',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power cool',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_cool',
+    'unique_id': '271d82e0-5b0c-e4b8-058e-cdf23a188610_main_samsungce.powerCool_activated_activated',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ref_normal_01011_onedoor][switch.lodowka_power_cool-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Lodówka Power cool',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.lodowka_power_cool',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][switch.robot_vacuum-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.robot_vacuum',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_switch_switch_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_rvc_map_01011][switch.robot_vacuum-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Robot vacuum',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.robot_vacuum',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
 # name: test_all_entities[da_rvc_normal_000001][switch.robot_vacuum-entry]
@@ -121,6 +795,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '3442dfc6-17c0-a65f-dae0-4c6e01786f44_main_switch_switch_switch',
@@ -140,7 +815,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][switch.eco_heating_system-entry]
+# name: test_all_entities[da_wm_sc_000001][switch.airdresser_auto_cycle_link-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -152,8 +827,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'switch',
-    'entity_category': None,
-    'entity_id': 'switch.eco_heating_system',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.airdresser_auto_cycle_link',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -165,22 +840,119 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Auto cycle link',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_switch_switch_switch',
+    'translation_key': 'auto_cycle_link',
+    'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_samsungce.steamClosetAutoCycleLink_steamClosetAutoCycleLink_steamClosetAutoCycleLink',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_sac_ehs_000001_sub][switch.eco_heating_system-state]
+# name: test_all_entities[da_wm_sc_000001][switch.airdresser_auto_cycle_link-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eco Heating System',
+      'friendly_name': 'AirDresser Auto cycle link',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.eco_heating_system',
+    'entity_id': 'switch.airdresser_auto_cycle_link',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[da_wm_sc_000001][switch.airdresser_keep_fresh_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.airdresser_keep_fresh_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Keep fresh mode',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'keep_fresh_mode',
+    'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_samsungce.steamClosetKeepFreshMode_status_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_sc_000001][switch.airdresser_keep_fresh_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'AirDresser Keep fresh mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.airdresser_keep_fresh_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_wm_sc_000001][switch.airdresser_sanitize-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.airdresser_sanitize',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sanitize',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sanitize',
+    'unique_id': 'b93211bf-9d96-bd21-3b2f-964fcc87f5cc_main_samsungce.steamClosetSanitizeMode_status_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_sc_000001][switch.airdresser_sanitize-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'AirDresser Sanitize',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.airdresser_sanitize',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -199,7 +971,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'switch',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.dryer_wrinkle_prevent',
     'has_entity_name': True,
     'hidden_by': None,
@@ -215,6 +987,7 @@
     'original_name': 'Wrinkle prevent',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wrinkle_prevent',
     'unique_id': '02f7256e-8353-5bdd-547f-bd5b1647e01b_main_custom.dryerWrinklePrevent_dryerWrinklePrevent_dryerWrinklePrevent',
@@ -246,7 +1019,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'switch',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.seca_roupa_wrinkle_prevent',
     'has_entity_name': True,
     'hidden_by': None,
@@ -262,6 +1035,7 @@
     'original_name': 'Wrinkle prevent',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wrinkle_prevent',
     'unique_id': '3a6c4e05-811d-5041-e956-3d04c424cbcd_main_custom.dryerWrinklePrevent_dryerWrinklePrevent_dryerWrinklePrevent',
@@ -293,7 +1067,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'switch',
-    'entity_category': None,
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
     'entity_id': 'switch.washing_machine_bubble_soak',
     'has_entity_name': True,
     'hidden_by': None,
@@ -309,6 +1083,7 @@
     'original_name': 'Bubble Soak',
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bubble_soak',
     'unique_id': '63803fae-cbed-f356-a063-2cf148ae3ca7_main_samsungce.washerBubbleSoak_status_status',
@@ -322,6 +1097,54 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.washing_machine_bubble_soak',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][switch.machine_a_laver_bubble_soak-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.machine_a_laver_bubble_soak',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bubble Soak',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bubble_soak',
+    'unique_id': 'b854ca5f-dc54-140d-6349-758b4d973c41_main_samsungce.washerBubbleSoak_status_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_wm_01011][switch.machine_a_laver_bubble_soak-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Machine à Laver Bubble Soak',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.machine_a_laver_bubble_soak',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -356,6 +1179,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '656569c2-7976-4232-a789-34b4d1176c3a_main_switch_switch_switch',
@@ -403,6 +1227,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'bf4b1167-48a3-4af7-9186-0900a678ffa5_main_switch_switch_switch',
@@ -450,6 +1275,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '550a1c72-65a0-4d55-b97b-75168e055398_main_switch_switch_switch',
@@ -497,6 +1323,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '6602696a-1e48-49e4-919f-69406f5b5da1_main_switch_switch_switch',
@@ -544,6 +1371,7 @@
     'original_name': None,
     'platform': 'smartthings',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '5cc1c096-98b9-460c-8f1c-1045509ec605_main_switch_switch_switch',

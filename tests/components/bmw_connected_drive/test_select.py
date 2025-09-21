@@ -8,7 +8,7 @@ import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
+from homeassistant.components.bmw_connected_drive import DOMAIN
 from homeassistant.components.bmw_connected_drive.select import SELECT_TYPES
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -182,9 +182,9 @@ async def test_entity_option_translations(
     # Setup component to load translations
     assert await setup_mocked_integration(hass)
 
-    prefix = f"component.{BMW_DOMAIN}.entity.{Platform.SELECT.value}"
+    prefix = f"component.{DOMAIN}.entity.{Platform.SELECT.value}"
 
-    translations = await async_get_translations(hass, "en", "entity", [BMW_DOMAIN])
+    translations = await async_get_translations(hass, "en", "entity", [DOMAIN])
     translation_states = {
         k for k in translations if k.startswith(prefix) and ".state." in k
     }

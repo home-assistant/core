@@ -24,8 +24,6 @@
         'externalTemperature': 8.0,
         'hvacStatus': 'off',
       }),
-      'res_state': dict({
-      }),
     }),
     'details': dict({
       'assets': list([
@@ -228,8 +226,6 @@
           'hvac_status': dict({
             'externalTemperature': 8.0,
             'hvacStatus': 'off',
-          }),
-          'res_state': dict({
           }),
         }),
         'details': dict({

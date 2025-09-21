@@ -8,7 +8,6 @@ from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
-import time
 from typing import Any, NamedTuple, cast
 from xml.parsers.expat import ExpatError
 
@@ -23,9 +22,9 @@ from huawei_lte_api.exceptions import (
 from requests.exceptions import Timeout
 import voluptuous as vol
 
-from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
     ATTR_HW_VERSION,
     ATTR_MODEL,
     ATTR_SW_VERSION,
@@ -56,9 +55,9 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     ADMIN_SERVICES,
     ALL_KEYS,
-    ATTR_CONFIG_ENTRY_ID,
     CONF_MANUFACTURER,
     CONF_UNAUTHENTICATED_MODE,
+    CONF_UPNP_UDN,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
     DEFAULT_MANUFACTURER,
@@ -79,7 +78,6 @@ from .const import (
     KEY_WLAN_HOST_LIST,
     KEY_WLAN_WIFI_FEATURE_SWITCH,
     KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
-    NOTIFY_SUPPRESS_TIMEOUT,
     SERVICE_RESUME_INTEGRATION,
     SERVICE_SUSPEND_INTEGRATION,
     UPDATE_SIGNAL,
@@ -90,36 +88,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
-NOTIFY_SCHEMA = vol.Any(
-    None,
-    vol.Schema(
-        {
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_RECIPIENT): vol.Any(
-                None, vol.All(cv.ensure_list, [cv.string])
-            ),
-        }
-    ),
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_URL): cv.url,
-                        vol.Optional(CONF_USERNAME): cv.string,
-                        vol.Optional(CONF_PASSWORD): cv.string,
-                        vol.Optional(NOTIFY_DOMAIN): NOTIFY_SCHEMA,
-                    }
-                )
-            ],
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 SERVICE_SCHEMA = vol.Schema({vol.Optional(CONF_URL): cv.url})
 
@@ -154,7 +123,6 @@ class Router:
     inflight_gets: set[str] = field(default_factory=set, init=False)
     client: Client = field(init=False)
     suspended: bool = field(default=False, init=False)
-    notify_last_attempt: float = field(default=-1, init=False)
 
     def __post_init__(self) -> None:
         """Set up internal state on init."""
@@ -180,9 +148,12 @@ class Router:
     @property
     def device_connections(self) -> set[tuple[str, str]]:
         """Get router connections for device registry."""
-        return {
+        connections = {
             (dr.CONNECTION_NETWORK_MAC, x) for x in self.config_entry.data[CONF_MAC]
         }
+        if udn := self.config_entry.data.get(CONF_UPNP_UDN):
+            connections.add((dr.CONNECTION_UPNP, udn))
+        return connections
 
     def _get_data(self, key: str, func: Callable[[], Any]) -> None:
         if not self.subscriptions.get(key):
@@ -225,19 +196,6 @@ class Router:
                 key,
             )
             self.subscriptions.pop(key)
-        except Timeout:
-            grace_left = (
-                self.notify_last_attempt - time.monotonic() + NOTIFY_SUPPRESS_TIMEOUT
-            )
-            if grace_left > 0:
-                _LOGGER.debug(
-                    "%s timed out, %.1fs notify timeout suppress grace remaining",
-                    key,
-                    grace_left,
-                    exc_info=True,
-                )
-            else:
-                raise
         finally:
             self.inflight_gets.discard(key)
             _LOGGER.debug("%s=%s", key, self.data.get(key))

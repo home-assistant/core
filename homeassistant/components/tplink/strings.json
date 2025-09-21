@@ -30,8 +30,8 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "username": "Your TP-Link cloud username which is the full email and is case sensitive.",
-          "password": "Your TP-Link cloud password which is case sensitive."
+          "username": "Your TP-Link cloud username which is the full email and is case-sensitive.",
+          "password": "Your TP-Link cloud password which is case-sensitive."
         }
       },
       "discovery_auth_confirm": {
@@ -209,7 +209,7 @@
         "name": "Last water leak alert"
       },
       "auto_off_at": {
-        "name": "Auto off at"
+        "name": "Auto-off at"
       },
       "report_interval": {
         "name": "Report interval"
@@ -297,10 +297,10 @@
         "name": "LED"
       },
       "auto_update_enabled": {
-        "name": "Auto update enabled"
+        "name": "Auto-update enabled"
       },
       "auto_off_enabled": {
-        "name": "Auto off enabled"
+        "name": "Auto-off enabled"
       },
       "smooth_transitions": {
         "name": "Smooth transitions"
@@ -388,7 +388,7 @@
         },
         "segments": {
           "name": "Segments",
-          "description": "List of Segments (0 for all)."
+          "description": "List of segments (0 for all)."
         },
         "brightness": {
           "name": "Brightness",
@@ -486,9 +486,6 @@
     },
     "unexpected_device": {
       "message": "Unexpected device found at {host}; expected {expected}, found {found}"
-    },
-    "unsupported_mode": {
-      "message": "Tried to set unsupported mode: {mode}"
     },
     "invalid_alarm_duration": {
       "message": "Invalid duration {duration} available: 1-{duration_max}s"

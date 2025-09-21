@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 from datetime import timedelta
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from aiocomelit.api import (
     AlarmDataObject,
@@ -13,8 +13,18 @@ from aiocomelit.api import (
     ComelitVedoAreaObject,
     ComelitVedoZoneObject,
 )
-from aiocomelit.const import BRIDGE, VEDO
+from aiocomelit.const import (
+    BRIDGE,
+    CLIMATE,
+    COVER,
+    IRRIGATION,
+    LIGHT,
+    OTHER,
+    SCENARIO,
+    VEDO,
+)
 from aiocomelit.exceptions import CannotAuthenticate, CannotConnect, CannotRetrieveData
+from aiohttp import ClientSession
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -95,13 +105,46 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
             await self.api.login()
             return await self._async_update_system_data()
         except (CannotConnect, CannotRetrieveData) as err:
-            raise UpdateFailed(repr(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": repr(err)},
+            ) from err
         except CannotAuthenticate as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_authenticate",
+            ) from err
 
     @abstractmethod
     async def _async_update_system_data(self) -> T:
         """Class method for updating data."""
+
+    async def _async_remove_stale_devices(
+        self,
+        previous_list: dict[int, Any],
+        current_list: dict[int, Any],
+        dev_type: str,
+    ) -> None:
+        """Remove stale devices."""
+        device_registry = dr.async_get(self.hass)
+
+        for i in previous_list:
+            if i not in current_list:
+                _LOGGER.debug(
+                    "Detected change in %s devices: index %s removed",
+                    dev_type,
+                    i,
+                )
+                identifier = f"{self.config_entry.entry_id}-{dev_type}-{i}"
+                device = device_registry.async_get_device(
+                    identifiers={(DOMAIN, identifier)}
+                )
+                if device:
+                    device_registry.async_update_device(
+                        device_id=device.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
 
 
 class ComelitSerialBridge(
@@ -119,16 +162,25 @@ class ComelitSerialBridge(
         host: str,
         port: int,
         pin: int,
+        session: ClientSession,
     ) -> None:
         """Initialize the scanner."""
-        self.api = ComeliteSerialBridgeApi(host, port, pin)
+        self.api = ComeliteSerialBridgeApi(host, port, pin, session)
         super().__init__(hass, entry, BRIDGE, host)
 
     async def _async_update_system_data(
         self,
     ) -> dict[str, dict[int, ComelitSerialBridgeObject]]:
         """Specific method for updating data."""
-        return await self.api.get_all_devices()
+        data = await self.api.get_all_devices()
+
+        if self.data:
+            for dev_type in (CLIMATE, COVER, LIGHT, IRRIGATION, OTHER, SCENARIO):
+                await self._async_remove_stale_devices(
+                    self.data[dev_type], data[dev_type], dev_type
+                )
+
+        return data
 
 
 class ComelitVedoSystem(ComelitBaseCoordinator[AlarmDataObject]):
@@ -144,13 +196,24 @@ class ComelitVedoSystem(ComelitBaseCoordinator[AlarmDataObject]):
         host: str,
         port: int,
         pin: int,
+        session: ClientSession,
     ) -> None:
         """Initialize the scanner."""
-        self.api = ComelitVedoApi(host, port, pin)
+        self.api = ComelitVedoApi(host, port, pin, session)
         super().__init__(hass, entry, VEDO, host)
 
     async def _async_update_system_data(
         self,
     ) -> AlarmDataObject:
         """Specific method for updating data."""
-        return await self.api.get_all_areas_and_zones()
+        data = await self.api.get_all_areas_and_zones()
+
+        if self.data:
+            for obj_type in ("alarm_areas", "alarm_zones"):
+                await self._async_remove_stale_devices(
+                    self.data[obj_type],
+                    data[obj_type],
+                    "area" if obj_type == "alarm_areas" else "zone",
+                )
+
+        return data

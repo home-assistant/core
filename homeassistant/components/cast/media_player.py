@@ -10,8 +10,10 @@ import json
 import logging
 from typing import TYPE_CHECKING, Any, Concatenate
 
-import pychromecast
+import pychromecast.config
+import pychromecast.const
 from pychromecast.controllers.homeassistant import HomeAssistantController
+import pychromecast.controllers.media
 from pychromecast.controllers.media import (
     MEDIA_PLAYER_ERROR_CODES,
     MEDIA_PLAYER_STATE_BUFFERING,
@@ -60,7 +62,7 @@ from .const import (
     ADDED_CAST_DEVICES_KEY,
     CAST_MULTIZONE_MANAGER_KEY,
     CONF_IGNORE_CEC,
-    DOMAIN as CAST_DOMAIN,
+    DOMAIN,
     SIGNAL_CAST_DISCOVERED,
     SIGNAL_CAST_REMOVED,
     SIGNAL_HASS_CAST_SHOW_VIEW,
@@ -315,7 +317,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         self._cast_view_remove_handler: CALLBACK_TYPE | None = None
         self._attr_unique_id = str(cast_info.uuid)
         self._attr_device_info = DeviceInfo(
-            identifiers={(CAST_DOMAIN, str(cast_info.uuid).replace("-", ""))},
+            identifiers={(DOMAIN, str(cast_info.uuid).replace("-", ""))},
             manufacturer=str(cast_info.cast_info.manufacturer),
             model=cast_info.cast_info.model_name,
             name=str(cast_info.friendly_name),
@@ -591,7 +593,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         """Generate root node."""
         children = []
         # Add media browsers
-        for platform in self.hass.data[CAST_DOMAIN]["cast_platform"].values():
+        for platform in self.hass.data[DOMAIN]["cast_platform"].values():
             children.extend(
                 await platform.async_get_media_browser_root_object(
                     self.hass, self._chromecast.cast_type
@@ -650,7 +652,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
 
         platform: CastProtocol
         assert media_content_type is not None
-        for platform in self.hass.data[CAST_DOMAIN]["cast_platform"].values():
+        for platform in self.hass.data[DOMAIN]["cast_platform"].values():
             browse_media = await platform.async_browse_media(
                 self.hass,
                 media_content_type,
@@ -680,7 +682,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
 
         # Handle media supported by a known cast app
-        if media_type == CAST_DOMAIN:
+        if media_type == DOMAIN:
             try:
                 app_data = json.loads(media_id)
                 if metadata := extra.get("metadata"):
@@ -712,7 +714,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             return
 
         # Try the cast platforms
-        for platform in self.hass.data[CAST_DOMAIN]["cast_platform"].values():
+        for platform in self.hass.data[DOMAIN]["cast_platform"].values():
             result = await platform.async_play_media(
                 self.hass, self.entity_id, chromecast, media_type, media_id
             )

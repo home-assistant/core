@@ -211,6 +211,7 @@ def _torrents_info_attr(
             "percent_done": f"{torrent.percent_done * 100:.2f}",
             "status": torrent.status,
             "id": torrent.id,
+            "ratio": torrent.ratio,
         }
         with suppress(ValueError):
             info["eta"] = str(torrent.eta)

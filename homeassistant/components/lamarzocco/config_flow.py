@@ -5,11 +5,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 import logging
 from typing import Any
+import uuid
 
 from aiohttp import ClientSession
 from pylamarzocco import LaMarzoccoCloudClient
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.models import Thing
+from pylamarzocco.util import InstallationKey, generate_installation_key
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
@@ -21,7 +23,7 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -33,7 +35,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -45,10 +46,12 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import CONF_USE_BLUETOOTH, DOMAIN
+from . import create_client_session
+from .const import CONF_INSTALLATION_KEY, CONF_USE_BLUETOOTH, DOMAIN
 from .coordinator import LaMarzoccoConfigEntry
 
 CONF_MACHINE = "machine"
+BT_MODEL_PREFIXES = ("MICRA", "MINI", "GS3")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,9 +59,10 @@ _LOGGER = logging.getLogger(__name__)
 class LmConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for La Marzocco."""
 
-    VERSION = 3
+    VERSION = 4
 
     _client: ClientSession
+    _installation_key: InstallationKey
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -82,13 +86,18 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 **user_input,
             }
 
-            self._client = async_create_clientsession(self.hass)
+            self._client = create_client_session(self.hass)
+            self._installation_key = generate_installation_key(
+                str(uuid.uuid4()).lower()
+            )
             cloud_client = LaMarzoccoCloudClient(
                 username=data[CONF_USERNAME],
                 password=data[CONF_PASSWORD],
                 client=self._client,
+                installation_key=self._installation_key,
             )
             try:
+                await cloud_client.async_register_client()
                 things = await cloud_client.list_things()
             except AuthFail:
                 _LOGGER.debug("Server rejected login credentials")
@@ -105,7 +114,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._config = data
                 if self.source == SOURCE_REAUTH:
                     return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data=data
+                        self._get_reauth_entry(), data_updates=data
                     )
                 if self._discovered:
                     if self._discovered[CONF_MACHINE] not in self._things:
@@ -169,15 +178,21 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 if self.source == SOURCE_RECONFIGURE:
                     for service_info in async_discovered_service_info(self.hass):
-                        self._discovered[service_info.name] = service_info.address
+                        if service_info.name.startswith(BT_MODEL_PREFIXES):
+                            self._discovered[service_info.name] = service_info.address
 
                     if self._discovered:
                         return await self.async_step_bluetooth_selection()
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
+                        data_updates=self._config,
+                    )
 
                 return self.async_create_entry(
                     title=selected_device.name,
                     data={
                         **self._config,
+                        CONF_INSTALLATION_KEY: self._installation_key.to_json(),
                         CONF_TOKEN: self._things[serial_number].ble_auth_token,
                     },
                 )
@@ -217,8 +232,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_update_reload_and_abort(
                 self._get_reconfigure_entry(),
-                data={
-                    **self._config,
+                data_updates={
                     CONF_MAC: user_input[CONF_MAC],
                 },
             )
@@ -358,7 +372,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         return LmOptionsFlowHandler()
 
 
-class LmOptionsFlowHandler(OptionsFlow):
+class LmOptionsFlowHandler(OptionsFlowWithReload):
     """Handles options flow for the component."""
 
     async def async_step_init(

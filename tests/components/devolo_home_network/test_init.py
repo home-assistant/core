@@ -25,27 +25,13 @@ from .const import IP
 from .mock import MockDevice
 
 
-@pytest.mark.parametrize(
-    "device", ["mock_device", "mock_repeater_device", "mock_ipv6_device"]
-)
-async def test_setup_entry(
-    hass: HomeAssistant,
-    device: str,
-    device_registry: dr.DeviceRegistry,
-    snapshot: SnapshotAssertion,
-    request: pytest.FixtureRequest,
-) -> None:
+@pytest.mark.usefixtures("mock_device")
+async def test_setup_entry(hass: HomeAssistant) -> None:
     """Test setup entry."""
-    mock_device: MockDevice = request.getfixturevalue(device)
     entry = configure_integration(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
-
-    device_info = device_registry.async_get_device(
-        {(DOMAIN, mock_device.serial_number)}
-    )
-    assert device_info == snapshot
 
 
 async def test_setup_device_not_found(hass: HomeAssistant) -> None:
@@ -77,6 +63,26 @@ async def test_hass_stop(hass: HomeAssistant, mock_device: MockDevice) -> None:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     mock_device.async_disconnect.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "device", ["mock_device", "mock_repeater_device", "mock_ipv6_device"]
+)
+async def test_device(
+    hass: HomeAssistant,
+    device: str,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test device setup."""
+    mock_device: MockDevice = request.getfixturevalue(device)
+    entry = configure_integration(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    device_info = device_registry.async_get_device(
+        {(DOMAIN, mock_device.serial_number)}
+    )
+    assert device_info == snapshot
 
 
 @pytest.mark.parametrize(

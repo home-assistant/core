@@ -11,6 +11,9 @@
     },
     "enable": {
       "service": "mdi:database"
+    },
+    "get_statistics": {
+      "service": "mdi:chart-bar"
     }
   }
 }

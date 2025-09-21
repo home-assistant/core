@@ -37,7 +37,7 @@ class FakeHaScanner(FakeScannerMixin, HaScanner):
         """Return the discovered devices and advertisement data."""
         return {
             "44:44:33:11:23:45": (
-                generate_ble_device(name="x", rssi=-127, address="44:44:33:11:23:45"),
+                generate_ble_device(name="x", address="44:44:33:11:23:45"),
                 generate_advertisement_data(local_name="x"),
             )
         }
@@ -297,6 +297,7 @@ async def test_diagnostics_macos(
         assert diag == {
             "adapters": {
                 "Core Bluetooth": {
+                    "adapter_type": None,
                     "address": "00:00:00:00:00:00",
                     "manufacturer": "Apple",
                     "passive_scan": False,
@@ -317,6 +318,7 @@ async def test_diagnostics_macos(
                 },
                 "adapters": {
                     "Core Bluetooth": {
+                        "adapter_type": None,
                         "address": "00:00:00:00:00:00",
                         "manufacturer": "Apple",
                         "passive_scan": False,
@@ -353,6 +355,7 @@ async def test_diagnostics_macos(
                             "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
                         },
                         "name": "wohand",
+                        "raw": None,
                         "rssi": -127,
                         "service_data": {},
                         "service_uuids": [],
@@ -382,6 +385,7 @@ async def test_diagnostics_macos(
                             "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
                         },
                         "name": "wohand",
+                        "raw": None,
                         "rssi": -127,
                         "service_data": {},
                         "service_uuids": [],
@@ -556,6 +560,7 @@ async def test_diagnostics_remote_adapter(
                             "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
                         },
                         "name": "wohand",
+                        "raw": None,
                         "rssi": -127,
                         "service_data": {},
                         "service_uuids": [],
@@ -585,6 +590,7 @@ async def test_diagnostics_remote_adapter(
                             "1": {"__type": "<class 'bytes'>", "repr": "b'\\x01'"}
                         },
                         "name": "wohand",
+                        "raw": None,
                         "rssi": -127,
                         "service_data": {},
                         "service_uuids": [],
@@ -651,6 +657,7 @@ async def test_diagnostics_remote_adapter(
                         "source": "esp32",
                         "start_time": ANY,
                         "time_since_last_device_detection": {"44:44:33:11:23:45": ANY},
+                        "raw_advertisement_data": {"44:44:33:11:23:45": None},
                         "type": "FakeScanner",
                     },
                 ],

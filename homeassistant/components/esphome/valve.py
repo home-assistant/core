@@ -65,29 +65,39 @@ class EsphomeValve(EsphomeEntity[ValveInfo, ValveState], ValveEntity):
 
     @property
     @esphome_state_property
-    def current_valve_position(self) -> int | None:
+    def current_valve_position(self) -> int:
         """Return current position of valve. 0 is closed, 100 is open."""
         return round(self._state.position * 100.0)
 
     @convert_api_error_ha_error
     async def async_open_valve(self, **kwargs: Any) -> None:
         """Open the valve."""
-        self._client.valve_command(key=self._key, position=1.0)
+        self._client.valve_command(
+            key=self._key, position=1.0, device_id=self._static_info.device_id
+        )
 
     @convert_api_error_ha_error
     async def async_close_valve(self, **kwargs: Any) -> None:
         """Close valve."""
-        self._client.valve_command(key=self._key, position=0.0)
+        self._client.valve_command(
+            key=self._key, position=0.0, device_id=self._static_info.device_id
+        )
 
     @convert_api_error_ha_error
     async def async_stop_valve(self, **kwargs: Any) -> None:
         """Stop the valve."""
-        self._client.valve_command(key=self._key, stop=True)
+        self._client.valve_command(
+            key=self._key, stop=True, device_id=self._static_info.device_id
+        )
 
     @convert_api_error_ha_error
     async def async_set_valve_position(self, position: float) -> None:
         """Move the valve to a specific position."""
-        self._client.valve_command(key=self._key, position=position / 100)
+        self._client.valve_command(
+            key=self._key,
+            position=position / 100,
+            device_id=self._static_info.device_id,
+        )
 
 
 async_setup_entry = partial(

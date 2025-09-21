@@ -32,7 +32,7 @@
         "name": "[%key:common::action::pause%]"
       },
       "resume": {
-        "name": "[%key:component::sabnzbd::services::resume::name%]"
+        "name": "Resume"
       }
     },
     "number": {
@@ -74,56 +74,6 @@
       "overall_total": {
         "name": "Overall total"
       }
-    }
-  },
-  "services": {
-    "pause": {
-      "name": "[%key:common::action::pause%]",
-      "description": "Pauses downloads.",
-      "fields": {
-        "api_key": {
-          "name": "SABnzbd API key",
-          "description": "The SABnzbd API key to pause downloads."
-        }
-      }
-    },
-    "resume": {
-      "name": "Resume",
-      "description": "Resumes downloads.",
-      "fields": {
-        "api_key": {
-          "name": "[%key:component::sabnzbd::services::pause::fields::api_key::name%]",
-          "description": "The SABnzbd API key to resume downloads."
-        }
-      }
-    },
-    "set_speed": {
-      "name": "Set speed",
-      "description": "Sets the download speed limit.",
-      "fields": {
-        "api_key": {
-          "name": "[%key:component::sabnzbd::services::pause::fields::api_key::name%]",
-          "description": "The SABnzbd API key to set speed limit."
-        },
-        "speed": {
-          "name": "Speed",
-          "description": "Speed limit. If specified as a number with no units, will be interpreted as a percent. If units are provided (e.g., 500K) will be interpreted absolutely."
-        }
-      }
-    }
-  },
-  "issues": {
-    "pause_action_deprecated": {
-      "title": "SABnzbd pause action deprecated",
-      "description": "The 'Pause' action is deprecated and will be removed in a future version. Please use the 'Pause' button instead. To remove this issue, please adjust automations accordingly and restart Home Assistant."
-    },
-    "resume_action_deprecated": {
-      "title": "SABnzbd resume action deprecated",
-      "description": "The 'Resume' action is deprecated and will be removed in a future version. Please use the 'Resume' button instead. To remove this issue, please adjust automations accordingly and restart Home Assistant."
-    },
-    "set_speed_action_deprecated": {
-      "title": "SABnzbd set_speed action deprecated",
-      "description": "The 'Set speed' action is deprecated and will be removed in a future version. Please use the 'Speedlimit' number entity instead. To remove this issue, please adjust automations accordingly and restart Home Assistant."
     }
   },
   "exceptions": {

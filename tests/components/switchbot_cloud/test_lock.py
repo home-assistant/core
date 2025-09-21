@@ -17,6 +17,7 @@ async def test_lock(hass: HomeAssistant, mock_list_devices, mock_get_status) -> 
     """Test locking and unlocking."""
     mock_list_devices.return_value = [
         Device(
+            version="V1.0",
             deviceId="lock-id-1",
             deviceName="lock-1",
             deviceType="Smart Lock",

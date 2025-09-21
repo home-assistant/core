@@ -390,7 +390,9 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> lis
     elif isinstance(parameter, str):
         if parameter.startswith("/"):
             parameter = int(parameter[1:])
-            res = [x for x in range(min_value, max_value + 1) if x % parameter == 0]
+            res = list(
+                range(min_value + (-min_value % parameter), max_value + 1, parameter)
+            )
         else:
             res = [int(parameter)]
 

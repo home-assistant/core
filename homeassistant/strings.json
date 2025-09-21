@@ -53,6 +53,7 @@
         "email": "Email",
         "host": "Host",
         "ip": "IP address",
+        "implementation": "Application credentials",
         "language": "Language",
         "latitude": "Latitude",
         "llm_hass_api": "Control Home Assistant",
@@ -64,6 +65,7 @@
         "path": "Path",
         "pin": "PIN code",
         "port": "Port",
+        "prompt": "Instructions",
         "ssl": "Uses an SSL certificate",
         "url": "URL",
         "usb_path": "USB device path",
@@ -71,7 +73,8 @@
         "verify_ssl": "Verify SSL certificate"
       },
       "description": {
-        "confirm_setup": "Do you want to start setup?"
+        "confirm_setup": "Do you want to start setup?",
+        "implementation": "The credentials you want to use to authenticate."
       },
       "error": {
         "cannot_connect": "Failed to connect",
@@ -126,7 +129,11 @@
       "disabled": "Disabled",
       "discharging": "Discharging",
       "disconnected": "Disconnected",
+      "empty": "Empty",
       "enabled": "Enabled",
+      "error": "Error",
+      "fault": "Fault",
+      "full": "Full",
       "high": "High",
       "home": "Home",
       "idle": "Idle",

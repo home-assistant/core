@@ -1,12 +1,14 @@
 """The Washer/Dryer Sensor for Whirlpool Appliances."""
 
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import override
 
 from whirlpool.appliance import Appliance
-from whirlpool.washerdryer import MachineState, WasherDryer
+from whirlpool.dryer import Dryer, MachineState as DryerMachineState
+from whirlpool.washer import MachineState as WasherMachineState, Washer
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -22,10 +24,11 @@ from homeassistant.util.dt import utcnow
 from . import WhirlpoolConfigEntry
 from .entity import WhirlpoolEntity
 
+PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(minutes=5)
 
 WASHER_TANK_FILL = {
-    0: "unknown",
+    0: None,
     1: "empty",
     2: "25",
     3: "50",
@@ -33,26 +36,49 @@ WASHER_TANK_FILL = {
     5: "active",
 }
 
-WASHER_DRYER_MACHINE_STATE = {
-    MachineState.Standby: "standby",
-    MachineState.Setting: "setting",
-    MachineState.DelayCountdownMode: "delay_countdown",
-    MachineState.DelayPause: "delay_paused",
-    MachineState.SmartDelay: "smart_delay",
-    MachineState.SmartGridPause: "smart_grid_pause",
-    MachineState.Pause: "pause",
-    MachineState.RunningMainCycle: "running_maincycle",
-    MachineState.RunningPostCycle: "running_postcycle",
-    MachineState.Exceptions: "exception",
-    MachineState.Complete: "complete",
-    MachineState.PowerFailure: "power_failure",
-    MachineState.ServiceDiagnostic: "service_diagnostic_mode",
-    MachineState.FactoryDiagnostic: "factory_diagnostic_mode",
-    MachineState.LifeTest: "life_test",
-    MachineState.CustomerFocusMode: "customer_focus_mode",
-    MachineState.DemoMode: "demo_mode",
-    MachineState.HardStopOrError: "hard_stop_or_error",
-    MachineState.SystemInit: "system_initialize",
+WASHER_MACHINE_STATE = {
+    WasherMachineState.Standby: "standby",
+    WasherMachineState.Setting: "setting",
+    WasherMachineState.DelayCountdownMode: "delay_countdown",
+    WasherMachineState.DelayPause: "delay_paused",
+    WasherMachineState.SmartDelay: "smart_delay",
+    WasherMachineState.SmartGridPause: "smart_grid_pause",
+    WasherMachineState.Pause: "pause",
+    WasherMachineState.RunningMainCycle: "running_maincycle",
+    WasherMachineState.RunningPostCycle: "running_postcycle",
+    WasherMachineState.Exceptions: "exception",
+    WasherMachineState.Complete: "complete",
+    WasherMachineState.PowerFailure: "power_failure",
+    WasherMachineState.ServiceDiagnostic: "service_diagnostic_mode",
+    WasherMachineState.FactoryDiagnostic: "factory_diagnostic_mode",
+    WasherMachineState.LifeTest: "life_test",
+    WasherMachineState.CustomerFocusMode: "customer_focus_mode",
+    WasherMachineState.DemoMode: "demo_mode",
+    WasherMachineState.HardStopOrError: "hard_stop_or_error",
+    WasherMachineState.SystemInit: "system_initialize",
+}
+
+DRYER_MACHINE_STATE = {
+    DryerMachineState.Standby: "standby",
+    DryerMachineState.Setting: "setting",
+    DryerMachineState.DelayCountdownMode: "delay_countdown",
+    DryerMachineState.DelayPause: "delay_paused",
+    DryerMachineState.SmartDelay: "smart_delay",
+    DryerMachineState.SmartGridPause: "smart_grid_pause",
+    DryerMachineState.Pause: "pause",
+    DryerMachineState.RunningMainCycle: "running_maincycle",
+    DryerMachineState.RunningPostCycle: "running_postcycle",
+    DryerMachineState.Exceptions: "exception",
+    DryerMachineState.Complete: "complete",
+    DryerMachineState.PowerFailure: "power_failure",
+    DryerMachineState.ServiceDiagnostic: "service_diagnostic_mode",
+    DryerMachineState.FactoryDiagnostic: "factory_diagnostic_mode",
+    DryerMachineState.LifeTest: "life_test",
+    DryerMachineState.CustomerFocusMode: "customer_focus_mode",
+    DryerMachineState.DemoMode: "demo_mode",
+    DryerMachineState.HardStopOrError: "hard_stop_or_error",
+    DryerMachineState.SystemInit: "system_initialize",
+    DryerMachineState.Cancelled: "cancelled",
 }
 
 STATE_CYCLE_FILLING = "cycle_filling"
@@ -61,32 +87,40 @@ STATE_CYCLE_SENSING = "cycle_sensing"
 STATE_CYCLE_SOAKING = "cycle_soaking"
 STATE_CYCLE_SPINNING = "cycle_spinning"
 STATE_CYCLE_WASHING = "cycle_washing"
-STATE_DOOR_OPEN = "door_open"
 
 
-def washer_dryer_state(washer_dryer: WasherDryer) -> str | None:
-    """Determine correct states for a washer/dryer."""
+def washer_state(washer: Washer) -> str | None:
+    """Determine correct states for a washer."""
 
-    if washer_dryer.get_door_open():
-        return STATE_DOOR_OPEN
+    machine_state = washer.get_machine_state()
 
-    machine_state = washer_dryer.get_machine_state()
-
-    if machine_state == MachineState.RunningMainCycle:
-        if washer_dryer.get_cycle_status_filling():
+    if machine_state == WasherMachineState.RunningMainCycle:
+        if washer.get_cycle_status_filling():
             return STATE_CYCLE_FILLING
-        if washer_dryer.get_cycle_status_rinsing():
+        if washer.get_cycle_status_rinsing():
             return STATE_CYCLE_RINSING
-        if washer_dryer.get_cycle_status_sensing():
+        if washer.get_cycle_status_sensing():
             return STATE_CYCLE_SENSING
-        if washer_dryer.get_cycle_status_soaking():
+        if washer.get_cycle_status_soaking():
             return STATE_CYCLE_SOAKING
-        if washer_dryer.get_cycle_status_spinning():
+        if washer.get_cycle_status_spinning():
             return STATE_CYCLE_SPINNING
-        if washer_dryer.get_cycle_status_washing():
+        if washer.get_cycle_status_washing():
             return STATE_CYCLE_WASHING
 
-    return WASHER_DRYER_MACHINE_STATE.get(machine_state)
+    return WASHER_MACHINE_STATE.get(machine_state)
+
+
+def dryer_state(dryer: Dryer) -> str | None:
+    """Determine correct states for a dryer."""
+
+    machine_state = dryer.get_machine_state()
+
+    if machine_state == DryerMachineState.RunningMainCycle:
+        if dryer.get_cycle_status_sensing():
+            return STATE_CYCLE_SENSING
+
+    return DRYER_MACHINE_STATE.get(machine_state)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -96,15 +130,19 @@ class WhirlpoolSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Appliance], str | None]
 
 
-WASHER_DRYER_STATE_OPTIONS = [
-    *WASHER_DRYER_MACHINE_STATE.values(),
+WASHER_STATE_OPTIONS = [
+    *WASHER_MACHINE_STATE.values(),
     STATE_CYCLE_FILLING,
     STATE_CYCLE_RINSING,
     STATE_CYCLE_SENSING,
     STATE_CYCLE_SOAKING,
     STATE_CYCLE_SPINNING,
     STATE_CYCLE_WASHING,
-    STATE_DOOR_OPEN,
+]
+
+DRYER_STATE_OPTIONS = [
+    *DRYER_MACHINE_STATE.values(),
+    STATE_CYCLE_SENSING,
 ]
 
 WASHER_SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
@@ -112,15 +150,15 @@ WASHER_SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         key="state",
         translation_key="washer_state",
         device_class=SensorDeviceClass.ENUM,
-        options=WASHER_DRYER_STATE_OPTIONS,
-        value_fn=washer_dryer_state,
+        options=WASHER_STATE_OPTIONS,
+        value_fn=washer_state,
     ),
     WhirlpoolSensorEntityDescription(
         key="DispenseLevel",
         translation_key="whirlpool_tank",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
-        options=list(WASHER_TANK_FILL.values()),
+        options=[value for value in WASHER_TANK_FILL.values() if value],
         value_fn=lambda washer: WASHER_TANK_FILL.get(washer.get_dispense_1_level()),
     ),
 )
@@ -130,8 +168,8 @@ DRYER_SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
         key="state",
         translation_key="dryer_state",
         device_class=SensorDeviceClass.ENUM,
-        options=WASHER_DRYER_STATE_OPTIONS,
-        value_fn=washer_dryer_state,
+        options=DRYER_STATE_OPTIONS,
+        value_fn=dryer_state,
     ),
 )
 
@@ -151,24 +189,40 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Config flow entry for Whirlpool sensors."""
-    entities: list = []
     appliances_manager = config_entry.runtime_data
-    for washer_dryer in appliances_manager.washer_dryers:
-        sensor_descriptions = (
-            DRYER_SENSORS
-            if "dryer" in washer_dryer.appliance_info.data_model.lower()
-            else WASHER_SENSORS
-        )
 
-        entities.extend(
-            WhirlpoolSensor(washer_dryer, description)
-            for description in sensor_descriptions
-        )
-        entities.extend(
-            WasherDryerTimeSensor(washer_dryer, description)
-            for description in WASHER_DRYER_TIME_SENSORS
-        )
-    async_add_entities(entities)
+    washer_sensors = [
+        WhirlpoolSensor(washer, description)
+        for washer in appliances_manager.washers
+        for description in WASHER_SENSORS
+    ]
+
+    washer_time_sensors = [
+        WasherTimeSensor(washer, description)
+        for washer in appliances_manager.washers
+        for description in WASHER_DRYER_TIME_SENSORS
+    ]
+
+    dryer_sensors = [
+        WhirlpoolSensor(dryer, description)
+        for dryer in appliances_manager.dryers
+        for description in DRYER_SENSORS
+    ]
+
+    dryer_time_sensors = [
+        DryerTimeSensor(dryer, description)
+        for dryer in appliances_manager.dryers
+        for description in WASHER_DRYER_TIME_SENSORS
+    ]
+
+    async_add_entities(
+        [
+            *washer_sensors,
+            *washer_time_sensors,
+            *dryer_sensors,
+            *dryer_time_sensors,
+        ]
+    )
 
 
 class WhirlpoolSensor(WhirlpoolEntity, SensorEntity):
@@ -187,21 +241,29 @@ class WhirlpoolSensor(WhirlpoolEntity, SensorEntity):
         return self.entity_description.value_fn(self._appliance)
 
 
-class WasherDryerTimeSensor(WhirlpoolEntity, RestoreSensor):
-    """A timestamp class for the Whirlpool washer/dryer."""
+class WasherDryerTimeSensorBase(WhirlpoolEntity, RestoreSensor, ABC):
+    """Abstract base class for Whirlpool washer/dryer time sensors."""
 
     _attr_should_poll = True
+    _appliance: Washer | Dryer
 
     def __init__(
-        self, washer_dryer: WasherDryer, description: SensorEntityDescription
+        self, appliance: Washer | Dryer, description: SensorEntityDescription
     ) -> None:
-        """Initialize the washer sensor."""
-        super().__init__(washer_dryer, unique_id_suffix=f"-{description.key}")
+        """Initialize the washer/dryer sensor."""
+        super().__init__(appliance, unique_id_suffix=f"-{description.key}")
         self.entity_description = description
 
-        self._wd = washer_dryer
         self._running: bool | None = None
         self._value: datetime | None = None
+
+    @abstractmethod
+    def _is_machine_state_finished(self) -> bool:
+        """Return true if the machine is in a finished state."""
+
+    @abstractmethod
+    def _is_machine_state_running(self) -> bool:
+        """Return true if the machine is in a running state."""
 
     async def async_added_to_hass(self) -> None:
         """Register attribute updates callback."""
@@ -212,28 +274,62 @@ class WasherDryerTimeSensor(WhirlpoolEntity, RestoreSensor):
 
     async def async_update(self) -> None:
         """Update status of Whirlpool."""
-        await self._wd.fetch_data()
+        await self._appliance.fetch_data()
 
     @override
     @property
     def native_value(self) -> datetime | None:
         """Calculate the time stamp for completion."""
-        machine_state = self._wd.get_machine_state()
         now = utcnow()
-        if (
-            machine_state.value
-            in {MachineState.Complete.value, MachineState.Standby.value}
-            and self._running
-        ):
+
+        if self._is_machine_state_finished() and self._running:
             self._running = False
             self._value = now
 
-        if machine_state is MachineState.RunningMainCycle:
+        if self._is_machine_state_running():
             self._running = True
-            new_timestamp = now + timedelta(seconds=self._wd.get_time_remaining())
+            new_timestamp = now + timedelta(
+                seconds=self._appliance.get_time_remaining()
+            )
             if self._value is None or (
                 isinstance(self._value, datetime)
                 and abs(new_timestamp - self._value) > timedelta(seconds=60)
             ):
                 self._value = new_timestamp
         return self._value
+
+
+class WasherTimeSensor(WasherDryerTimeSensorBase):
+    """A timestamp class for Whirlpool washers."""
+
+    _appliance: Washer
+
+    def _is_machine_state_finished(self) -> bool:
+        """Return true if the machine is in a finished state."""
+        return self._appliance.get_machine_state() in {
+            WasherMachineState.Complete,
+            WasherMachineState.Standby,
+        }
+
+    def _is_machine_state_running(self) -> bool:
+        """Return true if the machine is in a running state."""
+        return (
+            self._appliance.get_machine_state() is WasherMachineState.RunningMainCycle
+        )
+
+
+class DryerTimeSensor(WasherDryerTimeSensorBase):
+    """A timestamp class for Whirlpool dryers."""
+
+    _appliance: Dryer
+
+    def _is_machine_state_finished(self) -> bool:
+        """Return true if the machine is in a finished state."""
+        return self._appliance.get_machine_state() in {
+            DryerMachineState.Complete,
+            DryerMachineState.Standby,
+        }
+
+    def _is_machine_state_running(self) -> bool:
+        """Return true if the machine is in a running state."""
+        return self._appliance.get_machine_state() is DryerMachineState.RunningMainCycle

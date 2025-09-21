@@ -2,10 +2,6 @@
 
 import logging
 
-CONF_ACTION = "action"
-CONF_ACTIONS = "actions"
-CONF_TRIGGER = "trigger"
-CONF_TRIGGERS = "triggers"
 CONF_TRIGGER_VARIABLES = "trigger_variables"
 DOMAIN = "automation"
 

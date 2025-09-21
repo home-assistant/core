@@ -1,0 +1,102 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up SEKO PoolDose device",
+        "description": "Login handling not supported by API. Device password must be deactivated, i.e., set to default value (0000).",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "IP address or hostname of your device"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "api_not_set": "API version not found in device response. Device firmware may not be compatible with this integration.",
+      "api_not_supported": "Unsupported API version {api_version_is} (expected: {api_version_should}). Device firmware may not be compatible with this integration.",
+      "params_fetch_failed": "Unable to fetch core parameters from device. Device firmware may not be compatible with this integration.",
+      "no_device_info": "Unable to retrieve device information. Device may not be properly initialized or may be an unsupported model.",
+      "no_serial_number": "No serial number found on the device. Device may not be properly configured or may be an unsupported model.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "orp": {
+        "name": "ORP"
+      },
+      "ph_type_dosing": {
+        "name": "pH dosing type",
+        "state": {
+          "alcalyne": "pH+",
+          "acid": "pH-"
+        }
+      },
+      "peristaltic_ph_dosing": {
+        "name": "pH peristaltic dosing",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "proportional": "Proportional",
+          "on_off": "On/Off",
+          "timed": "Timed"
+        }
+      },
+      "ofa_ph_value": {
+        "name": "pH overfeed alert time"
+      },
+      "orp_type_dosing": {
+        "name": "ORP dosing type",
+        "state": {
+          "low": "[%key:common::state::low%]",
+          "high": "[%key:common::state::high%]"
+        }
+      },
+      "peristaltic_orp_dosing": {
+        "name": "ORP peristaltic dosing",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "proportional": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::proportional%]",
+          "on_off": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::on_off%]",
+          "timed": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::timed%]"
+        }
+      },
+      "ofa_orp_value": {
+        "name": "ORP overfeed alert time"
+      },
+      "ph_calibration_type": {
+        "name": "pH calibration type",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "reference": "Reference",
+          "1_point": "1 point",
+          "2_points": "2 points"
+        }
+      },
+      "ph_calibration_offset": {
+        "name": "pH calibration offset"
+      },
+      "ph_calibration_slope": {
+        "name": "pH calibration slope"
+      },
+      "orp_calibration_type": {
+        "name": "ORP calibration type",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "reference": "[%key:component::pooldose::entity::sensor::ph_calibration_type::state::reference%]",
+          "1_point": "[%key:component::pooldose::entity::sensor::ph_calibration_type::state::1_point%]"
+        }
+      },
+      "orp_calibration_offset": {
+        "name": "ORP calibration offset"
+      },
+      "orp_calibration_slope": {
+        "name": "ORP calibration slope"
+      }
+    }
+  }
+}

@@ -121,8 +121,8 @@ def test_timestamp_to_utc(caplog: pytest.LogCaptureFixture) -> None:
     utc_now = dt_util.utcnow()
     assert dt_util.utc_to_timestamp(utc_now) == utc_now.timestamp()
     assert (
-        "utc_to_timestamp is a deprecated function which will be removed "
-        "in HA Core 2026.1. Use datetime.timestamp instead" in caplog.text
+        "The deprecated function utc_to_timestamp was called. It will be "
+        "removed in HA Core 2026.1. Use datetime.timestamp instead" in caplog.text
     )
 
 
@@ -297,6 +297,10 @@ def test_parse_time_expression() -> None:
     assert list(range(60)) == dt_util.parse_time_expression(None, 0, 59)
 
     assert list(range(0, 60, 5)) == dt_util.parse_time_expression("/5", 0, 59)
+
+    assert dt_util.parse_time_expression("/4", 5, 20) == [8, 12, 16, 20]
+    assert dt_util.parse_time_expression("/10", 10, 30) == [10, 20, 30]
+    assert dt_util.parse_time_expression("/3", 4, 29) == [6, 9, 12, 15, 18, 21, 24, 27]
 
     assert dt_util.parse_time_expression([2, 1, 3], 0, 59) == [1, 2, 3]
 

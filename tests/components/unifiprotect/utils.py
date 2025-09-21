@@ -23,9 +23,8 @@ from uiprotect.websocket import WebsocketState
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, split_entity_id
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, translation
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -101,17 +100,45 @@ def normalize_name(name: str) -> str:
     return name.lower().replace(":", "").replace(" ", "_").replace("-", "_")
 
 
-def ids_from_device_description(
+async def async_get_translated_entity_name(
+    hass: HomeAssistant, platform: Platform, translation_key: str
+) -> str:
+    """Get the translated entity name for a given platform and translation key."""
+    platform_name = "unifiprotect"
+
+    # Get the translations for the UniFi Protect integration
+    translations = await translation.async_get_translations(
+        hass, "en", "entity", {platform_name}
+    )
+
+    # Build the translation key in the format that Home Assistant uses
+    # component.{integration}.entity.{platform}.{translation_key}.name
+    full_translation_key = (
+        f"component.{platform_name}.entity.{platform.value}.{translation_key}.name"
+    )
+
+    # Get the translated name, fall back to the translation key if not found
+    return translations.get(full_translation_key, translation_key)
+
+
+async def ids_from_device_description(
+    hass: HomeAssistant,
     platform: Platform,
     device: ProtectAdoptableDeviceModel,
     description: EntityDescription,
 ) -> tuple[str, str]:
-    """Return expected unique_id and entity_id for a give platform/device/description combination."""
+    """Return expected unique_id and entity_id using real Home Assistant translation logic."""
 
     entity_name = normalize_name(device.display_name)
 
-    if description.name and isinstance(description.name, str):
-        description_entity_name = normalize_name(description.name)
+    if getattr(description, "translation_key", None):
+        # Get the actual translated name from Home Assistant
+        translated_name = await async_get_translated_entity_name(
+            hass, platform, description.translation_key
+        )
+        description_entity_name = normalize_name(translated_name)
+    elif getattr(description, "device_class", None):
+        description_entity_name = normalize_name(description.device_class)
     else:
         description_entity_name = normalize_name(description.key)
 
@@ -167,7 +194,6 @@ async def init_entry(
     ufp: MockUFPFixture,
     devices: Sequence[ProtectAdoptableDeviceModel],
     regenerate_ids: bool = True,
-    debug: bool = False,
 ) -> None:
     """Initialize Protect entry with given devices."""
 
@@ -175,14 +201,6 @@ async def init_entry(
     for device in devices:
         add_device(ufp.api.bootstrap, device, regenerate_ids)
 
-    if debug:
-        assert await async_setup_component(hass, "logger", {"logger": {}})
-        await hass.services.async_call(
-            "logger",
-            "set_level",
-            {"homeassistant.components.unifiprotect": "DEBUG"},
-            blocking=True,
-        )
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
 

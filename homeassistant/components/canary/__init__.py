@@ -8,82 +8,23 @@ from typing import Final
 
 from canary.api import Api
 from requests.exceptions import ConnectTimeout, HTTPError
-import voluptuous as vol
 
-from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_FFMPEG_ARGUMENTS,
-    DEFAULT_FFMPEG_ARGUMENTS,
-    DEFAULT_TIMEOUT,
-    DOMAIN,
-)
+from .const import CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS, DEFAULT_TIMEOUT
 from .coordinator import CanaryConfigEntry, CanaryDataUpdateCoordinator
 
 _LOGGER: Final = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES: Final = timedelta(seconds=30)
 
-CONFIG_SCHEMA: Final = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Optional(
-                        CONF_TIMEOUT, default=DEFAULT_TIMEOUT
-                    ): cv.positive_int,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
 PLATFORMS: Final[list[Platform]] = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.CAMERA,
     Platform.SENSOR,
 ]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Canary integration."""
-    if hass.config_entries.async_entries(DOMAIN):
-        return True
-
-    ffmpeg_arguments = DEFAULT_FFMPEG_ARGUMENTS
-    if CAMERA_DOMAIN in config:
-        camera_config = next(
-            (item for item in config[CAMERA_DOMAIN] if item["platform"] == DOMAIN),
-            None,
-        )
-
-        if camera_config:
-            ffmpeg_arguments = camera_config.get(
-                CONF_FFMPEG_ARGUMENTS, DEFAULT_FFMPEG_ARGUMENTS
-            )
-
-    if DOMAIN in config:
-        if ffmpeg_arguments != DEFAULT_FFMPEG_ARGUMENTS:
-            config[DOMAIN][CONF_FFMPEG_ARGUMENTS] = ffmpeg_arguments
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config[DOMAIN],
-            )
-        )
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: CanaryConfigEntry) -> bool:

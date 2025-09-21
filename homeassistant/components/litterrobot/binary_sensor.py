@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Generic
 
-from pylitterbot import LitterRobot, Robot
+from pylitterbot import LitterRobot, LitterRobot4, Robot
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -45,6 +45,15 @@ BINARY_SENSOR_MAP: dict[type[Robot], tuple[RobotBinarySensorEntityDescription, .
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
             is_on_fn=lambda robot: robot.sleep_mode_enabled,
+        ),
+    ),
+    LitterRobot4: (
+        RobotBinarySensorEntityDescription[LitterRobot4](
+            key="hopper_connected",
+            translation_key="hopper_connected",
+            device_class=BinarySensorDeviceClass.CONNECTIVITY,
+            entity_registry_enabled_default=False,
+            is_on_fn=lambda robot: not robot.is_hopper_removed,
         ),
     ),
     Robot: (  # type: ignore[type-abstract]  # only used for isinstance check
