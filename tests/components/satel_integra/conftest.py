@@ -1,6 +1,7 @@
 """Satel Integra tests configuration."""
 
 from collections.abc import Generator
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -66,10 +67,12 @@ def mock_config_entry_with_subentries(
     mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
     """Mock satel configuration entry."""
-    mock_config_entry.subentries = {
-        MOCK_PARTITION_SUBENTRY.subentry_id: MOCK_PARTITION_SUBENTRY,
-        MOCK_ZONE_SUBENTRY.subentry_id: MOCK_ZONE_SUBENTRY,
-        MOCK_OUTPUT_SUBENTRY.subentry_id: MOCK_OUTPUT_SUBENTRY,
-        MOCK_SWITCHABLE_OUTPUT_SUBENTRY.subentry_id: MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
-    }
+    mock_config_entry.subentries = deepcopy(
+        {
+            MOCK_PARTITION_SUBENTRY.subentry_id: MOCK_PARTITION_SUBENTRY,
+            MOCK_ZONE_SUBENTRY.subentry_id: MOCK_ZONE_SUBENTRY,
+            MOCK_OUTPUT_SUBENTRY.subentry_id: MOCK_OUTPUT_SUBENTRY,
+            MOCK_SWITCHABLE_OUTPUT_SUBENTRY.subentry_id: MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
+        }
+    )
     return mock_config_entry
