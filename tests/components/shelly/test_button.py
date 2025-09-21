@@ -33,7 +33,7 @@ async def test_block_button(
     assert state.state == STATE_UNKNOWN
 
     assert (entry := entity_registry.async_get(entity_id))
-    assert entry.unique_id == "123456789ABC_reboot"
+    assert entry.unique_id == "123456789ABC-reboot"
 
     await hass.services.async_call(
         BUTTON_DOMAIN,

@@ -286,7 +286,7 @@ class ShellyButton(ShellyBaseButton):
         """Initialize Shelly button."""
         super().__init__(coordinator, description)
 
-        self._attr_unique_id = f"{coordinator.mac}_{description.key}"
+        self._attr_unique_id = f"{coordinator.mac}-{description.key}"
         if isinstance(coordinator, ShellyBlockCoordinator):
             self._attr_device_info = get_entity_block_device_info(coordinator)
         else:
