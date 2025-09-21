@@ -7,7 +7,7 @@ from momonga import MomongaSkJoinFailure, MomongaSkScanFailure
 import pytest
 from serial.tools.list_ports_linux import SysFS
 
-from homeassistant.components.smart_meter_b_route.const import DOMAIN, ENTRY_TITLE
+from homeassistant.components.route_b_smart_meter.const import DOMAIN, ENTRY_TITLE
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -25,7 +25,7 @@ def mock_comports() -> Generator[AsyncMock]:
     device.description = "Test Device"
 
     with patch(
-        "homeassistant.components.smart_meter_b_route.config_flow.comports",
+        "homeassistant.components.route_b_smart_meter.config_flow.comports",
         return_value=[SysFS("/dev/ttyUSB41"), device],
     ) as mock:
         yield mock

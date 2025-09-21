@@ -1250,7 +1250,7 @@ moat-ble==0.1.1
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.4.0
 
-# homeassistant.components.smart_meter_b_route
+# homeassistant.components.route_b_smart_meter
 momonga==0.1.4
 
 # homeassistant.components.monzo
@@ -1946,7 +1946,7 @@ pysensibo==1.2.1
 
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone
-# homeassistant.components.smart_meter_b_route
+# homeassistant.components.route_b_smart_meter
 # homeassistant.components.usb
 # homeassistant.components.zwave_js
 pyserial==3.5

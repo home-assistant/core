@@ -5615,6 +5615,12 @@
         }
       }
     },
+    "route_b_smart_meter": {
+      "name": "Smart Meter B Route",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "rova": {
       "name": "ROVA",
       "integration_type": "hub",
@@ -6091,12 +6097,6 @@
       "name": "Smart Home",
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
-    },
-    "smart_meter_b_route": {
-      "name": "Smart Meter B Route",
-      "integration_type": "device",
-      "config_flow": true,
-      "iot_class": "local_polling"
     },
     "smart_meter_texas": {
       "name": "Smart Meter Texas",

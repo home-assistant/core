@@ -100,7 +100,7 @@ class SmartMeterBRouteSensor(CoordinatorEntity[BRouteUpdateCoordinator], SensorE
         self._attr_unique_id = f"{coordinator.bid}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.bid)},
-            name=f"Smart Meter B Route {coordinator.bid}",
+            name=f"Route B Smart Meter {coordinator.bid}",
         )
 
     @property

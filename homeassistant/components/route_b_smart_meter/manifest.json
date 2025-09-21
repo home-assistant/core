@@ -1,10 +1,10 @@
 {
-  "domain": "smart_meter_b_route",
+  "domain": "route_b_smart_meter",
   "name": "Smart Meter B Route",
   "codeowners": ["@SeraphicRav"],
   "config_flow": true,
   "dependencies": ["usb"],
-  "documentation": "https://www.home-assistant.io/integrations/smart_meter_b_route",
+  "documentation": "https://www.home-assistant.io/integrations/route_b_smart_meter",
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": [

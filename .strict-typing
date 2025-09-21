@@ -442,6 +442,7 @@ homeassistant.components.rituals_perfume_genie.*
 homeassistant.components.roborock.*
 homeassistant.components.roku.*
 homeassistant.components.romy.*
+homeassistant.components.route_b_smart_meter.*
 homeassistant.components.rpi_power.*
 homeassistant.components.rss_feed_template.*
 homeassistant.components.russound_rio.*
@@ -473,7 +474,6 @@ homeassistant.components.skybell.*
 homeassistant.components.slack.*
 homeassistant.components.sleep_as_android.*
 homeassistant.components.sleepiq.*
-homeassistant.components.smart_meter_b_route.*
 homeassistant.components.smhi.*
 homeassistant.components.smlight.*
 homeassistant.components.smtp.*

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_smart_meter_b_route_sensor_update[sensor.smart_meter_b_route_01234567890123456789012345f789_instantaneous_current_r_phase-entry]
+# name: test_route_b_smart_meter_sensor_update[sensor.route_b_smart_meter_01234567890123456789012345f789_instantaneous_current_r_phase-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -14,7 +14,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_meter_b_route_01234567890123456789012345f789_instantaneous_current_r_phase',
+    'entity_id': 'sensor.route_b_smart_meter_01234567890123456789012345f789_instantaneous_current_r_phase',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -30,7 +30,7 @@
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Instantaneous current R phase',
-    'platform': 'smart_meter_b_route',
+    'platform': 'route_b_smart_meter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -39,23 +39,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_smart_meter_b_route_sensor_update[sensor.smart_meter_b_route_01234567890123456789012345f789_instantaneous_current_r_phase-state]
+# name: test_route_b_smart_meter_sensor_update[sensor.route_b_smart_meter_01234567890123456789012345f789_instantaneous_current_r_phase-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Smart Meter B Route 01234567890123456789012345F789 Instantaneous current R phase',
+      'friendly_name': 'Route B Smart Meter 01234567890123456789012345F789 Instantaneous current R phase',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_meter_b_route_01234567890123456789012345f789_instantaneous_current_r_phase',
+    'entity_id': 'sensor.route_b_smart_meter_01234567890123456789012345f789_instantaneous_current_r_phase',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
 # ---
-# name: test_smart_meter_b_route_sensor_update[sensor.smart_meter_b_route_01234567890123456789012345f789_instantaneous_current_t_phase-entry]
+# name: test_route_b_smart_meter_sensor_update[sensor.route_b_smart_meter_01234567890123456789012345f789_instantaneous_current_t_phase-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -70,7 +70,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_meter_b_route_01234567890123456789012345f789_instantaneous_current_t_phase',
+    'entity_id': 'sensor.route_b_smart_meter_01234567890123456789012345f789_instantaneous_current_t_phase',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -86,7 +86,7 @@
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Instantaneous current T phase',
-    'platform': 'smart_meter_b_route',
+    'platform': 'route_b_smart_meter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -95,23 +95,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_smart_meter_b_route_sensor_update[sensor.smart_meter_b_route_01234567890123456789012345f789_instantaneous_current_t_phase-state]
+# name: test_route_b_smart_meter_sensor_update[sensor.route_b_smart_meter_01234567890123456789012345f789_instantaneous_current_t_phase-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Smart Meter B Route 01234567890123456789012345F789 Instantaneous current T phase',
+      'friendly_name': 'Route B Smart Meter 01234567890123456789012345F789 Instantaneous current T phase',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_meter_b_route_01234567890123456789012345f789_instantaneous_current_t_phase',
+    'entity_id': 'sensor.route_b_smart_meter_01234567890123456789012345f789_instantaneous_current_t_phase',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_smart_meter_b_route_sensor_update[sensor.smart_meter_b_route_01234567890123456789012345f789_instantaneous_power-entry]
+# name: test_route_b_smart_meter_sensor_update[sensor.route_b_smart_meter_01234567890123456789012345f789_instantaneous_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -126,7 +126,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_meter_b_route_01234567890123456789012345f789_instantaneous_power',
+    'entity_id': 'sensor.route_b_smart_meter_01234567890123456789012345f789_instantaneous_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -142,7 +142,7 @@
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Instantaneous power',
-    'platform': 'smart_meter_b_route',
+    'platform': 'route_b_smart_meter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -151,23 +151,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_smart_meter_b_route_sensor_update[sensor.smart_meter_b_route_01234567890123456789012345f789_instantaneous_power-state]
+# name: test_route_b_smart_meter_sensor_update[sensor.route_b_smart_meter_01234567890123456789012345f789_instantaneous_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Smart Meter B Route 01234567890123456789012345F789 Instantaneous power',
+      'friendly_name': 'Route B Smart Meter 01234567890123456789012345F789 Instantaneous power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_meter_b_route_01234567890123456789012345f789_instantaneous_power',
+    'entity_id': 'sensor.route_b_smart_meter_01234567890123456789012345f789_instantaneous_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3',
   })
 # ---
-# name: test_smart_meter_b_route_sensor_update[sensor.smart_meter_b_route_01234567890123456789012345f789_total_consumption-entry]
+# name: test_route_b_smart_meter_sensor_update[sensor.route_b_smart_meter_01234567890123456789012345f789_total_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -182,7 +182,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.smart_meter_b_route_01234567890123456789012345f789_total_consumption',
+    'entity_id': 'sensor.route_b_smart_meter_01234567890123456789012345f789_total_consumption',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -198,7 +198,7 @@
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Total consumption',
-    'platform': 'smart_meter_b_route',
+    'platform': 'route_b_smart_meter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
@@ -207,16 +207,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_smart_meter_b_route_sensor_update[sensor.smart_meter_b_route_01234567890123456789012345f789_total_consumption-state]
+# name: test_route_b_smart_meter_sensor_update[sensor.route_b_smart_meter_01234567890123456789012345f789_total_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Smart Meter B Route 01234567890123456789012345F789 Total consumption',
+      'friendly_name': 'Route B Smart Meter 01234567890123456789012345F789 Total consumption',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.smart_meter_b_route_01234567890123456789012345f789_total_consumption',
+    'entity_id': 'sensor.route_b_smart_meter_01234567890123456789012345f789_total_consumption',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

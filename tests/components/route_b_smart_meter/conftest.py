@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.smart_meter_b_route.const import DOMAIN
+from homeassistant.components.route_b_smart_meter.const import DOMAIN
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.smart_meter_b_route.async_setup_entry",
+        "homeassistant.components.route_b_smart_meter.async_setup_entry",
         return_value=True,
     ) as mock:
         yield mock
@@ -28,11 +28,11 @@ def mock_momonga(exception=None) -> Generator[Mock]:
 
     with (
         patch(
-            "homeassistant.components.smart_meter_b_route.coordinator.Momonga",
+            "homeassistant.components.route_b_smart_meter.coordinator.Momonga",
             autospec=True,
         ) as mock_momonga,
         patch(
-            "homeassistant.components.smart_meter_b_route.config_flow.Momonga",
+            "homeassistant.components.route_b_smart_meter.config_flow.Momonga",
             new=mock_momonga,
         ),
     ):

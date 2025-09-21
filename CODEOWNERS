@@ -1327,6 +1327,8 @@ build.json @home-assistant/supervisor
 /tests/components/roomba/ @pschmitt @cyr-ius @shenxn @Orhideous
 /homeassistant/components/roon/ @pavoni
 /tests/components/roon/ @pavoni
+/homeassistant/components/route_b_smart_meter/ @SeraphicRav
+/tests/components/route_b_smart_meter/ @SeraphicRav
 /homeassistant/components/rpi_power/ @shenxn @swetoast
 /tests/components/rpi_power/ @shenxn @swetoast
 /homeassistant/components/rss_feed_template/ @home-assistant/core
@@ -1440,8 +1442,6 @@ build.json @home-assistant/supervisor
 /tests/components/smappee/ @bsmappee
 /homeassistant/components/smarla/ @explicatis @rlint-explicatis
 /tests/components/smarla/ @explicatis @rlint-explicatis
-/homeassistant/components/smart_meter_b_route/ @SeraphicRav
-/tests/components/smart_meter_b_route/ @SeraphicRav
 /homeassistant/components/smart_meter_texas/ @grahamwetzler
 /tests/components/smart_meter_texas/ @grahamwetzler
 /homeassistant/components/smartthings/ @joostlek
