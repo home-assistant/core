@@ -34,10 +34,6 @@ def mock_momonga(exception=None) -> Generator[Mock]:
             "homeassistant.components.route_b_smart_meter.config_flow.Momonga",
             new=mock_momonga,
         ),
-        patch(
-            "momonga.Momonga",
-            new=mock_momonga,
-        ),
     ):
         client = mock_momonga.return_value
         client.__enter__.return_value = client
@@ -48,10 +44,6 @@ def mock_momonga(exception=None) -> Generator[Mock]:
         }
         client.get_instantaneous_power.return_value = 3
         client.get_measured_cumulative_energy.return_value = 4
-        client.get_route_b_id.return_value = {
-            "manufacturer code": b"TEST",
-            "authentication id": "01234567890123456789012345F789",
-        }
         yield mock_momonga
 
 
