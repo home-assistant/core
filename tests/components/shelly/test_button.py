@@ -379,3 +379,34 @@ async def test_wall_display_virtual_button(
         blocking=True,
     )
     mock_rpc_device.button_trigger.assert_called_once_with(200, "single_push")
+
+
+async def test_migrate_unique_id_blu_trv(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    entity_registry: EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test migration of unique_id for BLU TRV button."""
+    entry = await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3, skip_setup=True)
+
+    old_unique_id = "f8:44:77:25:f0:dd_calibrate"
+
+    entity = entity_registry.async_get_or_create(
+        suggested_object_id="trv_name_calibrate",
+        disabled_by=None,
+        domain=BUTTON_DOMAIN,
+        platform=DOMAIN,
+        unique_id=old_unique_id,
+        config_entry=entry,
+    )
+    assert entity.unique_id == old_unique_id
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get("button.trv_name_calibrate")
+    assert entity_entry
+    assert entity_entry.unique_id == "F8447725F0DD-blutrv:200-calibrate"
+
+    assert "Migrating unique_id for button.trv_name_calibrate" in caplog.text
