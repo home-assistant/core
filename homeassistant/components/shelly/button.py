@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Final
 
 from aioshelly.const import BLU_TRV_IDENTIFIER, MODEL_BLU_GATEWAY_G3, RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
+from aioshelly.rpc_device import RpcDevice
 
 from homeassistant.components.button import (
     DOMAIN as BUTTON_PLATFORM,
@@ -130,6 +131,26 @@ def async_migrate_unique_ids(
                     old_unique_id, new_unique_id
                 )
             }
+
+    if blutrv_key_ids := get_rpc_key_ids(coordinator.device.status, BLU_TRV_IDENTIFIER):
+        assert isinstance(coordinator.device, RpcDevice)
+        for _id in blutrv_key_ids:
+            key = f"{BLU_TRV_IDENTIFIER}:{_id}"
+            ble_addr: str = coordinator.device.config[key]["addr"]
+            old_unique_id = f"{ble_addr}_calibrate"
+            if entity_entry.unique_id == old_unique_id:
+                new_unique_id = f"{format_ble_addr(ble_addr)}-{key}-calibrate"
+                LOGGER.debug(
+                    "Migrating unique_id for %s entity from [%s] to [%s]",
+                    entity_entry.entity_id,
+                    old_unique_id,
+                    new_unique_id,
+                )
+                return {
+                    "new_unique_id": entity_entry.unique_id.replace(
+                        old_unique_id, new_unique_id
+                    )
+                }
 
     return None
 
