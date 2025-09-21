@@ -7,7 +7,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -99,21 +99,18 @@ async def async_setup_entry(
     entities: list[EzvizSensor] = []
 
     for camera, sensors in coordinator.data.items():
+        optionals = sensors.get("optionals", {})
+
+        # Remap optionals attributes to top level for easier access
+        sensors["Record_Mode"] = optionals.get("Record_Mode", {}).get("mode")
+        sensors["powerStatus"] = optionals.get("powerStatus")
+        sensors["OnlineStatus"] = optionals.get("OnlineStatus")
+
         entities.extend(
             EzvizSensor(coordinator, camera, sensor)
             for sensor, value in sensors.items()
             if sensor in SENSOR_TYPES and value is not None
         )
-
-        optionals = sensors.get("optionals", {})
-        entities.extend(
-            EzvizSensor(coordinator, camera, optional_key)
-            for optional_key in ("powerStatus", "OnlineStatus")
-            if optional_key in optionals
-        )
-
-        if "mode" in optionals.get("Record_Mode", {}):
-            entities.append(EzvizSensor(coordinator, camera, "mode"))
 
     async_add_entities(entities)
 
@@ -133,4 +130,17 @@ class EzvizSensor(EzvizEntity, SensorEntity):
     @property
     def native_value(self) -> int | str:
         """Return the state of the sensor."""
-        return self.data[self._sensor_name]
+        sensors = self.data
+        optionals = sensors.get("optionals", {})
+
+        value = (
+            sensors.get(self._sensor_name)
+            if sensors.get(self._sensor_name) is not None
+            else optionals.get(self._sensor_name)
+        )
+
+        # Special handling for Record_Mode. {"Record_Mode": {"mode": <value>}}
+        if self._sensor_name == "Record_Mode" and isinstance(value, dict):
+            value = value.get("mode")
+
+        return value if value is not None else STATE_UNAVAILABLE
