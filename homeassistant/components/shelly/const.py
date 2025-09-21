@@ -296,10 +296,6 @@ ROLE_TO_DEVICE_CLASS_MAP = {
     "flow_rate": SensorDeviceClass.VOLUME_FLOW_RATE,
     "water_pressure": SensorDeviceClass.PRESSURE,
     "water_temperature": SensorDeviceClass.TEMPERATURE,
-    "work_state": SensorDeviceClass.ENUM,
-    "current_limit": SensorDeviceClass.CURRENT,
-    "energy_charge": SensorDeviceClass.ENERGY,
-    "time_charge": SensorDeviceClass.DURATION,
 }
 
 # Mapping for units that require conversion to a Home Assistant recognized unit

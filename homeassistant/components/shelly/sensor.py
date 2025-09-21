@@ -1467,7 +1467,7 @@ RPC_SENSORS: Final = {
         suggested_display_precision=3,
         device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        object_role="water_consumption",
+        role="water_consumption",
     ),
     "object_energy_consumption": RpcSensorDescription(
         key="object",
@@ -1478,7 +1478,7 @@ RPC_SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        object_role="phase_info",
+        role="phase_info",
     ),
     "object_total_act_energy": RpcSensorDescription(
         key="object",
@@ -1490,7 +1490,7 @@ RPC_SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        object_role="phase_info",
+        role="phase_info",
     ),
     "object_total_power": RpcSensorDescription(
         key="object",
@@ -1502,7 +1502,7 @@ RPC_SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        object_role="phase_info",
+        role="phase_info",
     ),
     "object_phase_a_voltage": RpcSensorDescription(
         key="object",
@@ -1513,7 +1513,7 @@ RPC_SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        object_role="phase_info",
+        role="phase_info",
     ),
     "object_phase_b_voltage": RpcSensorDescription(
         key="object",
@@ -1524,7 +1524,7 @@ RPC_SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        object_role="phase_info",
+        role="phase_info",
     ),
     "object_phase_c_voltage": RpcSensorDescription(
         key="object",
@@ -1535,7 +1535,7 @@ RPC_SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        object_role="phase_info",
+        role="phase_info",
     ),
 }
 

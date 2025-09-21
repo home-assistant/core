@@ -186,11 +186,9 @@ def async_setup_rpc_attribute_entities(
 
         for key in key_instances:
             # Filter non-existing sensors
-            if (
-                description.object_role
-                and description.object_role
-                != coordinator.device.config[key].get("role")
-            ):
+            if description.role and description.role != coordinator.device.config[
+                key
+            ].get("role", "generic"):
                 continue
 
             if description.sub_key not in coordinator.device.status[
@@ -317,7 +315,7 @@ class RpcEntityDescription(EntityDescription):
     unit: Callable[[dict], str | None] | None = None
     options_fn: Callable[[dict], list[str]] | None = None
     entity_class: Callable | None = None
-    object_role: str | None = None
+    role: str | None = None
 
 
 @dataclass(frozen=True)
