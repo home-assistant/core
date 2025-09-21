@@ -4,6 +4,28 @@
       "switch": {
         "default": "mdi:water"
       }
+    },
+    "binary_sensor": {
+      "watering_running": {
+        "default": "mdi:sprinkler",
+        "state": {
+          "on": "mdi:sprinkler",
+          "off": "mdi:sprinkler-variant"
+        }
+      },
+      "standby": {
+        "default": "mdi:pause-circle"
+      },
+      "freeze_prevent": {
+        "default": "mdi:snowflake-alert"
+      },
+      "zone_enabled": {
+        "default": "mdi:toggle-switch",
+        "state": {
+          "on": "mdi:toggle-switch",
+          "off": "mdi:toggle-switch-off"
+        }
+      }
     }
   },
   "services": {
