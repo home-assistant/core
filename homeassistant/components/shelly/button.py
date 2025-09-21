@@ -23,7 +23,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
 
 from .const import DOMAIN, LOGGER, SHELLY_GAS_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
@@ -114,12 +113,10 @@ def async_migrate_unique_ids(
     if not entity_entry.entity_id.startswith("button"):
         return None
 
-    device_name = slugify(coordinator.device.name)
-
     for key in ("reboot", "self_test", "mute", "unmute"):
-        old_unique_id = f"{device_name}_{key}"
+        old_unique_id = f"{coordinator.mac}_{key}"
         if entity_entry.unique_id == old_unique_id:
-            new_unique_id = f"{coordinator.mac}_{key}"
+            new_unique_id = f"{coordinator.mac}-{key}"
             LOGGER.debug(
                 "Migrating unique_id for %s entity from [%s] to [%s]",
                 entity_entry.entity_id,

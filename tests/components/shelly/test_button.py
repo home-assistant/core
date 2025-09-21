@@ -136,9 +136,9 @@ async def test_rpc_button_reauth_error(
 @pytest.mark.parametrize(
     ("gen", "old_unique_id", "new_unique_id", "migration"),
     [
-        (2, "test_name_reboot", "123456789ABC_reboot", True),
-        (1, "test_name_reboot", "123456789ABC_reboot", True),
-        (2, "123456789ABC_reboot", "123456789ABC_reboot", False),
+        (2, "123456789ABC_reboot", "123456789ABC-reboot", True),
+        (1, "123456789ABC_reboot", "123456789ABC-reboot", True),
+        (2, "123456789ABC-reboot", "123456789ABC-reboot", False),
     ],
 )
 async def test_migrate_unique_id(
