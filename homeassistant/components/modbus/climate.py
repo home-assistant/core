@@ -26,6 +26,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_ADDRESS,
@@ -37,9 +38,8 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
 from .const import (
@@ -118,17 +118,19 @@ HVACMODE_TO_TARG_TEMP_REG_INDEX_ARRAY = {
 }
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Read configuration and create Modbus climate."""
-    if discovery_info is None or not (climates := discovery_info[CONF_CLIMATES]):
+    """Set up climates."""
+    if CONF_CLIMATES not in config_entry.data:
         return
-    hub = get_hub(hass, discovery_info[CONF_NAME])
-    async_add_entities(ModbusThermostat(hass, hub, config) for config in climates)
+    hub = get_hub(hass, config_entry.data[CONF_NAME])
+    async_add_entities(
+        ModbusThermostat(hass, hub, config)
+        for config in config_entry.data[CONF_CLIMATES]
+    )
 
 
 class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):

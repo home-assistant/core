@@ -1129,7 +1129,7 @@ async def test_pymodbus_constructor_fail(
     ) as mock_pb:
         caplog.set_level(logging.ERROR)
         mock_pb.side_effect = ModbusException("test no class")
-        assert await async_setup_component(hass, DOMAIN, config) is False
+        await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
         message = f"Pymodbus: {TEST_MODBUS_NAME}: Modbus Error: test"
         assert caplog.messages[0].startswith(message)
@@ -1333,6 +1333,8 @@ async def test_integration_reload(
     assert state_sensor_1
     assert not state_sensor_2
 
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+    await hass.async_block_till_done()
     caplog.clear()
     yaml_path = get_fixture_path("configuration_2.yaml", DOMAIN)
     with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):

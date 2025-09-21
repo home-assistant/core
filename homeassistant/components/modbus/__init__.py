@@ -47,6 +47,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
+    Platform,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
@@ -532,6 +533,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     config[DOMAIN] = check_config(hass, config[DOMAIN])
     if not config[DOMAIN]:
         return False
+
     for hub in config[DOMAIN]:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -558,19 +560,43 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.debug("Modbus not present anymore")
             return
         _LOGGER.debug("Modbus reloading")
+        for hub in reload_config[DOMAIN]:
+            await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=hub,
+            )
         await async_modbus_setup(hass, reload_config)
 
     async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
     return await async_modbus_setup(hass, config)
 
 
+SETUP_PLATFORMS = (
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.FAN,
+    Platform.SENSOR,
+    Platform.SWITCH,
+)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
-    _LOGGER.debug("modbus_cf async_setup_entry")
+    if DATA_MODBUS_HUBS in hass.data:
+        hub_collect = hass.data[DATA_MODBUS_HUBS]
+    else:
+        hass.data[DATA_MODBUS_HUBS] = hub_collect = {}
+    my_hub = ModbusHub(hass, entry)
+    hub_collect[entry.data[CONF_NAME]] = my_hub
+    if not await my_hub.async_setup():
+        return False
+    await hass.config_entries.async_forward_entry_setups(entry, SETUP_PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    _LOGGER.debug("modbus_cf async_unload_entry")
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, SETUP_PLATFORMS)
