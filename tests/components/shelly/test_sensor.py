@@ -1097,7 +1097,7 @@ async def test_migrate_unique_id_virtual_components_roles(
     new_id: str,
     device_class: SensorDeviceClass | None,
 ) -> None:
-    """Test migration of unique_id for virtual components to include roel."""
+    """Test migration of unique_id for virtual components to include role."""
     entry = await init_integration(hass, 3, skip_setup=True)
     unique_base = f"{MOCK_MAC}-{old_id}:200"
     old_unique_id = f"{unique_base}-{old_id}"
