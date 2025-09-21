@@ -188,7 +188,7 @@ def async_setup_rpc_attribute_entities(
             # Filter non-existing sensors
             if description.role and description.role != coordinator.device.config[
                 key
-            ].get("role", "generic"):
+            ].get("role"):
                 continue
 
             if description.sub_key not in coordinator.device.status[
