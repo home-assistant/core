@@ -61,7 +61,6 @@ from .utils import (
     get_device_entry_gen,
     get_device_uptime,
     get_shelly_air_lamp_life,
-    get_virtual_component_ids,
     get_virtual_component_unit,
     is_rpc_wifi_stations_disabled,
     is_view_for_platform,
@@ -1459,6 +1458,14 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_class=RpcPresenceSensor,
     ),
+    "presencezone_num_objects": RpcSensorDescription(
+        key="presencezone",
+        sub_key="num_objects",
+        translation_key="detected_objects",
+        name="Detected objects",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_class=RpcPresenceSensor,
+    ),
     "object_water_consumption": RpcSensorDescription(
         key="object",
         sub_key="value",
@@ -1570,21 +1577,6 @@ async def async_setup_entry(
                 SENSOR_PLATFORM,
                 coordinator.device.status,
             )
-
-            # the user can remove virtual components from the device configuration, so
-            # we need to remove orphaned entities
-            virtual_component_ids = get_virtual_component_ids(
-                coordinator.device.config, SENSOR_PLATFORM
-            )
-            for component in ("enum", "number", "text"):
-                async_remove_orphaned_entities(
-                    hass,
-                    config_entry.entry_id,
-                    coordinator.mac,
-                    SENSOR_PLATFORM,
-                    virtual_component_ids,
-                    component,
-                )
         return
 
     if config_entry.data[CONF_SLEEP_PERIOD]:
