@@ -1465,6 +1465,7 @@ RPC_SENSORS: Final = {
         name="Detected objects",
         state_class=SensorStateClass.MEASUREMENT,
         entity_class=RpcPresenceSensor,
+    ),
     "object_water_consumption": RpcSensorDescription(
         key="object",
         sub_key="value",
