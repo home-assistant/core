@@ -391,23 +391,25 @@ async def test_duplicate_dhcp_entries_not_allowed(
 ) -> None:
     """Test that the same device cannot be configured twice via DHCP."""
     # First DHCP discovery creates a config entry
-    result1 = await hass.config_entries.flow.async_init(
+    result_frist_flow = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_DHCP},
         data=DhcpServiceInfo(
             ip="192.168.0.123", hostname="kommspot", macaddress="a4e57caabbcc"
         ),
     )
-    assert result1["type"] is FlowResultType.FORM
-    assert result1["step_id"] == "dhcp_confirm"
+    assert result_frist_flow["type"] is FlowResultType.FORM
+    assert result_frist_flow["step_id"] == "dhcp_confirm"
 
     # Complete the first flow
-    result2 = await hass.config_entries.flow.async_configure(result1["flow_id"], {})
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "PoolDose TEST123456789"
+    result_frist_flow = await hass.config_entries.flow.async_configure(
+        result_frist_flow["flow_id"], {}
+    )
+    assert result_frist_flow["type"] is FlowResultType.CREATE_ENTRY
+    assert result_frist_flow["title"] == "PoolDose TEST123456789"
 
     # Try to set up the same device again with different IP
-    result3 = await hass.config_entries.flow.async_init(
+    result_second_flow = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_DHCP},
         data=DhcpServiceInfo(
@@ -415,9 +417,9 @@ async def test_duplicate_dhcp_entries_not_allowed(
         ),
     )
     # Flow should abort as the device is already configured
-    assert result3["type"] is FlowResultType.ABORT
-    assert result3["reason"] == "already_configured"
+    assert result_second_flow["type"] is FlowResultType.ABORT
+    assert result_second_flow["reason"] == "already_configured"
 
     # Verify the host was updated in the config entry
-    entry = hass.config_entries.async_get_entry(result2["result"].entry_id)
+    entry = hass.config_entries.async_get_entry(result_frist_flow["result"].entry_id)
     assert entry.data[CONF_HOST] == "192.168.0.124"
