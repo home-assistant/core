@@ -45,6 +45,7 @@ ADDON_ENTITY_DESCRIPTIONS = (
 MOUNT_ENTITY_DESCRIPTIONS = (
     HassioBinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_registry_enabled_default=False,
         key=ATTR_STATE,
         translation_key="mount",
         target=MountState.ACTIVE.value,

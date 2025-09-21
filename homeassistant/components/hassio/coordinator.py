@@ -482,7 +482,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             DATA_CORE_INFO: hassio.get_core_info(),
             DATA_SUPERVISOR_INFO: hassio.get_supervisor_info(),
             DATA_OS_INFO: hassio.get_os_info(),
-            DATA_MOUNTS_INFO: hassio.get_mounts_info(),
+            DATA_MOUNTS_INFO: self.supervisor_client.mounts.info(),
         }
         if CONTAINER_STATS in container_updates[CORE_CONTAINER]:
             updates[DATA_CORE_STATS] = hassio.get_core_stats()

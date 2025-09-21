@@ -148,11 +148,6 @@ class HassIO:
         self._ip = ip
         base_url = f"http://{ip}"
         self._base_url = URL(base_url)
-        self.client = SupervisorClient(
-            str(self.base_url),
-            os.environ.get("SUPERVISOR_TOKEN", ""),
-            session=websession,
-        )
 
     @property
     def base_url(self) -> URL:
@@ -230,13 +225,6 @@ class HassIO:
         This method returns a coroutine.
         """
         return self.send_command("/ingress/panels", method="get")
-
-    def get_mounts_info(self) -> Coroutine:
-        """Return data for storage mounts.
-
-        This method returns a coroutine.
-        """
-        return self.client.mounts.info()
 
     @_api_bool
     async def update_hass_api(
@@ -348,4 +336,8 @@ class HassIO:
 def get_supervisor_client(hass: HomeAssistant) -> SupervisorClient:
     """Return supervisor client."""
     hassio = hass.data[DATA_COMPONENT]
-    return hassio.client
+    return SupervisorClient(
+        str(hassio.base_url),
+        os.environ.get("SUPERVISOR_TOKEN", ""),
+        session=hassio.websession,
+    )

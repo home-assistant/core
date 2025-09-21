@@ -1,17 +1,11 @@
 """The tests for the hassio binary sensors."""
 
-from dataclasses import asdict, replace
+from dataclasses import replace
 from datetime import timedelta
-import json
 import os
-from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from aiohasupervisor.models.mounts import (
-    CIFSMountResponse,
-    MountState,
-    NFSMountResponse,
-)
+from aiohasupervisor.models.mounts import CIFSMountResponse, MountsInfo, MountState
 import pytest
 
 from homeassistant.components.hassio import DOMAIN
@@ -23,7 +17,7 @@ from homeassistant.util import dt as dt_util
 from .common import MOCK_REPOSITORIES, MOCK_STORE_ADDONS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
@@ -163,34 +157,6 @@ def mock_all(
     )
 
 
-@pytest.fixture(autouse=True)
-def mock_mounts(
-    aioclient_mock: AiohttpClientMocker,
-) -> list[CIFSMountResponse | NFSMountResponse]:
-    """Mock mount requests."""
-    mounts: list[CIFSMountResponse | NFSMountResponse] = []
-
-    async def _respose(method: str, url: str, _: Any) -> str:
-        return AiohttpClientMockResponse(
-            method,
-            url,
-            response=json.dumps(
-                {
-                    "result": "ok",
-                    "data": {
-                        "default_backup_mount": None,
-                        "mounts": [asdict(mount) for mount in mounts],
-                    },
-                }
-            ).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
-        )
-
-    aioclient_mock.get("http://127.0.0.1/mounts", side_effect=_respose)
-
-    return mounts
-
-
 @pytest.mark.parametrize(
     ("store_addons", "store_repositories"), [(MOCK_STORE_ADDONS, MOCK_REPOSITORIES)]
 )
@@ -239,8 +205,8 @@ async def test_binary_sensor(
 
 async def test_mount_binary_sensor(
     hass: HomeAssistant,
-    mock_mounts: list[CIFSMountResponse | NFSMountResponse],
-    # freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    supervisor_client: AsyncMock,
 ) -> None:
     """Test hassio mounts binary sensor."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -261,7 +227,7 @@ async def test_mount_binary_sensor(
     assert hass.states.get(entity_id) is None
 
     # Add a mount.
-    mock_mounts.append(
+    mock_mounts = [
         CIFSMountResponse(
             share="files",
             server="1.2.3.4",
@@ -272,11 +238,22 @@ async def test_mount_binary_sensor(
             state=MountState.ACTIVE,
             user_path="/share/nas",
         )
+    ]
+    supervisor_client.mounts.info = AsyncMock(
+        return_value=MountsInfo(default_backup_mount=None, mounts=mock_mounts)
     )
 
     # Let it reload.
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1000))
     await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Verify that the entity is disabled by default.
+    assert hass.states.get(entity_id) is None
+
+    # Enable the entity.
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Test new entity.
     entity = hass.states.get(entity_id)
