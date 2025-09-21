@@ -36,11 +36,6 @@ def _human_readable_device_name(port: UsbServiceInfo | ListPortInfo) -> str:
     )
 
 
-def _generate_unique_id(port: UsbServiceInfo | ListPortInfo) -> str:
-    """Generate unique id from usb attributes."""
-    return f"{port.vid}:{port.pid}_{port.serial_number}_{port.manufacturer}_{port.description}"
-
-
 class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Smart Meter B Route."""
 
@@ -92,10 +87,8 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                device_id = get_serial_by_id(user_input[CONF_DEVICE])
-                device = device_options[device_id]
                 await self.async_set_unique_id(
-                    _generate_unique_id(device), raise_on_progress=False
+                    user_input[CONF_ID], raise_on_progress=False
                 )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=ENTRY_TITLE, data=user_input)

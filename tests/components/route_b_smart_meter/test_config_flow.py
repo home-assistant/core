@@ -53,7 +53,7 @@ async def test_step_user_form(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ENTRY_TITLE
     assert result["data"] == user_input
-    assert result["result"].unique_id == "4660:22136_123456_Test_Test Device"
+    assert result["result"].unique_id == user_input[CONF_ID]
     mock_setup_entry.assert_called_once()
     mock_comports.assert_called()
     mock_momonga.assert_called_once_with(

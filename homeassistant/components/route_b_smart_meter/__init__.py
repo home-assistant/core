@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import BRouteConfigEntry, BRouteUpdateCoordinator
@@ -18,6 +18,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: BRouteConfigEntry) -> bo
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    if (
+        route_b_id := coordinator.api.get_route_b_id().get("authentication id")
+    ) != entry.data[CONF_ID]:
+        _LOGGER.error(
+            "Route B ID mismatch: expected %s but got %s",
+            entry.data[CONF_ID],
+            route_b_id,
+        )
+        return False
 
     return True
 
