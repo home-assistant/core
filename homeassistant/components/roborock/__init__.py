@@ -256,6 +256,7 @@ async def setup_device_v1(
         RoborockMqttClientV1, user_data, DeviceData(device, product_info.model)
     )
     try:
+        await mqtt_client.async_connect()
         networking = await mqtt_client.get_networking()
         if networking is None:
             # If the api does not return an error but does return None for
