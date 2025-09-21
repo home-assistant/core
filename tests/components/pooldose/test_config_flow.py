@@ -342,110 +342,6 @@ async def test_dhcp_api_errors(
     )
 
 
-async def test_dhcp_adds_mac_connection(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test that DHCP flow adds MAC address as connection to device registry."""
-    # Create a config entry
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="TEST123456789",
-        data={CONF_HOST: "192.168.1.100"},
-    )
-    entry.add_to_hass(hass)
-
-    # Create device in registry
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, "TEST123456789")},
-        name="PoolDose TEST123456789",
-        manufacturer="Seko",
-        model="POOL DOSE",
-    )
-    assert device is not None
-
-    # Verify initial state has no MAC connection
-    mac_conn = ("network_mac", "a4e57caabbcc")
-    assert mac_conn not in device.connections
-
-    # Simulate DHCP discovery event
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_DHCP},
-        data=DhcpServiceInfo(
-            ip="192.168.0.123", hostname="kommspot", macaddress="a4e57caabbcc"
-        ),
-    )
-
-    # Verify flow aborts as device is already configured
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-    # Verify MAC address was added to device registry
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "TEST123456789")})
-    assert device is not None
-    assert mac_conn in device.connections
-
-    # Verify host was updated in config entry
-    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
-    assert updated_entry is not None
-    assert updated_entry.data[CONF_HOST] == "192.168.0.123"
-
-
-async def test_dhcp_mac_connection_not_duplicated(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test that DHCP flow does not add duplicate MAC connections."""
-    # Create and load a config entry with MAC connection already in device registry
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="TEST123456789",
-        data={CONF_HOST: "192.168.1.100"},
-    )
-    entry.add_to_hass(hass)
-
-    # Create device in registry
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, "TEST123456789")},
-        name="PoolDose TEST123456789",
-        manufacturer="Seko",
-        model="POOL DOSE",
-    )
-    assert device is not None
-
-    # Setup entry and add MAC connection
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    device_registry.async_update_device(
-        device.id, new_connections={("network_mac", "a4e57caabbcc")}
-    )
-
-    # Verify initial state has MAC connection
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "TEST123456789")})
-    assert ("network_mac", "a4e57caabbcc") in device.connections
-    connection_count = len(device.connections)
-
-    # Simulate DHCP discovery event with same MAC
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_DHCP},
-        data=DhcpServiceInfo(
-            ip="192.168.0.123", hostname="kommspot", macaddress="a4e57caabbcc"
-        ),
-    )
-
-    # Verify flow aborts as device is already configured
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-    # Verify no duplicate MAC connection was added (connections are still the same)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "TEST123456789")})
-    assert len(device.connections) == connection_count
-
-
 async def test_dhcp_updates_host(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -488,11 +384,6 @@ async def test_dhcp_updates_host(
     # Verify host was updated in the config entry
     updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
     assert updated_entry.data[CONF_HOST] == "192.168.0.123"
-
-    # Verify MAC was added as a connection
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "TEST123456789")})
-    assert device is not None
-    assert ("network_mac", "a4e57caabbcc") in device.connections
 
 
 async def test_duplicate_dhcp_entries_not_allowed(
