@@ -58,6 +58,32 @@ def _parse_metadata(raw_content: str) -> dict[str, Any]:
         return data
 
 
+def _find_backup_file_for_metadata(
+    metadata_filename: str, all_files: dict[str, FileVersion], prefix: str
+) -> FileVersion | None:
+    """Find corresponding backup file for metadata file."""
+    base_name = metadata_filename[len(prefix) :].removesuffix(METADATA_FILE_SUFFIX)
+    return next(
+        (
+            file
+            for name, file in all_files.items()
+            if name.startswith(prefix + base_name)
+            and name.endswith(".tar")
+            and name != metadata_filename
+        ),
+        None,
+    )
+
+
+def _create_backup_from_metadata(
+    metadata_content: dict[str, Any], backup_file: FileVersion
+) -> AgentBackup:
+    """Construct an AgentBackup from parsed metadata content and the associated backup file."""
+    metadata = metadata_content["backup_metadata"]
+    metadata["size"] = backup_file.size
+    return AgentBackup.from_dict(metadata)
+
+
 def handle_b2_errors[T](
     func: Callable[..., Coroutine[Any, Any, T]],
 ) -> Callable[..., Coroutine[Any, Any, T]]:
@@ -409,7 +435,7 @@ class BackblazeBackupAgent(BackupAgent):
             backup_id,
             metadata_file_version.file_name,
         )
-        backup = self._backup_from_b2_metadata(metadata_content, file)
+        backup = _create_backup_from_metadata(metadata_content, file)
 
         # Update single item in cache if found via direct get
         if time() <= self._backup_list_cache_expiration:
@@ -464,20 +490,8 @@ class BackblazeBackupAgent(BackupAgent):
                 return None, None
 
             if metadata_content.get("backup_id") == target_backup_id:
-                base_name = file_name.removesuffix(METADATA_FILE_SUFFIX)
-                expected_backup_file_prefix = base_name
-
-                found_backup_file = next(
-                    (
-                        archive_file_version
-                        for archive_file_name, archive_file_version in all_files_in_prefix.items()
-                        if archive_file_name.startswith(expected_backup_file_prefix)
-                        and archive_file_name.endswith(".tar")
-                        and archive_file_name
-                        != file_name  # Ensure we don't accidentally match the metadata file
-                        # if it somehow ends with .tar
-                    ),
-                    None,
+                found_backup_file = _find_backup_file_for_metadata(
+                    file_name, all_files_in_prefix, self._prefix
                 )
                 if found_backup_file:
                     _LOGGER.debug(
@@ -504,14 +518,6 @@ class BackblazeBackupAgent(BackupAgent):
                 err,
             )
         return None, None
-
-    def _backup_from_b2_metadata(
-        self, metadata_content: dict[str, Any], backup_file: FileVersion
-    ) -> AgentBackup:
-        """Construct an AgentBackup from parsed metadata content and the associated backup file."""
-        metadata = metadata_content["backup_metadata"]
-        metadata["size"] = backup_file.size
-        return AgentBackup.from_dict(metadata)
 
     async def _get_all_files_in_prefix(self) -> dict[str, FileVersion]:
         """Get all file versions in the configured prefix from Backblaze B2.
@@ -554,41 +560,21 @@ class BackblazeBackupAgent(BackupAgent):
             except ValueError:
                 return None
 
-            # Schema validation already checked required fields, so we can proceed
-            # Derive the expected main backup file name from the metadata file name.
-            # Remove prefix and then the .metadata.json suffix to get base name
-            base_filename_without_prefix = file_name[len(self._prefix) :].removesuffix(
-                METADATA_FILE_SUFFIX
+            found_backup_file = _find_backup_file_for_metadata(
+                file_name, all_files_in_prefix, self._prefix
             )
 
-            found_backup_archive_file = next(
-                (
-                    archive_file_version
-                    for archive_file_name, archive_file_version in all_files_in_prefix.items()
-                    if archive_file_name.startswith(
-                        self._prefix + base_filename_without_prefix
-                    )
-                    and archive_file_name.endswith(".tar")
-                    and archive_file_name
-                    != file_name  # Ensure it's not the metadata file itself
-                ),
-                None,
-            )
-
-            if found_backup_archive_file:
+            if found_backup_file:
                 _LOGGER.debug(
                     "Successfully processed metadata file %s for backup ID %s",
                     file_name,
                     metadata_content["backup_id"],
                 )
-                return self._backup_from_b2_metadata(
-                    metadata_content, found_backup_archive_file
-                )
+                return _create_backup_from_metadata(metadata_content, found_backup_file)
+
             _LOGGER.warning(
-                "Found metadata file %s but no corresponding backup file "
-                "starting with %s (after prefix)",
+                "Found metadata file %s but no corresponding backup file",
                 file_name,
-                base_filename_without_prefix,
             )
 
         except B2Error as err:

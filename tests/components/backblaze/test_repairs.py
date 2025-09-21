@@ -1,6 +1,6 @@
 """Test Backblaze repairs."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock, patch
 
 from b2sdk.v2.exception import (
     B2Error,
@@ -8,6 +8,7 @@ from b2sdk.v2.exception import (
     RestrictedBucket,
     Unauthorized,
 )
+import pytest
 
 from homeassistant.components.backblaze.repairs import (
     async_check_for_repair_issues,
@@ -20,68 +21,35 @@ from homeassistant.helpers import issue_registry as ir
 from tests.common import MockConfigEntry
 
 
-async def test_repair_issue_unauthorized(hass: HomeAssistant) -> None:
-    """Test that unauthorized errors don't create repair issues (handled by reauth)."""
+@pytest.fixture
+def mock_entry():
+    """Create a mock config entry with runtime data."""
     entry = MockConfigEntry(domain="backblaze", data={"bucket": "test"})
-    bucket = Mock()
-    entry.runtime_data = bucket
+    entry.runtime_data = Mock()
+    return entry
 
-    # Mock executor job to raise Unauthorized
-    hass.async_add_executor_job = AsyncMock(
-        side_effect=Unauthorized("test", "auth_failed")
-    )
 
-    await async_check_for_repair_issues(hass, entry)
+@pytest.mark.parametrize(
+    ("exception", "expected_issues"),
+    [
+        (Unauthorized("test", "auth_failed"), 0),  # Handled by reauth flow
+        (RestrictedBucket("test"), 1),  # Creates repair issue
+        (NonExistentBucket("test"), 1),  # Creates repair issue
+        (B2Error("test"), 0),  # Just logs, no issue
+    ],
+)
+async def test_repair_issue_creation(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+    exception: Exception,
+    expected_issues: int,
+) -> None:
+    """Test repair issue creation for different exception types."""
+    with patch.object(hass, "async_add_executor_job", side_effect=exception):
+        await async_check_for_repair_issues(hass, mock_entry)
 
-    # Should not create issue for Unauthorized (handled by reauth flow)
     issues = ir.async_get(hass).issues
-    assert len(issues) == 0
-
-
-async def test_repair_issue_restricted_bucket(hass: HomeAssistant) -> None:
-    """Test repair issue creation for restricted bucket error."""
-    entry = MockConfigEntry(domain="backblaze", data={"bucket": "test"})
-    bucket = Mock()
-    entry.runtime_data = bucket
-
-    # Mock executor job to raise RestrictedBucket
-    hass.async_add_executor_job = AsyncMock(side_effect=RestrictedBucket("test"))
-
-    await async_check_for_repair_issues(hass, entry)
-
-    # Check that issue was created
-    issues = ir.async_get(hass).issues
-    assert len(issues) == 1
-
-
-async def test_repair_issue_nonexistent_bucket(hass: HomeAssistant) -> None:
-    """Test repair issue creation for nonexistent bucket error."""
-    entry = MockConfigEntry(domain="backblaze", data={"bucket": "test"})
-    bucket = Mock()
-    entry.runtime_data = bucket
-
-    # Mock executor job to raise NonExistentBucket
-    hass.async_add_executor_job = AsyncMock(side_effect=NonExistentBucket("test"))
-
-    await async_check_for_repair_issues(hass, entry)
-
-    # Check that issue was created
-    issues = ir.async_get(hass).issues
-    assert len(issues) == 1
-
-
-async def test_repair_issue_b2_error(hass: HomeAssistant) -> None:
-    """Test repair issue with B2Error (covers debug logging)."""
-    entry = MockConfigEntry(domain="backblaze", data={"bucket": "test"})
-    bucket = Mock()
-    entry.runtime_data = bucket
-
-    # Mock executor job to raise B2Error
-    hass.async_add_executor_job = AsyncMock(side_effect=B2Error("test"))
-
-    await async_check_for_repair_issues(hass, entry)
-
-    # Should not create issue for generic B2Error, just log
+    assert len(issues) == expected_issues
 
 
 async def test_async_create_fix_flow(hass: HomeAssistant) -> None:

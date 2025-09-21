@@ -17,6 +17,7 @@ from homeassistant.components.backblaze.const import (
     CONF_KEY_ID,
     DOMAIN,
 )
+from homeassistant.components.backup import AgentBackup
 
 from .const import BACKUP_METADATA, TEST_BACKUP, USER_INPUT
 
@@ -278,7 +279,7 @@ def b2_fixture():
 
 
 @pytest.fixture
-def test_backup(request: pytest.FixtureRequest) -> None:
+def backup_fixture(request: pytest.FixtureRequest) -> AgentBackup:
     """Test backup fixture."""
     return TEST_BACKUP
 

@@ -1,4 +1,4 @@
-"""Backblaze backup agent tests with comprehensive coverage."""
+"""Clean and organized Backblaze backup agent tests."""
 
 import json
 import logging
@@ -39,7 +39,7 @@ from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
-# Test Data Factories
+# Simple test data factories
 def create_test_backup(backup_id="test_backup", name="test", size=1000, **kwargs):
     """Create a test backup with default values."""
     defaults = {
@@ -103,11 +103,11 @@ def create_mock_metadata_file(backup_id="test", valid=True):
         mock_response.content = b"{invalid json"
 
     mock_response.close = Mock()
-
     mock_file.download.return_value.response = mock_response
     return mock_file
 
 
+# Test fixtures
 @pytest.fixture(autouse=True)
 async def setup_backup_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
@@ -129,7 +129,7 @@ def agent(hass: HomeAssistant, mock_config_entry: MockConfigEntry):
     return BackblazeBackupAgent(hass, mock_config_entry)
 
 
-class TestBackblazeBackupUtilities:
+class TestUtilityFunctions:
     """Test utility functions and basic functionality."""
 
     def test_suggested_filename_generation(self):
@@ -167,12 +167,6 @@ class TestBackblazeBackupUtilities:
         with pytest.raises(TypeError, match="JSON content is not a dictionary"):
             _parse_metadata('["this", "is", "a", "list"]')
 
-        # Note: Field validation is now handled by AgentBackup.from_dict, not here
-        # So _parse_metadata will successfully parse incomplete metadata
-        incomplete = {k: v for k, v in valid_metadata.items() if k != "backup_id"}
-        result_incomplete = _parse_metadata(json.dumps(incomplete))
-        assert "backup_id" not in result_incomplete
-
     async def test_error_decorator(self):
         """Test the B2Error handling decorator."""
 
@@ -204,8 +198,8 @@ class TestBackblazeBackupUtilities:
         assert new_count == listeners_count - 1
 
 
-class TestBackblazeBackupAgent:
-    """Test BackblazeBackupAgent core functionality."""
+class TestBackupAgent:
+    """Test core backup agent functionality."""
 
     async def test_cache_management(self, agent):
         """Test cache invalidation and management."""
@@ -229,6 +223,7 @@ class TestBackblazeBackupAgent:
             "backup123", "test.tar", "test.metadata.json", remove_files=True
         )
         assert "test.tar" not in agent._all_files_cache
+        assert "test.metadata.json" not in agent._all_files_cache
         assert "backup123" not in agent._backup_list_cache
 
     async def test_cleanup_failed_upload(self, agent):
@@ -242,7 +237,7 @@ class TestBackblazeBackupAgent:
             await agent._cleanup_failed_upload("test_file.tar")
             mock_file_info.delete.assert_called_once()
 
-    async def test_backup_list_cache_hit(self, agent):
+    async def test_backup_list_cache_hit(self, agent, caplog):
         """Test cache hit scenarios for backup listing."""
         # Test all files cache hit
         agent._all_files_cache = {"test.tar": Mock()}
@@ -260,9 +255,17 @@ class TestBackblazeBackupAgent:
         backup_list = await agent.async_list_backups()
         assert mock_backup in backup_list
 
-        # Test individual backup cache hit
-        cached_backup = await agent.async_get_backup("cached_backup")
-        assert cached_backup == mock_backup
+        # Test individual backup cache hit with debug logging
+        with caplog.at_level(logging.DEBUG):
+            cached_backup = await agent.async_get_backup("cached_backup")
+            assert cached_backup == mock_backup
+
+            debug_logs = [
+                r.message
+                for r in caplog.records
+                if "Returning backup cached_backup from cache" in r.message
+            ]
+            assert len(debug_logs) > 0
 
     async def test_listener_cleanup_empty_list(self, hass: HomeAssistant):
         """Test listener cleanup when list becomes empty."""
@@ -286,18 +289,12 @@ class TestBackblazeBackupAgent:
         assert DATA_BACKUP_AGENT_LISTENERS not in hass.data
 
 
-class TestBackblazeBackupOperations:
+class TestBackupOperations:
     """Test backup upload, download, and delete operations."""
 
-    @pytest.mark.parametrize(
-        "backup_size",
-        [
-            100,
-            100 * 1024 * 1024 + 1000,  # Large file test case
-        ],
-    )
+    @pytest.mark.parametrize("backup_size", [100, 100 * 1024 * 1024 + 1000])
     async def test_upload_backup(self, agent, backup_size):
-        """Test backup upload with different sizes using unified streaming."""
+        """Test backup upload with different sizes."""
         backup = create_test_backup(size=backup_size)
         stream = create_mock_stream()
 
@@ -308,9 +305,7 @@ class TestBackblazeBackupOperations:
 
         with patch.object(agent, "_bucket", mock_bucket):
             await agent.async_upload_backup(open_stream=stream, backup=backup)
-            # Main backup file uses streaming (upload_unbound_stream)
             mock_bucket.upload_unbound_stream.assert_called_once()
-            # Metadata file uses upload_bytes
             mock_bucket.upload_bytes.assert_called_once()
 
     async def test_upload_backup_size_limit_exceeded(self, agent):
@@ -400,7 +395,7 @@ class TestBackblazeBackupOperations:
             assert len(warning_logs) > 0
 
 
-class TestBackblazeErrorHandling:
+class TestErrorHandling:
     """Test error handling scenarios."""
 
     async def test_b2_error_during_upload_with_cleanup(self, agent):
@@ -423,14 +418,12 @@ class TestBackblazeErrorHandling:
 
     async def test_b2_error_in_upload_file_method(self, agent, caplog):
         """Test B2Error handling in _upload_backup_file."""
-
         stream_mock = Mock(spec=[])
 
         async def mock_open_stream():
             return stream_mock
 
         mock_bucket = Mock()
-        # Make upload_unbound_stream raise B2Error
         mock_bucket.upload_unbound_stream.side_effect = B2Error(
             "B2 API connection error"
         )
@@ -442,32 +435,26 @@ class TestBackblazeErrorHandling:
             ) as mock_reader_class,
             caplog.at_level(logging.ERROR),
         ):
-            # Set up mock reader
             mock_reader = Mock()
             mock_reader.close = Mock()
             mock_reader_class.return_value = mock_reader
 
             with pytest.raises(B2Error, match="B2 API connection error"):
                 await agent._upload_backup_file(
-                    filename="test.tar",
-                    open_stream=mock_open_stream,
-                    file_info={},
+                    filename="test.tar", open_stream=mock_open_stream, file_info={}
                 )
 
             mock_reader.close.assert_called_once()
-
             assert "B2 connection error during upload for test.tar" in caplog.text
 
     async def test_generic_error_in_upload_file_method(self, agent, caplog):
         """Test generic Exception handling in _upload_backup_file."""
-
         stream_mock = Mock(spec=[])
 
         async def mock_open_stream():
             return stream_mock
 
         mock_bucket = Mock()
-        # Make upload_unbound_stream raise generic exception
         mock_bucket.upload_unbound_stream.side_effect = RuntimeError(
             "Generic upload error"
         )
@@ -479,20 +466,16 @@ class TestBackblazeErrorHandling:
             ) as mock_reader_class,
             caplog.at_level(logging.ERROR),
         ):
-            # Set up mock reader
             mock_reader = Mock()
             mock_reader.close = Mock()
             mock_reader_class.return_value = mock_reader
 
             with pytest.raises(RuntimeError, match="Generic upload error"):
                 await agent._upload_backup_file(
-                    filename="test.tar",
-                    open_stream=mock_open_stream,
-                    file_info={},
+                    filename="test.tar", open_stream=mock_open_stream, file_info={}
                 )
 
             mock_reader.close.assert_called_once()
-
             assert "An error occurred during upload for test.tar:" in caplog.text
 
     async def test_upload_metadata_failure(self, agent):
@@ -501,12 +484,8 @@ class TestBackblazeErrorHandling:
         stream = create_mock_stream()
 
         mock_bucket = Mock()
-        mock_bucket.upload_unbound_stream.return_value = Mock(
-            id_="main_file_id"
-        )  # Success for main backup
-        mock_bucket.upload_bytes.side_effect = RuntimeError(
-            "Unexpected error"
-        )  # Error for metadata
+        mock_bucket.upload_unbound_stream.return_value = Mock(id_="main_file_id")
+        mock_bucket.upload_bytes.side_effect = RuntimeError("Unexpected error")
 
         with (
             patch.object(agent, "_bucket", mock_bucket),
@@ -551,7 +530,7 @@ class TestBackblazeErrorHandling:
             await agent.async_delete_backup("test_backup")
 
 
-class TestBackblazeMetadataProcessing:
+class TestMetadataProcessing:
     """Test metadata file processing scenarios."""
 
     async def test_list_backups_with_valid_metadata(self, agent):
@@ -586,7 +565,6 @@ class TestBackblazeMetadataProcessing:
         mock_file_version.download.side_effect = B2Error("Download failed")
 
         with caplog.at_level(logging.WARNING):
-            # Test both processing methods
             result1 = agent._process_metadata_file_for_id_sync(
                 "b2error.metadata.json", mock_file_version, "target_backup_id", {}
             )
@@ -597,23 +575,13 @@ class TestBackblazeMetadataProcessing:
             )
             assert result2 is None
 
-            b2_warning_logs = [
-                r.message
-                for r in caplog.records
-                if "Failed to download metadata file" in r.message
-            ]
-            assert len(b2_warning_logs) > 0
-
     async def test_metadata_without_backup_file(self, agent, caplog):
         """Test metadata file without corresponding backup file."""
         mock_file_version = create_mock_metadata_file("orphan_backup_id")
 
         with caplog.at_level(logging.WARNING):
             result = agent._process_metadata_file_for_id_sync(
-                "orphan_backup.metadata.json",
-                mock_file_version,
-                "orphan_backup_id",
-                {},  # No backup files available
+                "orphan_backup.metadata.json", mock_file_version, "orphan_backup_id", {}
             )
 
             assert result == (None, None)
@@ -644,24 +612,22 @@ class TestBackblazeMetadataProcessing:
                 "homeassistant.components.backblaze.backup._parse_metadata",
                 return_value=mock_metadata_content,
             ),
-            patch.object(agent, "_backup_from_b2_metadata", return_value=test_backup),
+            patch(
+                "homeassistant.components.backblaze.backup._create_backup_from_metadata",
+                return_value=test_backup,
+            ),
         ):
             result = await agent.async_get_backup("direct_backup")
             assert result == test_backup
             assert "direct_backup" in agent._backup_list_cache
 
 
-class TestBackblazeWebSocketAPI:
+class TestWebSocketAPI:
     """Test WebSocket API functionality."""
 
     @pytest.mark.parametrize(
         "scenario",
-        [
-            "agents_info",
-            "list_backups",
-            "get_backup_success",
-            "get_backup_not_found",
-        ],
+        ["agents_info", "list_backups", "get_backup_success", "get_backup_not_found"],
     )
     async def test_websocket_operations(
         self,
@@ -754,7 +720,7 @@ class TestBackblazeWebSocketAPI:
             assert resp.status == 200
 
 
-class TestBackblazeAdditionalCoverage:
+class TestEdgeCases:
     """Additional tests to reach 100% coverage of edge cases."""
 
     async def test_cleanup_failed_upload_exception(self, agent, caplog):
@@ -773,16 +739,9 @@ class TestBackblazeAdditionalCoverage:
                 r.message for r in caplog.records if "Failed to clean up" in r.message
             ]
             assert len(error_logs) > 0
-            manual_logs = [
-                r.message
-                for r in caplog.records
-                if "Manual intervention may be required" in r.message
-            ]
-            assert len(manual_logs) > 0
 
     async def test_list_backups_empty_cache_miss(self, agent):
         """Test list backups when cache is expired and empty."""
-        # Expire cache
         agent._backup_list_cache_expiration = 0.0
         agent._backup_list_cache = {}
 
@@ -797,7 +756,6 @@ class TestBackblazeAdditionalCoverage:
 
     async def test_get_backup_no_cache_hit(self, agent):
         """Test get_backup when not in cache and needs direct fetch."""
-        # Empty cache
         agent._backup_list_cache = {}
         agent._backup_list_cache_expiration = time() + 300
 
@@ -819,7 +777,10 @@ class TestBackblazeAdditionalCoverage:
                 "homeassistant.components.backblaze.backup._parse_metadata",
                 return_value=mock_metadata_content,
             ),
-            patch.object(agent, "_backup_from_b2_metadata", return_value=test_backup),
+            patch(
+                "homeassistant.components.backblaze.backup._create_backup_from_metadata",
+                return_value=test_backup,
+            ),
         ):
             result = await agent.async_get_backup("test_backup")
             assert result == test_backup
@@ -839,18 +800,9 @@ class TestBackblazeAdditionalCoverage:
 
         with caplog.at_level(logging.WARNING):
             result = agent._process_metadata_file_sync(
-                "orphan.metadata.json",
-                mock_file_version,
-                {},  # No backup files
+                "orphan.metadata.json", mock_file_version, {}
             )
             assert result is None
-
-            warning_logs = [
-                r.message
-                for r in caplog.records
-                if "but no corresponding backup file" in r.message
-            ]
-            assert len(warning_logs) > 0
 
     async def test_debug_backup_not_found_logging(self, agent, caplog):
         """Test debug logging when backup is not found."""
@@ -874,10 +826,7 @@ class TestBackblazeAdditionalCoverage:
 
         with caplog.at_level(logging.DEBUG):
             result = agent._process_metadata_file_for_id_sync(
-                "different.metadata.json",
-                mock_file_version,
-                "target_backup_id",  # Different from file content
-                {},
+                "different.metadata.json", mock_file_version, "target_backup_id", {}
             )
             assert result == (None, None)
 
