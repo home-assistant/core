@@ -43,13 +43,13 @@ async def async_setup_entry(
             ]
             entities_to_add.extend(room_lights)
 
-            for group in room.groups:
-                group_lights = [
-                    CyncLightEntity(device, coordinator, room.name)
-                    for device in group.devices
-                    if isinstance(device, CyncLight)
-                ]
-                entities_to_add.extend(group_lights)
+            group_lights = [
+                CyncLightEntity(device, coordinator, room.name)
+                for group in room.groups
+                for device in group.devices
+                if isinstance(device, CyncLight)
+            ]
+            entities_to_add.extend(group_lights)
 
     async_add_entities(entities_to_add)
 
@@ -178,13 +178,3 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
         """Fetch the reference to the backing Cync light for this device."""
 
         return self.coordinator.data[self._cync_device_id]
-
-    @property
-    def available(self) -> bool:
-        """Determines whether this device is currently available."""
-
-        return (
-            super().available
-            and self.coordinator.data is not None
-            and self._cync_device_id in self.coordinator.data
-        )

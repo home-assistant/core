@@ -46,11 +46,13 @@ rules:
   discovery-update-info:
     status: exempt
     comment: |
-      Cync firmware disables local discovery.
+      Cync firmware disables device UDP communication, and requires
+      a signed TLS certificate from the Cync server for direct TCP communication.
   discovery:
     status: exempt
     comment: |
-      Cync firmware disables local discovery.
+      Cync firmware disables device UDP communication, and requires
+      a signed TLS certificate from the Cync server for direct TCP communication.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: done

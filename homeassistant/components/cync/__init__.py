@@ -43,8 +43,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool
 
     cync.set_update_callback(devices_coordinator.on_data_update)
 
-    entry.runtime_data = devices_coordinator
     await devices_coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = devices_coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 

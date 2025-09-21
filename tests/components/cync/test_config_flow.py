@@ -1,10 +1,10 @@
 """Test the Cync config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import ANY, AsyncMock, MagicMock
 
 from pycync.exceptions import AuthFailedError, CyncError, TwoFactorRequiredError
+import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.cync.const import (
     CONF_AUTHORIZE_STRING,
     CONF_EXPIRES_AT,
@@ -13,20 +13,26 @@ from homeassistant.components.cync.const import (
     CONF_USER_ID,
     DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import MOCKED_EMAIL
 
+from tests.common import MockConfigEntry
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
+
+async def test_form_auth_success(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test that an auth flow without two factor succeeds."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -35,29 +41,29 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
             CONF_PASSWORD: "test-password",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCKED_EMAIL
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
-        CONF_EXPIRES_AT: 3600,
+        CONF_EXPIRES_AT: ANY,
         CONF_ACCESS_TOKEN: "test_token",
         CONF_REFRESH_TOKEN: "test_refresh_token",
     }
+    assert result["result"].unique_id == MOCKED_EMAIL
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_two_factor_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, client: MagicMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, auth_client: MagicMock
 ) -> None:
     """Test we handle a request for a two factor code."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    client.login.side_effect = TwoFactorRequiredError
+    auth_client.login.side_effect = TwoFactorRequiredError
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -68,38 +74,75 @@ async def test_form_two_factor_success(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
+    assert result["step_id"] == "two_factor"
 
     # Enter two factor code
-    client.login.side_effect = None
+    auth_client.login.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_TWO_FACTOR_CODE: "123456",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCKED_EMAIL
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
-        CONF_EXPIRES_AT: 3600,
+        CONF_EXPIRES_AT: ANY,
         CONF_ACCESS_TOKEN: "test_token",
         CONF_REFRESH_TOKEN: "test_refresh_token",
     }
+    assert result["result"].unique_id == MOCKED_EMAIL
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_two_factor_bad_code(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, client: MagicMock
+async def test_form_unique_id_already_exists(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test we handle a request for a two factor code."""
+    """Test that setting up a config with a unique ID that already exists fails."""
+    mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_EMAIL: MOCKED_EMAIL,
+            CONF_PASSWORD: "test-password",
+        },
     )
 
-    client.login.side_effect = TwoFactorRequiredError
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("error_type", "error_string"),
+    [
+        (AuthFailedError, "invalid_auth"),
+        (CyncError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_form_two_factor_errors(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    auth_client: MagicMock,
+    error_type: Exception,
+    error_string: str,
+) -> None:
+    """Test we handle a request for a two factor code with errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    auth_client.login.side_effect = TwoFactorRequiredError
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -110,9 +153,10 @@ async def test_form_two_factor_bad_code(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
+    assert result["step_id"] == "two_factor"
 
     # Enter two factor code
-    client.login.side_effect = AuthFailedError
+    auth_client.login.side_effect = error_type
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -121,12 +165,13 @@ async def test_form_two_factor_bad_code(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": error_string}
+    assert result["step_id"] == "user"
 
     # Make sure the config flow tests finish with either an
     # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
     # we can show the config flow is able to recover from an error.
-    client.login.side_effect = TwoFactorRequiredError
+    auth_client.login.side_effect = TwoFactorRequiredError
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -136,36 +181,48 @@ async def test_form_two_factor_bad_code(
     )
 
     # Enter two factor code
-    client.login.side_effect = None
+    auth_client.login.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_TWO_FACTOR_CODE: "567890",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCKED_EMAIL
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
-        CONF_EXPIRES_AT: 3600,
+        CONF_EXPIRES_AT: ANY,
         CONF_ACCESS_TOKEN: "test_token",
         CONF_REFRESH_TOKEN: "test_refresh_token",
     }
+    assert result["result"].unique_id == MOCKED_EMAIL
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_two_factor_cant_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, client: MagicMock
+@pytest.mark.parametrize(
+    ("error_type", "error_string"),
+    [
+        (AuthFailedError, "invalid_auth"),
+        (CyncError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_form_errors(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    auth_client: MagicMock,
+    error_type: Exception,
+    error_string: str,
 ) -> None:
-    """Test we handle a request for a two factor code."""
+    """Test we handle errors in the user step of the setup."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    client.login.side_effect = TwoFactorRequiredError
+    auth_client.login.side_effect = error_type
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -175,24 +232,13 @@ async def test_form_two_factor_cant_connect(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
-
-    # Enter two factor code
-    client.login.side_effect = CyncError
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_TWO_FACTOR_CODE: "123456",
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error_string}
+    assert result["step_id"] == "user"
 
     # Make sure the config flow tests finish with either an
     # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
     # we can show the config flow is able to recover from an error.
-    client.login.side_effect = TwoFactorRequiredError
+    auth_client.login.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -200,227 +246,15 @@ async def test_form_two_factor_cant_connect(
             CONF_PASSWORD: "test-password",
         },
     )
-
-    # Enter two factor code
-    client.login.side_effect = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_TWO_FACTOR_CODE: "567890",
-        },
-    )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCKED_EMAIL
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
-        CONF_EXPIRES_AT: 3600,
+        CONF_EXPIRES_AT: ANY,
         CONF_ACCESS_TOKEN: "test_token",
         CONF_REFRESH_TOKEN: "test_refresh_token",
     }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_two_factor_unknown_error(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, client: MagicMock
-) -> None:
-    """Test we handle a request for a two factor code."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    client.login.side_effect = TwoFactorRequiredError
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_EMAIL: MOCKED_EMAIL,
-            CONF_PASSWORD: "test-password",
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
-
-    # Enter two factor code
-    client.login.side_effect = Exception
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_TWO_FACTOR_CODE: "123456",
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-    client.login.side_effect = TwoFactorRequiredError
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_EMAIL: MOCKED_EMAIL,
-            CONF_PASSWORD: "test-password",
-        },
-    )
-
-    # Enter two factor code
-    client.login.side_effect = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_TWO_FACTOR_CODE: "567890",
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MOCKED_EMAIL
-    assert result["data"] == {
-        CONF_USER_ID: 123456789,
-        CONF_AUTHORIZE_STRING: "test_authorize_string",
-        CONF_EXPIRES_AT: 3600,
-        CONF_ACCESS_TOKEN: "test_token",
-        CONF_REFRESH_TOKEN: "test_refresh_token",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, client: MagicMock
-) -> None:
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    client.login.side_effect = AuthFailedError
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_EMAIL: MOCKED_EMAIL,
-            CONF_PASSWORD: "test-password",
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-    client.login.side_effect = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_EMAIL: MOCKED_EMAIL,
-            CONF_PASSWORD: "test-password",
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MOCKED_EMAIL
-    assert result["data"] == {
-        CONF_USER_ID: 123456789,
-        CONF_AUTHORIZE_STRING: "test_authorize_string",
-        CONF_EXPIRES_AT: 3600,
-        CONF_ACCESS_TOKEN: "test_token",
-        CONF_REFRESH_TOKEN: "test_refresh_token",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, client: MagicMock
-) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    client.login.side_effect = CyncError
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_EMAIL: MOCKED_EMAIL,
-            CONF_PASSWORD: "test-password",
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-
-    client.login.side_effect = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_EMAIL: MOCKED_EMAIL,
-            CONF_PASSWORD: "test-password",
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MOCKED_EMAIL
-    assert result["data"] == {
-        CONF_USER_ID: 123456789,
-        CONF_AUTHORIZE_STRING: "test_authorize_string",
-        CONF_EXPIRES_AT: 3600,
-        CONF_ACCESS_TOKEN: "test_token",
-        CONF_REFRESH_TOKEN: "test_refresh_token",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_unknown_error(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, client: MagicMock
-) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    client.login.side_effect = Exception
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_EMAIL: MOCKED_EMAIL,
-            CONF_PASSWORD: "test-password",
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-
-    client.login.side_effect = None
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_EMAIL: MOCKED_EMAIL,
-            CONF_PASSWORD: "test-password",
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == MOCKED_EMAIL
-    assert result["data"] == {
-        CONF_USER_ID: 123456789,
-        CONF_AUTHORIZE_STRING: "test_authorize_string",
-        CONF_EXPIRES_AT: 3600,
-        CONF_ACCESS_TOKEN: "test_token",
-        CONF_REFRESH_TOKEN: "test_refresh_token",
-    }
+    assert result["result"].unique_id == MOCKED_EMAIL
     assert len(mock_setup_entry.mock_calls) == 1

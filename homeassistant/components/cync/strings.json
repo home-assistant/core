@@ -7,8 +7,8 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "email": "Your account's email address",
-          "password": "Your account's password"
+          "email": "Your Cync account's email address",
+          "password": "Your Cync account's password"
         }
       },
       "two_factor": {
@@ -16,7 +16,7 @@
           "two_factor_code": "Two-factor code"
         },
         "data_description": {
-          "two_factor_code": "The two-factor code sent to your account's email"
+          "two_factor_code": "The two-factor code sent to your Cync account's email"
         }
       }
     },
@@ -26,7 +26,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
   }
 }
