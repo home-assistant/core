@@ -263,3 +263,86 @@ async def test_water_heater_no_sensors(
     assert state.attributes.get("current_operation") is None
     assert state.attributes.get("current_temperature") is None
     assert state.attributes.get("temperature") is None
+
+
+@pytest.mark.parametrize(
+    ("config_setup", "test_description"),
+    [
+        (None, "no DHW config"),
+        ("missing_attributes", "DHW config with missing temperature attributes"),
+        ("missing_value_attribute", "DHW config with objects missing value attribute"),
+    ],
+)
+async def test_water_heater_default_temperature_limits(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    config_setup: str | None,
+    test_description: str,
+) -> None:
+    """Test water heater uses default temperature limits when config is unavailable."""
+    if config_setup is None:
+        # Mock coordinator to return None for dhw_config
+        mock_bsblan.hot_water_config.return_value = None
+    elif config_setup == "missing_attributes":
+        # Create a mock config without the temperature limit attributes
+        mock_config = MagicMock()
+        mock_config.reduced_setpoint = None
+        mock_config.nominal_setpoint_max = None
+        mock_bsblan.hot_water_config.return_value = mock_config
+    elif config_setup == "missing_value_attribute":
+        # Create a mock config with objects that don't have 'value' attribute
+        mock_config = MagicMock()
+        mock_reduced_setpoint = MagicMock(spec=[])  # Empty spec means no attributes
+        mock_nominal_setpoint_max = MagicMock(spec=[])  # Empty spec means no attributes
+        mock_config.reduced_setpoint = mock_reduced_setpoint
+        mock_config.nominal_setpoint_max = mock_nominal_setpoint_max
+        mock_bsblan.hot_water_config.return_value = mock_config
+
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+
+    # Should use default temperature limits when config is not available
+    assert state.attributes.get("min_temp") == 10.0  # Default minimum
+    assert state.attributes.get("max_temp") == 65.0  # Default maximum
+
+
+async def test_water_heater_custom_temperature_limits_from_config(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test water heater uses custom temperature limits from DHW config."""
+    # Create a mock config with custom temperature limit values
+    mock_config = MagicMock()
+
+    # Mock reduced_setpoint with a custom value for min_temp
+    mock_reduced_setpoint = MagicMock()
+    mock_reduced_setpoint.value = 15.0  # Custom minimum temperature
+    mock_config.reduced_setpoint = mock_reduced_setpoint
+
+    # Mock nominal_setpoint_max with a custom value for max_temp
+    mock_nominal_setpoint_max = MagicMock()
+    mock_nominal_setpoint_max.value = 75.0  # Custom maximum temperature
+    mock_config.nominal_setpoint_max = mock_nominal_setpoint_max
+
+    mock_bsblan.hot_water_config.return_value = mock_config
+
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+
+    # Should use custom temperature limits from config
+    assert (
+        state.attributes.get("min_temp") == 15.0
+    )  # Custom minimum from reduced_setpoint
+    assert (
+        state.attributes.get("max_temp") == 75.0
+    )  # Custom maximum from nominal_setpoint_max

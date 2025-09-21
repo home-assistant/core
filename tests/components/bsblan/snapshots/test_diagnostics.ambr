@@ -165,7 +165,17 @@
           'unit': '',
           'value': 0,
         }),
-        'reduced_setpoint': None,
+        'reduced_setpoint': dict({
+          'data_type': 0,
+          'desc': '',
+          'error': 0,
+          'name': 'DHW reduced setpoint',
+          'precision': None,
+          'readonly': 0,
+          'readwrite': 0,
+          'unit': '&deg;C',
+          'value': 35.0,
+        }),
       }),
       'dhw_schedule': dict({
         'dhw_time_program_friday': dict({

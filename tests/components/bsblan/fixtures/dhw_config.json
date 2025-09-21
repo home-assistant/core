@@ -8,6 +8,15 @@
     "readonly": 0,
     "unit": ""
   },
+  "reduced_setpoint": {
+    "name": "DHW reduced setpoint",
+    "error": 0,
+    "value": "35.0",
+    "desc": "",
+    "dataType": 0,
+    "readonly": 0,
+    "unit": "&deg;C"
+  },
   "nominal_setpoint_max": {
     "name": "DHW nominal setpoint maximum",
     "error": 0,
