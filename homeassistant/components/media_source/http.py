@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -16,14 +17,19 @@ from homeassistant.components.media_player import (
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant
 
+from .const import MEDIA_SOURCE_DATA
 from .error import Unresolvable
 from .helper import async_browse_media, async_resolve_media
+from .models import MediaSourceItem
+
+LOGGER = logging.getLogger(__name__)
 
 
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the HTTP views and WebSocket commands for media sources."""
     websocket_api.async_register_command(hass, websocket_browse_media)
     websocket_api.async_register_command(hass, websocket_resolve_media)
+    websocket_api.async_register_command(hass, websocket_remove_media)
     frontend.async_register_built_in_panel(
         hass, "media-browser", "media_browser", "hass:play-box-multiple"
     )
@@ -77,3 +83,46 @@ async def websocket_resolve_media(
             "mime_type": media.mime_type,
         },
     )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "media_source/remove_media",
+        vol.Required("media_content_id"): str,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+async def websocket_remove_media(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Remove media."""
+    try:
+        item = MediaSourceItem.from_uri(hass, msg["media_content_id"], None)
+    except ValueError as err:
+        connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
+        return
+
+    if item.domain is None:
+        connection.send_error(
+            msg["id"],
+            websocket_api.ERR_INVALID_FORMAT,
+            "Media source domain required",
+        )
+        return
+
+    source = hass.data[MEDIA_SOURCE_DATA][item.domain]
+
+    try:
+        await source.async_delete_media(item)
+    except NotImplementedError:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_NOT_SUPPORTED, "Delete not supported"
+        )
+    except Unresolvable as err:
+        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, str(err))
+    except Exception as err:  # pylint: disable=broad-except
+        LOGGER.exception("Unexpected error removing media")
+        connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
+    else:
+        connection.send_result(msg["id"])

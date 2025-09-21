@@ -7,13 +7,13 @@ import logging
 import mimetypes
 from pathlib import Path
 import shutil
-from typing import Any, Protocol, cast
+from typing import Protocol, cast
 
 from aiohttp import web
 from aiohttp.web_request import FileField
 import voluptuous as vol
 
-from homeassistant.components import http, websocket_api
+from homeassistant.components import http
 from homeassistant.components.http import require_admin
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.core import HomeAssistant, callback
@@ -26,10 +26,6 @@ from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
 
 MAX_UPLOAD_SIZE = 1024 * 1024 * 10
 LOGGER = logging.getLogger(__name__)
-
-
-class PathNotSupportedError(HomeAssistantError):
-    """Error to indicate a path is not supported."""
 
 
 class InvalidFileNameError(HomeAssistantError):
@@ -102,10 +98,10 @@ class LocalSource(MediaSource):
 
         def _do_delete() -> None:
             if not item_path.exists():
-                raise FileNotFoundError("Path does not exist")
+                raise Unresolvable("Path does not exist")
 
             if not item_path.is_file():
-                raise PathNotSupportedError("Path is not a file")
+                raise Unresolvable("Path is not a file")
 
             item_path.unlink()
 
@@ -141,7 +137,7 @@ class LocalSource(MediaSource):
 
                 target_dir.mkdir(parents=True, exist_ok=True)
             except ValueError as err:
-                raise PathNotSupportedError("Invalid path") from err
+                raise Unresolvable("Invalid path") from err
 
             with target_path.open("wb") as target_fp:
                 shutil.copyfileobj(uploaded_file.file, target_fp)
@@ -380,51 +376,8 @@ class UploadMediaView(http.HomeAssistantView):
         except InvalidFileNameError as err:
             LOGGER.error("Invalid filename uploaded: %s", data["file"].filename)
             raise web.HTTPBadRequest from err
-        except PathNotSupportedError as err:
-            LOGGER.error("Invalid path for upload: %s", data["media_content_id"])
-            raise web.HTTPBadRequest from err
         except OSError as err:
             LOGGER.error("Error uploading file: %s", err)
             raise web.HTTPInternalServerError from err
 
         return self.json({"media_content_id": uploaded_media_source_id})
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "media_source/local_source/remove",
-        vol.Required("media_content_id"): str,
-    }
-)
-@websocket_api.require_admin
-@websocket_api.async_response
-async def websocket_remove_media(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Remove media."""
-    try:
-        item = MediaSourceItem.from_uri(hass, msg["media_content_id"], None)
-    except ValueError as err:
-        connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
-        return
-
-    if item.domain != DOMAIN:
-        connection.send_error(
-            msg["id"], websocket_api.ERR_INVALID_FORMAT, "Invalid media source domain"
-        )
-        return
-
-    source = cast(LocalSource, hass.data[MEDIA_SOURCE_DATA][item.domain])
-
-    try:
-        await source.async_delete_media(item)
-    except Unresolvable as err:
-        connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
-    except FileNotFoundError as err:
-        connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, str(err))
-    except PathNotSupportedError as err:
-        connection.send_error(msg["id"], websocket_api.ERR_NOT_SUPPORTED, str(err))
-    except OSError as err:
-        connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
-    else:
-        connection.send_result(msg["id"])

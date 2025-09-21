@@ -297,7 +297,7 @@ async def test_remove_file(
     await client.send_json(
         {
             "id": msgid(),
-            "type": "media_source/local_source/remove",
+            "type": "media_source/remove_media",
             "media_content_id": f"media-source://media_source/test_dir/{to_delete.name}",
         }
     )
@@ -317,23 +317,21 @@ async def test_remove_file(
             websocket_api.ERR_NOT_FOUND,
         ),
         # Only a dir
-        ("media-source://media_source/test_dir", websocket_api.ERR_NOT_SUPPORTED),
+        ("media-source://media_source/test_dir", websocket_api.ERR_NOT_FOUND),
         # File with extra identifiers
         (
             f"media-source://media_source/test_dir/bla/../{extra_id_file.name}",
-            websocket_api.ERR_INVALID_FORMAT,
+            websocket_api.ERR_NOT_FOUND,
         ),
         # Location is invalid
-        ("media-source://media_source/test_dir/..", websocket_api.ERR_INVALID_FORMAT),
-        # Domain != media_source
-        ("media-source://nest/test_dir/.", websocket_api.ERR_INVALID_FORMAT),
+        ("media-source://media_source/test_dir/..", websocket_api.ERR_NOT_FOUND),
         # Completely something else
         ("http://bla", websocket_api.ERR_INVALID_FORMAT),
     ):
         await client.send_json(
             {
                 "id": msgid(),
-                "type": "media_source/local_source/remove",
+                "type": "media_source/remove_media",
                 "media_content_id": bad_id,
             }
         )
@@ -341,7 +339,7 @@ async def test_remove_file(
         msg = await client.receive_json()
 
         assert not msg["success"], bad_id
-        assert msg["error"]["code"] == err
+        assert msg["error"]["code"] == err, bad_id
 
     assert extra_id_file.exists()
 
@@ -352,7 +350,7 @@ async def test_remove_file(
         await client.send_json(
             {
                 "id": msgid(),
-                "type": "media_source/local_source/remove",
+                "type": "media_source/remove_media",
                 "media_content_id": f"media-source://media_source/test_dir/{to_delete_2.name}",
             }
         )
@@ -369,7 +367,7 @@ async def test_remove_file(
     await client.send_json(
         {
             "id": msgid(),
-            "type": "media_source/local_source/remove",
+            "type": "media_source/remove_media",
             "media_content_id": f"media-source://media_source/test_dir/{to_delete_3.name}",
         }
     )

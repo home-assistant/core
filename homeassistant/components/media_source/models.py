@@ -27,7 +27,12 @@ class BrowseMediaSource(BrowseMedia):
     """Represent a browsable media file."""
 
     def __init__(
-        self, *, domain: str | None, identifier: str | None, **kwargs: Any
+        self,
+        *,
+        domain: str | None,
+        identifier: str | None,
+        can_delete: bool = False,
+        **kwargs: Any,
     ) -> None:
         """Initialize media source browse media."""
         media_content_id = f"{URI_SCHEME}{domain or ''}"
@@ -38,6 +43,13 @@ class BrowseMediaSource(BrowseMedia):
 
         self.domain = domain
         self.identifier = identifier
+        self.can_delete = can_delete
+
+    def as_dict(self, *, parent: bool = True) -> dict[str, Any]:
+        """Convert BrowseMediaSource to a dictionary."""
+        response = super().as_dict(parent=parent)
+        response["can_delete"] = self.can_delete
+        return response
 
 
 @dataclass(slots=True)
@@ -134,4 +146,8 @@ class MediaSource:
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Browse media."""
+        raise NotImplementedError
+
+    async def async_delete_media(self, item: MediaSourceItem) -> None:
+        """Delete media."""
         raise NotImplementedError

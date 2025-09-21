@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.integration_platform import (
@@ -73,7 +72,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Local sources support
     await _process_media_source_platform(hass, DOMAIN, local_source)
     hass.http.register_view(local_source.UploadMediaView)
-    websocket_api.async_register_command(hass, local_source.websocket_remove_media)
 
     await async_process_integration_platforms(
         hass, DOMAIN, _process_media_source_platform
