@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 
 from bsblan import BSBLANError
-from propcache.api import cached_property
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -102,7 +101,7 @@ class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
         else:
             self._attr_max_temp = 65.0  # Default maximum
 
-    @cached_property
+    @property
     def current_operation(self) -> str | None:
         """Return current operation."""
         if self.coordinator.data.dhw.operating_mode is None:
@@ -110,14 +109,14 @@ class BSBLANWaterHeater(BSBLanEntity, WaterHeaterEntity):
         current_mode = self.coordinator.data.dhw.operating_mode.desc
         return OPERATION_MODES.get(current_mode)
 
-    @cached_property
+    @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.coordinator.data.dhw.dhw_actual_value_top_temperature is None:
             return None
         return self.coordinator.data.dhw.dhw_actual_value_top_temperature.value
 
-    @cached_property
+    @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.coordinator.data.dhw.nominal_setpoint is None:

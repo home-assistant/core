@@ -15,12 +15,26 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     data = entry.runtime_data
 
-    return {
+    # Build diagnostic data
+    diagnostics = {
         "info": data.info.to_dict(),
         "device": data.device.to_dict(),
         "coordinator_data": {
             "state": data.coordinator.data.state.to_dict(),
             "sensor": data.coordinator.data.sensor.to_dict(),
+            "dhw": data.coordinator.data.dhw.to_dict(),
         },
         "static": data.static.to_dict(),
     }
+
+    # Add DHW config and schedule if available
+    if data.coordinator.data.dhw_config:
+        diagnostics["coordinator_data"]["dhw_config"] = (
+            data.coordinator.data.dhw_config.to_dict()
+        )
+    if data.coordinator.data.dhw_schedule:
+        diagnostics["coordinator_data"]["dhw_schedule"] = (
+            data.coordinator.data.dhw_schedule.to_dict()
+        )
+
+    return diagnostics
