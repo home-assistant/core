@@ -30,7 +30,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'calibrate',
-    'unique_id': 'f8:44:77:25:f0:dd_calibrate',
+    'unique_id': 'F8447725F0DD-blutrv:200-calibrate',
     'unit_of_measurement': None,
   })
 # ---
