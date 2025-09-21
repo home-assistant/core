@@ -34,6 +34,7 @@ from homeassistant.const import (
     UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -1537,6 +1538,33 @@ async def test_rpc_device_virtual_number_sensor_with_device_class(
     assert state.state == "34"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY
+
+
+async def test_rpc_object_role_sensor(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test object role based sensor."""
+    config = deepcopy(mock_rpc_device.config)
+    config["object:200"] = {
+        "name": "Water consumption",
+        "meta": {"ui": {"unit": "m3"}},
+        "role": "water_consumption",
+    }
+
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["object:200"] = {"value": {"counter": {"total": 5.4}}}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    assert (state := hass.states.get("sensor.test_name_water_consumption"))
+    assert state.state == "5.4"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfVolume.CUBIC_METERS
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
