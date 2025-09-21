@@ -29,6 +29,7 @@ from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoo
 from .entity import get_entity_block_device_info, get_entity_rpc_device_info
 from .utils import (
     async_remove_orphaned_entities,
+    format_ble_addr,
     get_blu_trv_device_info,
     get_device_entry_gen,
     get_rpc_entity_name,
@@ -297,7 +298,7 @@ class ShellyBluTrvButton(ShellyBaseButton):
         ble_addr: str = config["addr"]
         fw_ver = coordinator.device.status[key].get("fw_ver")
 
-        self._attr_unique_id = f"{ble_addr}_{description.key}"
+        self._attr_unique_id = f"{format_ble_addr(ble_addr)}-{key}-{description.key}"
         self._attr_device_info = get_blu_trv_device_info(
             config, ble_addr, coordinator.mac, fw_ver
         )
