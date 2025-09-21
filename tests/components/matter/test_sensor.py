@@ -233,6 +233,26 @@ async def test_eve_thermo_sensor(
     assert state.state == "18.0"
 
 
+@pytest.mark.parametrize("node_fixture", ["thermostat"])
+async def test_thermostat_outdoor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test OutdoorTemperature."""
+    # OutdoorTemperature
+    state = hass.states.get("sensor.longan_link_hvac_outdoor_temperature")
+    assert state
+    assert state.state == "12.5"
+
+    set_node_attribute(matter_node, 1, 513, 1, 1300)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.longan_link_hvac_outdoor_temperature")
+    assert state
+    assert state.state == "13.0"
+
+
 @pytest.mark.parametrize("node_fixture", ["pressure_sensor"])
 async def test_pressure_sensor(
     hass: HomeAssistant,
