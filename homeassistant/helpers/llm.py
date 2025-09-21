@@ -658,19 +658,27 @@ def _get_exposed_entities(
 
         entity_entry = entity_registry.async_get(state.entity_id)
         names = [state.name]
+        device_name = None
         area_names = []
 
         if entity_entry is not None:
             names.extend(entity_entry.aliases)
+            device = (
+                device_registry.async_get(entity_entry.device_id)
+                if entity_entry.device_id
+                else None
+            )
+
+            if device:
+                device_name = device.name_by_user or device.name
+
             if entity_entry.area_id and (
                 area := area_registry.async_get_area(entity_entry.area_id)
             ):
                 # Entity is in area
                 area_names.append(area.name)
                 area_names.extend(area.aliases)
-            elif entity_entry.device_id and (
-                device := device_registry.async_get(entity_entry.device_id)
-            ):
+            elif device:
                 # Check device area
                 if device.area_id and (
                     area := area_registry.async_get_area(device.area_id)
@@ -690,6 +698,9 @@ def _get_exposed_entities(
             if state.attributes.get("device_class") == "timestamp" and state.state:
                 if (parsed_utc := dt_util.parse_datetime(state.state)) is not None:
                     info["state"] = dt_util.as_local(parsed_utc).isoformat()
+
+        if device_name:
+            info["device"] = device_name
 
         if area_names:
             info["areas"] = ", ".join(area_names)
