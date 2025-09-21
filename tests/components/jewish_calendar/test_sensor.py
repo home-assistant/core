@@ -1,9 +1,9 @@
 """The tests for the Jewish calendar sensors."""
 
+from collections.abc import AsyncGenerator
 from datetime import datetime as dt
 from typing import Any
 
-from freezegun.api import FrozenDateTimeFactory
 from hdate.holidays import HolidayDatabase
 from hdate.parasha import Parasha
 import pytest
@@ -11,7 +11,9 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from . import TestCase, TestSequence
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("language", ["en", "he"])
@@ -542,28 +544,23 @@ async def test_dafyomi_sensor(hass: HomeAssistant, results: str) -> None:
 
 
 @pytest.mark.parametrize(
-    ("test_time", "results"),
+    "test_sequence",
     [
-        (
-            dt(2025, 6, 10, 17),
-            {
-                "initial_state": "14 Sivan 5785",
-                "move_to": dt(2025, 6, 10, 23, 0),
-                "new_state": "15 Sivan 5785",
-            },
-        ),
+        TestSequence(
+            [
+                TestCase(dt(2025, 6, 10, 17), "14 Sivan 5785"),  # Initial time
+                TestCase(dt(2025, 6, 10, 23, 0), "15 Sivan 5785"),  # Later in the day
+                TestCase(dt(2025, 6, 11, 9, 0), "15 Sivan 5785"),  # Next morning
+                TestCase(dt(2025, 6, 11, 22, 0), "16 Sivan 5785"),  # Next evening
+            ]
+        )
     ],
     indirect=True,
 )
-@pytest.mark.usefixtures("setup_at_time")
-async def test_sensor_does_not_update_on_time_change(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, results: dict[str, Any]
+async def test_sensor_date_changes_with_time(
+    hass: HomeAssistant, test_sequence: AsyncGenerator[Any]
 ) -> None:
-    """Test that the Jewish calendar sensor does not update after time advances (regression test for update bug)."""
-    sensor_id = "sensor.jewish_calendar_date"
-    assert hass.states.get(sensor_id).state == results["initial_state"]
-
-    freezer.move_to(results["move_to"])
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert hass.states.get(sensor_id).state == results["new_state"]
+    """Test that the Jewish calendar date sensor updates when time crosses date boundaries."""
+    async for expected_state in test_sequence():
+        current_state = hass.states.get("sensor.jewish_calendar_date").state
+        assert current_state == expected_state

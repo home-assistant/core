@@ -1,139 +1,209 @@
 """The tests for the Jewish calendar binary sensors."""
 
-from datetime import datetime as dt, timedelta
+from collections.abc import AsyncGenerator
+from datetime import datetime as dt
 from typing import Any
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
-from tests.common import async_fire_time_changed
+from . import TestCase, TestSequence
 
-MELACHA_PARAMS = [
+# Test sequences for issur melacha (forbidden work) binary sensor
+MELACHA_TEST_SEQUENCES = [
+    # New York scenarios
     pytest.param(
         "New York",
-        dt(2018, 9, 1, 16, 0),
-        {"state": STATE_ON, "update": dt(2018, 9, 1, 20, 14), "new_state": STATE_OFF},
+        TestSequence(
+            [
+                TestCase(dt(2018, 9, 1, 16, 0), STATE_ON),
+                TestCase(dt(2018, 9, 1, 20, 14), STATE_OFF),
+            ]
+        ),
         id="currently_first_shabbat",
     ),
     pytest.param(
         "New York",
-        dt(2018, 9, 1, 20, 21),
-        {"state": STATE_OFF, "update": dt(2018, 9, 2, 6, 21), "new_state": STATE_OFF},
+        TestSequence(
+            [
+                TestCase(dt(2018, 9, 1, 20, 21), STATE_OFF),
+                TestCase(dt(2018, 9, 2, 6, 21), STATE_OFF),
+            ]
+        ),
         id="after_first_shabbat",
     ),
     pytest.param(
         "New York",
-        dt(2018, 9, 7, 13, 1),
-        {"state": STATE_OFF, "update": dt(2018, 9, 7, 19, 4), "new_state": STATE_ON},
+        TestSequence(
+            [
+                TestCase(dt(2018, 9, 7, 13, 1), STATE_OFF),
+                TestCase(dt(2018, 9, 7, 19, 4), STATE_ON),
+            ]
+        ),
         id="friday_upcoming_shabbat",
     ),
     pytest.param(
         "New York",
-        dt(2018, 9, 8, 21, 25),
-        {"state": STATE_OFF, "update": dt(2018, 9, 9, 6, 27), "new_state": STATE_OFF},
+        TestSequence(
+            [
+                TestCase(dt(2018, 9, 8, 21, 25), STATE_OFF),
+                TestCase(dt(2018, 9, 9, 6, 27), STATE_OFF),
+            ]
+        ),
         id="upcoming_rosh_hashana",
     ),
     pytest.param(
         "New York",
-        dt(2018, 9, 9, 21, 25),
-        {"state": STATE_ON, "update": dt(2018, 9, 10, 6, 28), "new_state": STATE_ON},
+        TestSequence(
+            [
+                TestCase(dt(2018, 9, 9, 21, 25), STATE_ON),
+                TestCase(dt(2018, 9, 10, 6, 28), STATE_ON),
+            ]
+        ),
         id="currently_rosh_hashana",
     ),
     pytest.param(
         "New York",
-        dt(2018, 9, 10, 21, 25),
-        {"state": STATE_ON, "update": dt(2018, 9, 11, 6, 29), "new_state": STATE_ON},
+        TestSequence(
+            [
+                TestCase(dt(2018, 9, 10, 21, 25), STATE_ON),
+                TestCase(dt(2018, 9, 11, 6, 29), STATE_ON),
+            ]
+        ),
         id="second_day_rosh_hashana_night",
     ),
     pytest.param(
         "New York",
-        dt(2018, 9, 11, 11, 25),
-        {"state": STATE_ON, "update": dt(2018, 9, 11, 19, 57), "new_state": STATE_OFF},
+        TestSequence(
+            [
+                TestCase(dt(2018, 9, 11, 11, 25), STATE_ON),
+                TestCase(dt(2018, 9, 11, 19, 57), STATE_OFF),
+            ]
+        ),
         id="second_day_rosh_hashana_day",
     ),
     pytest.param(
         "New York",
-        dt(2018, 9, 29, 16, 25),
-        {"state": STATE_ON, "update": dt(2018, 9, 29, 19, 25), "new_state": STATE_OFF},
+        TestSequence(
+            [
+                TestCase(dt(2018, 9, 29, 16, 25), STATE_ON),
+                TestCase(dt(2018, 9, 29, 19, 25), STATE_OFF),
+            ]
+        ),
         id="currently_shabbat_chol_hamoed",
     ),
     pytest.param(
         "New York",
-        dt(2018, 9, 29, 21, 25),
-        {"state": STATE_OFF, "update": dt(2018, 9, 30, 6, 48), "new_state": STATE_OFF},
+        TestSequence(
+            [
+                TestCase(dt(2018, 9, 29, 21, 25), STATE_OFF),
+                TestCase(dt(2018, 9, 30, 6, 48), STATE_OFF),
+            ]
+        ),
         id="upcoming_two_day_yomtov_in_diaspora",
     ),
     pytest.param(
         "New York",
-        dt(2018, 9, 30, 21, 25),
-        {"state": STATE_ON, "update": dt(2018, 10, 1, 6, 49), "new_state": STATE_ON},
+        TestSequence(
+            [
+                TestCase(dt(2018, 9, 30, 21, 25), STATE_ON),
+                TestCase(dt(2018, 10, 1, 6, 49), STATE_ON),
+            ]
+        ),
         id="currently_first_day_of_two_day_yomtov_in_diaspora",
     ),
     pytest.param(
         "New York",
-        dt(2018, 10, 1, 21, 25),
-        {"state": STATE_ON, "update": dt(2018, 10, 2, 6, 50), "new_state": STATE_ON},
+        TestSequence(
+            [
+                TestCase(dt(2018, 10, 1, 21, 25), STATE_ON),
+                TestCase(dt(2018, 10, 2, 6, 50), STATE_ON),
+            ]
+        ),
         id="currently_second_day_of_two_day_yomtov_in_diaspora",
     ),
+    # Jerusalem scenarios
     pytest.param(
         "Jerusalem",
-        dt(2018, 9, 29, 21, 25),
-        {"state": STATE_OFF, "update": dt(2018, 9, 30, 6, 29), "new_state": STATE_OFF},
+        TestSequence(
+            [
+                TestCase(dt(2018, 9, 29, 21, 25), STATE_OFF),
+                TestCase(dt(2018, 9, 30, 6, 29), STATE_OFF),
+            ]
+        ),
         id="upcoming_one_day_yom_tov_in_israel",
     ),
     pytest.param(
         "Jerusalem",
-        dt(2018, 10, 1, 11, 25),
-        {"state": STATE_ON, "update": dt(2018, 10, 1, 19, 2), "new_state": STATE_OFF},
+        TestSequence(
+            [
+                TestCase(dt(2018, 10, 1, 11, 25), STATE_ON),
+                TestCase(dt(2018, 10, 1, 19, 2), STATE_OFF),
+            ]
+        ),
         id="currently_one_day_yom_tov_in_israel",
     ),
     pytest.param(
         "Jerusalem",
-        dt(2018, 10, 1, 21, 25),
-        {"state": STATE_OFF, "update": dt(2018, 10, 2, 6, 31), "new_state": STATE_OFF},
+        TestSequence(
+            [
+                TestCase(dt(2018, 10, 1, 21, 25), STATE_OFF),
+                TestCase(dt(2018, 10, 2, 6, 31), STATE_OFF),
+            ]
+        ),
         id="after_one_day_yom_tov_in_israel",
     ),
 ]
 
 
 @pytest.mark.parametrize(
-    ("location_data", "test_time", "results"), MELACHA_PARAMS, indirect=True
+    ("location_data", "test_sequence"), MELACHA_TEST_SEQUENCES, indirect=True
 )
-@pytest.mark.usefixtures("setup_at_time")
 async def test_issur_melacha_sensor(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, results: dict[str, Any]
+    hass: HomeAssistant, test_sequence: AsyncGenerator[Any]
 ) -> None:
     """Test Issur Melacha sensor output."""
     sensor_id = "binary_sensor.jewish_calendar_issur_melacha_in_effect"
-    assert hass.states.get(sensor_id).state == results["state"]
-
-    freezer.move_to(results["update"])
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert hass.states.get(sensor_id).state == results["new_state"]
+    async for expected_state in test_sequence():
+        current_state = hass.states.get(sensor_id).state
+        assert current_state == expected_state
 
 
 @pytest.mark.parametrize(
-    ("location_data", "test_time", "results"),
+    ("location_data", "test_sequence"),
     [
-        ("New York", dt(2020, 10, 23, 17, 44, 59, 999999), [STATE_OFF, STATE_ON]),
-        ("New York", dt(2020, 10, 24, 18, 42, 59, 999999), [STATE_ON, STATE_OFF]),
+        pytest.param(
+            "New York",
+            TestSequence(
+                [
+                    TestCase(dt(2020, 10, 23, 17, 44, 59, 999999), STATE_OFF),
+                    TestCase(dt(2020, 10, 23, 17, 45, 0), STATE_ON),
+                    TestCase(dt(2020, 10, 24, 18, 42, 59), STATE_ON),
+                    TestCase(dt(2020, 10, 24, 18, 43, 0), STATE_OFF),
+                ]
+            ),
+            id="full_shabbat_cycle",
+        ),
+        pytest.param(
+            "New York",
+            TestSequence(
+                [
+                    TestCase(dt(2020, 10, 24, 18, 42, 59, 999999), STATE_ON),
+                    TestCase(dt(2020, 10, 24, 18, 43, 0), STATE_OFF),
+                ]
+            ),
+            id="havdalah_transition",
+        ),
     ],
-    ids=["before_candle_lighting", "before_havdalah"],
     indirect=True,
 )
-@pytest.mark.usefixtures("setup_at_time")
-async def test_issur_melacha_sensor_update(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, results: list[str]
+async def test_issur_melacha_sensor_transitions(
+    hass: HomeAssistant, test_sequence: AsyncGenerator[Any]
 ) -> None:
-    """Test Issur Melacha sensor output."""
+    """Test Issur Melacha sensor transitions at key times."""
     sensor_id = "binary_sensor.jewish_calendar_issur_melacha_in_effect"
-    assert hass.states.get(sensor_id).state == results[0]
-
-    freezer.tick(timedelta(microseconds=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert hass.states.get(sensor_id).state == results[1]
+    async for expected_state in test_sequence():
+        current_state = hass.states.get(sensor_id).state
+        assert current_state == expected_state

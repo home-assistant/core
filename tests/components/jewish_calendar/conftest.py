@@ -1,11 +1,14 @@
 """Common fixtures for the jewish_calendar tests."""
 
+from __future__ import annotations
+
 from collections.abc import AsyncGenerator, Generator, Iterable
 import datetime as dt
-from typing import NamedTuple
+from typing import Any, NamedTuple
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 from hdate.translator import set_language
 import pytest
 
@@ -20,7 +23,9 @@ from homeassistant.const import CONF_LANGUAGE, CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from . import TestCase
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 class _LocationData(NamedTuple):
@@ -161,3 +166,48 @@ async def setup_at_time(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         yield
+
+
+@pytest.fixture
+async def test_sequence(
+    request: pytest.FixtureRequest,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+    tz_info: dt.tzinfo,
+) -> None:
+    """Set up time sequence testing fixture.
+
+    This fixture:
+    1. Sets up the integration at the first time point
+    2. Yields the expected state value for each time point
+    3. Then moves through each time point, yielding the expected state
+
+    The test should compare the yielded expected state with the actual entity state.
+    """
+    # We expect a sequence of TimeStatePoint objects
+    if not hasattr(request, "param") or not request.param:
+        raise ValueError("time_sequence fixture requires parameters")
+
+    sequence: list[TestCase] = request.param.cases
+
+    async def _time_sequence() -> AsyncGenerator[Any]:
+        # Setup at the initial time
+        with freeze_time(sequence[0].time.replace(tzinfo=tz_info)):
+            config_entry.add_to_hass(hass)
+            await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+
+            # Yield the expected state
+            yield sequence[0].expected
+
+        # Move through subsequent time points
+        for data_point in sequence[1:]:
+            freezer.move_to(data_point.time.replace(tzinfo=tz_info))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+
+            # Yield the expected state
+            yield data_point.expected
+
+    return _time_sequence
