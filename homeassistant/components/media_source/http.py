@@ -1,4 +1,4 @@
-"""HTTTP views and WebSocket commands for media sources."""
+"""HTTP views and WebSocket commands for media sources."""
 
 from __future__ import annotations
 
