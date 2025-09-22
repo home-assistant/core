@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components.rejseplanen.const import (
-    CONF_AUTHENTICATION,
+    CONF_API_KEY,
     CONF_DEPARTURE_TYPE,
     CONF_DIRECTION,
     CONF_NAME,
@@ -26,20 +26,20 @@ from tests.common import MockConfigEntry
         (
             {
                 CONF_NAME: "Rejseplanen",
-                CONF_AUTHENTICATION: "token",
+                CONF_API_KEY: "token",
             },
             {
                 CONF_NAME: "Rejseplanen",
-                CONF_AUTHENTICATION: "token",
+                CONF_API_KEY: "token",
             },
         ),
         (
             {
-                CONF_AUTHENTICATION: "token",
+                CONF_API_KEY: "token",
             },
             {
                 CONF_NAME: "Rejseplanen",
-                CONF_AUTHENTICATION: "token",
+                CONF_API_KEY: "token",
             },
         ),
     ],
@@ -58,12 +58,12 @@ async def test_form(
         result["flow_id"],
         user_input={
             CONF_NAME: "Rejseplanen",
-            CONF_AUTHENTICATION: "token",
+            CONF_API_KEY: "token",
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Rejseplanen"
-    assert result["data"][CONF_AUTHENTICATION] == "token"
+    assert result["data"][CONF_API_KEY] == "token"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
@@ -149,7 +149,7 @@ async def test_add_stop_variants(
         title="Rejseplanen",
         data={
             CONF_NAME: "Rejseplanen",
-            CONF_AUTHENTICATION: "token",
+            CONF_API_KEY: "token",
         },
     )
     config_entry.add_to_hass(hass)

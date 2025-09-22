@@ -1,10 +1,8 @@
 """Constants for the Rejseplanen integration."""
 
-from enum import IntEnum
-
 DOMAIN = "rejseplanen"
 
-CONF_AUTHENTICATION = "authentication"
+CONF_API_KEY = "authentication"
 CONF_STOP_ID = "stop_id"
 CONF_ROUTE = "route"
 CONF_DIRECTION = "direction"
@@ -33,92 +31,6 @@ ATTR_NEXT_UP = "next_departures"
 
 SCAN_INTERVAL_MINUTES = 5
 
-
-class TransportClass(IntEnum):
-    """Transport class numbers from Rejseplanen XML."""
-
-    IC = 1  # InterCity trains
-    ICL = 2  # InterCity Lyn trains
-    RE = 4  # Regional trains
-    TOG = 8  # Long distance trains
-    S_TOG = 16  # S-trains (Copenhagen suburban)
-    BUS = 32  # Regular city buses
-    EXPRESS_BUS = 64  # Express/long-distance buses (S-bus/E-bus)
-    NIGHT_BUS = 128  # Night buses (N-bus)
-    FLEXIBLE_BUS = 256  # Flexible transport (Divbus)
-    FERRY = 512  # Ferry
-    METRO = 1024  # Metro
-    LETBANE = 2048  # Light rail
-    FLIGHT = 4096  # Flight
-
-
-# Mapping from XML catOut values to transport classes
-CATOUT_TO_CLASS = {
-    # IC Group (cls=1)
-    "IC": TransportClass.IC,
-    "IB": TransportClass.IC,
-    # ICL Group (cls=2)
-    "ICL": TransportClass.ICL,
-    "ICL-X": TransportClass.ICL,
-    "IL": TransportClass.ICL,  # ICL+
-    # Regional trains (cls=4)
-    "Re": TransportClass.RE,
-    "RA": TransportClass.RE,
-    "RX": TransportClass.RE,
-    # Long distance trains (cls=8)
-    "EC": TransportClass.TOG,
-    "IR": TransportClass.TOG,
-    "IP": TransportClass.TOG,
-    "ICE": TransportClass.TOG,
-    "SJ": TransportClass.TOG,
-    "EN": TransportClass.TOG,
-    "ICN": TransportClass.TOG,
-    "Pågatog": TransportClass.TOG,
-    "NAT": TransportClass.TOG,  # Night trains
-    "L": TransportClass.TOG,  # Local trains
-    "SKOLE": TransportClass.TOG,
-    "MTOG": TransportClass.TOG,
-    "E-Tog": TransportClass.TOG,
-    "R-netTog": TransportClass.TOG,
-    # S-trains (cls=16)
-    "S-Tog": TransportClass.S_TOG,
-    # Regular buses (cls=32)
-    "Bus": TransportClass.BUS,
-    "Bybus": TransportClass.BUS,
-    "E-Bus": TransportClass.BUS,
-    "ServiceB": TransportClass.BUS,
-    "R-net": TransportClass.BUS,
-    "C-Bus": TransportClass.BUS,
-    "TraktBus": TransportClass.BUS,
-    "Taxa": TransportClass.BUS,
-    # Express buses (cls=64)
-    "X Bus": TransportClass.EXPRESS_BUS,
-    "Ekspresb": TransportClass.EXPRESS_BUS,
-    "Fjernbus": TransportClass.EXPRESS_BUS,
-    # Night and special buses (cls=128)
-    "Natbus": TransportClass.NIGHT_BUS,
-    "Havnebus": TransportClass.NIGHT_BUS,
-    "Flybus": TransportClass.NIGHT_BUS,
-    "Sightseeing bus": TransportClass.NIGHT_BUS,
-    "HV-bus": TransportClass.NIGHT_BUS,
-    "Si-bus": TransportClass.NIGHT_BUS,
-    # Flexible transport (cls=256)
-    "Flexbus": TransportClass.FLEXIBLE_BUS,
-    "Flextur": TransportClass.FLEXIBLE_BUS,
-    "TELEBUS": TransportClass.FLEXIBLE_BUS,
-    "Nærbus": TransportClass.FLEXIBLE_BUS,
-    # Ferry (cls=512)
-    "Færge": TransportClass.FERRY,
-    "HF": TransportClass.FERRY,  # Fast ferry
-    # Metro (cls=1024)
-    "MET": TransportClass.METRO,
-    # Light rail (cls=2048)
-    "Letbane": TransportClass.LETBANE,
-    "LTBUS": TransportClass.LETBANE,
-    # Flight (cls=4096)
-    "Fly": TransportClass.FLIGHT,
-}
-
 # User-friendly names for config flow - use string keys for cv.multi_select
 DEPARTURE_TYPE_OPTIONS = {
     "ic": "InterCity trains (IC, IB)",
@@ -134,21 +46,4 @@ DEPARTURE_TYPE_OPTIONS = {
     "metro": "Metro",
     "letbane": "Light rail",
     "flight": "Flight",
-}
-
-# Mapping from string keys to TransportClass enum values
-DEPARTURE_TYPE_TO_CLASS = {
-    "ic": TransportClass.IC,
-    "icl": TransportClass.ICL,
-    "re": TransportClass.RE,
-    "tog": TransportClass.TOG,
-    "s_tog": TransportClass.S_TOG,
-    "bus": TransportClass.BUS,
-    "express_bus": TransportClass.EXPRESS_BUS,
-    "night_bus": TransportClass.NIGHT_BUS,
-    "flexible_bus": TransportClass.FLEXIBLE_BUS,
-    "ferry": TransportClass.FERRY,
-    "metro": TransportClass.METRO,
-    "letbane": TransportClass.LETBANE,
-    "flight": TransportClass.FLIGHT,
 }

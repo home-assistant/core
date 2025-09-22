@@ -5,10 +5,9 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 import logging
 
-from py_rejseplan.api.departures import DepartureBoard, departuresAPIClient
+from py_rejseplan.api.departures import DepartureBoard, DeparturesAPIClient
 from py_rejseplan.dataclasses.departure import Departure
 from py_rejseplan.exceptions import api_error, connection_error, http_error
-from py_rejseplan.version import __version__ as py_rejseplan_version
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -20,17 +19,18 @@ from .const import DOMAIN, SCAN_INTERVAL_MINUTES
 
 _LOGGER = logging.getLogger(__name__)
 
+type RejseplanenConfigEntry = ConfigEntry[RejseplanenDataUpdateCoordinator]
+
 
 class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard | None]):
     """Class to manage fetching data from the Rejseplanen API."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: RejseplanenConfigEntry
+    ) -> None:
         """Initialize."""
-        _LOGGER.info(
-            "Initializing Rejseplanen Data Update Coordinator for Home Assistant with pyRejseplan version %s",
-            py_rejseplan_version.version,
-        )
-        self.api = departuresAPIClient(auth_key=config_entry.data["authentication"])
+
+        self.api = DeparturesAPIClient(auth_key=config_entry.data["authentication"])
         self._stop_ids: set[int] = set()
         self.last_update_success_time: datetime | None = None
 
@@ -58,9 +58,6 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard | No
             _LOGGER.error(
                 "Type error fetching data for stop %s: %s", self._stop_ids, error
             )
-            raise UpdateFailed(error) from error
-        except Exception as error:
-            _LOGGER.error("Error fetching data for stop %s: %s", self._stop_ids, error)
             raise UpdateFailed(error) from error
 
         self.last_update_success_time = dt_util.now()

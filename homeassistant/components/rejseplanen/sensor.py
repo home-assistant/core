@@ -14,15 +14,12 @@ import zoneinfo
 
 from py_rejseplan.dataclasses.departure import Departure
 
-from homeassistant import const
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTR_DUE_AT,
@@ -40,36 +37,19 @@ from .const import (
     CONF_STOP_ID,
     DEFAULT_STOP_NAME,
     DOMAIN,
-    TransportClass,
 )
-from .coordinator import RejseplanenDataUpdateCoordinator
+from .coordinator import RejseplanenConfigEntry, RejseplanenDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RejseplanenConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Rejseplanen transport sensor."""
-
-    _LOGGER.info(
-        "Setting up Rejseplanen transport sensor for entry: %s", config_entry.entry_id
-    )
-    coordinator: RejseplanenDataUpdateCoordinator | None = getattr(
-        config_entry, "runtime_data", None
-    )
-    if coordinator is None:
-        # Defensive fallback if setup order changes
-        coordinator = RejseplanenDataUpdateCoordinator(hass, config_entry)
-        setattr(config_entry, "runtime_data", coordinator)
-        await coordinator.async_config_entry_first_refresh()
-
-    # Add the single diagnostic/status sensor under the service device
-    async_add_entities(
-        [RejseplanenDiagnosticSensor(coordinator, config_entry.entry_id)]
-    )
+    coordinator: RejseplanenDataUpdateCoordinator = config_entry.runtime_data
 
     for subentry_id, subentry in config_entry.subentries.items():
         _LOGGER.debug("Subentry %s with data: %s", subentry_id, subentry.data)
@@ -137,6 +117,7 @@ class RejseplanenTransportSensor(SensorEntity):
         name: str | None,
     ) -> None:
         """Initialize the sensor."""
+        super().__init__()
         self.coordinator: RejseplanenDataUpdateCoordinator = coordinator
         self._stop_id: int = stop_id
         self._route: list[str] = route
@@ -148,37 +129,13 @@ class RejseplanenTransportSensor(SensorEntity):
         self._attr_unique_id = f"{stop_id}_{name}_{departure_type}"
         self._attr_device_info = _stop_device_info(entry_id, stop_id, name)
 
-        self._departure_type_bitflag = self._calculate_departure_type_bitflag(
-            departure_type
+        self._departure_type_bitflag = (
+            self.coordinator.api.calculate_departure_type_bitflag(departure_type)
         )
+
         """Initialize the sensor's state."""
-        self._attr_native_unit_of_measurement = const.UnitOfTime.MINUTES
-        self._attr_native_value = self._compute_native_value()
-
-    def _calculate_departure_type_bitflag(self, departure_types: list) -> int | None:
-        """Calculate bitflag from departure type list."""
-        if not departure_types:
-            return None
-
-        bitflag = 0
-        for transport_class in departure_types:
-            if isinstance(transport_class, int):
-                # If already an int (TransportClass enum value)
-                bitflag |= transport_class
-            elif isinstance(transport_class, TransportClass):
-                # If TransportClass enum instance
-                bitflag |= transport_class.value
-            elif isinstance(transport_class, str):
-                # If string, try to convert to TransportClass enum
-                try:
-                    enum_value = TransportClass[transport_class.upper()]
-                    bitflag |= enum_value.value
-                except KeyError:
-                    _LOGGER.warning("Unknown departure type: %s", transport_class)
-            else:
-                _LOGGER.warning("Invalid departure type format: %s", transport_class)
-
-        return bitflag if bitflag > 0 else None
+        # self._attr_native_unit_of_measurement = const.UnitOfTime.MINUTES
+        # self._attr_native_value = self._compute_native_value()
 
     def _compute_native_value(self) -> StateType:
         """Return the state of the sensor."""
@@ -315,67 +272,3 @@ class RejseplanenTransportSensor(SensorEntity):
         departure_time = datetime.combine(date, time).replace(tzinfo=tz)
         due_in_seconds = (departure_time - now).total_seconds()
         return round(due_in_seconds / 60) if due_in_seconds > 0 else 0
-
-
-class RejseplanenDiagnosticSensor(SensorEntity):
-    """Implementation of Rejseplanen diagnostic sensor."""
-
-    _attr_attribution = "Data provided by rejseplanen.dk"
-    _attr_icon = "mdi:information-outline"
-    _attr_name = "Rejseplanen Updater Status"
-    _attr_unique_id = "rejseplanen_updater_status"
-    _attr_entity_category = const.EntityCategory.DIAGNOSTIC
-
-    def __init__(
-        self, coordinator: RejseplanenDataUpdateCoordinator, entry_id: str
-    ) -> None:
-        """Initialize the diagnostic sensor."""
-        self.coordinator = coordinator
-        self._attr_native_value = None
-        self._attr_extra_state_attributes = {}
-        self._attr_device_info = _service_device_info(entry_id)
-
-        self._attr_available = False
-        self._attr_extra_state_attributes = (
-            self.coordinator.diagnostics_attributes if self.coordinator else {}
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks when entity is added to hass."""
-        await super().async_added_to_hass()
-        self.coordinator.async_add_listener(self._handle_coordinator_update)
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Callback triggered when the coordinator updates data.
-
-        This method is registered with the update coordinator and called whenever
-        new data is fetched for the configured stop. It ensures the entity state
-        is updated in Home Assistant after each coordinator refresh.
-        """
-        _LOGGER.debug(
-            "Coordinator update callback triggered for sensor %s", self._attr_unique_id
-        )
-        if (
-            not self.coordinator.last_update_success_time
-            and not self.coordinator.update_interval
-        ):
-            self._attr_available = False
-            self._attr_native_value = "offline"
-            self._attr_extra_state_attributes = {}
-            self.async_write_ha_state()
-            return
-
-        is_available = self.coordinator.last_update_success_time is not None and (
-            self.coordinator.update_interval is None
-            or (
-                self.coordinator.last_update_success_time
-                + self.coordinator.update_interval
-                >= dt_util.utcnow()
-            )
-        )
-        self._attr_available = is_available
-
-        self._attr_native_value = "online" if is_available else "offline"
-        self._attr_extra_state_attributes = self.coordinator.diagnostics_attributes
-        self.async_write_ha_state()

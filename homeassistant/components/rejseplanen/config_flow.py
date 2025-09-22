@@ -1,6 +1,7 @@
 """Config flow for Rejseplanen integration."""
 
-from py_rejseplan.api.base import baseAPIClient as Rejseplanen
+from py_rejseplan.api.base import BaseAPIClient as Rejseplanen
+from py_rejseplan.dataclasses.transport_mappings import DEPARTURE_TYPE_TO_CLASS
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -22,7 +23,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    CONF_AUTHENTICATION,
+    CONF_API_KEY,
     CONF_DEPARTURE_TYPE,
     CONF_DIRECTION,
     CONF_NAME,
@@ -30,13 +31,12 @@ from .const import (
     CONF_STOP_ID,
     DEFAULT_STOP_NAME,
     DEPARTURE_TYPE_OPTIONS,
-    DEPARTURE_TYPE_TO_CLASS,
     DOMAIN,
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_AUTHENTICATION): str,
+        vol.Required(CONF_API_KEY): str,
     }
 )
 
@@ -88,14 +88,10 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
                 description_placeholders={"name": "Rejseplanen"},
             )
 
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
-
-        await self.async_set_unique_id(user_input[CONF_AUTHENTICATION])
-        self._abort_if_unique_id_configured()
+        self._async_abort_entries_match()
 
         # Validate authentication key
-        auth_key = user_input[CONF_AUTHENTICATION]
+        auth_key = user_input[CONF_API_KEY]
         api = Rejseplanen(base_url="https://www.rejseplanen.dk/api/", auth_key=auth_key)
         result = await self.hass.async_add_executor_job(api.validate_auth_key)
         if not result:
@@ -108,7 +104,7 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
         # Store the authentication key and name
         return self.async_create_entry(
             title="Rejseplanen",
-            data={CONF_AUTHENTICATION: auth_key, CONF_NAME: "Rejseplanen"},
+            data={CONF_API_KEY: auth_key, CONF_NAME: "Rejseplanen"},
         )
 
 

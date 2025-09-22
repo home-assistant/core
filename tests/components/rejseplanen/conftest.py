@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components.rejseplanen.const import (
-    CONF_AUTHENTICATION,
+    CONF_API_KEY,
     CONF_DEPARTURE_TYPE,
     CONF_DIRECTION,
     CONF_NAME,
@@ -50,7 +50,7 @@ def mock_config_entry() -> MockConfigEntry:
         title="rejseplanen",
         data={
             CONF_NAME: "Rejseplanen",
-            CONF_AUTHENTICATION: "token",
+            CONF_API_KEY: "token",
         },
         entry_id="123456789",
         subentries_data=[
