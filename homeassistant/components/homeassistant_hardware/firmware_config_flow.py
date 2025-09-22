@@ -26,9 +26,10 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     FlowType,
     OptionsFlow,
+    config_flow_progress_step,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow, progress_step
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
@@ -520,7 +521,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         """Install Thread firmware."""
         raise NotImplementedError
 
-    @progress_step(
+    @config_flow_progress_step(
         description_placeholders=lambda self: {
             **self._get_translation_placeholders(),
             "addon_name": get_otbr_addon_manager(self.hass).addon_name,
@@ -549,7 +550,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
         return "install_thread_firmware"
 
-    @progress_step(
+    @config_flow_progress_step(
         description_placeholders=lambda self: {
             **self._get_translation_placeholders(),
             "addon_name": get_otbr_addon_manager(self.hass).addon_name,

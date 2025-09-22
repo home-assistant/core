@@ -944,11 +944,6 @@ class section:
         return self.schema(value)
 
 
-_FlowResultT_co = TypeVar(
-    "_FlowResultT_co", bound="FlowResult[Any, Any]", covariant=True
-)
-
-
 def progress_step(
     progress_action: str | None = None,
     description_placeholders: dict[str, str]
@@ -956,7 +951,7 @@ def progress_step(
     | None = None,
 ) -> Callable[
     [Callable[..., Coroutine[Any, Any, str | None]]],
-    Callable[..., Coroutine[Any, Any, _FlowResultT_co]],
+    Callable[..., Coroutine[Any, Any, Any]],
 ]:
     """Decorator to create a progress step from an async function.
 
@@ -971,12 +966,12 @@ def progress_step(
 
     def decorator(
         func: Callable[..., Coroutine[Any, Any, str | None]],
-    ) -> Callable[..., Coroutine[Any, Any, _FlowResultT_co]]:
+    ) -> Callable[..., Coroutine[Any, Any, Any]]:
         @functools.wraps(func)
         async def wrapper(
             self: Any,
             user_input: dict[str, Any] | None = None,
-        ) -> _FlowResultT_co:
+        ) -> Any:
             step_id = func.__name__.replace("async_step_", "")
             action = progress_action or step_id
 
@@ -999,14 +994,11 @@ def progress_step(
                         else:
                             placeholders = description_placeholders
 
-                    return cast(
-                        _FlowResultT_co,
-                        self.async_show_progress(
-                            step_id=step_id,
-                            progress_action=action,
-                            progress_task=progress_task,
-                            description_placeholders=placeholders,
-                        ),
+                    return self.async_show_progress(
+                        step_id=step_id,
+                        progress_action=action,
+                        progress_task=progress_task,
+                        description_placeholders=placeholders,
                     )
 
             # Task is done or this is a subsequent call
@@ -1015,17 +1007,12 @@ def progress_step(
             except AbortFlow as err:
                 self.abort_reason = err.reason
                 self.abort_description_placeholders = err.description_placeholders or {}
-                return cast(
-                    _FlowResultT_co, self.async_show_progress_done(next_step_id="abort")
-                )
+                return self.async_show_progress_done(next_step_id="abort")
             finally:
                 # Clean up task reference
                 setattr(self, f"_{step_id}_progress_task", None)
 
-            return cast(
-                _FlowResultT_co,
-                self.async_show_progress_done(next_step_id=next_step_id),
-            )
+            return self.async_show_progress_done(next_step_id=next_step_id)
 
         return wrapper
 

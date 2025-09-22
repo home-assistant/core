@@ -46,7 +46,12 @@ from .core import (
     HomeAssistant,
     callback,
 )
-from .data_entry_flow import FLOW_NOT_COMPLETE_STEPS, FlowContext, FlowResult
+from .data_entry_flow import (
+    FLOW_NOT_COMPLETE_STEPS,
+    FlowContext,
+    FlowResult,
+    progress_step,
+)
 from .exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -3868,6 +3873,22 @@ async def _async_get_flow_handler(
         return handler
 
     raise data_entry_flow.UnknownHandler
+
+
+def config_flow_progress_step(
+    progress_action: str | None = None,
+    description_placeholders: dict[str, str]
+    | Callable[[Any], dict[str, str]]
+    | None = None,
+) -> Callable[
+    [Callable[..., Coroutine[Any, Any, str | None]]],
+    Callable[..., Coroutine[Any, Any, ConfigFlowResult]],
+]:
+    """Decorator to create a progress step from an async function for config flows."""
+    return progress_step(
+        progress_action=progress_action,
+        description_placeholders=description_placeholders,
+    )
 
 
 @callback
