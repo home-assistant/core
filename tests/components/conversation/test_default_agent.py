@@ -522,13 +522,13 @@ async def test_respond_intent(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("init_components")
-async def test_device_area_context(
+async def test_satellite_area_context(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that including a device_id will target a specific area."""
+    """Test that including a satellite will target a specific area."""
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
     turn_off_calls = async_mock_service(hass, "light", "turn_off")
 
@@ -560,12 +560,12 @@ async def test_device_area_context(
     entry = MockConfigEntry()
     entry.add_to_hass(hass)
 
-    kitchen_satellite = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections=set(),
-        identifiers={("demo", "id-satellite-kitchen")},
+    kitchen_satellite = entity_registry.async_get_or_create(
+        "assist_satellite", "demo", "kitchen"
     )
-    device_registry.async_update_device(kitchen_satellite.id, area_id=area_kitchen.id)
+    entity_registry.async_update_entity(
+        kitchen_satellite.entity_id, area_id=area_kitchen.id
+    )
 
     bedroom_satellite = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -581,7 +581,7 @@ async def test_device_area_context(
         None,
         Context(),
         None,
-        device_id=kitchen_satellite.id,
+        satellite_id=kitchen_satellite.entity_id,
     )
     await hass.async_block_till_done()
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -605,7 +605,7 @@ async def test_device_area_context(
         None,
         Context(),
         None,
-        device_id=kitchen_satellite.id,
+        satellite_id=kitchen_satellite.entity_id,
     )
     await hass.async_block_till_done()
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
