@@ -28,7 +28,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import AbortFlow, progress_step
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
@@ -72,8 +72,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     """Base flow to install firmware."""
 
     ZIGBEE_BAUDRATE = 115200  # Default, subclasses may override
-    _failed_addon_name: str
-    _failed_addon_reason: str
     _picked_firmware_type: PickedFirmwareType
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -85,8 +83,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         self._hardware_name: str = "unknown"  # To be set in a subclass
         self._zigbee_integration = ZigbeeIntegration.ZHA
 
-        self.addon_install_task: asyncio.Task | None = None
-        self.addon_start_task: asyncio.Task | None = None
         self.addon_uninstall_task: asyncio.Task | None = None
         self.firmware_install_task: asyncio.Task | None = None
         self.installing_firmware_name: str | None = None
@@ -439,18 +435,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         """Install Zigbee firmware."""
         raise NotImplementedError
 
-    async def async_step_addon_operation_failed(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Abort when add-on installation or start failed."""
-        return self.async_abort(
-            reason=self._failed_addon_reason,
-            description_placeholders={
-                **self._get_translation_placeholders(),
-                "addon_name": self._failed_addon_name,
-            },
-        )
-
     async def async_step_pre_confirm_zigbee(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -536,79 +520,58 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         """Install Thread firmware."""
         raise NotImplementedError
 
+    @progress_step(
+        description_placeholders=lambda self: {
+            **self._get_translation_placeholders(),
+            "addon_name": get_otbr_addon_manager(self.hass).addon_name,
+        }
+    )
     async def async_step_install_otbr_addon(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> str:
         """Show progress dialog for installing the OTBR addon."""
         addon_manager = get_otbr_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(addon_manager)
 
         _LOGGER.debug("OTBR addon info: %s", addon_info)
 
-        if not self.addon_install_task:
-            self.addon_install_task = self.hass.async_create_task(
-                addon_manager.async_install_addon_waiting(),
-                "OTBR addon install",
-            )
-
-        if not self.addon_install_task.done():
-            return self.async_show_progress(
-                step_id="install_otbr_addon",
-                progress_action="install_addon",
+        try:
+            await addon_manager.async_install_addon_waiting()
+        except AddonError as err:
+            _LOGGER.error(err)
+            raise AbortFlow(
+                "addon_install_failed",
                 description_placeholders={
                     **self._get_translation_placeholders(),
                     "addon_name": addon_manager.addon_name,
                 },
-                progress_task=self.addon_install_task,
-            )
+            ) from err
 
-        try:
-            await self.addon_install_task
-        except AddonError as err:
-            _LOGGER.error(err)
-            self._failed_addon_name = addon_manager.addon_name
-            self._failed_addon_reason = "addon_install_failed"
-            return self.async_show_progress_done(next_step_id="addon_operation_failed")
-        finally:
-            self.addon_install_task = None
+        return "install_thread_firmware"
 
-        return self.async_show_progress_done(next_step_id="install_thread_firmware")
-
+    @progress_step(
+        description_placeholders=lambda self: {
+            **self._get_translation_placeholders(),
+            "addon_name": get_otbr_addon_manager(self.hass).addon_name,
+        }
+    )
     async def async_step_start_otbr_addon(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> str:
         """Configure OTBR to point to the SkyConnect and run the addon."""
-        otbr_manager = get_otbr_addon_manager(self.hass)
-
-        if not self.addon_start_task:
-            self.addon_start_task = self.hass.async_create_task(
-                self._configure_and_start_otbr_addon()
-            )
-
-        if not self.addon_start_task.done():
-            return self.async_show_progress(
-                step_id="start_otbr_addon",
-                progress_action="start_otbr_addon",
+        try:
+            await self._configure_and_start_otbr_addon()
+        except AddonError as err:
+            _LOGGER.error(err)
+            raise AbortFlow(
+                "addon_start_failed",
                 description_placeholders={
                     **self._get_translation_placeholders(),
-                    "addon_name": otbr_manager.addon_name,
+                    "addon_name": get_otbr_addon_manager(self.hass).addon_name,
                 },
-                progress_task=self.addon_start_task,
-            )
+            ) from err
 
-        try:
-            await self.addon_start_task
-        except (AddonError, AbortFlow) as err:
-            _LOGGER.error(err)
-            self._failed_addon_name = otbr_manager.addon_name
-            self._failed_addon_reason = (
-                err.reason if isinstance(err, AbortFlow) else "addon_start_failed"
-            )
-            return self.async_show_progress_done(next_step_id="addon_operation_failed")
-        finally:
-            self.addon_start_task = None
-
-        return self.async_show_progress_done(next_step_id="pre_confirm_otbr")
+        return "pre_confirm_otbr"
 
     async def async_step_pre_confirm_otbr(
         self, user_input: dict[str, Any] | None = None

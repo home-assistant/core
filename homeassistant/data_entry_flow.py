@@ -5,11 +5,12 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections import defaultdict
-from collections.abc import Callable, Container, Hashable, Iterable, Mapping
+from collections.abc import Callable, Container, Coroutine, Hashable, Iterable, Mapping
 from contextlib import suppress
 import copy
 from dataclasses import dataclass
 from enum import StrEnum
+import functools
 import logging
 from types import MappingProxyType
 from typing import Any, Generic, Required, TypedDict, TypeVar, cast
@@ -639,6 +640,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     __progress_task: asyncio.Task[Any] | None = None
     __no_progress_task_reported = False
     deprecated_show_progress = False
+    abort_reason: str = "abort"
+    abort_description_placeholders: Mapping[str, str] = MappingProxyType({})
 
     @property
     def source(self) -> str | None:
@@ -759,6 +762,15 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             handler=self.handler,
             reason=reason,
             description_placeholders=description_placeholders,
+        )
+
+    async def async_step_abort(
+        self, user_input: dict[str, Any] | None = None
+    ) -> _FlowResultT:
+        """Abort the flow."""
+        return self.async_abort(
+            reason=self.abort_reason,
+            description_placeholders=self.abort_description_placeholders,
         )
 
     @callback
@@ -930,3 +942,91 @@ class section:
     def __call__(self, value: Any) -> Any:
         """Validate input."""
         return self.schema(value)
+
+
+_FlowResultT_co = TypeVar(
+    "_FlowResultT_co", bound="FlowResult[Any, Any]", covariant=True
+)
+
+
+def progress_step(
+    progress_action: str | None = None,
+    description_placeholders: dict[str, str]
+    | Callable[[Any], dict[str, str]]
+    | None = None,
+) -> Callable[
+    [Callable[..., Coroutine[Any, Any, str | None]]],
+    Callable[..., Coroutine[Any, Any, _FlowResultT_co]],
+]:
+    """Decorator to create a progress step from an async function.
+
+    The decorated function should contain the actual work to be done.
+    It receives (self, user_input) and should return the next step id or raise AbortFlow
+    It can call self.async_update_progress(progress) to update progress.
+
+    Args:
+        progress_action: The progress action name for the UI. If None, inferred from method name.
+        description_placeholders: Static dict or callable that returns dict for progress UI placeholders.
+    """
+
+    def decorator(
+        func: Callable[..., Coroutine[Any, Any, str | None]],
+    ) -> Callable[..., Coroutine[Any, Any, _FlowResultT_co]]:
+        @functools.wraps(func)
+        async def wrapper(
+            self: Any,
+            user_input: dict[str, Any] | None = None,
+        ) -> _FlowResultT_co:
+            step_id = func.__name__.replace("async_step_", "")
+            action = progress_action or step_id
+
+            # Check if we have a progress task running
+            progress_task = getattr(self, f"_{step_id}_progress_task", None)
+
+            if progress_task is None:
+                # First call - create and start the progress task
+                progress_task = self.hass.async_create_task(
+                    func(self, user_input), f"Progress step {step_id}"
+                )
+                setattr(self, f"_{step_id}_progress_task", progress_task)
+
+                if not progress_task.done():
+                    # Handle description placeholders
+                    placeholders = None
+                    if description_placeholders is not None:
+                        if callable(description_placeholders):
+                            placeholders = description_placeholders(self)
+                        else:
+                            placeholders = description_placeholders
+
+                    return cast(
+                        _FlowResultT_co,
+                        self.async_show_progress(
+                            step_id=step_id,
+                            progress_action=action,
+                            progress_task=progress_task,
+                            description_placeholders=placeholders,
+                        ),
+                    )
+
+            # Task is done or this is a subsequent call
+            try:
+                next_step_id = await progress_task
+            except AbortFlow as err:
+                self.abort_reason = err.reason
+                self.abort_description_placeholders = err.description_placeholders or {}
+                return cast(
+                    _FlowResultT_co, self.async_show_progress_done(next_step_id="abort")
+                )
+            finally:
+                # Clean up task reference
+                setattr(self, f"_{step_id}_progress_task", None)
+
+            return cast(
+                _FlowResultT_co,
+                self.async_show_progress_done(next_step_id=next_step_id),
+            )
+
+        return wrapper
+
+    return decorator

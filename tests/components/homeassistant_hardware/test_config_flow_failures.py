@@ -178,7 +178,7 @@ async def test_cannot_probe_after_install_thread(hass: HomeAssistant) -> None:
         )
 
         assert pick_result["type"] is FlowResultType.SHOW_PROGRESS
-        assert pick_result["progress_action"] == "install_addon"
+        assert pick_result["progress_action"] == "install_otbr_addon"
         assert pick_result["step_id"] == "install_otbr_addon"
         description_placeholders = pick_result["description_placeholders"]
         assert description_placeholders is not None

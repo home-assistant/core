@@ -714,7 +714,7 @@ async def test_config_flow_thread(hass: HomeAssistant) -> None:
         )
 
         assert pick_result["type"] is FlowResultType.SHOW_PROGRESS
-        assert pick_result["progress_action"] == "install_addon"
+        assert pick_result["progress_action"] == "install_otbr_addon"
         assert pick_result["step_id"] == "install_otbr_addon"
         assert pick_result["description_placeholders"]["firmware_type"] == "ezsp"
         assert pick_result["description_placeholders"]["model"] == TEST_HARDWARE_NAME
@@ -871,7 +871,7 @@ async def test_options_flow_zigbee_to_thread(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] is FlowResultType.SHOW_PROGRESS
-        assert result["progress_action"] == "install_addon"
+        assert result["progress_action"] == "install_otbr_addon"
         assert result["step_id"] == "install_otbr_addon"
 
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -1137,5 +1137,5 @@ async def test_config_flow_thread_migrate_handler(hass: HomeAssistant) -> None:
 
         # Should proceed to OTBR addon installation (same as normal thread flow)
         assert result["type"] is FlowResultType.SHOW_PROGRESS
-        assert result["progress_action"] == "install_addon"
+        assert result["progress_action"] == "install_otbr_addon"
         assert result["step_id"] == "install_otbr_addon"
