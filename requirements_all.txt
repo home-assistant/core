@@ -84,7 +84,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.70.0
+PySwitchbot==0.71.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -247,7 +247,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==41.3.0
+aioesphomeapi==41.4.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -271,7 +271,7 @@ aiohasupervisor==0.3.2
 aiohomeconnect==0.19.0
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.17
+aiohomekit==3.2.18
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -1827,7 +1827,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.32.0
+pyTibber==0.32.1
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -1963,7 +1963,7 @@ pyecoforest==0.4.0
 pyeconet==0.1.28
 
 # homeassistant.components.ista_ecotrend
-pyecotrend-ista==3.3.1
+pyecotrend-ista==3.4.0
 
 # homeassistant.components.edimax
 pyedimax==0.2.1
@@ -2898,7 +2898,7 @@ switchbot-api==2.8.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==4.1.10
+systembridgeconnector==5.1.0
 
 # homeassistant.components.tailscale
 tailscale==0.6.2
@@ -3086,9 +3086,6 @@ volkszaehler==0.4.0
 
 # homeassistant.components.volvo
 volvocarsapi==0.4.2
-
-# homeassistant.components.volvooncall
-volvooncall==0.10.3
 
 # homeassistant.components.verisure
 vsure==2.6.7
