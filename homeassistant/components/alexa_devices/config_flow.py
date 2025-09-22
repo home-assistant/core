@@ -107,7 +107,9 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await validate_input(self.hass, {**reauth_entry.data, **user_input})
+                data = await validate_input(
+                    self.hass, {**reauth_entry.data, **user_input}
+                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except (CannotAuthenticate, TypeError):
@@ -119,8 +121,9 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                     reauth_entry,
                     data={
                         CONF_USERNAME: entry_data[CONF_USERNAME],
-                        CONF_PASSWORD: entry_data[CONF_PASSWORD],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_CODE: user_input[CONF_CODE],
+                        CONF_LOGIN_DATA: data,
                     },
                 )
 
