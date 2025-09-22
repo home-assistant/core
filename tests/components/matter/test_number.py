@@ -253,5 +253,6 @@ async def test_unoccupied_heating_temperature_setpoint(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(
         "number.longan_link_hvac_unoccupied_heating_temperature_setpoint"
-    )    assert state
+    )
+    assert state
     assert state.state == "17.5"
