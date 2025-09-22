@@ -82,6 +82,7 @@ class ThinQHumidifierEntity(ThinQEntity, HumidifierEntity):
     """Represent a ThinQ humidifier entity."""
 
     entity_description: ThinQHumidifierEntityDescription
+    _attr_supported_features = HumidifierEntityFeature.MODES
 
     def __init__(
         self,
@@ -91,7 +92,6 @@ class ThinQHumidifierEntity(ThinQEntity, HumidifierEntity):
     ) -> None:
         """Initialize a humidifier entity."""
         super().__init__(coordinator, entity_description, property_id)
-        self._attr_supported_features = HumidifierEntityFeature.MODES
         self._attr_available_modes = self.coordinator.data[
             self.entity_description.mode_key
         ].options
@@ -110,13 +110,11 @@ class ThinQHumidifierEntity(ThinQEntity, HumidifierEntity):
         self._attr_current_humidity = self.coordinator.data[
             self.entity_description.current_humidity_key
         ].value
-        self._attr_is_on = _is_on = self.coordinator.data[
+        self._attr_is_on = self.coordinator.data[
             self.entity_description.operation_key
         ].is_on
-        self._attr_mode = _is_on = self.coordinator.data[
-            self.entity_description.mode_key
-        ].value
-        if _is_on:
+        self._attr_mode = self.coordinator.data[self.entity_description.mode_key].value
+        if self.is_on:
             self._attr_action = (
                 HumidifierAction.DRYING
                 if self.entity_description.device_class
@@ -134,7 +132,7 @@ class ThinQHumidifierEntity(ThinQEntity, HumidifierEntity):
             self.target_humidity,
             self.mode,
             self.action,
-            _is_on,
+            self.is_on,
         )
 
     async def async_set_mode(self, mode: str) -> None:
@@ -156,10 +154,10 @@ class ThinQHumidifierEntity(ThinQEntity, HumidifierEntity):
         requested: int,
     ) -> int:
         """Adjust target humidity by device's step."""
-        # current: 65, step: 5
-        # requested: 66, ceil -> result: 70
-        # requested: 64, floor -> result: 60
-        # requested: 53, round -> result: 55
+        # current: 55, step: 5
+        # requested: 43, round -> result: 45
+        # requested: 54(-), floor -> result: 50
+        # requested: 56(+), ceil -> result: 60
         method = (
             "round"
             if (
