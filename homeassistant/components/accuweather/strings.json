@@ -251,6 +251,9 @@
     }
   },
   "exceptions": {
+    "auth_error": {
+      "message": "Authentication failed for {entry}, please update your API key"
+    },
     "current_conditions_update_error": {
       "message": "An error occurred while retrieving weather current conditions data from the AccuWeather API: {error}"
     },
