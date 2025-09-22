@@ -23,9 +23,7 @@ from homeassistant.helpers.trigger import (
     DATA_PLUGGABLE_ACTIONS,
     PluggableAction,
     Trigger,
-    TriggerActionType,
-    TriggerConfig,
-    TriggerInfo,
+    TriggerActionRunnerType,
     _async_get_trigger_platform,
     async_initialize_triggers,
     async_validate_trigger_config,
@@ -536,30 +534,23 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
             """Validate config."""
             return config
 
-        def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
-            """Initialize trigger."""
-
     class MockTrigger1(MockTrigger):
         """Mock trigger 1."""
 
-        async def async_attach(
-            self,
-            action: TriggerActionType,
-            trigger_info: TriggerInfo,
+        async def _async_attach(
+            self, run_action: TriggerActionRunnerType
         ) -> CALLBACK_TYPE:
             """Attach a trigger."""
-            action({"trigger": "test_trigger_1"})
+            run_action("trigger 1 desc", {"extra": "test_trigger_1"})
 
     class MockTrigger2(MockTrigger):
         """Mock trigger 2."""
 
-        async def async_attach(
-            self,
-            action: TriggerActionType,
-            trigger_info: TriggerInfo,
+        async def _async_attach(
+            self, run_action: TriggerActionRunnerType
         ) -> CALLBACK_TYPE:
             """Attach a trigger."""
-            action({"trigger": "test_trigger_2"})
+            run_action("trigger 2 desc", {"extra": "test_trigger_2"})
 
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
@@ -589,11 +580,31 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
         action_calls.append([*args])
 
     await async_initialize_triggers(hass, config_1, cb_action, "test", "", log_cb)
-    assert action_calls == [[{"trigger": "test_trigger_1"}]]
+    assert len(action_calls) == 1
+    assert action_calls[0][0] == {
+        "trigger": {
+            "alias": None,
+            "description": "trigger 1 desc",
+            "extra": "test_trigger_1",
+            "id": "0",
+            "idx": "0",
+            "platform": "test",
+        }
+    }
     action_calls.clear()
 
     await async_initialize_triggers(hass, config_2, cb_action, "test", "", log_cb)
-    assert action_calls == [[{"trigger": "test_trigger_2"}]]
+    assert len(action_calls) == 1
+    assert action_calls[0][0] == {
+        "trigger": {
+            "alias": None,
+            "description": "trigger 2 desc",
+            "extra": "test_trigger_2",
+            "id": "0",
+            "idx": "0",
+            "platform": "test.trig_2",
+        }
+    }
     action_calls.clear()
 
     with pytest.raises(KeyError):

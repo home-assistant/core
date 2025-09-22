@@ -178,6 +178,9 @@ _TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 class Trigger(abc.ABC):
     """Trigger class."""
 
+    _job: HassJob | None = None
+    _trigger_info: TriggerInfo | None = None
+
     @classmethod
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
@@ -212,13 +215,41 @@ class Trigger(abc.ABC):
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize trigger."""
+        self._hass = hass
+        self._config = config
+
+    async def async_attach(
+        self, action: TriggerActionType, trigger_info: TriggerInfo
+    ) -> CALLBACK_TYPE:
+        """Attach the trigger."""
+        self._job = HassJob(action)
+        self._trigger_info = trigger_info
+
+        @callback
+        def run_action(
+            description: str,
+            extra_trigger_payload: dict[str, Any],
+            context: Context | None = None,
+        ) -> None:
+            """Run action with trigger variables."""
+            assert self._job
+            assert self._trigger_info
+
+            payload = {
+                "trigger": {
+                    **self._trigger_info["trigger_data"],
+                    CONF_PLATFORM: self._config.key,
+                    "description": description,
+                    **extra_trigger_payload,
+                }
+            }
+
+            self._hass.async_run_hass_job(self._job, payload, context)
+
+        return await self._async_attach(run_action)
 
     @abc.abstractmethod
-    async def async_attach(
-        self,
-        action: TriggerActionType,
-        trigger_info: TriggerInfo,
-    ) -> CALLBACK_TYPE:
+    async def _async_attach(self, run_action: TriggerActionRunnerType) -> CALLBACK_TYPE:
         """Attach the trigger."""
 
 
@@ -255,6 +286,19 @@ class TriggerConfig:
     key: str  # The key used to identify the trigger, e.g. "zwave.event"
     target: dict[str, Any] | None = None
     options: dict[str, Any] | None = None
+
+
+class TriggerActionRunnerType(Protocol):
+    """Protocol type for the trigger action runner helper callback."""
+
+    @callback
+    def __call__(
+        self,
+        description: str,
+        extra_trigger_payload: dict[str, Any],
+        context: Context | None = None,
+    ) -> None:
+        """Define trigger action runner type."""
 
 
 class TriggerActionType(Protocol):
