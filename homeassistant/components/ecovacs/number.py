@@ -5,11 +5,14 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from deebot_client.capabilities import CapabilitySet
+from deebot_client.capabilities import CapabilityNumber, CapabilitySet
+from deebot_client.device import Device
 from deebot_client.events import CleanCountEvent, CutDirectionEvent, VolumeEvent
 from deebot_client.events.base import Event
+from deebot_client.events.water_info import WaterCustomAmountEvent
 
 from homeassistant.components.number import (
+    EntityDescription,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
@@ -75,6 +78,17 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsNumberEntityDescription, ...] = (
         native_step=1.0,
         mode=NumberMode.BOX,
     ),
+    EcovacsNumberEntityDescription[WaterCustomAmountEvent](
+        capability_fn=lambda caps: caps.water.amount
+        if caps.water and isinstance(caps.water.amount, CapabilityNumber)
+        else None,
+        value_fn=lambda e: e.value,
+        key="water_amount",
+        translation_key="water_amount",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1.0,
+        mode=NumberMode.BOX,
+    ),
 )
 
 
@@ -99,6 +113,18 @@ class EcovacsNumberEntity[EventT: Event](
     """Ecovacs number entity."""
 
     entity_description: EcovacsNumberEntityDescription
+
+    def __init__(
+        self,
+        device: Device,
+        capability: CapabilitySet[EventT, [int]],
+        entity_description: EntityDescription,
+    ) -> None:
+        """Initialize entity."""
+        super().__init__(device, capability, entity_description)
+        if isinstance(capability, CapabilityNumber):
+            self._attr_native_min_value = capability.min
+            self._attr_native_max_value = capability.max
 
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""

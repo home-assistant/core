@@ -102,6 +102,9 @@
       },
       "volume": {
         "name": "Volume"
+      },
+      "water_amount": {
+        "name": "Water flow level"
       }
     },
     "sensor": {
@@ -174,7 +177,7 @@
     },
     "select": {
       "water_amount": {
-        "name": "Water flow level",
+        "name": "[%key:component::ecovacs::entity::number::water_amount::name%]",
         "state": {
           "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]",
