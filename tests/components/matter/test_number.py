@@ -252,3 +252,24 @@ async def test_lock(
     state = hass.states.get("number.mock_door_lock_wrong_code_limit")
     assert state
     assert state.state == "10"
+
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_matter_exception_on_write_attribute(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test if a MatterError gets converted to HomeAssistantError by using a door_lock fixture."""
+    state = hass.states.get("number.mock_door_lock_wrong_code_limit")
+    assert state
+    matter_client.write_attribute.side_effect = MatterError("Out of range")
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {
+                "entity_id": "number.mock_door_lock_wrong_code_limit",
+                "value": 500,
+            },
+            blocking=True,
+        )
