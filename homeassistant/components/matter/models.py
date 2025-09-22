@@ -100,6 +100,9 @@ class MatterDiscoverySchema:
     # [optional] the endpoint's vendor_id must match ANY of these values
     vendor_id: tuple[int, ...] | None = None
 
+    # [optional] the endpoint's product_id must match ANY of these values
+    product_id: tuple[int, ...] | None = None
+
     # [optional] the endpoint's product_name must match ANY of these values
     product_name: tuple[str, ...] | None = None
 

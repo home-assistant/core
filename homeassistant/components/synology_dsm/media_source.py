@@ -10,9 +10,8 @@ from synology_dsm.api.photos import SynoPhotosAlbum, SynoPhotosItem
 from synology_dsm.exceptions import SynologyDSMException
 
 from homeassistant.components import http
-from homeassistant.components.media_player import MediaClass
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
-    BrowseError,
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
