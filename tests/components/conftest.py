@@ -23,7 +23,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import components, loader
-from homeassistant.components import repairs
+from homeassistant.components import repairs, sensor
 from homeassistant.config_entries import (
     DISCOVERY_SOURCES,
     ConfigEntriesFlowManager,
@@ -57,6 +57,30 @@ if TYPE_CHECKING:
 
 # Regex for accessing the integration name from the test path
 RE_REQUEST_DOMAIN = re.compile(r".*tests\/components\/([^/]+)\/.*")
+
+
+@pytest.fixture(scope="session", autouse=True)
+def patch_restore_sensor() -> Generator[None]:
+    """Fixture to patch restore sensor."""
+    real_as_dict = sensor.SensorExtraStoredData.as_dict
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the sensor data."""
+        data = real_as_dict(self)
+        if not (_type := data["native_value"].get("__type")):
+            return data
+        if _type == "<class 'freezegun.api.FakeDate'>":
+            data["native_value"]["__type"] = "<class 'datetime.date'>"
+        elif _type == "<class 'tests.patch_time.HAFakeDatetime'>":
+            data["native_value"]["__type"] = "<class 'datetime.datetime'>"
+        return data
+
+    with patch(
+        "homeassistant.components.sensor.SensorExtraStoredData.as_dict",
+        autospec=True,
+        side_effect=as_dict,
+    ):
+        yield
 
 
 @pytest.fixture(scope="session", autouse=find_spec("zeroconf") is not None)
