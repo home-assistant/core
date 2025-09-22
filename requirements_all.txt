@@ -1278,6 +1278,9 @@ iottycloud==0.3.0
 # homeassistant.components.iperf3
 iperf3==0.1.11
 
+# homeassistant.components.irm_kmi
+irm-kmi-api==1.1.0
+
 # homeassistant.components.isal
 isal==1.8.0
 

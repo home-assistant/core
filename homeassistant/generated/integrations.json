@@ -3118,6 +3118,11 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "irm_kmi": {
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "iron_os": {
       "name": "IronOS",
       "integration_type": "hub",
@@ -7969,6 +7974,7 @@
     "input_select",
     "input_text",
     "integration",
+    "irm_kmi",
     "islamic_prayer_times",
     "local_calendar",
     "local_ip",
