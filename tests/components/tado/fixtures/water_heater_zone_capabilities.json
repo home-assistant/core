@@ -1,6 +1,9 @@
 {
   "canSetTemperature": true,
   "DRY": {},
+  "HEAT": {},
+  "COOL": {},
+  "FAN": {},
   "type": "HOT_WATER",
   "temperatures": {
     "celsius": {

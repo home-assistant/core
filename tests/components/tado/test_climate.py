@@ -118,6 +118,16 @@ async def test_aircon_set_hvac_mode(
     await trigger_update(hass, freezer)
 
     mock_tado_api.get_zone_state.return_value.current_hvac_mode = set_hvac_mode
+    mock_tado_api.get_zone_state.return_value.current_swing_mode = [
+        "MID_UP",
+        "MID_DOWN",
+        "ON",
+        "OFF",
+        "UP",
+        "MID",
+        "DOWN",
+    ]
+
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
