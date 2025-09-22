@@ -253,6 +253,17 @@ async def test_lock(
     assert state
     assert state.state == "10"
 
+    """Test UserCodeTemporaryDisableTime for door lock."""
+    state = hass.states.get("number.mock_door_lock_user_code_temporary_disable_time")
+    assert state
+    assert state.state == "15"
+
+    set_node_attribute(matter_node, 1, 257, 49, 30)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("number.mock_door_lock_user_code_temporary_disable_time")
+    assert state
+    assert state.state == "30"
+
 
 @pytest.mark.parametrize("node_fixture", ["door_lock"])
 async def test_matter_exception_on_door_lock_write_attribute(
