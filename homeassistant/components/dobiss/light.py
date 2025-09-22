@@ -7,13 +7,13 @@ from dobissapi import DobissAnalogOutput, DobissLight, DobissOutput
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, ENTITY_MATCH_NONE
+from homeassistant.const import ENTITY_MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_IGNORE_ZIGBEE_DEVICES, DOMAIN, KEY_API
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,79 +26,102 @@ async def async_setup_entry(
     """Set up dobiss lights."""
     _LOGGER.debug("Setting up light component of %s", DOMAIN)
 
-    dobiss = hass.data[DOMAIN][config_entry.entry_id][KEY_API].api
+    client = config_entry.runtime_data
+    dobiss = client.api
 
     light_entities = dobiss.get_devices_by_type(DobissLight)
-    entities = []
-    for device in light_entities:
-        if (
-            config_entry.options.get(CONF_IGNORE_ZIGBEE_DEVICES) is not None
-            and config_entry.options.get(CONF_IGNORE_ZIGBEE_DEVICES)
-            and (device.address in (210, 211))
-        ):
-            continue
-        entities.append(HADobissLight(device))
+    entities = [DobissLight(device) for device in light_entities]
 
     # wrap analog output in lights for now...
     analog_entities = dobiss.get_devices_by_type(DobissAnalogOutput)
-    entities.extend(HADobissLight(device) for device in analog_entities)
+    entities.extend(DobissLight(device) for device in analog_entities)
 
     if entities:
         async_add_entities(entities)
 
 
-class HADobissLight(LightEntity):
-    """Dobiss light device."""
+class DobissLightEntity(LightEntity):
+    """Representation of a Dobiss light or analog output."""
 
-    should_poll = False
+    _attr_should_poll = False
 
-    def __init__(self, dobisslight: DobissOutput) -> None:
-        """Init dobiss light device."""
-        super().__init__()
-        self._dobisslight = dobisslight
-        self._attr_supported_color_modes: set[ColorMode] = {ColorMode.ONOFF}
-        if self._dobisslight.dimmable:
-            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    def __init__(self, device: DobissOutput) -> None:
+        """Initialize the Dobiss light."""
+        self._device = device
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Information about this entity/device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._dobisslight.object_id)},
-            name=self.name,
+        self._attr_unique_id = device.object_id
+        self._attr_name = None
+        self._attr_has_entity_name = True
+
+        self._attr_supported_color_modes = (
+            {ColorMode.BRIGHTNESS} if device.dimmable else {ColorMode.ONOFF}
+        )
+        self._attr_color_mode = (
+            ColorMode.BRIGHTNESS if device.dimmable else ColorMode.ONOFF
+        )
+
+        self._attr_icon = (
+            "mdi:hvac" if isinstance(device, DobissAnalogOutput) else "mdi:lightbulb"
+        )
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device.object_id)},
+            name=device.name,
             manufacturer="dobiss",
         )
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return supported attributes."""
-        return self._dobisslight.attributes
-
     async def async_added_to_hass(self) -> None:
-        """Run when this Entity has been added to HA."""
-        self._dobisslight.register_callback(self.async_write_ha_state)
+        """Handle entity addition to Home Assistant."""
+        self._device.register_callback(self.async_write_ha_state)
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, DOMAIN, self.signal_handler)
+            async_dispatcher_connect(self.hass, DOMAIN, self._signal_handler)
         )
 
     async def async_will_remove_from_hass(self) -> None:
-        """Entity being removed from hass."""
-        self._dobisslight.remove_callback(self.async_write_ha_state)
+        """Handle entity removal from Home Assistant."""
+        self._device.remove_callback(self.async_write_ha_state)
 
-    async def signal_handler(self, data: dict[str, Any]) -> None:
-        """Handle domain-specific signal by calling appropriate method."""
-        entity_ids = data[ATTR_ENTITY_ID]
-
-        if entity_ids == ENTITY_MATCH_NONE:
+    async def _signal_handler(self, data: dict[str, Any]) -> None:
+        """Handle dispatcher signal."""
+        entity_ids = data.get("entity_id")
+        if entity_ids not in (ENTITY_MATCH_ALL, self.entity_id):
             return
 
-        if entity_ids == ENTITY_MATCH_ALL or self.entity_id in entity_ids:
+        method = data.get("method")
+        if method:
             params = {
                 key: value
                 for key, value in data.items()
-                if key not in ["entity_id", "method"]
+                if key not in ("entity_id", "method")
             }
-            await getattr(self, data["method"])(**params)
+            await getattr(self, method)(**params)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the light on."""
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        value = int((brightness / 255) * 100) if brightness is not None else 100
+        await self._device.turn_on(brightness=value)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the light off."""
+        await self._device.turn_off()
+
+    @property
+    def is_on(self) -> bool:
+        """Return whether the light is on."""
+        return self._device.is_on
+
+    @property
+    def brightness(self) -> int | None:
+        """Return the brightness level (0..255)."""
+        if not self._device.dimmable:
+            return None
+        return int((self._device.value / 100) * 255)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra state attributes."""
+        return self._device.attributes
 
     async def turn_on_service(
         self,
@@ -107,63 +130,10 @@ class HADobissLight(LightEntity):
         delayoff: int | None = None,
         from_pir: bool = False,
     ) -> None:
-        """Turn on the light with optional parameters."""
-        await self._dobisslight.turn_on(
-            brightness=brightness, delayon=delayon, delayoff=delayoff, from_pir=from_pir
+        """Turn on the light with optional parameters (called via dispatcher)."""
+        await self._device.turn_on(
+            brightness=brightness,
+            delayon=delayon,
+            delayoff=delayoff,
+            from_pir=from_pir,
         )
-
-    @property
-    def brightness(self) -> int | None:
-        """Return the brightness of the light."""
-        if not self._dobisslight.dimmable:
-            return None
-        # dobiss works from 0-100, ha from 0-255
-        return int((self._dobisslight.value / 100) * 255)
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if light is on."""
-        return self._dobisslight.is_on
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on or control the light."""
-        # dobiss works from 0-100, ha from 0-255
-        raw_brightness = kwargs.get(ATTR_BRIGHTNESS)
-        if raw_brightness is not None:
-            brightness = int((raw_brightness / 255) * 100)
-        else:
-            brightness = 100
-        await self._dobisslight.turn_on(brightness)
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Instruct the light to turn off."""
-        await self._dobisslight.turn_off()
-
-    @property
-    def icon(self) -> str:
-        """Return the icon to use in the frontend."""
-        if isinstance(self._dobisslight, DobissAnalogOutput):
-            return "mdi:hvac"
-        return super().icon or "mdi:lightbulb"
-
-    @property
-    def color_mode(self) -> ColorMode:
-        """Return the color mode of the light."""
-        if self._dobisslight.dimmable:
-            return ColorMode.BRIGHTNESS
-        return ColorMode.ONOFF
-
-    @property
-    def supported_color_modes(self) -> set[ColorMode]:
-        """Return the supported color modes."""
-        return self._attr_supported_color_modes
-
-    @property
-    def name(self) -> str:
-        """Return the display name of this light."""
-        return self._dobisslight.name
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return self._dobisslight.object_id

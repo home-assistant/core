@@ -8,66 +8,27 @@ import dobissapi
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.config_entries import ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, __version__ as HAVERSION
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 
-from .const import (
-    CONF_COVER_CLOSETIME,
-    CONF_COVER_SET_END_POSITION,
-    CONF_COVER_USE_TIMED,
-    CONF_IGNORE_ZIGBEE_DEVICES,
-    CONF_INVERT_BINARY_SENSOR,
-    CONF_SECRET,
-    CONF_SECURE,
-    CONF_WEBSOCKET_TIMEOUT,
-    DEFAULT_COVER_CLOSETIME,
-    DEFAULT_COVER_SET_END_POSITION,
-    DEFAULT_COVER_USE_TIMED,
-    DEFAULT_IGNORE_ZIGBEE_DEVICES,
-    DEFAULT_INVERT_BINARY_SENSOR,
-    DEFAULT_WEBSOCKET_TIMEOUT,
-    DOMAIN,
-)
+from .const import CONF_SECRET, CONF_SECURE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 HA_VERSION = AwesomeVersion(HAVERSION)
 
 
-class DobissConnection:
-    """Handle connection to Dobiss NXT server."""
-
-    def __init__(self, secret: str, host: str, secure: bool) -> None:
-        """Initialize."""
-        self.secret = secret
-        self.host = host
-        self.secure = secure
-
-    async def authenticate(self) -> bool:
-        """Test if we can authenticate with the host."""
-        response = False
-        dobiss = dobissapi.DobissAPI(self.secret, self.host, self.secure)
-        try:
-            if await dobiss.auth_check():
-                response = True
-        except (ConnectionError, TimeoutError):
-            _LOGGER.exception("Dobiss authentication failed")
-        return response
-
-
 async def validate_input(
     hass: core.HomeAssistant, data: dict[str, Any]
 ) -> dict[str, str]:
-    """Validate the user input allows us to connect.
+    """Validate the user input allows us to connect."""
+    dobiss = dobissapi.DobissAPI(data[CONF_SECRET], data[CONF_HOST], data[CONF_SECURE])
 
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    hub = DobissConnection(data[CONF_SECRET], data[CONF_HOST], data[CONF_SECURE])
-
-    if not await hub.authenticate():
-        raise InvalidAuth
+    try:
+        if not await dobiss.auth_check():
+            raise InvalidAuth
+    except (ConnectionError, TimeoutError) as err:
+        raise CannotConnect from err
 
     return {"title": f"NXT server {data[CONF_HOST]}"}
 
@@ -77,14 +38,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> OptionsFlow:
-        """Get the options flow for this handler."""
-        return DobissOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -129,61 +82,3 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
-
-
-class DobissOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        if HA_VERSION < "2024.12":
-            self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle options flow."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        data_schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_COVER_SET_END_POSITION,
-                    default=self.config_entry.options.get(
-                        CONF_COVER_SET_END_POSITION, DEFAULT_COVER_SET_END_POSITION
-                    ),
-                ): cv.boolean,
-                vol.Required(
-                    CONF_INVERT_BINARY_SENSOR,
-                    default=self.config_entry.options.get(
-                        CONF_INVERT_BINARY_SENSOR, DEFAULT_INVERT_BINARY_SENSOR
-                    ),
-                ): cv.boolean,
-                vol.Required(
-                    CONF_IGNORE_ZIGBEE_DEVICES,
-                    default=self.config_entry.options.get(
-                        CONF_IGNORE_ZIGBEE_DEVICES, DEFAULT_IGNORE_ZIGBEE_DEVICES
-                    ),
-                ): cv.boolean,
-                vol.Required(
-                    CONF_COVER_CLOSETIME,
-                    default=self.config_entry.options.get(
-                        CONF_COVER_CLOSETIME, DEFAULT_COVER_CLOSETIME
-                    ),
-                ): cv.positive_int,
-                vol.Optional(
-                    CONF_COVER_USE_TIMED,
-                    default=self.config_entry.options.get(
-                        CONF_COVER_USE_TIMED, DEFAULT_COVER_USE_TIMED
-                    ),
-                ): cv.boolean,
-                vol.Required(
-                    CONF_WEBSOCKET_TIMEOUT,
-                    default=self.config_entry.options.get(
-                        CONF_WEBSOCKET_TIMEOUT, DEFAULT_WEBSOCKET_TIMEOUT
-                    ),
-                ): cv.positive_int,
-            }
-        )
-        return self.async_show_form(step_id="init", data_schema=data_schema)
