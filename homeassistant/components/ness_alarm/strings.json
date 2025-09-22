@@ -82,6 +82,10 @@
     "yaml_config_duplicate": {
       "title": "Remove Duplicate YAML Configuration",
       "description": "Ness Alarm is already configured through the UI, but YAML configuration was also found.\n\n**Current UI Configuration:**\n- Host: {host}\n- Port: {port}\n\nThe YAML configuration is being ignored. Please remove the following section from your `configuration.yaml` file:\n\n```yaml\n{yaml_example}\n```\n\nRestart Home Assistant after removing the YAML configuration to clear this issue."
+    },
+    "yaml_import_failed": {
+      "title": "YAML Import Failed - Connection Error",
+      "description": "Failed to import Ness Alarm from YAML configuration due to connection error.\\n\\n**Failed Configuration:**\\n- Host: {host}\\n- Port: {port}\\n\\n**Action Required:**\\nEither fix the connection issue or remove the following from your `configuration.yaml`:\\n\\n```yaml\\n{yaml_example}\\n```"
     }
   }
 }

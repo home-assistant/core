@@ -75,7 +75,7 @@ class NessAlarmPanel(AlarmControlPanelEntity):
         """Initialize the alarm panel."""
         self._client = client
         self._partition_id = partition_id
-        self._name = name
+        self._attr_name = name
         self._entry_id = entry_id
         self._support_home_arm = support_home_arm
 
@@ -118,11 +118,6 @@ class NessAlarmPanel(AlarmControlPanelEntity):
     def unique_id(self) -> str:
         """Return unique ID."""
         return f"{self._entry_id}_partition_{self._partition_id}"
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
 
     @property
     def supported_features(self) -> AlarmControlPanelEntityFeature:
