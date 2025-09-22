@@ -96,6 +96,7 @@ class TestSetupEntry:
         assert mock_config_entry.state is ConfigEntryState.LOADED
         mock_forward.assert_called_once()
 
+    ###
     async def test_setup_entry_success_manual_configure(
         self, hass: HomeAssistant, mock_elk: MagicMock
     ) -> None:
@@ -1776,7 +1777,7 @@ class TestErrorHandling:
 
         assert result is False
 
-    async def test_elk_range_validator_coverage(self, hass):
+    async def test_elk_range_validator_coverage(self):
         """Test _elk_range_validator to cover lines 103-115."""
         # Test single number
         result = elkm1._elk_range_validator("5")
@@ -1802,7 +1803,7 @@ class TestErrorHandling:
         with pytest.raises(vol.Invalid, match="Invalid range"):
             elkm1._elk_range_validator("Z1")
 
-    async def test_has_all_unique_prefixes_coverage(self, hass):
+    async def test_has_all_unique_prefixes_coverage(self):
         """Test _has_all_unique_prefixes to cover lines 123-126."""
         # Test valid unique prefixes
         devices = [
@@ -1870,7 +1871,7 @@ class TestErrorHandling:
         changeset_missing = {}
         callback_func(mock_keypad, changeset_missing)
 
-    async def test_discovery_config_coverage(self, hass):
+    async def test_discovery_config_coverage(self, hass: HomeAssistant) -> None:
         """Test discovery configuration to cover missing lines."""
         mock_config_entry = MockConfigEntry(
             domain=DOMAIN,
@@ -1908,7 +1909,7 @@ class TestErrorHandling:
 
         assert result is True
 
-    async def test_included_function_error_path(self, hass):
+    async def test_included_function_error_path(self):
         """Test _included function with out-of-bounds ranges to trigger error path."""
         values = [False] * 10  # 10 element array
         ranges = [(12, 15)]  # Out of bounds range
@@ -1921,7 +1922,7 @@ class TestErrorHandling:
 class TestConnectionErrorPaths:
     """Test connection error handling and timeout scenarios."""
 
-    async def test_ensure_elk_connection_authentication_failure(self, hass):
+    async def test_ensure_elk_connection_authentication_failure(self):
         """Test _ensure_elk_connection with authentication failure."""
         mock_elk = MagicMock()
         mock_elk.disconnect = MagicMock()
@@ -1939,7 +1940,7 @@ class TestConnectionErrorPaths:
         # Verify disconnect was called (may be called multiple times)
         assert mock_elk.disconnect.call_count >= 1
 
-    async def test_ensure_elk_connection_timeout_error(self, hass):
+    async def test_ensure_elk_connection_timeout_error(self):
         """Test _ensure_elk_connection with timeout error."""
         mock_elk = MagicMock()
         mock_elk.disconnect = MagicMock()
@@ -1959,7 +1960,7 @@ class TestConnectionErrorPaths:
         # Verify disconnect was called
         mock_elk.disconnect.assert_called_once()
 
-    async def test_ensure_elk_connection_login_failed_exception(self, hass):
+    async def test_ensure_elk_connection_login_failed_exception(self):
         """Test _ensure_elk_connection with login failed exception."""
         mock_elk = MagicMock()
         mock_elk.disconnect = MagicMock()
@@ -1977,7 +1978,7 @@ class TestConnectionErrorPaths:
         # Verify disconnect was called
         mock_elk.disconnect.assert_called_once()
 
-    async def test_ensure_elk_connection_invalid_exception(self, hass):
+    async def test_ensure_elk_connection_invalid_exception(self):
         """Test _ensure_elk_connection with invalid credentials exception."""
         mock_elk = MagicMock()
         mock_elk.disconnect = MagicMock()
@@ -1995,7 +1996,7 @@ class TestConnectionErrorPaths:
         # Verify disconnect was called
         mock_elk.disconnect.assert_called_once()
 
-    async def test_ensure_elk_connection_generic_exception(self, hass):
+    async def test_ensure_elk_connection_generic_exception(self):
         """Test _ensure_elk_connection with generic exception."""
         mock_elk = MagicMock()
         mock_elk.disconnect = MagicMock()
@@ -2017,7 +2018,7 @@ class TestConnectionErrorPaths:
 class TestAsyncWaitForElkToSync:
     """Test async_wait_for_elk_to_sync function coverage."""
 
-    async def test_wait_for_elk_sync_login_failure(self, hass):
+    async def test_wait_for_elk_sync_login_failure(self):
         """Test login failure in wait_for_elk_to_sync."""
         mock_elk = MagicMock()
         mock_elk.disconnect = MagicMock()
@@ -2040,14 +2041,14 @@ class TestAsyncWaitForElkToSync:
         # Disconnect should be called on login failure
         mock_elk.disconnect.assert_called_once()
 
-    async def test_wait_for_elk_sync_login_timeout(self, hass):
+    async def test_wait_for_elk_sync_login_timeout(self):
         """Test login timeout in wait_for_elk_to_sync."""
         mock_elk = MagicMock()
         mock_elk.disconnect = MagicMock()
         mock_elk.add_handler = MagicMock()
 
         # Mock the handlers to not trigger any events (timeout)
-        def mock_add_handler(event_name, handler):
+        def mock_add_handler(_event_name, _handler):
             pass  # Don't call any handlers, causing timeout
 
         mock_elk.add_handler.side_effect = mock_add_handler
@@ -2058,7 +2059,7 @@ class TestAsyncWaitForElkToSync:
         # Disconnect should be called on timeout
         mock_elk.disconnect.assert_called()
 
-    async def test_wait_for_elk_sync_success_complete(self, hass):
+    async def test_wait_for_elk_sync_success_complete(self):
         """Test successful login and sync completion."""
         mock_elk = MagicMock()
         mock_elk.disconnect = MagicMock()
@@ -2097,7 +2098,7 @@ class TestAsyncWaitForElkToSync:
         # Disconnect should not be called on success
         mock_elk.disconnect.assert_not_called()
 
-    async def test_wait_for_elk_sync_complete_timeout(self, hass):
+    async def test_wait_for_elk_sync_complete_timeout(self):
         """Test sync_complete timeout after successful login."""
         mock_elk = MagicMock()
         mock_elk.disconnect = MagicMock()
@@ -2135,7 +2136,7 @@ class TestAsyncWaitForElkToSync:
 class TestConfigurationIncludeExcludeError:
     """Test configuration include/exclude error handling."""
 
-    async def test_setup_elk_config_include_exclude_value_error(self, hass):
+    async def test_setup_elk_config_include_exclude_value_error(self):
         """Test ValueError handling in _setup_elk_config."""
         # Configuration that will trigger ValueError in _included function
         # Need to provide all ELK_ELEMENTS for the configuration
