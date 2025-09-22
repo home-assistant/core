@@ -1,7 +1,7 @@
 {
   "domain": "onewire",
   "name": "1-Wire",
-  "codeowners": ["@garbled1", "@epenet"],
+  "codeowners": ["@garbled1", "@epenet", "@szczukot"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/onewire",
   "integration_type": "hub",
