@@ -1106,7 +1106,7 @@ RELAY_SWITCH_2PM_SERVICE_INFO = BluetoothServiceInfoBleak(
     tx_power=-127,
 )
 
-K11_VACUUM_SERVICE_INFO = BluetoothServiceInfoBleak(
+K11_PLUS_VACUUM_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="K11+ Vacuum",
     manufacturer_data={2409: b"\xb0\xe9\xfe\xe4\xbf\xd8\x0b\x01\x11f\x00\x16M\x15"},
     service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00M\x00\x10\xfb\xa8"},
