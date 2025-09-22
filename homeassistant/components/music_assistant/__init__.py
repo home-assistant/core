@@ -9,8 +9,10 @@ from typing import TYPE_CHECKING
 
 from music_assistant_client import MusicAssistantClient
 from music_assistant_client.exceptions import CannotConnect, InvalidServerVersion
+from music_assistant_models.config_entries import PlayerConfig
 from music_assistant_models.enums import EventType
 from music_assistant_models.errors import ActionUnavailable, MusicAssistantError
+from music_assistant_models.player import Player
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP, Platform
@@ -25,7 +27,7 @@ from homeassistant.helpers.issue_registry import (
 )
 
 from .actions import get_music_assistant_client, register_actions
-from .const import DOMAIN, LOGGER
+from .const import ATTR_CONF_EXPOSE_PLAYER_TO_HA, DOMAIN, LOGGER
 
 if TYPE_CHECKING:
     from music_assistant_models.event import MassEvent
@@ -59,7 +61,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(
+async def async_setup_entry(  # noqa: C901
     hass: HomeAssistant, entry: MusicAssistantConfigEntry
 ) -> bool:
     """Set up Music Assistant from a config entry."""
@@ -126,6 +128,23 @@ async def async_setup_entry(
     # initialize platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    def add_player(player: Player) -> None:
+        """Handle adding Player from MA as HA device + entities."""
+        entry.runtime_data.discovered_players.add(player.player_id)
+        # run callback for each platform
+        for callback in entry.runtime_data.platform_handlers.values():
+            callback(player.player_id)
+
+    def remove_player(player_id: str) -> None:
+        """Handle removing Player from MA as HA device + entities."""
+        if player_id in entry.runtime_data.discovered_players:
+            entry.runtime_data.discovered_players.remove(player_id)
+        dev_reg = dr.async_get(hass)
+        if hass_device := dev_reg.async_get_device({(DOMAIN, player_id)}):
+            dev_reg.async_update_device(
+                hass_device.id, remove_config_entry_id=entry.entry_id
+            )
+
     # register listener for new players
     async def handle_player_added(event: MassEvent) -> None:
         """Handle Mass Player Added event."""
@@ -138,10 +157,7 @@ async def async_setup_entry(
             assert player is not None
         if not player.expose_to_ha:
             return
-        entry.runtime_data.discovered_players.add(event.object_id)
-        # run callback for each platform
-        for callback in entry.runtime_data.platform_handlers.values():
-            callback(event.object_id)
+        add_player(player)
 
     entry.async_on_unload(mass.subscribe(handle_player_added, EventType.PLAYER_ADDED))
 
@@ -149,23 +165,38 @@ async def async_setup_entry(
     for player in mass.players:
         if not player.expose_to_ha:
             continue
-        entry.runtime_data.discovered_players.add(player.player_id)
-        for callback in entry.runtime_data.platform_handlers.values():
-            callback(player.player_id)
+        add_player(player)
 
     # register listener for removed players
     async def handle_player_removed(event: MassEvent) -> None:
         """Handle Mass Player Removed event."""
         if event.object_id is None:
             return
-        dev_reg = dr.async_get(hass)
-        if hass_device := dev_reg.async_get_device({(DOMAIN, event.object_id)}):
-            dev_reg.async_update_device(
-                hass_device.id, remove_config_entry_id=entry.entry_id
-            )
+        remove_player(event.object_id)
 
     entry.async_on_unload(
         mass.subscribe(handle_player_removed, EventType.PLAYER_REMOVED)
+    )
+
+    # register listener for player configs (to handle toggling of the 'expose_to_ha' setting)
+    async def handle_player_config_updated(event: MassEvent) -> None:
+        """Handle Mass Player Config Updated event."""
+        if event.object_id is None:
+            return
+        player_id = event.object_id
+        player_config = PlayerConfig.from_dict(event.data)
+        expose_to_ha = player_config.get_value(ATTR_CONF_EXPOSE_PLAYER_TO_HA, True)
+        if not expose_to_ha and player_id in entry.runtime_data.discovered_players:
+            # player is no longer exposed to Home Assistant
+            remove_player(player_id)
+        elif expose_to_ha and player_id not in entry.runtime_data.discovered_players:
+            # player is now exposed to Home Assistant
+            if not (player := mass.players.get(player_id)):
+                return  # guard
+            add_player(player)
+
+    entry.async_on_unload(
+        mass.subscribe(handle_player_config_updated, EventType.PLAYER_CONFIG_UPDATED)
     )
 
     # check if any playerconfigs have been removed while we were disconnected
