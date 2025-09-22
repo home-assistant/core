@@ -96,7 +96,6 @@ class TestSetupEntry:
         assert mock_config_entry.state is ConfigEntryState.LOADED
         mock_forward.assert_called_once()
 
-    ###
     async def test_setup_entry_success_manual_configure(
         self, hass: HomeAssistant, mock_elk: MagicMock
     ) -> None:
