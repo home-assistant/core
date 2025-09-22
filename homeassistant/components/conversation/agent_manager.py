@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -12,7 +12,7 @@ from homeassistant.core import Context, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, singleton
 
-from .const import DATA_COMPONENT, DATA_DEFAULT_ENTITY, HOME_ASSISTANT_AGENT
+from .const import DATA_COMPONENT, HOME_ASSISTANT_AGENT
 from .entity import ConversationEntity
 from .models import (
     AbstractConversationAgent,
@@ -27,6 +27,9 @@ from .trace import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from .default_agent import DefaultAgent
 
 
 @singleton.singleton("conversation_agent")
@@ -49,8 +52,10 @@ def async_get_agent(
     hass: HomeAssistant, agent_id: str | None = None
 ) -> AbstractConversationAgent | ConversationEntity | None:
     """Get specified agent."""
+    manager = get_agent_manager(hass)
+
     if agent_id is None or agent_id == HOME_ASSISTANT_AGENT:
-        return hass.data[DATA_DEFAULT_ENTITY]
+        return manager.default_agent
 
     if "." in agent_id:
         return hass.data[DATA_COMPONENT].get_entity(agent_id)
@@ -134,6 +139,7 @@ class AgentManager:
         """Initialize the conversation agents."""
         self.hass = hass
         self._agents: dict[str, AbstractConversationAgent] = {}
+        self.default_agent: DefaultAgent | None = None
 
     @callback
     def async_get_agent(self, agent_id: str) -> AbstractConversationAgent | None:
@@ -182,3 +188,7 @@ class AgentManager:
     def async_unset_agent(self, agent_id: str) -> None:
         """Unset the agent."""
         self._agents.pop(agent_id, None)
+
+    async def async_setup_default_agent(self, agent: DefaultAgent) -> None:
+        """Set up the default agent."""
+        self.default_agent = agent

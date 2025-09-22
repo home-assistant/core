@@ -1812,7 +1812,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PM4: 'pm4'>,
     'original_icon': None,
     'original_name': 'SPS30 PM4',
     'platform': 'nam',
@@ -1827,6 +1827,7 @@
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'pm4',
       'friendly_name': 'Nettigo Air Monitor SPS30 PM4',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
