@@ -25,7 +25,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize BSBLan flow."""
-        self.host: str | None = None
+        self.host: str = ""
         self.port: int = DEFAULT_PORT
         self.mac: str | None = None
         self.passkey: str | None = None
@@ -211,16 +211,16 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                 ),
             )
 
-        # Use existing host and port, update auth credentials
-        self.host = existing_entry.data[CONF_HOST]
-        self.port = existing_entry.data[CONF_PORT]
-        self.passkey = user_input.get(CONF_PASSKEY) or existing_entry.data.get(
-            CONF_PASSKEY
-        )
-        self.username = user_input.get(CONF_USERNAME) or existing_entry.data.get(
-            CONF_USERNAME
-        )
-        self.password = user_input.get(CONF_PASSWORD)
+        # Combine existing data with the user's new input for validation.
+        # This correctly handles adding, changing, and clearing credentials.
+        config_data = existing_entry.data.copy()
+        config_data.update(user_input)
+
+        self.host = config_data[CONF_HOST]
+        self.port = config_data[CONF_PORT]
+        self.passkey = config_data.get(CONF_PASSKEY)
+        self.username = config_data.get(CONF_USERNAME)
+        self.password = config_data.get(CONF_PASSWORD)
 
         try:
             await self._get_bsblan_info(raise_on_progress=False, is_reauth=True)
@@ -267,17 +267,9 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors={"base": "cannot_connect"},
             )
 
-        # Update the config entry with new auth data
-        data_updates = {}
-        if self.passkey is not None:
-            data_updates[CONF_PASSKEY] = self.passkey
-        if self.username is not None:
-            data_updates[CONF_USERNAME] = self.username
-        if self.password is not None:
-            data_updates[CONF_PASSWORD] = self.password
-
+        # Update only the fields that were provided by the user
         return self.async_update_reload_and_abort(
-            existing_entry, data_updates=data_updates, reason="reauth_successful"
+            existing_entry, data_updates=user_input, reason="reauth_successful"
         )
 
     @callback

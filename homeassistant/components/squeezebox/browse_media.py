@@ -116,6 +116,7 @@ CONTENT_TYPE_TO_CHILD_TYPE: dict[
     MediaType.APPS: MediaType.APP,
     MediaType.APP: MediaType.TRACK,
     "favorite": None,
+    "track": MediaType.TRACK,
 }
 
 
@@ -157,26 +158,28 @@ class BrowseData:
 
         cmd = ["apps", 0, browse_limit]
         result = await player.async_query(*cmd)
-        for app in result["appss_loop"]:
-            app_cmd = "app-" + app["cmd"]
-            if app_cmd not in self.known_apps_radios:
-                self.add_new_command(app_cmd, "item_id")
-                _LOGGER.debug(
-                    "Adding new command %s to browse data for player %s",
-                    app_cmd,
-                    player.player_id,
-                )
+        if result and result.get("appss_loop"):
+            for app in result["appss_loop"]:
+                app_cmd = "app-" + app["cmd"]
+                if app_cmd not in self.known_apps_radios:
+                    self.add_new_command(app_cmd, "item_id")
+                    _LOGGER.debug(
+                        "Adding new command %s to browse data for player %s",
+                        app_cmd,
+                        player.player_id,
+                    )
         cmd = ["radios", 0, browse_limit]
         result = await player.async_query(*cmd)
-        for app in result["radioss_loop"]:
-            app_cmd = "app-" + app["cmd"]
-            if app_cmd not in self.known_apps_radios:
-                self.add_new_command(app_cmd, "item_id")
-                _LOGGER.debug(
-                    "Adding new command %s to browse data for player %s",
-                    app_cmd,
-                    player.player_id,
-                )
+        if result and result.get("radioss_loop"):
+            for app in result["radioss_loop"]:
+                app_cmd = "app-" + app["cmd"]
+                if app_cmd not in self.known_apps_radios:
+                    self.add_new_command(app_cmd, "item_id")
+                    _LOGGER.debug(
+                        "Adding new command %s to browse data for player %s",
+                        app_cmd,
+                        player.player_id,
+                    )
 
 
 def _build_response_apps_radios_category(
@@ -245,11 +248,16 @@ def _get_item_thumbnail(
     item_type: str | MediaType | None,
     search_type: str,
     internal_request: bool,
+    known_apps_radios: set[str],
 ) -> str | None:
     """Construct path to thumbnail image."""
     item_thumbnail: str | None = None
+
     track_id = item.get("artwork_track_id") or (
-        item.get("id") if item_type == "track" else None
+        item.get("id")
+        if item_type == "track"
+        and search_type not in known_apps_radios | {"apps", "radios"}
+        else None
     )
 
     if track_id:
@@ -354,6 +362,7 @@ async def build_item_response(
                 item_type=item_type,
                 search_type=search_type,
                 internal_request=internal_request,
+                known_apps_radios=browse_data.known_apps_radios,
             )
 
             children.append(child_media)
@@ -420,7 +429,7 @@ async def library_payload(
                 )
             )
 
-    with contextlib.suppress(media_source.BrowseError):
+    with contextlib.suppress(BrowseError):
         browse = await media_source.async_browse_media(
             hass, None, content_filter=media_source_content_filter
         )

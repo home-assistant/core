@@ -1,20 +1,14 @@
 {
-  "endpoint": "https://apigw.tuyaus.com",
-  "terminal_id": "1732306182276g6jQLp",
-  "mqtt_connected": true,
-  "disabled_by": null,
-  "disabled_polling": false,
-  "id": "eb14fd1dd93ca2ea34vpin",
   "name": "AQI",
   "category": "co2bj",
   "product_id": "yrr3eiyiacm31ski",
   "product_name": "AIR_DETECTOR ",
   "online": true,
   "sub": false,
-  "time_zone": "+07:00",
-  "active_time": "2025-01-02T05:14:50+00:00",
-  "create_time": "2025-01-02T05:14:50+00:00",
-  "update_time": "2025-01-02T05:14:50+00:00",
+  "time_zone": "+02:00",
+  "active_time": "2025-08-31T07:43:45+00:00",
+  "create_time": "2025-08-31T07:43:45+00:00",
+  "update_time": "2025-09-05T07:29:11+00:00",
   "function": {
     "alarm_volume": {
       "type": "Enum",
@@ -44,6 +38,62 @@
         "max": 100,
         "scale": 0,
         "step": 1
+      }
+    },
+    "alarm_ringtone": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "ringtone_1",
+          "ringtone_2",
+          "ringtone_3",
+          "ringtone_4",
+          "ringtone_5"
+        ]
+      }
+    },
+    "maxco2_set": {
+      "type": "Integer",
+      "value": {
+        "max": 2000,
+        "min": 800,
+        "scale": 0,
+        "step": 100,
+        "unit": "ppm"
+      }
+    },
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    },
+    "pm25_set": {
+      "type": "Integer",
+      "value": {
+        "max": 75,
+        "min": 15,
+        "scale": 0,
+        "step": 5,
+        "unit": "\u03bcg/m3"
+      }
+    },
+    "check_time": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "screen_sleep": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "screen_sleep_time": {
+      "type": "Integer",
+      "value": {
+        "max": 300,
+        "min": 10,
+        "scale": 0,
+        "step": 10,
+        "unit": "s"
       }
     }
   },
@@ -153,21 +203,82 @@
         "scale": 3,
         "step": 1
       }
+    },
+    "battery_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["normal", "charge"]
+      }
+    },
+    "pm10": {
+      "type": "Integer",
+      "value": {
+        "max": 1000,
+        "min": 0,
+        "scale": 0,
+        "step": 1,
+        "unit": "ug/m3"
+      }
+    },
+    "pm25": {
+      "type": "Integer",
+      "value": {
+        "max": 1000,
+        "min": 0,
+        "scale": 0,
+        "step": 1,
+        "unit": "ug/m3"
+      }
+    },
+    "humidity_current": {
+      "type": "Integer",
+      "value": {
+        "max": 100,
+        "min": 0,
+        "scale": 0,
+        "step": 1,
+        "unit": ""
+      }
+    },
+    "air_quality": {
+      "type": "Enum",
+      "value": {
+        "range": ["great", "mild", "good", "medium", "severe"]
+      }
+    },
+    "pm25_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["alarm", "normal"]
+      }
     }
   },
   "status": {
     "co2_state": "normal",
-    "co2_value": 541,
-    "alarm_volume": "low",
+    "co2_value": 419,
+    "alarm_volume": "mute",
     "alarm_time": 1,
     "alarm_switch": false,
     "battery_percentage": 100,
-    "alarm_bright": 98,
-    "temp_current": 26,
-    "humidity_value": 53,
-    "pm25_value": 17,
-    "voc_value": 18,
-    "ch2o_value": 2
+    "alarm_bright": 0,
+    "temp_current": 24,
+    "humidity_value": 54,
+    "pm25_value": 7,
+    "voc_value": 71,
+    "ch2o_value": 6,
+    "alarm_ringtone": "ringtone_1",
+    "battery_state": "normal",
+    "maxco2_set": 1500,
+    "temp_unit_convert": "c",
+    "pm10": 8,
+    "pm25": 5,
+    "humidity_current": 54,
+    "air_quality": "great",
+    "pm25_set": 40,
+    "pm25_state": "normal",
+    "check_time": false,
+    "screen_sleep": true,
+    "screen_sleep_time": 180
   },
   "set_up": true,
   "support_local": true

@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaus.com",
-  "terminal_id": "1742695000703Ozq34h",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "eb0c772dabbb19d653ssi5",
   "name": "HVAC Meter",
   "category": "cz",
   "product_id": "2jxesipczks0kdct",

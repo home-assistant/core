@@ -866,6 +866,164 @@ async def test_reauth_flow_partial_credentials_update(
     assert mock_config_entry.data[CONF_PORT] == 80
 
 
+async def test_reauth_flow_preserves_non_credential_fields(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test reauth flow preserves non-credential fields using data_updates."""
+    # Create a config entry with additional custom fields that should be preserved
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "old_key",
+            CONF_USERNAME: "old_user",
+            CONF_PASSWORD: "old_pass",
+            # Add some custom fields that should be preserved
+            "custom_field": "should_be_preserved",
+            "another_field": 42,
+        },
+        unique_id="00:80:41:19:69:90",
+    )
+    entry.add_to_hass(hass)
+
+    # Start reauth flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+    )
+
+    # Submit with only new credentials
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_PASSKEY: "new_key",
+            CONF_USERNAME: "new_user",
+            CONF_PASSWORD: "new_pass",
+        },
+    )
+
+    _assert_abort_result(result, "reauth_successful")
+
+    # Verify that only the provided fields were updated, others preserved
+    assert entry.data[CONF_PASSKEY] == "new_key"  # Updated
+    assert entry.data[CONF_USERNAME] == "new_user"  # Updated
+    assert entry.data[CONF_PASSWORD] == "new_pass"  # Updated
+
+    # These fields should remain unchanged (preserved by data_updates)
+    assert entry.data[CONF_HOST] == "127.0.0.1"
+    assert entry.data[CONF_PORT] == 80
+    assert entry.data["custom_field"] == "should_be_preserved"
+    assert entry.data["another_field"] == 42
+
+
+async def test_reauth_flow_clears_credentials_with_empty_strings(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test reauth flow can clear credentials by providing empty strings."""
+    # Create a config entry with existing credentials
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "existing_key",
+            CONF_USERNAME: "existing_user",
+            CONF_PASSWORD: "existing_pass",
+        },
+        unique_id="00:80:41:19:69:90",
+    )
+    entry.add_to_hass(hass)
+
+    # Start reauth flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+    )
+
+    # Submit with empty strings to clear credentials
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_PASSKEY: "",  # Clear passkey
+            CONF_USERNAME: "",  # Clear username
+            CONF_PASSWORD: "",  # Clear password
+        },
+    )
+
+    _assert_abort_result(result, "reauth_successful")
+
+    # Verify that credentials were cleared (set to empty strings)
+    assert entry.data[CONF_PASSKEY] == ""
+    assert entry.data[CONF_USERNAME] == ""
+    assert entry.data[CONF_PASSWORD] == ""
+
+    # Host and port should remain unchanged
+    assert entry.data[CONF_HOST] == "127.0.0.1"
+    assert entry.data[CONF_PORT] == 80
+
+
+async def test_reauth_flow_partial_clear_credentials(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test reauth flow can partially clear some credentials while updating others."""
+    # Create a config entry with existing credentials
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 80,
+            CONF_PASSKEY: "existing_key",
+            CONF_USERNAME: "existing_user",
+            CONF_PASSWORD: "existing_pass",
+        },
+        unique_id="00:80:41:19:69:90",
+    )
+    entry.add_to_hass(hass)
+
+    # Start reauth flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+    )
+
+    # Submit with mix of clearing and updating credentials
+    result = await _configure_flow(
+        hass,
+        result["flow_id"],
+        {
+            CONF_PASSKEY: "",  # Clear passkey
+            CONF_USERNAME: "new_user",  # Update username
+            CONF_PASSWORD: "",  # Clear password
+        },
+    )
+
+    _assert_abort_result(result, "reauth_successful")
+
+    # Verify mixed update: some cleared, some updated, some preserved
+    assert entry.data[CONF_PASSKEY] == ""  # Cleared
+    assert entry.data[CONF_USERNAME] == "new_user"  # Updated
+    assert entry.data[CONF_PASSWORD] == ""  # Cleared
+
+    # Host and port should remain unchanged
+    assert entry.data[CONF_HOST] == "127.0.0.1"
+    assert entry.data[CONF_PORT] == 80
+
+
 async def test_zeroconf_discovery_auth_error_during_confirm(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,

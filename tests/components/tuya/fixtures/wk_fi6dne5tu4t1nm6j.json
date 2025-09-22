@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "xxxxxxxxxxxxxxxxxxx",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bfb45cb8a9452fba66lexg",
   "name": "WiFi Smart Gas Boiler Thermostat ",
   "category": "wk",
   "product_id": "fi6dne5tu4t1nm6j",
