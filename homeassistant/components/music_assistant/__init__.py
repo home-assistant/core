@@ -146,7 +146,7 @@ async def async_setup_entry(  # noqa: C901
             )
 
     # register listener for new players
-    async def handle_player_added(event: MassEvent) -> None:
+    def handle_player_added(event: MassEvent) -> None:
         """Handle Mass Player Added event."""
         if TYPE_CHECKING:
             assert event.object_id is not None
@@ -168,7 +168,7 @@ async def async_setup_entry(  # noqa: C901
         add_player(player)
 
     # register listener for removed players
-    async def handle_player_removed(event: MassEvent) -> None:
+    def handle_player_removed(event: MassEvent) -> None:
         """Handle Mass Player Removed event."""
         if event.object_id is None:
             return
@@ -179,9 +179,9 @@ async def async_setup_entry(  # noqa: C901
     )
 
     # register listener for player configs (to handle toggling of the 'expose_to_ha' setting)
-    async def handle_player_config_updated(event: MassEvent) -> None:
+    def handle_player_config_updated(event: MassEvent) -> None:
         """Handle Mass Player Config Updated event."""
-        if event.object_id is None:
+        if event.object_id is None or not event.data:
             return
         player_id = event.object_id
         player_config = PlayerConfig.from_dict(event.data)
