@@ -107,7 +107,7 @@ from .const import (
     DEFAULT_SCALE,
     DataType,
 )
-from .entity import BaseStructPlatform
+from .entity import ModbusStructEntity
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -137,7 +137,7 @@ async def async_setup_platform(
     async_add_entities(ModbusThermostat(hass, hub, config) for config in climates)
 
 
-class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
+class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
     """Representation of a Modbus Thermostat."""
 
     _attr_supported_features = (

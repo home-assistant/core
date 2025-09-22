@@ -26,6 +26,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import get_hub
+
 from .const import (
     _LOGGER,
     CONF_SCALE,
@@ -34,7 +35,8 @@ from .const import (
     DEFAULT_OFFSET,
     DEFAULT_SCALE,
 )
-from .entity import BaseStructPlatform
+
+from .entity import ModbusStructEntity
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -64,7 +66,7 @@ async def async_setup_platform(
     async_add_entities(sensors)
 
 
-class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
+class ModbusRegisterSensor(ModbusStructEntity, RestoreSensor, SensorEntity):
     """Modbus register sensor."""
 
     def __init__(
