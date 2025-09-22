@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Select location",
+        "description": "Choose a location in Lithuania for weather forecasts.",
+        "data": {
+          "place_code": "Location",
+          "name": "Name"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Meteo.lt API",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "Location is already configured",
+      "no_places_found": "No locations found from the API"
+    }
+  }
+}

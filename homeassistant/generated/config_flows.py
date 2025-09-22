@@ -385,6 +385,7 @@ FLOWS = {
         "met",
         "met_eireann",
         "meteo_france",
+        "meteo_lt",
         "meteoclimatic",
         "metoffice",
         "microbees",
