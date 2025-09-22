@@ -23,11 +23,8 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for AccuWeather."""
 
     VERSION = 1
-
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._latitude: float | None = None
-        self._longitude: float | None = None
+    _latitude: float | None = None
+    _longitude: float | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
