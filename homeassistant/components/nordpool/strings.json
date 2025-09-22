@@ -157,6 +157,12 @@
     },
     "connection_error": {
       "message": "There was a connection error connecting to the API. Try again later."
+    },
+    "no_day_data": {
+      "message": "Data for current day is missing"
+    },
+    "could_not_fetch_data": {
+      "message": "Data could not be retrieved: {error}"
     }
   }
 }
