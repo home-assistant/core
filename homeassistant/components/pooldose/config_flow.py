@@ -72,17 +72,18 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
         if not serial_number:
             return self.async_abort(reason="no_serial_number")
 
-        await self.async_set_unique_id(serial_number)
+        # If an existing entry is found
+        existing_entry = await self.async_set_unique_id(serial_number)
+        if existing_entry:
+            # Only update the MAC if it's not already set
+            if CONF_MAC not in existing_entry.data:
+                self.hass.config_entries.async_update_entry(
+                    existing_entry,
+                    data={**existing_entry.data, CONF_MAC: discovery_info.macaddress},
+                )
+            self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
 
-        # Conditionally update IP and MAC address and abort if entry exists
-        self._abort_if_unique_id_configured(
-            updates={
-                CONF_HOST: discovery_info.ip,
-                CONF_MAC: discovery_info.macaddress,
-            }
-        )
-
-        # Continue with new device flow
+        # Else: Continue with new flow
         self._discovered_ip = discovery_info.ip
         self._discovered_mac = discovery_info.macaddress
         return self.async_show_form(
