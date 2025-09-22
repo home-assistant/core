@@ -152,6 +152,8 @@ PUMP_CONTROL_MODE_MAP = {
     clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kUnknownEnumValue: None,
 }
 
+TEMPERATURE_SCALING_FACTOR = 100
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -1148,7 +1150,7 @@ DISCOVERY_SCHEMAS = [
             translation_key="outdoor_temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
-            device_to_ha=lambda x: x / 100 if x > 0 else None,
+            device_to_ha=lambda x: x / TEMPERATURE_SCALING_FACTOR if x > 0 else None,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
