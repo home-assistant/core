@@ -85,6 +85,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: CloudflareConfigEntry) -
 
     hass.services.async_register(DOMAIN, SERVICE_UPDATE_RECORDS, update_records_service)
 
+    hass.async_create_task(update_records(datetime.now()))
+
     return True
 
 
