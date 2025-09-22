@@ -33,6 +33,8 @@ from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
+TEMPERATURE_SCALING_FACTOR = 100
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -412,8 +414,10 @@ DISCOVERY_SCHEMAS = [
             name=None,
             translation_key="unoccupied_heating_temperature_setpoint",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            device_to_ha=lambda x: None if x is None else x / 100,
-            ha_to_device=lambda x: round(x * 100),
+            device_to_ha=lambda x: None
+            if x is None
+            else x / TEMPERATURE_SCALING_FACTOR,
+            ha_to_device=lambda x: round(x * TEMPERATURE_SCALING_FACTOR),
             mode=NumberMode.SLIDER,
         ),
         entity_class=MatterNumber,
