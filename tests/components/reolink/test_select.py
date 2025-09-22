@@ -201,6 +201,7 @@ async def test_chime_select(
 
     # Test unavailable
     reolink_chime.event_info = {}
+    reolink_chime.update_enums()
     freezer.tick(DEVICE_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
