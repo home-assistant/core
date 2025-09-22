@@ -975,15 +975,19 @@ def progress_step(
             step_id = func.__name__.replace("async_step_", "")
             action = progress_action or step_id
 
+            # Initialize decorated progress tasks dict if it doesn't exist
+            if not hasattr(self, "_decorated_progress_tasks"):
+                self._decorated_progress_tasks = {}
+
             # Check if we have a progress task running
-            progress_task = getattr(self, f"_{step_id}_progress_task", None)
+            progress_task = self._decorated_progress_tasks.get(step_id)
 
             if progress_task is None:
                 # First call - create and start the progress task
                 progress_task = self.hass.async_create_task(
                     func(self, user_input), f"Progress step {step_id}"
                 )
-                setattr(self, f"_{step_id}_progress_task", progress_task)
+                self._decorated_progress_tasks[step_id] = progress_task
 
                 if not progress_task.done():
                     # Handle description placeholders
@@ -1010,7 +1014,7 @@ def progress_step(
                 return self.async_show_progress_done(next_step_id="abort")
             finally:
                 # Clean up task reference
-                setattr(self, f"_{step_id}_progress_task", None)
+                self._decorated_progress_tasks.pop(step_id, None)
 
             return self.async_show_progress_done(next_step_id=next_step_id)
 
