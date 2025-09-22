@@ -73,7 +73,7 @@ class ReolinkChimeSelectEntityDescription(
 
     get_options: list[str]
     method: Callable[[Chime, str], Any]
-    value: Callable[[Chime], str]
+    value: Callable[[Chime], str | None]
 
 
 def _get_quick_reply_id(api: Host, ch: int, mess: str) -> int:
@@ -310,7 +310,7 @@ CHIME_SELECT_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         supported=lambda chime: "md" in chime.chime_event_types,
         get_options=[method.name for method in ChimeToneEnum],
-        value=lambda chime: ChimeToneEnum(chime.tone("md")).name,
+        value=lambda chime: chime.tone_name("md"),
         method=lambda chime, name: chime.set_tone("md", ChimeToneEnum[name].value),
     ),
     ReolinkChimeSelectEntityDescription(
@@ -320,7 +320,7 @@ CHIME_SELECT_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         get_options=[method.name for method in ChimeToneEnum],
         supported=lambda chime: "people" in chime.chime_event_types,
-        value=lambda chime: ChimeToneEnum(chime.tone("people")).name,
+        value=lambda chime: chime.tone_name("people"),
         method=lambda chime, name: chime.set_tone("people", ChimeToneEnum[name].value),
     ),
     ReolinkChimeSelectEntityDescription(
@@ -330,7 +330,7 @@ CHIME_SELECT_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         get_options=[method.name for method in ChimeToneEnum],
         supported=lambda chime: "vehicle" in chime.chime_event_types,
-        value=lambda chime: ChimeToneEnum(chime.tone("vehicle")).name,
+        value=lambda chime: chime.tone_name("vehicle"),
         method=lambda chime, name: chime.set_tone("vehicle", ChimeToneEnum[name].value),
     ),
     ReolinkChimeSelectEntityDescription(
@@ -340,7 +340,7 @@ CHIME_SELECT_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         get_options=[method.name for method in ChimeToneEnum],
         supported=lambda chime: "visitor" in chime.chime_event_types,
-        value=lambda chime: ChimeToneEnum(chime.tone("visitor")).name,
+        value=lambda chime: chime.tone_name("visitor"),
         method=lambda chime, name: chime.set_tone("visitor", ChimeToneEnum[name].value),
     ),
     ReolinkChimeSelectEntityDescription(
@@ -350,7 +350,7 @@ CHIME_SELECT_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         get_options=[method.name for method in ChimeToneEnum],
         supported=lambda chime: "package" in chime.chime_event_types,
-        value=lambda chime: ChimeToneEnum(chime.tone("package")).name,
+        value=lambda chime: chime.tone_name("package"),
         method=lambda chime, name: chime.set_tone("package", ChimeToneEnum[name].value),
     ),
 )
@@ -476,22 +476,12 @@ class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
         """Initialize Reolink select entity for a chime."""
         self.entity_description = entity_description
         super().__init__(reolink_data, chime)
-        self._log_error = True
         self._attr_options = entity_description.get_options
 
     @property
     def current_option(self) -> str | None:
         """Return the current option."""
-        try:
-            option = self.entity_description.value(self._chime)
-        except (ValueError, KeyError):
-            if self._log_error:
-                _LOGGER.exception("Reolink '%s' has an unknown value", self.name)
-                self._log_error = False
-            return None
-
-        self._log_error = True
-        return option
+        return self.entity_description.value(self._chime)
 
     @raise_translated_error
     async def async_select_option(self, option: str) -> None:
@@ -514,22 +504,12 @@ class ReolinkHostChimeSelectEntity(ReolinkHostChimeCoordinatorEntity, SelectEnti
         """Initialize Reolink select entity for a chime."""
         self.entity_description = entity_description
         super().__init__(reolink_data, chime)
-        self._log_error = True
         self._attr_options = entity_description.get_options
 
     @property
     def current_option(self) -> str | None:
         """Return the current option."""
-        try:
-            option = self.entity_description.value(self._chime)
-        except (ValueError, KeyError):
-            if self._log_error:
-                _LOGGER.exception("Reolink '%s' has an unknown value", self.name)
-                self._log_error = False
-            return None
-
-        self._log_error = True
-        return option
+        return self.entity_description.value(self._chime)
 
     @raise_translated_error
     async def async_select_option(self, option: str) -> None:
