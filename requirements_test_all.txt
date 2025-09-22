@@ -1292,7 +1292,7 @@ myuplink==0.7.0
 ndms2-client==0.1.2
 
 # homeassistant.components.ness_alarm
-nessclient==1.2.0
+nessclient==1.3.1
 
 # homeassistant.components.nmap_tracker
 netmap==0.7.0.2
