@@ -208,7 +208,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             self.boot_time = dt_util.utc_from_timestamp(self._psutil.boot_time())
             _LOGGER.debug("boot time: %s", self.boot_time)
 
-        selected_processes: list[str] = []
+        selected_processes: list[Process] = []
         if self.update_subscribers[("processes", "")] or self._initial_update:
             processes = self._psutil.process_iter()
             _LOGGER.debug("processes: %s", processes)
