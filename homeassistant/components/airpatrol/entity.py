@@ -41,4 +41,4 @@ class AirPatrolEntity(CoordinatorEntity[AirPatrolDataUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self._unit_id in self.device_data
+        return super().available and bool(self.device_data)
