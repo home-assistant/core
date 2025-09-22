@@ -526,9 +526,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self._host is not None
         assert self._device_name is not None
         if self.source == SOURCE_RECONFIGURE:
-            reason = "reconfigure_wrong_device"
+            reason = "reconfigure_unique_id_changed"
         else:
-            reason = "reauth_wrong_device"
+            reason = "reauth_unique_id_changed"
         return self.async_abort(
             reason=reason,
             description_placeholders={
