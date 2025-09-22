@@ -53,6 +53,8 @@ class AccuWeatherObservationDataUpdateCoordinator(
 ):
     """Class to manage fetching AccuWeather data API."""
 
+    config_entry: AccuWeatherConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -104,6 +106,8 @@ class AccuWeatherForecastDataUpdateCoordinator(
     TimestampDataUpdateCoordinator[list[dict[str, Any]]]
 ):
     """Base class for AccuWeather forecast."""
+
+    config_entry: AccuWeatherConfigEntry
 
     def __init__(
         self,
