@@ -60,11 +60,11 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
         self.entity_description = entity_description
         self.platform_name = platform_name
         self._attr_unique_id = f"{serial_number}_{entity_description.key}"
-        mac = None
-        if coordinator.config_entry and CONF_MAC in coordinator.config_entry.data:
-            # Since MAC address is only available during dhcp discovery, it may not be set when entity is created manually
-            mac = coordinator.config_entry.data[CONF_MAC]
-        self._attr_device_info = device_info(device_properties, serial_number, mac)
+        self._attr_device_info = device_info(
+            device_properties,
+            serial_number,
+            coordinator.config_entry.data.get(CONF_MAC),
+        )
 
     @property
     def available(self) -> bool:
