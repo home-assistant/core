@@ -1198,16 +1198,17 @@ async def async_ensure_addon_running(
     lr_s2_authenticated_key: str = entry.data.get(CONF_LR_S2_AUTHENTICATED_KEY, "")
     addon_state = addon_info.state
     addon_config = {
-        CONF_ADDON_DEVICE: usb_path,
         CONF_ADDON_S0_LEGACY_KEY: s0_legacy_key,
         CONF_ADDON_S2_ACCESS_CONTROL_KEY: s2_access_control_key,
         CONF_ADDON_S2_AUTHENTICATED_KEY: s2_authenticated_key,
         CONF_ADDON_S2_UNAUTHENTICATED_KEY: s2_unauthenticated_key,
     }
+    if usb_path is not None:
+        addon_config[CONF_ADDON_DEVICE] = usb_path
     if addon_has_lr:
         addon_config[CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY] = lr_s2_access_control_key
         addon_config[CONF_ADDON_LR_S2_AUTHENTICATED_KEY] = lr_s2_authenticated_key
-    if addon_has_esphome:
+    if addon_has_esphome and socket_path is not None:
         addon_config[CONF_ADDON_SOCKET] = socket_path
 
     if addon_state == AddonState.NOT_INSTALLED:
@@ -1225,7 +1226,7 @@ async def async_ensure_addon_running(
         raise ConfigEntryNotReady
 
     addon_options = addon_info.options
-    addon_device = addon_options[CONF_ADDON_DEVICE]
+    addon_device = addon_options.get(CONF_ADDON_DEVICE)
     # s0_legacy_key was saved as network_key before s2 was added.
     addon_s0_legacy_key = addon_options.get(CONF_ADDON_S0_LEGACY_KEY, "")
     if not addon_s0_legacy_key:
