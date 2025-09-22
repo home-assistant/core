@@ -193,7 +193,7 @@
         "name": "Altitude above sea level"
       },
       "cook_time": {
-        "name": "Cook time"
+        "name": "Cooking time"
       },
       "pump_setpoint": {
         "name": "Setpoint"
@@ -204,8 +204,8 @@
       "temperature_setpoint": {
         "name": "Temperature setpoint"
       },
-      "pir_occupied_to_unoccupied_delay": {
-        "name": "Occupied to unoccupied delay"
+      "hold_time": {
+        "name": "Hold time"
       },
       "auto_relock_timer": {
         "name": "Autorelock time"
@@ -434,6 +434,9 @@
       },
       "evse_soc": {
         "name": "State of charge"
+      },
+      "nitrogen_dioxide": {
+        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
       },
       "pump_control_mode": {
         "name": "Control mode",

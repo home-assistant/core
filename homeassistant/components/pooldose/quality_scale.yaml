@@ -17,7 +17,7 @@ rules:
   docs-removal-instructions: done
   entity-event-setup:
     status: exempt
-    comment: This integration does not subscribe to any events.
+    comment: This integration does not explicitly subscribe to any events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -35,9 +35,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates:
-    status: exempt
-    comment: This integration uses a central coordinator to manage updates, which is not compatible with parallel updates.
+  parallel-updates: todo
   reauthentication-flow:
     status: exempt
     comment: This integration does not need authentication for the local API.
@@ -45,28 +43,16 @@ rules:
 
   # Gold
   devices: done
-  diagnostics:
-    status: exempt
-    comment: This integration does not provide any diagnostic information, but can provide detailed logs if needed.
-  discovery-update-info:
-    status: exempt
-    comment: This integration does not support discovery features.
-  discovery:
-    status: exempt
-    comment: This integration does not support discovery updates since the PoolDose device does not support standard discovery methods.
+  diagnostics: todo
+  discovery-update-info: done
+  discovery: done
   docs-data-update: done
-  docs-examples:
-    status: exempt
-    comment: This integration does not provide any examples, as it is a simple integration that does not require complex configurations.
-  docs-known-limitations:
-    status: exempt
-    comment: This integration has known and documented limitations in frequency of data polling and stability of the connection to the device.
+  docs-examples: todo
+  docs-known-limitations: todo
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
-  docs-use-cases:
-    status: exempt
-    comment: This integration does not provide use cases, as it is a simple integration that does not require complex configurations.
+  docs-use-cases: todo
   dynamic-devices:
     status: exempt
     comment: This integration does not support dynamic devices, as it is designed for a single PoolDose device.
@@ -76,9 +62,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: exempt
-    comment: This integration does not support reconfiguration flows, as it is designed for a single PoolDose device with a fixed configuration.
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: This integration does not provide repair issues, as it is designed for a single PoolDose device with a fixed configuration.
@@ -88,7 +72,5 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession: done
-  strict-typing:
-    status: exempt
-    comment: Dependency python-pooldose is not strictly typed and does not include a py.typed file.
+  inject-websession: todo
+  strict-typing: todo

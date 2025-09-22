@@ -497,16 +497,18 @@ class BayesianBinarySensor(BinarySensorEntity):
                 _LOGGER.debug(
                     (
                         "Observation for entity '%s' returned None, it will not be used"
-                        " for Bayesian updating"
+                        " for updating Bayesian sensor '%s'"
                     ),
                     observation.entity_id,
+                    self.entity_id,
                 )
                 continue
             _LOGGER.debug(
                 (
                     "Observation for template entity returned None rather than a valid"
-                    " boolean, it will not be used for Bayesian updating"
+                    " boolean, it will not be used for updating Bayesian sensor '%s'"
                 ),
+                self.entity_id,
             )
         # the prior has been updated and is now the posterior
         return prior
@@ -555,10 +557,6 @@ class BayesianBinarySensor(BinarySensorEntity):
         for observation in self._observations:
             if observation.value_template is None:
                 continue
-            if isinstance(observation.value_template, str):
-                observation.value_template = Template(
-                    observation.value_template, hass=self.hass
-                )
             template = observation.value_template
             observations_by_template.setdefault(template, []).append(observation)
 

@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import APCUPSdConfigEntry, APCUPSdCoordinator
 
-PLATFORMS: Final = (Platform.BINARY_SENSOR, Platform.SENSOR)
+PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(

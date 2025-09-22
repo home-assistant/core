@@ -12,6 +12,7 @@ from typing import Any, cast
 from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
 from aiohttp import ClientSession
 from asusrouter import AsusRouter, AsusRouterError
+from asusrouter.config import ARConfigKey
 from asusrouter.modules.client import AsusClient
 from asusrouter.modules.data import AsusData
 from asusrouter.modules.homeassistant import convert_to_ha_data, convert_to_ha_sensors
@@ -119,10 +120,18 @@ class AsusWrtBridge(ABC):
 
     def __init__(self, host: str) -> None:
         """Initialize Bridge."""
+        self._configuration_url = f"http://{host}"
         self._host = host
         self._firmware: str | None = None
         self._label_mac: str | None = None
         self._model: str | None = None
+        self._model_id: str | None = None
+        self._serial_number: str | None = None
+
+    @property
+    def configuration_url(self) -> str:
+        """Return configuration URL."""
+        return self._configuration_url
 
     @property
     def host(self) -> str:
@@ -143,6 +152,16 @@ class AsusWrtBridge(ABC):
     def model(self) -> str | None:
         """Return model information."""
         return self._model
+
+    @property
+    def model_id(self) -> str | None:
+        """Return model_id information."""
+        return self._model_id
+
+    @property
+    def serial_number(self) -> str | None:
+        """Return serial number information."""
+        return self._serial_number
 
     @property
     @abstractmethod
@@ -314,10 +333,14 @@ class AsusWrtHttpBridge(AsusWrtBridge):
     def __init__(self, conf: dict[str, Any], session: ClientSession) -> None:
         """Initialize Bridge that use HTTP library."""
         super().__init__(conf[CONF_HOST])
-        self._api = self._get_api(conf, session)
+        # Get API configuration
+        config = self._get_api_config()
+        self._api = self._get_api(conf, session, config)
 
     @staticmethod
-    def _get_api(conf: dict[str, Any], session: ClientSession) -> AsusRouter:
+    def _get_api(
+        conf: dict[str, Any], session: ClientSession, config: dict[ARConfigKey, Any]
+    ) -> AsusRouter:
         """Get the AsusRouter API."""
         return AsusRouter(
             hostname=conf[CONF_HOST],
@@ -326,7 +349,18 @@ class AsusWrtHttpBridge(AsusWrtBridge):
             use_ssl=conf[CONF_PROTOCOL] == PROTOCOL_HTTPS,
             port=conf.get(CONF_PORT),
             session=session,
+            config=config,
         )
+
+    def _get_api_config(self) -> dict[ARConfigKey, Any]:
+        """Get configuration for the API."""
+        return {
+            # Enable automatic temperature data correction in the library
+            ARConfigKey.OPTIMISTIC_TEMPERATURE: True,
+            # Disable `warning`-level log message when temperature
+            # is corrected by setting it to already notified.
+            ARConfigKey.NOTIFIED_OPTIMISTIC_TEMPERATURE: True,
+        }
 
     @property
     def is_connected(self) -> bool:
@@ -343,8 +377,11 @@ class AsusWrtHttpBridge(AsusWrtBridge):
         # get main router properties
         if mac := _identity.mac:
             self._label_mac = format_mac(mac)
+        self._configuration_url = self._api.webpanel
         self._firmware = str(_identity.firmware)
         self._model = _identity.model
+        self._model_id = _identity.product_id
+        self._serial_number = _identity.serial
 
     async def async_disconnect(self) -> None:
         """Disconnect to the device."""
