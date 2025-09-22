@@ -26,7 +26,6 @@ from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceEntry,
     DeviceRegistry,
-    format_mac,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -152,7 +151,7 @@ def register_device(
     """Register Shelly device."""
     return device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(CONNECTION_NETWORK_MAC, format_mac(MOCK_MAC))},
+        connections={(CONNECTION_NETWORK_MAC, MOCK_MAC)},
     )
 
 
@@ -163,7 +162,7 @@ def register_sub_device(
     return device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, f"{MOCK_MAC}-{unique_id}")},
-        via_device=(DOMAIN, format_mac(MOCK_MAC)),
+        via_device=(DOMAIN, MOCK_MAC),
     )
 
 

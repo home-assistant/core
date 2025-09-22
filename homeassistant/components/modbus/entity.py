@@ -68,7 +68,7 @@ from .const import (
 from .modbus import ModbusHub
 
 
-class BasePlatform(Entity):
+class ModbusBaseEntity(Entity):
     """Base for readonly platforms."""
 
     _value: str | None = None
@@ -154,7 +154,7 @@ class BasePlatform(Entity):
         )
 
 
-class BaseStructPlatform(BasePlatform, RestoreEntity):
+class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
     """Base class representing a sensor/climate."""
 
     def __init__(self, hass: HomeAssistant, hub: ModbusHub, config: dict) -> None:
@@ -261,7 +261,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         return self.__process_raw_value(val[0])
 
 
-class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
+class ModbusToggleEntity(ModbusBaseEntity, ToggleEntity, RestoreEntity):
     """Base class representing a Modbus switch."""
 
     def __init__(self, hass: HomeAssistant, hub: ModbusHub, config: dict) -> None:
