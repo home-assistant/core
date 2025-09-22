@@ -1150,7 +1150,7 @@ DISCOVERY_SCHEMAS = [
             translation_key="outdoor_temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
-            device_to_ha=lambda x: x / TEMPERATURE_SCALING_FACTOR if x > 0 else None,
+            device_to_ha=lambda x: round(x / TEMPERATURE_SCALING_FACTOR, 1) if x > 0 else None,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
