@@ -12,10 +12,13 @@ from psutil import Process
 from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
 import psutil_home_assistant as ha_psutil
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util import dt as dt_util
+
+from .const import CONF_PROCESS, PROCESS_ERRORS
 
 if TYPE_CHECKING:
     from . import SystemMonitorConfigEntry
@@ -82,6 +85,8 @@ class VirtualMemory(NamedTuple):
 
 class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
     """A System monitor Data Update Coordinator."""
+
+    config_entry: SystemMonitorConfigEntry
 
     def __init__(
         self,
@@ -203,11 +208,30 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             self.boot_time = dt_util.utc_from_timestamp(self._psutil.boot_time())
             _LOGGER.debug("boot time: %s", self.boot_time)
 
-        processes = None
+        selected_processes: list[str] = []
         if self.update_subscribers[("processes", "")] or self._initial_update:
             processes = self._psutil.process_iter()
             _LOGGER.debug("processes: %s", processes)
-            processes = list(processes)
+            user_options: list[str] = self.config_entry.options.get(
+                BINARY_SENSOR_DOMAIN, {}
+            ).get(CONF_PROCESS, [])
+            for process in processes:
+                try:
+                    if process.name() in user_options:
+                        selected_processes.append(process)
+                except PROCESS_ERRORS as err:
+                    if not hasattr(err, "pid") or not hasattr(err, "name"):
+                        _LOGGER.warning(
+                            "Failed to load process: %s",
+                            str(err),
+                        )
+                    else:
+                        _LOGGER.warning(
+                            "Failed to load process with ID: %s, old name: %s",
+                            err.pid,
+                            err.name,
+                        )
+                    continue
 
         temps: dict[str, list[shwtemp]] = {}
         if self.update_subscribers[("temperatures", "")] or self._initial_update:
@@ -224,6 +248,6 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             "io_counters": io_counters,
             "addresses": addresses,
             "boot_time": self.boot_time,
-            "processes": processes,
+            "processes": selected_processes,
             "temperatures": temps,
         }
