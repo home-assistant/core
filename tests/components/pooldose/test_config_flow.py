@@ -256,7 +256,8 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "PoolDose TEST123456789"
-    assert result["data"] == {CONF_HOST: "192.168.0.123"}
+    assert result["data"][CONF_HOST] == "192.168.0.123"
+    assert result["data"]["mac"] == "a4e57caabbcc"
     assert result["result"].unique_id == "TEST123456789"
 
 
@@ -354,4 +355,6 @@ async def test_dhcp_updates_host(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
+    # Verify host was updated and MAC was added in the config entry
     assert mock_config_entry.data[CONF_HOST] == "192.168.0.123"
+    assert mock_config_entry.data["mac"] == "a4e57caabbcc"
