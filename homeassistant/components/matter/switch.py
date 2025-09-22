@@ -177,7 +177,6 @@ DISCOVERY_SCHEMAS = [
             key="MatterPlug",
             device_class=SwitchDeviceClass.OUTLET,
             name=None,
-            default_label_list=("name",),
         ),
         entity_class=MatterSwitch,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
