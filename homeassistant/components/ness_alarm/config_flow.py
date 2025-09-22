@@ -114,8 +114,8 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # Validate the connection and fetch model/version
                 info = await validate_input(self.hass, user_input)
 
-                # Use model + version + port for uniqueness
-                unique_id = f"{info['model']}_{info['version']}_{user_input.get(CONF_PORT, DEFAULT_PORT)}"
+                # Use model + version for uniqueness
+                unique_id = f"{info['model']}_{info['version']}_{DOMAIN}"
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
 
@@ -184,7 +184,7 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, data)
-            unique_id = f"{info['model']}_{info['version']}_{data[CONF_PORT]}"
+            unique_id = f"{info['model']}_{info['version']}_{DOMAIN}"
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
