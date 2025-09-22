@@ -157,6 +157,8 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             scan_interval = int(scan_interval)
 
+        zones = import_config.get(CONF_ZONES, [])
+
         data = {
             CONF_HOST: import_config[CONF_HOST],
             CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
