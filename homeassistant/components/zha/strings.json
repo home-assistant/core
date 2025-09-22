@@ -104,12 +104,13 @@
       "invalid_backup_json": "Invalid backup JSON"
     },
     "abort": {
-      "single_instance_allowed": "Only a single ZHA instance is allowed",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "not_zha_device": "This device is not a ZHA device",
       "usb_probe_failed": "Failed to probe the USB device",
       "wrong_firmware_installed": "Your device is running the wrong firmware and cannot be used with ZHA until the correct firmware is installed. [A repair has been created]({repair_url}) with more information and instructions for how to fix this.",
       "invalid_zeroconf_data": "The coordinator has invalid Zeroconf service info and cannot be identified by ZHA",
-      "cannot_restore_backup": "The coordinator you are restoring to does not properly support backup restoration. Please upgrade the firmware.\n\nError: {error}",
+      "cannot_restore_backup": "The adapter you are restoring to does not properly support backup restoration. Please upgrade the firmware.\n\nError: {error}",
+      "cannot_restore_backup_no_ieee_confirm": "The adapter you are restoring to has outdated firmware and cannot write the adapter IEEE address multiple times. Please upgrade the firmware or confirm permanent overwrite in the previous step.",
       "reconfigure_successful": "ZHA has successfully migrated from your old adapter to the new one. Give your Zigbee network a few minutes to stabilize.\n\nIf you no longer need the old adapter, you can now unplug it."
     }
   },
@@ -227,7 +228,8 @@
       "not_zha_device": "[%key:component::zha::config::abort::not_zha_device%]",
       "usb_probe_failed": "[%key:component::zha::config::abort::usb_probe_failed%]",
       "wrong_firmware_installed": "[%key:component::zha::config::abort::wrong_firmware_installed%]",
-      "cannot_restore_backup": "[%key:component::zha::config::abort::cannot_restore_backup%]"
+      "cannot_restore_backup": "[%key:component::zha::config::abort::cannot_restore_backup%]",
+      "cannot_restore_backup_no_ieee_confirm": "[%key:component::zha::config::abort::cannot_restore_backup_no_ieee_confirm%]"
     }
   },
   "config_panel": {

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import abstractmethod
 import collections
 from contextlib import suppress
 import json
@@ -181,6 +182,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self._hass = hass
         self._radio_mgr.hass = hass
 
+    @abstractmethod
     async def _async_create_radio_entry(self) -> ConfigFlowResult:
         """Create a config entry with the current flow state."""
         raise NotImplementedError
@@ -550,19 +552,14 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm restore for EZSP radios that require permanent IEEE writes."""
-
         if user_input is not None:
             if user_input[OVERWRITE_COORDINATOR_IEEE]:
                 # On confirmation, overwrite destructively
                 await self._radio_mgr.restore_backup(overwrite_ieee=True)
                 return await self._async_create_radio_entry()
+
             # On rejection, explain why we can't restore
-            return self.async_abort(
-                reason="cannot_restore_backup",
-                description_placeholders={
-                    "error": "Confirmation not given for IEEE overwrite"
-                },
-            )
+            return self.async_abort(reason="cannot_restore_backup_no_ieee_confirm")
 
         # On first attempt, just try to restore nondestructively
         try:
