@@ -653,9 +653,8 @@ IMAGE_CONTENT_TYPE_SELECTOR = SelectSelector(
 )
 IMAGE_ENCODING_SELECTOR = SelectSelector(
     SelectSelectorConfig(
-        options=[
-            SelectOptionDict(value="b64", label="Base64"),
-        ],
+        options=["raw", "b64"],
+        translation_key="image_encoding",
         mode=SelectSelectorMode.DROPDOWN,
     )
 )
@@ -2368,6 +2367,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             selector=IMAGE_ENCODING_SELECTOR,
             required=False,
             conditions=({"image_processing_mode": "image_data"},),
+            default="raw",
         ),
         CONF_URL_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,

@@ -373,7 +373,7 @@
             "content_type": "The content type or the image data that is received at the image topic.",
             "force_update": "Sends update events even if the value hasn’t changed. Useful if you want to have meaningful value graphs in history. [Learn more.]({url}#force_update)",
             "green_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract green color from the state payload value. Expected result of the template is an integer from 0-255 range.",
-            "image_encoding": "Select Base64 encoding in case the image data is Base64 encoded. If this option is not set, raw image data is expected.",
+            "image_encoding": "Select the encoding of the received image data",
             "image_topic": "The MQTT topic subscribed to receive messages containing the image data. [Learn more.]({url}#image_topic)",
             "last_reset_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the last reset. When Last reset template is set, the State class option must be Total. [Learn more.]({url}#last_reset_value_template)",
             "modes": "A list of supported operation modes. [Learn more.]({url}#modes)",
@@ -1271,6 +1271,12 @@
       "options": {
         "config": "Config",
         "diagnostic": "Diagnostic"
+      }
+    },
+    "image_encoding": {
+      "options": {
+        "raw": "Raw data",
+        "b64": "Base64 encoding"
       }
     },
     "image_processing_mode": {

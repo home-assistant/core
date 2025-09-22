@@ -68,7 +68,7 @@ PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Exclusive(CONF_URL_TOPIC, "image_topic"): valid_subscribe_topic,
         vol.Exclusive(CONF_IMAGE_TOPIC, "image_topic"): valid_subscribe_topic,
-        vol.Optional(CONF_IMAGE_ENCODING): "b64",
+        vol.Optional(CONF_IMAGE_ENCODING): vol.In({"b64", "raw"}),
         vol.Optional(CONF_URL_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
@@ -147,7 +147,7 @@ class MqttImage(MqttEntity, ImageEntity):
     def _image_data_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT messages."""
         try:
-            if CONF_IMAGE_ENCODING in self._config:
+            if self._config.get(CONF_IMAGE_ENCODING) == "b64":
                 self._last_image = b64decode(msg.payload)
             else:
                 if TYPE_CHECKING:
