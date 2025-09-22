@@ -110,9 +110,9 @@ class AccuWeatherFlowHandler(ConfigFlow, domain=DOMAIN):
             except (ApiError, ClientConnectorError, TimeoutError, ClientError):
                 errors["base"] = "cannot_connect"
             except InvalidApiKeyError:
-                errors[CONF_API_KEY] = "invalid_api_key"
+                errors["base"] = "invalid_api_key"
             except RequestsExceededError:
-                errors[CONF_API_KEY] = "requests_exceeded"
+                errors["base"] = "requests_exceeded"
             else:
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(), data_updates=user_input
