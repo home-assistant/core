@@ -10,7 +10,6 @@ from tololib import ToloClient, ToloCommunicationError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    SOURCE_DHCP,
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
@@ -53,14 +52,7 @@ class ToloConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            # For reconfigure flow, check if the host actually changed
-            if self.source == SOURCE_RECONFIGURE:
-                current_host = self._get_reconfigure_entry().data[CONF_HOST]
-                if user_input[CONF_HOST] == current_host:
-                    # Host didn't change, just reload with same data
-                    return self.async_update_reload_and_abort(
-                        self._get_reconfigure_entry(), data_updates=user_input
-                    )
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
             device_available = await self.hass.async_add_executor_job(
                 self._check_device_availability, user_input[CONF_HOST]
@@ -80,8 +72,6 @@ class ToloConfigFlow(ConfigFlow, domain=DOMAIN):
             schema_values = user_input
         elif self.source == SOURCE_RECONFIGURE:
             schema_values = self._get_reconfigure_entry().data
-        elif self.source == SOURCE_DHCP and self._dhcp_discovery_info is not None:
-            schema_values = {CONF_HOST: self._dhcp_discovery_info.ip}
 
         return self.async_show_form(
             step_id="user",
@@ -102,11 +92,9 @@ class ToloConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
-        # Check for existing entries with the same host first
-        self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
-
         await self.async_set_unique_id(format_mac(discovery_info.macaddress))
         self._abort_if_unique_id_configured({CONF_HOST: discovery_info.ip})
+        self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
 
         device_available = await self.hass.async_add_executor_job(
             self._check_device_availability, discovery_info.ip
@@ -114,5 +102,22 @@ class ToloConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if device_available:
             self._dhcp_discovery_info = discovery_info
-            return await self.async_step_user()
+            return await self.async_step_confirm()
         return self.async_abort(reason="not_tolo_device")
+
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle user-confirmation of discovered node."""
+        assert self._dhcp_discovery_info is not None
+
+        if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: self._dhcp_discovery_info.ip})
+            return self.async_create_entry(
+                title=DEFAULT_NAME, data={CONF_HOST: self._dhcp_discovery_info.ip}
+            )
+
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders={CONF_HOST: self._dhcp_discovery_info.ip},
+        )
