@@ -85,7 +85,7 @@ class MatterNumber(MatterEntity, NumberEntity):
             await self.write_attribute(
                 value=sendvalue,
             )
-        except:
+        except MatterError:
             raise HomeAssistantError(
                 "The device does not allow to change this value."
             ) from None
