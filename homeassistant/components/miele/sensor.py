@@ -38,8 +38,8 @@ from .const import (
     COFFEE_SYSTEM_PROFILE,
     DISABLED_TEMP_ENTITIES,
     DOMAIN,
+    PROGRAM_PHASE,
     STATE_PROGRAM_ID,
-    STATE_PROGRAM_PHASE,
     STATE_STATUS_TAGS,
     MieleAppliance,
     PlatePowerStep,
@@ -946,29 +946,36 @@ class MieleStatusSensor(MieleSensor):
         return True
 
 
+# Some phases have names that are not valid python identifiers, so we need to translate
+# them in order to avoid breaking changes
+PROGRAM_PHASE_TRANSLATION = {
+    "second_espresso": "2nd_espresso",
+    "second_grinding": "2nd_grinding",
+    "second_pre_brewing": "2nd_pre_brewing",
+}
+
+
 class MielePhaseSensor(MieleSensor):
     """Representation of the program phase sensor."""
 
     @property
     def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        ret_val = STATE_PROGRAM_PHASE.get(self.device.device_type, {}).get(
+        """Return the state of the phase sensor."""
+        program_phase = PROGRAM_PHASE[self.device.device_type](
             self.device.state_program_phase
+        ).name
+
+        return (
+            PROGRAM_PHASE_TRANSLATION.get(program_phase, program_phase)
+            if program_phase is not None
+            else None
         )
-        if ret_val is None:
-            _LOGGER.debug(
-                "Unknown program phase: %s on device type: %s",
-                self.device.state_program_phase,
-                self.device.device_type,
-            )
-        return ret_val
 
     @property
     def options(self) -> list[str]:
         """Return the options list for the actual device type."""
-        return sorted(
-            set(STATE_PROGRAM_PHASE.get(self.device.device_type, {}).values())
-        )
+        phases = PROGRAM_PHASE[self.device.device_type].keys()
+        return sorted([PROGRAM_PHASE_TRANSLATION.get(phase, phase) for phase in phases])
 
 
 class MieleProgramIdSensor(MieleSensor):

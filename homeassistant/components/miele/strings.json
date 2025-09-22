@@ -297,6 +297,7 @@
           "not_running": "Not running",
           "pre_brewing": "Pre-brewing",
           "pre_dishwash": "Pre-cleaning",
+          "pre_heating": "Pre-heating",
           "pre_wash": "Pre-wash",
           "process_finished": "Process finished",
           "process_running": "Process running",
