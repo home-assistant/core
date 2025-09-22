@@ -237,12 +237,13 @@ async def test_microwave_oven(
 
 
 @pytest.mark.parametrize("node_fixture", ["door_lock"])
-async def test_lock(
+async def test_lock_attributes(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test WrongCodeEntryLimit for door lock."""
+    """Test door lock attributes."""
+    # WrongCodeEntryLimit for door lock
     state = hass.states.get("number.mock_door_lock_wrong_code_limit")
     assert state
     assert state.state == "3"
@@ -253,7 +254,7 @@ async def test_lock(
     assert state
     assert state.state == "10"
 
-    """Test UserCodeTemporaryDisableTime for door lock."""
+    # UserCodeTemporaryDisableTime for door lock
     state = hass.states.get("number.mock_door_lock_user_code_temporary_disable_time")
     assert state
     assert state.state == "15"
