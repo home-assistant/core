@@ -1,6 +1,6 @@
 {
   "domain": "ekeybionyx",
-  "name": "Ekey Bionyx",
+  "name": "ekey bionyx",
   "codeowners": ["@richardpolzer"],
   "config_flow": true,
   "dependencies": ["application_credentials", "http"],

@@ -1599,7 +1599,7 @@
       "iot_class": "local_polling"
     },
     "ekeybionyx": {
-      "name": "Ekey Bionyx",
+      "name": "ekey bionyx",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"

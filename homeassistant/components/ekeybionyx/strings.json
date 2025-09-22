@@ -11,7 +11,7 @@
         "data_description": {
           "system": "System the webhooks should be set up for"
         },
-        "description": "Please select the Ekey Bionyx system in which you want to set up the webhooks"
+        "description": "Please select the ekey bionyx system in which you want to set up the webhooks"
       },
       "webhooks": {
         "description": "Please name your webhooks. You can configure up to 5 webhooks. Leaving a name empty will skip the setup of that webhook.",
@@ -32,7 +32,7 @@
       }
     },
     "progress": {
-      "check_deletion_status": "Please go to the ekey Bionyx app and confirm the deletion of the webhooks."
+      "check_deletion_status": "Please go to the ekey bionyx app and confirm the deletion of the webhooks."
     },
     "error": {
       "invalid_name": "Name is invalid",
@@ -50,9 +50,9 @@
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
-      "no_available_webhooks": "There are no available webhooks in the ekey Bionyx plattform. Please delete some and try again.",
+      "no_available_webhooks": "There are no available webhooks in the ekey bionyx plattform. Please delete some and try again.",
       "no_own_systems": "Your account does not have admin access to any systems",
-      "cannot_connect": "Connection to ekey Bionyx failed. Please check your Internet connection and try again."
+      "cannot_connect": "Connection to ekey bionyx failed. Please check your Internet connection and try again."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"

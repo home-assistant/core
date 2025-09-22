@@ -1,4 +1,4 @@
-"""Config flow for Ekey Bionyx."""
+"""Config flow for ekey bionyx."""
 
 import asyncio
 import json

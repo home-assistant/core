@@ -1,4 +1,4 @@
-"""Test the Ekey Bionyx config flow."""
+"""Test the ekey bionyx config flow."""
 
 from unittest.mock import patch
 
