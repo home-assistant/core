@@ -79,6 +79,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.K10_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.K10_PRO_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.K10_PRO_COMBO_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
+    SupportedModels.K11_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.HUB3.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
     SupportedModels.LOCK_LITE.value: [
         Platform.BINARY_SENSOR,
@@ -99,7 +100,6 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.RGBICWW_STRIP_LIGHT.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.PLUG_MINI_EU.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.RELAY_SWITCH_2PM.value: [Platform.SWITCH, Platform.SENSOR],
-    SupportedModels.K11_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -121,6 +121,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.K10_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.K10_PRO_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.K10_PRO_COMBO_VACUUM.value: switchbot.SwitchbotVacuum,
+    SupportedModels.K11_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.LOCK_LITE.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_ULTRA.value: switchbot.SwitchbotLock,
     SupportedModels.AIR_PURIFIER.value: switchbot.SwitchbotAirPurifier,
@@ -132,7 +133,6 @@ CLASS_BY_DEVICE = {
     SupportedModels.RGBICWW_STRIP_LIGHT.value: switchbot.SwitchbotRgbicLight,
     SupportedModels.PLUG_MINI_EU.value: switchbot.SwitchbotRelaySwitch,
     SupportedModels.RELAY_SWITCH_2PM.value: switchbot.SwitchbotRelaySwitch2PM,
-    SupportedModels.K11_VACUUM.value: switchbot.SwitchbotVacuum,
 }
 
 
