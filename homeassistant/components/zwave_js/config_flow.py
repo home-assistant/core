@@ -375,6 +375,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         new_addon_config = addon_config | config_updates
 
+        if not new_addon_config[CONF_ADDON_DEVICE]:
+            new_addon_config.pop(CONF_ADDON_DEVICE)
+        if not new_addon_config[CONF_ADDON_SOCKET]:
+            new_addon_config.pop(CONF_ADDON_SOCKET)
+
         if new_addon_config == addon_config:
             return
 
@@ -1210,6 +1215,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
             addon_config_updates = self._addon_config_updates | addon_config_updates
             self._addon_config_updates = {}
+
             await self._async_set_addon_config(addon_config_updates)
 
             if addon_info.state == AddonState.RUNNING and not self.restart_addon:
@@ -1460,7 +1466,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(str(discovery_info.zwave_home_id))
         self._abort_if_unique_id_configured(
             {
-                CONF_ADDON_DEVICE: None,
+                CONF_USB_PATH: None,
                 CONF_SOCKET_PATH: discovery_info.socket_path,
             }
         )
