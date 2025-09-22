@@ -7,8 +7,6 @@ from yarl import URL
 
 from homeassistant.data_entry_flow import BaseServiceInfo
 
-# Attributes for ZeroconfServiceInfo[ATTR_PROPERTIES]
-ATTR_PROPERTIES_ID: Final = "id"
 
 
 @dataclass(slots=True)

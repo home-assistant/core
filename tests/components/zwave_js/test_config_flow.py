@@ -1178,8 +1178,8 @@ async def test_esphome_discovery(
     set_addon_options: AsyncMock,
     start_addon: AsyncMock,
 ) -> None:
-    """Test usb discovery success path."""
-    # Make sure it doesn't work on hassio
+    """Test ESPHome discovery success path."""
+    # Make sure it works only on hassio
     with patch(
         "homeassistant.components.zwave_js.config_flow.is_hassio", return_value=False
     ):
