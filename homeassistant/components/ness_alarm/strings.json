@@ -73,5 +73,15 @@
         }
       }
     }
+  },
+  "issues": {
+    "yaml_config_imported": {
+      "title": "YAML Configuration Successfully Imported",
+      "description": "The Ness Alarm integration has been successfully imported from your YAML configuration and is now managed through the UI.\n\n**Imported Configuration:**\n- Host: {host}\n- Port: {port}\n- Panel: {panel_model} (v{panel_version})\n- Zones: {zone_count} configured\n\n**Next Steps:**\n1. Remove the `ness_alarm:` section from your `configuration.yaml` file\n2. Restart Home Assistant to complete the migration\n\nYou can manage this integration at **Settings → Devices & Services → Ness Alarm**"
+    },
+    "yaml_config_duplicate": {
+      "title": "Remove Duplicate YAML Configuration",
+      "description": "Ness Alarm is already configured through the UI, but YAML configuration was also found.\n\n**Current UI Configuration:**\n- Host: {host}\n- Port: {port}\n\nThe YAML configuration is being ignored. Please remove the following section from your `configuration.yaml` file:\n\n```yaml\n{yaml_example}\n```\n\nRestart Home Assistant after removing the YAML configuration to clear this issue."
+    }
   }
 }

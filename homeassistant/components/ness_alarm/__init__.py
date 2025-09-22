@@ -7,7 +7,6 @@ import logging
 from nessclient import ArmingMode, ArmingState, Client
 import voluptuous as vol
 
-from homeassistant.components import persistent_notification
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -17,7 +16,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
@@ -101,24 +100,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 yaml_config[CONF_HOST],
                 yaml_config.get(CONF_PORT, DEFAULT_PORT),
             )
-
-            persistent_notification.async_create(
+            ir.async_create_issue(
                 hass,
-                f"**Duplicate Configuration Detected**\n\n"
-                f"Ness Alarm is already configured through the UI for:\n"
-                f"- Host: `{yaml_config[CONF_HOST]}`\n"
-                f"- Port: `{yaml_config.get(CONF_PORT, DEFAULT_PORT)}`\n\n"
-                f"The YAML configuration in `configuration.yaml` is being ignored.\n\n"
-                f"**Please remove the following from your configuration.yaml:**\n"
-                f"```yaml\n"
-                f"ness_alarm:\n"
-                f"  host: {yaml_config[CONF_HOST]}\n"
-                f"  port: {yaml_config.get(CONF_PORT, DEFAULT_PORT)}\n"
-                f"  # ... any other ness_alarm config\n"
-                f"```\n\n"
-                f"After removing it, restart Home Assistant to clear this warning.",
-                "Ness Alarm: Remove YAML Configuration",
-                f"{DOMAIN}_yaml_duplicate_warning",
+                DOMAIN,
+                "yaml_config_duplicate",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="yaml_config_duplicate",
+                translation_placeholders={
+                    "host": yaml_config[CONF_HOST],
+                    "port": str(yaml_config.get(CONF_PORT, DEFAULT_PORT)),
+                    "yaml_example": f"ness_alarm:\n  host: {yaml_config[CONF_HOST]}\n  port: {yaml_config.get(CONF_PORT, DEFAULT_PORT)}",
+                },
             )
 
             return True
