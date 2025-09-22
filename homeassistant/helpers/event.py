@@ -54,7 +54,8 @@ from .entity_registry import (
 )
 from .ratelimit import KeyedRateLimit
 from .sun import get_astral_event_next
-from .template import RenderInfo, Template, result_as_boolean
+from .template import Template, result_as_boolean
+from .template.render_info import RenderInfo
 from .typing import TemplateVarsType
 
 _TRACK_STATE_CHANGE_DATA: HassKey[_KeyedEventData[EventStateChangedData]] = HassKey(

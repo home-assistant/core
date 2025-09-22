@@ -37,10 +37,10 @@ from .template import (
     _SENTINEL,
     Template,
     TemplateStateFromEntityId,
-    _render_with_context,
     render_complex,
     result_as_boolean,
 )
+from .template.context import render_with_context
 from .typing import ConfigType
 
 CONF_AVAILABILITY = "availability"
@@ -131,7 +131,7 @@ class ValueTemplate(Template):
         compiled = self._compiled or self._ensure_compiled()
 
         try:
-            render_result = _render_with_context(
+            render_result = render_with_context(
                 self.template, compiled, **variables
             ).strip()
         except jinja2.TemplateError as ex:

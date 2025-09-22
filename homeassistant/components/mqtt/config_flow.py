@@ -1209,7 +1209,6 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             default=lambda config: bool(config.get(CONF_DIRECTION_COMMAND_TOPIC)),
         ),
     },
-    Platform.NOTIFY.value: {},
     Platform.LIGHT.value: {
         CONF_SCHEMA: PlatformField(
             selector=LIGHT_SCHEMA_SELECTOR,
@@ -1225,6 +1224,7 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
         ),
     },
     Platform.LOCK.value: {},
+    Platform.NOTIFY.value: {},
     Platform.SENSOR.value: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=SENSOR_DEVICE_CLASS_SELECTOR, required=False

@@ -918,3 +918,8 @@ def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
             dev_reg.async_update_device(
                 device.id, remove_config_entry_id=entry.entry_id
             )
+
+
+def format_ble_addr(ble_addr: str) -> str:
+    """Format BLE address to use in unique_id."""
+    return ble_addr.replace(":", "").upper()

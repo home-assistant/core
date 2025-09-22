@@ -35,7 +35,7 @@ ATTR_WITH_GROUP = "with_group"
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register Sonos services."""
 
-    @service.verify_domain_control(hass, DOMAIN)
+    @service.verify_domain_control(DOMAIN)
     async def async_service_handle(service_call: ServiceCall) -> None:
         """Handle dispatched services."""
         platform_entities = hass.data.get(DATA_DOMAIN_PLATFORM_ENTITIES, {}).get(

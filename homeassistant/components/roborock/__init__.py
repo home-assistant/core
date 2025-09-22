@@ -256,6 +256,7 @@ async def setup_device_v1(
         RoborockMqttClientV1, user_data, DeviceData(device, product_info.model)
     )
     try:
+        await mqtt_client.async_connect()
         networking = await mqtt_client.get_networking()
         if networking is None:
             # If the api does not return an error but does return None for
@@ -319,8 +320,11 @@ async def setup_device_a01(
     product_info: HomeDataProduct,
 ) -> RoborockDataUpdateCoordinatorA01 | None:
     """Set up a A01 protocol device."""
-    mqtt_client = RoborockMqttClientA01(
-        user_data, DeviceData(device, product_info.name), product_info.category
+    mqtt_client = await hass.async_add_executor_job(
+        RoborockMqttClientA01,
+        user_data,
+        DeviceData(device, product_info.model),
+        product_info.category,
     )
     coord = RoborockDataUpdateCoordinatorA01(
         hass, entry, device, product_info, mqtt_client

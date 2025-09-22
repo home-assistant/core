@@ -272,6 +272,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         """Verify that the api is reachable. If it is not, switch clients."""
         if isinstance(self.api, RoborockLocalClientV1):
             try:
+                await self.api.async_connect()
                 await self.api.ping()
             except RoborockException:
                 _LOGGER.warning(
