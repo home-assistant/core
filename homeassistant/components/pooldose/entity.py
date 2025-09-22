@@ -63,7 +63,7 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
         mac = None
         if coordinator.config_entry and CONF_MAC in coordinator.config_entry.data:
             # Since MAC address is only available during dhcp discovery, it may not be set when entity is created manually
-            mac = str(coordinator.config_entry.data[CONF_MAC])
+            mac = coordinator.config_entry.data[CONF_MAC]
         self._attr_device_info = device_info(device_properties, serial_number, mac)
 
     @property
