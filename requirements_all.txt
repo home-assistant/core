@@ -1278,6 +1278,9 @@ iottycloud==0.3.0
 # homeassistant.components.iperf3
 iperf3==0.1.11
 
+# homeassistant.components.irm_kmi
+irm-kmi-api==1.1.0
+
 # homeassistant.components.isal
 isal==1.8.0
 
@@ -1413,7 +1416,7 @@ mbddns==0.1.2
 
 # homeassistant.components.mcp
 # homeassistant.components.mcp_server
-mcp==1.5.0
+mcp==1.14.1
 
 # homeassistant.components.minecraft_server
 mcstatus==12.0.1
