@@ -10,6 +10,7 @@ from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
 from matter_server.client.models import device_types
 from matter_server.common import custom_clusters
+from matter_server.common.errors import MatterError
 
 from homeassistant.components.number import (
     NumberDeviceClass,
