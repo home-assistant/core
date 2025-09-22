@@ -772,6 +772,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/iqvia/ @bachya
 /tests/components/iqvia/ @bachya
 /homeassistant/components/irish_rail_transport/ @ttroy50
+/homeassistant/components/irm_kmi/ @jdejaegh
+/tests/components/irm_kmi/ @jdejaegh
 /homeassistant/components/iron_os/ @tr4nt0r
 /tests/components/iron_os/ @tr4nt0r
 /homeassistant/components/isal/ @bdraco
@@ -1729,8 +1731,8 @@ build.json @home-assistant/supervisor
 /tests/components/volumio/ @OnFreund
 /homeassistant/components/volvo/ @thomasddn
 /tests/components/volvo/ @thomasddn
-/homeassistant/components/volvooncall/ @molobrakos
-/tests/components/volvooncall/ @molobrakos
+/homeassistant/components/volvooncall/ @molobrakos @svrooij
+/tests/components/volvooncall/ @molobrakos @svrooij
 /homeassistant/components/wake_on_lan/ @ntilley905
 /tests/components/wake_on_lan/ @ntilley905
 /homeassistant/components/wake_word/ @home-assistant/core @synesthesiam

@@ -60,7 +60,7 @@ from . import (
     template,
     translation,
 )
-from .deprecation import deprecated_class, deprecated_function
+from .deprecation import deprecated_class, deprecated_function, deprecated_hass_argument
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType, VolDictType, VolSchemaType
 
@@ -492,7 +492,7 @@ async def async_extract_config_entry_ids(
     return config_entry_ids
 
 
-def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
+def _load_services_file(integration: Integration) -> JSON_TYPE:
     """Load services file for an integration."""
     try:
         return cast(
@@ -515,12 +515,10 @@ def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_T
         return {}
 
 
-def _load_services_files(
-    hass: HomeAssistant, integrations: Iterable[Integration]
-) -> dict[str, JSON_TYPE]:
+def _load_services_files(integrations: Iterable[Integration]) -> dict[str, JSON_TYPE]:
     """Load service files for multiple integrations."""
     return {
-        integration.domain: _load_services_file(hass, integration)
+        integration.domain: _load_services_file(integration)
         for integration in integrations
     }
 
@@ -586,7 +584,7 @@ async def async_get_all_descriptions(
 
         if integrations:
             loaded = await hass.async_add_executor_job(
-                _load_services_files, hass, integrations
+                _load_services_files, integrations
             )
 
     # Load translations for all service domains
@@ -995,10 +993,10 @@ def async_register_admin_service(
     )
 
 
-@bind_hass
+@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 @callback
 def verify_domain_control(
-    hass: HomeAssistant, domain: str
+    domain: str,
 ) -> Callable[[Callable[[ServiceCall], Any]], Callable[[ServiceCall], Any]]:
     """Ensure permission to access any entity under domain in service call."""
 
@@ -1014,6 +1012,7 @@ def verify_domain_control(
             if not call.context.user_id:
                 return await service_handler(call)
 
+            hass = call.hass
             user = await hass.auth.async_get_user(call.context.user_id)
 
             if user is None:
