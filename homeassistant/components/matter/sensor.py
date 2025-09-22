@@ -1151,7 +1151,7 @@ DISCOVERY_SCHEMAS = [
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             device_to_ha=lambda x: (
-                round(x / TEMPERATURE_SCALING_FACTOR, 1) if x > 0 else None
+                None if x is None else round(x / TEMPERATURE_SCALING_FACTOR, 1)
             ),
             state_class=SensorStateClass.MEASUREMENT,
         ),
