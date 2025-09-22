@@ -24,6 +24,7 @@ from homeassistant.helpers.trigger import (
     PluggableAction,
     Trigger,
     TriggerActionType,
+    TriggerConfig,
     TriggerInfo,
     _async_get_trigger_platform,
     async_initialize_triggers,
@@ -535,7 +536,7 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
             """Validate config."""
             return config
 
-        def __init__(self, hass: HomeAssistant, config: Trigger.Config) -> None:
+        def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
             """Initialize trigger."""
 
     class MockTrigger1(MockTrigger):

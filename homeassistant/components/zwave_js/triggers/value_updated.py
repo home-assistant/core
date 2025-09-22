@@ -24,6 +24,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.trigger import (
     Trigger,
     TriggerActionType,
+    TriggerConfig,
     TriggerInfo,
     move_top_level_schema_fields_to_options,
 )
@@ -242,7 +243,7 @@ class ValueUpdatedTrigger(Trigger):
         """Validate config."""
         return await async_validate_trigger_config(hass, config)
 
-    def __init__(self, hass: HomeAssistant, config: Trigger.Config) -> None:
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize trigger."""
         self._hass = hass
         assert config.options is not None

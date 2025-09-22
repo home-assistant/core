@@ -178,14 +178,6 @@ _TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 class Trigger(abc.ABC):
     """Trigger class."""
 
-    @dataclass(slots=True, frozen=True)
-    class Config:
-        """Trigger config."""
-
-        key: str  # The key used to identify the trigger, e.g. "zwave.event"
-        target: dict[str, Any] | None = None
-        options: dict[str, Any] | None = None
-
     @classmethod
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
@@ -218,7 +210,7 @@ class Trigger(abc.ABC):
     ) -> ConfigType:
         """Validate config."""
 
-    def __init__(self, hass: HomeAssistant, config: Config) -> None:
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize trigger."""
 
     @abc.abstractmethod
@@ -254,6 +246,15 @@ class TriggerProtocol(Protocol):
         trigger_info: TriggerInfo,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
+
+
+@dataclass(slots=True, frozen=True)
+class TriggerConfig:
+    """Trigger config."""
+
+    key: str  # The key used to identify the trigger, e.g. "zwave.event"
+    target: dict[str, Any] | None = None
+    options: dict[str, Any] | None = None
 
 
 class TriggerActionType(Protocol):
@@ -563,7 +564,7 @@ async def async_initialize_triggers(
             trigger_cls = trigger_descriptors[relative_trigger_key]
             trigger = trigger_cls(
                 hass,
-                Trigger.Config(
+                TriggerConfig(
                     key=trigger_key,
                     target=conf.get(CONF_TARGET),
                     options=conf.get(CONF_OPTIONS),
