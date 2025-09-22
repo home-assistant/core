@@ -27,6 +27,7 @@ from homeassistant.helpers.typing import UndefinedType
 
 from .const import DOMAIN, FEATUREMAP_ATTRIBUTE_ID, ID_TYPE_DEVICE_ID
 from .helpers import get_device_id
+from .semantic_tagging import convert_tag_to_text
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
@@ -55,7 +56,122 @@ def catch_matter_error[_R, **P](
 
 
 @dataclass(frozen=True)
-class MatterEntityDescription(EntityDescription):
+class MatterEntityLabeling(EntityDescription):
+    """Data structure for Matter Tag and Label Information."""
+
+    # A label or tag can be used to modify an entity's name by appending the text
+    # or replacing the name. This class holds the information needed to do that.
+
+    # Where to place the Tag or Label text in the entity name.
+    # Can be "rename", "append", "ignore". Append by default.
+    label_placement: str = "append"
+
+    # Priority-ordered default set of labels used for locating the name modifier
+    # Can override this set in an entity's discovery schema.
+    # Always uses lower case for matching.
+    default_label_list: tuple[str, ...] | None = (
+        "label",
+        "button",
+        "orientation",
+        "name",
+    )
+
+    # Priority-ordered default set of tags namespace IDs used for locating the name modifier
+    # Can override this set in an entity's discovery schema.
+    # Uses the numeric tag IDs as defined in the Matter specification.
+    default_tag_list: tuple[int, ...] | None = (
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x06,
+        0x08,
+        0x11,
+        0x12,
+        0x0A,
+        0x10,
+        0x0E,
+        0x0F,
+        0x41,
+        0x42,
+        0x43,
+        0x07,  # Common Number Namespace (less informative than others, so search it last)
+    )
+
+    # When multiple tags or labels are matched, use the concatenator string to join them.
+    # Examples: ", " or "-" or " " (space).
+    # if set to None or empty string, then only the first match is used.
+    label_concatenator: str | None = ", "
+
+    # If both tags and labels are found, which one takes precedence.
+    prefer_tags: bool = False
+
+    def find_matching_labels(self, entity: MatterEntity) -> list[str]:
+        """Find all labels for a Matter entity."""
+
+        user_label_list: list[clusters.UserLabel.Structs.LabelStruct] = (
+            entity.get_matter_attribute_value(clusters.UserLabel.Attributes.LabelList)
+            or []
+        )
+        fixed_label_list: list[clusters.FixedLabel.Structs.LabelStruct] = (
+            entity.get_matter_attribute_value(clusters.FixedLabel.Attributes.LabelList)
+            or []
+        )
+
+        found_labels: list[str] = [
+            lbl.value
+            for label in self.default_label_list or []
+            for lbl in (*user_label_list, *fixed_label_list)
+            if lbl.label.lower() == label.lower()
+        ]
+        return found_labels
+
+    def find_matching_tags(self, entity: MatterEntity) -> list[str]:
+        """Find all tags for a Matter entity."""
+
+        tags_as_text: list[str] = []
+        for namespace in self.default_tag_list or []:
+            for tag in (
+                entity.get_matter_attribute_value(
+                    clusters.Descriptor.Attributes.TagList
+                )
+                or []
+            ):
+                if tag.namespaceID == namespace:
+                    tag_text = convert_tag_to_text(tag)
+                    tags_as_text.append(tag_text) if tag_text is not None else None
+
+        return tags_as_text
+
+    def get_name_modifier(self, entity: MatterEntity) -> str | None:
+        """Get the name modifier for the entity based on tags and labels."""
+
+        found_labels = self.find_matching_labels(entity)
+        found_tags = self.find_matching_tags(entity)
+        if self.prefer_tags and found_tags:
+            return (
+                self.label_concatenator.join(found_tags)
+                if self.label_concatenator
+                else found_tags[0]
+            )
+        if found_labels:
+            return (
+                self.label_concatenator.join(found_labels)
+                if self.label_concatenator
+                else found_labels[0]
+            )
+        if not self.prefer_tags and found_tags:
+            return (
+                self.label_concatenator.join(found_tags)
+                if self.label_concatenator
+                else found_tags[0]
+            )
+        return None
+
+
+@dataclass(frozen=True)
+class MatterEntityDescription(MatterEntityLabeling):
     """Describe the Matter entity."""
 
     # convert the value from the primary attribute to the value used by HA
@@ -101,37 +217,40 @@ class MatterEntity(Entity):
             identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
         )
         self._attr_available = self._endpoint.node.available
+
         # mark endpoint postfix if the device has the primary attribute on multiple endpoints
-        if not self._endpoint.node.is_bridge_device and any(
-            ep
-            for ep in self._endpoint.node.endpoints.values()
-            if ep != self._endpoint
-            and ep.has_attribute(None, entity_info.primary_attribute)
+        # this will get overwritten if an explicit name is set below and label_placement is "after"
+        if (
+            not self._endpoint.node.is_bridge_device
+            and self._entity_info.entity_description.label_placement != "ignore"
+            and any(
+                ep
+                for ep in self._endpoint.node.endpoints.values()
+                if ep != self._endpoint
+                and ep.has_cluster(entity_info.primary_attribute.cluster_id)
+            )
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
             if self._platform_translation_key and not self.translation_key:
                 self._attr_translation_key = self._platform_translation_key
 
-        # prefer the label attribute for the entity name
-        # Matter has a way for users and/or vendors to specify a name for an endpoint
-        # which is always preferred over a standard HA (generated) name
-        for attr in (
-            clusters.FixedLabel.Attributes.LabelList,
-            clusters.UserLabel.Attributes.LabelList,
+        # Matter tags or labels can be used to modify the entity name
+        # by appending the text or replacing the name.
+        # This is controlled by the entity_description.label_placement setting.
+        # The text is derived from the tags or labels defined on the device.
+        # If label_placement is "ignore" or no tags/labels are found, then
+        # the entity name is not modified.
+        name_modifier = self._entity_info.entity_description.get_name_modifier(self)
+        if (
+            name_modifier
+            and self._entity_info.entity_description.label_placement == "rename"
         ):
-            if not (labels := self.get_matter_attribute_value(attr)):
-                continue
-            for label in labels:
-                if label.label not in ["Label", "Button"]:
-                    continue
-                # fixed or user label found: use it
-                label_value: str = label.value
-                # in the case the label is only the label id, use it as postfix only
-                if label_value.isnumeric():
-                    self._name_postfix = label_value
-                else:
-                    self._attr_name = label_value
-                break
+            self._attr_name = name_modifier
+        elif (
+            name_modifier
+            and self._entity_info.entity_description.label_placement == "append"
+        ):
+            self._name_postfix = name_modifier
 
         # make sure to update the attributes once
         self._update_from_device()

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
 
@@ -16,7 +18,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -32,6 +34,11 @@ async def async_setup_entry(
     """Set up Matter valve platform from Config Entry."""
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.VALVE, async_add_entities)
+
+
+@dataclass(frozen=True)
+class MatterValveEntityDescription(ValveEntityDescription, MatterEntityDescription):
+    """Describe Matter Valve entities."""
 
 
 class MatterValve(MatterEntity, ValveEntity):
@@ -128,7 +135,7 @@ class MatterValve(MatterEntity, ValveEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.VALVE,
-        entity_description=ValveEntityDescription(
+        entity_description=MatterValveEntityDescription(
             key="MatterValve",
             device_class=ValveDeviceClass.WATER,
             name=None,

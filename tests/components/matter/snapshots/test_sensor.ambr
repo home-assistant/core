@@ -3597,7 +3597,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_fancy_button-entry]
+# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_fancy_button-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3612,7 +3612,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_generic_switch_fancy_button',
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position_fancy_button',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3624,7 +3624,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fancy Button',
+    'original_name': 'Current switch position (Fancy Button)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3634,14 +3634,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_fancy_button-state]
+# name: test_sensors[generic_switch_multi][sensor.mock_generic_switch_current_switch_position_fancy_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Generic Switch Fancy Button',
+      'friendly_name': 'Mock Generic Switch Current switch position (Fancy Button)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_generic_switch_fancy_button',
+    'entity_id': 'sensor.mock_generic_switch_current_switch_position_fancy_button',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3987,7 +3987,7 @@
     'state': 'stopped',
   })
 # ---
-# name: test_sensors[multi_endpoint_light][sensor.inovelli_config-entry]
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_config-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4002,7 +4002,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.inovelli_config',
+    'entity_id': 'sensor.inovelli_current_switch_position_config',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4014,7 +4014,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Config',
+    'original_name': 'Current switch position (Config)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4024,21 +4024,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[multi_endpoint_light][sensor.inovelli_config-state]
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_config-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Config',
+      'friendly_name': 'Inovelli Current switch position (Config)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inovelli_config',
+    'entity_id': 'sensor.inovelli_current_switch_position_config',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[multi_endpoint_light][sensor.inovelli_down-entry]
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_down-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4053,7 +4053,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.inovelli_down',
+    'entity_id': 'sensor.inovelli_current_switch_position_down',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4065,7 +4065,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Down',
+    'original_name': 'Current switch position (Down)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4075,21 +4075,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[multi_endpoint_light][sensor.inovelli_down-state]
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Down',
+      'friendly_name': 'Inovelli Current switch position (Down)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inovelli_down',
+    'entity_id': 'sensor.inovelli_current_switch_position_down',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[multi_endpoint_light][sensor.inovelli_up-entry]
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_up-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4104,7 +4104,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.inovelli_up',
+    'entity_id': 'sensor.inovelli_current_switch_position_up',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4116,7 +4116,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Up',
+    'original_name': 'Current switch position (Up)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4126,21 +4126,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[multi_endpoint_light][sensor.inovelli_up-state]
+# name: test_sensors[multi_endpoint_light][sensor.inovelli_current_switch_position_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inovelli Up',
+      'friendly_name': 'Inovelli Current switch position (Up)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inovelli_up',
+    'entity_id': 'sensor.inovelli_current_switch_position_up',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[oven][sensor.mock_oven_current_phase-entry]
+# name: test_sensors[oven][sensor.mock_oven_current_phase_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4159,7 +4159,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_oven_current_phase',
+    'entity_id': 'sensor.mock_oven_current_phase_top',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4171,7 +4171,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Current phase',
+    'original_name': 'Current phase (Top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4181,11 +4181,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[oven][sensor.mock_oven_current_phase-state]
+# name: test_sensors[oven][sensor.mock_oven_current_phase_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Mock Oven Current phase',
+      'friendly_name': 'Mock Oven Current phase (Top)',
       'options': list([
         'pre-heating',
         'pre-heated',
@@ -4193,14 +4193,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_oven_current_phase',
+    'entity_id': 'sensor.mock_oven_current_phase_top',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'pre-heating',
   })
 # ---
-# name: test_sensors[oven][sensor.mock_oven_operational_state-entry]
+# name: test_sensors[oven][sensor.mock_oven_operational_state_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4219,7 +4219,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_oven_operational_state',
+    'entity_id': 'sensor.mock_oven_operational_state_top',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4231,7 +4231,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Operational state',
+    'original_name': 'Operational state (Top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4241,11 +4241,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[oven][sensor.mock_oven_operational_state-state]
+# name: test_sensors[oven][sensor.mock_oven_operational_state_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Mock Oven Operational state',
+      'friendly_name': 'Mock Oven Operational state (Top)',
       'options': list([
         'stopped',
         'running',
@@ -4253,14 +4253,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_oven_operational_state',
+    'entity_id': 'sensor.mock_oven_operational_state_top',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'running',
   })
 # ---
-# name: test_sensors[oven][sensor.mock_oven_temperature_2-entry]
+# name: test_sensors[oven][sensor.mock_oven_temperature_left-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4275,7 +4275,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_oven_temperature_2',
+    'entity_id': 'sensor.mock_oven_temperature_left',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4290,63 +4290,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Temperature (2)',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-TemperatureSensor-1026-0',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensors[oven][sensor.mock_oven_temperature_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Mock Oven Temperature (2)',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_oven_temperature_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '65.55',
-  })
-# ---
-# name: test_sensors[oven][sensor.mock_oven_temperature_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.mock_oven_temperature_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature (4)',
+    'original_name': 'Temperature (Left)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4356,20 +4300,76 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[oven][sensor.mock_oven_temperature_4-state]
+# name: test_sensors[oven][sensor.mock_oven_temperature_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Mock Oven Temperature (4)',
+      'friendly_name': 'Mock Oven Temperature (Left)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_oven_temperature_4',
+    'entity_id': 'sensor.mock_oven_temperature_left',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_sensors[oven][sensor.mock_oven_temperature_top-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_oven_temperature_top',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature (Top)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-2-TemperatureSensor-1026-0',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[oven][sensor.mock_oven_temperature_top-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Mock Oven Temperature (Top)',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_oven_temperature_top',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '65.55',
   })
 # ---
 # name: test_sensors[pressure_sensor][sensor.mock_pressure_sensor_pressure-entry]
@@ -6555,7 +6555,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_active_current-entry]
+# name: test_sensors[solar_power][sensor.solarpower_active_current_solar_solar-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6570,7 +6570,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.solarpower_active_current',
+    'entity_id': 'sensor.solarpower_active_current_solar_solar',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6588,7 +6588,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Active current',
+    'original_name': 'Active current (Solar Solar)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6598,23 +6598,23 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_active_current-state]
+# name: test_sensors[solar_power][sensor.solarpower_active_current_solar_solar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'SolarPower Active current',
+      'friendly_name': 'SolarPower Active current (Solar Solar)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.solarpower_active_current',
+    'entity_id': 'sensor.solarpower_active_current_solar_solar',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-3.62',
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_energy_exported-entry]
+# name: test_sensors[solar_power][sensor.solarpower_energy_exported_solar_solar-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6629,7 +6629,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.solarpower_energy_exported',
+    'entity_id': 'sensor.solarpower_energy_exported_solar_solar',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6647,7 +6647,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy exported',
+    'original_name': 'Energy exported (Solar Solar)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6657,23 +6657,23 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_energy_exported-state]
+# name: test_sensors[solar_power][sensor.solarpower_energy_exported_solar_solar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'SolarPower Energy exported',
+      'friendly_name': 'SolarPower Energy exported (Solar Solar)',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.solarpower_energy_exported',
+    'entity_id': 'sensor.solarpower_energy_exported_solar_solar',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '42.279',
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_power-entry]
+# name: test_sensors[solar_power][sensor.solarpower_power_solar_solar-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6688,7 +6688,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.solarpower_power',
+    'entity_id': 'sensor.solarpower_power_solar_solar',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6706,7 +6706,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Power (Solar Solar)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6716,23 +6716,23 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_power-state]
+# name: test_sensors[solar_power][sensor.solarpower_power_solar_solar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'SolarPower Power',
+      'friendly_name': 'SolarPower Power (Solar Solar)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.solarpower_power',
+    'entity_id': 'sensor.solarpower_power_solar_solar',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-850.0',
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_voltage-entry]
+# name: test_sensors[solar_power][sensor.solarpower_voltage_solar_solar-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6747,7 +6747,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.solarpower_voltage',
+    'entity_id': 'sensor.solarpower_voltage_solar_solar',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6765,7 +6765,7 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'Voltage (Solar Solar)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6775,16 +6775,16 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_voltage-state]
+# name: test_sensors[solar_power][sensor.solarpower_voltage_solar_solar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
-      'friendly_name': 'SolarPower Voltage',
+      'friendly_name': 'SolarPower Voltage (Solar Solar)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.solarpower_voltage',
+    'entity_id': 'sensor.solarpower_voltage_solar_solar',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -6847,7 +6847,7 @@
     'state': '21.0',
   })
 # ---
-# name: test_sensors[thermostat][sensor.longan_link_hvac_temperature-entry]
+# name: test_sensors[thermostat][sensor.longan_link_hvac_temperature_north-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6862,7 +6862,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.longan_link_hvac_temperature',
+    'entity_id': 'sensor.longan_link_hvac_temperature_north',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6877,7 +6877,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Temperature',
+    'original_name': 'Temperature (North)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -6887,16 +6887,16 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[thermostat][sensor.longan_link_hvac_temperature-state]
+# name: test_sensors[thermostat][sensor.longan_link_hvac_temperature_north-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Longan link HVAC Temperature',
+      'friendly_name': 'Longan link HVAC Temperature (North)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.longan_link_hvac_temperature',
+    'entity_id': 'sensor.longan_link_hvac_temperature_north',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -7069,7 +7069,7 @@
     'state': '100',
   })
 # ---
-# name: test_sensors[window_covering_pa_lift][sensor.longan_link_wncv_da01_target_opening_position-entry]
+# name: test_sensors[window_covering_pa_lift][sensor.longan_link_wncv_da01_target_opening_position_north-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7082,7 +7082,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.longan_link_wncv_da01_target_opening_position',
+    'entity_id': 'sensor.longan_link_wncv_da01_target_opening_position_north',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7094,7 +7094,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Target opening position',
+    'original_name': 'Target opening position (North)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7104,14 +7104,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[window_covering_pa_lift][sensor.longan_link_wncv_da01_target_opening_position-state]
+# name: test_sensors[window_covering_pa_lift][sensor.longan_link_wncv_da01_target_opening_position_north-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Longan link WNCV DA01 Target opening position',
+      'friendly_name': 'Longan link WNCV DA01 Target opening position (North)',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.longan_link_wncv_da01_target_opening_position',
+    'entity_id': 'sensor.longan_link_wncv_da01_target_opening_position_north',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -110,13 +110,13 @@ async def test_temperature_control_temperature_setpoint(
 ) -> None:
     """Test TemperatureSetpoint from TemperatureControl."""
     # TemperatureSetpoint
-    state = hass.states.get("number.refrigerator_temperature_setpoint_2")
+    state = hass.states.get("number.refrigerator_temperature_setpoint_freezer")
     assert state
     assert state.state == "-18.0"
 
     set_node_attribute(matter_node, 2, 86, 0, -1600)
     await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get("number.refrigerator_temperature_setpoint_2")
+    state = hass.states.get("number.refrigerator_temperature_setpoint_freezer")
     assert state
     assert state.state == "-16.0"
 
@@ -125,7 +125,7 @@ async def test_temperature_control_temperature_setpoint(
         "number",
         "set_value",
         {
-            "entity_id": "number.refrigerator_temperature_setpoint_2",
+            "entity_id": "number.refrigerator_temperature_setpoint_freezer",
             "value": -17,
         },
         blocking=True,
