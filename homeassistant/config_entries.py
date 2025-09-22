@@ -3875,7 +3875,7 @@ async def _async_get_flow_handler(
     raise data_entry_flow.UnknownHandler
 
 
-def config_flow_progress_step(
+def config_entry_progress_step(
     progress_action: str | None = None,
     description_placeholders: dict[str, str]
     | Callable[[Any], dict[str, str]]
