@@ -30,19 +30,24 @@ async def async_setup_entry(
         devices_to_remove = tracked_devices - set(latest_devices)
         devices_to_add = set(latest_devices) - tracked_devices
 
-        entities_to_remove = [
-            entity_entry.entity_id
-            for entity_entry in entity_registry.entities.values()
-            if (entity_entry.unique_id in devices_to_remove)
-        ]
+        entities_to_remove = []
+        for entity_entry in entity_registry.entities.values():
+            if entity_entry.config_entry_id != config_entry.entry_id:
+                continue
+            try:
+                _, mac = entity_entry.unique_id.rsplit("-", 1)
+                if mac in devices_to_remove:
+                    entities_to_remove.append(entity_entry.entity_id)
+            except ValueError:
+                continue
 
         for entity_id in entities_to_remove:
             entity_registry.async_remove(entity_id)
 
         entities_to_add = []
-        for unique_id in devices_to_add:
-            device = coordinator.data.devices[unique_id]
-            entities_to_add.append(FingTrackedDevice(coordinator, unique_id, device))
+        for mac_addr in devices_to_add:
+            device = coordinator.data.devices[mac_addr]
+            entities_to_add.append(FingTrackedDevice(coordinator, device))
 
         tracked_devices.clear()
         tracked_devices.update(latest_devices)
@@ -57,16 +62,17 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
 
     _attr_has_entity_name = True
 
-    def __init__(
-        self, coordinator: FingDataUpdateCoordinator, unique_id: str, device: Device
-    ) -> None:
+    def __init__(self, coordinator: FingDataUpdateCoordinator, device: Device) -> None:
         """Set up FingDevice entity."""
         super().__init__(coordinator)
-        self._mac = device.mac
-        self._device = coordinator.data.devices[unique_id]
 
-        self._attr_unique_id = unique_id
-        self._attr_mac_address = self._mac
+        self._device = device
+        agent_id = coordinator.data.network_id
+        if coordinator.data.agent_info is not None:
+            agent_id = coordinator.data.agent_info.agent_id
+
+        self._attr_mac_address = self._device.mac
+        self._attr_unique_id = f"{agent_id}-{self._attr_mac_address}"
         self._attr_name = self._device.name
         self._attr_icon = get_icon_from_type(self._device.type)
 
@@ -115,7 +121,7 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        updated_device_data = self.coordinator.data.devices.get(self._mac)
+        updated_device_data = self.coordinator.data.devices.get(self._device.mac)
         if updated_device_data is not None and self.check_for_updates(
             updated_device_data
         ):

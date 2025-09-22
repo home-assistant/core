@@ -79,19 +79,8 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
         ) as err:
             raise UpdateFailed("Unexpected error from HTTP request") from err
         else:
-            agent_id = device_response.network_id
-            if agent_info_response is not None:
-                agent_id = agent_info_response.agent_id
-
             return FingDataObject(
                 device_response.network_id,
                 agent_info_response,
-                {
-                    self.create_unique_id(agent_id, device.mac): device
-                    for device in device_response.devices
-                },
+                {device.mac: device for device in device_response.devices},
             )
-
-    def create_unique_id(self, agent_id: str, mac_address: str) -> str:
-        """Create a unique ID for a device."""
-        return f"{agent_id}-{mac_address}"
