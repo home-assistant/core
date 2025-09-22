@@ -10,7 +10,6 @@ from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import RequestStatus
@@ -305,15 +304,12 @@ async def test_dhcp_connection_errors(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_serial_number"
 
-    # Reset for other tests
-    mock_pooldose_client.connect.return_value = RequestStatus.SUCCESS
-
 
 @pytest.mark.parametrize(
-    ("api_status"),
+    "api_status",
     [
-        (RequestStatus.NO_DATA),
-        (RequestStatus.API_VERSION_UNSUPPORTED),
+        RequestStatus.NO_DATA,
+        RequestStatus.API_VERSION_UNSUPPORTED,
     ],
 )
 async def test_dhcp_api_errors(
@@ -335,38 +331,15 @@ async def test_dhcp_api_errors(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_serial_number"
 
-    # Reset for other tests
-    mock_pooldose_client.check_apiversion_supported.return_value = (
-        RequestStatus.SUCCESS,
-        {},
-    )
-
 
 async def test_dhcp_updates_host(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_setup_entry: AsyncMock
 ) -> None:
     """Test that DHCP discovery updates the host if it has changed."""
-    # Create and load a config entry
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="TEST123456789",
-        data={CONF_HOST: "192.168.1.100"},
-    )
-    entry.add_to_hass(hass)
-
-    # Create device in registry to match the implementation
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, "TEST123456789")},
-        name="PoolDose TEST123456789",
-        manufacturer="Seko",
-        model="POOL DOSE",
-    )
-    assert device is not None
+    mock_config_entry.add_to_hass(hass)
 
     # Verify initial host IP
-    assert entry.data[CONF_HOST] == "192.168.1.100"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.100"
 
     # Simulate DHCP discovery event with different IP
     result = await hass.config_entries.flow.async_init(
@@ -381,45 +354,4 @@ async def test_dhcp_updates_host(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    # Verify host was updated in the config entry
-    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
-    assert updated_entry.data[CONF_HOST] == "192.168.0.123"
-
-
-async def test_duplicate_dhcp_entries_not_allowed(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test that the same device cannot be configured twice via DHCP."""
-    # First DHCP discovery creates a config entry
-    result_frist_flow = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_DHCP},
-        data=DhcpServiceInfo(
-            ip="192.168.0.123", hostname="kommspot", macaddress="a4e57caabbcc"
-        ),
-    )
-    assert result_frist_flow["type"] is FlowResultType.FORM
-    assert result_frist_flow["step_id"] == "dhcp_confirm"
-
-    # Complete the first flow
-    result_frist_flow = await hass.config_entries.flow.async_configure(
-        result_frist_flow["flow_id"], {}
-    )
-    assert result_frist_flow["type"] is FlowResultType.CREATE_ENTRY
-    assert result_frist_flow["title"] == "PoolDose TEST123456789"
-
-    # Try to set up the same device again with different IP
-    result_second_flow = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_DHCP},
-        data=DhcpServiceInfo(
-            ip="192.168.0.124", hostname="kommspot", macaddress="a4e57caabbcc"
-        ),
-    )
-    # Flow should abort as the device is already configured
-    assert result_second_flow["type"] is FlowResultType.ABORT
-    assert result_second_flow["reason"] == "already_configured"
-
-    # Verify the host was updated in the config entry
-    entry = hass.config_entries.async_get_entry(result_frist_flow["result"].entry_id)
-    assert entry.data[CONF_HOST] == "192.168.0.124"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.0.123"
