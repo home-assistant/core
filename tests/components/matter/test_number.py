@@ -253,6 +253,7 @@ async def test_lock(
     assert state
     assert state.state == "10"
 
+
 @pytest.mark.parametrize("node_fixture", ["door_lock"])
 async def test_matter_exception_on_write_attribute(
     hass: HomeAssistant,
