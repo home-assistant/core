@@ -16,7 +16,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
@@ -88,33 +88,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     yaml_config = config[DOMAIN]
-
-    # Check if already configured via UI
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data.get(CONF_HOST) == yaml_config[CONF_HOST] and entry.data.get(
-            CONF_PORT, DEFAULT_PORT
-        ) == yaml_config.get(CONF_PORT, DEFAULT_PORT):
-            _LOGGER.warning(
-                "Ness Alarm YAML configuration found but already configured via UI for %s:%s. "
-                "Please remove the ness_alarm section from configuration.yaml",
-                yaml_config[CONF_HOST],
-                yaml_config.get(CONF_PORT, DEFAULT_PORT),
-            )
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                "yaml_config_duplicate",
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="yaml_config_duplicate",
-                translation_placeholders={
-                    "host": yaml_config[CONF_HOST],
-                    "port": str(yaml_config.get(CONF_PORT, DEFAULT_PORT)),
-                    "yaml_example": f"ness_alarm:\n  host: {yaml_config[CONF_HOST]}\n  port: {yaml_config.get(CONF_PORT, DEFAULT_PORT)}",
-                },
-            )
-
-            return True
 
     # If not configured, import it
     hass.async_create_task(

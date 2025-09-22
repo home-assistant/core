@@ -157,12 +157,37 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             scan_interval = int(scan_interval)
 
-        zones = import_config.get(CONF_ZONES, [])
-
         data = {
             CONF_HOST: import_config[CONF_HOST],
             CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
         }
+
+        # Check if already configured by host/port BEFORE validation
+        for entry in self._async_current_entries():
+            if (
+                entry.data.get(CONF_HOST) == data[CONF_HOST]
+                and entry.data.get(CONF_PORT, DEFAULT_PORT) == data[CONF_PORT]
+            ):
+                # Already configured - create issue about duplicate YAML
+                ir.async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"yaml_duplicate_{data[CONF_HOST]}_{data[CONF_PORT]}",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="yaml_config_duplicate",
+                    translation_placeholders={
+                        "host": data[CONF_HOST],
+                        "port": str(data[CONF_PORT]),
+                        "yaml_example": f"ness_alarm:\n  host: {data[CONF_HOST]}\n  port: {data[CONF_PORT]}",
+                    },
+                )
+
+                # Abort since it's already configured
+                return self.async_abort(reason="already_configured")
+
+        # Not a duplicate, proceed with import
+        zones = import_config.get(CONF_ZONES, [])
 
         options = {
             CONF_SCAN_INTERVAL: scan_interval,
@@ -186,15 +211,18 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, data)
             unique_id = f"{info['model']}_{info['version']}_{DOMAIN}"
             await self.async_set_unique_id(unique_id)
+
+            # This second check catches edge cases (same model/version at different IPs)
             self._abort_if_unique_id_configured()
 
             # Store panel model
             data["panel_model"] = info["model"]
 
+            # Create issue about successful import with unique ID
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
-                "yaml_config_imported",
+                f"yaml_imported_{data[CONF_HOST]}_{data[CONF_PORT]}",
                 is_fixable=False,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="yaml_config_imported",
@@ -212,7 +240,22 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data=data,
                 options=options,
             )
+
         except NessAlarmConnectionError:
+            # Can't connect - create error issue about failed import
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"yaml_import_failed_{data[CONF_HOST]}_{data[CONF_PORT]}",
+                is_fixable=False,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="yaml_import_failed",
+                translation_placeholders={
+                    "host": data[CONF_HOST],
+                    "port": str(data[CONF_PORT]),
+                    "yaml_example": f"ness_alarm:\n  host: {data[CONF_HOST]}\n  port: {data[CONF_PORT]}",
+                },
+            )
             return self.async_abort(reason="cannot_connect")
 
     @staticmethod
