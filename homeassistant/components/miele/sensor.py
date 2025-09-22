@@ -777,13 +777,7 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
         last_value = await self.async_get_last_state()
         last_data = await self.async_get_last_sensor_data()
         if last_value and last_data and last_value.state != STATE_UNKNOWN:
-            self._restore_last_value(last_data.native_value)
-
-    def _restore_last_value(
-        self, native_value: StateType | date | datetime | Decimal
-    ) -> None:
-        """Restore the last value from cache."""
-        self._attr_native_value = native_value
+            self._attr_native_value = last_data.native_value
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
