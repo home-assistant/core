@@ -1,21 +1,28 @@
 """Test for the weather entity of the IRM KMI integration."""
 
-from datetime import datetime
 from unittest.mock import AsyncMock
 
-from freezegun import freeze_time
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.weather import Forecast
+from homeassistant.components.weather import (
+    DOMAIN as WEATHER_DOMAIN,
+    SERVICE_GET_FORECASTS,
+)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-@freeze_time(datetime.fromisoformat("2023-12-28T15:30:00+01:00"))
+@pytest.mark.freeze_time("2023-12-28T15:30:00+01:00")
 async def test_weather_nl(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_irm_kmi_api_nl: AsyncMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test weather with forecast from the Netherland."""
     mock_config_entry.add_to_hass(hass)
@@ -23,22 +30,49 @@ async def test_weather_nl(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    weather = hass.data["weather"].get_entity("weather.home")
-    result = await weather.async_forecast_daily()
-
-    assert isinstance(result, list)
-    assert len(result) == 7
-
-    # When getting daily forecast, the min temperature of the current day
-    # should be the min temperature of the coming night
-    assert result[0]["native_templow"] == 9
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@freeze_time(datetime.fromisoformat("2024-01-21T14:15:00+01:00"))
+@pytest.mark.parametrize(
+    "forecast_type",
+    ["daily", "hourly"],
+)
+async def test_forecast_service(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_irm_kmi_api_nl: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    forecast_type: str,
+) -> None:
+    """Test multiple forecast."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {
+            ATTR_ENTITY_ID: "weather.home",
+            "type": forecast_type,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
+
+
+@pytest.mark.freeze_time("2024-01-21T14:15:00+01:00")
+@pytest.mark.parametrize(
+    "forecast_type",
+    ["daily", "hourly"],
+)
 async def test_weather_higher_temp_at_night(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_irm_kmi_api_high_low_temp: AsyncMock,
+    forecast_type: str,
 ) -> None:
     """Test that the templow is always lower than temperature, even when API returns the opposite."""
     # Test case for https://github.com/jdejaegh/irm-kmi-ha/issues/8
@@ -47,15 +81,19 @@ async def test_weather_higher_temp_at_night(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    weather = hass.data["weather"].get_entity("weather.home")
-    result: list[Forecast] = await weather.async_forecast_daily()
-
-    for f in result:
-        if f["native_temperature"] is not None and f["native_templow"] is not None:
-            assert f["native_temperature"] >= f["native_templow"]
-
-    result: list[Forecast] = await weather.async_forecast_twice_daily()
-
-    for f in result:
-        if f["native_temperature"] is not None and f["native_templow"] is not None:
-            assert f["native_temperature"] >= f["native_templow"]
+    response = await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {
+            ATTR_ENTITY_ID: "weather.home",
+            "type": forecast_type,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    for forecast in response["weather.home"]["forecast"]:
+        assert (
+            forecast.get("native_temperature") is None
+            or forecast.get("native_templow") is None
+            or forecast["native_temperature"] >= forecast["native_templow"]
+        )

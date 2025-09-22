@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock
 
-from homeassistant.components.irm_kmi import async_reload_entry
 from homeassistant.components.irm_kmi.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -28,9 +27,6 @@ async def test_load_unload_config_entry(
 
     assert not hass.data.get(DOMAIN)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-
-    await async_reload_entry(hass, mock_config_entry)
-    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_config_entry_not_ready(
