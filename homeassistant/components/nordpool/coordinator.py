@@ -71,6 +71,9 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
         self.unsub = async_track_point_in_utc_time(
             self.hass, self.fetch_data, self.get_next_interval(dt_util.utcnow())
         )
+        if self.config_entry.pref_disable_polling and not initial:
+            self.async_update_listeners()
+            return
         try:
             data = await self.handle_data(initial)
         except UpdateFailed as err:
@@ -95,9 +98,6 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
 
     async def _async_update_data(self) -> DeliveryPeriodsData:
         """Fetch the latest data from the source."""
-        if self.unsub:
-            self.unsub()
-            self.unsub = None
         return await self.handle_data()
 
     async def api_call(self, retry: int = 3) -> DeliveryPeriodsData | None:
