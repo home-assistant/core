@@ -255,7 +255,7 @@ async def test_lock(
 
 
 @pytest.mark.parametrize("node_fixture", ["door_lock"])
-async def test_matter_exception_on_write_attribute(
+async def test_matter_exception_on_door_lock_write_attribute(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
