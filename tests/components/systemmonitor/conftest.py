@@ -196,7 +196,6 @@ def mock_os() -> Generator:
         patch("homeassistant.components.systemmonitor.coordinator.os") as mock_os,
         patch("homeassistant.components.systemmonitor.util.os") as mock_os_util,
     ):
-        mock_os_util.name = "linux"
         mock_os.getloadavg.return_value = (1, 2, 3)
         mock_os_util.path.isdir = isdir
         yield mock_os
