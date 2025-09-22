@@ -38,6 +38,15 @@
       },
       "wdr_switch": {
         "default": "mdi:alpha-w-box"
+      },
+      "pet_detection_switch": {
+        "default": "mdi:paw"
+      },
+      "car_detection_switch": {
+        "default": "mdi:car-hatchback"
+      },
+      "human_detection_switch": {
+        "default": "mdi:human"
       }
     },
     "number": {

@@ -35,9 +35,14 @@ class FoscamDeviceInfo:
     is_turn_off_volume: bool
     is_turn_off_light: bool
     supports_speak_volume_adjustment: bool
+    supports_pet_adjustment: bool
+    supports_car_adjustment: bool
 
     is_open_wdr: bool | None = None
     is_open_hdr: bool | None = None
+    is_open_pet_detection: bool | None = None
+    is_open_car_detection: bool | None = None
+    is_open_human_detection: bool | None = None
 
 
 class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
@@ -126,6 +131,34 @@ class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
             if ret_sw == 0
             else False
         )
+        pet_adjustment_val = (
+            bool(int(software_capabilities.get("swCapabilities2")) & 512)
+            if ret_sw == 0
+            else False
+        )
+        car_adjustment_val = (
+            bool(int(software_capabilities.get("swCapabilities2")) & 256)
+            if ret_sw == 0
+            else False
+        )
+        ret_md, mothion_config_val = self.session.get_motion_detect_config()
+        if pet_adjustment_val:
+            is_open_pet_detection_val = (
+                mothion_config_val["petEnable"] == "1" if ret_md == 0 else False
+            )
+        else:
+            is_open_pet_detection_val = False
+
+        if car_adjustment_val:
+            is_open_car_detection_val = (
+                mothion_config_val["carEnable"] == "1" if ret_md == 0 else False
+            )
+        else:
+            is_open_car_detection_val = False
+
+        is_open_human_detection_val = (
+            mothion_config_val["humanEnable"] == "1" if ret_md == 0 else False
+        )
 
         return FoscamDeviceInfo(
             dev_info=dev_info,
@@ -141,8 +174,13 @@ class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
             is_turn_off_volume=is_turn_off_volume_val,
             is_turn_off_light=is_turn_off_light_val,
             supports_speak_volume_adjustment=supports_speak_volume_adjustment_val,
+            supports_pet_adjustment=pet_adjustment_val,
+            supports_car_adjustment=car_adjustment_val,
             is_open_wdr=is_open_wdr,
             is_open_hdr=is_open_hdr,
+            is_open_pet_detection=is_open_pet_detection_val,
+            is_open_car_detection=is_open_car_detection_val,
+            is_open_human_detection=is_open_human_detection_val,
         )
 
     async def _async_update_data(self) -> FoscamDeviceInfo:

@@ -61,6 +61,15 @@
       },
       "wdr_switch": {
         "name": "WDR"
+      },
+      "pet_detection_switch": {
+        "name": "Pet detection"
+      },
+      "car_detection_switch": {
+        "name": "Car detection"
+      },
+      "human_detection_switch": {
+        "name": "Human detection"
       }
     },
     "number": {
