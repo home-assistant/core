@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from homeassistant.components.light import ColorMode, LightEntity
@@ -14,6 +15,7 @@ from .const import DOMAIN
 from .coordinator import LunatoneConfigEntry, LunatoneDevicesDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
+STATUS_UPDATE_DELAY = 0.02
 
 
 async def async_setup_entry(
@@ -58,7 +60,6 @@ class LunatoneLight(
         self._interface_serial_number = interface_serial_number
         self._device = self.coordinator.device_api_mapping.get(self._device_id)
         self._attr_unique_id = f"{interface_serial_number}-device{device_id}"
-        self._apply_device_state()
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -79,16 +80,12 @@ class LunatoneLight(
     @property
     def is_on(self) -> bool:
         """Return True if light is on."""
-        return bool(self._attr_is_on)
-
-    def _apply_device_state(self) -> None:
-        self._attr_is_on = self._device.is_on if self._device is not None else False
+        return self._device.is_on if self._device is not None else False
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._device = self.coordinator.device_api_mapping.get(self._device_id)
-        self._apply_device_state()
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -96,13 +93,13 @@ class LunatoneLight(
         if self._device is None:
             return
         await self._device.switch_on()
-        self._attr_is_on = True
-        self.async_write_ha_state()
+        await asyncio.sleep(STATUS_UPDATE_DELAY)
+        await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         if self._device is None:
             return
         await self._device.switch_off()
-        self._attr_is_on = False
-        self.async_write_ha_state()
+        await asyncio.sleep(STATUS_UPDATE_DELAY)
+        await self.coordinator.async_refresh()
