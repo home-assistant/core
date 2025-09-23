@@ -89,20 +89,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     yaml_config = config[DOMAIN]
 
-    # Wait for Home Assistant to be fully started before importing
-    # This ensures existing config entries are loaded
-    async def _import_yaml_config(_):
-        """Import YAML configuration after HA is started."""
-        _LOGGER.debug("Importing YAML config after startup: %s", yaml_config)
-        await hass.config_entries.flow.async_init(
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
             data=yaml_config,
         )
-
-    # Use async_at_started to ensure import happens after startup
-    async_at_started(hass, _import_yaml_config)
-
+    )
     return True
 
 
