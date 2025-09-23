@@ -16,6 +16,7 @@ from homeassistant.components.ness_alarm.const import (
     CONF_ZONES,
     DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
@@ -772,15 +773,18 @@ async def test_import_duplicate_yaml(hass: HomeAssistant) -> None:
         data={CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
     ).add_to_hass(hass)
 
-    flow = NessConfigFlow()
-    flow.hass = hass
-
     import_config = {CONF_HOST: "1.2.3.4", CONF_PORT: 1234}
 
-    result = await flow.async_step_import(import_config)
-    # This should abort due to duplicate YAML
+    # Use the proper flow initialization method
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=import_config,
+    )
+
+    # This should abort due to single_config_entry restriction
     assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_import_with_zones(hass: HomeAssistant) -> None:
