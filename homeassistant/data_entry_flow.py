@@ -13,7 +13,7 @@ from enum import StrEnum
 import functools
 import logging
 from types import MappingProxyType
-from typing import Any, Generic, Required, TypedDict, TypeVar, cast
+from typing import Any, Concatenate, Generic, Required, TypedDict, TypeVar, cast
 
 import voluptuous as vol
 
@@ -963,18 +963,21 @@ class section:
         return self.schema(value)
 
 
+type _FuncType[_T: FlowHandler[Any, Any, Any], _R: FlowResult[Any, Any], **_P] = (
+    Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R]]
+)
+
+
 def progress_step[
-    _ResultT: FlowResult[Any, Any],
-    _FlowHandlerT: FlowHandler[Any, _FlowResultT, Any],  # type: ignore[valid-type]
+    HandlerT: FlowHandler[Any, Any, Any],
+    ResultT: FlowResult[Any, Any],
+    **P,
 ](
     progress_action: str | None = None,
     description_placeholders: (
         dict[str, str] | Callable[[Any], dict[str, str]] | None
     ) = None,
-) -> Callable[
-    [Callable[[_FlowHandlerT, dict[str, Any] | None], Coroutine[Any, Any, _ResultT]]],
-    Callable[..., Coroutine[Any, Any, _ResultT]],
-]:
+) -> Callable[[_FuncType[HandlerT, ResultT, P]], _FuncType[HandlerT, ResultT, P]]:
     """Decorator to create a progress step from an async function.
 
     The decorated function should contain the actual work to be done.
@@ -987,15 +990,12 @@ def progress_step[
     """
 
     def decorator(
-        func: Callable[
-            [_FlowHandlerT, dict[str, Any] | None], Coroutine[Any, Any, _ResultT]
-        ],
-    ) -> Callable[..., Coroutine[Any, Any, _ResultT]]:
+        func: _FuncType[HandlerT, ResultT, P],
+    ) -> _FuncType[HandlerT, ResultT, P]:
         @functools.wraps(func)
         async def wrapper(
-            self: _FlowHandlerT,
-            user_input: dict[str, Any] | None = None,
-        ) -> _ResultT:
+            self: FlowHandler[Any, ResultT], *args: P.args, **kwargs: P.kwargs
+        ) -> ResultT:
             step_id = func.__name__.replace("async_step_", "")
             action = progress_action or step_id
 
@@ -1005,7 +1005,8 @@ def progress_step[
             if progress_task is None:
                 # First call - create and start the progress task
                 progress_task = self.hass.async_create_task(
-                    func(self, user_input), f"Progress step {step_id}"
+                    func(self, *args, **kwargs),  # type: ignore[arg-type]
+                    f"Progress step {step_id}",
                 )
                 self._decorated_progress_tasks[step_id] = progress_task
 
