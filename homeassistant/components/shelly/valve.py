@@ -20,8 +20,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry
 from .entity import (
     BlockEntityDescription,
+    RpcEntityDescription,
     ShellyBlockAttributeEntity,
+    ShellyRpcAttributeEntity,
     async_setup_block_attribute_entities,
+    async_setup_entry_rpc,
 )
 from .utils import async_remove_shelly_entity, get_device_entry_gen
 
@@ -33,12 +36,79 @@ class BlockValveDescription(BlockEntityDescription, ValveEntityDescription):
     """Class to describe a BLOCK valve."""
 
 
+@dataclass(kw_only=True, frozen=True)
+class RpcValveDescription(RpcEntityDescription, ValveEntityDescription):
+    """Class to describe a RPC virtual valve."""
+
+
 GAS_VALVE = BlockValveDescription(
     key="valve|valve",
     name="Valve",
     available=lambda block: block.valve not in ("failure", "checking"),
     removal_condition=lambda _, block: block.valve in ("not_connected", "unknown"),
 )
+
+
+class RpcShellyWaterValve(ShellyRpcAttributeEntity, ValveEntity):
+    """Entity that controls a valve on RPC Shelly Water Valve."""
+
+    entity_description: RpcValveDescription
+    _attr_device_class = ValveDeviceClass.WATER
+    _attr_supported_features = (
+        ValveEntityFeature.OPEN
+        | ValveEntityFeature.CLOSE
+        | ValveEntityFeature.SET_POSITION
+    )
+    _attr_reports_position = True
+    _id: int
+
+    @property
+    def current_valve_position(self) -> int:
+        """Return current position of valve."""
+        return cast(int, self.attribute_value)
+
+    async def async_set_valve_position(self, position: int) -> None:
+        """Move the valve to a specific position."""
+        await self.coordinator.device.number_set(self._id, position)
+
+
+class RpcShellyNeoWaterValve(ShellyRpcAttributeEntity, ValveEntity):
+    """Entity that controls a valve on RPC Shelly NEO Water Walve."""
+
+    entity_description: RpcValveDescription
+    _attr_device_class = ValveDeviceClass.WATER
+    _attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
+    _attr_reports_position = False
+    _id: int
+
+    @property
+    def is_closed(self) -> bool | None:
+        """Return if the valve is closed or not."""
+        return not self.attribute_value
+
+    async def async_open_valve(self, **kwargs: Any) -> None:
+        """Open valve."""
+        await self.call_rpc("Boolean.Set", {"id": self._id, "value": True})
+
+    async def async_close_valve(self, **kwargs: Any) -> None:
+        """Close valve."""
+        await self.call_rpc("Boolean.Set", {"id": self._id, "value": False})
+
+
+RPC_VAVLES: dict[str, RpcValveDescription] = {
+    "water_valve": RpcValveDescription(
+        key="number",
+        sub_key="value",
+        role="position",
+        entity_class=RpcShellyWaterValve,
+    ),
+    "neo_water_valve": RpcValveDescription(
+        key="boolean",
+        sub_key="value",
+        role="state",
+        entity_class=RpcShellyNeoWaterValve,
+    ),
+}
 
 
 async def async_setup_entry(
@@ -48,7 +118,24 @@ async def async_setup_entry(
 ) -> None:
     """Set up valves for device."""
     if get_device_entry_gen(config_entry) in BLOCK_GENERATIONS:
-        async_setup_block_entry(hass, config_entry, async_add_entities)
+        return async_setup_block_entry(hass, config_entry, async_add_entities)
+
+    return async_setup_rpc_entry(hass, config_entry, async_add_entities)
+
+
+@callback
+def async_setup_rpc_entry(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up entities for RPC device."""
+    coordinator = config_entry.runtime_data.rpc
+    assert coordinator
+
+    async_setup_entry_rpc(
+        hass, config_entry, async_add_entities, RPC_VAVLES, RpcShellyWaterValve
+    )
 
 
 @callback
