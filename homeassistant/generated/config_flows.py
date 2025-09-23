@@ -117,6 +117,7 @@ FLOWS = {
         "cert_expiry",
         "chacon_dio",
         "cloudflare",
+        "cloudflare_r2",
         "co2signal",
         "coinbase",
         "color_extractor",

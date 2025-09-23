@@ -278,6 +278,8 @@ build.json @home-assistant/supervisor
 /tests/components/cloud/ @home-assistant/cloud
 /homeassistant/components/cloudflare/ @ludeeus @ctalkington
 /tests/components/cloudflare/ @ludeeus @ctalkington
+/homeassistant/components/cloudflare_r2/ @corrreia
+/tests/components/cloudflare_r2/ @corrreia
 /homeassistant/components/co2signal/ @jpbede @VIKTORVAV99
 /tests/components/co2signal/ @jpbede @VIKTORVAV99
 /homeassistant/components/coinbase/ @tombrien

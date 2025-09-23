@@ -1025,6 +1025,12 @@
       "iot_class": "cloud_push",
       "single_config_entry": true
     },
+    "cloudflare_r2": {
+      "name": "Cloudflare R2",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "cmus": {
       "name": "cmus",
       "integration_type": "hub",
