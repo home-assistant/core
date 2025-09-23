@@ -52,7 +52,7 @@ async def async_setup_platform(
         slave_count = entry.get(CONF_SLAVE_COUNT, None) or entry.get(
             CONF_VIRTUAL_COUNT, 0
         )
-        sensor = ModbusBinarySensor(hass, hub, entry, slave_count)
+        sensor = ModbusBinarySensor(hub, entry, slave_count)
         if slave_count > 0:
             sensors.extend(await sensor.async_setup_slaves(hass, slave_count, entry))
         sensors.append(sensor)
@@ -64,7 +64,6 @@ class ModbusBinarySensor(ModbusBaseEntity, RestoreEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         hub: ModbusHub,
         entry: dict[str, Any],
         slave_count: int,
@@ -73,7 +72,7 @@ class ModbusBinarySensor(ModbusBaseEntity, RestoreEntity, BinarySensorEntity):
         self._count = slave_count + 1
         self._coordinator: DataUpdateCoordinator[list[int] | None] | None = None
         self._result: list[int] = []
-        super().__init__(hass, hub, entry)
+        super().__init__(hub, entry)
 
     async def async_setup_slaves(
         self, hass: HomeAssistant, slave_count: int, entry: dict[str, Any]

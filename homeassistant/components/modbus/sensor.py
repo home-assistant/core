@@ -49,7 +49,7 @@ async def async_setup_platform(
         slave_count = entry.get(CONF_SLAVE_COUNT, None) or entry.get(
             CONF_VIRTUAL_COUNT, 0
         )
-        sensor = ModbusRegisterSensor(hass, hub, entry, slave_count)
+        sensor = ModbusRegisterSensor(hub, entry, slave_count)
         if slave_count > 0:
             sensors.extend(await sensor.async_setup_slaves(hass, slave_count, entry))
         sensors.append(sensor)
@@ -61,13 +61,12 @@ class ModbusRegisterSensor(ModbusStructEntity, RestoreSensor, SensorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         hub: ModbusHub,
         entry: dict[str, Any],
         slave_count: int,
     ) -> None:
         """Initialize the modbus register sensor."""
-        super().__init__(hass, hub, entry)
+        super().__init__(hub, entry)
         if slave_count:
             self._count = self._count * (slave_count + 1)
         self._coordinator: DataUpdateCoordinator[list[float | None] | None] | None = (

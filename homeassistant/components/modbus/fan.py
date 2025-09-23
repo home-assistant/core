@@ -28,17 +28,15 @@ async def async_setup_platform(
     if discovery_info is None or not (fans := discovery_info[CONF_FANS]):
         return
     hub = get_hub(hass, discovery_info[CONF_NAME])
-    async_add_entities(ModbusFan(hass, hub, config) for config in fans)
+    async_add_entities(ModbusFan(hub, config) for config in fans)
 
 
 class ModbusFan(ModbusToggleEntity, FanEntity):
     """Class representing a Modbus fan."""
 
-    def __init__(
-        self, hass: HomeAssistant, hub: ModbusHub, config: dict[str, Any]
-    ) -> None:
+    def __init__(self, hub: ModbusHub, config: dict[str, Any]) -> None:
         """Initialize the fan."""
-        super().__init__(hass, hub, config)
+        super().__init__(hub, config)
         if self.command_on is not None and self._command_off is not None:
             self._attr_supported_features |= (
                 FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON

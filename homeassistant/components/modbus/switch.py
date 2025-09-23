@@ -26,7 +26,7 @@ async def async_setup_platform(
     if discovery_info is None or not (switches := discovery_info[CONF_SWITCHES]):
         return
     hub = get_hub(hass, discovery_info[CONF_NAME])
-    async_add_entities(ModbusSwitch(hass, hub, config) for config in switches)
+    async_add_entities(ModbusSwitch(hub, config) for config in switches)
 
 
 class ModbusSwitch(ModbusToggleEntity, SwitchEntity):

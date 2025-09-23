@@ -46,17 +46,15 @@ async def async_setup_platform(
     if discovery_info is None or not (lights := discovery_info[CONF_LIGHTS]):
         return
     hub = get_hub(hass, discovery_info[CONF_NAME])
-    async_add_entities(ModbusLight(hass, hub, config) for config in lights)
+    async_add_entities(ModbusLight(hub, config) for config in lights)
 
 
 class ModbusLight(ModbusToggleEntity, LightEntity):
     """Class representing a Modbus light."""
 
-    def __init__(
-        self, hass: HomeAssistant, hub: ModbusHub, config: dict[str, Any]
-    ) -> None:
+    def __init__(self, hub: ModbusHub, config: dict[str, Any]) -> None:
         """Initialize the Modbus light entity."""
-        super().__init__(hass, hub, config)
+        super().__init__(hub, config)
         self._brightness_address: int | None = config.get(CONF_BRIGHTNESS_REGISTER)
         self._color_temp_address: int | None = config.get(CONF_COLOR_TEMP_REGISTER)
 

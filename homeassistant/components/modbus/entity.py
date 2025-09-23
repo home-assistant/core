@@ -25,7 +25,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.event import async_call_later
@@ -76,9 +76,7 @@ class ModbusBaseEntity(Entity):
     _attr_available = True
     _attr_unit_of_measurement = None
 
-    def __init__(
-        self, hass: HomeAssistant, hub: ModbusHub, entry: dict[str, Any]
-    ) -> None:
+    def __init__(self, hub: ModbusHub, entry: dict[str, Any]) -> None:
         """Initialize the Modbus binary sensor."""
 
         self._hub = hub
@@ -157,9 +155,9 @@ class ModbusBaseEntity(Entity):
 class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
     """Base class representing a sensor/climate."""
 
-    def __init__(self, hass: HomeAssistant, hub: ModbusHub, config: dict) -> None:
+    def __init__(self, hub: ModbusHub, config: dict) -> None:
         """Initialize the switch."""
-        super().__init__(hass, hub, config)
+        super().__init__(hub, config)
         self._swap = config[CONF_SWAP]
         self._data_type = config[CONF_DATA_TYPE]
         self._structure: str = config[CONF_STRUCTURE]
@@ -264,10 +262,10 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
 class ModbusToggleEntity(ModbusBaseEntity, ToggleEntity, RestoreEntity):
     """Base class representing a Modbus switch."""
 
-    def __init__(self, hass: HomeAssistant, hub: ModbusHub, config: dict) -> None:
+    def __init__(self, hub: ModbusHub, config: dict) -> None:
         """Initialize the switch."""
         config[CONF_INPUT_TYPE] = ""
-        super().__init__(hass, hub, config)
+        super().__init__(hub, config)
         self._attr_is_on = False
         convert = {
             CALL_TYPE_REGISTER_HOLDING: (

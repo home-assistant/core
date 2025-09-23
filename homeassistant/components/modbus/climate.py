@@ -128,7 +128,7 @@ async def async_setup_platform(
     if discovery_info is None or not (climates := discovery_info[CONF_CLIMATES]):
         return
     hub = get_hub(hass, discovery_info[CONF_NAME])
-    async_add_entities(ModbusThermostat(hass, hub, config) for config in climates)
+    async_add_entities(ModbusThermostat(hub, config) for config in climates)
 
 
 class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
@@ -142,12 +142,11 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         hub: ModbusHub,
         config: dict[str, Any],
     ) -> None:
         """Initialize the modbus thermostat."""
-        super().__init__(hass, hub, config)
+        super().__init__(hub, config)
         self._target_temperature_register = config[CONF_TARGET_TEMP]
         self._target_temperature_write_registers = config[
             CONF_TARGET_TEMP_WRITE_REGISTERS
