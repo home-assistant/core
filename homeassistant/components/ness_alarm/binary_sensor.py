@@ -15,7 +15,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import SIGNAL_ZONE_CHANGED
 from .const import (
@@ -45,7 +44,6 @@ async def async_setup_entry(
 
     panel_model = config_entry.data.get("panel_model", "UNKNOWN")
 
-    # Handle manual overrides directly if not in dictionary (workaround for module caching)
     if panel_model.startswith("MANUAL_"):
         try:
             zone_str = panel_model.split("_")[1]
@@ -135,7 +133,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class NessZoneSensor(BinarySensorEntity, RestoreEntity):
+class NessZoneSensor(BinarySensorEntity):
     """Representation of a Ness zone sensor."""
 
     _attr_should_poll = False
@@ -172,11 +170,6 @@ class NessZoneSensor(BinarySensorEntity, RestoreEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks and restore state."""
-        # Restore previous state if available
-        last_state = await self.async_get_last_state()
-        if last_state is not None:
-            self._state = last_state.state == "on"
-
         # Register zone change callback
         self.async_on_remove(
             async_dispatcher_connect(

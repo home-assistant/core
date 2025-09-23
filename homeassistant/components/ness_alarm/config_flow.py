@@ -79,13 +79,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         # Log the detected model and its zone capacity
         if panel_model in PANEL_MODEL_ZONES:
             zone_count = PANEL_MODEL_ZONES[panel_model]
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Detected panel model %s with %s zone capacity",
                 panel_model,
                 zone_count,
             )
         else:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Unknown panel model %s, will default to %s zones enabled",
                 panel_model,
                 DEFAULT_MAX_SUPPORTED_ZONES,
@@ -136,9 +136,6 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_HOST): str,
                 vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Required(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): vol.All(cv.positive_float, vol.Range(min=0.1, max=3600)),
                 vol.Optional(
                     CONF_INFER_ARMING_STATE, default=DEFAULT_INFER_ARMING_STATE
                 ): bool,
@@ -151,7 +148,7 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Handle import from YAML."""
 
-        scan_interval = import_config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        scan_interval = DEFAULT_SCAN_INTERVAL
         if isinstance(scan_interval, timedelta):
             scan_interval = int(scan_interval.total_seconds())
         else:
