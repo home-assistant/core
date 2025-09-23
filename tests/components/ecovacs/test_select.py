@@ -4,6 +4,7 @@ from deebot_client.command import Command
 from deebot_client.commands.json import SetWaterInfo
 from deebot_client.event_bus import EventBus
 from deebot_client.events.water_info import WaterAmount, WaterAmountEvent
+from deebot_client.events.work_mode import WorkMode, WorkModeEvent
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -34,6 +35,7 @@ def platforms() -> Platform | list[Platform]:
 async def notify_events(hass: HomeAssistant, event_bus: EventBus):
     """Notify events."""
     event_bus.notify(WaterAmountEvent(WaterAmount.ULTRAHIGH))
+    event_bus.notify(WorkModeEvent(WorkMode.VACUUM))
     await block_till_done(hass, event_bus)
 
 
@@ -45,6 +47,12 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
             "yna5x1",
             [
                 "select.ozmo_950_water_flow_level",
+            ],
+        ),
+        (
+            "n0vyif",
+            [
+                "select.x8_pro_omni_work_mode",
             ],
         ),
     ],
