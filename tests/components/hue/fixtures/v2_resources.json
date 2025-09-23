@@ -2363,5 +2363,199 @@
       "sensitivity_max": 4
     },
     "type": "motion"
+  },
+  {
+    "id": "4f317b69-9da0-4b4f-84f2-7ca07b9fe345",
+    "owner": {
+      "rid": "5e6f7a8b-9c1d-4e2f-b3a4-5c6d7e8f9a0b",
+      "rtype": "motion_area_configuration"
+    },
+    "enabled": true,
+    "motion": {
+      "motion": false,
+      "motion_valid": true,
+      "motion_report": {
+        "changed": "2023-09-23T08:13:42.394Z",
+        "motion": false
+      }
+    },
+    "sensitivity": {
+      "sensitivity": 2,
+      "sensitivity_max": 4
+    },
+    "type": "convenience_area_motion"
+  },
+  {
+    "id": "8b7e4f82-9c3d-4e1a-a5f6-8d9c7b2a3e4f",
+    "owner": {
+      "rid": "5e6f7a8b-9c1d-4e2f-b3a4-5c6d7e8f9a0b",
+      "rtype": "motion_area_configuration"
+    },
+    "enabled": true,
+    "motion": {
+      "motion": false,
+      "motion_valid": true,
+      "motion_report": {
+        "changed": "2023-09-23T05:54:08.166Z",
+        "motion": false
+      }
+    },
+    "sensitivity": {
+      "sensitivity": 2,
+      "sensitivity_max": 4
+    },
+    "type": "security_area_motion"
+  },
+  {
+    "id": "5e6f7a8b-9c1d-4e2f-b3a4-5c6d7e8f9a0b",
+    "name": "Motion configuration 1",
+    "group": {
+      "rid": "6ddc9066-7e7d-4a03-a773-c73937968296",
+      "rtype": "room"
+    },
+    "participants": [
+      {
+        "resource": {
+          "rid": "a17253ed-168d-471a-8e59-01a101441511",
+          "rtype": "motion_area_candidate"
+        },
+        "status": {
+          "health": "healthy"
+        }
+      }
+    ],
+    "services": [
+      {
+        "rid": "4f317b69-9da0-4b4f-84f2-7ca07b9fe345",
+        "rtype": "convenience_area_motion"
+      },
+      {
+        "rid": "8b7e4f82-9c3d-4e1a-a5f6-8d9c7b2a3e4f",
+        "rtype": "security_area_motion"
+      }
+    ],
+    "health": "healthy",
+    "enabled": true,
+    "type": "motion_area_configuration"
+  },
+  {
+    "id": "9f8e7d6c-5b4a-3e2d-1c0b-9a8f7e6d5c4b",
+    "owner": {
+      "rid": "3ff06175-29e8-44a8-8fe7-af591b0025da",
+      "rtype": "device"
+    },
+    "state": "no_update",
+    "problems": [],
+    "type": "device_software_update"
+  },
+  {
+    "id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+    "owner": {
+      "rid": "4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a",
+      "rtype": "service_group"
+    },
+    "enabled": true,
+    "light": {
+      "light_level_report": {
+        "changed": "2023-09-23T06:19:38.865Z",
+        "light_level": 0
+      }
+    },
+    "type": "grouped_light_level"
+  },
+  {
+    "id": "2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e",
+    "owner": {
+      "rid": "4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a",
+      "rtype": "service_group"
+    },
+    "enabled": true,
+    "motion": {
+      "motion_report": {
+        "changed": "2023-09-23T08:20:51.384Z",
+        "motion": false
+      }
+    },
+    "type": "grouped_motion"
+  },
+  {
+    "id": "3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f",
+    "id_v1": "/sensors/75",
+    "owner": {
+      "rid": "3ff06175-29e8-44a8-8fe7-af591b0025da",
+      "rtype": "device"
+    },
+    "relative_rotary": {
+      "last_event": {
+        "action": "start",
+        "rotation": {
+          "direction": "clock_wise",
+          "steps": 30,
+          "duration": 400
+        }
+      },
+      "rotary_report": {
+        "updated": "2023-09-21T10:00:03.276Z",
+        "action": "start",
+        "rotation": {
+          "direction": "counter_clock_wise",
+          "steps": 45,
+          "duration": 400
+        }
+      }
+    },
+    "type": "relative_rotary"
+  },
+  {
+    "id": "4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a",
+    "children": [
+      {
+        "rid": "4f317b69-9da0-4b4f-84f2-7ca07b9fe345",
+        "rtype": "convenience_area_motion"
+      },
+      {
+        "rid": "5f317b69-9da0-4b4f-84f2-7ca07b9fe346",
+        "rtype": "security_area_motion"
+      }
+    ],
+    "services": [
+      {
+        "rid": "2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e",
+        "rtype": "grouped_motion"
+      },
+      {
+        "rid": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+        "rtype": "grouped_light_level"
+      }
+    ],
+    "metadata": {
+      "name": "Sensor group"
+    },
+    "type": "service_group"
+  },
+  {
+    "id": "5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b",
+    "name": "Test clip resource",
+    "type": "clip"
+  },
+  {
+    "id": "6f7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c",
+    "type": "matter",
+    "enabled": true,
+    "max_fabrics": 5,
+    "has_qr_code": false
+  },
+  {
+    "id": "7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d",
+    "time": {
+      "time_zone": "UTC",
+      "time": "2023-09-23T10:30:00Z"
+    },
+    "type": "time"
+  },
+  {
+    "id": "8b9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e",
+    "status": "ready",
+    "type": "zigbee_device_discovery"
   }
 ]
