@@ -43,7 +43,7 @@ async def async_setup_entry(
             )
             lists_added |= new_lists
 
-    coordinator.activity.async_add_listener(add_entities)
+    coordinator.data.async_add_listener(add_entities)
     add_entities()
 
 
@@ -67,7 +67,8 @@ class BringEventEntity(BringBaseEntity, EventEntity):
 
     def _async_handle_event(self) -> None:
         """Handle the activity event."""
-        bring_list = self.coordinator.data[self._list_uuid]
+        if (bring_list := self.coordinator.data.get(self._list_uuid)) is None:
+            return
         last_event_triggered = self.state
         if bring_list.activity.timeline and (
             last_event_triggered is None
