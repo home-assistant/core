@@ -102,7 +102,6 @@ async def setup_integration(
 ) -> MockConfigEntry:
     """Set up the Lunatone integration for testing."""
     mock_config_entry.add_to_hass(hass)
-    with patch("asyncio.sleep"):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     return mock_config_entry
