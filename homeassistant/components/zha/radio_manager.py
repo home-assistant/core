@@ -178,11 +178,8 @@ class ZhaRadioManager:
 
         # Don't create `zigbee.db` if it doesn't already exist
         try:
-            if (
-                database_path is not None
-                and not await self.hass.async_add_executor_job(
-                    os.path.exists, database_path
-                )
+            if database_path is not None and not await self.hass.async_add_executor_job(
+                os.path.exists, database_path
             ):
                 database_path = None
         except OSError as error:
