@@ -153,8 +153,8 @@ class IntentCacheKey:
     language: str
     """Language of text."""
 
-    device_id: str | None
-    """Device id from user input."""
+    satellite_id: str | None
+    """Satellite id from user input."""
 
 
 @dataclass(frozen=True)
@@ -443,9 +443,15 @@ class DefaultAgent(ConversationEntity):
             }
             for entity in result.entities_list
         }
-        device_area = self._get_device_area(user_input.device_id)
-        if device_area:
-            slots["preferred_area_id"] = {"value": device_area.id}
+
+        satellite_id = user_input.satellite_id
+        device_id = user_input.device_id
+        satellite_area, device_id = self._get_satellite_area_and_device(
+            satellite_id, device_id
+        )
+        if satellite_area is not None:
+            slots["preferred_area_id"] = {"value": satellite_area.id}
+
         async_conversation_trace_append(
             ConversationTraceEventType.TOOL_CALL,
             {
@@ -467,8 +473,8 @@ class DefaultAgent(ConversationEntity):
                 user_input.context,
                 language,
                 assistant=DOMAIN,
-                device_id=user_input.device_id,
-                satellite_id=user_input.satellite_id,
+                device_id=device_id,
+                satellite_id=satellite_id,
                 conversation_agent_id=user_input.agent_id,
             )
         except intent.MatchFailedError as match_error:
@@ -534,7 +540,9 @@ class DefaultAgent(ConversationEntity):
 
         # Try cache first
         cache_key = IntentCacheKey(
-            text=user_input.text, language=language, device_id=user_input.device_id
+            text=user_input.text,
+            language=language,
+            satellite_id=user_input.satellite_id,
         )
         cache_value = self._intent_cache.get(cache_key)
         if cache_value is not None:
@@ -1304,28 +1312,40 @@ class DefaultAgent(ConversationEntity):
         self, user_input: ConversationInput
     ) -> dict[str, Any] | None:
         """Return intent recognition context for user input."""
-        if not user_input.device_id:
+        satellite_area, _ = self._get_satellite_area_and_device(
+            user_input.satellite_id, user_input.device_id
+        )
+        if satellite_area is None:
             return None
 
-        device_area = self._get_device_area(user_input.device_id)
-        if device_area is None:
-            return None
+        return {"area": {"value": satellite_area.name, "text": satellite_area.name}}
 
-        return {"area": {"value": device_area.name, "text": device_area.name}}
+    def _get_satellite_area_and_device(
+        self, satellite_id: str | None, device_id: str | None = None
+    ) -> tuple[ar.AreaEntry | None, str | None]:
+        """Return area entry and device id."""
+        hass = self.hass
 
-    def _get_device_area(self, device_id: str | None) -> ar.AreaEntry | None:
-        """Return area object for given device identifier."""
-        if device_id is None:
-            return None
+        area_id: str | None = None
 
-        devices = dr.async_get(self.hass)
-        device = devices.async_get(device_id)
-        if (device is None) or (device.area_id is None):
-            return None
+        if (
+            satellite_id is not None
+            and (entity_entry := er.async_get(hass).async_get(satellite_id)) is not None
+        ):
+            area_id = entity_entry.area_id
+            device_id = entity_entry.device_id
 
-        areas = ar.async_get(self.hass)
+        if (
+            area_id is None
+            and device_id is not None
+            and (device_entry := dr.async_get(hass).async_get(device_id)) is not None
+        ):
+            area_id = device_entry.area_id
 
-        return areas.async_get_area(device.area_id)
+        if area_id is None:
+            return None, device_id
+
+        return ar.async_get(hass).async_get_area(area_id), device_id
 
     def _get_error_text(
         self,
