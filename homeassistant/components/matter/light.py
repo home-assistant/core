@@ -145,16 +145,20 @@ class MatterLight(MatterEntity, LightEntity):
             color_temp_kelvin
         )
         # clamp to supported range
-        max_mireds = self.get_matter_attribute_value(
-            clusters.ColorControl.Attributes.ColorTempPhysicalMaxMireds
+        max_mireds = (
+            self.get_matter_attribute_value(
+                clusters.ColorControl.Attributes.ColorTempPhysicalMaxMireds
+            )
+            or 65279  # Maximumm allowed value for Matter
         )
-        min_mireds = self.get_matter_attribute_value(
-            clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds
+        min_mireds = (
+            self.get_matter_attribute_value(
+                clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds
+            )
+            or 1  # Minimum allowed value for Matter
         )
-        if max_mireds is not None and color_temp_mired > max_mireds:
-            color_temp_mired = max_mireds
-        if min_mireds is not None and color_temp_mired < min_mireds:
-            color_temp_mired = min_mireds
+        color_temp_mired = min(color_temp_mired, max_mireds)
+        color_temp_mired = max(color_temp_mired, min_mireds)
 
         await self.send_device_command(
             clusters.ColorControl.Commands.MoveToColorTemperature(
