@@ -94,7 +94,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         return {
             "title": f"Ness Alarm {panel_model} ({host})",
             "model": panel_model,
-            "version": panel_info.version if panel_info else "Unknown",
+            "version": panel_info.version if panel_info else None,
         }
 
 
@@ -113,8 +113,13 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 # Validate the connection and fetch model/version
                 info = await validate_input(self.hass, user_input)
-
-                # Use model + version for uniqueness
+            except NessAlarmConnectionError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                # Only runs if validate_input succeeded
                 unique_id = f"{info['model']}_{info['version']}_{DOMAIN}"
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
@@ -126,11 +131,6 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=info["title"],
                     data=user_input,
                 )
-            except NessAlarmConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
 
         schema = vol.Schema(
             {

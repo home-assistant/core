@@ -168,6 +168,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_INFER_ARMING_STATE: True,
+        CONF_SCAN_INTERVAL: 60,
         CONF_SUPPORT_HOME_ARM: False,
         # enabled_zones is removed from options as it's stored in data
     }
