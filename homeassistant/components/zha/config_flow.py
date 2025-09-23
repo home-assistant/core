@@ -182,6 +182,31 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self._hass = hass
         self._radio_mgr.hass = hass
 
+    async def _get_config_entry_data(self) -> dict:
+        """Extract ZHA config entry data from the radio manager."""
+        assert self._radio_mgr.radio_type is not None
+        assert self._radio_mgr.device_path is not None
+        assert self._radio_mgr.device_settings is not None
+
+        try:
+            device_path = await self.hass.async_add_executor_job(
+                usb.get_serial_by_id, self._radio_mgr.device_path
+            )
+        except OSError as error:
+            raise HomeAssistantError(
+                f"Could not resolve device path {self._radio_mgr.device_path}: {error}"
+            ) from error
+
+        return {
+            CONF_DEVICE: DEVICE_SCHEMA(
+                {
+                    **self._radio_mgr.device_settings,
+                    CONF_DEVICE_PATH: device_path,
+                }
+            ),
+            CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,
+        }
+
     @abstractmethod
     async def _async_create_radio_entry(self) -> ConfigFlowResult:
         """Create a config entry with the current flow state."""
@@ -820,37 +845,24 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
     async def _async_create_radio_entry(self) -> ConfigFlowResult:
         """Create a config entry with the current flow state."""
-        assert self._radio_mgr.radio_type is not None
-        assert self._radio_mgr.device_path is not None
-        assert self._radio_mgr.device_settings is not None
-
-        device_settings = self._radio_mgr.device_settings.copy()
-        device_settings[CONF_DEVICE_PATH] = await self.hass.async_add_executor_job(
-            usb.get_serial_by_id, self._radio_mgr.device_path
-        )
 
         # ZHA is still single instance only, even though we use discovery to allow for
         # migrating to a new radio
         zha_config_entries = self.hass.config_entries.async_entries(DOMAIN)
+        data = await self._get_config_entry_data()
 
         if len(zha_config_entries) == 1:
             return self.async_update_reload_and_abort(
                 entry=zha_config_entries[0],
                 title=self._title,
-                data={
-                    CONF_DEVICE: DEVICE_SCHEMA(device_settings),
-                    CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,
-                },
+                data=data,
                 reload_even_if_entry_is_unchanged=True,
                 reason="reconfigure_successful",
             )
         if not zha_config_entries:
             return self.async_create_entry(
                 title=self._title,
-                data={
-                    CONF_DEVICE: DEVICE_SCHEMA(device_settings),
-                    CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,
-                },
+                data=data,
             )
         # This should never be reached
         return self.async_abort(reason="single_instance_allowed")
@@ -936,18 +948,11 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
 
     async def _async_create_radio_entry(self):
         """Re-implementation of the base flow's final step to update the config."""
-        device_settings = self._radio_mgr.device_settings.copy()
-        device_settings[CONF_DEVICE_PATH] = await self.hass.async_add_executor_job(
-            usb.get_serial_by_id, self._radio_mgr.device_path
-        )
 
         # Avoid creating both `.options` and `.data` by directly writing `data` here
         self.hass.config_entries.async_update_entry(
             entry=self.config_entry,
-            data={
-                CONF_DEVICE: DEVICE_SCHEMA(device_settings),
-                CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,
-            },
+            data=await self._get_config_entry_data(),
             options=self.config_entry.options,
         )
 
