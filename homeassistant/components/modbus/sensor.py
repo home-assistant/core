@@ -133,7 +133,7 @@ class ModbusRegisterSensor(ModbusStructEntity, RestoreSensor, SensorEntity):
                 self._coordinator.async_set_updated_data(result_array)
             else:
                 self._attr_native_value = None
-                result_array = (self._virtual_count + 1) * [None]
+                result_array = (self._slave_count + 1) * [None]
                 self._coordinator.async_set_updated_data(result_array)
         else:
             self._attr_native_value = result

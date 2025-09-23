@@ -165,10 +165,10 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
         self._structure: str = config[CONF_STRUCTURE]
         self._scale = config[CONF_SCALE]
         self._offset = config[CONF_OFFSET]
-        self._virtual_count = config.get(CONF_SLAVE_COUNT) or config.get(
+        self._slave_count = config.get(CONF_SLAVE_COUNT) or config.get(
             CONF_VIRTUAL_COUNT, 0
         )
-        self._count = config[CONF_COUNT]
+        self._slave_size = self._count = config[CONF_COUNT]
         self._value_is_int: bool = self._data_type in (
             DataType.INT16,
             DataType.INT32,
@@ -188,9 +188,9 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
         """Do swap as needed."""
         if slave_count:
             swapped = []
-            for i in range(self._virtual_count + 1):
-                inx = i * self._count
-                inx2 = inx + self._count
+            for i in range(self._slave_count + 1):
+                inx = i * self._slave_size
+                inx2 = inx + self._slave_size
                 swapped.extend(self._swap_registers(registers[inx:inx2], 0))
             return swapped
         if self._swap in (CONF_SWAP_BYTE, CONF_SWAP_WORD_BYTE):
@@ -231,7 +231,7 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
 
         if self._swap:
             registers = self._swap_registers(
-                copy.deepcopy(registers), self._virtual_count
+                copy.deepcopy(registers), self._slave_count
             )
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         if self._data_type == DataType.STRING:
