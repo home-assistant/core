@@ -56,7 +56,7 @@ from .const import (
     CONF_STOPBITS,
     DEFAULT_HUB,
     DEVICE_ID,
-    MODBUS_DOMAIN as DOMAIN,
+    DOMAIN,
     PLATFORMS,
     RTUOVERTCP,
     SERIAL,
