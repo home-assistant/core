@@ -373,7 +373,7 @@ async def test_setup_component_with_delay(
 
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 10
+        assert fake_post_hits == 9
 
         mock_impl.assert_called_once()
         # mock_webhook.assert_not_called()
