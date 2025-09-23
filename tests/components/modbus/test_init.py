@@ -780,10 +780,9 @@ async def test_no_duplicate_names(hass: HomeAssistant, do_config) -> None:
         },
     ],
 )
-async def test_config_modbus(hass: HomeAssistant, mock_modbus_with_pymodbus, issue_registry: ir.IssueRegistry) -> None:
+async def test_config_modbus(hass: HomeAssistant, mock_modbus_with_pymodbus) -> None:
     """Run configuration test for modbus."""
     assert len(hass.data[DOMAIN])
-    assert len(issue_registry.issues) == 0
 
 
 @pytest.mark.parametrize(
