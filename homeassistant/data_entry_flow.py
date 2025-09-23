@@ -639,6 +639,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
 
     __progress_task: asyncio.Task[Any] | None = None
     __no_progress_task_reported = False
+    _decorated_progress_tasks: dict[str, asyncio.Task[Any]] = {}
     deprecated_show_progress = False
     abort_reason: str = "abort"
     abort_description_placeholders: Mapping[str, str] = MappingProxyType({})
@@ -985,15 +986,11 @@ def progress_step(
     ) -> Callable[..., Coroutine[Any, Any, Any]]:
         @functools.wraps(func)
         async def wrapper(
-            self: Any,
+            self: FlowHandler[Any, Any, Any],
             user_input: dict[str, Any] | None = None,
         ) -> Any:
             step_id = func.__name__.replace("async_step_", "")
             action = progress_action or step_id
-
-            # Initialize decorated progress tasks dict if it doesn't exist
-            if not hasattr(self, "_decorated_progress_tasks"):
-                self._decorated_progress_tasks = {}
 
             # Check if we have a progress task running
             progress_task = self._decorated_progress_tasks.get(step_id)
