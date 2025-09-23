@@ -33,6 +33,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
@@ -193,8 +194,9 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
                 usb.get_serial_by_id, self._radio_mgr.device_path
             )
         except OSError as error:
-            raise HomeAssistantError(
-                f"Could not resolve device path {self._radio_mgr.device_path}: {error}"
+            raise AbortFlow(
+                reason="cannot_resolve_path",
+                description_placeholders={"path": self._radio_mgr.device_path},
             ) from error
 
         return {

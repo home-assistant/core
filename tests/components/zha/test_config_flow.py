@@ -44,7 +44,6 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_MANUFACTURER_URL,
     ATTR_UPNP_SERIAL,
@@ -2295,12 +2294,15 @@ async def test_config_flow_serial_resolution_oserror(
             "homeassistant.components.usb.get_serial_by_id",
             side_effect=OSError("Test error"),
         ),
-        pytest.raises(HomeAssistantError, match="Could not resolve device path"),
     ):
-        await hass.config_entries.flow.async_configure(
+        setup_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={"next_step_id": config_flow.SETUP_STRATEGY_RECOMMENDED},
         )
+
+    assert setup_result["type"] is FlowResultType.ABORT
+    assert setup_result["reason"] == "cannot_resolve_path"
+    assert setup_result["description_placeholders"] == {"path": "/dev/ttyUSB33"}
 
 
 @patch("homeassistant.components.zha.radio_manager._allow_overwrite_ezsp_ieee")
