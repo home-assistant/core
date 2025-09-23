@@ -161,40 +161,6 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
         }
 
-        # Check if already configured by host/port BEFORE validation
-        # Use async_entries() to get ALL existing entries for this domain
-        existing_entries = self.hass.config_entries.async_entries(DOMAIN)
-
-        for entry in existing_entries:
-            _LOGGER.debug("Comparing with existing entry")
-            if (
-                entry.data.get(CONF_HOST) == data[CONF_HOST]
-                and entry.data.get(CONF_PORT, DEFAULT_PORT) == data[CONF_PORT]
-            ):
-                # Already configured - create issue about duplicate YAML
-                _LOGGER.warning(
-                    "Found duplicate Ness Alarm configuration for %s:%s. Creating issue",
-                    data[CONF_HOST],
-                    data[CONF_PORT],
-                )
-                ir.async_create_issue(
-                    self.hass,
-                    DOMAIN,
-                    f"yaml_duplicate_{data[CONF_HOST]}_{data[CONF_PORT]}",
-                    is_fixable=False,
-                    severity=ir.IssueSeverity.WARNING,
-                    translation_key="yaml_config_duplicate",
-                    translation_placeholders={
-                        "host": data[CONF_HOST],
-                        "port": str(data[CONF_PORT]),
-                        "yaml_example": f"ness_alarm:\n  host: {data[CONF_HOST]}\n  port: {data[CONF_PORT]}",
-                    },
-                )
-
-                # Abort since it's already configured
-                return self.async_abort(reason="already_configured")
-
-        # Not a duplicate, proceed with import
         zones = import_config.get(CONF_ZONES, [])
 
         options = {
