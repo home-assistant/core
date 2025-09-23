@@ -195,29 +195,30 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Ness Alarm."""
+
     if hass.services.has_service(DOMAIN, SERVICE_AUX):
         return
 
     async def handle_aux(call: ServiceCall) -> None:
         """Handle aux service call."""
         output_id = call.data.get("output_id")
-        state = call.data.get("state")
+        state = call.data.get("state", True)
 
         for entry_data in hass.data[DOMAIN].values():
-            if isinstance(entry_data, dict) and "client" in entry_data:
-                client = entry_data.get("client")
-                if client:
-                    await client.aux(output_id, state)
+            client = entry_data.get("client") if isinstance(entry_data, dict) else None
+            if client:
+                await client.aux(output_id, state)
+                break
 
     async def handle_panic(call: ServiceCall) -> None:
         """Handle panic service call."""
         code = call.data.get(SERVICE_CODE)
 
         for entry_data in hass.data[DOMAIN].values():
-            if isinstance(entry_data, dict) and "client" in entry_data:
-                client = entry_data.get("client")
-                if client:
-                    await client.panic(code)
+            client = entry_data.get("client") if isinstance(entry_data, dict) else None
+            if client:
+                await client.panic(code)
+                break
 
     hass.services.async_register(
         DOMAIN,

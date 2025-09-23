@@ -19,7 +19,7 @@ from homeassistant.components.ness_alarm.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
 
 from tests.common import MockConfigEntry
 
@@ -290,14 +290,12 @@ async def test_import_with_invalid_zones(hass: HomeAssistant, mock_panel_info) -
 
 async def test_duplicate_config_entry(hass: HomeAssistant, mock_panel_info) -> None:
     """Test that duplicate config entries are handled properly."""
-    # Create first entry
     with (
         patch(
             "homeassistant.components.ness_alarm.config_flow.Client"
         ) as mock_client_class,
         patch(
-            "homeassistant.components.ness_alarm.async_setup_entry",
-            return_value=True,
+            "homeassistant.components.ness_alarm.async_setup_entry", return_value=True
         ),
     ):
         mock_client = AsyncMock(spec=Client)
@@ -306,11 +304,11 @@ async def test_duplicate_config_entry(hass: HomeAssistant, mock_panel_info) -> N
         mock_client.keepalive = AsyncMock()
         mock_client.close = AsyncMock()
 
+        # Create first entry
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
-
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -321,24 +319,22 @@ async def test_duplicate_config_entry(hass: HomeAssistant, mock_panel_info) -> N
         )
         assert result2["type"] == FlowResultType.CREATE_ENTRY
 
-        # Try to create duplicate entry with same unique_id
-        # The flow catches the AbortFlow exception and shows an error
+        # Try to create duplicate entry
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
 
-        result4 = await hass.config_entries.flow.async_configure(
-            result3["flow_id"],
-            {
-                CONF_HOST: "192.168.1.100",
-                CONF_PORT: 2401,
-                CONF_INFER_ARMING_STATE: False,
-            },
-        )
-        # Due to the exception handling in the flow, it shows form with error
-        assert result4["type"] == FlowResultType.ABORT
-        assert result4["reason"] == "already_configured"
+        # HA prevents the flow entirely, raising UnknownFlow when async_configure is called
+        with pytest.raises(UnknownFlow):
+            await hass.config_entries.flow.async_configure(
+                result3["flow_id"],
+                {
+                    CONF_HOST: "192.168.1.100",
+                    CONF_PORT: 2401,
+                    CONF_INFER_ARMING_STATE: False,
+                },
+            )
 
 
 async def test_options_flow_with_missing_entry(hass: HomeAssistant) -> None:
@@ -666,7 +662,7 @@ async def test_duplicate_import_entry(hass: HomeAssistant, mock_panel_info) -> N
             data={CONF_HOST: "192.168.1.100", CONF_PORT: 2401},
         )
         assert result2["type"] == FlowResultType.ABORT
-        assert result2["reason"] == "already_configured"
+        assert result2["reason"] == "single_instance_allowed"
 
 
 async def test_connection_failure_closes_client(hass: HomeAssistant) -> None:
