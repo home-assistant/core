@@ -4024,17 +4024,19 @@ async def test_reconfigure_migrate_with_addon(
 
     assert restart_addon.call_args == call("core_zwave_js")
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    # Ensure add-on running would migrate the old settings back into the config entry
+    with patch("homeassistant.components.zwave_js.async_ensure_addon_running"):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert entry.unique_id == "5678"
-    get_server_version.side_effect = restore_server_version_side_effect
-    version_info.home_id = 3245146787
+        assert entry.unique_id == "5678"
+        get_server_version.side_effect = restore_server_version_side_effect
+        version_info.home_id = 3245146787
 
-    assert result["type"] is FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "restore_nvm"
-    assert client.connect.call_count == 2
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "restore_nvm"
+        assert client.connect.call_count == 2
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
     assert client.connect.call_count == 4
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert client.driver.controller.async_restore_nvm.call_count == 1

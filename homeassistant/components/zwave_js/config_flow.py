@@ -1083,10 +1083,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Instruct the user to unplug the old controller."""
 
         if user_input is not None:
-            if self.usb_path:
-                # USB discovery was used, so the device is already known.
+            if self._adapter_discovered:
+                # Discovery was used, so the device is already known.
                 self._addon_config_updates[CONF_ADDON_DEVICE] = self.usb_path
-                self._addon_config_updates[CONF_ADDON_SOCKET] = None
+                self._addon_config_updates[CONF_ADDON_SOCKET] = self.socket_path
                 return await self.async_step_start_addon()
             # Now that the old controller is gone, we can scan for serial ports again
             return await self.async_step_choose_serial_port()
