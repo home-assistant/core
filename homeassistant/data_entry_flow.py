@@ -642,6 +642,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     deprecated_show_progress = False
     abort_reason: str = "abort"
     abort_description_placeholders: Mapping[str, str] = MappingProxyType({})
+    progress_next_step: _FlowResultT | None = None
 
     @property
     def source(self) -> str | None:
@@ -772,6 +773,21 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             reason=self.abort_reason,
             description_placeholders=self.abort_description_placeholders,
         )
+
+    async def async_step_progress_done(
+        self, user_input: dict[str, Any] | None = None
+    ) -> _FlowResultT:
+        """Progress done. Return the next step.
+
+        Used by progress_step decorator to keep the API consistent.
+        If no next step is set, abort the flow.
+        """
+        if self.progress_next_step is None:
+            return self.async_abort(
+                reason=self.abort_reason,
+                description_placeholders=self.abort_description_placeholders,
+            )
+        return self.progress_next_step
 
     @callback
     def async_external_step(
@@ -950,7 +966,7 @@ def progress_step(
     | Callable[[Any], dict[str, str]]
     | None = None,
 ) -> Callable[
-    [Callable[..., Coroutine[Any, Any, str | None]]],
+    [Callable[..., Coroutine[Any, Any, Any]]],
     Callable[..., Coroutine[Any, Any, Any]],
 ]:
     """Decorator to create a progress step from an async function.
@@ -965,7 +981,7 @@ def progress_step(
     """
 
     def decorator(
-        func: Callable[..., Coroutine[Any, Any, str | None]],
+        func: Callable[..., Coroutine[Any, Any, Any]],
     ) -> Callable[..., Coroutine[Any, Any, Any]]:
         @functools.wraps(func)
         async def wrapper(
@@ -1007,7 +1023,7 @@ def progress_step(
 
             # Task is done or this is a subsequent call
             try:
-                next_step_id = await progress_task
+                self.progress_next_step = await progress_task
             except AbortFlow as err:
                 self.abort_reason = err.reason
                 self.abort_description_placeholders = err.description_placeholders or {}
@@ -1016,7 +1032,7 @@ def progress_step(
                 # Clean up task reference
                 self._decorated_progress_tasks.pop(step_id, None)
 
-            return self.async_show_progress_done(next_step_id=next_step_id)
+            return self.async_show_progress_done(next_step_id="progress_done")
 
         return wrapper
 

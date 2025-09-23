@@ -3881,7 +3881,7 @@ def config_entry_progress_step(
     | Callable[[Any], dict[str, str]]
     | None = None,
 ) -> Callable[
-    [Callable[..., Coroutine[Any, Any, str | None]]],
+    [Callable[..., Coroutine[Any, Any, ConfigFlowResult]]],
     Callable[..., Coroutine[Any, Any, ConfigFlowResult]],
 ]:
     """Decorator to create a progress step from an async function for config flows."""

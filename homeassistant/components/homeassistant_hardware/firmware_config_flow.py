@@ -529,7 +529,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     )
     async def async_step_install_otbr_addon(
         self, user_input: dict[str, Any] | None = None
-    ) -> str:
+    ) -> ConfigFlowResult:
         """Show progress dialog for installing the OTBR addon."""
         addon_manager = get_otbr_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(addon_manager)
@@ -548,7 +548,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 },
             ) from err
 
-        return "install_thread_firmware"
+        return await self.async_step_install_thread_firmware()
 
     @config_entry_progress_step(
         description_placeholders=lambda self: {
@@ -558,7 +558,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     )
     async def async_step_start_otbr_addon(
         self, user_input: dict[str, Any] | None = None
-    ) -> str:
+    ) -> ConfigFlowResult:
         """Configure OTBR to point to the SkyConnect and run the addon."""
         try:
             await self._configure_and_start_otbr_addon()
@@ -572,7 +572,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 },
             ) from err
 
-        return "pre_confirm_otbr"
+        return await self.async_step_pre_confirm_otbr()
 
     async def async_step_pre_confirm_otbr(
         self, user_input: dict[str, Any] | None = None
