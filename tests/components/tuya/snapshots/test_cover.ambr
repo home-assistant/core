@@ -198,7 +198,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'open',
   })
 # ---
 # name: test_platform_setup_and_discovery[cover.kitchen_blinds_blind-entry]
