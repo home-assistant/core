@@ -1149,9 +1149,10 @@ DISCOVERY_SCHEMAS = [
             key="ThermostatOutdoorTemperature",
             translation_key="outdoor_temperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            suggested_display_precision=1,
             device_class=SensorDeviceClass.TEMPERATURE,
             device_to_ha=lambda x: (
-                None if x is None else round(x / TEMPERATURE_SCALING_FACTOR, 1)
+                None if x is None else x / TEMPERATURE_SCALING_FACTOR
             ),
             state_class=SensorStateClass.MEASUREMENT,
         ),
