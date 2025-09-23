@@ -141,7 +141,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
             attr["active_time"] = self.device.state.active_time
 
         if hasattr(self.device.state, "display_status"):
-            attr["display_status"] = self.device.state.display_status
+            attr["display_status"] = self.device.state.display_status.value
 
         if hasattr(self.device.state, "child_lock"):
             attr["child_lock"] = self.device.state.child_lock

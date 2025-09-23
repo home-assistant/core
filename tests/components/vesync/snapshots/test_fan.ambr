@@ -79,7 +79,7 @@
     'attributes': ReadOnlyDict({
       'active_time': 0,
       'child_lock': False,
-      'display_status': <DeviceStatus.ON: 'on'>,
+      'display_status': 'on',
       'friendly_name': 'Air Purifier 131s',
       'mode': 'sleep',
       'night_light': None,
@@ -179,7 +179,7 @@
     'attributes': ReadOnlyDict({
       'active_time': None,
       'child_lock': False,
-      'display_status': <DeviceStatus.ON: 'on'>,
+      'display_status': 'on',
       'friendly_name': 'Air Purifier 200s',
       'mode': 'manual',
       'night_light': <DeviceStatus.OFF: 'off'>,
@@ -279,7 +279,7 @@
     'attributes': ReadOnlyDict({
       'active_time': None,
       'child_lock': False,
-      'display_status': <DeviceStatus.ON: 'on'>,
+      'display_status': 'on',
       'friendly_name': 'Air Purifier 400s',
       'mode': 'manual',
       'night_light': <DeviceStatus.OFF: 'off'>,
@@ -380,7 +380,7 @@
     'attributes': ReadOnlyDict({
       'active_time': None,
       'child_lock': False,
-      'display_status': <DeviceStatus.ON: 'on'>,
+      'display_status': 'on',
       'friendly_name': 'Air Purifier 600s',
       'mode': 'manual',
       'night_light': <DeviceStatus.OFF: 'off'>,
@@ -667,7 +667,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'active_time': None,
-      'display_status': <DeviceStatus.OFF: 'off'>,
+      'display_status': 'off',
       'friendly_name': 'SmartTowerFan',
       'mode': 'normal',
       'percentage': None,
