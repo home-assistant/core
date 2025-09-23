@@ -6,6 +6,7 @@ from typing import Any
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
+from aiohue.v2.models.bell_button import BellButton
 from aiohue.v2.models.button import Button
 from aiohue.v2.models.relative_rotary import RelativeRotary, RelativeRotaryDirection
 
@@ -39,19 +40,27 @@ async def async_setup_entry(
     @callback
     def async_add_entity(
         event_type: EventType,
-        resource: Button | RelativeRotary,
+        resource: Button | RelativeRotary | BellButton,
     ) -> None:
         """Add entity from Hue resource."""
         if isinstance(resource, RelativeRotary):
             async_add_entities(
                 [HueRotaryEventEntity(bridge, api.sensors.relative_rotary, resource)]
             )
+        elif isinstance(resource, BellButton):
+            async_add_entities(
+                [HueBellButtonEventEntity(bridge, api.sensors.bell_button, resource)]
+            )
         else:
             async_add_entities(
                 [HueButtonEventEntity(bridge, api.sensors.button, resource)]
             )
 
-    for controller in (api.sensors.button, api.sensors.relative_rotary):
+    for controller in (
+        api.sensors.button,
+        api.sensors.relative_rotary,
+        api.sensors.bell_button,
+    ):
         # add all current items in controller
         for item in controller:
             async_add_entity(EventType.RESOURCE_ADDED, item)
@@ -66,6 +75,8 @@ async def async_setup_entry(
 
 class HueButtonEventEntity(HueBaseEntity, EventEntity):
     """Representation of a Hue Event entity from a button resource."""
+
+    resource: Button | BellButton
 
     entity_description = EventEntityDescription(
         key="button",
@@ -91,7 +102,9 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
         }
 
     @callback
-    def _handle_event(self, event_type: EventType, resource: Button) -> None:
+    def _handle_event(
+        self, event_type: EventType, resource: Button | BellButton
+    ) -> None:
         """Handle status event for this resource (or it's parent)."""
         if event_type == EventType.RESOURCE_UPDATED and resource.id == self.resource.id:
             if resource.button is None or resource.button.button_report is None:
@@ -100,6 +113,18 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
             self.async_write_ha_state()
             return
         super()._handle_event(event_type, resource)
+
+
+class HueBellButtonEventEntity(HueButtonEventEntity):
+    """Representation of a Hue Event entity from a bell_button resource."""
+
+    resource: Button | BellButton
+
+    entity_description = EventEntityDescription(
+        key="bell_button",
+        device_class=EventDeviceClass.DOORBELL,
+        has_entity_name=True,
+    )
 
 
 class HueRotaryEventEntity(HueBaseEntity, EventEntity):
