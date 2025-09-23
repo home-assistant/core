@@ -12,9 +12,14 @@ from syrupy.assertion import SnapshotAssertion
 import yaml
 
 from homeassistant.components import conversation, cover, media_player, weather
-from homeassistant.components.conversation import async_get_agent, default_agent
+from homeassistant.components.conversation import (
+    async_get_agent,
+    default_agent,
+    get_agent_manager,
+)
 from homeassistant.components.conversation.default_agent import METADATA_CUSTOM_SENTENCE
 from homeassistant.components.conversation.models import ConversationInput
+from homeassistant.components.conversation.trigger import TriggerDetails
 from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.homeassistant.exposed_entities import (
     async_get_assistant_settings,
@@ -415,10 +420,10 @@ async def test_trigger_sentences(hass: HomeAssistant) -> None:
     trigger_sentences = ["It's party time", "It is time to party"]
     trigger_response = "Cowabunga!"
 
-    agent = async_get_agent(hass)
+    manager = get_agent_manager(hass)
 
     callback = AsyncMock(return_value=trigger_response)
-    unregister = agent.register_trigger(trigger_sentences, callback)
+    unregister = manager.register_trigger(TriggerDetails(trigger_sentences, callback))
 
     result = await conversation.async_converse(hass, "Not the trigger", None, Context())
     assert result.response.response_type == intent.IntentResponseType.ERROR
@@ -461,7 +466,7 @@ async def test_trigger_sentence_response_translation(
     """Test translation of default response 'done'."""
     hass.config.language = language
 
-    agent = async_get_agent(hass)
+    manager = get_agent_manager(hass)
 
     translations = {
         "en": {"component.conversation.conversation.agent.done": "English done"},
@@ -473,8 +478,8 @@ async def test_trigger_sentence_response_translation(
         "homeassistant.components.conversation.default_agent.translation.async_get_translations",
         return_value=translations.get(language),
     ):
-        unregister = agent.register_trigger(
-            ["test sentence"], AsyncMock(return_value=None)
+        unregister = manager.register_trigger(
+            TriggerDetails(["test sentence"], AsyncMock(return_value=None))
         )
         result = await conversation.async_converse(
             hass, "test sentence", None, Context()
