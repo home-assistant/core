@@ -1,12 +1,10 @@
 """ESPHome discovery data."""
 
 from dataclasses import dataclass
-from typing import Final
 
 from yarl import URL
 
 from homeassistant.data_entry_flow import BaseServiceInfo
-
 
 
 @dataclass(slots=True)
