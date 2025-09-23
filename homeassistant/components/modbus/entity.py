@@ -168,7 +168,7 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
         self._virtual_count = config.get(CONF_SLAVE_COUNT) or config.get(
             CONF_VIRTUAL_COUNT, 0
         )
-        self._device_address_size = self._count = config[CONF_COUNT]
+        self._count = config[CONF_COUNT]
         self._value_is_int: bool = self._data_type in (
             DataType.INT16,
             DataType.INT32,
@@ -189,8 +189,8 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
         if slave_count:
             swapped = []
             for i in range(self._virtual_count + 1):
-                inx = i * self._device_address_size
-                inx2 = inx + self._device_address_size
+                inx = i * self._count
+                inx2 = inx + self._count
                 swapped.extend(self._swap_registers(registers[inx:inx2], 0))
             return swapped
         if self._swap in (CONF_SWAP_BYTE, CONF_SWAP_WORD_BYTE):
