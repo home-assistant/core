@@ -63,39 +63,38 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         with contextlib.suppress(asyncio.CancelledError):
             await keepalive_task
 
-        await client.close()
-
     except TimeoutError:
         _LOGGER.error("Timeout connecting to Ness Alarm at %s:%s", host, port)
-        await client.close()
         raise NessAlarmConnectionError(f"Timeout connecting to {host}:{port}") from None
     except Exception as err:
         _LOGGER.error("Failed to connect to Ness Alarm: %s", err)
-        await client.close()
         raise NessAlarmConnectionError(f"Cannot connect to {host}:{port}") from err
+    finally:
+        await client.close()
+
+    # process panel info after successful connection
+    panel_model = panel_info.model.value if panel_info else "UNKNOWN"
+
+    # Log the detected model and its zone capacity
+    if panel_model in PANEL_MODEL_ZONES:
+        zone_count = PANEL_MODEL_ZONES[panel_model]
+        _LOGGER.debug(
+            "Detected panel model %s with %s zone capacity",
+            panel_model,
+            zone_count,
+        )
     else:
-        panel_model = panel_info.model.value if panel_info else "UNKNOWN"
+        _LOGGER.debug(
+            "Unknown panel model %s, will default to %s zones enabled",
+            panel_model,
+            DEFAULT_MAX_SUPPORTED_ZONES,
+        )
 
-        # Log the detected model and its zone capacity
-        if panel_model in PANEL_MODEL_ZONES:
-            zone_count = PANEL_MODEL_ZONES[panel_model]
-            _LOGGER.debug(
-                "Detected panel model %s with %s zone capacity",
-                panel_model,
-                zone_count,
-            )
-        else:
-            _LOGGER.debug(
-                "Unknown panel model %s, will default to %s zones enabled",
-                panel_model,
-                DEFAULT_MAX_SUPPORTED_ZONES,
-            )
-
-        return {
-            "title": f"Ness Alarm {panel_model} ({host})",
-            "model": panel_model,
-            "version": panel_info.version if panel_info else None,
-        }
+    return {
+        "title": f"Ness Alarm {panel_model} ({host})",
+        "model": panel_model,
+        "version": panel_info.version if panel_info else None,
+    }
 
 
 class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

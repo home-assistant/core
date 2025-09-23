@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.ness_alarm import CONF_SCAN_INTERVAL
-from homeassistant.components.ness_alarm.config_flow import OptionsFlow
+from homeassistant.components.ness_alarm.config_flow import NessConfigFlow, OptionsFlow
 from homeassistant.components.ness_alarm.const import (
     CONF_ID,
     CONF_INFER_ARMING_STATE,
@@ -765,3 +765,50 @@ async def test_options_flow_entry_not_found_direct(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "entry_not_found"
+
+
+async def test_import_duplicate_yaml(hass: HomeAssistant) -> None:
+    """Test importing YAML that duplicates an existing config entry."""
+    # Add a mock config entry
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.2.3.4", CONF_PORT: 1234},
+    ).add_to_hass(hass)
+
+    flow = NessConfigFlow()
+    flow.hass = hass
+
+    import_config = {CONF_HOST: "1.2.3.4", CONF_PORT: 1234}
+
+    result = await flow.async_step_import(import_config)
+    # This should abort due to duplicate YAML
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
+async def test_import_with_zones(hass: HomeAssistant) -> None:
+    """Test importing YAML with zones creates data properly."""
+    flow = NessConfigFlow()
+    flow.hass = hass
+    flow.context = {}
+
+    import_config = {
+        CONF_HOST: "5.6.7.8",
+        CONF_PORT: 4321,
+        CONF_ZONES: [
+            {"id": 1, "name": "Front Door"},
+            {"id": 2, "name": "Back Door", "type": "door"},
+            {"id": None, "name": "Invalid Zone"},  # skipped
+            {"id": 4, "name": None},  # skipped
+        ],
+    }
+
+    with patch(
+        "homeassistant.components.ness_alarm.config_flow.validate_input",
+        return_value={"title": "Ness Alarm TEST", "model": "TEST", "version": "1.0"},
+    ):
+        result = await flow.async_step_import(import_config)
+
+    assert result["type"] == "create_entry"
+    assert result["data"]["panel_model"] == "TEST"
+    assert len(result["data"][CONF_ZONES]) == 2

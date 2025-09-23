@@ -71,7 +71,7 @@ async def async_setup_entry(
             enabled_zones,
         )
 
-    # Map custom names and types if any are provided
+    # Map custom names and types if any are provided within the YAML config
     custom_zones = {}
     for zone in config.get(CONF_ZONES, []):
         zone_id = zone.get(CONF_ID)
