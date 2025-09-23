@@ -337,8 +337,8 @@ async def test_duplicate_config_entry(hass: HomeAssistant, mock_panel_info) -> N
             },
         )
         # Due to the exception handling in the flow, it shows form with error
-        assert result4["type"] == FlowResultType.FORM
-        assert result4["errors"] == {"base": "unknown"}
+        assert result4["type"] == FlowResultType.ABORT
+        assert result4["reason"] == "already_configured"
 
 
 async def test_options_flow_with_missing_entry(hass: HomeAssistant) -> None:
