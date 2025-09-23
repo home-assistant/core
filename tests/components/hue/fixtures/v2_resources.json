@@ -2408,7 +2408,7 @@
   },
   {
     "id": "5e6f7a8b-9c1d-4e2f-b3a4-5c6d7e8f9a0b",
-    "name": "Motion configuration 1",
+    "name": "Motion Aware Sensor 1",
     "group": {
       "rid": "6ddc9066-7e7d-4a03-a773-c73937968296",
       "rtype": "room"
