@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from copy import deepcopy
 from typing import Any
 
 from aiopurpleair import API
@@ -21,6 +22,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_API_KEY, CONF_BASE, CONF_SHOW_ON_MAP
 from homeassistant.core import callback
@@ -34,13 +36,13 @@ from .const import (
     CONF_RECONFIGURE,
     CONF_RECONFIGURE_SUCCESSFUL,
     CONF_SENSOR,
+    CONF_SETTINGS,
     CONF_UNKNOWN,
     DOMAIN,
     LOGGER,
     SCHEMA_VERSION,
     TITLE,
 )
-from .options_flow import PurpleAirOptionsFlow
 from .subentry_flow import PurpleAirSubentryFlow
 
 
@@ -231,3 +233,43 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
             data_updates={CONF_API_KEY: self._flow_data[CONF_API_KEY]},
             reason=CONF_RECONFIGURE_SUCCESSFUL,
         )
+
+
+class PurpleAirOptionsFlow(OptionsFlow):
+    """Options flow."""
+
+    def __init__(self) -> None:
+        """Initialize."""
+        self._flow_data: dict[str, Any] = {}
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle user initialization flow."""
+        return await self.async_step_settings()
+
+    @property
+    def settings_schema(self) -> vol.Schema:
+        """Settings schema."""
+        return vol.Schema(
+            {
+                vol.Optional(
+                    CONF_SHOW_ON_MAP,
+                    default=self.config_entry.options.get(CONF_SHOW_ON_MAP, False),
+                ): bool
+            }
+        )
+
+    async def async_step_settings(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle settings flow."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id=CONF_SETTINGS, data_schema=self.settings_schema
+            )
+
+        options = deepcopy(dict(self.config_entry.options))
+        options[CONF_SHOW_ON_MAP] = user_input.get(CONF_SHOW_ON_MAP, False)
+
+        return self.async_create_entry(data=options)

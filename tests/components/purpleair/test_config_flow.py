@@ -12,6 +12,7 @@ from homeassistant.components.purpleair.const import (
     CONF_REAUTH_SUCCESSFUL,
     CONF_RECONFIGURE,
     CONF_RECONFIGURE_SUCCESSFUL,
+    CONF_SETTINGS,
     CONF_UNKNOWN,
     DOMAIN,
     TITLE,
@@ -238,3 +239,25 @@ async def test_user_init_errors(
 
     hass.config_entries.flow.async_abort(result[CONF_FLOW_ID])
     await hass.async_block_till_done()
+
+
+async def test_options_settings(
+    hass: HomeAssistant, config_entry, setup_config_entry
+) -> None:
+    """Test options setting flow."""
+
+    # Options init
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert result[CONF_TYPE] is FlowResultType.FORM
+    assert result[CONF_STEP_ID] == CONF_SETTINGS
+
+    # Settings
+    result = await hass.config_entries.options.async_configure(
+        result[CONF_FLOW_ID], user_input={CONF_SHOW_ON_MAP: True}
+    )
+    await hass.async_block_till_done()
+    assert result[CONF_TYPE] is FlowResultType.CREATE_ENTRY
+    assert result[CONF_DATA] == {
+        CONF_SHOW_ON_MAP: True,
+    }
