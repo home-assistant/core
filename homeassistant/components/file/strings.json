@@ -13,6 +13,7 @@
         "description": "[%key:component::file::config::step::user::menu_options::sensor%]",
         "data": {
           "file_path": "File path",
+          "name": "[%key:common::config_flow::data::name%]",
           "value_template": "Value template",
           "unit_of_measurement": "Unit of measurement"
         },
@@ -47,6 +48,7 @@
       "init": {
         "data": {
           "value_template": "[%key:component::file::config::step::sensor::data::value_template%]",
+          "name": "[%key:common::config_flow::data::name%]",
           "unit_of_measurement": "[%key:component::file::config::step::sensor::data::unit_of_measurement%]",
           "timestamp": "[%key:component::file::config::step::notify::data::timestamp%]"
         },

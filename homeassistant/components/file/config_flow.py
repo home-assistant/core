@@ -41,6 +41,7 @@ TEXT_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
 FILE_OPTIONS_SCHEMAS = {
     Platform.SENSOR.value: vol.Schema(
         {
+            vol.Optional(CONF_NAME): TEXT_SELECTOR,
             vol.Optional(CONF_VALUE_TEMPLATE): TEMPLATE_SELECTOR,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): TEXT_SELECTOR,
         }
@@ -105,7 +106,7 @@ class FileConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             if not await self.validate_file_path(user_input[CONF_FILE_PATH]):
                 errors[CONF_FILE_PATH] = "not_allowed"
             else:
-                title = f"{platform.capitalize()} [{user_input[CONF_FILE_PATH]}]"
+                title = f"{user_input.get(CONF_NAME) if user_input.get(CONF_NAME) else platform.capitalize()} [{user_input[CONF_FILE_PATH]}]"
                 data = deepcopy(user_input)
                 options = {}
                 for key, value in user_input.items():
