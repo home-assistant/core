@@ -44,6 +44,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_MANUFACTURER_URL,
     ATTR_UPNP_SERIAL,
@@ -2266,3 +2267,98 @@ async def test_migration_resets_old_radio(
         CONF_BAUDRATE: 115200,
         CONF_FLOW_CONTROL: None,
     }
+
+
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+@patch(f"bellows.{PROBE_FUNCTION_PATH}", return_value=True)
+async def test_config_flow_serial_resolution_oserror(
+    probe_mock, hass: HomeAssistant
+) -> None:
+    """Test that OSError during serial port resolution is handled."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "manual_pick_radio_type"},
+        data={CONF_RADIO_TYPE: RadioType.ezsp.description},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"},
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "choose_setup_strategy"
+
+    with (
+        patch(
+            "homeassistant.components.usb.get_serial_by_id",
+            side_effect=OSError("Test error"),
+        ),
+        pytest.raises(HomeAssistantError, match="Could not resolve device path"),
+    ):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"next_step_id": config_flow.SETUP_STRATEGY_RECOMMENDED},
+        )
+
+
+@patch("homeassistant.components.zha.radio_manager._allow_overwrite_ezsp_ieee")
+async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp_write_fail(
+    allow_overwrite_ieee_mock,
+    advanced_pick_radio: RadioPicker,
+    mock_app: AsyncMock,
+    backup,
+    hass: HomeAssistant,
+) -> None:
+    """Test restoring a manual backup on EZSP coordinators (overwrite IEEE) with a write failure."""
+    advanced_strategy_result = await advanced_pick_radio(RadioType.ezsp)
+
+    upload_backup_result = await hass.config_entries.flow.async_configure(
+        advanced_strategy_result["flow_id"],
+        user_input={"next_step_id": config_flow.FORMATION_UPLOAD_MANUAL_BACKUP},
+    )
+    await hass.async_block_till_done()
+
+    assert upload_backup_result["type"] is FlowResultType.FORM
+    assert upload_backup_result["step_id"] == "upload_manual_backup"
+
+    with (
+        patch(
+            "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._parse_uploaded_backup",
+            return_value=backup,
+        ),
+        patch(
+            "homeassistant.components.zha.radio_manager.ZhaRadioManager.restore_backup",
+            side_effect=[
+                DestructiveWriteNetworkSettings("Radio IEEE change is permanent"),
+                CannotWriteNetworkSettings("Failed to write settings"),
+            ],
+        ) as mock_restore_backup,
+    ):
+        confirm_restore_result = await hass.config_entries.flow.async_configure(
+            upload_backup_result["flow_id"],
+            user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
+        )
+
+        assert mock_restore_backup.call_count == 1
+        assert not mock_restore_backup.mock_calls[0].kwargs.get("overwrite_ieee")
+        mock_restore_backup.reset_mock()
+
+        # The radio requires user confirmation for restore
+        assert confirm_restore_result["type"] is FlowResultType.FORM
+        assert confirm_restore_result["step_id"] == "maybe_confirm_ezsp_restore"
+
+        final_result = await hass.config_entries.flow.async_configure(
+            confirm_restore_result["flow_id"],
+            user_input={config_flow.OVERWRITE_COORDINATOR_IEEE: True},
+        )
+
+    assert final_result["type"] is FlowResultType.ABORT
+    assert final_result["reason"] == "cannot_restore_backup"
+    assert (
+        "Failed to write settings" in final_result["description_placeholders"]["error"]
+    )
+
+    assert mock_restore_backup.call_count == 1
+    assert mock_restore_backup.mock_calls[0].kwargs["overwrite_ieee"] is True

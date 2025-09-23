@@ -16,6 +16,7 @@ from homeassistant.components.zha.const import DOMAIN
 from homeassistant.components.zha.radio_manager import ProbeResult, ZhaRadioManager
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from tests.common import MockConfigEntry
@@ -484,3 +485,32 @@ async def test_detect_radio_type_failure_no_detect(
     ):
         assert await radio_manager.detect_radio_type() == ProbeResult.PROBING_FAILED
         assert radio_manager.radio_type is None
+
+
+async def test_load_network_settings_oserror(
+    radio_manager: ZhaRadioManager, hass: HomeAssistant
+) -> None:
+    """Test that OSError during network settings loading is handled."""
+    radio_manager.device_path = "/dev/ttyZigbee"
+    radio_manager.radio_type = RadioType.ezsp
+    radio_manager.device_settings = {"database": "/test/db/path"}
+
+    with (
+        patch("os.path.exists", side_effect=OSError("Test error")),
+        pytest.raises(HomeAssistantError, match="Could not read the ZHA database"),
+    ):
+        await radio_manager.async_load_network_settings()
+
+
+async def test_create_zigpy_app_connect_oserror(
+    radio_manager: ZhaRadioManager, hass: HomeAssistant, mock_app
+) -> None:
+    """Test that OSError during zigpy app connection is handled."""
+    radio_manager.radio_type = RadioType.ezsp
+    radio_manager.device_settings = {CONF_DEVICE_PATH: "/dev/ttyZigbee"}
+
+    mock_app.connect.side_effect = OSError("Test error")
+
+    with pytest.raises(HomeAssistantError, match="Failed to connect to Zigbee adapter"):
+        async with radio_manager.create_zigpy_app():
+            pytest.fail("Should not be reached")
