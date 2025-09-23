@@ -4,7 +4,7 @@ from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, patch
 
-from pycync import Cync
+from pycync import Cync, CyncHome
 import pytest
 
 from homeassistant.components.cync.const import (
@@ -16,15 +16,9 @@ from homeassistant.components.cync.const import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-from . import get_mocked_homes
-from .const import (
-    MOCKED_EMAIL,
-    MOCKED_USER,
-    ONLINE_WIFI_CONNECTED_LIGHT,
-    ONLINE_WIFI_DISCONNECTED_LIGHT,
-)
+from .const import MOCKED_EMAIL, MOCKED_USER
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture(autouse=True)
@@ -54,18 +48,18 @@ def cync_client():
     ):
         cync_mock.get_logged_in_user.return_value = MOCKED_USER
 
-        ONLINE_WIFI_CONNECTED_LIGHT.update_state(
-            is_on=True, brightness=80, color_temp=20
+        home_fixture: CyncHome = CyncHome.from_dict(
+            load_json_object_fixture("home.json", DOMAIN)
         )
-        ONLINE_WIFI_DISCONNECTED_LIGHT.update_state(
-            is_on=True, brightness=90, color_temp=254, rgb=(120, 145, 180)
-        )
+        cync_mock.get_homes.return_value = [home_fixture]
 
-        cync_mock.get_homes.return_value = get_mocked_homes()
-        cync_mock.get_devices.return_value = [
-            ONLINE_WIFI_CONNECTED_LIGHT,
-            ONLINE_WIFI_DISCONNECTED_LIGHT,
+        available_mock_devices = [
+            device
+            for device in home_fixture.get_flattened_device_list()
+            if device.is_online
         ]
+        cync_mock.get_devices.return_value = available_mock_devices
+
         cync_mock.create.return_value = cync_mock
         client_mock = cync_mock.return_value
         yield client_mock
@@ -86,9 +80,9 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title=MOCKED_EMAIL,
-        unique_id=MOCKED_EMAIL,
+        unique_id=str(MOCKED_USER.user_id),
         data={
-            CONF_USER_ID: 123456789,
+            CONF_USER_ID: MOCKED_USER.user_id,
             CONF_AUTHORIZE_STRING: "test_authorize_string",
             CONF_EXPIRES_AT: (time.time() * 1000) + 3600000,
             CONF_ACCESS_TOKEN: "test_token",

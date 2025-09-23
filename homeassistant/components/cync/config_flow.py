@@ -105,7 +105,7 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
         """Create the Cync config entry using input user data."""
 
         cync_user = self.cync_auth.user
-        await self.async_set_unique_id(user_email)
+        await self.async_set_unique_id(str(cync_user.user_id))
         self._abort_if_unique_id_configured()
 
         config = {

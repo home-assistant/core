@@ -18,7 +18,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import MOCKED_EMAIL
+from .const import MOCKED_EMAIL, MOCKED_USER
 
 from tests.common import MockConfigEntry
 
@@ -45,13 +45,13 @@ async def test_form_auth_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCKED_EMAIL
     assert result["data"] == {
-        CONF_USER_ID: 123456789,
+        CONF_USER_ID: MOCKED_USER.user_id,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
         CONF_EXPIRES_AT: ANY,
         CONF_ACCESS_TOKEN: "test_token",
         CONF_REFRESH_TOKEN: "test_refresh_token",
     }
-    assert result["result"].unique_id == MOCKED_EMAIL
+    assert result["result"].unique_id == str(MOCKED_USER.user_id)
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -88,13 +88,13 @@ async def test_form_two_factor_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCKED_EMAIL
     assert result["data"] == {
-        CONF_USER_ID: 123456789,
+        CONF_USER_ID: MOCKED_USER.user_id,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
         CONF_EXPIRES_AT: ANY,
         CONF_ACCESS_TOKEN: "test_token",
         CONF_REFRESH_TOKEN: "test_refresh_token",
     }
-    assert result["result"].unique_id == MOCKED_EMAIL
+    assert result["result"].unique_id == str(MOCKED_USER.user_id)
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -192,13 +192,13 @@ async def test_form_two_factor_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCKED_EMAIL
     assert result["data"] == {
-        CONF_USER_ID: 123456789,
+        CONF_USER_ID: MOCKED_USER.user_id,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
         CONF_EXPIRES_AT: ANY,
         CONF_ACCESS_TOKEN: "test_token",
         CONF_REFRESH_TOKEN: "test_refresh_token",
     }
-    assert result["result"].unique_id == MOCKED_EMAIL
+    assert result["result"].unique_id == str(MOCKED_USER.user_id)
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -250,11 +250,11 @@ async def test_form_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCKED_EMAIL
     assert result["data"] == {
-        CONF_USER_ID: 123456789,
+        CONF_USER_ID: MOCKED_USER.user_id,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
         CONF_EXPIRES_AT: ANY,
         CONF_ACCESS_TOKEN: "test_token",
         CONF_REFRESH_TOKEN: "test_refresh_token",
     }
-    assert result["result"].unique_id == MOCKED_EMAIL
+    assert result["result"].unique_id == str(MOCKED_USER.user_id)
     assert len(mock_setup_entry.mock_calls) == 1

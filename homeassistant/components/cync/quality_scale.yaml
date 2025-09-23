@@ -43,16 +43,8 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info:
-    status: exempt
-    comment: |
-      Cync firmware disables device UDP communication, and requires
-      a signed TLS certificate from the Cync server for direct TCP communication.
-  discovery:
-    status: exempt
-    comment: |
-      Cync firmware disables device UDP communication, and requires
-      a signed TLS certificate from the Cync server for direct TCP communication.
+  discovery-update-info: todo
+  discovery: todo
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: done
