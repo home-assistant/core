@@ -20,7 +20,7 @@ async def async_setup_entry(
     entry: CompitConfigEntry,
     async_add_devices: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Compit select sensors from a config entry."""
+    """Set up Compit select entities from a config entry."""
 
     coordinator = entry.runtime_data
     climate_entities = []
