@@ -497,7 +497,7 @@ class RuntimeEntryData:
             {"source": config_entries.SOURCE_ESPHOME},
             ESPHomeServiceInfo(
                 name=device_info.name,
-                zwave_home_id=device_info.zwave_home_id,
+                zwave_home_id=device_info.zwave_home_id or None,
                 ip_address=self.client.connected_address,
                 port=self.client.port,
                 noise_psk=self.client.noise_psk,
