@@ -178,7 +178,6 @@ OSI_APPROVED_LICENSES = {
 }
 
 EXCEPTIONS = {
-    "PyMicroBot",  # https://github.com/spycle/pyMicroBot/pull/3
     "PySwitchmate",  # https://github.com/Danielhiversen/pySwitchmate/pull/16
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "chacha20poly1305",  # LGPL
@@ -203,6 +202,7 @@ EXCEPTIONS = {
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
+    "ujson",  # https://github.com/ultrajson/ultrajson/blob/main/LICENSE.txt
 }
 
 # fmt: off
@@ -212,7 +212,6 @@ TODO = {
         "0.12.3"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
     "caldav": AwesomeVersion("1.6.0"),  # None -- GPL -- ['GNU General Public License (GPL)', 'Apache Software License']  # https://github.com/python-caldav/caldav
-    "pyiskra": AwesomeVersion("0.1.21"),  # None -- GPL -- ['GNU General Public License v3 (GPLv3)']
     "xbox-webapi": AwesomeVersion("2.1.0"),  # None -- GPL -- ['MIT License']
 }
 # fmt: on

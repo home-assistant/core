@@ -60,8 +60,11 @@
     "step": {
       "init": {
         "data": {
-          "traffic_mode": "Traffic mode",
+          "traffic_mode": "Use traffic and time-aware routing",
           "route_mode": "Route mode"
+        },
+        "data_description": {
+          "traffic_mode": "Needed for defining arrival/departure times"
         }
       },
       "time_menu": {
@@ -103,6 +106,12 @@
       "destination": {
         "name": "Destination"
       }
+    }
+  },
+  "issues": {
+    "multiple_here_travel_time_entries": {
+      "title": "More than one HERE Travel Time integration detected",
+      "description": "HERE deprecated the previous free tier. You have change to the Base Plan which has 5000 instead of 30000 free requests per month.\n\nSince you have more than one HERE Travel Time integration configured, you will need to disable or remove the additional integrations to avoid exceeding the free request limit.\nYou can ignore this issue if you are okay with the additional cost."
     }
   }
 }

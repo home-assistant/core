@@ -2,6 +2,9 @@
   "entity_component": {
     "_": {
       "default": "mdi:lightbulb",
+      "state": {
+        "off": "mdi:lightbulb-off"
+      },
       "state_attributes": {
         "effect": {
           "default": "mdi:circle-medium",

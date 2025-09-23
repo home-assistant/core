@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_device_diagnostics[rqbj_gas_sensor]
+# name: test_device_diagnostics[rqbj_4iqe2hsfyd86kwwc]
   dict({
     'active_time': '2025-06-24T20:33:10+00:00',
     'category': 'rqbj',
@@ -59,7 +59,7 @@
       'name': 'Gas sensor',
       'name_by_user': None,
     }),
-    'id': 'ebb9d0eb5014f98cfboxbz',
+    'id': 'cwwk68dyfsh2eqi4jbqr',
     'mqtt_connected': True,
     'name': 'Gas sensor',
     'online': True,
@@ -88,7 +88,7 @@
     'update_time': '2025-06-24T20:33:10+00:00',
   })
 # ---
-# name: test_entry_diagnostics[rqbj_gas_sensor]
+# name: test_entry_diagnostics[rqbj_4iqe2hsfyd86kwwc]
   dict({
     'devices': list([
       dict({
@@ -147,7 +147,7 @@
           'name': 'Gas sensor',
           'name_by_user': None,
         }),
-        'id': 'ebb9d0eb5014f98cfboxbz',
+        'id': 'cwwk68dyfsh2eqi4jbqr',
         'name': 'Gas sensor',
         'online': True,
         'product_id': '4iqe2hsfyd86kwwc',

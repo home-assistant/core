@@ -6,10 +6,7 @@ rules:
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency:
-    status: todo
-    comment: |
-      Mastodon.py does not have CI build/publish.
+  dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
@@ -26,10 +23,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: |
-      Awaiting legacy Notify deprecation.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -39,19 +33,12 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates:
-    status: todo
-    comment: |
-      Awaiting legacy Notify deprecation.
+  parallel-updates: done
   reauthentication-flow:
     status: todo
     comment: |
       Waiting to move to oAuth.
-  test-coverage:
-    status: todo
-    comment: |
-      Awaiting legacy Notify deprecation.
-
+  test-coverage: done
   # Gold
   devices: done
   diagnostics: done

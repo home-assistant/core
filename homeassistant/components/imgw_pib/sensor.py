@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
+from imgw_pib.const import HYDROLOGICAL_ALERTS_MAP, NO_ALERT
 from imgw_pib.model import HydrologicalData
 
 from homeassistant.components.sensor import (
@@ -28,14 +30,36 @@ from .entity import ImgwPibEntity
 PARALLEL_UPDATES = 0
 
 
+def gen_alert_attributes(data: HydrologicalData) -> dict[str, Any] | None:
+    """Generate attributes for the alert entity."""
+    if data.hydrological_alert.value == NO_ALERT:
+        return None
+
+    return {
+        "level": data.hydrological_alert.level,
+        "probability": data.hydrological_alert.probability,
+        "valid_from": data.hydrological_alert.valid_from,
+        "valid_to": data.hydrological_alert.valid_to,
+    }
+
+
 @dataclass(frozen=True, kw_only=True)
 class ImgwPibSensorEntityDescription(SensorEntityDescription):
     """IMGW-PIB sensor entity description."""
 
     value: Callable[[HydrologicalData], StateType]
+    attrs: Callable[[HydrologicalData], dict[str, Any] | None] | None = None
 
 
 SENSOR_TYPES: tuple[ImgwPibSensorEntityDescription, ...] = (
+    ImgwPibSensorEntityDescription(
+        key="hydrological_alert",
+        translation_key="hydrological_alert",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(HYDROLOGICAL_ALERTS_MAP.values()),
+        value=lambda data: data.hydrological_alert.value,
+        attrs=gen_alert_attributes,
+    ),
     ImgwPibSensorEntityDescription(
         key="water_flow",
         translation_key="water_flow",
@@ -109,3 +133,11 @@ class ImgwPibSensorEntity(ImgwPibEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.entity_description.value(self.coordinator.data)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes."""
+        if self.entity_description.attrs:
+            return self.entity_description.attrs(self.coordinator.data)
+
+        return None
