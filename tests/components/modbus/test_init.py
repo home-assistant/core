@@ -887,6 +887,8 @@ async def test_config_wrong_modbus(
 ) -> None:
     """Run configuration test for modbus."""
     assert len(hass.data[DOMAIN]) == 1
+    assert len(issue_registry.issues) == 1
+    assert (DOMAIN, "duplicate_modbus_entry") in issue_registry.issues
 
 
 VALUE = "value"
