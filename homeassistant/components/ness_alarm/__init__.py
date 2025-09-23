@@ -89,21 +89,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     yaml_config = config[DOMAIN]
 
-    # If not configured, import it
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
+    # Wait for Home Assistant to be fully started before importing
+    # This ensures existing config entries are loaded
+    async def _import_yaml_config(_):
+        """Import YAML configuration after HA is started."""
+        _LOGGER.debug("Importing YAML config after startup: %s", yaml_config)
+        await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
             data=yaml_config,
         )
-    )
+
+    # Use async_at_started to ensure import happens after startup
+    async_at_started(hass, _import_yaml_config)
+
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ness Alarm from a config entry."""
-
-    hass.data.setdefault(DOMAIN, {})
 
     host = entry.data[CONF_HOST]
     port = entry.data.get(CONF_PORT, DEFAULT_PORT)
@@ -141,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client.on_zone_change(on_zone_change)
     client.on_state_change(on_state_change)
 
-    hass.data[DOMAIN][entry.entry_id] = {
+    entry.runtime_data = {
         "client": client,
         "config": {
             CONF_HOST: host,
@@ -182,7 +186,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     if unload_ok:
-        data = hass.data[DOMAIN].pop(entry.entry_id)
+        data = entry.runtime_data
         await data["client"].close()
 
     return unload_ok
@@ -204,8 +208,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         output_id = call.data.get("output_id")
         state = call.data.get("state", True)
 
-        for entry_data in hass.data[DOMAIN].values():
-            client = entry_data.get("client") if isinstance(entry_data, dict) else None
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            client = entry.runtime_data.get("client") if entry.runtime_data else None
             if client:
                 await client.aux(output_id, state)
                 break
@@ -214,8 +218,8 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         """Handle panic service call."""
         code = call.data.get(SERVICE_CODE)
 
-        for entry_data in hass.data[DOMAIN].values():
-            client = entry_data.get("client") if isinstance(entry_data, dict) else None
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            client = entry.runtime_data.get("client") if entry.runtime_data else None
             if client:
                 await client.panic(code)
                 break

@@ -37,7 +37,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ness zone binary sensors from a config entry."""
-    data = hass.data[DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     config = data["config"]
 
     entity_registry = er.async_get(hass)
@@ -157,16 +157,6 @@ class NessZoneSensor(BinarySensorEntity):
         # Set entity as disabled if beyond panel's capacity
         # This only applies on first creation, not on reload
         self._attr_entity_registry_enabled_default = enabled_by_default
-
-        # Add suggested area based on zone ranges (optional)
-        if zone_id <= 8:
-            self._attr_suggested_area = "Ground Floor"
-        elif zone_id <= 16:
-            self._attr_suggested_area = "First Floor"
-        elif zone_id <= 24:
-            self._attr_suggested_area = "Second Floor"
-        else:
-            self._attr_suggested_area = "Extended"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks and restore state."""
