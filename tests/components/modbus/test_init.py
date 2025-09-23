@@ -788,6 +788,7 @@ async def test_config_modbus(hass: HomeAssistant, mock_modbus_with_pymodbus) -> 
     "do_config",
     [
         [
+            # Duplicate CONF_NAME
             {
                 CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
