@@ -1,14 +1,10 @@
 {
-    "domain": "myneomitis",
-    "name": "MyNeomitis",
-    "documentation": "https://www.home-assistant.io/integrations/myneomitis",
-    "requirements": [
-      "python-socketio==5.11.2",
-      "pyaxencoapi==1.0.2"
-    ],
-    "codeowners": ["@l-pr"],
-    "config_flow": true,
-    "iot_class": "cloud_push",
-    "integration_type": "hub"
-  }
-  
+  "domain": "myneomitis",
+  "name": "MyNeomitis",
+  "documentation": "https://www.home-assistant.io/integrations/myneomitis",
+  "requirements": ["pyaxencoapi==1.0.2"],
+  "codeowners": ["@l-pr"],
+  "config_flow": true,
+  "iot_class": "cloud_push",
+  "integration_type": "hub"
+}

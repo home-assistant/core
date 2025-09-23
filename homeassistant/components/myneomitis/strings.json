@@ -6,6 +6,11 @@
       "title": "Connect to MyNeomitis"
     }
   },
+  "config": {
+    "abort": {
+      "already_configured": "This integration is already configured."
+    }
+  },
   "errors": {
     "auth_failed": {
       "title": "Authentication failed",
@@ -41,4 +46,3 @@
     }
   }
 }
-

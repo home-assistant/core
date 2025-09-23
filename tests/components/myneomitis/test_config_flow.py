@@ -4,7 +4,6 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientConnectionError, ClientError, ClientResponseError, RequestInfo
-import pyaxencoapi
 import pytest
 
 from homeassistant import config_entries
@@ -32,7 +31,9 @@ def disable_track_time_interval(
 @pytest.mark.asyncio
 async def test_user_flow_success(hass: HomeAssistant) -> None:
     """Test successful user flow for MyNeoMitis integration."""
-    with patch(pyaxencoapi.PyAxencoAPI) as mock_api:
+    with patch(
+        "homeassistant.components.myneomitis.config_flow.PyAxencoAPI"
+    ) as mock_api:
         instance = mock_api.return_value
         instance.login = AsyncMock()
         instance.user_id = "user-123"
@@ -63,20 +64,23 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
 
 @pytest.mark.asyncio
 async def test_flow_raises_on_network_error(hass: HomeAssistant) -> None:
-    """Test that a network error during login raises an exception."""
-    with patch(pyaxencoapi.PyAxencoAPI) as mock_api:
+    """Test that a network error during login shows an error in the form."""
+    with patch(
+        "homeassistant.components.myneomitis.config_flow.PyAxencoAPI"
+    ) as mock_api:
         instance = mock_api.return_value
-        instance.login = AsyncMock(side_effect=Exception("Network error"))
+        instance.login = AsyncMock(side_effect=ClientError("Network error"))
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        with pytest.raises(Exception, match="Network error"):
-            await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
-            )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
+        )
+        assert result2["type"] == "form"
+        assert result2["errors"]["base"] == "unknown_error"
 
 
 @pytest.mark.asyncio
@@ -102,24 +106,33 @@ async def test_abort_if_already_configured(
 
 def make_client_response_error(status: int) -> ClientResponseError:
     """Create a mock ClientResponseError with the given status code."""
+    request_info = RequestInfo(
+        url=URL("https://api.fake"),
+        method="POST",
+        headers={},
+        real_url=URL("https://api.fake"),
+    )
     return ClientResponseError(
-        request_info=RequestInfo(
-            url=URL("https://api.fake"),
-            method="POST",
-            headers={},
-            real_url=URL("https://api.fake"),
-        ),
-        history=[],
+        request_info=request_info,
+        history=(),
         status=status,
+        message="error",
+        headers=None,
     )
 
 
 @pytest.mark.asyncio
 async def test_auth_failed(hass: HomeAssistant) -> None:
-    """Test that an authentication error during login raises an exception."""
-    with patch(pyaxencoapi.PyAxencoAPI) as mock_api:
+    """Test that an authentication error during login shows an error in the form."""
+    with patch(
+        "homeassistant.components.myneomitis.config_flow.PyAxencoAPI"
+    ) as mock_api:
         instance = mock_api.return_value
-        instance.login = AsyncMock(side_effect=make_client_response_error(401))
+
+        async def raise_auth(*args, **kwargs):
+            raise make_client_response_error(401)
+
+        instance.login = AsyncMock(side_effect=raise_auth)
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -128,17 +141,22 @@ async def test_auth_failed(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
         )
-
         assert result2["type"] == "form"
         assert result2["errors"]["base"] == "auth_failed"
 
 
 @pytest.mark.asyncio
 async def test_http_error(hass: HomeAssistant) -> None:
-    """Test that an HTTP error during login raises an exception."""
-    with patch(pyaxencoapi.PyAxencoAPI) as mock_api:
+    """Test that an HTTP error during login shows an error in the form."""
+    with patch(
+        "homeassistant.components.myneomitis.config_flow.PyAxencoAPI"
+    ) as mock_api:
         instance = mock_api.return_value
-        instance.login = AsyncMock(side_effect=make_client_response_error(500))
+
+        async def raise_http(*args, **kwargs):
+            raise make_client_response_error(500)
+
+        instance.login = AsyncMock(side_effect=raise_http)
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -147,15 +165,16 @@ async def test_http_error(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
         )
-
         assert result2["type"] == "form"
         assert result2["errors"]["base"] == "connection_error"
 
 
 @pytest.mark.asyncio
 async def test_connection_error(hass: HomeAssistant) -> None:
-    """Test that a connection error during login raises an exception."""
-    with patch(pyaxencoapi.PyAxencoAPI) as mock_api:
+    """Test that a connection error during login shows an error in the form."""
+    with patch(
+        "homeassistant.components.myneomitis.config_flow.PyAxencoAPI"
+    ) as mock_api:
         instance = mock_api.return_value
         instance.login = AsyncMock(side_effect=ClientConnectionError())
 
@@ -166,15 +185,16 @@ async def test_connection_error(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
         )
-
         assert result2["type"] == "form"
         assert result2["errors"]["base"] == "connection_error"
 
 
 @pytest.mark.asyncio
 async def test_generic_client_error(hass: HomeAssistant) -> None:
-    """Test that a generic client error during login raises an exception."""
-    with patch(pyaxencoapi.PyAxencoAPI) as mock_api:
+    """Test that a generic client error during login shows an error in the form."""
+    with patch(
+        "homeassistant.components.myneomitis.config_flow.PyAxencoAPI"
+    ) as mock_api:
         instance = mock_api.return_value
         instance.login = AsyncMock(side_effect=ClientError("oops"))
 
@@ -185,15 +205,16 @@ async def test_generic_client_error(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
         )
-
         assert result2["type"] == "form"
         assert result2["errors"]["base"] == "unknown_error"
 
 
 @pytest.mark.asyncio
 async def test_runtime_error(hass: HomeAssistant) -> None:
-    """Test that a runtime error during login raises an exception."""
-    with patch(pyaxencoapi.PyAxencoAPI) as mock_api:
+    """Test that a runtime error during login shows an error in the form."""
+    with patch(
+        "homeassistant.components.myneomitis.config_flow.PyAxencoAPI"
+    ) as mock_api:
         instance = mock_api.return_value
         instance.login = AsyncMock(side_effect=RuntimeError("boom"))
 
@@ -204,6 +225,5 @@ async def test_runtime_error(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
         )
-
         assert result2["type"] == "form"
         assert result2["errors"]["base"] == "unknown_error"
