@@ -65,5 +65,6 @@ ATTR_STREAM_TITLE = "stream_title"
 ATTR_PROVIDER = "provider"
 ATTR_ITEM_ID = "item_id"
 
+ATTR_CONF_EXPOSE_PLAYER_TO_HA = "expose_player_to_ha"
 
 LOGGER = logging.getLogger(__package__)
