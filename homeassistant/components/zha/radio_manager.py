@@ -1,4 +1,4 @@
-"""Config flow for ZHA."""
+"""ZHA radio manager."""
 
 from __future__ import annotations
 
@@ -177,10 +177,18 @@ class ZhaRadioManager:
         database_path: str | None = self.zigpy_database_path
 
         # Don't create `zigbee.db` if it doesn't already exist
-        if database_path is not None and not await self.hass.async_add_executor_job(
-            os.path.exists, database_path
-        ):
-            database_path = None
+        try:
+            if (
+                database_path is not None
+                and not await self.hass.async_add_executor_job(
+                    os.path.exists, database_path
+                )
+            ):
+                database_path = None
+        except OSError as error:
+            raise HomeAssistantError(
+                f"Could not read the ZHA database {database_path}: {error}"
+            ) from error
 
         app_config[CONF_DATABASE] = database_path
         app_config[CONF_DEVICE] = self.device_settings
