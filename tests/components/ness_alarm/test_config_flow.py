@@ -7,6 +7,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.ness_alarm import CONF_SCAN_INTERVAL
 from homeassistant.components.ness_alarm.config_flow import OptionsFlow
 from homeassistant.components.ness_alarm.const import (
     CONF_ID,
@@ -158,6 +159,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={
             CONF_INFER_ARMING_STATE: True,
+            CONF_SCAN_INTERVAL: 60,
             CONF_SUPPORT_HOME_ARM: False,
             "enabled_zones": 8,  # Use "enabled_zones" not CONF_MAX_SUPPORTED_ZONES
         },
