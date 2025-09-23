@@ -144,6 +144,18 @@ class MatterLight(MatterEntity, LightEntity):
         color_temp_mired = color_util.color_temperature_kelvin_to_mired(
             color_temp_kelvin
         )
+        # clamp to supported range
+        max_mireds = self.get_matter_attribute_value(
+            clusters.ColorControl.Attributes.ColorTempPhysicalMaxMireds
+        )
+        min_mireds = self.get_matter_attribute_value(
+            clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds
+        )
+        if max_mireds is not None and color_temp_mired > max_mireds:
+            color_temp_mired = max_mireds
+        if min_mireds is not None and color_temp_mired < min_mireds:
+            color_temp_mired = min_mireds
+
         await self.send_device_command(
             clusters.ColorControl.Commands.MoveToColorTemperature(
                 colorTemperatureMireds=color_temp_mired,
@@ -289,6 +301,7 @@ class MatterLight(MatterEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
+        LOGGER.info("Turn on %s with %s", self.entity_id, kwargs)
 
         hs_color = kwargs.get(ATTR_HS_COLOR)
         xy_color = kwargs.get(ATTR_XY_COLOR)
