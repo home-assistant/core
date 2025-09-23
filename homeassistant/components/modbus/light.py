@@ -117,7 +117,7 @@ class ModbusLight(ModbusToggleEntity, LightEntity):
         conv_brightness = self._convert_brightness_to_modbus(brightness)
 
         await self._hub.async_pb_call(
-            unit=self._device_address,
+            device_address=self._device_address,
             address=self._brightness_address,
             value=conv_brightness,
             use_call=CALL_TYPE_WRITE_REGISTER,
@@ -133,7 +133,7 @@ class ModbusLight(ModbusToggleEntity, LightEntity):
         conv_color_temp_kelvin = self._convert_color_temp_to_modbus(color_temp_kelvin)
 
         await self._hub.async_pb_call(
-            unit=self._device_address,
+            device_address=self._device_address,
             address=self._color_temp_address,
             value=conv_color_temp_kelvin,
             use_call=CALL_TYPE_WRITE_REGISTER,
@@ -150,7 +150,7 @@ class ModbusLight(ModbusToggleEntity, LightEntity):
 
         if self._brightness_address:
             brightness_result = await self._hub.async_pb_call(
-                unit=self._device_address,
+                device_address=self._device_address,
                 value=1,
                 address=self._brightness_address,
                 use_call=CALL_TYPE_REGISTER_HOLDING,
@@ -167,7 +167,7 @@ class ModbusLight(ModbusToggleEntity, LightEntity):
 
         if self._color_temp_address:
             color_result = await self._hub.async_pb_call(
-                unit=self._device_address,
+                device_address=self._device_address,
                 value=1,
                 address=self._color_temp_address,
                 use_call=CALL_TYPE_REGISTER_HOLDING,
