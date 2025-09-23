@@ -162,7 +162,11 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         """Turn the grouped_light on."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
         xy_color = kwargs.get(ATTR_XY_COLOR)
-        color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP_KELVIN))
+        color_temp = normalize_hue_colortemp(
+            kwargs.get(ATTR_COLOR_TEMP_KELVIN),
+            color_util.color_temperature_kelvin_to_mired(self.max_color_temp_kelvin),
+            color_util.color_temperature_kelvin_to_mired(self.min_color_temp_kelvin),
+        )
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
         flash = kwargs.get(ATTR_FLASH)
 
