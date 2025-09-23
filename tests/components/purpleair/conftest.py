@@ -118,7 +118,6 @@ def mock_aiopurpleair_fixture(api: Mock) -> Generator[Mock]:
     with (
         patch("homeassistant.components.purpleair.coordinator.API", return_value=api),
         patch("homeassistant.components.purpleair.config_flow.API", return_value=api),
-        patch("homeassistant.components.purpleair.subentry_flow.API", return_value=api),
     ):
         yield api
 
