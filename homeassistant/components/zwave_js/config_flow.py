@@ -717,7 +717,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if addon_info.state == AddonState.RUNNING:
             addon_config = addon_info.options
-            self.usb_path = addon_config[CONF_ADDON_DEVICE]
+            self.usb_path = addon_config.get(CONF_ADDON_DEVICE)
+            self.socket_path = addon_config.get(CONF_ADDON_SOCKET)
             self.s0_legacy_key = addon_config.get(CONF_ADDON_S0_LEGACY_KEY, "")
             self.s2_access_control_key = addon_config.get(
                 CONF_ADDON_S2_ACCESS_CONTROL_KEY, ""
