@@ -49,7 +49,7 @@ async def async_setup_devices(bridge: HueBridge):
                 entry_type=dr.DeviceEntryType.SERVICE,
                 identifiers={(DOMAIN, hue_resource.id)},
                 name=hue_resource.metadata.name,
-                model=hue_resource.type.value.title(),
+                model=hue_resource.type.value.replace("_", " ").title(),
                 manufacturer=api.config.bridge_device.product_data.manufacturer_name,
                 via_device=(DOMAIN, api.config.bridge_device.id),
                 suggested_area=hue_resource.metadata.name
