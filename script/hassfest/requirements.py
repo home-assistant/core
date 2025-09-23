@@ -38,6 +38,7 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "pillow": "SemVer",
     "pydantic": "SemVer",
     "pyjwt": "SemVer",
+    "pymodbus": "Custom",
     "pytz": "CalVer",
     "requests": "SemVer",
     "typing_extensions": "SemVer",
@@ -64,6 +65,14 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "noaa_tides": {
         # https://github.com/GClunies/noaa_coops/pull/69
         "noaa-coops": {"pandas"}
+    },
+    "smarty": {
+        # Current has an upper bound on major >=3.11.0,<4.0.0
+        "pysmarty2": {"pymodbus"}
+    },
+    "stiebel_eltron": {
+        # Current has an upper bound on major >=3.10.0,<4.0.0
+        "pystiebeleltron": {"pymodbus"}
     },
 }
 
@@ -164,7 +173,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # universal-silabs-flasher > zigpy > pyserial-asyncio
         "zigpy": {"pyserial-asyncio"},
     },
-    "homekit": {"hap-python": {"async-timeout"}},
     "homewizard": {"python-homewizard-energy": {"async-timeout"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
     "influxdb": {

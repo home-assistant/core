@@ -343,6 +343,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ac_cac_01001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '23c6d296-4656-20d8-f6eb-2ff13e041753',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'TP1X_DA-AC-CAC-01001_0000',
+    'model_id': None,
+    'name': 'Ar Varanda',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'ASA-WW-TP1-24-PACCOM_14240625',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_ac_ehs_01001]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -390,6 +421,37 @@
       tuple(
         'smartthings',
         '96a5ef74-5832-a84b-f1f7-ca799957065d',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': None,
+    'model_id': None,
+    'name': 'AC Office Granit',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_ac_rac_000002]
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'theater',
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '13549124-3320-4fda-8e5c-3f363e043034',
       ),
     }),
     'labels': set({

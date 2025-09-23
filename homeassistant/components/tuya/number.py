@@ -65,6 +65,14 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # White noise machine
+    "bzyd": (
+        NumberEntityDescription(
+            key=DPCode.VOLUME_SET,
+            translation_key="volume",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # CO2 Detector
     # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
     "co2bj": (
@@ -212,6 +220,20 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.CLOUD_RECIPE_NUMBER,
             translation_key="cloud_recipe",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Cooking thermometer
+    "swtz": (
+        NumberEntityDescription(
+            key=DPCode.COOK_TEMPERATURE,
+            translation_key="cook_temperature",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.COOK_TEMPERATURE_2,
+            translation_key="indexed_cook_temperature",
+            translation_placeholders={"index": "2"},
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -396,6 +418,21 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.TEMP_CORRECTION,
             translation_key="temp_correction",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Micro Storage Inverter
+    # Energy storage and solar PV inverter system with monitoring capabilities
+    "xnyjcn": (
+        NumberEntityDescription(
+            key=DPCode.BACKUP_RESERVE,
+            translation_key="battery_backup_reserve",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.OUTPUT_POWER_LIMIT,
+            translation_key="inverter_output_power_limit",
+            device_class=NumberDeviceClass.POWER,
             entity_category=EntityCategory.CONFIG,
         ),
     ),

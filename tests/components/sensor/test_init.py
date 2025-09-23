@@ -32,6 +32,7 @@ from homeassistant.components.sensor.const import STATE_CLASS_UNITS, UNIT_CONVER
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     STATE_UNKNOWN,
     EntityCategory,
@@ -2157,6 +2158,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.PM1,
         SensorDeviceClass.PM10,
         SensorDeviceClass.PM25,
+        SensorDeviceClass.PM4,
         SensorDeviceClass.POWER_FACTOR,
         SensorDeviceClass.POWER,
         SensorDeviceClass.PRECIPITATION_INTENSITY,
@@ -2938,6 +2940,13 @@ async def test_suggested_unit_guard_invalid_unit(
             UnitOfDataRate.BITS_PER_SECOND,
             10000,
         ),
+        (
+            SensorDeviceClass.CO2,
+            CONCENTRATION_PARTS_PER_MILLION,
+            10,
+            CONCENTRATION_PARTS_PER_MILLION,
+            10,
+        ),
     ],
 )
 async def test_suggested_unit_guard_valid_unit(
@@ -2999,7 +3008,6 @@ def test_device_class_converters_are_complete() -> None:
     no_converter_device_classes = {
         SensorDeviceClass.AQI,
         SensorDeviceClass.BATTERY,
-        SensorDeviceClass.CO,
         SensorDeviceClass.CO2,
         SensorDeviceClass.DATE,
         SensorDeviceClass.ENUM,
@@ -3017,6 +3025,7 @@ def test_device_class_converters_are_complete() -> None:
         SensorDeviceClass.PM1,
         SensorDeviceClass.PM10,
         SensorDeviceClass.PM25,
+        SensorDeviceClass.PM4,
         SensorDeviceClass.SIGNAL_STRENGTH,
         SensorDeviceClass.SOUND_PRESSURE,
         SensorDeviceClass.SULPHUR_DIOXIDE,
