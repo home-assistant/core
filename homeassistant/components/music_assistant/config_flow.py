@@ -128,10 +128,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                 # and continue to discovery confirm
                 self.hass.config_entries.async_update_entry(
                     existing_entry,
-                    data={
-                        **existing_entry.data,
-                        CONF_URL: self.server_info.base_url,
-                    },
+                    data={**existing_entry.data, CONF_URL: self.server_info.base_url},
                 )
                 # Schedule reload since URL changed
                 self.hass.config_entries.async_schedule_reload(existing_entry.entry_id)
