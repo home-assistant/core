@@ -605,7 +605,11 @@ async def test_migration_strategy_recommended_cannot_write(
 ) -> None:
     """Test recommended migration with a write failure."""
     MockConfigEntry(
-        domain=DOMAIN, data={CONF_DEVICE: {CONF_DEVICE_PATH: "/dev/ttyUSB1"}}
+        domain=DOMAIN,
+        data={
+            CONF_DEVICE: {CONF_DEVICE_PATH: "/dev/ttyUSB1"},
+            CONF_RADIO_TYPE: "ezsp",
+        },
     ).add_to_hass(hass)
 
     discovery_info = UsbServiceInfo(

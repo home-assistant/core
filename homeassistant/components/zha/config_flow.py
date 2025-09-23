@@ -401,6 +401,31 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 
         # Assume the most recent backup is the correct one
         self._radio_mgr.chosen_backup = self._radio_mgr.backups[0]
+        return await self.async_step_maybe_reset_old_radio()
+
+    async def async_step_maybe_reset_old_radio(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Erase the old radio's network settings before migration."""
+
+        # Like in the options flow, pull the correct settings from the config entry
+        config_entries = self.hass.config_entries.async_entries(DOMAIN)
+
+        if config_entries:
+            assert len(config_entries) == 1
+            config_entry = config_entries[0]
+
+            # Create a radio manager to connect to the old stick to reset it
+            temp_radio_mgr = ZhaRadioManager()
+            temp_radio_mgr.hass = self.hass
+            temp_radio_mgr.device_path = config_entry.data[CONF_DEVICE][
+                CONF_DEVICE_PATH
+            ]
+            temp_radio_mgr.device_settings = config_entry.data[CONF_DEVICE]
+            temp_radio_mgr.radio_type = RadioType[config_entry.data[CONF_RADIO_TYPE]]
+
+            await temp_radio_mgr.async_reset_adapter()
+
         return await self.async_step_maybe_confirm_ezsp_restore()
 
     async def async_step_migration_strategy_advanced(
@@ -495,7 +520,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             except ValueError:
                 errors["base"] = "invalid_backup_json"
             else:
-                return await self.async_step_maybe_confirm_ezsp_restore()
+                return await self.async_step_maybe_reset_old_radio()
 
         return self.async_show_form(
             step_id="upload_manual_backup",
@@ -535,7 +560,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             index = choices.index(user_input[CHOOSE_AUTOMATIC_BACKUP])
             self._radio_mgr.chosen_backup = self._radio_mgr.backups[index]
 
-            return await self.async_step_maybe_confirm_ezsp_restore()
+            return await self.async_step_maybe_reset_old_radio()
 
         return self.async_show_form(
             step_id="choose_automatic_backup",

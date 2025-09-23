@@ -59,6 +59,10 @@
           "migration_strategy_advanced": "This will let you restore a specific network backup or upload your own"
         }
       },
+      "maybe_reset_old_radio": {
+        "title": "Resetting old radio",
+        "description": "A backup was created earlier and your old radio is being reset as part of the migration."
+      },
       "choose_formation_strategy": {
         "title": "Network formation",
         "description": "Choose the network settings for your radio.",
