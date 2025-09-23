@@ -2343,7 +2343,7 @@ smart-meter-texas==0.5.5
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.11
+soco==0.30.12
 
 # homeassistant.components.solarlog
 solarlog_cli==0.6.0
