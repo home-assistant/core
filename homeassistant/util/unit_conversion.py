@@ -174,7 +174,9 @@ class CarbonMonoxideConcentrationConverter(BaseUnitConverter):
     UNIT_CLASS = "carbon_monoxide"
     _UNIT_CONVERSION: dict[str | None, float] = {
         CONCENTRATION_PARTS_PER_MILLION: 1,
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: 1.145609,
+        # concentration (mg/m3) = 0.0409 x concentration (ppm) x molecular weight
+        # Carbon monoxide molecular weight: 28.01 g/mol
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: 0.0409 * 28.01,
     }
     VALID_UNITS = {
         CONCENTRATION_PARTS_PER_MILLION,
@@ -740,6 +742,8 @@ class UnitlessRatioConverter(BaseUnitConverter):
     }
     VALID_UNITS = {
         None,
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_PARTS_PER_MILLION,
         PERCENTAGE,
     }
 
