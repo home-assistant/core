@@ -30,6 +30,7 @@ async def test_adam_select_entities(
     """Test Adam select snapshot."""
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
+
 async def test_adam_change_select_entity(
     hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
 ) -> None:
@@ -53,6 +54,7 @@ async def test_adam_change_select_entity(
         "on",
     )
 
+
 @pytest.mark.parametrize("chosen_env", ["m_adam_cooling"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [True], indirect=True)
 @pytest.mark.parametrize("platforms", [(SELECT_DOMAIN,)])
@@ -66,6 +68,7 @@ async def test_adam_2_select_entities(
 ) -> None:
     """Test Adam with cooling select snapshot."""
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
 
 @pytest.mark.parametrize("chosen_env", ["m_adam_cooling"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [True], indirect=True)
@@ -95,6 +98,7 @@ async def test_adam_select_regulation_mode(
         "on",
     )
 
+
 async def test_legacy_anna_select_entities(
     hass: HomeAssistant,
     mock_smile_legacy_anna: MagicMock,
@@ -102,6 +106,7 @@ async def test_legacy_anna_select_entities(
 ) -> None:
     """Test not creating a select-entity for a legacy Anna without a thermostat-schedule."""
     assert not hass.states.get("select.anna_thermostat_schedule")
+
 
 @pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [True], indirect=True)
