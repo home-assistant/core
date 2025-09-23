@@ -594,17 +594,19 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     ) -> list[_FlowResultT]:
         """Convert a list of FlowHandler to a partial FlowResult that can be serialized."""
         return [
-            self._flow_result(
-                flow_id=flow.flow_id,
-                handler=flow.handler,
-                context=flow.context,
-                step_id=flow.cur_step["step_id"],
-            )
-            if flow.cur_step
-            else self._flow_result(
-                flow_id=flow.flow_id,
-                handler=flow.handler,
-                context=flow.context,
+            (
+                self._flow_result(
+                    flow_id=flow.flow_id,
+                    handler=flow.handler,
+                    context=flow.context,
+                    step_id=flow.cur_step["step_id"],
+                )
+                if flow.cur_step
+                else self._flow_result(
+                    flow_id=flow.flow_id,
+                    handler=flow.handler,
+                    context=flow.context,
+                )
             )
             for flow in flows
             if include_uninitialized or flow.cur_step is not None
@@ -961,14 +963,17 @@ class section:
         return self.schema(value)
 
 
-def progress_step(
+def progress_step[
+    _ResultT: FlowResult[Any, Any],
+    _FlowHandlerT: FlowHandler[Any, _FlowResultT, Any],  # type: ignore[valid-type]
+](
     progress_action: str | None = None,
-    description_placeholders: dict[str, str]
-    | Callable[[Any], dict[str, str]]
-    | None = None,
+    description_placeholders: (
+        dict[str, str] | Callable[[Any], dict[str, str]] | None
+    ) = None,
 ) -> Callable[
-    [Callable[..., Coroutine[Any, Any, Any]]],
-    Callable[..., Coroutine[Any, Any, Any]],
+    [Callable[[_FlowHandlerT, dict[str, Any] | None], Coroutine[Any, Any, _ResultT]]],
+    Callable[..., Coroutine[Any, Any, _ResultT]],
 ]:
     """Decorator to create a progress step from an async function.
 
@@ -982,13 +987,15 @@ def progress_step(
     """
 
     def decorator(
-        func: Callable[..., Coroutine[Any, Any, Any]],
-    ) -> Callable[..., Coroutine[Any, Any, Any]]:
+        func: Callable[
+            [_FlowHandlerT, dict[str, Any] | None], Coroutine[Any, Any, _ResultT]
+        ],
+    ) -> Callable[..., Coroutine[Any, Any, _ResultT]]:
         @functools.wraps(func)
         async def wrapper(
-            self: FlowHandler[Any, Any, Any],
+            self: _FlowHandlerT,
             user_input: dict[str, Any] | None = None,
-        ) -> Any:
+        ) -> _ResultT:
             step_id = func.__name__.replace("async_step_", "")
             action = progress_action or step_id
 
