@@ -7,12 +7,12 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.foscam.const import DOMAIN
 from homeassistant.components.foscam.switch import (
-    handle_car_Detect_turn_off,
-    handle_car_Detect_turn_on,
-    handle_human_Detect_turn_off,
-    handle_human_Detect_turn_on,
-    handle_pet_Detect_turn_off,
-    handle_pet_Detect_turn_on,
+    handle_car_detect_turn_off,
+    handle_car_detect_turn_on,
+    handle_human_detect_turn_off,
+    handle_human_detect_turn_on,
+    handle_pet_detect_turn_off,
+    handle_pet_detect_turn_on,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -23,13 +23,15 @@ from .const import ENTRY_ID, VALID_CONFIG
 
 from tests.common import MockConfigEntry, snapshot_platform
 
+supports_pet_adjustment = True
+supports_car_adjustment = True
 TEST_CASES = [
-    (handle_pet_Detect_turn_on, "petEnable", "1"),
-    (handle_pet_Detect_turn_off, "petEnable", "0"),
-    (handle_car_Detect_turn_on, "carEnable", "1"),
-    (handle_car_Detect_turn_off, "carEnable", "0"),
-    (handle_human_Detect_turn_on, "humanEnable", "1"),
-    (handle_human_Detect_turn_off, "humanEnable", "0"),
+    (handle_pet_detect_turn_on, "petEnable", "1"),
+    (handle_pet_detect_turn_off, "petEnable", "0"),
+    (handle_car_detect_turn_on, "carEnable", "1"),
+    (handle_car_detect_turn_off, "carEnable", "0"),
+    (handle_human_detect_turn_on, "humanEnable", "1"),
+    (handle_human_detect_turn_off, "humanEnable", "0"),
 ]
 
 

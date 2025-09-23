@@ -30,8 +30,8 @@ def handle_ir_turn_off(session: FoscamCamera) -> None:
     session.close_infra_led()
 
 
-def handle_pet_Detect_turn_on(session: FoscamCamera) -> None:
-    """Turn on IR LED: sets IR mode to auto (if supported), then turns off the IR LED."""
+def handle_pet_detect_turn_on(session: FoscamCamera) -> None:
+    """Turns on pet detection."""
 
     session.set_motion_detect_config(
         {
@@ -62,8 +62,8 @@ def handle_pet_Detect_turn_on(session: FoscamCamera) -> None:
     )
 
 
-def handle_pet_Detect_turn_off(session: FoscamCamera) -> None:
-    """Turn on IR LED: sets IR mode to auto (if supported), then turns off the IR LED."""
+def handle_pet_detect_turn_off(session: FoscamCamera) -> None:
+    """Turns off pet detection."""
 
     session.set_motion_detect_config(
         {
@@ -94,8 +94,8 @@ def handle_pet_Detect_turn_off(session: FoscamCamera) -> None:
     )
 
 
-def handle_car_Detect_turn_on(session: FoscamCamera) -> None:
-    """Turn on IR LED: sets IR mode to auto (if supported), then turns off the IR LED."""
+def handle_car_detect_turn_on(session: FoscamCamera) -> None:
+    """Turns on vehicle detection."""
 
     session.set_motion_detect_config(
         {
@@ -126,8 +126,8 @@ def handle_car_Detect_turn_on(session: FoscamCamera) -> None:
     )
 
 
-def handle_car_Detect_turn_off(session: FoscamCamera) -> None:
-    """Turn on IR LED: sets IR mode to auto (if supported), then turns off the IR LED."""
+def handle_car_detect_turn_off(session: FoscamCamera) -> None:
+    """Turns off vehicle detection."""
 
     session.set_motion_detect_config(
         {
@@ -158,8 +158,8 @@ def handle_car_Detect_turn_off(session: FoscamCamera) -> None:
     )
 
 
-def handle_human_Detect_turn_on(session: FoscamCamera) -> None:
-    """Turn on IR LED: sets IR mode to auto (if supported), then turns off the IR LED."""
+def handle_human_detect_turn_on(session: FoscamCamera) -> None:
+    """Turns on human detection."""
 
     session.set_motion_detect_config(
         {
@@ -190,8 +190,8 @@ def handle_human_Detect_turn_on(session: FoscamCamera) -> None:
     )
 
 
-def handle_human_Detect_turn_off(session: FoscamCamera) -> None:
-    """Turn on IR LED: sets IR mode to auto (if supported), then turns off the IR LED."""
+def handle_human_detect_turn_off(session: FoscamCamera) -> None:
+    """Turns off human detection."""
 
     session.set_motion_detect_config(
         {
@@ -229,7 +229,7 @@ class FoscamSwitchEntityDescription(SwitchEntityDescription):
     native_value_fn: Callable[..., bool]
     turn_off_fn: Callable[[FoscamCamera], None]
     turn_on_fn: Callable[[FoscamCamera], None]
-    exists_fn: Callable[[FoscamCoordinator], bool]
+    exists_fn: Callable[[FoscamCoordinator], bool] = lambda _: True
 
 
 SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
@@ -239,7 +239,6 @@ SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
         native_value_fn=lambda data: data.is_flip,
         turn_off_fn=lambda session: session.flip_video(0),
         turn_on_fn=lambda session: session.flip_video(1),
-        exists_fn=lambda coordinator: True,
     ),
     FoscamSwitchEntityDescription(
         key="is_mirror",
@@ -247,7 +246,6 @@ SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
         native_value_fn=lambda data: data.is_mirror,
         turn_off_fn=lambda session: session.mirror_video(0),
         turn_on_fn=lambda session: session.mirror_video(1),
-        exists_fn=lambda coordinator: True,
     ),
     FoscamSwitchEntityDescription(
         key="is_open_ir",
@@ -255,7 +253,6 @@ SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
         native_value_fn=lambda data: data.is_open_ir,
         turn_off_fn=handle_ir_turn_off,
         turn_on_fn=handle_ir_turn_on,
-        exists_fn=lambda coordinator: True,
     ),
     FoscamSwitchEntityDescription(
         key="sleep_switch",
@@ -263,7 +260,6 @@ SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
         native_value_fn=lambda data: data.is_asleep["status"],
         turn_off_fn=lambda session: session.wake_up(),
         turn_on_fn=lambda session: session.sleep(),
-        exists_fn=lambda coordinator: True,
     ),
     FoscamSwitchEntityDescription(
         key="is_open_white_light",
@@ -271,7 +267,6 @@ SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
         native_value_fn=lambda data: data.is_open_white_light,
         turn_off_fn=lambda session: session.closeWhiteLight(),
         turn_on_fn=lambda session: session.openWhiteLight(),
-        exists_fn=lambda coordinator: True,
     ),
     FoscamSwitchEntityDescription(
         key="is_siren_alarm",
@@ -279,7 +274,6 @@ SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
         native_value_fn=lambda data: data.is_siren_alarm,
         turn_off_fn=lambda session: session.setSirenConfig(0, 100, 0),
         turn_on_fn=lambda session: session.setSirenConfig(1, 100, 0),
-        exists_fn=lambda coordinator: True,
     ),
     FoscamSwitchEntityDescription(
         key="is_turn_off_volume",
@@ -287,7 +281,6 @@ SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
         native_value_fn=lambda data: data.is_turn_off_volume,
         turn_off_fn=lambda session: session.setVoiceEnableState(1),
         turn_on_fn=lambda session: session.setVoiceEnableState(0),
-        exists_fn=lambda coordinator: True,
     ),
     FoscamSwitchEntityDescription(
         key="is_turn_off_light",
@@ -295,7 +288,6 @@ SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
         native_value_fn=lambda data: data.is_turn_off_light,
         turn_off_fn=lambda session: session.setLedEnableState(0),
         turn_on_fn=lambda session: session.setLedEnableState(1),
-        exists_fn=lambda coordinator: True,
     ),
     FoscamSwitchEntityDescription(
         key="is_open_hdr",
@@ -303,7 +295,7 @@ SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
         native_value_fn=lambda data: data.is_open_hdr,
         turn_off_fn=lambda session: session.setHdrMode(0),
         turn_on_fn=lambda session: session.setHdrMode(1),
-        exists_fn=lambda coordinator: True,
+        exists_fn=lambda coordinator: coordinator.data.supports_hdr_adjustment,
     ),
     FoscamSwitchEntityDescription(
         key="is_open_wdr",
@@ -311,31 +303,30 @@ SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
         native_value_fn=lambda data: data.is_open_wdr,
         turn_off_fn=lambda session: session.setWdrMode(0),
         turn_on_fn=lambda session: session.setWdrMode(1),
-        exists_fn=lambda coordinator: True,
+        exists_fn=lambda coordinator: coordinator.data.supports_wdr_adjustment,
     ),
     FoscamSwitchEntityDescription(
         key="pet_detection",
         translation_key="pet_detection_switch",
-        native_value_fn=lambda data: data.is_open_pet_detection,
-        turn_off_fn=handle_pet_Detect_turn_off,
-        turn_on_fn=handle_pet_Detect_turn_on,
+        native_value_fn=lambda data: data.is_pet_detection_on,
+        turn_off_fn=handle_pet_detect_turn_off,
+        turn_on_fn=handle_pet_detect_turn_on,
         exists_fn=lambda coordinator: coordinator.data.supports_pet_adjustment,
     ),
     FoscamSwitchEntityDescription(
         key="car_detection",
         translation_key="car_detection_switch",
-        native_value_fn=lambda data: data.is_open_car_detection,
-        turn_off_fn=handle_car_Detect_turn_off,
-        turn_on_fn=handle_car_Detect_turn_on,
+        native_value_fn=lambda data: data.is_car_detection_on,
+        turn_off_fn=handle_car_detect_turn_off,
+        turn_on_fn=handle_car_detect_turn_on,
         exists_fn=lambda coordinator: coordinator.data.supports_car_adjustment,
     ),
     FoscamSwitchEntityDescription(
         key="human_detection",
         translation_key="human_detection_switch",
-        native_value_fn=lambda data: data.is_open_human_detection,
-        turn_off_fn=handle_human_Detect_turn_off,
-        turn_on_fn=handle_human_Detect_turn_on,
-        exists_fn=lambda coordinator: True,
+        native_value_fn=lambda data: data.is_human_detection_on,
+        turn_off_fn=handle_human_detect_turn_off,
+        turn_on_fn=handle_human_detect_turn_on,
     ),
 ]
 
@@ -349,26 +340,11 @@ async def async_setup_entry(
 
     coordinator = config_entry.runtime_data
 
-    entities = []
-
-    product_info = coordinator.data.product_info
-    reserve3 = product_info.get("reserve3", "0")
-
-    for description in SWITCH_DESCRIPTIONS:
-        if description.key == "is_asleep":
-            if not coordinator.data.is_asleep["supported"]:
-                continue
-        elif description.key == "is_open_hdr":
-            if ((1 << 8) & int(reserve3)) != 0 or ((1 << 7) & int(reserve3)) == 0:
-                continue
-        elif description.key == "is_open_wdr":
-            if ((1 << 8) & int(reserve3)) == 0:
-                continue
-        elif description.key in ("pet_detection", "car_detection"):
-            if not description.exists_fn(coordinator):
-                continue
-        entities.append(FoscamGenericSwitch(coordinator, description))
-    async_add_entities(entities)
+    async_add_entities(
+        FoscamGenericSwitch(coordinator, description)
+        for description in SWITCH_DESCRIPTIONS
+        if description.exists_fn is None or description.exists_fn(coordinator)
+    )
 
 
 class FoscamGenericSwitch(FoscamEntity, SwitchEntity):

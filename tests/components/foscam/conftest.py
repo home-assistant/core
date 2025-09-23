@@ -79,7 +79,7 @@ def setup_mock_foscam_camera(mock_foscam_camera):
             0,
             {
                 "swCapabilities1": "100",
-                "swCapabilities2": "100",
+                "swCapabilities2": "768",
                 "swCapabilities3": "100",
                 "swCapabilities4": "100",
             },
@@ -88,6 +88,7 @@ def setup_mock_foscam_camera(mock_foscam_camera):
             0,
             {"petEnable": "1", "carEnable": "1", "humanEnable": "1"},
         )
+
         return mock_foscam_camera
 
     mock_foscam_camera.side_effect = configure_mock_on_init
