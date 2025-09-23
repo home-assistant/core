@@ -12,7 +12,7 @@ from nessclient import Client
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -198,7 +198,6 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         zones = import_config.get(CONF_ZONES, [])
 
         options = {
-            CONF_SCAN_INTERVAL: scan_interval,
             CONF_INFER_ARMING_STATE: import_config.get(
                 CONF_INFER_ARMING_STATE, DEFAULT_INFER_ARMING_STATE
             ),
@@ -319,10 +318,6 @@ class OptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         # Build options schema with current values
-        current_scan = entry.options.get(
-            CONF_SCAN_INTERVAL,
-            entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
-        )
         current_infer = entry.options.get(
             CONF_INFER_ARMING_STATE,
             entry.data.get(CONF_INFER_ARMING_STATE, DEFAULT_INFER_ARMING_STATE),
@@ -338,9 +333,6 @@ class OptionsFlow(config_entries.OptionsFlow):
 
         schema = vol.Schema(
             {
-                vol.Optional(CONF_SCAN_INTERVAL, default=current_scan): vol.All(
-                    cv.positive_int, vol.Range(min=1, max=3600)
-                ),
                 vol.Optional(CONF_INFER_ARMING_STATE, default=current_infer): bool,
                 vol.Optional(CONF_SUPPORT_HOME_ARM, default=current_home): bool,
                 vol.Optional("enabled_zones", default=current_zones): vol.In(
