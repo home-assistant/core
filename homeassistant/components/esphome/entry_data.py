@@ -486,7 +486,7 @@ class RuntimeEntryData:
         # be marked as unavailable or not.
         self.expected_disconnect = True
 
-        if not device_info.zwave_proxy_feature_flags or not device_info.zwave_home_id:
+        if not device_info.zwave_proxy_feature_flags:
             return
 
         assert self.client.connected_address
@@ -497,7 +497,7 @@ class RuntimeEntryData:
             {"source": config_entries.SOURCE_ESPHOME},
             ESPHomeServiceInfo(
                 name=device_info.name,
-                zwave_home_id=device_info.zwave_home_id,
+                zwave_home_id=device_info.zwave_home_id or None,
                 ip_address=self.client.connected_address,
                 port=self.client.port,
                 noise_psk=self.client.noise_psk,

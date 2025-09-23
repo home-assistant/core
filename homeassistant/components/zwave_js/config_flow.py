@@ -1470,13 +1470,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if not is_hassio(self.hass):
             return self.async_abort(reason="not_hassio")
 
-        await self.async_set_unique_id(str(discovery_info.zwave_home_id))
-        self._abort_if_unique_id_configured(
-            {
-                CONF_USB_PATH: None,
-                CONF_SOCKET_PATH: discovery_info.socket_path,
-            }
-        )
+        if discovery_info.zwave_home_id:
+            await self.async_set_unique_id(str(discovery_info.zwave_home_id))
+            self._abort_if_unique_id_configured(
+                {
+                    CONF_USB_PATH: None,
+                    CONF_SOCKET_PATH: discovery_info.socket_path,
+                }
+            )
+
         self.socket_path = discovery_info.socket_path
         self.context["title_placeholders"] = {
             CONF_NAME: f"{discovery_info.name} via ESPHome"
