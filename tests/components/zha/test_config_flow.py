@@ -1422,7 +1422,7 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
             user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
         )
 
-        assert len(mock_restore_backup.mock_calls) == 1
+        assert mock_restore_backup.call_count == 1
         assert not mock_restore_backup.mock_calls[0].kwargs.get("overwrite_ieee")
         mock_restore_backup.reset_mock()
 
@@ -1438,7 +1438,7 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp(
     assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["data"][CONF_RADIO_TYPE] == "ezsp"
 
-    assert len(mock_restore_backup.mock_calls) == 1
+    assert mock_restore_backup.call_count == 1
     assert mock_restore_backup.mock_calls[0].kwargs["overwrite_ieee"] is True
 
 
@@ -1479,7 +1479,7 @@ async def test_formation_strategy_restore_manual_backup_ezsp(
             user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
         )
 
-        assert len(mock_restore_backup.mock_calls) == 1
+        assert mock_restore_backup.call_count == 1
         assert not mock_restore_backup.mock_calls[0].kwargs.get("overwrite_ieee")
         mock_restore_backup.reset_mock()
 
@@ -1495,7 +1495,7 @@ async def test_formation_strategy_restore_manual_backup_ezsp(
 
     assert result4["type"] is FlowResultType.ABORT
     assert result4["reason"] == "cannot_restore_backup_no_ieee_confirm"
-    assert len(mock_restore_backup.mock_calls) == 0
+    assert mock_restore_backup.call_count == 0
 
 
 async def test_formation_strategy_restore_manual_backup_invalid_upload(
@@ -2252,7 +2252,7 @@ async def test_migration_resets_old_radio(
     assert result_recommended["reason"] == "reconfigure_successful"
 
     # We reset the old radio
-    assert len(mock_temp_radio_mgr.async_reset_adapter.mock_calls) == 1
+    assert mock_temp_radio_mgr.async_reset_adapter.call_count == 1
 
     # It should be configured with the old radio's settings
     assert mock_temp_radio_mgr.radio_type == RadioType.ezsp

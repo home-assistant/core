@@ -185,7 +185,6 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
     @abstractmethod
     async def _async_create_radio_entry(self) -> ConfigFlowResult:
         """Create a config entry with the current flow state."""
-        raise NotImplementedError
 
     async def async_step_choose_serial_port(
         self, user_input: dict[str, Any] | None = None
@@ -845,7 +844,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
                 reload_even_if_entry_is_unchanged=True,
                 reason="reconfigure_successful",
             )
-        if len(zha_config_entries) == 0:
+        if not zha_config_entries:
             return self.async_create_entry(
                 title=self._title,
                 data={

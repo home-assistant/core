@@ -29,6 +29,11 @@
           "path": "Serial device path",
           "baudrate": "Port speed",
           "flow_control": "Data flow control"
+        },
+        "data_description": {
+          "path": "Path to the serial port or `socket://` TCP address",
+          "baudrate": "Baudrate to use when communicating with the serial port, usually 115200 or 460800",
+          "flow_control": "Check your adapter's documentation for the correct option, usually `None` or `Hardware`"
         }
       },
       "verify_radio": {
@@ -43,8 +48,8 @@
           "setup_strategy_advanced": "Advanced setup"
         },
         "menu_option_descriptions": {
-          "setup_strategy_recommended": "This is the quickest option to create a new network and get started",
-          "setup_strategy_advanced": "This will let you restore from a backup"
+          "setup_strategy_recommended": "This is the quickest option to create a new network and get started.",
+          "setup_strategy_advanced": "This will let you restore from a backup."
         }
       },
       "choose_migration_strategy": {
@@ -55,8 +60,8 @@
           "migration_strategy_advanced": "Advanced migration"
         },
         "menu_option_descriptions": {
-          "migration_strategy_recommended": "This is the quickest option to migrate to a new adapter",
-          "migration_strategy_advanced": "This will let you restore a specific network backup or upload your own"
+          "migration_strategy_recommended": "This is the quickest option to migrate to a new adapter.",
+          "migration_strategy_advanced": "This will let you restore a specific network backup or upload your own."
         }
       },
       "maybe_reset_old_radio": {
@@ -74,11 +79,11 @@
           "upload_manual_backup": "Upload a manual backup"
         },
         "menu_option_descriptions": {
-          "form_new_network": "This will create a new Zigbee network",
+          "form_new_network": "This will create a new Zigbee network.",
           "form_initial_network": "[%key:component::zha::config::step::choose_formation_strategy::menu_option_descriptions::form_new_network%]",
-          "reuse_settings": "This will let ZHA import the settings from a stick that was used with other software, migrating some of the network automatically",
-          "choose_automatic_backup": "This will let you change your adapter's network settings back to a previous state, in case you have changed them",
-          "upload_manual_backup": "This will let you upload a backup JSON file from ZHA or the Zigbee2MQTT `coordinator_backup.json` file"
+          "reuse_settings": "This will let ZHA import the settings from a stick that was used with other software, migrating some of the network automatically.",
+          "choose_automatic_backup": "This will let you change your adapter's network settings back to a previous state, in case you have changed them.",
+          "upload_manual_backup": "This will let you upload a backup JSON file from ZHA or the Zigbee2MQTT `coordinator_backup.json` file."
         }
       },
       "choose_automatic_backup": {
@@ -133,8 +138,8 @@
           "intent_reconfigure": "Re-configure the current radio"
         },
         "menu_option_descriptions": {
-          "intent_migrate": "This will help you migrate your Zigbee network from your old radio to a new one",
-          "intent_reconfigure": "This will let you change the serial port for your current Zigbee radio"
+          "intent_migrate": "This will help you migrate your Zigbee network from your old radio to a new one.",
+          "intent_reconfigure": "This will let you change the serial port for your current Zigbee radio."
         }
       },
       "intent_migrate": {
@@ -597,7 +602,7 @@
             },
             "menu_option_descriptions": {
               "use_new_settings": "This will keep the new settings written to the stick. Only choose this option if you have intentionally changed settings.",
-              "restore_old_settings": "This will restore your network settings back to the last working state"
+              "restore_old_settings": "This will restore your network settings back to the last working state."
             }
           }
         }
