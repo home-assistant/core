@@ -175,8 +175,8 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ADDRESS): cv.positive_int,
-        vol.Exclusive(CONF_DEVICE_ADDRESS, "slave_addr"): cv.positive_int,
-        vol.Exclusive(CONF_SLAVE, "slave_addr"): cv.positive_int,
+        vol.Exclusive(CONF_DEVICE_ADDRESS, "device_address"): cv.positive_int,
+        vol.Exclusive(CONF_SLAVE, "device_address"): cv.positive_int,
         vol.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,

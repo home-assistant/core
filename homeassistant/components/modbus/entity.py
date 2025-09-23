@@ -82,10 +82,7 @@ class ModbusBaseEntity(Entity):
         """Initialize the Modbus binary sensor."""
 
         self._hub = hub
-        if (conf_slave := entry.get(CONF_SLAVE)) is not None:
-            self._device_address = conf_slave
-        else:
-            self._device_address = entry.get(CONF_DEVICE_ADDRESS, 1)
+        self._device_address = entry.get(CONF_DEVICE_ADDRESS, entry.get(CONF_SLAVE, 1))
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
