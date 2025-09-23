@@ -13,7 +13,7 @@ from music_assistant_client.exceptions import (
 from music_assistant_models.api import ServerInfoMessage
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
@@ -113,6 +113,10 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         if existing_entry:
+            # If the entry was ignored or disabled, don't make any changes
+            if existing_entry.source == SOURCE_IGNORE or existing_entry.disabled_by:
+                return self.async_abort(reason="already_configured")
+
             # Test connectivity to the current URL first
             current_url = existing_entry.data[CONF_URL]
             try:
@@ -124,7 +128,10 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                 # and continue to discovery confirm
                 self.hass.config_entries.async_update_entry(
                     existing_entry,
-                    data={**existing_entry.data, CONF_URL: self.server_info.base_url},
+                    data={
+                        **existing_entry.data,
+                        CONF_URL: self.server_info.base_url,
+                    },
                 )
                 # Schedule reload since URL changed
                 self.hass.config_entries.async_schedule_reload(existing_entry.entry_id)
