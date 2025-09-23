@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from types import MappingProxyType
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_API_KEY, CONF_SHOW_ON_MAP, Platform
@@ -62,7 +62,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PurpleAirConfigEntry) 
             if identifier[0] == DOMAIN
         )
         sensor_index = next(identifiers, None)
-        assert sensor_index in index_list, "Sensor not in config entry"
+        if TYPE_CHECKING:
+            assert sensor_index in index_list, "Sensor not in config entry"
 
         dev_reg.async_remove_device(device.id)
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from aiopurpleair import API
 from aiopurpleair.endpoints.sensors import NearbySensorResult
@@ -248,7 +248,8 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
                 errors=self._errors,
             )
 
-        assert self._flow_data.get(CONF_NEARBY_SENSOR_LIST) is not None
+        if TYPE_CHECKING:
+            assert self._flow_data.get(CONF_NEARBY_SENSOR_LIST) is not None
 
         return await self.async_step_select_sensor()
 
@@ -297,7 +298,9 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
             )
 
         sensor: SensorModel = self._flow_data[CONF_SENSOR]
-        assert sensor is not None
+        if TYPE_CHECKING:
+            if TYPE_CHECKING:
+                assert sensor is not None
 
         return self.async_create_entry(
             title=self._get_title(sensor),
@@ -344,7 +347,8 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
             )
 
         sensor: SensorModel = self._flow_data[CONF_SENSOR]
-        assert sensor is not None
+        if TYPE_CHECKING:
+            assert sensor is not None
 
         data: dict[str, Any] = {CONF_SENSOR_INDEX: sensor.sensor_index}
         read_key: str | None = self._flow_data[CONF_SENSOR_READ_KEY]
