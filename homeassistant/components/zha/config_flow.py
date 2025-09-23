@@ -604,7 +604,14 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         if user_input is not None:
             if user_input[OVERWRITE_COORDINATOR_IEEE]:
                 # On confirmation, overwrite destructively
-                await self._radio_mgr.restore_backup(overwrite_ieee=True)
+                try:
+                    await self._radio_mgr.restore_backup(overwrite_ieee=True)
+                except CannotWriteNetworkSettings as exc:
+                    return self.async_abort(
+                        reason="cannot_restore_backup",
+                        description_placeholders={"error": str(exc)},
+                    )
+
                 return await self._async_create_radio_entry()
 
             # On rejection, explain why we can't restore
