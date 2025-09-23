@@ -310,15 +310,18 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         if user_input is not None:
             self._title = user_input[CONF_DEVICE_PATH]
             self._radio_mgr.device_path = user_input[CONF_DEVICE_PATH]
-            self._radio_mgr.device_settings = {
-                CONF_BAUDRATE: user_input[CONF_BAUDRATE],
-                # `None` shows up as the empty string in the frontend
-                CONF_FLOW_CONTROL: (
-                    user_input[CONF_FLOW_CONTROL]
-                    if user_input[CONF_FLOW_CONTROL] != "none"
-                    else None
-                ),
-            }
+            self._radio_mgr.device_settings = DEVICE_SCHEMA(
+                {
+                    CONF_DEVICE_PATH: self._radio_mgr.device_path,
+                    CONF_BAUDRATE: user_input[CONF_BAUDRATE],
+                    # `None` shows up as the empty string in the frontend
+                    CONF_FLOW_CONTROL: (
+                        user_input[CONF_FLOW_CONTROL]
+                        if user_input[CONF_FLOW_CONTROL] != "none"
+                        else None
+                    ),
+                }
+            )
 
             if await self._radio_mgr.radio_type.controller.probe(user_input):
                 return await self.async_step_verify_radio()
@@ -815,11 +818,13 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         self._title = title
         self._radio_mgr.device_path = device_path
         self._radio_mgr.radio_type = radio_type
-        self._radio_mgr.device_settings = {
-            CONF_DEVICE_PATH: device_path,
-            CONF_BAUDRATE: 115200,
-            CONF_FLOW_CONTROL: None,
-        }
+        self._radio_mgr.device_settings = DEVICE_SCHEMA(
+            {
+                CONF_DEVICE_PATH: device_path,
+                CONF_BAUDRATE: 115200,
+                CONF_FLOW_CONTROL: None,
+            }
+        )
 
         return await self.async_step_confirm()
 

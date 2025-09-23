@@ -1059,7 +1059,11 @@ async def test_user_port_config_fail(probe_mock, hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"},
+        user_input={
+            CONF_DEVICE_PATH: "/dev/ttyUSB33",
+            CONF_BAUDRATE: 115200,
+            CONF_FLOW_CONTROL: "none",
+        },
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_port_config"
