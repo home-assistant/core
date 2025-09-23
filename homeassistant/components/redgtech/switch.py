@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
 from redgtech_api.api import RedgtechAuthError, RedgtechConnectionError
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -17,13 +15,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import (
-    RedgtechConfigEntry,
-    RedgtechDataUpdateCoordinator,
-    RedgtechDevice,
-)
+from .coordinator import RedgtechConfigEntry, RedgtechDataUpdateCoordinator
+from .device import RedgtechDevice
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +63,7 @@ class RedgtechSwitch(CoordinatorEntity[RedgtechDataUpdateCoordinator], SwitchEnt
 
         for device in self.coordinator.data:
             if device.unique_id == self.device.unique_id:
-                return device.state == STATE_ON
+                return bool(device.state)
 
         return False
 
@@ -78,10 +73,8 @@ class RedgtechSwitch(CoordinatorEntity[RedgtechDataUpdateCoordinator], SwitchEnt
             await self.coordinator.ensure_token()
 
             await self.coordinator.api.set_switch_state(
-                self.device.unique_id, new_state, self.coordinator.access_token or ""
+                self.device.unique_id, new_state, self.coordinator.access_token
             )
-
-            await asyncio.sleep(0.5)
 
             await self.coordinator.async_refresh()
         except RedgtechAuthError as err:

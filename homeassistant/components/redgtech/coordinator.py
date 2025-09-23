@@ -2,32 +2,22 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
 
 from redgtech_api.api import RedgtechAPI, RedgtechAuthError, RedgtechConnectionError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+from .device import RedgtechDevice
 
 UPDATE_INTERVAL = timedelta(seconds=15)
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class RedgtechDevice:
-    """Representation of a Redgtech device."""
-
-    unique_id: str
-    name: str
-    state: str
 
 
 type RedgtechConfigEntry = ConfigEntry[RedgtechDataUpdateCoordinator]
@@ -40,7 +30,7 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
 
     def __init__(self, hass: HomeAssistant, config_entry: RedgtechConfigEntry) -> None:
         """Initialize the coordinator."""
-        self.api: Any = RedgtechAPI()  # type: ignore[no-untyped-call]
+        self.api = RedgtechAPI()
         self.access_token: str | None = None
         self.email = config_entry.data[CONF_EMAIL]
         self.password = config_entry.data[CONF_PASSWORD]
@@ -117,9 +107,12 @@ class RedgtechDataUpdateCoordinator(DataUpdateCoordinator[list[RedgtechDevice]])
 
         for item in data["boards"]:
             device = RedgtechDevice(
-                unique_id=item["endpointId"],
-                name=item["friendlyName"],
-                state=STATE_ON if item["value"] else STATE_OFF,
+                {
+                    "endpointId": item["endpointId"],
+                    "friendlyName": item["friendlyName"],
+                    "value": item["value"],
+                    "type": item.get("type", "switch"),
+                }
             )
             _LOGGER.debug("Processing device: %s", device)
             devices.append(device)

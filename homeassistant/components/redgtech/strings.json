@@ -12,34 +12,9 @@
           "email": "Enter the email address associated with your Redgtech account.",
           "password": "Enter the password for your Redgtech account."
         }
-      },
-      "reauth": {
-        "title": "Re-authenticate with Redgtech",
-        "description": "Your Redgtech credentials are no longer valid. Please re-enter your credentials.",
-        "data": {
-          "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "email": "Enter the email address associated with your Redgtech account.",
-          "password": "Enter the password for your Redgtech account."
-        }
-      },
-      "reauth_confirm": {
-        "title": "Re-authenticate with Redgtech",
-        "description": "Your Redgtech credentials are no longer valid. Please re-enter your credentials.",
-        "data": {
-          "email": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "email": "Enter the email address associated with your Redgtech account.",
-          "password": "Enter the password for your Redgtech account."
-        }
       }
     },
     "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
@@ -55,17 +30,8 @@
     "authentication_failed": {
       "message": "Authentication failed. Please check your credentials."
     },
-    "switch_turn_on_failed": {
-      "message": "Failed to turn on switch"
-    },
-    "switch_turn_off_failed": {
-      "message": "Failed to turn off switch"
-    },
     "connection_error": {
       "message": "Connection error"
-    },
-    "switch_auth_error": {
-      "message": "Failed to set switch state due to authentication error"
     }
   }
 }
