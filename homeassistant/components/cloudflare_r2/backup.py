@@ -19,7 +19,7 @@ from homeassistant.components.backup import (
 from homeassistant.core import HomeAssistant, callback
 
 from . import R2ConfigEntry
-from .const import CONF_BUCKET, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .const import CONF_BUCKET, CONF_PREFIX, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 CACHE_TTL = 300
@@ -98,6 +98,12 @@ class R2BackupAgent(BackupAgent):
         self.unique_id = entry.entry_id
         self._backup_cache: dict[str, AgentBackup] = {}
         self._cache_expiration = time()
+        self._prefix: str = entry.data.get(CONF_PREFIX, "").strip("/")
+
+    def _with_prefix(self, key: str) -> str:
+        if not self._prefix:
+            return key
+        return f"{self._prefix}/{key}"
 
     @handle_boto_errors
     async def async_download_backup(
@@ -113,7 +119,9 @@ class R2BackupAgent(BackupAgent):
         backup = await self._find_backup_by_id(backup_id)
         tar_filename, _ = suggested_filenames(backup)
 
-        response = await self._client.get_object(Bucket=self._bucket, Key=tar_filename)
+        response = await self._client.get_object(
+            Bucket=self._bucket, Key=self._with_prefix(tar_filename)
+        )
         return response["Body"].iter_chunks()
 
     async def async_upload_backup(
@@ -140,7 +148,7 @@ class R2BackupAgent(BackupAgent):
             metadata_content = json.dumps(backup.as_dict())
             await self._client.put_object(
                 Bucket=self._bucket,
-                Key=metadata_filename,
+                Key=self._with_prefix(metadata_filename),
                 Body=metadata_content,
             )
         except BotoCoreError as err:
@@ -167,7 +175,7 @@ class R2BackupAgent(BackupAgent):
 
         await self._client.put_object(
             Bucket=self._bucket,
-            Key=tar_filename,
+            Key=self._with_prefix(tar_filename),
             Body=bytes(file_data),
         )
 
@@ -184,7 +192,7 @@ class R2BackupAgent(BackupAgent):
         _LOGGER.debug("Starting multipart upload for %s", tar_filename)
         multipart_upload = await self._client.create_multipart_upload(
             Bucket=self._bucket,
-            Key=tar_filename,
+            Key=self._with_prefix(tar_filename),
         )
         upload_id = multipart_upload["UploadId"]
         try:
@@ -205,7 +213,7 @@ class R2BackupAgent(BackupAgent):
                     )
                     part = await self._client.upload_part(
                         Bucket=self._bucket,
-                        Key=tar_filename,
+                        Key=self._with_prefix(tar_filename),
                         PartNumber=part_number,
                         UploadId=upload_id,
                         Body=b"".join(buffer),
@@ -222,7 +230,7 @@ class R2BackupAgent(BackupAgent):
                 )
                 part = await self._client.upload_part(
                     Bucket=self._bucket,
-                    Key=tar_filename,
+                    Key=self._with_prefix(tar_filename),
                     PartNumber=part_number,
                     UploadId=upload_id,
                     Body=b"".join(buffer),
@@ -231,7 +239,7 @@ class R2BackupAgent(BackupAgent):
 
             await self._client.complete_multipart_upload(
                 Bucket=self._bucket,
-                Key=tar_filename,
+                Key=self._with_prefix(tar_filename),
                 UploadId=upload_id,
                 MultipartUpload={"Parts": parts},
             )
@@ -240,7 +248,7 @@ class R2BackupAgent(BackupAgent):
             try:
                 await self._client.abort_multipart_upload(
                     Bucket=self._bucket,
-                    Key=tar_filename,
+                    Key=self._with_prefix(tar_filename),
                     UploadId=upload_id,
                 )
             except BotoCoreError:
@@ -261,8 +269,12 @@ class R2BackupAgent(BackupAgent):
         tar_filename, metadata_filename = suggested_filenames(backup)
 
         # Delete both the backup file and its metadata file
-        await self._client.delete_object(Bucket=self._bucket, Key=tar_filename)
-        await self._client.delete_object(Bucket=self._bucket, Key=metadata_filename)
+        await self._client.delete_object(
+            Bucket=self._bucket, Key=self._with_prefix(tar_filename)
+        )
+        await self._client.delete_object(
+            Bucket=self._bucket, Key=self._with_prefix(metadata_filename)
+        )
 
         # Reset cache after successful deletion
         self._cache_expiration = time()
@@ -296,7 +308,9 @@ class R2BackupAgent(BackupAgent):
             return self._backup_cache
 
         backups = {}
-        response = await self._client.list_objects_v2(Bucket=self._bucket)
+        response = await self._client.list_objects_v2(
+            Bucket=self._bucket, Prefix=(self._prefix + "/") if self._prefix else None
+        )
 
         # Filter for metadata files only
         metadata_files = [

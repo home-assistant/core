@@ -6,13 +6,15 @@
           "access_key_id": "Access key ID",
           "secret_access_key": "Secret access key",
           "bucket": "Bucket name",
-          "endpoint_url": "Endpoint URL"
+          "endpoint_url": "Endpoint URL",
+          "prefix": "Folder prefix (optional)"
         },
         "data_description": {
           "access_key_id": "Access key ID to connect to Cloudflare R2 (this is your Account ID)",
           "secret_access_key": "Secret access key to connect to Cloudflare R2. See [Docs]({auth_docs_url})",
           "bucket": "Bucket must already exist and be writable by the provided credentials.",
-          "endpoint_url": "Cloudflare R2 S3-compatible endpoint."
+          "endpoint_url": "Cloudflare R2 S3-compatible endpoint.",
+          "prefix": "Optional folder path inside the bucket. Example: backups/homeassistant"
         },
         "title": "Add Cloudflare R2 bucket"
       }

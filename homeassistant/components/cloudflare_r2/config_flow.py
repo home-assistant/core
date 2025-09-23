@@ -22,6 +22,7 @@ from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_BUCKET,
     CONF_ENDPOINT_URL,
+    CONF_PREFIX,
     CONF_SECRET_ACCESS_KEY,
     DEFAULT_ENDPOINT_URL,
     DESCRIPTION_R2_AUTH_DOCS_URL,
@@ -38,6 +39,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_ENDPOINT_URL, default=DEFAULT_ENDPOINT_URL): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.URL)
         ),
+        vol.Optional(CONF_PREFIX, default=""): cv.string,
     }
 )
 
