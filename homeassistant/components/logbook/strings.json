@@ -3,7 +3,7 @@
   "services": {
     "log": {
       "name": "Log",
-      "description": "Track a custom activity.",
+      "description": "Tracks a custom activity.",
       "fields": {
         "name": {
           "name": "[%key:common::config_flow::data::name%]",
