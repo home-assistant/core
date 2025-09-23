@@ -502,7 +502,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_brightness",
         cmd_key="GetImage",
-        cmd_id=26,
+        cmd_id=[26, 78],
         translation_key="image_brightness",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -516,7 +516,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_contrast",
         cmd_key="GetImage",
-        cmd_id=26,
+        cmd_id=[26, 78],
         translation_key="image_contrast",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -530,7 +530,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_saturation",
         cmd_key="GetImage",
-        cmd_id=26,
+        cmd_id=[26, 78],
         translation_key="image_saturation",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -544,7 +544,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_sharpness",
         cmd_key="GetImage",
-        cmd_id=26,
+        cmd_id=[26, 78],
         translation_key="image_sharpness",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -558,7 +558,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_hue",
         cmd_key="GetImage",
-        cmd_id=26,
+        cmd_id=[26, 78],
         translation_key="image_hue",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,

@@ -1967,7 +1967,7 @@ async def test_compile_hourly_sum_statistics_total_no_reset(
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
     with freeze_time(period0) as freezer:
-        four, eight, states = await async_record_meter_states(
+        _four, eight, states = await async_record_meter_states(
             hass, freezer, period0, "sensor.test1", attributes, seq
         )
     await async_wait_recording_done(hass)
@@ -2081,7 +2081,7 @@ async def test_compile_hourly_sum_statistics_total_increasing(
     }
     seq = [10, 15, 20, 10, 30, 40, 50, 60, 70]
     with freeze_time(period0) as freezer:
-        four, eight, states = await async_record_meter_states(
+        _four, eight, states = await async_record_meter_states(
             hass, freezer, period0, "sensor.test1", attributes, seq
         )
     await async_wait_recording_done(hass)
@@ -2195,7 +2195,7 @@ async def test_compile_hourly_sum_statistics_total_increasing_small_dip(
     }
     seq = [10, 15, 20, 19, 30, 40, 39, 60, 70]
     with freeze_time(period0) as freezer:
-        four, eight, states = await async_record_meter_states(
+        _four, eight, states = await async_record_meter_states(
             hass, freezer, period0, "sensor.test1", attributes, seq
         )
     await async_wait_recording_done(hass)
@@ -4941,9 +4941,15 @@ async def async_record_states(
             POWER_SENSOR_ATTRIBUTES,
             "W",
             "kW",
-            "GW, MW, TW, W, kW, mW",
+            "BTU/h, GW, MW, TW, W, kW, mW",
         ),
-        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "GW, MW, TW, W, kW, mW"),
+        (
+            METRIC_SYSTEM,
+            POWER_SENSOR_ATTRIBUTES,
+            "W",
+            "kW",
+            "BTU/h, GW, MW, TW, W, kW, mW",
+        ),
         (
             US_CUSTOMARY_SYSTEM,
             TEMPERATURE_SENSOR_ATTRIBUTES,
@@ -4957,14 +4963,14 @@ async def async_record_states(
             PRESSURE_SENSOR_ATTRIBUTES,
             "psi",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, kPa, mbar, mmHg, psi",
+            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mbar, mmHg, psi",
         ),
         (
             METRIC_SYSTEM,
             PRESSURE_SENSOR_ATTRIBUTES,
             "Pa",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, kPa, mbar, mmHg, psi",
+            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mbar, mmHg, psi",
         ),
     ],
 )
@@ -5159,9 +5165,15 @@ async def test_validate_statistics_unit_ignore_device_class(
             POWER_SENSOR_ATTRIBUTES,
             "W",
             "kW",
-            "GW, MW, TW, W, kW, mW",
+            "BTU/h, GW, MW, TW, W, kW, mW",
         ),
-        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "GW, MW, TW, W, kW, mW"),
+        (
+            METRIC_SYSTEM,
+            POWER_SENSOR_ATTRIBUTES,
+            "W",
+            "kW",
+            "BTU/h, GW, MW, TW, W, kW, mW",
+        ),
         (
             US_CUSTOMARY_SYSTEM,
             TEMPERATURE_SENSOR_ATTRIBUTES,
@@ -5175,21 +5187,21 @@ async def test_validate_statistics_unit_ignore_device_class(
             PRESSURE_SENSOR_ATTRIBUTES,
             "psi",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, kPa, mbar, mmHg, psi",
+            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mbar, mmHg, psi",
         ),
         (
             METRIC_SYSTEM,
             PRESSURE_SENSOR_ATTRIBUTES,
             "Pa",
             "bar",
-            "Pa, bar, cbar, hPa, inHg, kPa, mbar, mmHg, psi",
+            "Pa, bar, cbar, hPa, inHg, inH₂O, kPa, mbar, mmHg, psi",
         ),
         (
             METRIC_SYSTEM,
             BATTERY_SENSOR_ATTRIBUTES,
             "%",
             None,
-            "%, <None>",
+            "%, <None>, ppb, ppm",
         ),
     ],
 )
