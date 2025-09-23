@@ -25,7 +25,6 @@
         'GS012345',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'La Marzocco',
@@ -35,7 +34,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'GS012345',
-    'suggested_area': None,
     'sw_version': 'v1.17',
     'via_device_id': None,
   })

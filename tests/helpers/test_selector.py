@@ -1,5 +1,6 @@
 """Test selectors."""
 
+from collections.abc import Callable, Iterable
 from enum import Enum
 from typing import Any
 
@@ -42,7 +43,11 @@ def test_invalid_base_schema(schema) -> None:
 
 
 def _test_selector(
-    selector_type, schema, valid_selections, invalid_selections, converter=None
+    selector_type: str,
+    schema: dict,
+    valid_selections: Iterable[Any],
+    invalid_selections: Iterable[Any],
+    converter: Callable[[Any], Any] | None = None,
 ):
     """Help test a selector."""
 
@@ -88,7 +93,6 @@ def _test_selector(
         ({"integration": "zha"}, ("abc123",), (None,)),
         ({"manufacturer": "mock-manuf"}, ("abc123",), (None,)),
         ({"model": "mock-model"}, ("abc123",), (None,)),
-        ({"model_id": "mock-model_id"}, ("abc123",), (None,)),
         ({"manufacturer": "mock-manuf", "model": "mock-model"}, ("abc123",), (None,)),
         (
             {"integration": "zha", "manufacturer": "mock-manuf", "model": "mock-model"},
@@ -128,6 +132,7 @@ def _test_selector(
                     "integration": "zha",
                     "manufacturer": "mock-manuf",
                     "model": "mock-model",
+                    "model_id": "mock-model_id",
                 }
             },
             ("abc123",),
@@ -140,11 +145,13 @@ def _test_selector(
                         "integration": "zha",
                         "manufacturer": "mock-manuf",
                         "model": "mock-model",
+                        "model_id": "mock-model_id",
                     },
                     {
                         "integration": "matter",
                         "manufacturer": "other-mock-manuf",
                         "model": "other-mock-model",
+                        "model_id": "other-mock-model_id",
                     },
                 ]
             },
@@ -156,6 +163,19 @@ def _test_selector(
 def test_device_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test device selector."""
     _test_selector("device", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        # model_id should be used under the filter key
+        {"model_id": "mock-model_id"},
+    ],
+)
+def test_device_selector_schema_error(schema) -> None:
+    """Test device selector."""
+    with pytest.raises(vol.Invalid):
+        selector.validate_selector({"device": schema})
 
 
 @pytest.mark.parametrize(
@@ -215,6 +235,11 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections) ->
                 ["sensor.abc123", "sensor.jkl123"],
                 ["sensor.abc123", "sensor.ghi789"],
             ),
+        ),
+        (
+            {"multiple": True, "reorder": True},
+            ((["sensor.abc123", "sensor.def456"],)),
+            (None, "abc123", ["sensor.abc123", None]),
         ),
         (
             {"filter": {"domain": "light"}},
@@ -290,10 +315,12 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
         {"filter": [{"supported_features": ["light.FooEntityFeature.blah"]}]},
         # Unknown feature enum member
         {"filter": [{"supported_features": ["light.LightEntityFeature.blah"]}]},
+        # supported_features should be used under the filter key
+        {"supported_features": ["light.LightEntityFeature.EFFECT"]},
     ],
 )
 def test_entity_selector_schema_error(schema) -> None:
-    """Test number selector."""
+    """Test entity selector."""
     with pytest.raises(vol.Invalid):
         selector.validate_selector({"entity": schema})
 
@@ -410,6 +437,7 @@ def test_assist_pipeline_selector_schema(
         ({"mode": "box"}, (10,), ()),
         ({"mode": "box", "step": "any"}, (), ()),
         ({"mode": "slider", "min": 0, "max": 1, "step": "any"}, (), ()),
+        ({}, (), ()),
     ],
 )
 def test_number_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -417,10 +445,28 @@ def test_number_selector_schema(schema, valid_selections, invalid_selections) ->
     _test_selector("number", schema, valid_selections, invalid_selections)
 
 
+def test_number_selector_schema_default_mode() -> None:
+    """Test number selector default mode set on min/max."""
+    assert selector.selector({"number": {"min": 10, "max": 50}}).config == {
+        "mode": "slider",
+        "min": 10.0,
+        "max": 50.0,
+        "step": 1.0,
+    }
+    assert selector.selector({"number": {}}).config == {
+        "mode": "box",
+        "step": 1.0,
+    }
+    assert selector.selector({"number": {"min": "10"}}).config == {
+        "mode": "box",
+        "min": 10.0,
+        "step": 1.0,
+    }
+
+
 @pytest.mark.parametrize(
     "schema",
     [
-        {},  # Must have mandatory fields
         {"mode": "slider"},  # Must have min+max in slider mode
     ],
 )
@@ -522,7 +568,17 @@ def test_time_selector_schema(schema, valid_selections, invalid_selections) -> N
         (
             {"entity_id": "sensor.abc"},
             ("on", "armed"),
-            (None, True, 1),
+            (None, True, 1, ["on"]),
+        ),
+        (
+            {"entity_id": "sensor.abc", "multiple": True},
+            (["on"], ["on", "off"], []),
+            (None, True, 1, [True], [1], "on"),
+        ),
+        (
+            {"hide_states": ["unknown", "unavailable"]},
+            (),
+            (),
         ),
     ],
 )
@@ -1109,6 +1165,7 @@ def test_constant_selector_schema(schema, valid_selections, invalid_selections) 
 @pytest.mark.parametrize(
     "schema",
     [
+        None,  # Value is mandatory
         {},  # Value is mandatory
         {"value": []},  # Value must be str, int or bool
         {"value": 123, "label": 123},  # Label must be str

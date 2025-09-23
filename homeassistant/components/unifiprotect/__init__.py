@@ -8,7 +8,7 @@ import logging
 from aiohttp.client_exceptions import ServerDisconnectedError
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import Bootstrap
-from uiprotect.exceptions import ClientError, NotAuthorized
+from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
 
 # Import the test_util.anonymize module from the uiprotect package
 # in __init__ to ensure it gets imported in the executor since the
@@ -16,9 +16,13 @@ from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.test_util.anonymize import anonymize_data  # noqa: F401
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -33,7 +37,6 @@ from .const import (
     DEVICES_THAT_ADOPT,
     DOMAIN,
     MIN_REQUIRED_PROTECT_V,
-    OUTDATED_LOG_MESSAGE,
     PLATFORMS,
 )
 from .data import ProtectData, UFPConfigEntry
@@ -69,6 +72,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     """Set up the UniFi Protect config entries."""
+
     protect = async_create_api_client(hass, entry)
     _LOGGER.debug("Connect to UniFi Protect")
 
@@ -89,6 +93,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     bootstrap = protect.bootstrap
     nvr_info = bootstrap.nvr
     auth_user = bootstrap.users.get(bootstrap.auth_user_id)
+
+    # Check if API key is missing
+    if not protect.is_api_key_set() and auth_user and nvr_info.can_write(auth_user):
+        try:
+            new_api_key = await protect.create_api_key(
+                name=f"Home Assistant ({hass.config.location_name})"
+            )
+        except (NotAuthorized, BadRequest) as err:
+            _LOGGER.error("Failed to create API key: %s", err)
+        else:
+            protect.set_api_key(new_api_key)
+            hass.config_entries.async_update_entry(
+                entry, data={**entry.data, CONF_API_KEY: new_api_key}
+            )
+
+    if not protect.is_api_key_set():
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="api_key_required",
+        )
+
     if auth_user and auth_user.cloud_account:
         ir.async_create_issue(
             hass,
@@ -103,18 +128,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
         )
 
     if nvr_info.version < MIN_REQUIRED_PROTECT_V:
-        _LOGGER.error(
-            OUTDATED_LOG_MESSAGE,
-            nvr_info.version,
-            MIN_REQUIRED_PROTECT_V,
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="protect_version",
+            translation_placeholders={
+                "current_version": str(nvr_info.version),
+                "min_version": str(MIN_REQUIRED_PROTECT_V),
+            },
         )
-        return False
 
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=nvr_info.mac)
 
     entry.runtime_data = data_service
-    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, data_service.async_stop)
     )
@@ -137,11 +163,6 @@ async def _async_setup_entry(
     hass.http.register_view(SnapshotProxyView(hass))
     hass.http.register_view(VideoProxyView(hass))
     hass.http.register_view(VideoEventProxyView(hass))
-
-
-async def _async_options_updated(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
-    """Update options."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:

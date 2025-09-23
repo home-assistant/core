@@ -6,13 +6,16 @@ from unittest.mock import patch
 
 import pytest
 from roborock.exceptions import RoborockException
+from vacuum_map_parser_base.config.color import SupportedColor
 
 from homeassistant.components.roborock.const import (
+    CONF_SHOW_BACKGROUND,
     V1_CLOUD_IN_CLEANING_INTERVAL,
     V1_CLOUD_NOT_CLEANING_INTERVAL,
     V1_LOCAL_IN_CLEANING_INTERVAL,
     V1_LOCAL_NOT_CLEANING_INTERVAL,
 )
+from homeassistant.components.roborock.coordinator import RoborockDataUpdateCoordinator
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -71,6 +74,26 @@ async def test_dynamic_cloud_scan_interval(
         async_fire_time_changed(hass, dt_util.utcnow() + interval)
 
     assert hass.states.get("sensor.roborock_s7_maxv_battery").state == "20"
+
+
+async def test_visible_background(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    bypass_api_fixture: None,
+) -> None:
+    """Test that a visible background is handled correctly."""
+    hass.config_entries.async_update_entry(
+        mock_roborock_entry,
+        options={
+            CONF_SHOW_BACKGROUND: True,
+        },
+    )
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator: RoborockDataUpdateCoordinator = mock_roborock_entry.runtime_data.v1[0]
+    assert coordinator.map_parser._palette.get_color(  # pylint: disable=protected-access
+        SupportedColor.MAP_OUTSIDE
+    ) != (0, 0, 0, 0)
 
 
 @pytest.mark.parametrize(

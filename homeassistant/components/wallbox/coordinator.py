@@ -14,6 +14,7 @@ from wallbox import Wallbox
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -94,7 +95,9 @@ def _require_authentication[_WallboxCoordinatorT: WallboxCoordinator, **_P](
             return func(self, *args, **kwargs)
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == HTTPStatus.FORBIDDEN:
-                raise ConfigEntryAuthFailed from wallbox_connection_error
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN, translation_key="invalid_auth"
+                ) from wallbox_connection_error
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="api_failed"
             ) from wallbox_connection_error
@@ -108,7 +111,9 @@ def _validate(wallbox: Wallbox) -> None:
         wallbox.authenticate()
     except requests.exceptions.HTTPError as wallbox_connection_error:
         if wallbox_connection_error.response.status_code == 403:
-            raise InvalidAuth from wallbox_connection_error
+            raise InvalidAuth(
+                translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from wallbox_connection_error
         raise ConnectionError from wallbox_connection_error
 
 
@@ -193,7 +198,6 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.ECO_MODE
             elif eco_smart_mode == 1:
                 data[CHARGER_ECO_SMART_KEY] = EcoSmartMode.FULL_SOLAR
-
             return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 429:
@@ -224,8 +228,10 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
-                raise InvalidAuth(
-                    translation_domain=DOMAIN, translation_key="invalid_auth"
+                raise InsufficientRights(
+                    translation_domain=DOMAIN,
+                    translation_key="insufficient_rights",
+                    hass=self.hass,
                 ) from wallbox_connection_error
             if wallbox_connection_error.response.status_code == 429:
                 raise HomeAssistantError(
@@ -252,8 +258,10 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
-                raise InvalidAuth(
-                    translation_domain=DOMAIN, translation_key="invalid_auth"
+                raise InsufficientRights(
+                    translation_domain=DOMAIN,
+                    translation_key="insufficient_rights",
+                    hass=self.hass,
                 ) from wallbox_connection_error
             if wallbox_connection_error.response.status_code == 429:
                 raise HomeAssistantError(
@@ -309,8 +317,10 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return data  # noqa: TRY300
         except requests.exceptions.HTTPError as wallbox_connection_error:
             if wallbox_connection_error.response.status_code == 403:
-                raise InvalidAuth(
-                    translation_domain=DOMAIN, translation_key="invalid_auth"
+                raise InsufficientRights(
+                    translation_domain=DOMAIN,
+                    translation_key="insufficient_rights",
+                    hass=self.hass,
                 ) from wallbox_connection_error
             if wallbox_connection_error.response.status_code == 429:
                 raise HomeAssistantError(
@@ -375,3 +385,34 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class InsufficientRights(HomeAssistantError):
+    """Error to indicate there are insufficient right for the user."""
+
+    def __init__(
+        self,
+        *args: object,
+        translation_domain: str | None = None,
+        translation_key: str | None = None,
+        translation_placeholders: dict[str, str] | None = None,
+        hass: HomeAssistant,
+    ) -> None:
+        """Initialize exception."""
+        super().__init__(
+            self, *args, translation_domain, translation_key, translation_placeholders
+        )
+        self.hass = hass
+        self._create_insufficient_rights_issue()
+
+    def _create_insufficient_rights_issue(self) -> None:
+        """Creates an issue for insufficient rights."""
+        ir.create_issue(
+            self.hass,
+            DOMAIN,
+            "insufficient_rights",
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            learn_more_url="https://www.home-assistant.io/integrations/wallbox/#troubleshooting",
+            translation_key="insufficient_rights",
+        )

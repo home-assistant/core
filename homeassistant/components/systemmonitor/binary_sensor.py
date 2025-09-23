@@ -9,8 +9,6 @@ import logging
 import sys
 from typing import Literal
 
-from psutil import NoSuchProcess
-
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
@@ -25,7 +23,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from . import SystemMonitorConfigEntry
-from .const import CONF_PROCESS, DOMAIN
+from .const import CONF_PROCESS, DOMAIN, PROCESS_ERRORS
 from .coordinator import SystemMonitorCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,12 +57,8 @@ def get_process(entity: SystemMonitorSensor) -> bool:
             if entity.argument == proc.name():
                 state = True
                 break
-        except NoSuchProcess as err:
-            _LOGGER.warning(
-                "Failed to load process with ID: %s, old name: %s",
-                err.pid,
-                err.name,
-            )
+        except PROCESS_ERRORS:
+            continue
     return state
 
 

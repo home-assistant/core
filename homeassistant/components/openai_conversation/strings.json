@@ -28,7 +28,7 @@
         "init": {
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
-            "prompt": "Instructions",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
             "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
             "recommended": "Recommended model settings"
           },
@@ -48,12 +48,14 @@
         "model": {
           "title": "Model-specific options",
           "data": {
+            "code_interpreter": "Enable code interpreter tool",
             "reasoning_effort": "Reasoning effort",
             "web_search": "Enable web search",
             "search_context_size": "Search context size",
             "user_location": "Include home location"
           },
           "data_description": {
+            "code_interpreter": "This tool, also known as the python tool to the model, allows it to run code to answer questions",
             "reasoning_effort": "How many reasoning tokens the model should generate before creating a response to the prompt",
             "web_search": "Allow the model to search the web for the latest information before generating a response",
             "search_context_size": "High level guidance for the amount of context window space to use for the search",
@@ -71,10 +73,10 @@
     },
     "ai_task_data": {
       "initiate_flow": {
-        "user": "Add Generate data with AI service",
-        "reconfigure": "Reconfigure Generate data with AI service"
+        "user": "Add AI task",
+        "reconfigure": "Reconfigure AI task"
       },
-      "entry_type": "Generate data with AI service",
+      "entry_type": "AI task",
       "step": {
         "init": {
           "data": {
@@ -119,12 +121,20 @@
   "selector": {
     "reasoning_effort": {
       "options": {
+        "minimal": "Minimal",
         "low": "[%key:common::state::low%]",
         "medium": "[%key:common::state::medium%]",
         "high": "[%key:common::state::high%]"
       }
     },
     "search_context_size": {
+      "options": {
+        "low": "[%key:common::state::low%]",
+        "medium": "[%key:common::state::medium%]",
+        "high": "[%key:common::state::high%]"
+      }
+    },
+    "verbosity": {
       "options": {
         "low": "[%key:common::state::low%]",
         "medium": "[%key:common::state::medium%]",
@@ -177,6 +187,12 @@
           "description": "List of files to upload"
         }
       }
+    }
+  },
+  "issues": {
+    "organization_verification_required": {
+      "title": "Organization verification required",
+      "description": "Your organization must be verified to use this model. Please go to {platform_settings} and select Verify Organization. If you just verified, it can take up to 15 minutes for access to propagate."
     }
   },
   "exceptions": {
