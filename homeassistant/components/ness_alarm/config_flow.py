@@ -149,10 +149,11 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle import from YAML."""
 
         scan_interval = DEFAULT_SCAN_INTERVAL
-        if isinstance(scan_interval, timedelta):
-            scan_interval = int(scan_interval.total_seconds())
-        else:
-            scan_interval = int(scan_interval)
+        scan_interval = (
+            int(scan_interval.total_seconds())
+            if isinstance(scan_interval, timedelta)
+            else int(scan_interval)
+        )
 
         zones = import_config.get(CONF_ZONES, [])
 
