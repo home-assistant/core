@@ -118,7 +118,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         if hasattr(self.device, "modes"):
             return sorted(
                 [
-                    mode
+                    mode.value
                     for mode in self.device.modes
                     if mode in VS_FAN_MODE_PRESET_LIST_HA
                 ]
