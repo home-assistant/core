@@ -83,9 +83,9 @@ class ModbusBaseEntity(Entity):
 
         self._hub = hub
         if (conf_slave := entry.get(CONF_SLAVE)) is not None:
-            self._slave = conf_slave
+            self._device_address = conf_slave
         else:
-            self._slave = entry.get(CONF_DEVICE_ADDRESS, 1)
+            self._device_address = entry.get(CONF_DEVICE_ADDRESS, 1)
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
@@ -165,10 +165,10 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
         self._structure: str = config[CONF_STRUCTURE]
         self._scale = config[CONF_SCALE]
         self._offset = config[CONF_OFFSET]
-        self._slave_count = config.get(CONF_SLAVE_COUNT) or config.get(
+        self._device_address_count = config.get(CONF_SLAVE_COUNT) or config.get(
             CONF_VIRTUAL_COUNT, 0
         )
-        self._slave_size = self._count = config[CONF_COUNT]
+        self._device_address_size = self._count = config[CONF_COUNT]
         self._value_is_int: bool = self._data_type in (
             DataType.INT16,
             DataType.INT32,
@@ -188,9 +188,9 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
         """Do swap as needed."""
         if slave_count:
             swapped = []
-            for i in range(self._slave_count + 1):
-                inx = i * self._slave_size
-                inx2 = inx + self._slave_size
+            for i in range(self._device_address_count + 1):
+                inx = i * self._device_address_size
+                inx2 = inx + self._device_address_size
                 swapped.extend(self._swap_registers(registers[inx:inx2], 0))
             return swapped
         if self._swap in (CONF_SWAP_BYTE, CONF_SWAP_WORD_BYTE):
@@ -231,7 +231,7 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
 
         if self._swap:
             registers = self._swap_registers(
-                copy.deepcopy(registers), self._slave_count
+                copy.deepcopy(registers), self._device_address_count
             )
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         if self._data_type == DataType.STRING:
@@ -323,7 +323,7 @@ class ModbusToggleEntity(ModbusBaseEntity, ToggleEntity, RestoreEntity):
     async def async_turn(self, command: int) -> None:
         """Evaluate switch result."""
         result = await self._hub.async_pb_call(
-            self._slave, self._address, command, self._write_type
+            self._device_address, self._address, command, self._write_type
         )
         if result is None:
             self._attr_available = False
@@ -358,7 +358,7 @@ class ModbusToggleEntity(ModbusBaseEntity, ToggleEntity, RestoreEntity):
 
         # do not allow multiple active calls to the same platform
         result = await self._hub.async_pb_call(
-            self._slave, self._verify_address, 1, self._verify_type
+            self._device_address, self._verify_address, 1, self._verify_type
         )
         if result is None:
             self._attr_available = False
@@ -379,7 +379,7 @@ class ModbusToggleEntity(ModbusBaseEntity, ToggleEntity, RestoreEntity):
                         "Unexpected response from modbus device slave %s register %s,"
                         " got 0x%2x"
                     ),
-                    self._slave,
+                    self._device_address,
                     self._verify_address,
                     value,
                 )

@@ -107,7 +107,7 @@ class ModbusRegisterSensor(ModbusStructEntity, RestoreSensor, SensorEntity):
     async def _async_update(self) -> None:
         """Update the state of the sensor."""
         raw_result = await self._hub.async_pb_call(
-            self._slave, self._address, self._count, self._input_type
+            self._device_address, self._address, self._count, self._input_type
         )
         if raw_result is None:
             self._attr_available = False
@@ -133,7 +133,7 @@ class ModbusRegisterSensor(ModbusStructEntity, RestoreSensor, SensorEntity):
                 self._coordinator.async_set_updated_data(result_array)
             else:
                 self._attr_native_value = None
-                result_array = (self._slave_count + 1) * [None]
+                result_array = (self._device_address_count + 1) * [None]
                 self._coordinator.async_set_updated_data(result_array)
         else:
             self._attr_native_value = result
