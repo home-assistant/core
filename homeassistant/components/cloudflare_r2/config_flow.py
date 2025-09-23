@@ -24,7 +24,7 @@ from .const import (
     CONF_ENDPOINT_URL,
     CONF_SECRET_ACCESS_KEY,
     DEFAULT_ENDPOINT_URL,
-    DESCRIPTION_R2_BOTO3_DOCS_URL,
+    DESCRIPTION_R2_AUTH_DOCS_URL,
     DOMAIN,
 )
 
@@ -95,6 +95,6 @@ class R2ConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={
-                "boto3_docs_url": DESCRIPTION_R2_BOTO3_DOCS_URL,
+                "auth_docs_url": DESCRIPTION_R2_AUTH_DOCS_URL,
             },
         )

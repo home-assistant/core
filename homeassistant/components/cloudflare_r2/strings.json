@@ -9,10 +9,10 @@
           "endpoint_url": "Endpoint URL"
         },
         "data_description": {
-          "access_key_id": "Access key ID to connect to Cloudflare R2 (S3 API)",
-          "secret_access_key": "Secret access key to connect to Cloudflare R2",
+          "access_key_id": "Access key ID to connect to Cloudflare R2 (this is your Account ID)",
+          "secret_access_key": "Secret access key to connect to Cloudflare R2. See [Docs]({auth_docs_url})",
           "bucket": "Bucket must already exist and be writable by the provided credentials.",
-          "endpoint_url": "Cloudflare R2 S3-compatible endpoint. See [Boto3 example]({boto3_docs_url})."
+          "endpoint_url": "Cloudflare R2 S3-compatible endpoint."
         },
         "title": "Add Cloudflare R2 bucket"
       }

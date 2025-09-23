@@ -21,6 +21,5 @@ DATA_BACKUP_AGENT_LISTENERS: HassKey[list[Callable[[], None]]] = HassKey(
     f"{DOMAIN}.backup_agent_listeners"
 )
 
-DESCRIPTION_R2_BOTO3_DOCS_URL: Final = (
-    "https://developers.cloudflare.com/r2/examples/aws/boto3/"
-)
+
+DESCRIPTION_R2_AUTH_DOCS_URL: Final = "https://developers.cloudflare.com/r2/api/tokens/"
