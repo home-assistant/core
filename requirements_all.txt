@@ -247,7 +247,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==41.5.0
+aioesphomeapi==41.6.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -736,7 +736,7 @@ colorlog==6.9.0
 colorthief==0.2.1
 
 # homeassistant.components.compit
-compit-inext-api==0.2.1
+compit-inext-api==0.3.1
 
 # homeassistant.components.concord232
 concord232==0.15.1
@@ -782,7 +782,7 @@ decora-wifi==1.4
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==13.7.0
+deebot-client==14.0.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -2827,7 +2827,7 @@ smart-meter-texas==0.5.5
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.11
+soco==0.30.12
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
