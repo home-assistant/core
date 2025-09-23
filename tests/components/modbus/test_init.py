@@ -846,6 +846,7 @@ async def test_config_modbus(hass: HomeAssistant, mock_modbus_with_pymodbus) -> 
             },
         ],
         [
+            # Duplicate CONF_PORT (for type == SERIAL)
             {
                 CONF_NAME: TEST_MODBUS_NAME,
                 CONF_TYPE: SERIAL,
