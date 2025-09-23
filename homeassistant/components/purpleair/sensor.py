@@ -171,14 +171,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up PurpleAir sensors based on a config entry."""
     for subentry in entry.subentries.values():
-        new_entities = [
-            PurpleAirSensorEntity(
-                entry, int(subentry.data[CONF_SENSOR_INDEX]), description
-            )
-            for description in SENSOR_DESCRIPTIONS
-        ]
         async_add_entities(
-            new_entities=new_entities,
+            (
+                PurpleAirSensorEntity(
+                    entry, int(subentry.data[CONF_SENSOR_INDEX]), description
+                )
+                for description in SENSOR_DESCRIPTIONS
+            ),
             update_before_add=False,
             config_subentry_id=subentry.subentry_id,
         )
