@@ -88,7 +88,7 @@ def com_port(device="/dev/ttyUSB1234"):
 
 
 @pytest.fixture
-def mock_connect_zigpy_app() -> Generator[MagicMock]:
+def mock_create_zigpy_app() -> Generator[MagicMock]:
     """Mock the radio connection."""
 
     mock_connect_app = MagicMock()
@@ -98,7 +98,7 @@ def mock_connect_zigpy_app() -> Generator[MagicMock]:
     )
 
     with patch(
-        "homeassistant.components.zha.radio_manager.ZhaRadioManager.connect_zigpy_app",
+        "homeassistant.components.zha.radio_manager.ZhaRadioManager.create_zigpy_app",
         return_value=mock_connect_app,
     ):
         yield mock_connect_app
@@ -107,7 +107,7 @@ def mock_connect_zigpy_app() -> Generator[MagicMock]:
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_migrate_matching_port(
     hass: HomeAssistant,
-    mock_connect_zigpy_app,
+    mock_create_zigpy_app,
 ) -> None:
     """Test automatic migration."""
     # Set up the config entry
@@ -167,7 +167,7 @@ async def test_migrate_matching_port(
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_migrate_matching_port_usb(
     hass: HomeAssistant,
-    mock_connect_zigpy_app,
+    mock_create_zigpy_app,
 ) -> None:
     """Test automatic migration."""
     # Set up the config entry
@@ -214,7 +214,7 @@ async def test_migrate_matching_port_usb(
 
 async def test_migrate_matching_port_config_entry_not_loaded(
     hass: HomeAssistant,
-    mock_connect_zigpy_app,
+    mock_create_zigpy_app,
 ) -> None:
     """Test automatic migration."""
     # Set up the config entry
@@ -274,7 +274,7 @@ async def test_migrate_matching_port_config_entry_not_loaded(
 async def test_migrate_matching_port_retry(
     mock_restore_backup_step_1,
     hass: HomeAssistant,
-    mock_connect_zigpy_app,
+    mock_create_zigpy_app,
 ) -> None:
     """Test automatic migration."""
     # Set up the config entry
@@ -331,7 +331,7 @@ async def test_migrate_matching_port_retry(
 
 async def test_migrate_non_matching_port(
     hass: HomeAssistant,
-    mock_connect_zigpy_app,
+    mock_create_zigpy_app,
 ) -> None:
     """Test automatic migration."""
     # Set up the config entry
@@ -379,7 +379,7 @@ async def test_migrate_non_matching_port(
 
 async def test_migrate_initiate_failure(
     hass: HomeAssistant,
-    mock_connect_zigpy_app,
+    mock_create_zigpy_app,
 ) -> None:
     """Test retries with failure."""
     # Set up the config entry
@@ -416,7 +416,7 @@ async def test_migrate_initiate_failure(
     }
 
     mock_load_info = AsyncMock(side_effect=OSError())
-    mock_connect_zigpy_app.__aenter__.return_value.load_network_info = mock_load_info
+    mock_create_zigpy_app.__aenter__.return_value.load_network_info = mock_load_info
 
     migration_helper = radio_manager.ZhaMultiPANMigrationHelper(hass, config_entry)
 

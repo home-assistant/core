@@ -29,6 +29,7 @@ from zigpy.exceptions import NetworkNotFormed
 from homeassistant import config_entries
 from homeassistant.components import usb
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from . import repairs
@@ -164,7 +165,9 @@ class ZhaRadioManager:
         )
 
     @contextlib.asynccontextmanager
-    async def connect_zigpy_app(self) -> AsyncIterator[ControllerApplication]:
+    async def create_zigpy_app(
+        self, *, connect: bool = True
+    ) -> AsyncIterator[ControllerApplication]:
         """Connect to the radio with the current config and then clean up."""
         assert self.radio_type is not None
 
@@ -189,6 +192,14 @@ class ZhaRadioManager:
         )
 
         try:
+            if connect:
+                try:
+                    await app.connect()
+                except OSError as error:
+                    raise HomeAssistantError(
+                        f"Failed to connect to Zigbee adapter: {error}"
+                    ) from error
+
             yield app
         finally:
             await app.shutdown()
@@ -215,8 +226,7 @@ class ZhaRadioManager:
         if overwrite_ieee:
             backup = _allow_overwrite_ezsp_ieee(backup)
 
-        async with self.connect_zigpy_app() as app:
-            await app.connect()
+        async with self.create_zigpy_app() as app:
             await app.can_write_network_settings(
                 network_info=backup.network_info,
                 node_info=backup.node_info,
@@ -266,7 +276,7 @@ class ZhaRadioManager:
         self,
     ) -> list[zigpy.backups.NetworkBackup]:
         """Read the list of backups from the database, internal."""
-        async with self.connect_zigpy_app() as app:
+        async with self.create_zigpy_app(connect=False) as app:
             backups = app.backups.backups.copy()
             backups.sort(reverse=True, key=lambda b: b.backup_time)
 
@@ -282,9 +292,7 @@ class ZhaRadioManager:
         """Connect to the radio and load its current network settings."""
         backup = None
 
-        async with self.connect_zigpy_app() as app:
-            await app.connect()
-
+        async with self.create_zigpy_app() as app:
             # Check if the stick has any settings and load them
             try:
                 await app.load_network_info()
@@ -313,14 +321,12 @@ class ZhaRadioManager:
         with suppress(OSError):
             await self.hass.async_add_executor_job(os.remove, self.zigpy_database_path)
 
-        async with self.connect_zigpy_app() as app:
-            await app.connect()
+        async with self.create_zigpy_app() as app:
             await app.form_network()
 
     async def async_reset_adapter(self) -> None:
         """Reset the current adapter."""
-        async with self.connect_zigpy_app() as app:
-            await app.connect()
+        async with self.create_zigpy_app() as app:
             await app.reset_network_info()
 
 
