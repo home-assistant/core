@@ -1023,6 +1023,9 @@
       }
     },
     "valve": {
+      "valve": {
+        "name": "Valve"
+      },
       "indexed_valve": {
         "name": "Valve {index}"
       }
@@ -1031,6 +1034,12 @@
   "exceptions": {
     "action_dpcode_not_found": {
       "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
+    }
+  },
+  "issues": {
+    "deprecated_entity_new_valve": {
+      "title": "{name} is deprecated",
+      "description": "The Tuya entity `{entity}` is deprecated, replaced by a new valve entity.\nPlease update your dashboards, automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
     }
   }
 }
