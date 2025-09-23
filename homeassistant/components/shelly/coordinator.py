@@ -643,6 +643,13 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             for event_callback in self._event_listeners:
                 event_callback(event)
 
+            if (
+                component is not None
+                and component.startswith("rgbcct")
+                and event_type == "config_changed"
+            ):
+                continue
+
             if event_type in ("component_added", "component_removed", "config_changed"):
                 self.update_sleep_period()
                 LOGGER.info(
