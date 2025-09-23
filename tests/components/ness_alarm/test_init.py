@@ -1,6 +1,5 @@
 """Tests for the ness_alarm component."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from nessclient import ArmingMode, ArmingState
@@ -11,7 +10,6 @@ from homeassistant.components import alarm_control_panel
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.ness_alarm import (
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONFIG_SCHEMA,
     async_setup_services,
     config_flow,
@@ -495,26 +493,6 @@ async def test_panic_service_without_code(hass: HomeAssistant, mock_nessclient) 
 
     # Should be called with None as code
     mock_nessclient.panic.assert_awaited_once_with(None)
-
-
-async def test_setup_with_timedelta_scan_interval(
-    hass: HomeAssistant, mock_nessclient
-) -> None:
-    """Test setup with timedelta object for scan_interval."""
-
-    config = {
-        DOMAIN: {
-            CONF_HOST: "alarm.local",
-            CONF_DEVICE_PORT: 1234,
-            CONF_SCAN_INTERVAL: timedelta(seconds=30),
-            CONF_ZONES: [],
-        }
-    }
-
-    # This should be properly handled by the schema
-    validated = CONFIG_SCHEMA(config)
-    assert isinstance(validated[DOMAIN][CONF_SCAN_INTERVAL], timedelta)
-    assert validated[DOMAIN][CONF_SCAN_INTERVAL].total_seconds() == 30
 
 
 async def test_services_already_registered(

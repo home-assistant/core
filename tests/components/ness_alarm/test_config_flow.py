@@ -16,7 +16,7 @@ from homeassistant.components.ness_alarm.const import (
     CONF_ZONES,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -60,7 +60,6 @@ async def test_form(hass: HomeAssistant, mock_panel_info) -> None:
             {
                 CONF_HOST: "192.168.1.100",
                 CONF_PORT: 2401,
-                CONF_SCAN_INTERVAL: 60,
                 CONF_INFER_ARMING_STATE: False,
             },
         )
@@ -71,7 +70,6 @@ async def test_form(hass: HomeAssistant, mock_panel_info) -> None:
     assert result2["data"] == {
         CONF_HOST: "192.168.1.100",
         CONF_PORT: 2401,
-        CONF_SCAN_INTERVAL: 60,
         CONF_INFER_ARMING_STATE: False,
         "panel_model": "DPLUS8",  # This gets added by the flow
     }
@@ -97,7 +95,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             {
                 CONF_HOST: "192.168.1.100",
                 CONF_PORT: 2401,
-                CONF_SCAN_INTERVAL: 60,
                 CONF_INFER_ARMING_STATE: False,
             },
         )
@@ -146,7 +143,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         data={
             CONF_HOST: "192.168.1.100",
             CONF_PORT: 2401,
-            CONF_SCAN_INTERVAL: 60,
             CONF_INFER_ARMING_STATE: False,
             "panel_model": "D16X",  # Add panel model
         },
@@ -161,7 +157,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_SCAN_INTERVAL: 120,
             CONF_INFER_ARMING_STATE: True,
             CONF_SUPPORT_HOME_ARM: False,
             "enabled_zones": 8,  # Use "enabled_zones" not CONF_MAX_SUPPORTED_ZONES
@@ -170,7 +165,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        CONF_SCAN_INTERVAL: 120,
         CONF_INFER_ARMING_STATE: True,
         CONF_SUPPORT_HOME_ARM: False,
         # enabled_zones is removed from options as it's stored in data
@@ -190,7 +184,6 @@ async def test_form_invalid_port(hass: HomeAssistant) -> None:
             {
                 CONF_HOST: "192.168.1.100",
                 CONF_PORT: 70000,
-                CONF_SCAN_INTERVAL: 60,
                 CONF_INFER_ARMING_STATE: False,
             },
         )
@@ -205,56 +198,6 @@ async def test_form_invalid_port(hass: HomeAssistant) -> None:
             {
                 CONF_HOST: "192.168.1.100",
                 CONF_PORT: -1,
-                CONF_SCAN_INTERVAL: 60,
-                CONF_INFER_ARMING_STATE: False,
-            },
-        )
-
-
-async def test_form_invalid_scan_interval(hass: HomeAssistant) -> None:
-    """Test we handle invalid scan interval values."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    # Test scan interval too low
-    with pytest.raises(vol.Invalid):
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "192.168.1.100",
-                CONF_PORT: 2401,
-                CONF_SCAN_INTERVAL: 0.05,  # Below minimum of 0.1
-                CONF_INFER_ARMING_STATE: False,
-            },
-        )
-
-    # Test scan interval too high
-    result2 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    with pytest.raises(vol.Invalid):
-        await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {
-                CONF_HOST: "192.168.1.100",
-                CONF_PORT: 2401,
-                CONF_SCAN_INTERVAL: 3601,  # Above maximum of 3600
-                CONF_INFER_ARMING_STATE: False,
-            },
-        )
-
-    # Test negative scan interval
-    result3 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    with pytest.raises(vol.Invalid):
-        await hass.config_entries.flow.async_configure(
-            result3["flow_id"],
-            {
-                CONF_HOST: "192.168.1.100",
-                CONF_PORT: 2401,
-                CONF_SCAN_INTERVAL: -10,
                 CONF_INFER_ARMING_STATE: False,
             },
         )
@@ -281,7 +224,6 @@ async def test_form_connection_timeout(hass: HomeAssistant) -> None:
             {
                 CONF_HOST: "192.168.1.100",
                 CONF_PORT: 2401,
-                CONF_SCAN_INTERVAL: 60,
                 CONF_INFER_ARMING_STATE: False,
             },
         )
@@ -371,7 +313,6 @@ async def test_duplicate_config_entry(hass: HomeAssistant, mock_panel_info) -> N
             {
                 CONF_HOST: "192.168.1.100",
                 CONF_PORT: 2401,
-                CONF_SCAN_INTERVAL: 60,
                 CONF_INFER_ARMING_STATE: False,
             },
         )
@@ -389,55 +330,12 @@ async def test_duplicate_config_entry(hass: HomeAssistant, mock_panel_info) -> N
             {
                 CONF_HOST: "192.168.1.100",
                 CONF_PORT: 2401,
-                CONF_SCAN_INTERVAL: 60,
                 CONF_INFER_ARMING_STATE: False,
             },
         )
         # Due to the exception handling in the flow, it shows form with error
         assert result4["type"] == FlowResultType.FORM
         assert result4["errors"] == {"base": "unknown"}
-
-
-async def test_options_flow_invalid_values(hass: HomeAssistant) -> None:
-    """Test options flow with invalid values."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "192.168.1.100",
-            CONF_PORT: 2401,
-            CONF_SCAN_INTERVAL: 60,
-            CONF_INFER_ARMING_STATE: False,
-            "panel_model": "D16X",
-        },
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    # Test invalid scan interval
-    with pytest.raises(vol.Invalid):
-        await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_SCAN_INTERVAL: 0,  # Below minimum
-                CONF_INFER_ARMING_STATE: True,
-                CONF_SUPPORT_HOME_ARM: False,
-                "enabled_zones": 8,
-            },
-        )
-
-    # Test invalid scan interval (too high)
-    result2 = await hass.config_entries.options.async_init(entry.entry_id)
-    with pytest.raises(vol.Invalid):
-        await hass.config_entries.options.async_configure(
-            result2["flow_id"],
-            user_input={
-                CONF_SCAN_INTERVAL: 3601,  # Above maximum
-                CONF_INFER_ARMING_STATE: True,
-                CONF_SUPPORT_HOME_ARM: False,
-                "enabled_zones": 8,
-            },
-        )
 
 
 async def test_options_flow_with_missing_entry(hass: HomeAssistant) -> None:
@@ -469,7 +367,6 @@ async def test_connection_with_unknown_exception(hass: HomeAssistant) -> None:
             {
                 CONF_HOST: "192.168.1.100",
                 CONF_PORT: 2401,
-                CONF_SCAN_INTERVAL: 60,
                 CONF_INFER_ARMING_STATE: False,
             },
         )
@@ -535,7 +432,6 @@ async def test_form_unknown_panel_model(hass: HomeAssistant) -> None:
             {
                 CONF_HOST: "192.168.1.100",
                 CONF_PORT: 2401,
-                CONF_SCAN_INTERVAL: 60,
                 CONF_INFER_ARMING_STATE: False,
             },
         )
@@ -562,7 +458,6 @@ async def test_options_flow_zone_count_16(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_SCAN_INTERVAL: 120,
             CONF_INFER_ARMING_STATE: True,
             CONF_SUPPORT_HOME_ARM: False,
             "enabled_zones": 16,
@@ -591,7 +486,6 @@ async def test_options_flow_zone_count_24(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_SCAN_INTERVAL: 120,
             CONF_INFER_ARMING_STATE: True,
             CONF_SUPPORT_HOME_ARM: False,
             "enabled_zones": 24,
@@ -620,7 +514,6 @@ async def test_options_flow_zone_count_32(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_SCAN_INTERVAL: 120,
             CONF_INFER_ARMING_STATE: True,
             CONF_SUPPORT_HOME_ARM: False,
             "enabled_zones": 32,
@@ -654,7 +547,6 @@ async def test_options_flow_entry_not_found(hass: HomeAssistant) -> None:
     # Call async_step_init - should abort because entry doesn't exist
     result = await options_flow.async_step_init(
         user_input={
-            CONF_SCAN_INTERVAL: 120,
             CONF_INFER_ARMING_STATE: True,
             CONF_SUPPORT_HOME_ARM: False,
             "enabled_zones": 16,
@@ -685,7 +577,6 @@ async def test_options_flow_without_enabled_zones(hass: HomeAssistant) -> None:
     # Call async_step_init with user_input that doesn't have enabled_zones
     result = await options_flow.async_step_init(
         user_input={
-            CONF_SCAN_INTERVAL: 120,
             CONF_INFER_ARMING_STATE: True,
             CONF_SUPPORT_HOME_ARM: True,
             # No "enabled_zones" key
@@ -694,7 +585,6 @@ async def test_options_flow_without_enabled_zones(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        CONF_SCAN_INTERVAL: 120,
         CONF_INFER_ARMING_STATE: True,
         CONF_SUPPORT_HOME_ARM: True,
     }
