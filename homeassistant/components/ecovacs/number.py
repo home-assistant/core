@@ -12,7 +12,6 @@ from deebot_client.events.base import Event
 from deebot_client.events.water_info import WaterCustomAmountEvent
 
 from homeassistant.components.number import (
-    EntityDescription,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
