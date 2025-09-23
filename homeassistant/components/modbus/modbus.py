@@ -370,11 +370,17 @@ class ModbusHub:
             _LOGGER.info(f"modbus {self.name} communication closed")
 
     async def low_level_pb_call(
-        self, slave: int | None, address: int, value: int | list[int], use_call: str
+        self,
+        device_address: int | None,
+        address: int,
+        value: int | list[int],
+        use_call: str,
     ) -> ModbusPDU | None:
         """Call sync. pymodbus."""
         kwargs: dict[str, Any] = (
-            {DEVICE_ID: slave} if slave is not None else {DEVICE_ID: 1}
+            {DEVICE_ID: device_address}
+            if device_address is not None
+            else {DEVICE_ID: 1}
         )
         entry = self._pb_request[use_call]
 
@@ -386,28 +392,26 @@ class ModbusHub:
         try:
             result: ModbusPDU = await entry.func(address, **kwargs)
         except ModbusException as exception_error:
-            error = f"Error: device: {slave} address: {address} -> {exception_error!s}"
+            error = f"Error: device: {device_address} address: {address} -> {exception_error!s}"
             self._log_error(error)
             return None
         if not result:
-            error = (
-                f"Error: device: {slave} address: {address} -> pymodbus returned None"
-            )
+            error = f"Error: device: {device_address} address: {address} -> pymodbus returned None"
             self._log_error(error)
             return None
         if not hasattr(result, entry.attr):
-            error = f"Error: device: {slave} address: {address} -> {result!s}"
+            error = f"Error: device: {device_address} address: {address} -> {result!s}"
             self._log_error(error)
             return None
         if result.isError():
-            error = f"Error: device: {slave} address: {address} -> pymodbus returned isError True"
+            error = f"Error: device: {device_address} address: {address} -> pymodbus returned isError True"
             self._log_error(error)
             return None
         return result
 
     async def async_pb_call(
         self,
-        unit: int | None,
+        device_address: int | None,
         address: int,
         value: int | list[int],
         use_call: str,
@@ -415,7 +419,7 @@ class ModbusHub:
         """Convert async to sync pymodbus call."""
         if not self._client:
             return None
-        result = await self.low_level_pb_call(unit, address, value, use_call)
+        result = await self.low_level_pb_call(device_address, address, value, use_call)
         if self._msg_wait:
             await asyncio.sleep(self._msg_wait)
         return result
