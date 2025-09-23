@@ -37,7 +37,7 @@ from .helpers import AndroidTVRemoteConfigEntry, create_api, get_enable_ime
 
 _LOGGER = logging.getLogger(__name__)
 
-APPS_NEW_ID = "NewApp"
+APPS_NEW_ID = "add_new"
 CONF_APP_DELETE = "app_delete"
 CONF_APP_ID = "app_id"
 
@@ -287,7 +287,9 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithReload):
                 {
                     vol.Optional(CONF_APPS): SelectSelector(
                         SelectSelectorConfig(
-                            options=apps, mode=SelectSelectorMode.DROPDOWN
+                            options=apps,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            translation_key="apps",
                         )
                     ),
                     vol.Required(
