@@ -20,14 +20,14 @@ async def async_setup_entry(
     entry: CompitConfigEntry,
     async_add_devices: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Compit select entities from a config entry."""
+    """Set up Compit select sensors from a config entry."""
 
     coordinator = entry.runtime_data
-    climate_entities = []
+    select_entities = []
     for device_id in coordinator.connector.all_devices:
         device = coordinator.connector.get_device(device_id)
         if device:
-            climate_entities.extend(
+            select_entities.extend(
                 [
                     CompitSelect(
                         coordinator,
@@ -40,7 +40,7 @@ async def async_setup_entry(
                 ]
             )
 
-    async_add_devices(climate_entities)
+    async_add_devices(select_entities)
 
 
 class CompitSelect(CoordinatorEntity[CompitDataUpdateCoordinator], SelectEntity):
@@ -96,8 +96,8 @@ class CompitSelect(CoordinatorEntity[CompitDataUpdateCoordinator], SelectEntity)
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        state_value = self.available_values.get(option)
-        if state_value is not None:
-            await self.coordinator.connector.set_device_parameter(
-                self.device_id, self.parameter.parameter_code, state_value
-            )
+        state_value = self.available_values.get(option, -1)
+
+        await self.coordinator.connector.set_device_parameter(
+            self.device_id, self.parameter.parameter_code, state_value
+        )
