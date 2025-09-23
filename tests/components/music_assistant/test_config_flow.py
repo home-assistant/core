@@ -15,7 +15,7 @@ import pytest
 
 from homeassistant.components.music_assistant.config_flow import CONF_URL
 from homeassistant.components.music_assistant.const import DEFAULT_NAME, DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -362,3 +362,41 @@ async def test_zeroconf_existing_entry_broken_url(
     # Verify the URL was updated in the config entry
     updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert updated_entry.data[CONF_URL] == "http://discovered-working-url:8095"
+
+
+async def test_zeroconf_existing_entry_ignored(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+) -> None:
+    """Test zeroconf flow when existing entry was ignored."""
+    # Create an ignored config entry (no URL field)
+    ignored_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Music Assistant",
+        data={},  # No URL field for ignored entries
+        unique_id="1234",
+        source=SOURCE_IGNORE,
+    )
+    ignored_config_entry.add_to_hass(hass)
+
+    # Mock server info with discovered URL
+    server_info = ServerInfoMessage.from_json(
+        await async_load_fixture(hass, "server_info_message.json", DOMAIN)
+    )
+    server_info.base_url = "http://discovered-url:8095"
+    mock_get_server_info.return_value = server_info
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DATA,
+    )
+    await hass.async_block_till_done()
+
+    # Should abort because entry was ignored (respect user's choice)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # Verify the ignored entry was not modified
+    ignored_entry = hass.config_entries.async_get_entry(ignored_config_entry.entry_id)
+    assert ignored_entry.data == {}  # Still no URL field
+    assert ignored_entry.source == SOURCE_IGNORE
