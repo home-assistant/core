@@ -33,7 +33,7 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
         inverter: Inverter,
         host: str,
         protocol: str,
-    ):
+    ) -> ConfigFlowResult:
         """Handle a successful connection storing it's values on the entry data."""
         await self.async_set_unique_id(inverter.serial_number)
         self._abort_if_unique_id_configured()
