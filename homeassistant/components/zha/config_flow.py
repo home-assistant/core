@@ -630,6 +630,8 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm a discovery."""
 
+        self._set_confirm_only()
+
         zha_config_entries = self.hass.config_entries.async_entries(DOMAIN)
 
         # Without confirmation, discovery can automatically progress into parts of the

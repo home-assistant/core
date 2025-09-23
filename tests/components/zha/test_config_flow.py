@@ -1490,7 +1490,7 @@ async def test_formation_strategy_restore_manual_backup_ezsp(
         )
 
     assert result4["type"] is FlowResultType.ABORT
-    assert result4["reason"] == "cannot_restore_backup"
+    assert result4["reason"] == "cannot_restore_backup_no_ieee_confirm"
     assert len(mock_restore_backup.mock_calls) == 0
 
 
