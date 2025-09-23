@@ -1468,6 +1468,37 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     }
 
 
+async def test_get_date_time_tool(hass: HomeAssistant) -> None:
+    """Test the GetDateTime tool."""
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=context,
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    tool = next((tool for tool in api.tools if tool.name == "GetDateTime"), None)
+    assert tool is not None
+
+    now = dt_util.parse_datetime("2025-09-22 12:30:45Z")
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        result = await tool.async_call(
+            hass,
+            llm.ToolInput("GetDateTime", {}),
+            llm_context,
+        )
+        assert result["success"] is True
+        assert result["result"]["date"] == "2025-09-22"
+        assert result["result"]["time"] == "12:30:45"
+        assert result["result"]["timezone"] == "UTC"
+        assert result["result"]["weekday"] == "Monday"
+
+
 async def test_no_tools_exposed(hass: HomeAssistant) -> None:
     """Test that tools are not exposed when no entities are exposed."""
     assert await async_setup_component(hass, "homeassistant", {})
