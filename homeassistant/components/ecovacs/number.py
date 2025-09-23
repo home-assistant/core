@@ -79,9 +79,11 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsNumberEntityDescription, ...] = (
         mode=NumberMode.BOX,
     ),
     EcovacsNumberEntityDescription[WaterCustomAmountEvent](
-        capability_fn=lambda caps: caps.water.amount
-        if caps.water and isinstance(caps.water.amount, CapabilityNumber)
-        else None,
+        capability_fn=lambda caps: (
+            caps.water.amount
+            if caps.water and isinstance(caps.water.amount, CapabilityNumber)
+            else None
+        ),
         value_fn=lambda e: e.value,
         key="water_amount",
         translation_key="water_amount",
