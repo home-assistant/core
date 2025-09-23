@@ -301,7 +301,6 @@ class MatterLight(MatterEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
-        LOGGER.info("Turn on %s with %s", self.entity_id, kwargs)
 
         hs_color = kwargs.get(ATTR_HS_COLOR)
         xy_color = kwargs.get(ATTR_XY_COLOR)
