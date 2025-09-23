@@ -64,7 +64,7 @@ from homeassistant.components.modbus.const import (
     CONF_VIRTUAL_COUNT,
     DEFAULT_SCAN_INTERVAL,
     DEVICE_ID,
-    MODBUS_DOMAIN as DOMAIN,
+    DOMAIN,
     RTUOVERTCP,
     SERIAL,
     SERVICE_STOP,
