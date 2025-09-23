@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Goodwe config flow."""
 
-    VERSION = 2
+    MINOR_VERSION = 2
 
     async def async_handle_successful_connection(
         self,
