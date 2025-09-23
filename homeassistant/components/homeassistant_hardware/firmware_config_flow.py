@@ -415,10 +415,38 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         if self._picked_firmware_type == PickedFirmwareType.ZIGBEE:
             return await self.async_step_install_zigbee_firmware()
 
-        if result := await self._ensure_thread_addon_setup():
-            return result
+        return await self.async_step_prepare_thread_installation()
+
+    async def async_step_prepare_thread_installation(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Prepare for Thread installation by stopping the OTBR addon if needed."""
+        if not is_hassio(self.hass):
+            return self.async_abort(
+                reason="not_hassio_thread",
+                description_placeholders=self._get_translation_placeholders(),
+            )
+
+        otbr_manager = get_otbr_addon_manager(self.hass)
+        addon_info = await self._async_get_addon_info(otbr_manager)
+
+        if addon_info.state == AddonState.RUNNING:
+            # Stop the addon before continuing to flash firmware
+            await otbr_manager.async_stop_addon()
 
         return await self.async_step_install_thread_firmware()
+
+    async def async_step_finish_thread_installation(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Finish Thread installation by starting the OTBR addon."""
+        otbr_manager = get_otbr_addon_manager(self.hass)
+        addon_info = await self._async_get_addon_info(otbr_manager)
+
+        if addon_info.state == AddonState.NOT_INSTALLED:
+            return await self.async_step_install_otbr_addon()
+
+        return await self.async_step_start_otbr_addon()
 
     async def async_step_pick_firmware_zigbee(
         self, user_input: dict[str, Any] | None = None
@@ -495,28 +523,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         """Continue the ZHA flow."""
         raise NotImplementedError
 
-    async def _ensure_thread_addon_setup(self) -> ConfigFlowResult | None:
-        """Ensure the OTBR addon is set up and not running."""
-
-        # We install the OTBR addon no matter what, since it is required to use Thread
-        if not is_hassio(self.hass):
-            return self.async_abort(
-                reason="not_hassio_thread",
-                description_placeholders=self._get_translation_placeholders(),
-            )
-
-        otbr_manager = get_otbr_addon_manager(self.hass)
-        addon_info = await self._async_get_addon_info(otbr_manager)
-
-        if addon_info.state == AddonState.NOT_INSTALLED:
-            return await self.async_step_install_otbr_addon()
-
-        if addon_info.state == AddonState.RUNNING:
-            # Stop the addon before continuing to flash firmware
-            await otbr_manager.async_stop_addon()
-
-        return None
-
     async def async_step_pick_firmware_thread(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -572,7 +578,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         finally:
             self.addon_install_task = None
 
-        return self.async_show_progress_done(next_step_id="install_thread_firmware")
+        return self.async_show_progress_done(next_step_id="finish_thread_installation")
 
     async def async_step_start_otbr_addon(
         self, user_input: dict[str, Any] | None = None
