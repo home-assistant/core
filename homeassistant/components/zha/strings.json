@@ -24,11 +24,11 @@
       },
       "manual_port_config": {
         "title": "Serial port settings",
-        "description": "ZHA was not able to automatically detect serial port settings for your radio. This usually is an issue with the firmware or permissions.\n\nIf you are using firmware with nonstandard settings, enter the serial port settings",
+        "description": "ZHA was not able to automatically detect serial port settings for your adapter. This usually is an issue with the firmware or permissions.\n\nIf you are using firmware with nonstandard settings, enter the serial port settings",
         "data": {
           "path": "Serial device path",
-          "baudrate": "Port speed",
-          "flow_control": "Data flow control"
+          "baudrate": "Serial port speed",
+          "flow_control": "Serial port flow control"
         },
         "data_description": {
           "path": "Path to the serial port or `socket://` TCP address",
