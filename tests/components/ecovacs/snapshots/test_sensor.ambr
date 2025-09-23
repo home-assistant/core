@@ -1288,6 +1288,8 @@
       'options': list([
         'idle',
         'emptying_dustbin',
+        'washing_mop',
+        'drying_mop',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1327,6 +1329,8 @@
       'options': list([
         'idle',
         'emptying_dustbin',
+        'washing_mop',
+        'drying_mop',
       ]),
     }),
     'context': <ANY>,

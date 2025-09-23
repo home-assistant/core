@@ -169,12 +169,11 @@ async def websocket_list_sentences(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List custom registered sentences."""
-    agent = get_agent_manager(hass).default_agent
-    assert agent is not None
+    manager = get_agent_manager(hass)
 
     sentences = []
-    for trigger_data in agent.trigger_sentences:
-        sentences.extend(trigger_data.sentences)
+    for trigger_details in manager.triggers_details:
+        sentences.extend(trigger_details.sentences)
 
     connection.send_result(msg["id"], {"trigger_sentences": sentences})
 

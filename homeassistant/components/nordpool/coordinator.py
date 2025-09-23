@@ -13,7 +13,6 @@ from pynordpool import (
     DeliveryPeriodEntry,
     DeliveryPeriodsData,
     NordPoolClient,
-    NordPoolEmptyResponseError,
     NordPoolError,
     NordPoolResponseError,
 )
@@ -22,7 +21,7 @@ from homeassistant.const import CONF_CURRENCY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_AREAS, DOMAIN, LOGGER
@@ -67,14 +66,39 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
             self.unsub()
             self.unsub = None
 
-    async def fetch_data(self, now: datetime) -> None:
+    async def fetch_data(self, now: datetime, initial: bool = False) -> None:
         """Fetch data from Nord Pool."""
         self.unsub = async_track_point_in_utc_time(
             self.hass, self.fetch_data, self.get_next_interval(dt_util.utcnow())
         )
+        if self.config_entry.pref_disable_polling and not initial:
+            self.async_update_listeners()
+            return
+        try:
+            data = await self.handle_data(initial)
+        except UpdateFailed as err:
+            self.async_set_update_error(err)
+            return
+        self.async_set_updated_data(data)
+
+    async def handle_data(self, initial: bool = False) -> DeliveryPeriodsData:
+        """Fetch data from Nord Pool."""
         data = await self.api_call()
         if data and data.entries:
-            self.async_set_updated_data(data)
+            current_day = dt_util.utcnow().strftime("%Y-%m-%d")
+            for entry in data.entries:
+                if entry.requested_date == current_day:
+                    LOGGER.debug("Data for current day found")
+                    return data
+        if data and not data.entries and not initial:
+            # Empty response, use cache
+            LOGGER.debug("No data entries received")
+            return self.data
+        raise UpdateFailed(translation_domain=DOMAIN, translation_key="no_day_data")
+
+    async def _async_update_data(self) -> DeliveryPeriodsData:
+        """Fetch the latest data from the source."""
+        return await self.handle_data()
 
     async def api_call(self, retry: int = 3) -> DeliveryPeriodsData | None:
         """Make api call to retrieve data with retry if failure."""
@@ -96,16 +120,16 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
             aiohttp.ClientError,
         ) as error:
             LOGGER.debug("Connection error: %s", error)
-            self.async_set_update_error(error)
+            if self.data is None:
+                self.async_set_update_error(  # type: ignore[unreachable]
+                    UpdateFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="could_not_fetch_data",
+                        translation_placeholders={"error": str(error)},
+                    )
+                )
+            return self.data
 
-        if data:
-            current_day = dt_util.utcnow().strftime("%Y-%m-%d")
-            for entry in data.entries:
-                if entry.requested_date == current_day:
-                    LOGGER.debug("Data for current day found")
-                    return data
-
-        self.async_set_update_error(NordPoolEmptyResponseError("No current day data"))
         return data
 
     def merge_price_entries(self) -> list[DeliveryPeriodEntry]:

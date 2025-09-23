@@ -837,7 +837,7 @@ async def test_async_get_all_descriptions(hass: HomeAssistant) -> None:
 
     # Test we only load services.yaml for integrations with services.yaml
     # And system_health has no services
-    assert proxy_load_services_files.mock_calls[0][1][1] == unordered(
+    assert proxy_load_services_files.mock_calls[0][1][0] == unordered(
         [
             await async_get_integration(hass, DOMAIN_GROUP),
         ]
@@ -990,7 +990,7 @@ async def test_async_get_all_descriptions_dot_keys(hass: HomeAssistant) -> None:
         descriptions = await service.async_get_all_descriptions(hass)
 
     mock_load_yaml.assert_called_once_with("services.yaml", None)
-    assert proxy_load_services_files.mock_calls[0][1][1] == unordered(
+    assert proxy_load_services_files.mock_calls[0][1][0] == unordered(
         [
             await async_get_integration(hass, domain),
         ]
@@ -1085,7 +1085,7 @@ async def test_async_get_all_descriptions_filter(hass: HomeAssistant) -> None:
         descriptions = await service.async_get_all_descriptions(hass)
 
     mock_load_yaml.assert_called_once_with("services.yaml", None)
-    assert proxy_load_services_files.mock_calls[0][1][1] == unordered(
+    assert proxy_load_services_files.mock_calls[0][1][0] == unordered(
         [
             await async_get_integration(hass, domain),
         ]

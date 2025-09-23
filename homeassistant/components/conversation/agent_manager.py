@@ -8,7 +8,13 @@ from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from homeassistant.core import Context, HomeAssistant, async_get_hass, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    HomeAssistant,
+    async_get_hass,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, intent, singleton
 
@@ -30,6 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from .default_agent import DefaultAgent
+    from .trigger import TriggerDetails
 
 
 @singleton.singleton("conversation_agent")
@@ -140,6 +147,7 @@ class AgentManager:
         self.hass = hass
         self._agents: dict[str, AbstractConversationAgent] = {}
         self.default_agent: DefaultAgent | None = None
+        self.triggers_details: list[TriggerDetails] = []
 
     @callback
     def async_get_agent(self, agent_id: str) -> AbstractConversationAgent | None:
@@ -191,4 +199,20 @@ class AgentManager:
 
     async def async_setup_default_agent(self, agent: DefaultAgent) -> None:
         """Set up the default agent."""
+        agent.update_triggers(self.triggers_details)
         self.default_agent = agent
+
+    def register_trigger(self, trigger_details: TriggerDetails) -> CALLBACK_TYPE:
+        """Register a trigger."""
+        self.triggers_details.append(trigger_details)
+        if self.default_agent is not None:
+            self.default_agent.update_triggers(self.triggers_details)
+
+        @callback
+        def unregister_trigger() -> None:
+            """Unregister the trigger."""
+            self.triggers_details.remove(trigger_details)
+            if self.default_agent is not None:
+                self.default_agent.update_triggers(self.triggers_details)
+
+        return unregister_trigger

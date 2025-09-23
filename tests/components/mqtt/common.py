@@ -356,6 +356,27 @@ MOCK_SUBENTRY_FAN_COMPONENT = {
         "speed_range_min": 1,
     },
 }
+MOCK_SUBENTRY_IMAGE_COMPONENT_DATA = {
+    "24402bcbd5b64a54bc32695a5ef752bf": {
+        "platform": "image",
+        "name": "Merchandise",
+        "entity_category": None,
+        "image_topic": "test-topic",
+        "content_type": "image/jpeg",
+        "image_encoding": "b64",
+        "entity_picture": "https://example.com/24402bcbd5b64a54bc32695a5ef752bf",
+    },
+}
+MOCK_SUBENTRY_IMAGE_COMPONENT_URL = {
+    "326104eb58af48c9ab1f887cded499bb": {
+        "platform": "image",
+        "name": "Merchandise",
+        "entity_category": None,
+        "url_topic": "test-topic",
+        "url_template": "{{ value_json.value }}",
+        "entity_picture": "https://example.com/326104eb58af48c9ab1f887cded499bb",
+    },
+}
 MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT = {
     "8131babc5e8d4f44b82e0761d39091a2": {
         "platform": "light",
@@ -552,6 +573,14 @@ MOCK_COVER_SUBENTRY_DATA_SINGLE = {
 MOCK_FAN_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_FAN_COMPONENT,
+}
+MOCK_IMAGE_SUBENTRY_DATA_IMAGE_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_IMAGE_COMPONENT_DATA,
+}
+MOCK_IMAGE_SUBENTRY_DATA_IMAGE_URL = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_IMAGE_COMPONENT_URL,
 }
 MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},

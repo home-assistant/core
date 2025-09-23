@@ -25,6 +25,11 @@ VALVES: dict[str, tuple[ValveEntityDescription, ...]] = {
     # Smart Water Timer
     "sfkzq": (
         ValveEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="valve",
+            device_class=ValveDeviceClass.WATER,
+        ),
+        ValveEntityDescription(
             key=DPCode.SWITCH_1,
             translation_key="indexed_valve",
             translation_placeholders={"index": "1"},

@@ -55,6 +55,7 @@ class SupportedModels(StrEnum):
     RGBICWW_FLOOR_LAMP = "rgbicww_floor_lamp"
     PLUG_MINI_EU = "plug_mini_eu"
     RELAY_SWITCH_2PM = "relay_switch_2pm"
+    K11_PLUS_VACUUM = "k11+_vacuum"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -89,6 +90,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.RGBICWW_FLOOR_LAMP: SupportedModels.RGBICWW_FLOOR_LAMP,
     SwitchbotModel.PLUG_MINI_EU: SupportedModels.PLUG_MINI_EU,
     SwitchbotModel.RELAY_SWITCH_2PM: SupportedModels.RELAY_SWITCH_2PM,
+    SwitchbotModel.K11_VACUUM: SupportedModels.K11_PLUS_VACUUM,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {

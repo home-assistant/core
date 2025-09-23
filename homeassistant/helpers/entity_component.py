@@ -240,7 +240,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         This method must be run in the event loop.
         """
         return await service.async_extract_entities(
-            self.hass, self.entities, service_call, expand_group
+            self.entities, service_call, expand_group
         )
 
     @callback

@@ -379,22 +379,21 @@ def async_prepare_call_from_config(
     }
 
 
-@bind_hass
+@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 def extract_entity_ids(
-    hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
+    service_call: ServiceCall, expand_group: bool = True
 ) -> set[str]:
     """Extract a list of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
     """
     return asyncio.run_coroutine_threadsafe(
-        async_extract_entity_ids(hass, service_call, expand_group), hass.loop
+        async_extract_entity_ids(service_call, expand_group), service_call.hass.loop
     ).result()
 
 
-@bind_hass
+@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 async def async_extract_entities[_EntityT: Entity](
-    hass: HomeAssistant,
     entities: Iterable[_EntityT],
     service_call: ServiceCall,
     expand_group: bool = True,
@@ -410,7 +409,7 @@ async def async_extract_entities[_EntityT: Entity](
 
     selector_data = target_helpers.TargetSelectorData(service_call.data)
     referenced = target_helpers.async_extract_referenced_entity_ids(
-        hass, selector_data, expand_group
+        service_call.hass, selector_data, expand_group
     )
     combined = referenced.referenced | referenced.indirectly_referenced
 
@@ -432,9 +431,9 @@ async def async_extract_entities[_EntityT: Entity](
     return found
 
 
-@bind_hass
+@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 async def async_extract_entity_ids(
-    hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
+    service_call: ServiceCall, expand_group: bool = True
 ) -> set[str]:
     """Extract a set of entity ids from a service call.
 
@@ -442,7 +441,7 @@ async def async_extract_entity_ids(
     """
     selector_data = target_helpers.TargetSelectorData(service_call.data)
     referenced = target_helpers.async_extract_referenced_entity_ids(
-        hass, selector_data, expand_group
+        service_call.hass, selector_data, expand_group
     )
     return referenced.referenced | referenced.indirectly_referenced
 
@@ -463,17 +462,17 @@ def async_extract_referenced_entity_ids(
     return SelectedEntities(**dataclasses.asdict(selected))
 
 
-@bind_hass
+@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 async def async_extract_config_entry_ids(
-    hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
+    service_call: ServiceCall, expand_group: bool = True
 ) -> set[str]:
     """Extract referenced config entry ids from a service call."""
     selector_data = target_helpers.TargetSelectorData(service_call.data)
     referenced = target_helpers.async_extract_referenced_entity_ids(
-        hass, selector_data, expand_group
+        service_call.hass, selector_data, expand_group
     )
-    ent_reg = entity_registry.async_get(hass)
-    dev_reg = device_registry.async_get(hass)
+    ent_reg = entity_registry.async_get(service_call.hass)
+    dev_reg = device_registry.async_get(service_call.hass)
     config_entry_ids: set[str] = set()
 
     # Some devices may have no entities
@@ -492,7 +491,7 @@ async def async_extract_config_entry_ids(
     return config_entry_ids
 
 
-def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
+def _load_services_file(integration: Integration) -> JSON_TYPE:
     """Load services file for an integration."""
     try:
         return cast(
@@ -515,12 +514,10 @@ def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_T
         return {}
 
 
-def _load_services_files(
-    hass: HomeAssistant, integrations: Iterable[Integration]
-) -> dict[str, JSON_TYPE]:
+def _load_services_files(integrations: Iterable[Integration]) -> dict[str, JSON_TYPE]:
     """Load service files for multiple integrations."""
     return {
-        integration.domain: _load_services_file(hass, integration)
+        integration.domain: _load_services_file(integration)
         for integration in integrations
     }
 
@@ -586,7 +583,7 @@ async def async_get_all_descriptions(
 
         if integrations:
             loaded = await hass.async_add_executor_job(
-                _load_services_files, hass, integrations
+                _load_services_files, integrations
             )
 
     # Load translations for all service domains

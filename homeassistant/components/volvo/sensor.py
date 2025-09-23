@@ -354,7 +354,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors."""
-    coordinators = entry.runtime_data
+    coordinators = entry.runtime_data.interval_coordinators
     async_add_entities(
         VolvoSensor(coordinator, description)
         for coordinator in coordinators

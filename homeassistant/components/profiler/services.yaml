@@ -51,6 +51,7 @@ start_log_object_sources:
           unit_of_measurement: objects
 stop_log_object_sources:
 lru_stats:
+dump_sockets:
 log_thread_frames:
 log_event_loop_scheduled:
 set_asyncio_debug:

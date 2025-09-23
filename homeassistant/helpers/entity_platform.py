@@ -1068,7 +1068,7 @@ class EntityPlatform:
         This method must be run in the event loop.
         """
         return await service.async_extract_entities(
-            self.hass, self.entities.values(), service_call, expand_group
+            self.entities.values(), service_call, expand_group
         )
 
     @callback
