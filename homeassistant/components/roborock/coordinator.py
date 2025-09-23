@@ -351,10 +351,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
     def _set_current_map(self) -> None:
         if (
             self.roborock_device_info.props.status is not None
-            and self.roborock_device_info.props.status.map_status is not None
+            and self.roborock_device_info.props.status.current_map is not None
         ):
-            # To get the current map flag, you bitshift the map_status right by 2.
-            self.current_map = self.roborock_device_info.props.status.map_status >> 2
+            self.current_map = self.roborock_device_info.props.status.current_map
 
     async def set_current_map_rooms(self) -> None:
         """Fetch all of the rooms for the current map and set on RoborockMapInfo."""
