@@ -205,6 +205,7 @@ async def async_attach_trigger(
 class ValueUpdatedTrigger(Trigger):
     """Z-Wave JS value updated trigger."""
 
+    _hass: HomeAssistant
     _options: dict[str, Any]
 
     @classmethod
@@ -226,10 +227,10 @@ class ValueUpdatedTrigger(Trigger):
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize trigger."""
-        super().__init__(hass, config)
+        self._hass = hass
         assert config.options is not None
         self._options = config.options
 
-    async def _async_attach(self, run_action: TriggerActionRunnerType) -> CALLBACK_TYPE:
+    async def async_attach(self, run_action: TriggerActionRunnerType) -> CALLBACK_TYPE:
         """Attach a trigger."""
         return await async_attach_trigger(self._hass, self._options, run_action)

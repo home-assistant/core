@@ -124,6 +124,7 @@ _CONFIG_SCHEMA = vol.Schema(
 class EventTrigger(Trigger):
     """Z-Wave JS event trigger."""
 
+    _hass: HomeAssistant
     _options: dict[str, Any]
 
     _event_source: str
@@ -169,11 +170,11 @@ class EventTrigger(Trigger):
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize trigger."""
-        super().__init__(hass, config)
+        self._hass = hass
         assert config.options is not None
         self._options = config.options
 
-    async def _async_attach(self, run_action: TriggerActionRunnerType) -> CALLBACK_TYPE:
+    async def async_attach(self, run_action: TriggerActionRunnerType) -> CALLBACK_TYPE:
         """Attach a trigger."""
         dev_reg = dr.async_get(self._hass)
         options = self._options

@@ -178,9 +178,6 @@ _TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 class Trigger(abc.ABC):
     """Trigger class."""
 
-    _job: HassJob | None = None
-    _trigger_info: TriggerInfo | None = None
-
     @classmethod
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
@@ -215,41 +212,9 @@ class Trigger(abc.ABC):
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize trigger."""
-        self._hass = hass
-        self._config = config
-
-    async def async_attach(
-        self, action: TriggerActionType, trigger_info: TriggerInfo
-    ) -> CALLBACK_TYPE:
-        """Attach the trigger."""
-        self._job = HassJob(action)
-        self._trigger_info = trigger_info
-
-        @callback
-        def run_action(
-            description: str,
-            extra_trigger_payload: dict[str, Any],
-            context: Context | None = None,
-        ) -> None:
-            """Run action with trigger variables."""
-            assert self._job
-            assert self._trigger_info
-
-            payload = {
-                "trigger": {
-                    **self._trigger_info["trigger_data"],
-                    CONF_PLATFORM: self._config.key,
-                    "description": description,
-                    **extra_trigger_payload,
-                }
-            }
-
-            self._hass.async_run_hass_job(self._job, payload, context)
-
-        return await self._async_attach(run_action)
 
     @abc.abstractmethod
-    async def _async_attach(self, run_action: TriggerActionRunnerType) -> CALLBACK_TYPE:
+    async def async_attach(self, run_action: TriggerActionRunnerType) -> CALLBACK_TYPE:
         """Attach the trigger."""
 
 
@@ -560,6 +525,47 @@ def _trigger_action_wrapper(
     return wrapper_func
 
 
+async def _async_attach_trigger_cls(
+    hass: HomeAssistant,
+    trigger_cls: type[Trigger],
+    trigger_key: str,
+    conf: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
+    """Initialize a new Trigger class and attach it."""
+    job = HassJob(action)
+
+    @callback
+    def run_action(
+        description: str,
+        extra_trigger_payload: dict[str, Any],
+        context: Context | None = None,
+    ) -> None:
+        """Run action with trigger variables."""
+
+        payload = {
+            "trigger": {
+                **trigger_info["trigger_data"],
+                CONF_PLATFORM: trigger_key,
+                "description": description,
+                **extra_trigger_payload,
+            }
+        }
+
+        hass.async_run_hass_job(job, payload, context)
+
+    trigger = trigger_cls(
+        hass,
+        TriggerConfig(
+            key=trigger_key,
+            target=conf.get(CONF_TARGET),
+            options=conf.get(CONF_OPTIONS),
+        ),
+    )
+    return await trigger.async_attach(run_action)
+
+
 async def async_initialize_triggers(
     hass: HomeAssistant,
     trigger_config: list[ConfigType],
@@ -606,15 +612,9 @@ async def async_initialize_triggers(
                 platform_domain, trigger_key
             )
             trigger_cls = trigger_descriptors[relative_trigger_key]
-            trigger = trigger_cls(
-                hass,
-                TriggerConfig(
-                    key=trigger_key,
-                    target=conf.get(CONF_TARGET),
-                    options=conf.get(CONF_OPTIONS),
-                ),
+            coro = _async_attach_trigger_cls(
+                hass, trigger_cls, trigger_key, conf, action_wrapper, info
             )
-            coro = trigger.async_attach(action_wrapper, info)
         else:
             coro = platform.async_attach_trigger(hass, conf, action_wrapper, info)
 
