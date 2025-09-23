@@ -173,12 +173,7 @@ async def async_modbus_setup(
         service: ServiceCall,
     ) -> tuple[ModbusHub, int, int]:
         """Return the details required to process the service call."""
-        device_address = 1
-        if ATTR_SLAVE in service.data:
-            device_address = service.data[ATTR_SLAVE]
-        elif ATTR_UNIT in service.data:
-            device_address = service.data[ATTR_UNIT]
-
+        device_address = service.data.get(ATTR_SLAVE, service.data.get(ATTR_UNIT, 1))
         address = service.data[ATTR_ADDRESS]
         hub = hub_collect[service.data[ATTR_HUB]]
         return (hub, device_address, address)
