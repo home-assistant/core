@@ -26,6 +26,7 @@ from homeassistant.components.hassio import (
     AddonState,
 )
 from homeassistant.config_entries import (
+    SOURCE_ESPHOME,
     SOURCE_USB,
     ConfigEntryState,
     ConfigFlow,
@@ -911,7 +912,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info = await self._async_get_addon_discovery_info()
             self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
 
-        if not self.unique_id or self.source == SOURCE_USB:
+        if not self.unique_id or self.source in (SOURCE_USB, SOURCE_ESPHOME):
             if not self.version_info:
                 try:
                     self.version_info = await async_get_version_info(
