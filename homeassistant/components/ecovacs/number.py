@@ -120,7 +120,7 @@ class EcovacsNumberEntity[EventT: Event](
         self,
         device: Device,
         capability: CapabilitySet[EventT, [int]],
-        entity_description: EntityDescription,
+        entity_description: EcovacsNumberEntityDescription,
     ) -> None:
         """Initialize entity."""
         super().__init__(device, capability, entity_description)
