@@ -239,7 +239,11 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     "port": str(data[CONF_PORT]),
                     "panel_model": info["model"],
                     "panel_version": info["version"],
-                    "zone_count": str(len(data.get(CONF_ZONES, []))),
+                    "zone_count": str(
+                        PANEL_MODEL_ZONES.get(
+                            info["model"], DEFAULT_MAX_SUPPORTED_ZONES
+                        )
+                    ),
                 },
             )
 

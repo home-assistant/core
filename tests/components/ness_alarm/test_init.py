@@ -303,7 +303,7 @@ async def test_invalid_yaml_config(hass: HomeAssistant) -> None:
         side_effect=Exception("Invalid config"),
     ):
         result = await async_setup_component(hass, DOMAIN, invalid_config)
-        assert result is False  # Component setup returns True but import will fail
+        assert result is False
 
         # Verify that no entities were created
         await hass.async_block_till_done()
