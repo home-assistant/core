@@ -22,7 +22,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.selector import SelectOptionDict, SelectSelector
 
-from .const import API_URL, DOMAIN, SCOPE
+from .const import API_URL, DOMAIN, INTEGRATION_NAME, SCOPE
 
 # Valid webhook name: starts with letter or underscore, contains letters, digits, spaces, dots, and underscores, does not end with space or dot
 VALID_NAME_PATTERN = re.compile(r"^(?![\d\s])[\w\d \.]*[\w\d]$")
@@ -90,7 +90,7 @@ class OAuth2FlowHandler(
         except aiohttp.ClientResponseError:
             return self.async_abort(
                 reason="cannot_connect",
-                description_placeholders={"ekeybionyx": "ekey bionyx"},
+                description_placeholders={"ekeybionyx": INTEGRATION_NAME},
             )
         system = [s for s in system_res if s.own_system]
         if len(system) == 0:
@@ -115,7 +115,7 @@ class OAuth2FlowHandler(
             return self.async_show_form(
                 step_id="choose_system",
                 data_schema=vol.Schema(data_schema),
-                description_placeholders={"ekeybionyx": "ekey bionyx"},
+                description_placeholders={"ekeybionyx": INTEGRATION_NAME},
             )
         self._data["system"] = [
             s for s in self._data["systems"] if s.system_id == user_input["system"]
@@ -136,7 +136,7 @@ class OAuth2FlowHandler(
         ):
             return self.async_abort(
                 reason="no_available_webhooks",
-                description_placeholders={"ekeybionyx": "ekey bionyx"},
+                description_placeholders={"ekeybionyx": INTEGRATION_NAME},
             )
 
         if system.function_webhook_quotas["used"] > 0:
@@ -244,7 +244,7 @@ class OAuth2FlowHandler(
         if uncompleted_task:
             return self.async_show_progress(
                 step_id="wait_for_deletion",
-                description_placeholders={"ekeybionyx": "ekey bionyx"},
+                description_placeholders={"ekeybionyx": INTEGRATION_NAME},
                 progress_action=progress_action,
                 progress_task=uncompleted_task,
             )

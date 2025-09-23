@@ -3,6 +3,7 @@
 import logging
 
 DOMAIN = "ekeybionyx"
+INTEGRATION_NAME = "ekey bionyx"
 
 LOGGER = logging.getLogger(__package__)
 
