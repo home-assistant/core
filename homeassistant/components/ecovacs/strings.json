@@ -152,8 +152,10 @@
       "station_state": {
         "name": "Station state",
         "state": {
+          "drying_mop": "Drying mop",
           "idle": "[%key:common::state::idle%]",
-          "emptying_dustbin": "Emptying dustbin"
+          "emptying_dustbin": "Emptying dustbin",
+          "washing_mop": "Washing mop"
         }
       },
       "stats_area": {
