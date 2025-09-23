@@ -33,6 +33,7 @@ async def test_weather_nl(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.freeze_time("2023-12-28T14:30:00+00:00")
 @pytest.mark.parametrize(
     "forecast_type",
     ["daily", "hourly"],
