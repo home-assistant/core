@@ -1638,7 +1638,7 @@ pydrawise==2025.9.0
 pydroid-ipcam==3.0.0
 
 # homeassistant.components.droplet
-pydroplet==2.3.2
+pydroplet==2.3.3
 
 # homeassistant.components.ecoforest
 pyecoforest==0.4.0
