@@ -4,12 +4,12 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from aioonkyo import ReceiverInfo
 import voluptuous as vol
 from yarl import URL
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -29,6 +29,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
+from . import OnkyoConfigEntry
 from .const import (
     DOMAIN,
     OPTION_INPUT_SOURCES,
@@ -41,19 +42,20 @@ from .const import (
     InputSource,
     ListeningMode,
 )
-from .receiver import ReceiverInfo, async_discover, async_interview
+from .receiver import async_discover, async_interview
+from .util import get_meaning
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DEVICE = "device"
 
-INPUT_SOURCES_DEFAULT: dict[str, str] = {}
-LISTENING_MODES_DEFAULT: dict[str, str] = {}
+INPUT_SOURCES_DEFAULT: list[InputSource] = []
+LISTENING_MODES_DEFAULT: list[ListeningMode] = []
 INPUT_SOURCES_ALL_MEANINGS = {
-    input_source.value_meaning: input_source for input_source in InputSource
+    get_meaning(input_source): input_source for input_source in InputSource
 }
 LISTENING_MODES_ALL_MEANINGS = {
-    listening_mode.value_meaning: listening_mode for listening_mode in ListeningMode
+    get_meaning(listening_mode): listening_mode for listening_mode in ListeningMode
 }
 STEP_MANUAL_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 STEP_RECONFIGURE_SCHEMA = vol.Schema(
@@ -91,6 +93,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
+        _LOGGER.debug("Config flow start user")
         return self.async_show_menu(
             step_id="user", menu_options=["manual", "eiscp_discovery"]
         )
@@ -103,10 +106,10 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = user_input[CONF_HOST]
-            _LOGGER.debug("Config flow start manual: %s", host)
+            _LOGGER.debug("Config flow manual: %s", host)
             try:
                 info = await async_interview(host)
-            except Exception:
+            except OSError:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -156,8 +159,8 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Config flow start eiscp discovery")
 
         try:
-            infos = await async_discover()
-        except Exception:
+            infos = list(await async_discover(self.hass))
+        except OSError:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
@@ -165,7 +168,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._discovered_infos = {}
         discovered_names = {}
-        current_unique_ids = self._async_current_ids()
+        current_unique_ids = self._async_current_ids(include_ignore=False)
         for info in infos:
             if info.identifier in current_unique_ids:
                 continue
@@ -303,8 +306,14 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             if reconfigure_entry is None:
                 suggested_values = {
                     OPTION_VOLUME_RESOLUTION: OPTION_VOLUME_RESOLUTION_DEFAULT,
-                    OPTION_INPUT_SOURCES: INPUT_SOURCES_DEFAULT,
-                    OPTION_LISTENING_MODES: LISTENING_MODES_DEFAULT,
+                    OPTION_INPUT_SOURCES: [
+                        get_meaning(input_source)
+                        for input_source in INPUT_SOURCES_DEFAULT
+                    ],
+                    OPTION_LISTENING_MODES: [
+                        get_meaning(listening_mode)
+                        for listening_mode in LISTENING_MODES_DEFAULT
+                    ],
                 }
             else:
                 entry_options = reconfigure_entry.options
@@ -325,11 +334,12 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the receiver."""
+        _LOGGER.debug("Config flow start reconfigure")
         return await self.async_step_manual()
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowWithReload:
+    def async_get_options_flow(config_entry: OnkyoConfigEntry) -> OptionsFlowWithReload:
         """Return the options flow."""
         return OnkyoOptionsFlowHandler()
 
@@ -372,7 +382,10 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithReload):
 
         entry_options: Mapping[str, Any] = self.config_entry.options
         entry_options = {
-            OPTION_LISTENING_MODES: LISTENING_MODES_DEFAULT,
+            OPTION_LISTENING_MODES: {
+                listening_mode.value: get_meaning(listening_mode)
+                for listening_mode in LISTENING_MODES_DEFAULT
+            },
             **entry_options,
         }
 
@@ -416,11 +429,11 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithReload):
             suggested_values = {
                 OPTION_MAX_VOLUME: entry_options[OPTION_MAX_VOLUME],
                 OPTION_INPUT_SOURCES: [
-                    InputSource(input_source).value_meaning
+                    get_meaning(InputSource(input_source))
                     for input_source in entry_options[OPTION_INPUT_SOURCES]
                 ],
                 OPTION_LISTENING_MODES: [
-                    ListeningMode(listening_mode).value_meaning
+                    get_meaning(ListeningMode(listening_mode))
                     for listening_mode in entry_options[OPTION_LISTENING_MODES]
                 ],
             }
@@ -463,13 +476,13 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithReload):
         input_sources_schema_dict: dict[Any, Selector] = {}
         for input_source, input_source_name in self._input_sources.items():
             input_sources_schema_dict[
-                vol.Required(input_source.value_meaning, default=input_source_name)
+                vol.Required(get_meaning(input_source), default=input_source_name)
             ] = TextSelector()
 
         listening_modes_schema_dict: dict[Any, Selector] = {}
         for listening_mode, listening_mode_name in self._listening_modes.items():
             listening_modes_schema_dict[
-                vol.Required(listening_mode.value_meaning, default=listening_mode_name)
+                vol.Required(get_meaning(listening_mode), default=listening_mode_name)
             ] = TextSelector()
 
         return self.async_show_form(

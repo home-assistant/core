@@ -17,7 +17,7 @@ from .const import (
     InputSource,
     ListeningMode,
 )
-from .receiver import Receiver, async_interview
+from .receiver import ReceiverManager, async_interview
 from .services import DATA_MP_ENTITIES, async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 class OnkyoData:
     """Config Entry data."""
 
-    receiver: Receiver
+    manager: ReceiverManager
     sources: dict[InputSource, str]
     sound_modes: dict[ListeningMode, str]
 
@@ -50,11 +50,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
 
     host = entry.data[CONF_HOST]
 
-    info = await async_interview(host)
+    try:
+        info = await async_interview(host)
+    except OSError as exc:
+        raise ConfigEntryNotReady(f"Unable to connect to: {host}") from exc
     if info is None:
         raise ConfigEntryNotReady(f"Unable to connect to: {host}")
 
-    receiver = await Receiver.async_create(info)
+    manager = ReceiverManager(hass, entry, info)
 
     sources_store: dict[str, str] = entry.options[OPTION_INPUT_SOURCES]
     sources = {InputSource(k): v for k, v in sources_store.items()}
@@ -62,11 +65,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
     sound_modes_store: dict[str, str] = entry.options.get(OPTION_LISTENING_MODES, {})
     sound_modes = {ListeningMode(k): v for k, v in sound_modes_store.items()}
 
-    entry.runtime_data = OnkyoData(receiver, sources, sound_modes)
+    entry.runtime_data = OnkyoData(manager, sources, sound_modes)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    await receiver.conn.connect()
+    if error := await manager.start():
+        try:
+            await error
+        except OSError as exc:
+            raise ConfigEntryNotReady(f"Unable to connect to: {host}") from exc
 
     return True
 
@@ -75,9 +82,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bo
     """Unload Onkyo config entry."""
     del hass.data[DATA_MP_ENTITIES][entry.entry_id]
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    entry.runtime_data.manager.start_unloading()
 
-    receiver = entry.runtime_data.receiver
-    receiver.conn.close()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -78,21 +78,20 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "dr": (
         SelectEntityDescription(
             key=DPCode.LEVEL,
-            name="Level",
             icon="mdi:thermometer-lines",
             translation_key="blanket_level",
         ),
         SelectEntityDescription(
             key=DPCode.LEVEL_1,
-            name="Side A Level",
             icon="mdi:thermometer-lines",
-            translation_key="blanket_level",
+            translation_key="indexed_blanket_level",
+            translation_placeholders={"index": "1"},
         ),
         SelectEntityDescription(
             key=DPCode.LEVEL_2,
-            name="Side B Level",
             icon="mdi:thermometer-lines",
-            translation_key="blanket_level",
+            translation_key="indexed_blanket_level",
+            translation_placeholders={"index": "2"},
         ),
     ),
     # Fan
@@ -248,6 +247,19 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Electric desk
+    "sjz": (
+        SelectEntityDescription(
+            key=DPCode.LEVEL,
+            translation_key="desk_level",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
+            key=DPCode.UP_DOWN,
+            translation_key="desk_up_down",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Smart Camera
     # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
     "sp": (
@@ -320,17 +332,20 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.LED_TYPE_1,
             entity_category=EntityCategory.CONFIG,
-            translation_key="led_type",
+            translation_key="indexed_led_type",
+            translation_placeholders={"index": "1"},
         ),
         SelectEntityDescription(
             key=DPCode.LED_TYPE_2,
             entity_category=EntityCategory.CONFIG,
-            translation_key="led_type_2",
+            translation_key="indexed_led_type",
+            translation_placeholders={"index": "2"},
         ),
         SelectEntityDescription(
             key=DPCode.LED_TYPE_3,
             entity_category=EntityCategory.CONFIG,
-            translation_key="led_type_3",
+            translation_key="indexed_led_type",
+            translation_placeholders={"index": "3"},
         ),
     ),
     # Dimmer
@@ -339,12 +354,23 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.LED_TYPE_1,
             entity_category=EntityCategory.CONFIG,
-            translation_key="led_type",
+            translation_key="indexed_led_type",
+            translation_placeholders={"index": "1"},
         ),
         SelectEntityDescription(
             key=DPCode.LED_TYPE_2,
             entity_category=EntityCategory.CONFIG,
-            translation_key="led_type_2",
+            translation_key="indexed_led_type",
+            translation_placeholders={"index": "2"},
+        ),
+    ),
+    # Micro Storage Inverter
+    # Energy storage and solar PV inverter system with monitoring capabilities
+    "xnyjcn": (
+        SelectEntityDescription(
+            key=DPCode.WORK_MODE,
+            translation_key="inverter_work_mode",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
 }

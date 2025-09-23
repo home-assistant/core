@@ -26,7 +26,7 @@ from roborock.version_1_apis.roborock_local_client_v1 import RoborockLocalClient
 from roborock.version_1_apis.roborock_mqtt_client_v1 import RoborockMqttClientV1
 from roborock.version_a01_apis import RoborockClientA01
 from roborock.web_api import RoborockApiClient
-from vacuum_map_parser_base.config.color import ColorsPalette
+from vacuum_map_parser_base.config.color import ColorsPalette, SupportedColor
 from vacuum_map_parser_base.config.image_config import ImageConfig
 from vacuum_map_parser_base.config.size import Size, Sizes
 from vacuum_map_parser_base.map_data import MapData
@@ -44,6 +44,7 @@ from homeassistant.util import dt as dt_util, slugify
 
 from .const import (
     A01_UPDATE_INTERVAL,
+    CONF_SHOW_BACKGROUND,
     DEFAULT_DRAWABLES,
     DOMAIN,
     DRAWABLES,
@@ -146,8 +147,11 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             for drawable, default_value in DEFAULT_DRAWABLES.items()
             if config_entry.options.get(DRAWABLES, {}).get(drawable, default_value)
         ]
+        colors = ColorsPalette()
+        if not config_entry.options.get(CONF_SHOW_BACKGROUND, False):
+            colors = ColorsPalette({SupportedColor.MAP_OUTSIDE: (0, 0, 0, 0)})
         self.map_parser = RoborockMapDataParser(
-            ColorsPalette(),
+            colors,
             Sizes(
                 {
                     k: v * MAP_SCALE
@@ -268,6 +272,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         """Verify that the api is reachable. If it is not, switch clients."""
         if isinstance(self.api, RoborockLocalClientV1):
             try:
+                await self.api.async_connect()
                 await self.api.ping()
             except RoborockException:
                 _LOGGER.warning(

@@ -22,7 +22,7 @@ async def test_hmip_load_all_supported_devices(
         test_devices=None, test_groups=None
     )
 
-    assert len(mock_hap.hmip_device_by_entity_id) == 335
+    assert len(mock_hap.hmip_device_by_entity_id) == 340
 
 
 async def test_hmip_remove_device(
@@ -280,7 +280,7 @@ async def test_hmip_multi_area_device(
         test_devices=["Wired Eingangsmodul – 32-fach"]
     )
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
     assert ha_state

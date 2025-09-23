@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 import re
 import subprocess
@@ -28,8 +27,6 @@ def run_download_docker():
             "-v",
             f"{DOWNLOAD_DIR}:/opt/dest/locale",
             "--rm",
-            "--user",
-            f"{os.getuid()}:{os.getgid()}",
             f"lokalise/lokalise-cli-2:{CLI_2_DOCKER_IMAGE}",
             # Lokalise command
             "lokalise2",

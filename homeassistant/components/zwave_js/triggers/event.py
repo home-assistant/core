@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import functools
+from typing import Any
 
 from pydantic import ValidationError
 import voluptuous as vol
@@ -11,15 +12,27 @@ from zwave_js_server.model.controller import CONTROLLER_EVENT_MODEL_MAP
 from zwave_js_server.model.driver import DRIVER_EVENT_MODEL_MAP, Driver
 from zwave_js_server.model.node import NODE_EVENT_MODEL_MAP
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM
+from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    CONF_OPTIONS,
+    CONF_PLATFORM,
+)
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.trigger import Trigger, TriggerActionType, TriggerInfo
+from homeassistant.helpers.trigger import (
+    Trigger,
+    TriggerActionType,
+    TriggerConfig,
+    TriggerData,
+    TriggerInfo,
+    move_top_level_schema_fields_to_options,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from ..const import (
-    ATTR_CONFIG_ENTRY_ID,
     ATTR_EVENT,
     ATTR_EVENT_DATA,
     ATTR_EVENT_SOURCE,
@@ -34,8 +47,11 @@ from ..helpers import (
 )
 from .trigger_helpers import async_bypass_dynamic_config_validation
 
+# Relative platform type should be <SUBMODULE_NAME>
+RELATIVE_PLATFORM_TYPE = f"{__name__.rsplit('.', maxsplit=1)[-1]}"
+
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
-PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
+PLATFORM_TYPE = f"{DOMAIN}.{RELATIVE_PLATFORM_TYPE}"
 
 
 def validate_non_node_event_source(obj: dict) -> dict:
@@ -83,86 +99,122 @@ def validate_event_data(obj: dict) -> dict:
     return obj
 
 
-TRIGGER_SCHEMA = vol.All(
-    cv.TRIGGER_BASE_SCHEMA.extend(
-        {
-            vol.Required(CONF_PLATFORM): PLATFORM_TYPE,
-            vol.Optional(ATTR_CONFIG_ENTRY_ID): str,
-            vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-            vol.Required(ATTR_EVENT_SOURCE): vol.In(["controller", "driver", "node"]),
-            vol.Required(ATTR_EVENT): cv.string,
-            vol.Optional(ATTR_EVENT_DATA): dict,
-            vol.Optional(ATTR_PARTIAL_DICT_MATCH, default=False): bool,
-        },
-    ),
-    validate_event_name,
-    validate_event_data,
-    vol.Any(
-        validate_non_node_event_source,
-        cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
-    ),
+_OPTIONS_SCHEMA_DICT = {
+    vol.Optional(ATTR_CONFIG_ENTRY_ID): str,
+    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_EVENT_SOURCE): vol.In(["controller", "driver", "node"]),
+    vol.Required(ATTR_EVENT): cv.string,
+    vol.Optional(ATTR_EVENT_DATA): dict,
+    vol.Optional(ATTR_PARTIAL_DICT_MATCH, default=False): bool,
+}
+
+_CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_OPTIONS): vol.All(
+            _OPTIONS_SCHEMA_DICT,
+            validate_event_name,
+            validate_event_data,
+            vol.Any(
+                validate_non_node_event_source,
+                cv.has_at_least_one_key(ATTR_DEVICE_ID, ATTR_ENTITY_ID),
+            ),
+        )
+    }
 )
 
 
-async def async_validate_trigger_config(
-    hass: HomeAssistant, config: ConfigType
-) -> ConfigType:
-    """Validate config."""
-    config = TRIGGER_SCHEMA(config)
+class EventTrigger(Trigger):
+    """Z-Wave JS event trigger."""
 
-    if ATTR_CONFIG_ENTRY_ID in config:
-        entry_id = config[ATTR_CONFIG_ENTRY_ID]
-        if hass.config_entries.async_get_entry(entry_id) is None:
-            raise vol.Invalid(f"Config entry '{entry_id}' not found")
+    _hass: HomeAssistant
+    _options: dict[str, Any]
 
-    if async_bypass_dynamic_config_validation(hass, config):
+    _event_source: str
+    _event_name: str
+    _event_data_filter: dict
+    _job: HassJob
+    _trigger_data: TriggerData
+    _unsubs: list[Callable]
+
+    _platform_type = PLATFORM_TYPE
+
+    @classmethod
+    async def async_validate_complete_config(
+        cls, hass: HomeAssistant, complete_config: ConfigType
+    ) -> ConfigType:
+        """Validate complete config."""
+        complete_config = move_top_level_schema_fields_to_options(
+            complete_config, _OPTIONS_SCHEMA_DICT
+        )
+        return await super().async_validate_complete_config(hass, complete_config)
+
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        config = _CONFIG_SCHEMA(config)
+        options = config[CONF_OPTIONS]
+
+        if ATTR_CONFIG_ENTRY_ID in options:
+            entry_id = options[ATTR_CONFIG_ENTRY_ID]
+            if hass.config_entries.async_get_entry(entry_id) is None:
+                raise vol.Invalid(f"Config entry '{entry_id}' not found")
+
+        if async_bypass_dynamic_config_validation(hass, options):
+            return config
+
+        if options[ATTR_EVENT_SOURCE] == "node" and not async_get_nodes_from_targets(
+            hass, options
+        ):
+            raise vol.Invalid(
+                f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
+            )
+
         return config
 
-    if config[ATTR_EVENT_SOURCE] == "node" and not async_get_nodes_from_targets(
-        hass, config
-    ):
-        raise vol.Invalid(
-            f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
-        )
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize trigger."""
+        self._hass = hass
+        assert config.options is not None
+        self._options = config.options
 
-    return config
+    async def async_attach(
+        self,
+        action: TriggerActionType,
+        trigger_info: TriggerInfo,
+    ) -> CALLBACK_TYPE:
+        """Attach a trigger."""
+        dev_reg = dr.async_get(self._hass)
+        options = self._options
+        if options[ATTR_EVENT_SOURCE] == "node" and not async_get_nodes_from_targets(
+            self._hass, options, dev_reg=dev_reg
+        ):
+            raise ValueError(
+                f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
+            )
 
+        self._event_source = options[ATTR_EVENT_SOURCE]
+        self._event_name = options[ATTR_EVENT]
+        self._event_data_filter = options.get(ATTR_EVENT_DATA, {})
+        self._job = HassJob(action)
+        self._trigger_data = trigger_info["trigger_data"]
+        self._unsubs: list[Callable] = []
 
-async def async_attach_trigger(
-    hass: HomeAssistant,
-    config: ConfigType,
-    action: TriggerActionType,
-    trigger_info: TriggerInfo,
-    *,
-    platform_type: str = PLATFORM_TYPE,
-) -> CALLBACK_TYPE:
-    """Listen for state changes based on configuration."""
-    dev_reg = dr.async_get(hass)
-    if config[ATTR_EVENT_SOURCE] == "node" and not async_get_nodes_from_targets(
-        hass, config, dev_reg=dev_reg
-    ):
-        raise ValueError(
-            f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
-        )
-
-    event_source = config[ATTR_EVENT_SOURCE]
-    event_name = config[ATTR_EVENT]
-    event_data_filter = config.get(ATTR_EVENT_DATA, {})
-
-    unsubs: list[Callable] = []
-    job = HassJob(action)
-
-    trigger_data = trigger_info["trigger_data"]
+        self._create_zwave_listeners()
+        return self._async_remove
 
     @callback
-    def async_on_event(event_data: dict, device: dr.DeviceEntry | None = None) -> None:
+    def _async_on_event(
+        self, event_data: dict, device: dr.DeviceEntry | None = None
+    ) -> None:
         """Handle event."""
-        for key, val in event_data_filter.items():
+        for key, val in self._event_data_filter.items():
             if key not in event_data:
                 return
             if (
-                config[ATTR_PARTIAL_DICT_MATCH]
+                self._options[ATTR_PARTIAL_DICT_MATCH]
                 and isinstance(event_data[key], dict)
                 and isinstance(val, dict)
             ):
@@ -174,14 +226,16 @@ async def async_attach_trigger(
                 return
 
         payload = {
-            **trigger_data,
-            CONF_PLATFORM: platform_type,
-            ATTR_EVENT_SOURCE: event_source,
-            ATTR_EVENT: event_name,
+            **self._trigger_data,
+            CONF_PLATFORM: self._platform_type,
+            ATTR_EVENT_SOURCE: self._event_source,
+            ATTR_EVENT: self._event_name,
             ATTR_EVENT_DATA: event_data,
         }
 
-        primary_desc = f"Z-Wave JS '{event_source}' event '{event_name}' was emitted"
+        primary_desc = (
+            f"Z-Wave JS '{self._event_source}' event '{self._event_name}' was emitted"
+        )
 
         if device:
             device_name = device.name_by_user or device.name
@@ -197,34 +251,41 @@ async def async_attach_trigger(
             f"{payload['description']} with event data: {event_data}"
         )
 
-        hass.async_run_hass_job(job, {"trigger": payload})
+        self._hass.async_run_hass_job(self._job, {"trigger": payload})
 
     @callback
-    def async_remove() -> None:
+    def _async_remove(self) -> None:
         """Remove state listeners async."""
-        for unsub in unsubs:
+        for unsub in self._unsubs:
             unsub()
-        unsubs.clear()
+        self._unsubs.clear()
 
     @callback
-    def _create_zwave_listeners() -> None:
+    def _create_zwave_listeners(self) -> None:
         """Create Z-Wave JS listeners."""
-        async_remove()
+        self._async_remove()
         # Nodes list can come from different drivers and we will need to listen to
         # server connections for all of them.
         drivers: set[Driver] = set()
-        if not (nodes := async_get_nodes_from_targets(hass, config, dev_reg=dev_reg)):
-            entry_id = config[ATTR_CONFIG_ENTRY_ID]
-            entry = hass.config_entries.async_get_entry(entry_id)
+        dev_reg = dr.async_get(self._hass)
+        if not (
+            nodes := async_get_nodes_from_targets(
+                self._hass, self._options, dev_reg=dev_reg
+            )
+        ):
+            entry_id = self._options[ATTR_CONFIG_ENTRY_ID]
+            entry = self._hass.config_entries.async_get_entry(entry_id)
             assert entry
             client = entry.runtime_data.client
             driver = client.driver
             assert driver
             drivers.add(driver)
-            if event_source == "controller":
-                unsubs.append(driver.controller.on(event_name, async_on_event))
+            if self._event_source == "controller":
+                self._unsubs.append(
+                    driver.controller.on(self._event_name, self._async_on_event)
+                )
             else:
-                unsubs.append(driver.on(event_name, async_on_event))
+                self._unsubs.append(driver.on(self._event_name, self._async_on_event))
 
         for node in nodes:
             driver = node.client.driver
@@ -234,44 +295,17 @@ async def async_attach_trigger(
             device = dev_reg.async_get_device(identifiers={device_identifier})
             assert device
             # We need to store the device for the callback
-            unsubs.append(
-                node.on(event_name, functools.partial(async_on_event, device=device))
+            self._unsubs.append(
+                node.on(
+                    self._event_name,
+                    functools.partial(self._async_on_event, device=device),
+                )
             )
-        unsubs.extend(
+        self._unsubs.extend(
             async_dispatcher_connect(
-                hass,
+                self._hass,
                 f"{DOMAIN}_{driver.controller.home_id}_connected_to_server",
-                _create_zwave_listeners,
+                self._create_zwave_listeners,
             )
             for driver in drivers
-        )
-
-    _create_zwave_listeners()
-
-    return async_remove
-
-
-class EventTrigger(Trigger):
-    """Z-Wave JS event trigger."""
-
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
-        """Initialize trigger."""
-        self._config = config
-        self._hass = hass
-
-    @classmethod
-    async def async_validate_trigger_config(
-        cls, hass: HomeAssistant, config: ConfigType
-    ) -> ConfigType:
-        """Validate config."""
-        return await async_validate_trigger_config(hass, config)
-
-    async def async_attach_trigger(
-        self,
-        action: TriggerActionType,
-        trigger_info: TriggerInfo,
-    ) -> CALLBACK_TYPE:
-        """Attach a trigger."""
-        return await async_attach_trigger(
-            self._hass, self._config, action, trigger_info
         )

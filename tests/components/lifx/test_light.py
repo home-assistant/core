@@ -30,6 +30,8 @@ from homeassistant.components.lifx.manager import (
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
+    ATTR_BRIGHTNESS_STEP,
+    ATTR_BRIGHTNESS_STEP_PCT,
     ATTR_COLOR_MODE,
     ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP_KELVIN,
@@ -1735,6 +1737,48 @@ async def test_transitions_color_bulb(hass: HomeAssistant) -> None:
     bulb.set_color.reset_mock()
 
 
+async def test_lifx_set_state_brightness(hass: HomeAssistant) -> None:
+    """Test lifx.set_state works with brightness, brightness_pct and brightness_step."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb_new_firmware()
+    bulb.power_level = 65535
+    bulb.color = [0, 0, 32768, 3500]
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+
+    # brightness_step should convert from 8 bit to 16 bit
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS_STEP: 128},
+        blocking=True,
+    )
+
+    assert bulb.set_color.calls[0][0][0] == [0, 0, 65535, 3500]
+    bulb.set_color.reset_mock()
+
+    # brightness_step_pct should convert from percentage to 16 bit
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS_STEP_PCT: 50},
+        blocking=True,
+    )
+
+    assert bulb.set_color.calls[0][0][0] == [0, 0, 65535, 3500]
+    bulb.set_color.reset_mock()
+
+
 async def test_lifx_set_state_color(hass: HomeAssistant) -> None:
     """Test lifx.set_state works with color names and RGB."""
     config_entry = MockConfigEntry(
@@ -2098,7 +2142,12 @@ async def test_light_strip_zones_not_populated_yet(hass: HomeAssistant) -> None:
     assert bulb.set_power.calls[0][0][0] is True
     bulb.set_power.reset_mock()
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
-    await hass.async_block_till_done()
+    with (
+        _patch_discovery(device=bulb),
+        _patch_config_flow_try_connect(device=bulb),
+        _patch_device(device=bulb),
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON

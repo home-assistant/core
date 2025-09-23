@@ -8,11 +8,14 @@ from typing import Any, cast
 from aiohttp import ClientSession
 from aiovodafone import VodafoneStationDevice, VodafoneStationSercommApi, exceptions
 
-from homeassistant.components.device_tracker import DEFAULT_CONSIDER_HOME
+from homeassistant.components.device_tracker import (
+    DEFAULT_CONSIDER_HOME,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -71,16 +74,14 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
             config_entry=config_entry,
         )
-        device_reg = dr.async_get(self.hass)
-        device_list = dr.async_entries_for_config_entry(
-            device_reg, self.config_entry.entry_id
-        )
 
+        entity_reg = er.async_get(hass)
         self.previous_devices = {
-            connection[1].upper()
-            for device in device_list
-            for connection in device.connections
-            if connection[0] == dr.CONNECTION_NETWORK_MAC
+            entry.unique_id
+            for entry in er.async_entries_for_config_entry(
+                entity_reg, config_entry.entry_id
+            )
+            if entry.domain == DEVICE_TRACKER_DOMAIN
         }
 
     def _calculate_update_time_and_consider_home(
@@ -187,4 +188,5 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             model=sensors_data.get("sys_model_name"),
             hw_version=sensors_data["sys_hardware_version"],
             sw_version=sensors_data["sys_firmware_version"],
+            serial_number=self.serial_number,
         )
