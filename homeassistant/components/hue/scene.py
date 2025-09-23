@@ -18,11 +18,10 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
-from homeassistant.util import dt as dt_util
 
 from .bridge import HueBridge, HueConfigEntry
 from .const import DOMAIN
-from .v2.entity import HueBaseEntity, ResourceTypes
+from .v2.entity import HueBaseEntity
 from .v2.helpers import normalize_hue_brightness, normalize_hue_transition
 
 SERVICE_ACTIVATE_SCENE = "activate_scene"
@@ -81,40 +80,6 @@ async def async_setup_entry(
             ),
         },
         "_async_activate",
-    )
-
-    # Workaround for missing 'status.active' + 'status.last_recall' in aiohue
-    # https://github.com/home-assistant-libs/aiohue/pull/538
-    @callback
-    def handle_scene_event(event_type: EventType, data: dict[str, Any]) -> None:
-        """Handle raw scene event from the Hue event stream."""
-        if not isinstance(data, dict):
-            return
-        if data.get("type") != "scene":
-            return
-        scene_id = data.get("id")
-        if not scene_id:
-            return
-        # Ensure the scene resource is known (may be None on very early events)
-        scene = api.scenes.get(scene_id)
-        if scene is None:
-            return
-        status = data.get("status")
-        if status:
-            # Attach custom attributes on the underlying scene resource so we can
-            # later expose them on grouped lights or elsewhere. Attribute names are
-            # prefixed with _ha_ to avoid clashing with official model fields.
-            active_mode = status.get("active")
-            last_recall = status.get("last_recall")
-
-            # Events only contain fields that changed, so we must check for None
-            if active_mode is not None:
-                setattr(scene, "_ha_active_mode", active_mode)
-            if last_recall is not None:
-                setattr(scene, "_ha_last_recall", dt_util.parse_datetime(last_recall))
-
-    config_entry.async_on_unload(
-        api.events.subscribe(handle_scene_event, resource_filter=ResourceTypes.SCENE)
     )
 
 

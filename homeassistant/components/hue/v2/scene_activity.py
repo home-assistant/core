@@ -17,7 +17,7 @@ from datetime import datetime
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.models.scene import Scene as HueScene
+from aiohue.v2.models.scene import Scene as HueScene, SceneActiveStatus
 from aiohue.v2.models.smart_scene import SmartScene as HueSmartScene, SmartSceneState
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -122,16 +122,11 @@ class HueSceneActivityManager:
         group_state = self._group_states[group_id]
 
         if isinstance(scene, HueScene):
-            # Workaround for missing 'status.active' + 'status.last_recall' in aiohue
-            # https://github.com/home-assistant-libs/aiohue/pull/538
-            active_mode = getattr(scene, "_ha_active_mode", "inactive")
-            if active_mode != "inactive":
+            if scene.status.active != SceneActiveStatus.INACTIVE:
                 group_state.active_scene_entity_id = entity_id
                 group_state.active_scene_name = scene.metadata.name
-                group_state.active_scene_mode = active_mode
-                group_state.active_scene_last_recall = getattr(
-                    scene, "_ha_last_recall", None
-                )
+                group_state.active_scene_mode = scene.status.active.value
+                group_state.active_scene_last_recall = scene.status.last_recall
                 return True
             if group_state.active_scene_entity_id == entity_id:
                 group_state.active_scene_entity_id = None
