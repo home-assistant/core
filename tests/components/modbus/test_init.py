@@ -883,7 +883,7 @@ async def test_config_modbus(hass: HomeAssistant, mock_modbus_with_pymodbus) -> 
     ],
 )
 async def test_config_wrong_modbus(
-    hass: HomeAssistant, mock_modbus_with_pymodbus
+    hass: HomeAssistant, mock_modbus_with_pymodbus, issue_registry: ir.IssueRegistry
 ) -> None:
     """Run configuration test for modbus."""
     assert len(hass.data[DOMAIN]) == 1
