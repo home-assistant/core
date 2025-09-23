@@ -148,16 +148,20 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         data = event["data"]
         event_type = data.get(ATTR_EVENT_TYPE)
 
+        if not event_type:
+            _LOGGER.debug("Event has no type, returning")
+            return
+
         if not data.get("camera_id"):
-            _LOGGER.debug("Event has no camera ID, returning")
+            _LOGGER.debug("Event %s has no camera ID, returning", event_type)
             return
 
         if not data.get("home_id"):
-            _LOGGER.debug("Event has no home ID, returning")
-            return
-
-        if not event_type:
-            _LOGGER.debug("Event has no type, returning")
+            _LOGGER.debug(
+                "Event %s for camera %s has no home ID, returning",
+                event_type,
+                data["camera_id"],
+            )
             return
 
         if (
@@ -217,10 +221,12 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
 
     async def async_turn_off(self) -> None:
         """Turn off camera."""
+        _LOGGER.debug("Turn camera '%s' off", self.device.name)
         await self.device.async_monitoring_off()
 
     async def async_turn_on(self) -> None:
         """Turn on camera."""
+        _LOGGER.debug("Turn camera '%s' off", self.device.name)
         await self.device.async_monitoring_on()
 
     async def stream_source(self) -> str:

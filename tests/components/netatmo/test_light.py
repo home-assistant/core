@@ -1,5 +1,6 @@
 """The tests for Netatmo light."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from syrupy.assertion import SnapshotAssertion
@@ -16,6 +17,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import (
     FAKE_WEBHOOK_ACTIVATION,
+    fake_post_request,
     selected_platforms,
     simulate_webhook,
     snapshot_platform_entities,
@@ -46,7 +48,33 @@ async def test_camera_light_setup_and_services(
     hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test camera ligiht setup and services."""
-    with selected_platforms(["light"]):
+    fake_post_hits = 0
+
+    async def fake_post(*args: Any, **kwargs: Any):
+        """Fake error during requesting backend data."""
+        nonlocal fake_post_hits
+        fake_post_hits += 1
+        return await fake_post_request(hass, *args, **kwargs)
+
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch(
+            "homeassistant.components.netatmo.data_handler.PLATFORMS",
+            ["camera", "light"],
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.netatmo.webhook_generate_url",
+        ) as mock_webhook,
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        mock_webhook.return_value = "https://example.com"
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
         await hass.async_block_till_done()
@@ -57,42 +85,73 @@ async def test_camera_light_setup_and_services(
     await simulate_webhook(hass, webhook_id, FAKE_WEBHOOK_ACTIVATION)
     await hass.async_block_till_done()
 
-    light_entity = "light.front"
-    assert hass.states.get(light_entity).state == "unavailable"
+    # Define the mock home_id and camera_id for the test
+    _home_id = "91763b24c43d3e344f424e8b"
+    _camera_id_outdoor = "12:34:56:10:b9:0e"
+    _camera_entity_outdoor = "camera.front"
+    _light_entity = "light.front"
+    assert hass.states.get(_light_entity) is not None
+    assert hass.states.get(_light_entity).state == "unavailable"
+
+    # Fake camera reconnect
+    response = {
+        "user_id": "1234567890",
+        "event_type": "connection",
+        "event_id": "1234567890",
+        "camera_id": _camera_id_outdoor,
+        "device_id": _camera_id_outdoor,
+        "home_id": _home_id,
+        "push_type": "NOC-connection",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(_camera_entity_outdoor).state == "streaming"
 
     # Trigger light mode change
     response = {
         "event_type": "light_mode",
-        "device_id": "12:34:56:10:b9:0e",
-        "camera_id": "12:34:56:10:b9:0e",
+        "device_id": _camera_id_outdoor,
+        "camera_id": _camera_id_outdoor,
+        "home_id": _home_id,
         "event_id": "601dce1560abca1ebad9b723",
         "push_type": "NOC-light_mode",
         "sub_type": "on",
     }
     await simulate_webhook(hass, webhook_id, response)
 
-    assert hass.states.get(light_entity).state == "on"
+    assert hass.states.get(_camera_entity_outdoor).state == "streaming"
+    assert hass.states.get(_camera_entity_outdoor).attributes["light_state"] == "on"
 
     # Trigger light mode change with erroneous webhook data
     response = {
         "event_type": "light_mode",
-        "device_id": "12:34:56:10:b9:0e",
+        "device_id": _camera_id_outdoor,
     }
     await simulate_webhook(hass, webhook_id, response)
 
-    assert hass.states.get(light_entity).state == "on"
+    assert hass.states.get(_camera_entity_outdoor).attributes["light_state"] == "on"
 
     # Test turning light off
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: light_entity},
+            {ATTR_ENTITY_ID: _light_entity},
             blocking=True,
         )
         await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
-            {"modules": [{"id": "12:34:56:10:b9:0e", "floodlight": "auto"}]}
+            {
+                "modules": [
+                    {
+                        "id": f"{_camera_id_outdoor}-light",
+                        "camera_id": _camera_id_outdoor,
+                        "floodlight": "auto",
+                        "on": False,
+                    }
+                ]
+            }
         )
 
     # Test turning light on
@@ -100,12 +159,21 @@ async def test_camera_light_setup_and_services(
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: light_entity},
+            {ATTR_ENTITY_ID: _light_entity},
             blocking=True,
         )
         await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
-            {"modules": [{"id": "12:34:56:10:b9:0e", "floodlight": "on"}]}
+            {
+                "modules": [
+                    {
+                        "id": f"{_camera_id_outdoor}-light",
+                        "camera_id": _camera_id_outdoor,
+                        "floodlight": "on",
+                        "on": True,
+                    }
+                ]
+            }
         )
 
 
@@ -150,7 +218,7 @@ async def test_setup_component_no_devices(hass: HomeAssistant, config_entry) -> 
         )
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 4
+        assert fake_post_hits == 3
 
         assert hass.config_entries.async_entries(DOMAIN)
         assert len(hass.states.async_all()) == 0

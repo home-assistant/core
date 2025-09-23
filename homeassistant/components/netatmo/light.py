@@ -14,16 +14,15 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    ATTR_EVENT_TYPE,
     CONF_URL_CONTROL,
     CONF_URL_SECURITY,
     DOMAIN,
     EVENT_TYPE_LIGHT_MODE,
     NETATMO_CREATE_CAMERA_LIGHT,
     NETATMO_CREATE_LIGHT,
-    WEBHOOK_LIGHT_MODE,
-    WEBHOOK_PUSH_TYPE,
 )
-from .data_handler import HOME, SIGNAL_NAME, NetatmoDevice
+from .data_handler import EVENT, HOME, SIGNAL_NAME, NetatmoDevice
 from .entity import NetatmoModuleEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,6 +41,7 @@ async def async_setup_entry(
             return
 
         entity = NetatmoCameraLight(netatmo_device)
+        _LOGGER.debug("Adding camera light %s", netatmo_device.device.name)
         async_add_entities([entity])
 
     entry.async_on_unload(
@@ -51,16 +51,16 @@ async def async_setup_entry(
     )
 
     @callback
-    def _create_entity(netatmo_device: NetatmoDevice) -> None:
+    def _create_light_entity(netatmo_device: NetatmoDevice) -> None:
         if not hasattr(netatmo_device.device, "brightness"):
             return
 
         entity = NetatmoLight(netatmo_device)
-        _LOGGER.debug("Adding light %s", entity)
+        _LOGGER.debug("Adding regular light %s", netatmo_device.device.name)
         async_add_entities([entity])
 
     entry.async_on_unload(
-        async_dispatcher_connect(hass, NETATMO_CREATE_LIGHT, _create_entity)
+        async_dispatcher_connect(hass, NETATMO_CREATE_LIGHT, _create_light_entity)
     )
 
 
@@ -88,6 +88,11 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
                     "home_id": self.home.entity_id,
                     SIGNAL_NAME: self._signal_name,
                 },
+                {
+                    "name": EVENT,
+                    "home_id": self.home.entity_id,
+                    SIGNAL_NAME: self._signal_name,
+                },
             ]
         )
 
@@ -107,19 +112,51 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
     def handle_event(self, event: dict) -> None:
         """Handle webhook events."""
         data = event["data"]
+        event_type = data.get(ATTR_EVENT_TYPE)
+
+        if not event_type:
+            _LOGGER.debug("Event has no type, returning")
+            return
 
         if not data.get("camera_id"):
+            _LOGGER.debug("Event %s has no camera ID, returning", event_type)
+            return
+
+        if not data.get("home_id"):
+            _LOGGER.debug(
+                "Event %s for camera %s has no home ID, returning",
+                event_type,
+                data["camera_id"],
+            )
             return
 
         if (
             data["home_id"] == self.home.entity_id
             and data["camera_id"] == self.device.entity_id
-            and data[WEBHOOK_PUSH_TYPE] == WEBHOOK_LIGHT_MODE
+            and event_type == EVENT_TYPE_LIGHT_MODE
         ):
-            self._attr_is_on = bool(data["sub_type"] == "on")
+            if data.get("sub_type"):
+                self._attr_is_on = bool(data["sub_type"] == "on")
+                _LOGGER.debug(
+                    "Camera light %s has received light mode with sub_type %s",
+                    self.device.name,
+                    data["sub_type"],
+                )
 
-            self.async_write_ha_state()
-            return
+                self.async_write_ha_state()
+            else:
+                _LOGGER.debug(
+                    "Camera light %s has received light mode event without sub_type",
+                    self.device.name,
+                )
+        else:
+            _LOGGER.debug(
+                "Camera light %s has received unexpected event as type %s",
+                data["camera_id"],
+                event_type,
+            )
+
+        return
 
     @property
     def available(self) -> bool:
@@ -128,12 +165,14 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn camera floodlight on."""
-        _LOGGER.debug("Turn camera '%s' on", self.name)
+        _LOGGER.debug("Turn camera light '%s' on", self.device.name)
+        self._attr_is_on = True
         await self.device.async_floodlight_on()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn camera floodlight into auto mode."""
-        _LOGGER.debug("Turn camera '%s' to auto mode", self.name)
+        _LOGGER.debug("Turn camera light '%s' to auto mode", self.device.name)
+        self._attr_is_on = False
         await self.device.async_floodlight_auto()
 
     @callback
@@ -182,12 +221,14 @@ class NetatmoLight(NetatmoModuleEntity, LightEntity):
         else:
             await self.device.async_on()
 
+        _LOGGER.debug("Turn light '%s' on", self.device.name)
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
         await self.device.async_off()
+        _LOGGER.debug("Turn light '%s' off", self.device.name)
         self._attr_is_on = False
         self.async_write_ha_state()
 
