@@ -49,7 +49,7 @@ async def async_setup_entry(
             )
         elif isinstance(resource, BellButton):
             async_add_entities(
-                [HueButtonEventEntity(bridge, api.sensors.bell_button, resource)]
+                [HueBellButtonEventEntity(bridge, api.sensors.bell_button, resource)]
             )
         else:
             async_add_entities(
@@ -113,6 +113,18 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
             self.async_write_ha_state()
             return
         super()._handle_event(event_type, resource)
+
+
+class HueBellButtonEventEntity(HueButtonEventEntity):
+    """Representation of a Hue Event entity from a bell_button resource."""
+
+    resource: Button | BellButton
+
+    entity_description = EventEntityDescription(
+        key="bell_button",
+        device_class=EventDeviceClass.DOORBELL,
+        has_entity_name=True,
+    )
 
 
 class HueRotaryEventEntity(HueBaseEntity, EventEntity):
