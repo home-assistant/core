@@ -101,4 +101,3 @@ class CompitSelect(CoordinatorEntity[CompitDataUpdateCoordinator], SelectEntity)
             await self.coordinator.connector.set_device_parameter(
                 self.device_id, self.parameter.parameter_code, state_value
             )
-            self.async_write_ha_state()
