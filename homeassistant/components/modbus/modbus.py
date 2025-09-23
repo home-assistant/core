@@ -190,14 +190,11 @@ async def async_modbus_setup(
         value = service.data[ATTR_VALUE]
         if isinstance(value, list):
             await hub.async_pb_call(
-                device_address,
-                address,
-                [int(float(i)) for i in value],
-                CALL_TYPE_WRITE_REGISTERS,
+                device_address, address, value, CALL_TYPE_WRITE_REGISTERS
             )
         else:
             await hub.async_pb_call(
-                device_address, address, int(float(value)), CALL_TYPE_WRITE_REGISTER
+                device_address, address, value, CALL_TYPE_WRITE_REGISTER
             )
 
     async def async_write_coil(service: ServiceCall) -> None:
