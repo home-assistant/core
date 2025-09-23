@@ -15,7 +15,7 @@ from .const import DOMAIN
 from .coordinator import LunatoneConfigEntry, LunatoneDevicesDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
-STATUS_UPDATE_DELAY = 0.02
+STATUS_UPDATE_DELAY = 0.04
 
 
 async def async_setup_entry(
