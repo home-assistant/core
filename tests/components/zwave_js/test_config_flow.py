@@ -734,7 +734,6 @@ async def test_usb_discovery(
         AddonsOptions(
             config={
                 "device": device,
-                "socket": None,
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -848,7 +847,6 @@ async def test_usb_discovery_addon_not_running(
         AddonsOptions(
             config={
                 "device": USB_DISCOVERY_INFO.device,
-                "socket": None,
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -997,7 +995,6 @@ async def test_usb_discovery_migration(
         AddonsOptions(
             config={
                 CONF_ADDON_DEVICE: USB_DISCOVERY_INFO.device,
-                CONF_ADDON_SOCKET: None,
             }
         ),
     )
@@ -1132,7 +1129,6 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
         AddonsOptions(
             config={
                 "device": USB_DISCOVERY_INFO.device,
-                "socket": None,
             }
         ),
     )
@@ -1245,7 +1241,6 @@ async def test_esphome_discovery(
         "core_zwave_js",
         AddonsOptions(
             config={
-                "device": None,
                 "socket": "esphome://192.168.1.100:6053",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
@@ -1361,7 +1356,6 @@ async def test_discovery_addon_not_running(
         AddonsOptions(
             config={
                 "device": "/test",
-                "socket": None,
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -1482,7 +1476,6 @@ async def test_discovery_addon_not_installed(
         AddonsOptions(
             config={
                 "device": "/test",
-                "socket": None,
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -2008,7 +2001,6 @@ async def test_addon_installed(
         AddonsOptions(
             config={
                 "device": "/test",
-                "socket": None,
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -2123,7 +2115,6 @@ async def test_addon_installed_start_failure(
         AddonsOptions(
             config={
                 "device": "/test",
-                "socket": None,
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -2232,7 +2223,6 @@ async def test_addon_installed_failures(
         AddonsOptions(
             config={
                 "device": "/test",
-                "socket": None,
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -2322,7 +2312,6 @@ async def test_addon_installed_set_options_failure(
         AddonsOptions(
             config={
                 "device": "/test",
-                "socket": None,
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -2452,7 +2441,6 @@ async def test_addon_installed_already_configured(
         AddonsOptions(
             config={
                 "device": "/new",
-                "socket": None,
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -2560,7 +2548,6 @@ async def test_addon_not_installed(
         AddonsOptions(
             config={
                 "device": "/test",
-                "socket": None,
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -2888,6 +2875,7 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
     (
         "entry_data",
         "old_addon_options",
+        "form_data",
         "new_addon_options",
         "disconnect_calls",
     ),
@@ -2896,7 +2884,6 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
             {},
             {
                 "device": "/test",
-                "socket": None,
                 "network_key": "old123",
                 "s0_legacy_key": "old123",
                 "s2_access_control_key": "old456",
@@ -2907,7 +2894,15 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
             },
             {
                 "usb_path": "/new",
-                "socket_path": None,
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            {
+                "device": "/new",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -2921,7 +2916,6 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
             {"use_addon": True},
             {
                 "device": "/test",
-                "socket": None,
                 "network_key": "old123",
                 "s0_legacy_key": "old123",
                 "s2_access_control_key": "old456",
@@ -2932,7 +2926,15 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
             },
             {
                 "usb_path": "/new",
-                "socket_path": None,
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            {
+                "device": "/new",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -2953,6 +2955,7 @@ async def test_reconfigure_addon_running(
     restart_addon: AsyncMock,
     entry_data: dict[str, Any],
     old_addon_options: dict[str, Any],
+    form_data: dict[str, Any],
     new_addon_options: dict[str, Any],
     disconnect_calls: int,
 ) -> None:
@@ -2987,12 +2990,8 @@ async def test_reconfigure_addon_running(
     assert result["step_id"] == "configure_addon_reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {key: val for key, val in new_addon_options.items() if val is not None},
+        result["flow_id"], form_data
     )
-
-    new_addon_options["device"] = new_addon_options.pop("usb_path")
-    new_addon_options["socket"] = new_addon_options.pop("socket_path")
 
     assert set_addon_options.call_args == call(
         "core_zwave_js",
@@ -3012,8 +3011,8 @@ async def test_reconfigure_addon_running(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data["url"] == "ws://host1:3001"
-    assert entry.data["usb_path"] == new_addon_options["device"]
-    assert entry.data["socket_path"] == new_addon_options["socket"]
+    assert entry.data["usb_path"] == new_addon_options.get("device")
+    assert entry.data["socket_path"] == new_addon_options.get("socket")
     assert entry.data["s0_legacy_key"] == new_addon_options["s0_legacy_key"]
     assert (
         entry.data["s2_access_control_key"]
@@ -3042,13 +3041,12 @@ async def test_reconfigure_addon_running(
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
 @pytest.mark.parametrize(
-    ("entry_data", "old_addon_options", "new_addon_options"),
+    ("entry_data", "old_addon_options", "form_data", "new_addon_options"),
     [
         (
             {},
             {
                 "device": "/test",
-                "socket": None,
                 "network_key": "old123",
                 "s0_legacy_key": "old123",
                 "s2_access_control_key": "old456",
@@ -3059,7 +3057,15 @@ async def test_reconfigure_addon_running(
             },
             {
                 "usb_path": "/test",
-                "socket_path": None,
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
+            },
+            {
+                "device": "/test",
                 "s0_legacy_key": "old123",
                 "s2_access_control_key": "old456",
                 "s2_authenticated_key": "old789",
@@ -3079,6 +3085,7 @@ async def test_reconfigure_addon_running_no_changes(
     restart_addon: AsyncMock,
     entry_data: dict[str, Any],
     old_addon_options: dict[str, Any],
+    form_data: dict[str, Any],
     new_addon_options: dict[str, Any],
 ) -> None:
     """Test reconfigure flow without changes, and add-on already running on Supervisor."""
@@ -3112,21 +3119,18 @@ async def test_reconfigure_addon_running_no_changes(
     assert result["step_id"] == "configure_addon_reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {key: val for key, val in new_addon_options.items() if val is not None},
+        result["flow_id"], form_data
     )
     await hass.async_block_till_done()
 
-    new_addon_options["device"] = new_addon_options.pop("usb_path")
-    new_addon_options["socket"] = new_addon_options.pop("socket_path")
     assert set_addon_options.call_count == 0
     assert restart_addon.call_count == 0
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data["url"] == "ws://host1:3001"
-    assert entry.data["usb_path"] == new_addon_options["device"]
-    assert entry.data["socket_path"] == new_addon_options["socket"]
+    assert entry.data["usb_path"] == new_addon_options.get("device")
+    assert entry.data["socket_path"] == new_addon_options.get("socket")
     assert entry.data["s0_legacy_key"] == new_addon_options["s0_legacy_key"]
     assert (
         entry.data["s2_access_control_key"]
@@ -3169,6 +3173,7 @@ async def different_device_server_version(*args):
     (
         "entry_data",
         "old_addon_options",
+        "form_data",
         "new_addon_options",
         "disconnect_calls",
         "server_version_side_effect",
@@ -3178,7 +3183,6 @@ async def different_device_server_version(*args):
             {},
             {
                 "device": "/test",
-                "socket": None,
                 "network_key": "old123",
                 "s0_legacy_key": "old123",
                 "s2_access_control_key": "old456",
@@ -3189,7 +3193,15 @@ async def different_device_server_version(*args):
             },
             {
                 "usb_path": "/new",
-                "socket_path": None,
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            {
+                "device": "/new",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -3204,7 +3216,6 @@ async def different_device_server_version(*args):
             {},
             {
                 "device": "/test",
-                "socket": None,
                 "network_key": "old123",
                 "s0_legacy_key": "old123",
                 "s2_access_control_key": "old456",
@@ -3214,8 +3225,16 @@ async def different_device_server_version(*args):
                 "lr_s2_authenticated_key": "old321",
             },
             {
-                "usb_path": None,
                 "socket_path": "esphome://mock-host:6053",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            {
+                "socket": "esphome://mock-host:6053",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -3237,6 +3256,7 @@ async def test_reconfigure_different_device(
     restart_addon: AsyncMock,
     entry_data: dict[str, Any],
     old_addon_options: dict[str, Any],
+    form_data: dict[str, Any],
     new_addon_options: dict[str, Any],
     disconnect_calls: int,
 ) -> None:
@@ -3272,13 +3292,10 @@ async def test_reconfigure_different_device(
     assert result["step_id"] == "configure_addon_reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {key: val for key, val in new_addon_options.items() if val is not None},
+        result["flow_id"], form_data
     )
 
     assert set_addon_options.call_count == 1
-    new_addon_options["device"] = new_addon_options.pop("usb_path")
-    new_addon_options["socket"] = new_addon_options.pop("socket_path")
     assert set_addon_options.call_args == call(
         "core_zwave_js", AddonsOptions(config=new_addon_options)
     )
@@ -3325,6 +3342,7 @@ async def test_reconfigure_different_device(
     (
         "entry_data",
         "old_addon_options",
+        "form_data",
         "new_addon_options",
         "disconnect_calls",
         "restart_addon_side_effect",
@@ -3334,7 +3352,6 @@ async def test_reconfigure_different_device(
             {},
             {
                 "device": "/test",
-                "socket": None,
                 "network_key": "old123",
                 "s0_legacy_key": "old123",
                 "s2_access_control_key": "old456",
@@ -3345,7 +3362,15 @@ async def test_reconfigure_different_device(
             },
             {
                 "usb_path": "/new",
-                "socket_path": None,
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            {
+                "device": "/new",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -3360,7 +3385,6 @@ async def test_reconfigure_different_device(
             {},
             {
                 "device": "/test",
-                "socket": None,
                 "network_key": "old123",
                 "s0_legacy_key": "old123",
                 "s2_access_control_key": "old456",
@@ -3371,7 +3395,15 @@ async def test_reconfigure_different_device(
             },
             {
                 "usb_path": "/new",
-                "socket_path": None,
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            {
+                "device": "/new",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -3396,6 +3428,7 @@ async def test_reconfigure_addon_restart_failed(
     restart_addon: AsyncMock,
     entry_data: dict[str, Any],
     old_addon_options: dict[str, Any],
+    form_data: dict[str, Any],
     new_addon_options: dict[str, Any],
     disconnect_calls: int,
 ) -> None:
@@ -3431,13 +3464,10 @@ async def test_reconfigure_addon_restart_failed(
     assert result["step_id"] == "configure_addon_reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {key: val for key, val in new_addon_options.items() if val is not None},
+        result["flow_id"], form_data
     )
 
     assert set_addon_options.call_count == 1
-    new_addon_options["device"] = new_addon_options.pop("usb_path")
-    new_addon_options["socket"] = new_addon_options.pop("socket_path")
     assert set_addon_options.call_args == call(
         "core_zwave_js", AddonsOptions(config=new_addon_options)
     )
@@ -3489,7 +3519,6 @@ async def test_reconfigure_addon_running_server_info_failure(
     """Test reconfigure flow and add-on already running with server info failure."""
     old_addon_options = {
         "device": "/test",
-        "socket": None,
         "network_key": "abc123",
         "s0_legacy_key": "abc123",
         "s2_access_control_key": "old456",
@@ -3500,7 +3529,6 @@ async def test_reconfigure_addon_running_server_info_failure(
     }
     new_addon_options = {
         "usb_path": "/test",
-        "socket_path": None,
         "s0_legacy_key": "abc123",
         "s2_access_control_key": "old456",
         "s2_authenticated_key": "old789",
@@ -3537,8 +3565,7 @@ async def test_reconfigure_addon_running_server_info_failure(
     assert result["step_id"] == "configure_addon_reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {key: val for key, val in new_addon_options.items() if val is not None},
+        result["flow_id"], new_addon_options
     )
     await hass.async_block_till_done()
 
@@ -3555,6 +3582,7 @@ async def test_reconfigure_addon_running_server_info_failure(
     (
         "entry_data",
         "old_addon_options",
+        "form_data",
         "new_addon_options",
         "disconnect_calls",
     ),
@@ -3563,7 +3591,6 @@ async def test_reconfigure_addon_running_server_info_failure(
             {},
             {
                 "device": "/test",
-                "socket": None,
                 "network_key": "abc123",
                 "s0_legacy_key": "abc123",
                 "s2_access_control_key": "old456",
@@ -3574,7 +3601,15 @@ async def test_reconfigure_addon_running_server_info_failure(
             },
             {
                 "usb_path": "/new",
-                "socket_path": None,
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            {
+                "device": "/new",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -3588,7 +3623,6 @@ async def test_reconfigure_addon_running_server_info_failure(
             {"use_addon": True},
             {
                 "device": "/test",
-                "socket": None,
                 "network_key": "abc123",
                 "s0_legacy_key": "abc123",
                 "s2_access_control_key": "old456",
@@ -3599,7 +3633,15 @@ async def test_reconfigure_addon_running_server_info_failure(
             },
             {
                 "usb_path": "/new",
-                "socket_path": None,
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            {
+                "device": "/new",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -3621,6 +3663,7 @@ async def test_reconfigure_addon_not_installed(
     start_addon: AsyncMock,
     entry_data: dict[str, Any],
     old_addon_options: dict[str, Any],
+    form_data: dict[str, Any],
     new_addon_options: dict[str, Any],
     disconnect_calls: int,
 ) -> None:
@@ -3665,12 +3708,9 @@ async def test_reconfigure_addon_not_installed(
     assert result["step_id"] == "configure_addon_reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {key: val for key, val in new_addon_options.items() if val is not None},
+        result["flow_id"], form_data
     )
 
-    new_addon_options["device"] = new_addon_options.pop("usb_path")
-    new_addon_options["socket"] = new_addon_options.pop("socket_path")
     assert set_addon_options.call_args == call(
         "core_zwave_js", AddonsOptions(config=new_addon_options)
     )
@@ -3691,7 +3731,7 @@ async def test_reconfigure_addon_not_installed(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data["url"] == "ws://host1:3001"
-    assert entry.data["usb_path"] == new_addon_options["device"]
+    assert entry.data["usb_path"] == new_addon_options.get("device")
     assert entry.data["s0_legacy_key"] == new_addon_options["s0_legacy_key"]
     assert entry.data["use_addon"] is True
     assert entry.data["integration_created_addon"] is True
@@ -3802,6 +3842,7 @@ async def test_reconfigure_migrate_low_sdk_version(
 @pytest.mark.usefixtures("supervisor", "addon_running")
 @pytest.mark.parametrize(
     (
+        "form_data",
         "new_addon_options",
         "restore_server_version_side_effect",
         "final_unique_id",
@@ -3811,6 +3852,7 @@ async def test_reconfigure_migrate_low_sdk_version(
     [
         (
             {CONF_USB_PATH: "/test"},
+            {CONF_ADDON_DEVICE: "/test"},
             None,
             "3245146787",
             False,
@@ -3818,6 +3860,7 @@ async def test_reconfigure_migrate_low_sdk_version(
         ),
         (
             {CONF_SOCKET_PATH: "esphome://1.2.3.4:1234"},
+            {CONF_ADDON_SOCKET: "esphome://1.2.3.4:1234"},
             aiohttp.ClientError("Boom"),
             "5678",
             True,
@@ -3835,6 +3878,7 @@ async def test_reconfigure_migrate_with_addon(
     addon_options: dict[str, Any],
     set_addon_options: AsyncMock,
     get_server_version: AsyncMock,
+    form_data: dict[str, Any],
     new_addon_options: dict,
     restore_server_version_side_effect: Exception | None,
     final_unique_id: str,
@@ -3956,12 +4000,9 @@ async def test_reconfigure_migrate_with_addon(
     version_info.home_id = 5678
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=new_addon_options,
+        result["flow_id"], form_data
     )
 
-    new_addon_options[CONF_ADDON_DEVICE] = new_addon_options.pop(CONF_USB_PATH, None)
-    new_addon_options[CONF_ADDON_SOCKET] = new_addon_options.pop(CONF_SOCKET_PATH, None)
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
     assert set_addon_options.call_args == call(
@@ -4006,8 +4047,8 @@ async def test_reconfigure_migrate_with_addon(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "migration_successful"
     assert entry.data["url"] == "ws://host1:3001"
-    assert entry.data[CONF_USB_PATH] == new_addon_options[CONF_ADDON_DEVICE]
-    assert entry.data[CONF_SOCKET_PATH] == new_addon_options[CONF_ADDON_SOCKET]
+    assert entry.data[CONF_USB_PATH] == new_addon_options.get(CONF_ADDON_DEVICE)
+    assert entry.data[CONF_SOCKET_PATH] == new_addon_options.get(CONF_ADDON_SOCKET)
     assert entry.data["use_addon"] is True
     assert ("keep_old_devices" in entry.data) is keep_old_devices
     assert entry.unique_id == final_unique_id
@@ -4133,7 +4174,7 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
     assert set_addon_options.call_args == call(
-        "core_zwave_js", AddonsOptions(config={"device": "/test", "socket": None})
+        "core_zwave_js", AddonsOptions(config={"device": "/test"})
     )
 
     await hass.async_block_till_done()
@@ -4301,7 +4342,7 @@ async def test_reconfigure_migrate_start_addon_failure(
 
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
-        "core_zwave_js", AddonsOptions(config={"device": "/test", "socket": None})
+        "core_zwave_js", AddonsOptions(config={"device": "/test"})
     )
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -4677,8 +4718,9 @@ async def test_intent_recommended_user(
     assert result["step_id"] == "configure_addon_user"
     data_schema = result["data_schema"]
     assert data_schema is not None
-    assert len(data_schema.schema) == 1
+    assert len(data_schema.schema) == 2
     assert data_schema.schema.get(CONF_USB_PATH) is not None
+    assert data_schema.schema.get(CONF_SOCKET_PATH) is not None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -4692,7 +4734,6 @@ async def test_intent_recommended_user(
         AddonsOptions(
             config={
                 CONF_ADDON_DEVICE: "/test",
-                CONF_ADDON_SOCKET: None,
                 CONF_ADDON_S0_LEGACY_KEY: "",
                 CONF_ADDON_S2_ACCESS_CONTROL_KEY: "",
                 CONF_ADDON_S2_AUTHENTICATED_KEY: "",
@@ -4807,7 +4848,6 @@ async def test_recommended_usb_discovery(
         AddonsOptions(
             config={
                 "device": device,
-                "socket": None,
                 "s0_legacy_key": "",
                 "s2_access_control_key": "",
                 "s2_authenticated_key": "",
@@ -4921,7 +4961,6 @@ async def test_addon_rf_region_new_network(
         AddonsOptions(
             config={
                 "device": device,
-                "socket": None,
                 "s0_legacy_key": "",
                 "s2_access_control_key": "",
                 "s2_authenticated_key": "",
@@ -5067,7 +5106,6 @@ async def test_addon_rf_region_migrate_network(
         AddonsOptions(
             config={
                 "device": "/test",
-                "socket": None,
                 "rf_region": "Europe",
             }
         ),
@@ -5150,7 +5188,6 @@ async def test_addon_skip_rf_region(
         AddonsOptions(
             config={
                 "device": device,
-                "socket": None,
                 "s0_legacy_key": "",
                 "s2_access_control_key": "",
                 "s2_authenticated_key": "",

@@ -748,13 +748,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Ask for config for Z-Wave JS add-on."""
 
         if user_input is not None:
-            self.usb_path = user_input[CONF_USB_PATH]
+            self.usb_path = user_input.get(CONF_USB_PATH)
+            self.socket_path = user_input.get(CONF_SOCKET_PATH)
             return await self.async_step_network_type()
 
         if self._adapter_discovered:
             return await self.async_step_network_type()
-
-        usb_path = self.usb_path or ""
 
         try:
             ports = await async_get_usb_ports(self.hass)
@@ -764,7 +763,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_USB_PATH, default=usb_path): vol.In(ports),
+                vol.Optional(
+                    CONF_USB_PATH, description={"suggested_value": self.usb_path}
+                ): vol.In(ports),
+                vol.Optional(
+                    CONF_SOCKET_PATH,
+                    description={"suggested_value": self.socket_path or ""},
+                ): str,
             }
         )
 
