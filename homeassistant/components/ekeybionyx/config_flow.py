@@ -168,11 +168,11 @@ class OAuth2FlowHandler(
                 webhook_data = [
                     {
                         "auth": secrets.token_hex(32),
-                        "name": webhooks[1],
+                        "name": webhook_name,
                         "webhook_id": webhook_generate_id(),
                     }
-                    for webhooks in user_input.items()
-                    if webhooks[0] != CONF_URL
+                    for key, webhook_name in user_input.items()
+                    if key != CONF_URL
                 ]
                 for webhook in webhook_data:
                     wh_def: ekey_bionyxpy.WebhookData = {
@@ -216,6 +216,12 @@ class OAuth2FlowHandler(
                 | (user_input or {}),
             ),
             errors=errors,
+            description_placeholders={
+                "webhooks_available": str(
+                    self._data["system"].function_webhook_quotas["free"]
+                ),
+                "ekeybionyx": INTEGRATION_NAME,
+            },
         )
 
     async def async_step_delete_webhooks(

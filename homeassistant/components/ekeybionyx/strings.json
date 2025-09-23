@@ -9,12 +9,12 @@
           "system": "System"
         },
         "data_description": {
-          "system": "System the webhooks should be set up for"
+          "system": "System the event entities should be set up for."
         },
-        "description": "Please select the {ekeybionyx} system in which you want to set up the webhooks"
+        "description": "Please select the {ekeybionyx} system in which you want to set up the event entities."
       },
       "webhooks": {
-        "description": "Please name your webhooks. You can configure up to 5 webhooks. Leaving a name empty will skip the setup of that webhook.",
+        "description": "Please name your event entities. You can configure up to {webhooks_available} events. Leaving a name empty will skip the setup of that event. These names will be reflected in the {ekeybionyx} app.",
         "data": {
           "webhook1": "Webhook 1",
           "webhook2": "Webhook 2",
@@ -33,16 +33,16 @@
         }
       },
       "delete_webhooks": {
-        "description": "Webhooks with Home Assistant were already configured. If you continue they will be removed."
+        "description": "Event entites with Home Assistant were already configured. If you continue they will be removed."
       }
     },
     "progress": {
-      "check_deletion_status": "Please go to the {ekeybionyx} app and confirm the deletion of the webhooks."
+      "check_deletion_status": "Please go to the {ekeybionyx} app and confirm the deletion of the functions."
     },
     "error": {
       "invalid_name": "Name is invalid",
       "invalid_url": "URL is invalid",
-      "no_webhooks_provided": "No webhooks provided"
+      "no_webhooks_provided": "No event names provided"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
