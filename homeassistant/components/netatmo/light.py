@@ -22,7 +22,7 @@ from .const import (
     NETATMO_CREATE_CAMERA_LIGHT,
     NETATMO_CREATE_LIGHT,
 )
-from .data_handler import EVENT, HOME, SIGNAL_NAME, NetatmoDevice
+from .data_handler import HOME, SIGNAL_NAME, NetatmoDevice
 from .entity import NetatmoModuleEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,11 +85,6 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
             [
                 {
                     "name": HOME,
-                    "home_id": self.home.entity_id,
-                    SIGNAL_NAME: self._signal_name,
-                },
-                {
-                    "name": EVENT,
                     "home_id": self.home.entity_id,
                     SIGNAL_NAME: self._signal_name,
                 },
