@@ -64,9 +64,10 @@ class LunatoneLight(
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
+        assert self.unique_id
         name = self._device.name if self._device is not None else None
         return DeviceInfo(
-            identifiers={(DOMAIN, str(self.unique_id))},
+            identifiers={(DOMAIN, self.unique_id)},
             name=name,
             via_device=(DOMAIN, str(self._interface_serial_number)),
         )
