@@ -188,9 +188,12 @@ class NetatmoDataHandler:
         self.config_entry.async_on_unload(
             async_dispatcher_connect(
                 self.hass,
-                f"webhook-{DOMAIN}-webhook-None",
+                f"signal-{DOMAIN}-webhook-None",
                 self.handle_event,
             )
+        )
+        _LOGGER.debug(
+            "Subscribed to webhook events: %s", f"signal-{DOMAIN}-webhook-None"
         )
 
         self.account = pyatmo.AsyncAccount(self._auth)

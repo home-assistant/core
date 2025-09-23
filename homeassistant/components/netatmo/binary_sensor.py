@@ -20,9 +20,14 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    ATTR_EVENT_TYPE,
     CONF_URL_ENERGY,
     CONF_URL_SECURITY,
     CONF_URL_WEATHER,
+    DATA_DEVICE_IDS,
+    DOMAIN,
+    EVENT_TYPE_DOOR_TAG_BIG_MOVE,
+    EVENT_TYPE_DOOR_TAG_SMALL_MOVE,
     NETATMO_CREATE_BINARY_SENSOR,
 )
 from .data_handler import HOME, SIGNAL_NAME, NetatmoDevice
@@ -283,6 +288,26 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
             ]
         )
 
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await super().async_added_to_hass()
+
+        for event_type in (
+            EVENT_TYPE_DOOR_TAG_BIG_MOVE,
+            EVENT_TYPE_DOOR_TAG_SMALL_MOVE,
+        ):
+            self.async_on_remove(
+                async_dispatcher_connect(
+                    self.hass,
+                    f"signal-{DOMAIN}-webhook-{event_type}",
+                    self.handle_event,
+                )
+            )
+
+        self.hass.data[DOMAIN][DATA_DEVICE_IDS][self.device.entity_id] = (
+            self.device.name
+        )
+
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
@@ -311,3 +336,51 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         self._attr_available = True
         self._attr_is_on = value
         self.async_write_ha_state()
+
+    def handle_event(self, event: dict) -> None:
+        """Handle webhook events."""
+        data = event["data"]
+        event_type = data.get(ATTR_EVENT_TYPE)
+
+        if not event_type:
+            _LOGGER.debug("Event has no type, returning")
+            return
+
+        if not data.get("module_id"):
+            _LOGGER.debug("Event %s has no module ID, returning", event_type)
+            return
+
+        if not data.get("home_id"):
+            _LOGGER.debug(
+                "Event %s for module %s has no home ID, returning",
+                event_type,
+                data["module_id"],
+            )
+            return
+
+        if (
+            data["home_id"] == self.home.entity_id
+            and data["module_id"] == self.device.entity_id
+        ):
+            if event_type in [
+                EVENT_TYPE_DOOR_TAG_SMALL_MOVE,
+                EVENT_TYPE_DOOR_TAG_BIG_MOVE,
+            ]:
+                _LOGGER.debug(
+                    "Module %s has detected door tag open event",
+                    data["module_id"],
+                )
+
+                if not self._attr_is_on:
+                    self._attr_is_on = True
+                    _LOGGER.debug("Toggling %s sensor state to open", self.device.name)
+                    self.async_write_ha_state()
+            else:
+                _LOGGER.debug(
+                    "Binary sensor %s has received unexpected event as type %s",
+                    data["module_id"],
+                    event_type,
+                )
+
+            self.async_write_ha_state()
+            return
