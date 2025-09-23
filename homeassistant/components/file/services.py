@@ -43,7 +43,7 @@ def read_file(call: ServiceCall) -> dict:
     file_encoding = call.data[ATTR_FILE_ENCODING].lower()
 
     if not call.hass.config.is_allowed_path(file_name):
-        raise HomeAssistantError(
+        raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="no_access_to_path",
             translation_placeholders={"filename": file_name},
@@ -63,7 +63,7 @@ def read_file(call: ServiceCall) -> dict:
         with open(file_name, encoding="utf-8") as file:
             file_content = file.read()
     except FileNotFoundError as err:
-        raise HomeAssistantError(
+        raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="file_not_found",
             translation_placeholders={"filename": file_name},

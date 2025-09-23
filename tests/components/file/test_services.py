@@ -52,8 +52,8 @@ async def test_read_file_disallowed_path(
     """Test reading in a disallowed path generates error."""
     file_name = "tests/components/file/fixtures/file_read.json"
 
-    with pytest.raises(HomeAssistantError) as hae:
-        _ = await hass.services.async_call(
+    with pytest.raises(ServiceValidationError) as sve:
+        await hass.services.async_call(
             DOMAIN,
             SERVICE_READ_FILE,
             {
@@ -63,7 +63,9 @@ async def test_read_file_disallowed_path(
             blocking=True,
             return_response=True,
         )
-    assert file_name in str(hae.value)
+    assert file_name in str(sve.value)
+    assert sve.value.translation_key == "no_access_to_path"
+    assert sve.value.translation_domain == DOMAIN
 
 
 async def test_read_file_bad_encoding_option(
@@ -75,7 +77,7 @@ async def test_read_file_bad_encoding_option(
     file_name = "tests/components/file/fixtures/file_read.json"
 
     with pytest.raises(ServiceValidationError) as sve:
-        _ = await hass.services.async_call(
+        await hass.services.async_call(
             DOMAIN,
             SERVICE_READ_FILE,
             {
@@ -87,12 +89,14 @@ async def test_read_file_bad_encoding_option(
         )
     assert file_name in str(sve.value)
     assert "invalid" in str(sve.value)
+    assert sve.value.translation_key == "unsupported_file_encoding"
+    assert sve.value.translation_domain == DOMAIN
 
 
 @pytest.mark.parametrize(
     ("file_name", "file_encoding"),
     [
-        ("tests/components/file/fixtures/file_read.yaml", "json"),
+        ("tests/components/file/fixtures/file_read.not_json", "json"),
         ("tests/components/file/fixtures/file_read.not_yaml", "yaml"),
     ],
 )
@@ -105,7 +109,7 @@ async def test_read_file_decoding_error(
 ) -> None:
     """Test decoding errors are handled correctly."""
     with pytest.raises(HomeAssistantError) as hae:
-        _ = await hass.services.async_call(
+        await hass.services.async_call(
             DOMAIN,
             SERVICE_READ_FILE,
             {
@@ -117,6 +121,8 @@ async def test_read_file_decoding_error(
         )
     assert file_name in str(hae.value)
     assert file_encoding in str(hae.value)
+    assert hae.value.translation_key == "file_decoding"
+    assert hae.value.translation_domain == DOMAIN
 
 
 async def test_read_file_dne(
