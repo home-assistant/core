@@ -781,17 +781,21 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
 
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
-        """Return the state of the sensor."""
+        """Return the state of the sensor.
+           It is necessary to override `native_value` to fall back to the default
+           attribute-based implementation, instead of the function-based
+           implementation in `MieleSensor`.
+           """
         return self._attr_native_value
 
-    def _update_last_value(self) -> None:
-        """Update the last value of the sensor."""
+    def _update_native_value(self) -> None:
+        """Update the native value attribute of the sensor."""
         self._attr_native_value = self.entity_description.value_fn(self.device)
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._update_last_value()
+        self._update_native_value()
         super()._handle_coordinator_update()
 
 
@@ -908,7 +912,7 @@ class MieleProgramIdSensor(MieleSensor):
 class MieleTimeSensor(MieleRestorableSensor):
     """Representation of time sensors keeping state from cache."""
 
-    def _update_last_value(self) -> None:
+    def _update_native_value(self) -> None:
         """Update the last value of the sensor."""
 
         current_value = self.entity_description.value_fn(self.device)
@@ -941,7 +945,7 @@ class MieleConsumptionSensor(MieleRestorableSensor):
 
     _is_reporting: bool = False
 
-    def _update_last_value(self) -> None:
+    def _update_native_value(self) -> None:
         """Update the last value of the sensor."""
         current_value = self.entity_description.value_fn(self.device)
         current_status = StateStatus(self.device.state_status)
