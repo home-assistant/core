@@ -84,6 +84,9 @@
     "imap_server_fail": {
       "message": "The IMAP server failed to connect: {error}."
     },
+    "invalid_part_index": {
+      "message": "Invalid part index."
+    },
     "seen_failed": {
       "message": "Marking message as seen failed with \"{error}\"."
     }
@@ -145,6 +148,10 @@
         "uid": {
           "name": "UID",
           "description": "The email identifier (UID)."
+        },
+        "part": {
+          "name": "Part",
+          "description": "The message part index."
         }
       }
     },

@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+from email.message import Message
 import logging
+from typing import Any
 
 from aioimaplib import IMAP4_SSL, AioImapException, Response
 import voluptuous as vol
@@ -33,6 +35,7 @@ from .coordinator import (
     ImapPollingDataUpdateCoordinator,
     ImapPushDataUpdateCoordinator,
     connect_to_server,
+    get_parts,
 )
 from .errors import InvalidAuth, InvalidFolder
 
@@ -40,6 +43,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 CONF_ENTRY = "entry"
 CONF_SEEN = "seen"
+CONF_PART = "part"
 CONF_UID = "uid"
 CONF_TARGET_FOLDER = "target_folder"
 
@@ -63,7 +67,11 @@ SERVICE_MOVE_SCHEMA = _SERVICE_UID_SCHEMA.extend(
     }
 )
 SERVICE_DELETE_SCHEMA = _SERVICE_UID_SCHEMA
-SERVICE_FETCH_TEXT_SCHEMA = _SERVICE_UID_SCHEMA
+SERVICE_FETCH_TEXT_SCHEMA = _SERVICE_UID_SCHEMA.extend(
+    {
+        vol.Optional(CONF_PART): cv.string,
+    }
+)
 
 type ImapConfigEntry = ConfigEntry[ImapDataUpdateCoordinator]
 
@@ -199,8 +207,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def async_fetch(call: ServiceCall) -> ServiceResponse:
         """Process fetch email service and return content."""
+
+        @callback
+        def get_message_part(message: Message, part_key: str) -> Message:
+            part: Message | Any = message
+            for index in part_key.split(","):
+                sub_parts = part.get_payload()
+                try:
+                    assert isinstance(sub_parts, list)
+                    part = sub_parts[int(index)]
+                except (AssertionError, ValueError, IndexError) as exc:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="invalid_part_index",
+                    ) from exc
+
+            return part
+
         entry_id: str = call.data[CONF_ENTRY]
         uid: str = call.data[CONF_UID]
+        part_key: str | None = call.data.get(CONF_PART)
         _LOGGER.debug(
             "Fetch text for message %s. Entry: %s",
             uid,
@@ -218,10 +244,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         raise_on_error(response, "fetch_failed")
         message = ImapMessage(response.lines[1])
         await client.close()
+        if part_key is None:
+            return {
+                "text": message.text,
+                "sender": message.sender,
+                "subject": message.subject,
+                "parts": get_parts(message.email_message),
+                "uid": uid,
+            }
+        part_data = get_message_part(message.email_message, part_key)
+        part_data_content = part_data.get_payload(decode=False)
+        try:
+            assert isinstance(part_data_content, str)
+        except AssertionError as exc:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_part_index",
+            ) from exc
         return {
-            "text": message.text,
-            "sender": message.sender,
-            "subject": message.subject,
+            "part_data": part_data_content,
+            "content_type": part_data.get_content_type(),
+            "content_transfer_encoding": part_data.get("Content-Transfer-Encoding"),
+            "filename": part_data.get_filename(),
+            "part": part_key,
             "uid": uid,
         }
 

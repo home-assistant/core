@@ -56,3 +56,9 @@ fetch:
       example: "12"
       selector:
         text:
+
+    part:
+      required: false
+      example: "0,1"
+      selector:
+        text:
