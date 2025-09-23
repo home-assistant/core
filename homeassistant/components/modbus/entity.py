@@ -62,6 +62,7 @@ from .const import (
     CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
+    DEFAULT_DEVICE_ADDRESS,
     SIGNAL_STOP_ENTITY,
     DataType,
 )
@@ -82,7 +83,9 @@ class ModbusBaseEntity(Entity):
         """Initialize the Modbus binary sensor."""
 
         self._hub = hub
-        self._device_address = entry.get(CONF_DEVICE_ADDRESS, entry.get(CONF_SLAVE, 1))
+        self._device_address = entry.get(
+            CONF_DEVICE_ADDRESS, entry.get(CONF_SLAVE, DEFAULT_DEVICE_ADDRESS)
+        )
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
