@@ -29,7 +29,7 @@ VALID_NAME_PATTERN = re.compile(r"^(?![\d\s])[\w\d \.]*[\w\d]$")
 
 
 class ConfigFlowEkeyApi(ekey_bionyxpy.AbstractAuth):
-    """Ekey Bionyx authentication before a ConfigEntry exists.
+    """ekey bionyx authentication before a ConfigEntry exists.
 
     This implementation directly provides the token without supporting refresh.
     """
@@ -59,7 +59,7 @@ class EkeyFlowData(TypedDict):
 class OAuth2FlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
-    """Config flow to handle Ekey Bionyx OAuth2 authentication."""
+    """Config flow to handle ekey bionyx OAuth2 authentication."""
 
     DOMAIN = DOMAIN
 
@@ -88,7 +88,10 @@ class OAuth2FlowHandler(
         try:
             system_res = await ap.get_systems()
         except aiohttp.ClientResponseError:
-            return self.async_abort(reason="cannot_connect")
+            return self.async_abort(
+                reason="cannot_connect",
+                description_placeholders={"ekeybionyx": "ekey bionyx"},
+            )
         system = [s for s in system_res if s.own_system]
         if len(system) == 0:
             return self.async_abort(reason="no_own_systems")
@@ -110,7 +113,9 @@ class OAuth2FlowHandler(
             ]
             data_schema = {vol.Required("system"): SelectSelector({"options": options})}
             return self.async_show_form(
-                step_id="choose_system", data_schema=vol.Schema(data_schema)
+                step_id="choose_system",
+                data_schema=vol.Schema(data_schema),
+                description_placeholders={"ekeybionyx": "ekey bionyx"},
             )
         self._data["system"] = [
             s for s in self._data["systems"] if s.system_id == user_input["system"]
@@ -129,7 +134,10 @@ class OAuth2FlowHandler(
             system.function_webhook_quotas["free"] == 0
             and system.function_webhook_quotas["used"] == 0
         ):
-            return self.async_abort(reason="no_available_webhooks")
+            return self.async_abort(
+                reason="no_available_webhooks",
+                description_placeholders={"ekeybionyx": "ekey bionyx"},
+            )
 
         if system.function_webhook_quotas["used"] > 0:
             return await self.async_step_delete_webhooks()
@@ -236,6 +244,7 @@ class OAuth2FlowHandler(
         if uncompleted_task:
             return self.async_show_progress(
                 step_id="wait_for_deletion",
+                description_placeholders={"ekeybionyx": "ekey bionyx"},
                 progress_action=progress_action,
                 progress_task=uncompleted_task,
             )

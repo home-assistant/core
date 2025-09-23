@@ -41,18 +41,6 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-@pytest.mark.parametrize(
-    "ignore_missing_translations",
-    [
-        [
-            "component.ekeybionyx.config.step.webhooks.data_description.webhook1",
-            "component.ekeybionyx.config.step.webhooks.data_description.webhook2",
-            "component.ekeybionyx.config.step.webhooks.data_description.webhook3",
-            "component.ekeybionyx.config.step.webhooks.data_description.webhook4",
-            "component.ekeybionyx.config.step.webhooks.data_description.webhook5",
-        ]
-    ],
-)
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
