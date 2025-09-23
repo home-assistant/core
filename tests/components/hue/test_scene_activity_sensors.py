@@ -24,13 +24,19 @@ async def test_scene_activity_sensors(
         [Platform.SCENE, Platform.SENSOR, Platform.LIGHT, Platform.BINARY_SENSOR],
     )
 
-    # Regular scene sensors start unknown due to aiohue ignoring status
-    assert hass.states.get("sensor.test_room_scene").state == STATE_UNKNOWN
-    assert hass.states.get("sensor.test_room_scene_name").state == STATE_UNKNOWN
+    # Regular scene in fixture starts already active with mode static; manager prefilled it
     assert (
-        hass.states.get("binary_sensor.test_room_dynamic_scene").state == STATE_UNKNOWN
+        hass.states.get("sensor.test_room_scene").state
+        == "scene.test_room_regular_test_scene"
     )
-    assert hass.states.get("sensor.test_room_last_scene_recall").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.test_room_scene_name").state == "Regular Test Scene"
+    # Static mode -> dynamic binary sensor off
+    assert hass.states.get("binary_sensor.test_room_dynamic_scene").state == "off"
+    # Prefilled last recall timestamp from fixture
+    assert (
+        hass.states.get("sensor.test_room_last_scene_recall").state
+        == "2025-09-12T11:41:46+00:00"
+    )
 
     # smart scene sensors prefilled as active
     assert (
@@ -41,8 +47,27 @@ async def test_scene_activity_sensors(
         hass.states.get("sensor.test_room_smart_scene_name").state == "Smart Test Scene"
     )
 
-    # Emit update event marking a regular scene active (simulate aiohue status event injection)
+    # First, simulate the regular scene being turned inactive after startup
     regular_scene_id = "cdbf3740-7977-4a11-8275-8c78636ad4bd"
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {
+            "id": regular_scene_id,
+            "type": "scene",
+            "status": {"active": "inactive"},
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Regular scene sensors should now revert to unknown
+    assert hass.states.get("sensor.test_room_scene").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.test_room_scene_name").state == STATE_UNKNOWN
+    assert (
+        hass.states.get("binary_sensor.test_room_dynamic_scene").state == STATE_UNKNOWN
+    )
+    assert hass.states.get("sensor.test_room_last_scene_recall").state == STATE_UNKNOWN
+
+    # Reactivate the regular scene with a new last_recall timestamp
     mock_bridge_v2.api.emit_event(
         "update",
         {
