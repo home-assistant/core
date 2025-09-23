@@ -782,10 +782,11 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
     @property
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the state of the sensor.
-           It is necessary to override `native_value` to fall back to the default
-           attribute-based implementation, instead of the function-based
-           implementation in `MieleSensor`.
-           """
+
+        It is necessary to override `native_value` to fall back to the default
+        attribute-based implementation, instead of the function-based
+        implementation in `MieleSensor`.
+        """
         return self._attr_native_value
 
     def _update_native_value(self) -> None:
