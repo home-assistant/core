@@ -37,7 +37,7 @@
       }
     },
     "progress": {
-      "check_deletion_status": "Please go to the {ekeybionyx} app and confirm the deletion of the functions."
+      "check_deletion_status": "Please open the {ekeybionyx} app and confirm the deletion of the functions."
     },
     "error": {
       "invalid_name": "Name is invalid",
