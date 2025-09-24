@@ -539,30 +539,14 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         share_link = self.coordinator.share_link
         if share_link.is_share_link(media_id):
-            # Pass the title to SoCo to fill metadata.
-            # Use empty string, if no title is provided.
             title = kwargs.get(ATTR_MEDIA_EXTRA, {}).get("title", "")
-            soco_kwargs = {"dc_title": title}
-            if enqueue == MediaPlayerEnqueue.ADD:
-                share_link.add_share_link_to_queue(
-                    media_id, timeout=LONG_SERVICE_TIMEOUT, **soco_kwargs
-                )
-            elif enqueue in (
-                MediaPlayerEnqueue.NEXT,
-                MediaPlayerEnqueue.PLAY,
-            ):
-                pos = (self.media.queue_position or 0) + 1
-                new_pos = share_link.add_share_link_to_queue(
-                    media_id, position=pos, timeout=LONG_SERVICE_TIMEOUT, **soco_kwargs
-                )
-                if enqueue == MediaPlayerEnqueue.PLAY:
-                    soco.play_from_queue(new_pos - 1)
-            elif enqueue == MediaPlayerEnqueue.REPLACE:
-                soco.clear_queue()
-                share_link.add_share_link_to_queue(
-                    media_id, timeout=LONG_SERVICE_TIMEOUT, **soco_kwargs
-                )
-                soco.play_from_queue(0)
+            self._play_media_sharelink(
+                soco=soco,
+                media_type=media_type,
+                media_id=media_id,
+                enqueue=enqueue,
+                title=title,
+            )
         elif media_type == MEDIA_TYPE_DIRECTORY:
             self._play_media_directory(
                 soco=soco, media_type=media_type, media_id=media_id, enqueue=enqueue
@@ -667,6 +651,39 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 },
             )
         self._play_media_queue(soco, item, enqueue)
+
+    def _play_media_sharelink(
+        self,
+        soco: SoCo,
+        media_type: MediaType | str,
+        media_id: str,
+        enqueue: MediaPlayerEnqueue,
+        title: str,
+    ):
+        share_link = self.coordinator.share_link
+        kwargs = {}
+        if title:
+            kwargs["dc_title"] = title
+        if enqueue == MediaPlayerEnqueue.ADD:
+            share_link.add_share_link_to_queue(
+                media_id, timeout=LONG_SERVICE_TIMEOUT, **kwargs
+            )
+        elif enqueue in (
+            MediaPlayerEnqueue.NEXT,
+            MediaPlayerEnqueue.PLAY,
+        ):
+            pos = (self.media.queue_position or 0) + 1
+            new_pos = share_link.add_share_link_to_queue(
+                media_id, position=pos, timeout=LONG_SERVICE_TIMEOUT, **kwargs
+            )
+            if enqueue == MediaPlayerEnqueue.PLAY:
+                soco.play_from_queue(new_pos - 1)
+        elif enqueue == MediaPlayerEnqueue.REPLACE:
+            soco.clear_queue()
+            share_link.add_share_link_to_queue(
+                media_id, timeout=LONG_SERVICE_TIMEOUT, **kwargs
+            )
+            soco.play_from_queue(0)
 
     @soco_error()
     def set_sleep_timer(self, sleep_time: int) -> None:
