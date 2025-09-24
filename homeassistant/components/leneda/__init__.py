@@ -9,7 +9,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import CONF_API_TOKEN, CONF_ENERGY_ID
 from .coordinator import LenedaCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -21,8 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: LenedaConfigEntry) -> bool:
     """Set up Leneda from a config entry or subentry."""
-    api_token, energy_id = entry.data[CONF_API_TOKEN], entry.data[CONF_ENERGY_ID]
-    coordinator = LenedaCoordinator(hass, entry, api_token, energy_id)
+    coordinator = LenedaCoordinator(hass, entry)
     entry.runtime_data = coordinator
 
     await coordinator.async_config_entry_first_refresh()

@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, SCAN_INTERVAL
+from .const import CONF_API_TOKEN, CONF_ENERGY_ID, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,16 +25,12 @@ class LenedaCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        api_token: str,
-        energy_id: str,
     ) -> None:
         """Initialize the coordinator for all metering point subentries.
 
         Args:
             hass: Home Assistant instance
             config_entry: Configuration entry
-            api_token: API token for authentication
-            energy_id: Energy ID for the client
 
         """
         super().__init__(
@@ -44,7 +40,12 @@ class LenedaCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
+        self.api_token, self.energy_id = (
+            config_entry.data[CONF_API_TOKEN],
+            config_entry.data[CONF_ENERGY_ID],
+        )
+
         self.client = LenedaClient(
-            api_key=api_token,
-            energy_id=energy_id,
+            api_key=self.api_token,
+            energy_id=self.energy_id,
         )
