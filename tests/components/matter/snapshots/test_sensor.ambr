@@ -7324,7 +7324,8 @@
     'last_updated': <ANY>,
     'state': '28.3',
   })
-# name: test_sensors[thermostat][sensor.longan_link_hvac_outdoor_temperature_north-entry]
+# ---
+# name: test_sensors[thermostat][sensor.longan_link_hvac_temperature_north_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7339,7 +7340,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.longan_link_hvac_outdoor_temperature_north',
+    'entity_id': 'sensor.longan_link_hvac_temperature_north_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7354,7 +7355,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Outdoor temperature',
+    'original_name': 'Temperature (North)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -7364,16 +7365,16 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[thermostat][sensor.longan_link_hvac_outdoor_temperature_north-state]
+# name: test_sensors[thermostat][sensor.longan_link_hvac_temperature_north_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Longan link HVAC Outdoor temperature',
+      'friendly_name': 'Longan link HVAC Temperature (North)',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.longan_link_hvac_outdoor_temperature_north',
+    'entity_id': 'sensor.longan_link_hvac_temperature_north_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
