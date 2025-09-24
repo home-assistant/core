@@ -417,7 +417,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
-        entity_description=MatterNumberEntityDescription(
+        entity_description=MatterRangeNumberEntityDescription(
             key="ThermostatUnoccupiedHeatingSetpoint",
             name=None,
             translation_key="unoccupied_heating_temperature_setpoint",
