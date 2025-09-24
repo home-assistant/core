@@ -995,9 +995,12 @@ def progress_step[
 ) -> Callable[[_FuncType[HandlerT, ResultT, P]], _FuncType[HandlerT, ResultT, P]]:
     """Decorator to create a progress step from an async function.
 
-    The decorated function should contain the actual work to be done.
-    It receives (self, user_input) and should return the next step id or raise AbortFlow
-    It can call self.async_update_progress(progress) to update progress.
+    The decorated method should be a step method
+    which needs to show progress.
+    The method should accept dict[str, Any] as user_input
+    and should return a FlowResult or raise AbortFlow.
+    The method can call self.async_update_progress(progress)
+    to update progress.
 
     Args:
         progress_action: The progress action name for the UI. If None, inferred from method name.
