@@ -39,7 +39,7 @@ from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.system_info import async_get_system_info
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
@@ -142,7 +142,6 @@ class EntityAnalyticsModifications:
     """
 
     remove: bool = False
-    capabilities: dict[str, Any] | None | UndefinedType = UNDEFINED
 
 
 class AnalyticsPlatformProtocol(Protocol):
@@ -677,14 +676,14 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
                 # we should replace it with the original value in the future.
                 # It is also not present, if entity is not in the state machine,
                 # which can happen for disabled entities.
-                "assumed_state": entity_state.attributes.get(ATTR_ASSUMED_STATE, False)
-                if entity_state is not None
-                else None,
-                "capabilities": None,
+                "assumed_state": (
+                    entity_state.attributes.get(ATTR_ASSUMED_STATE, False)
+                    if entity_state is not None
+                    else None
+                ),
                 "domain": entity_entry.domain,
                 "entity_category": entity_entry.entity_category,
                 "has_entity_name": entity_entry.has_entity_name,
-                "modified_by_integration": None,
                 "original_device_class": entity_entry.original_device_class,
                 # LIMITATION: `unit_of_measurement` can be overridden by users;
                 # we should replace it with the original value in the future.
