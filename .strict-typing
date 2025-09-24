@@ -142,6 +142,7 @@ homeassistant.components.cloud.*
 homeassistant.components.co2signal.*
 homeassistant.components.comelit.*
 homeassistant.components.command_line.*
+homeassistant.components.compit.*
 homeassistant.components.config.*
 homeassistant.components.configurator.*
 homeassistant.components.cookidoo.*
@@ -442,6 +443,7 @@ homeassistant.components.rituals_perfume_genie.*
 homeassistant.components.roborock.*
 homeassistant.components.roku.*
 homeassistant.components.romy.*
+homeassistant.components.route_b_smart_meter.*
 homeassistant.components.rpi_power.*
 homeassistant.components.rss_feed_template.*
 homeassistant.components.russound_rio.*

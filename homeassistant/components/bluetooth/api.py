@@ -10,6 +10,7 @@ from asyncio import Future
 from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, cast
 
+from bleak import BleakScanner
 from habluetooth import (
     BaseHaScanner,
     BluetoothScannerDevice,
@@ -38,13 +39,16 @@ def _get_manager(hass: HomeAssistant) -> HomeAssistantBluetoothManager:
 
 
 @hass_callback
-def async_get_scanner(hass: HomeAssistant) -> HaBleakScannerWrapper:
-    """Return a HaBleakScannerWrapper.
+def async_get_scanner(hass: HomeAssistant) -> BleakScanner:
+    """Return a HaBleakScannerWrapper cast to BleakScanner.
 
     This is a wrapper around our BleakScanner singleton that allows
     multiple integrations to share the same BleakScanner.
+
+    The wrapper is cast to BleakScanner for type compatibility with
+    libraries expecting a BleakScanner instance.
     """
-    return HaBleakScannerWrapper()
+    return cast(BleakScanner, HaBleakScannerWrapper())
 
 
 @hass_callback
