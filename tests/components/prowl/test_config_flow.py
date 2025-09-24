@@ -8,14 +8,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import (
-    BAD_API_RESPONSE,
-    CONF_INPUT,
-    CONF_INPUT_NEW_KEY,
-    INVALID_API_KEY_ERROR,
-    OTHER_API_KEY,
-    TIMEOUT_ERROR,
-)
+from .conftest import BAD_API_RESPONSE, CONF_INPUT, INVALID_API_KEY_ERROR, TIMEOUT_ERROR
 
 
 async def test_flow_user(hass: HomeAssistant, mock_prowlpy) -> None:
@@ -33,27 +26,6 @@ async def test_flow_user(hass: HomeAssistant, mock_prowlpy) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == CONF_INPUT[CONF_NAME]
     assert result["data"] == CONF_INPUT
-
-
-async def test_flow_reauth(
-    hass: HomeAssistant, mock_prowlpy_config_entry, mock_prowlpy
-) -> None:
-    """Test reauth flow."""
-    mock_prowlpy_config_entry.add_to_hass(hass)
-
-    result = await mock_prowlpy_config_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=CONF_INPUT_NEW_KEY,
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert mock_prowlpy.verify_key.call_count > 0
-    assert mock_prowlpy_config_entry.data["api_key"] == OTHER_API_KEY
-    assert mock_prowlpy_config_entry.data["name"] == CONF_INPUT[CONF_NAME]
 
 
 async def test_flow_user_bad_key(hass: HomeAssistant, mock_prowlpy) -> None:

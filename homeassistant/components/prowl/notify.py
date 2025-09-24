@@ -17,7 +17,6 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
     NotifyEntity,
-    migrate_notify_issue,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
@@ -26,8 +25,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +37,9 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> ProwlNotificationService:
     """Get the Prowl notification service."""
-    return ProwlNotificationService(hass, config[CONF_API_KEY])
+    return await hass.async_add_executor_job(
+        partial(ProwlNotificationService, hass, config[CONF_API_KEY])
+    )
 
 
 class ProwlNotificationService(BaseNotificationService):
@@ -56,14 +55,6 @@ class ProwlNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send the message to the user."""
-        migrate_notify_issue(
-            self.hass,
-            DOMAIN,
-            "Prowl",
-            "2025.09.20",
-            service_name=self._service_name,
-        )
-
         data = kwargs.get(ATTR_DATA, {})
         if data is None:
             data = {}

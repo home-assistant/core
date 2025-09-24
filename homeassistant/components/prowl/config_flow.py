@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
+from functools import partial
 import logging
 from typing import Any
 
@@ -61,38 +61,10 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle re-authentication when the API key is invalid."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Dialog that informs the user that reauth is required."""
-        errors = {}
-        entry = self._get_reauth_entry()
-
-        if user_input:
-            api_key = user_input[CONF_API_KEY]
-            errors = await self._validate_api_key(api_key)
-
-            if not errors:
-                # Update existing entry with new API key
-                data = {CONF_NAME: entry.data[CONF_NAME], CONF_API_KEY: api_key}
-                self.hass.config_entries.async_update_entry(entry, data=data)
-                return self.async_abort(reason="reauth_successful")
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
-            errors=errors,
-        )
-
     async def _validate_api_key(self, api_key: str) -> dict[str, str]:
         """Validate the provided API key."""
-        prowl = prowlpy.Prowl(api_key)
+        prowl = await self.hass.async_add_executor_job(partial(prowlpy.Prowl, api_key))
+
         try:
             async with asyncio.timeout(10):
                 await self.hass.async_add_executor_job(prowl.verify_key)
