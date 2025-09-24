@@ -11,23 +11,17 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 
-# All descriptions can be found here.
-# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-BUTTONS: dict[str, tuple[ButtonEntityDescription, ...]] = {
-    # Wake Up Light II
-    # Not documented
-    "hxd": (
+BUTTONS: dict[DeviceCategory, tuple[ButtonEntityDescription, ...]] = {
+    DeviceCategory.HXD: (
         ButtonEntityDescription(
             key=DPCode.SWITCH_USB6,
             translation_key="snooze",
         ),
     ),
-    # Robot Vacuum
-    # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
-    "sd": (
+    DeviceCategory.SD: (
         ButtonEntityDescription(
             key=DPCode.RESET_DUSTER_CLOTH,
             translation_key="reset_duster_cloth",
