@@ -1207,7 +1207,6 @@ async def test_reauth_password_changed(
         "name": "Mock Title",
     }
 
-    # Reset the mock and provide the new password
     mock_client.connect.side_effect = None
     mock_client.connect.return_value = None
     mock_client.device_info.return_value = DeviceInfo(
