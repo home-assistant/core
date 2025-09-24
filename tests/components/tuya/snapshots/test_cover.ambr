@@ -443,7 +443,7 @@
 # name: test_platform_setup_and_discovery[cover.persiana_do_quarto_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
+      'current_position': 38,
       'device_class': 'curtain',
       'friendly_name': 'Persiana do Quarto Curtain',
       'supported_features': <CoverEntityFeature: 15>,
