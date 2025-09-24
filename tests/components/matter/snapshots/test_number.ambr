@@ -2430,8 +2430,8 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 100.0,
-      'min': 0.0,
+      'max': 35.0,
+      'min': 7.0,
       'mode': <NumberMode.SLIDER: 'slider'>,
       'step': 1.0,
     }),
@@ -2468,8 +2468,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Longan link HVAC Unoccupied heating temperature setpoint',
-      'max': 100.0,
-      'min': 0.0,
+      'max': 35.0,
+      'min': 7.0,
       'mode': <NumberMode.SLIDER: 'slider'>,
       'step': 1.0,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
