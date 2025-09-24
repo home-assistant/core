@@ -103,9 +103,16 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         send_value = self.entity_description.ha_to_device(value)
-        # custom command defined to set the new value
-        await self.send_device_command(
-            self.entity_description.command(send_value),
+
+        if self.entity_description.command:
+            # custom command defined to set the new value
+            await self.send_device_command(
+                self.entity_description.command(send_value),
+            )
+            return
+        # regular write attribute to set the new value
+        await self.write_attribute(
+            value=send_value,
         )
 
     @callback
