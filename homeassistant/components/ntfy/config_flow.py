@@ -473,7 +473,12 @@ class TopicSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 entry=entry,
                 subentry=subentry,
-                data_updates=user_input,
+                data_updates={
+                    CONF_PRIORITY: user_input.get(CONF_PRIORITY),
+                    CONF_TAGS: user_input.get(CONF_TAGS),
+                    CONF_TITLE: user_input.get(CONF_TITLE),
+                    CONF_MESSAGE: user_input.get(CONF_MESSAGE),
+                },
             )
 
         return self.async_show_form(
