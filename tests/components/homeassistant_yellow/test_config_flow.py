@@ -487,21 +487,13 @@ async def test_firmware_options_flow_thread(
         # Make sure the flow continues when the progress task is done.
         await hass.async_block_till_done()
 
-        confirm_result = await hass.config_entries.options.async_configure(
+        create_result = await hass.config_entries.options.async_configure(
             result["flow_id"]
         )
 
-        assert start_addon.call_count == 1
-        assert start_addon.call_args == call("core_openthread_border_router")
-        assert confirm_result["type"] is FlowResultType.FORM
-        assert confirm_result["step_id"] == ("confirm_otbr")
-
-        create_result = await hass.config_entries.options.async_configure(
-            confirm_result["flow_id"], user_input={}
-        )
-
+    assert start_addon.call_count == 1
+    assert start_addon.call_args == call("core_openthread_border_router")
     assert create_result["type"] is FlowResultType.CREATE_ENTRY
-
     assert config_entry.data == {
         "firmware": fw_type.value,
         "firmware_version": fw_version,

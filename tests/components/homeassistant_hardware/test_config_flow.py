@@ -705,7 +705,7 @@ async def test_config_flow_thread(
         await hass.async_block_till_done(wait_background_tasks=True)
 
         # Progress the flow, it is now installing firmware
-        confirm_otbr_result = await consume_progress_flow(
+        create_result = await consume_progress_flow(
             hass,
             flow_id=pick_result["flow_id"],
             valid_step_ids=(
@@ -717,9 +717,6 @@ async def test_config_flow_thread(
         )
 
         # Installation will conclude with the config entry being created
-        create_result = await hass.config_entries.flow.async_configure(
-            confirm_otbr_result["flow_id"], user_input={}
-        )
         assert create_result["type"] is FlowResultType.CREATE_ENTRY
 
         config_entry = create_result["result"]
@@ -766,7 +763,7 @@ async def test_config_flow_thread_addon_already_installed(
         )
 
         # Progress
-        confirm_otbr_result = await consume_progress_flow(
+        create_result = await consume_progress_flow(
             hass,
             flow_id=pick_result["flow_id"],
             valid_step_ids=(
@@ -776,35 +773,26 @@ async def test_config_flow_thread_addon_already_installed(
             ),
         )
 
-        # We're now waiting to confirm OTBR
-        assert confirm_otbr_result["type"] is FlowResultType.FORM
-        assert confirm_otbr_result["step_id"] == "confirm_otbr"
-
-        # The addon has been installed
-        assert set_addon_options.call_args == call(
-            "core_openthread_border_router",
-            AddonsOptions(
-                config={
-                    "device": "/dev/SomeDevice123",
-                    "baudrate": 460800,
-                    "flow_control": True,
-                    "autoflash_firmware": False,
-                },
-            ),
-        )
-        assert start_addon.call_count == 1
-        assert start_addon.call_args == call("core_openthread_border_router")
-
-        # Finally, create the config entry
-        create_result = await hass.config_entries.flow.async_configure(
-            confirm_otbr_result["flow_id"], user_input={}
-        )
-        assert create_result["type"] is FlowResultType.CREATE_ENTRY
-        assert create_result["result"].data == {
-            "firmware": "spinel",
-            "device": TEST_DEVICE,
-            "hardware": TEST_HARDWARE_NAME,
-        }
+    # The add-on has been installed
+    assert set_addon_options.call_args == call(
+        "core_openthread_border_router",
+        AddonsOptions(
+            config={
+                "device": "/dev/SomeDevice123",
+                "baudrate": 460800,
+                "flow_control": True,
+                "autoflash_firmware": False,
+            },
+        ),
+    )
+    assert start_addon.call_count == 1
+    assert start_addon.call_args == call("core_openthread_border_router")
+    assert create_result["type"] is FlowResultType.CREATE_ENTRY
+    assert create_result["result"].data == {
+        "firmware": "spinel",
+        "device": TEST_DEVICE,
+        "hardware": TEST_HARDWARE_NAME,
+    }
 
 
 @pytest.mark.usefixtures("addon_not_installed")
@@ -870,33 +858,26 @@ async def test_options_flow_zigbee_to_thread(
 
         result = await hass.config_entries.options.async_configure(result["flow_id"])
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "confirm_otbr"
-        assert install_addon.call_count == 1
-        assert install_addon.call_args == call("core_openthread_border_router")
-        assert set_addon_options.call_count == 1
-        assert set_addon_options.call_args == call(
-            "core_openthread_border_router",
-            AddonsOptions(
-                config={
-                    "device": "/dev/SomeDevice123",
-                    "baudrate": 460800,
-                    "flow_control": True,
-                    "autoflash_firmware": False,
-                },
-            ),
-        )
-        assert start_addon.call_count == 1
-        assert start_addon.call_args == call("core_openthread_border_router")
+    assert install_addon.call_count == 1
+    assert install_addon.call_args == call("core_openthread_border_router")
+    assert set_addon_options.call_count == 1
+    assert set_addon_options.call_args == call(
+        "core_openthread_border_router",
+        AddonsOptions(
+            config={
+                "device": "/dev/SomeDevice123",
+                "baudrate": 460800,
+                "flow_control": True,
+                "autoflash_firmware": False,
+            },
+        ),
+    )
+    assert start_addon.call_count == 1
+    assert start_addon.call_args == call("core_openthread_border_router")
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-        # We are now done
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={}
-        )
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-
-        # The firmware type has been updated
-        assert config_entry.data["firmware"] == "spinel"
+    # The firmware type has been updated
+    assert config_entry.data["firmware"] == "spinel"
 
 
 @pytest.mark.usefixtures("addon_store_info")
