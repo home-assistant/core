@@ -75,6 +75,40 @@
           }
         }
       }
+    },
+    "select": {
+      "taste": {
+        "name": "Taste",
+        "state": {
+          "none": "Not set",
+          "rare": "Rare",
+          "medium_rare": "Medium rare",
+          "medium": "Medium",
+          "medium_well": "Medium well",
+          "well_done": "Well done"
+        }
+      },
+      "grill_type": {
+        "name": "Grill type",
+        "state": {
+          "none": "[%key:component::togrill::entity::select::taste::state::none%]",
+          "beef": "Beef",
+          "veal": "Veal",
+          "lamb": "Lamb",
+          "pork": "Pork",
+          "turkey": "Turkey",
+          "chicken": "Chicken",
+          "sausage": "Sausage",
+          "fish": "Fish",
+          "hamburger": "Hamburger",
+          "bbq_smoke": "BBQ smoke",
+          "hot_smoke": "Hot smoke",
+          "cold_smoke": "Cold smoke",
+          "mark_a": "Mark A",
+          "mark_b": "Mark B",
+          "mark_c": "Mark C"
+        }
+      }
     }
   }
 }
