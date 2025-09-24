@@ -101,7 +101,6 @@ HA_MODE_TO_HEAT_PUMP_AC_MODE = {v: k for k, v in HEAT_PUMP_AC_MODE_TO_HA.items()
 
 WIND = "wind"
 FAN = "fan"
-WINDFREE = "windFree"
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -577,14 +576,15 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
     @property
     def preset_mode(self) -> str | None:
-        """Return the preset mode."""
+        """Return the current preset mode."""
         if self.supports_capability(Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE):
             mode = self.get_attribute_value(
                 Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
                 Attribute.AC_OPTIONAL_MODE,
             )
-            if mode == WINDFREE:
-                return WINDFREE
+            # Return the mode if it is in the supported modes
+            if self._attr_preset_modes and mode in self._attr_preset_modes:
+                return mode
         return None
 
     def _determine_preset_modes(self) -> list[str] | None:
@@ -594,12 +594,12 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
                 Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
                 Attribute.SUPPORTED_AC_OPTIONAL_MODE,
             )
-            if supported_modes and WINDFREE in supported_modes:
-                return [WINDFREE]
+            if supported_modes:
+                return supported_modes
         return None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set special modes (currently only windFree is supported)."""
+        """Set optional AC modes."""
         await self.execute_device_command(
             Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
             Command.SET_AC_OPTIONAL_MODE,

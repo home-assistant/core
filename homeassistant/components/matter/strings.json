@@ -488,6 +488,9 @@
       "apparent_current": {
         "name": "Apparent current"
       },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
       "reactive_current": {
         "name": "Reactive current"
       },
