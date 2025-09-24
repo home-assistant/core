@@ -10,7 +10,7 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import BASE_URL
+from . import BASE_URL, SERIAL_NUMBER
 
 from tests.common import MockConfigEntry
 
@@ -28,11 +28,11 @@ async def test_full_flow(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_URL: "http://10.0.0.131"},
+        {CONF_URL: BASE_URL},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test 12345"
-    assert result["data"] == {CONF_URL: "http://10.0.0.131"}
+    assert result["title"] == f"Test {SERIAL_NUMBER}"
+    assert result["data"] == {CONF_URL: BASE_URL}
 
 
 async def test_full_flow_fail_because_of_missing_device_infos(
@@ -50,7 +50,7 @@ async def test_full_flow_fail_because_of_missing_device_infos(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_URL: "http://10.0.0.131"},
+        {CONF_URL: BASE_URL},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -72,7 +72,7 @@ async def test_device_already_configured(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_URL: "http://10.0.0.131"},
+        user_input={CONF_URL: BASE_URL},
     )
 
     assert result2.get("type") is FlowResultType.ABORT
@@ -96,7 +96,7 @@ async def test_user_step_invalid_url(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_URL: "http://10.0.0.131"},
+        {CONF_URL: BASE_URL},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_url"}
@@ -117,7 +117,7 @@ async def test_user_step_cannot_connect(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_URL: "http://10.0.0.131"},
+        {CONF_URL: BASE_URL},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
