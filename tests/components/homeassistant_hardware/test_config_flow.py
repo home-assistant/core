@@ -1108,10 +1108,33 @@ async def test_config_flow_thread_migrate_handler(hass: HomeAssistant) -> None:
         assert result["step_id"] == "install_thread_firmware"
 
 
-@pytest.mark.parametrize("zha_source", [SOURCE_USER, SOURCE_IGNORE])
-@pytest.mark.parametrize("otbr_source", [SOURCE_USER, SOURCE_IGNORE])
+@pytest.mark.parametrize(
+    ("zha_source", "otbr_source", "expected_menu"),
+    [
+        (
+            SOURCE_USER,
+            SOURCE_USER,
+            ["pick_firmware_zigbee_migrate", "pick_firmware_thread_migrate"],
+        ),
+        (
+            SOURCE_IGNORE,
+            SOURCE_USER,
+            ["pick_firmware_zigbee", "pick_firmware_thread_migrate"],
+        ),
+        (
+            SOURCE_USER,
+            SOURCE_IGNORE,
+            ["pick_firmware_zigbee_migrate", "pick_firmware_thread"],
+        ),
+        (
+            SOURCE_IGNORE,
+            SOURCE_IGNORE,
+            ["pick_firmware_zigbee", "pick_firmware_thread"],
+        ),
+    ],
+)
 async def test_config_flow_pick_firmware_with_ignored_entries(
-    hass: HomeAssistant, zha_source: str, otbr_source: str
+    hass: HomeAssistant, zha_source: str, otbr_source: str, expected_menu: str
 ) -> None:
     """Test that ignored entries are properly excluded from migration menu options."""
     zha_entry = MockConfigEntry(
@@ -1138,16 +1161,4 @@ async def test_config_flow_pick_firmware_with_ignored_entries(
     assert init_result["type"] is FlowResultType.MENU
     assert init_result["step_id"] == "pick_firmware"
 
-    # Expected menu options based on whether entries are ignored or not
-    assert init_result["menu_options"] == [
-        (
-            "pick_firmware_zigbee_migrate"
-            if zha_source != SOURCE_IGNORE
-            else "pick_firmware_zigbee"
-        ),
-        (
-            "pick_firmware_thread_migrate"
-            if otbr_source != SOURCE_IGNORE
-            else "pick_firmware_thread"
-        ),
-    ]
+    assert init_result["menu_options"] == expected_menu
