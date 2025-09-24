@@ -89,6 +89,23 @@ class NessAlarmPanel(AlarmControlPanelEntity):
             )
         )
 
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
+        """Send disarm command."""
+        await self._client.disarm(code)
+
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
+        """Send arm away command."""
+        await self._client.arm_away(code)
+
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
+        """Send arm home command."""
+        if self._support_home_arm:
+            await self._client.arm_home(code)
+
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
+        """Send alarm trigger command (panic)."""
+        await self._client.panic(code)
+
     @callback
     def _handle_arming_state_change(
         self, arming_state: ArmingState, arming_mode: ArmingMode | None
@@ -129,20 +146,3 @@ class NessAlarmPanel(AlarmControlPanelEntity):
         if self._support_home_arm:
             features |= AlarmControlPanelEntityFeature.ARM_HOME
         return features
-
-    async def async_alarm_disarm(self, code: str | None = None) -> None:
-        """Send disarm command."""
-        await self._client.disarm(code)
-
-    async def async_alarm_arm_away(self, code: str | None = None) -> None:
-        """Send arm away command."""
-        await self._client.arm_away(code)
-
-    async def async_alarm_arm_home(self, code: str | None = None) -> None:
-        """Send arm home command."""
-        if self._support_home_arm:
-            await self._client.arm_home(code)
-
-    async def async_alarm_trigger(self, code: str | None = None) -> None:
-        """Send alarm trigger command (panic)."""
-        await self._client.panic(code)
