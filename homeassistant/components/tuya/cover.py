@@ -143,9 +143,11 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
 }
 
 _QUIRKS: dict[str, dict[str, Any]] = {
+    # Quirks for devices where the standard descriptions don't work well
+    # Key is "{device.category}_{device.product_id}_{description.key}"
     "cl_lfkr93x0ukp5gaia_control": {
         # This model has percent_control / percent_state / situation_set
-        # but they never change - use control instead
+        # but they never get updated - use control instead to get the state
         "current_state": DPCode.CONTROL,
         "current_position": None,
         "set_position": None,
