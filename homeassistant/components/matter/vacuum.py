@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, cast
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import NullValue
 from matter_server.client.models import device_types
+from matter_server.common.errors import MatterError
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -229,16 +230,19 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         self, areas: list[int], **kwargs: Any
     ) -> ServiceResponse:
         """Start cleaning the specified areas."""
-        # Matter command to the vacuum cleaner to select the areas.
-        await self.send_device_command(
-            clusters.ServiceArea.Commands.SelectAreas(newAreas=areas)
-        )
-        # Start the vacuum cleaner after selecting areas.
-        await self.async_start()
-        # Return response indicating selected areas.
-        return cast(
-            ServiceResponse, {"status": "cleaning areas selected", "areas": areas}
-        )
+        try:
+            # Matter command to the vacuum cleaner to select the areas.
+            await self.send_device_command(
+                clusters.ServiceArea.Commands.SelectAreas(newAreas=areas)
+            )
+            # Start the vacuum cleaner after selecting areas.
+            await self.async_start()
+            # Return response indicating selected areas.
+            return cast(
+                ServiceResponse, {"status": "cleaning areas selected", "areas": areas}
+            )
+        except MatterError as err:
+            raise MatterError(f"Failed to start cleaning areas {areas}: {err}") from err
 
     @callback
     def _update_from_device(self) -> None:
