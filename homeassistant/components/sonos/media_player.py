@@ -538,9 +538,13 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         share_link = self.coordinator.share_link
         if share_link.is_share_link(media_id):
+            # Pass the title to SoCo to fill metadata.
+            # Use empty string, if no title is provided.
+            title = kwargs.get("extra", {}).pop("title", "")
+            soco_kwargs = {"dc_title": title}
             if enqueue == MediaPlayerEnqueue.ADD:
                 share_link.add_share_link_to_queue(
-                    media_id, timeout=LONG_SERVICE_TIMEOUT
+                    media_id, timeout=LONG_SERVICE_TIMEOUT, **soco_kwargs
                 )
             elif enqueue in (
                 MediaPlayerEnqueue.NEXT,
@@ -548,14 +552,14 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             ):
                 pos = (self.media.queue_position or 0) + 1
                 new_pos = share_link.add_share_link_to_queue(
-                    media_id, position=pos, timeout=LONG_SERVICE_TIMEOUT
+                    media_id, position=pos, timeout=LONG_SERVICE_TIMEOUT, **soco_kwargs
                 )
                 if enqueue == MediaPlayerEnqueue.PLAY:
                     soco.play_from_queue(new_pos - 1)
             elif enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.clear_queue()
                 share_link.add_share_link_to_queue(
-                    media_id, timeout=LONG_SERVICE_TIMEOUT
+                    media_id, timeout=LONG_SERVICE_TIMEOUT, **soco_kwargs
                 )
                 soco.play_from_queue(0)
         elif media_type == MEDIA_TYPE_DIRECTORY:
