@@ -364,7 +364,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         if user_input is not None or self._radio_mgr.radio_type in RECOMMENDED_RADIOS:
             # ZHA disables the single instance check and will decide at runtime if we
             # are migrating or setting up from scratch
-            if self.hass.config_entries.async_entries(DOMAIN):
+            if self.hass.config_entries.async_entries(DOMAIN, include_ignore=False):
                 return await self.async_step_choose_migration_strategy()
             return await self.async_step_choose_setup_strategy()
 
@@ -386,7 +386,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         # Allow onboarding for new users to just create a new network automatically
         if (
             not onboarding.async_is_onboarded(self.hass)
-            and not self.hass.config_entries.async_entries(DOMAIN)
+            and not self.hass.config_entries.async_entries(DOMAIN, include_ignore=False)
             and not self._radio_mgr.backups
         ):
             return await self.async_step_setup_strategy_recommended()
@@ -438,7 +438,9 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         """Erase the old radio's network settings before migration."""
 
         # Like in the options flow, pull the correct settings from the config entry
-        config_entries = self.hass.config_entries.async_entries(DOMAIN)
+        config_entries = self.hass.config_entries.async_entries(
+            DOMAIN, include_ignore=False
+        )
 
         if config_entries:
             assert len(config_entries) == 1
@@ -697,7 +699,9 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
         self._set_confirm_only()
 
-        zha_config_entries = self.hass.config_entries.async_entries(DOMAIN)
+        zha_config_entries = self.hass.config_entries.async_entries(
+            DOMAIN, include_ignore=False
+        )
 
         # Without confirmation, discovery can automatically progress into parts of the
         # config flow logic that interacts with hardware.
@@ -866,7 +870,9 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
         # ZHA is still single instance only, even though we use discovery to allow for
         # migrating to a new radio
-        zha_config_entries = self.hass.config_entries.async_entries(DOMAIN)
+        zha_config_entries = self.hass.config_entries.async_entries(
+            DOMAIN, include_ignore=False
+        )
         data = await self._get_config_entry_data()
 
         if len(zha_config_entries) == 1:
