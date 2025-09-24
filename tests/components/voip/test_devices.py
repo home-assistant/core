@@ -106,11 +106,13 @@ async def test_device_load_contact(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test loading contact endpoint from Store."""
+    voip_id = call_info.caller_endpoint.uri
     mock_store = AsyncMock()
-    mock_store.async_load.return_value = {"contact": "Test <sip:example.com:5061>"}
+    mock_store.async_load.return_value = {
+        voip_id: {"contact": "Test <sip:example.com:5061>"}
+    }
 
     # Initialize voip device
-    voip_id = call_info.caller_endpoint.uri
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, voip_id)},
