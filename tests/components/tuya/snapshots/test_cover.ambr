@@ -553,7 +553,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'open',
+    'state': 'closed',
   })
 # ---
 # name: test_platform_setup_and_discovery[cover.roller_shutter_living_room_curtain-entry]
