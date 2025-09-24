@@ -506,7 +506,7 @@ DEFAULT_DEVICE_ANALYTICS_CONFIG = DeviceAnalyticsModifications()
 DEFAULT_ENTITY_ANALYTICS_CONFIG = EntityAnalyticsModifications()
 
 
-async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
+async def async_devices_payload(hass: HomeAssistant) -> dict:
     """Return detailed information about entities and devices."""
     dev_reg = dr.async_get(hass)
     ent_reg = er.async_get(hass)
@@ -537,6 +537,22 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
 
         integration_input = integration_inputs.setdefault(integration_domain, ([], []))
         integration_input[1].append(entity_entry.entity_id)
+
+    integrations = {
+        domain: integration
+        for domain, integration in (
+            await async_get_integrations(hass, integration_inputs.keys())
+        ).items()
+        if isinstance(integration, Integration)
+    }
+
+    # Filter out custom integrations
+    integration_inputs = {
+        domain: integration_info
+        for domain, integration_info in integration_inputs.items()
+        if (integration := integrations.get(domain)) is not None
+        and integration.is_built_in
+    }
 
     # Call integrations that implement the analytics platform
     for integration_domain, integration_input in integration_inputs.items():
@@ -687,23 +703,6 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
                 device_info["entities"].append(entity_info)
             else:
                 entities_info.append(entity_info)
-
-    integrations = {
-        domain: integration
-        for domain, integration in (
-            await async_get_integrations(hass, integrations_info.keys())
-        ).items()
-        if isinstance(integration, Integration)
-    }
-
-    for domain, integration_info in integrations_info.items():
-        if integration := integrations.get(domain):
-            integration_info["is_custom_integration"] = not integration.is_built_in
-            # Include version for custom integrations
-            if not integration.is_built_in and integration.version:
-                integration_info["custom_integration_version"] = str(
-                    integration.version
-                )
 
     return {
         "version": "home-assistant:1",
