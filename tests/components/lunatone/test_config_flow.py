@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 import aiohttp
+import pytest
 
 from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -79,13 +80,21 @@ async def test_device_already_configured(
     assert result2.get("reason") == "already_configured"
 
 
-async def test_user_step_invalid_url(
-    hass: HomeAssistant, mock_lunatone_info: AsyncMock
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (aiohttp.InvalidUrlClientError(BASE_URL), "invalid_url"),
+        (aiohttp.ClientConnectionError(), "cannot_connect"),
+    ],
+)
+async def test_user_step_fail_with_error(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    exception: Exception,
+    expected_error: str,
 ) -> None:
-    """Test if cannot connect."""
-    mock_lunatone_info.async_update.side_effect = aiohttp.InvalidUrlClientError(
-        BASE_URL
-    )
+    """Test user step with an error."""
+    mock_lunatone_info.async_update.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -99,7 +108,7 @@ async def test_user_step_invalid_url(
         {CONF_URL: BASE_URL},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_url"}
+    assert result["errors"] == {"base": expected_error}
 
     mock_lunatone_info.async_update.side_effect = None
 
@@ -110,27 +119,6 @@ async def test_user_step_invalid_url(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Test {SERIAL_NUMBER}"
     assert result["data"] == {CONF_URL: BASE_URL}
-
-
-async def test_user_step_cannot_connect(
-    hass: HomeAssistant, mock_lunatone_info: AsyncMock
-) -> None:
-    """Test if cannot connect."""
-    mock_lunatone_info.async_update.side_effect = aiohttp.ClientConnectionError()
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_URL: BASE_URL},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_reconfigure(
