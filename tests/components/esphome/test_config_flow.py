@@ -1278,7 +1278,7 @@ async def test_reauth_fixed_via_dashboard_add_encryption_remove_password(
 ) -> None:
     """Test reauth fixed automatically via dashboard with password removed."""
     mock_client.device_info.side_effect = (
-        InvalidAuthAPIError,
+        InvalidEncryptionKeyAPIError("Wrong key", "test"),
         DeviceInfo(uses_password=False, name="test", mac_address="11:22:33:44:55:aa"),
     )
 
