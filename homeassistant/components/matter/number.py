@@ -10,7 +10,6 @@ from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
 from matter_server.client.models import device_types
 from matter_server.common import custom_clusters
-from matter_server.common.errors import MatterError
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -28,7 +27,6 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
@@ -82,14 +80,7 @@ class MatterNumber(MatterEntity, NumberEntity):
         sendvalue = int(value)
         if value_convert := self.entity_description.ha_to_device:
             sendvalue = value_convert(value)
-        try:
-            await self.write_attribute(
-                value=sendvalue,
-            )
-        except MatterError:
-            raise HomeAssistantError(
-                "The device does not allow to change this value."
-            ) from None
+        await self.write_attribute(value=sendvalue)
 
     @callback
     def _update_from_device(self) -> None:
