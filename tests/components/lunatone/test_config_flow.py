@@ -16,9 +16,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_full_flow(
-    hass: HomeAssistant,
-    mock_lunatone_info: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_lunatone_info: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test full flow with all DALI device scan methods."""
     result = await hass.config_entries.flow.async_init(
@@ -126,9 +124,7 @@ async def test_user_step_cannot_connect(
 
 
 async def test_reconfigure(
-    hass: HomeAssistant,
-    mock_lunatone_info: AsyncMock,
-    mock_config_entry: AsyncMock,
+    hass: HomeAssistant, mock_lunatone_info: AsyncMock, mock_config_entry: AsyncMock
 ) -> None:
     """Test reconfigure flow."""
     mock_config_entry.add_to_hass(hass)

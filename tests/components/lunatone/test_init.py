@@ -15,8 +15,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(
-    hass: HomeAssistant,
-    setup_integration: MockConfigEntry,
+    hass: HomeAssistant, setup_integration: MockConfigEntry
 ) -> None:
     """Test the Lunatone configuration entry loading/unloading."""
     config_entry = setup_integration
@@ -115,8 +114,7 @@ async def test_config_entry_not_ready_no_serial_number(
 
 
 async def test_device_info(
-    setup_integration: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
+    setup_integration: MockConfigEntry, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test device registry integration."""
     config_entry = setup_integration
