@@ -426,9 +426,13 @@ DISCOVERY_SCHEMAS = [
             if x is None
             else x / TEMPERATURE_SCALING_FACTOR,
             ha_to_device=lambda x: round(x * TEMPERATURE_SCALING_FACTOR),
+            format_min_value=lambda x: x / 100,
+            format_max_value=lambda x: x / 100,
+            min_attribute=clusters.TemperatureControl.Attributes.MinHeatSetpointLimit,
+            max_attribute=clusters.TemperatureControl.Attributes.MaxHeatSetpointLimit,
             mode=NumberMode.SLIDER,
         ),
-        entity_class=MatterNumber,
+        entity_class=MatterRangeNumber,
         required_attributes=(clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,),
     ),
     MatterDiscoverySchema(
