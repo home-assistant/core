@@ -29,10 +29,23 @@ async def async_setup_entry(
 
     coordinator = cast(ComelitVedoSystem, config_entry.runtime_data)
 
-    async_add_entities(
-        ComelitVedoBinarySensorEntity(coordinator, device, config_entry.entry_id)
-        for device in coordinator.data["alarm_zones"].values()
-    )
+    known_devices: set[int] = set()
+
+    def _check_device() -> None:
+        current_devices = set(coordinator.data["alarm_zones"])
+        new_devices = current_devices - known_devices
+        if new_devices:
+            known_devices.update(new_devices)
+            async_add_entities(
+                ComelitVedoBinarySensorEntity(
+                    coordinator, device, config_entry.entry_id
+                )
+                for device in coordinator.data["alarm_zones"].values()
+                if device.index in new_devices
+            )
+
+    _check_device()
+    config_entry.async_on_unload(coordinator.async_add_listener(_check_device))
 
 
 class ComelitVedoBinarySensorEntity(
