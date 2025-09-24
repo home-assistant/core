@@ -101,6 +101,16 @@ async def test_user_step_invalid_url(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_url"}
 
+    mock_lunatone_info.async_update.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: BASE_URL},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"Test {SERIAL_NUMBER}"
+    assert result["data"] == {CONF_URL: BASE_URL}
+
 
 async def test_user_step_cannot_connect(
     hass: HomeAssistant, mock_lunatone_info: AsyncMock
