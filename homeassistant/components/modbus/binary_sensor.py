@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_DEVICE_CLASS,
@@ -13,7 +14,10 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
@@ -28,6 +32,7 @@ from .const import (
     CALL_TYPE_DISCRETE,
     CONF_SLAVE_COUNT,
     CONF_VIRTUAL_COUNT,
+    MODBUS_DOMAIN,
 )
 from .entity import ModbusBaseEntity
 from .modbus import ModbusHub
@@ -46,9 +51,33 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
+    entry = ConfigEntry(
+        data=discovery_info,
+        discovery_keys=None,  # type: ignore[arg-type]
+        domain=MODBUS_DOMAIN,
+        minor_version=1,
+        options=None,
+        source="",
+        subentries_data=None,
+        title="",
+        unique_id="1234",
+        version=1,
+    )
+    await async_setup_entry(hass, entry, async_add_entities)  # type: ignore[arg-type]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up climates."""
+    if CONF_BINARY_SENSORS not in config_entry.data:
+        return
+
     sensors: list[ModbusBinarySensor | SlaveSensor] = []
-    hub = get_hub(hass, discovery_info[CONF_NAME])
-    for entry in discovery_info[CONF_BINARY_SENSORS]:
+    hub = get_hub(hass, config_entry.data[CONF_NAME])
+    for entry in config_entry.data[CONF_BINARY_SENSORS]:
         slave_count = entry.get(CONF_SLAVE_COUNT, None) or entry.get(
             CONF_VIRTUAL_COUNT, 0
         )
