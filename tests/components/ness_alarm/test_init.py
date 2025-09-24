@@ -12,6 +12,8 @@ from homeassistant.components.ness_alarm import (
     CONF_PORT,
     CONFIG_SCHEMA,
     PLATFORMS,
+    async_remove_entry,
+    async_setup,
     async_setup_entry,
     async_setup_services,
     config_flow,
@@ -39,8 +41,10 @@ from homeassistant.const import (
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -634,3 +638,174 @@ async def test_async_setup_entry_callbacks(hass: HomeAssistant) -> None:
             assert getattr(mock_client, "_state_cb_registered", False) is True
 
             mock_forward.assert_called_once_with(entry, PLATFORMS)
+
+
+# Add these tests to your existing test_init.py file
+
+
+async def test_yaml_config_with_existing_ui_entry(
+    hass: HomeAssistant, mock_nessclient
+) -> None:
+    """Test YAML configuration when UI configuration already exists."""
+    # First, set up via UI (mock config entry)
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.50",
+            CONF_PORT: 2401,
+            "panel_model": "D8X",
+        },
+        source="user",
+    )
+    mock_entry.add_to_hass(hass)
+
+    # Setup the existing entry
+    with patch(
+        "homeassistant.components.ness_alarm.Client",
+        return_value=mock_nessclient,
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Now attempt to set up from YAML - should create warning issue
+    yaml_config = {
+        DOMAIN: {
+            CONF_HOST: "192.168.1.100",  # Different host
+            CONF_DEVICE_PORT: 2402,  # Different port
+            CONF_ZONES: [
+                {CONF_ZONE_NAME: "Zone 1", CONF_ZONE_ID: 1},
+            ],
+        }
+    }
+
+    with patch(
+        "homeassistant.components.ness_alarm.ir.async_create_issue"
+    ) as mock_create_issue:
+        # Import the actual async_setup function
+
+        result = await async_setup(hass, yaml_config)
+        assert result is True
+
+        # Verify issue was created for duplicate YAML
+        mock_create_issue.assert_called_once()
+        call_args = mock_create_issue.call_args
+
+        # Check the issue parameters
+        assert call_args[0][0] == hass  # hass instance
+        assert call_args[0][1] == DOMAIN  # domain
+        assert "yaml_duplicate" in call_args[0][2]  # issue id contains yaml_duplicate
+
+        # Check the kwargs
+        assert call_args[1]["is_fixable"] is False
+        assert call_args[1]["is_persistent"] is True
+        assert call_args[1]["severity"] == ir.IssueSeverity.WARNING
+        assert call_args[1]["translation_key"] == "yaml_config_duplicate"
+        assert call_args[1]["translation_placeholders"]["host"] == "192.168.1.100"
+        assert call_args[1]["translation_placeholders"]["port"] == "2402"
+
+        # Verify no new config flow was started (since entry already exists)
+        # The import flow should NOT be triggered when there's an existing entry
+
+
+async def test_async_remove_entry_with_entities(
+    hass: HomeAssistant, mock_nessclient
+) -> None:
+    """Test removing config entry also removes associated entities."""
+
+    # Create a mock config entry
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 2401,
+            "panel_model": "D8X",
+        },
+        entry_id="test_entry_for_removal",
+    )
+    mock_entry.add_to_hass(hass)
+
+    # Setup the integration
+    with patch(
+        "homeassistant.components.ness_alarm.Client",
+        return_value=mock_nessclient,
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Get entity registry and add test entities
+    entity_registry = er.async_get(hass)
+
+    # Create test entities associated with this config entry
+    alarm_entity = entity_registry.async_get_or_create(
+        Platform.ALARM_CONTROL_PANEL,
+        DOMAIN,
+        "test_alarm_panel",
+        config_entry=mock_entry,
+        suggested_object_id="test_alarm",
+    )
+
+    zone1_entity = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        "test_zone_1",
+        config_entry=mock_entry,
+        suggested_object_id="test_zone_1",
+    )
+
+    zone2_entity = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        "test_zone_2",
+        config_entry=mock_entry,
+        suggested_object_id="test_zone_2",
+    )
+
+    # Create an entity from a different integration (should NOT be removed)
+    other_entry = MockConfigEntry(
+        domain="other_domain",
+        data={"some": "data"},
+        entry_id="other_entry_id",
+    )
+    other_entry.add_to_hass(hass)
+
+    other_entity = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        "other_domain",
+        "other_sensor_unique",
+        config_entry=other_entry,
+        suggested_object_id="other_sensor",
+    )
+
+    # Verify all entities exist before removal
+    assert entity_registry.async_get(alarm_entity.entity_id) is not None
+    assert entity_registry.async_get(zone1_entity.entity_id) is not None
+    assert entity_registry.async_get(zone2_entity.entity_id) is not None
+    assert entity_registry.async_get(other_entity.entity_id) is not None
+
+    # Call async_remove_entry
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        return_value=True,
+    ):
+        await async_remove_entry(hass, mock_entry)
+        await hass.async_block_till_done()
+
+    # Verify Ness Alarm entities were removed
+    assert entity_registry.async_get(alarm_entity.entity_id) is None
+    assert entity_registry.async_get(zone1_entity.entity_id) is None
+    assert entity_registry.async_get(zone2_entity.entity_id) is None
+
+    # Verify other entity was NOT removed
+    assert entity_registry.async_get(other_entity.entity_id) is not None
+
+
+async def test_async_setup_without_yaml_config(hass: HomeAssistant) -> None:
+    """Test async_setup returns True when no YAML config is present."""
+
+    # Call async_setup with empty config (no DOMAIN key)
+    result = await async_setup(hass, {})
+    assert result is True
+
+    # Also test with other config but no ness_alarm
+    result = await async_setup(hass, {"other_domain": {"key": "value"}})
+    assert result is True

@@ -118,12 +118,13 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # Only runs if validate_input succeeded
-                unique_id = f"{info['model']}_{info['version']}_{DOMAIN}"
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
+                self._async_abort_entries_match(
+                    {
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
+                    }
+                )
 
-                # Store panel model in data for use by binary_sensor
                 user_input["panel_model"] = info["model"]
 
                 return self.async_create_entry(
@@ -182,16 +183,16 @@ class NessConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, data)
-            unique_id = f"{info['model']}_{info['version']}_{DOMAIN}"
-            await self.async_set_unique_id(unique_id)
 
-            # This second check catches edge cases (same model/version at different IPs)
-            self._abort_if_unique_id_configured()
+            self._async_abort_entries_match(
+                {
+                    CONF_HOST: data[CONF_HOST],
+                    CONF_PORT: data[CONF_PORT],
+                }
+            )
 
-            # Store panel model
             data["panel_model"] = info["model"]
 
-            # Create issue about successful import with unique ID
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,

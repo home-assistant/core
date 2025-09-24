@@ -590,45 +590,6 @@ async def test_options_flow_without_enabled_zones(hass: HomeAssistant) -> None:
     assert updated_entry.data["panel_model"] == "D16X"
 
 
-async def test_unique_id_format(hass: HomeAssistant, mock_panel_info) -> None:
-    """Test that unique_id is set as model_version_domain."""
-    with (
-        patch(
-            "homeassistant.components.ness_alarm.config_flow.Client"
-        ) as mock_client_class,
-        patch(
-            "homeassistant.components.ness_alarm.async_setup_entry", return_value=True
-        ),
-    ):
-        mock_client = AsyncMock(spec=Client)
-        mock_client_class.return_value = mock_client
-        mock_client.get_panel_info = AsyncMock(return_value=mock_panel_info)
-        mock_client.keepalive = AsyncMock()
-        mock_client.close = AsyncMock()
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "192.168.1.100",
-                CONF_PORT: 2401,
-                CONF_INFER_ARMING_STATE: False,
-            },
-        )
-        await hass.async_block_till_done()
-
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert (
-        entry.unique_id
-        == f"{mock_panel_info.model.value}_{mock_panel_info.version}_{DOMAIN}"
-    )
-
-
 async def test_duplicate_import_entry(hass: HomeAssistant, mock_panel_info) -> None:
     """Test that duplicate entries from import are aborted."""
     with (
