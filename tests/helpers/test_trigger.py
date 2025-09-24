@@ -24,6 +24,7 @@ from homeassistant.helpers.trigger import (
     PluggableAction,
     Trigger,
     TriggerActionType,
+    TriggerConfig,
     TriggerInfo,
     _async_get_trigger_platform,
     async_initialize_triggers,
@@ -55,14 +56,10 @@ async def test_trigger_subtype(hass: HomeAssistant) -> None:
         assert integration_mock.call_args == call(hass, "test")
 
 
-async def test_trigger_variables(hass: HomeAssistant) -> None:
-    """Test trigger variables."""
-
-
-async def test_if_fires_on_event(
+async def test_trigger_variables(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
-    """Test the firing of events."""
+    """Test trigger variables."""
     assert await async_setup_component(
         hass,
         "automation",
@@ -535,7 +532,7 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
             """Validate config."""
             return config
 
-        def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+        def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
             """Initialize trigger."""
 
     class MockTrigger1(MockTrigger):
@@ -612,13 +609,13 @@ async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:
 
         @classmethod
         async def async_validate_complete_config(
-            cls, hass: HomeAssistant, config: ConfigType
+            cls, hass: HomeAssistant, complete_config: ConfigType
         ) -> ConfigType:
             """Validate complete config."""
-            config = move_top_level_schema_fields_to_options(
-                config, OPTIONS_SCHEMA_DICT
+            complete_config = move_top_level_schema_fields_to_options(
+                complete_config, OPTIONS_SCHEMA_DICT
             )
-            return await super().async_validate_complete_config(hass, config)
+            return await super().async_validate_complete_config(hass, complete_config)
 
         @classmethod
         async def async_validate_config(
