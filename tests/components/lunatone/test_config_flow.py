@@ -19,7 +19,7 @@ from tests.common import MockConfigEntry
 async def test_full_flow(
     hass: HomeAssistant, mock_lunatone_info: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test full flow with all DALI device scan methods."""
+    """Test full user flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
