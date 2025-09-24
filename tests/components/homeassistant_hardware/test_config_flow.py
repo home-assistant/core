@@ -844,7 +844,7 @@ async def test_options_flow_zigbee_to_thread(
 
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "install_otbr_addon"
-        assert result["progress_action"] == "install_addon"
+        assert result["progress_action"] == "install_otbr_addon"
 
         await hass.async_block_till_done(wait_background_tasks=True)
 
