@@ -151,6 +151,15 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
     url: str
 
 
+class ProgressStepData[_FlowResultT](TypedDict):
+    """Typed data for progress step tracking."""
+
+    tasks: dict[str, asyncio.Task[Any]]
+    abort_reason: str
+    abort_description_placeholders: Mapping[str, str]
+    next_step_result: _FlowResultT | None
+
+
 def _map_error_to_schema_errors(
     schema_errors: dict[str, Any],
     error: vol.Invalid,
@@ -641,11 +650,13 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
 
     __progress_task: asyncio.Task[Any] | None = None
     __no_progress_task_reported = False
-    _decorated_progress_tasks: dict[str, asyncio.Task[Any]] = {}
     deprecated_show_progress = False
-    abort_reason: str = "abort"
-    abort_description_placeholders: Mapping[str, str] = MappingProxyType({})
-    progress_next_step: _FlowResultT | None = None
+    _progress_step_data: ProgressStepData[_FlowResultT] = {
+        "tasks": {},
+        "abort_reason": "abort",
+        "abort_description_placeholders": MappingProxyType({}),
+        "next_step_result": None,
+    }
 
     @property
     def source(self) -> str | None:
@@ -768,16 +779,18 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             description_placeholders=description_placeholders,
         )
 
-    async def async_step_abort(
+    async def async_step__progress_step_abort(
         self, user_input: dict[str, Any] | None = None
     ) -> _FlowResultT:
         """Abort the flow."""
         return self.async_abort(
-            reason=self.abort_reason,
-            description_placeholders=self.abort_description_placeholders,
+            reason=self._progress_step_data["abort_reason"],
+            description_placeholders=self._progress_step_data[
+                "abort_description_placeholders"
+            ],
         )
 
-    async def async_step_progress_done(
+    async def async_step__progress_step_progress_done(
         self, user_input: dict[str, Any] | None = None
     ) -> _FlowResultT:
         """Progress done. Return the next step.
@@ -785,12 +798,14 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         Used by progress_step decorator to keep the API consistent.
         If no next step is set, abort the flow.
         """
-        if self.progress_next_step is None:
+        if self._progress_step_data["next_step_result"] is None:
             return self.async_abort(
-                reason=self.abort_reason,
-                description_placeholders=self.abort_description_placeholders,
+                reason=self._progress_step_data["abort_reason"],
+                description_placeholders=self._progress_step_data[
+                    "abort_description_placeholders"
+                ],
             )
-        return self.progress_next_step
+        return self._progress_step_data["next_step_result"]
 
     @callback
     def async_external_step(
@@ -1000,7 +1015,7 @@ def progress_step[
             action = progress_action or step_id
 
             # Check if we have a progress task running
-            progress_task = self._decorated_progress_tasks.get(step_id)
+            progress_task = self._progress_step_data["tasks"].get(step_id)
 
             if progress_task is None:
                 # First call - create and start the progress task
@@ -1008,7 +1023,7 @@ def progress_step[
                     func(self, *args, **kwargs),  # type: ignore[arg-type]
                     f"Progress step {step_id}",
                 )
-                self._decorated_progress_tasks[step_id] = progress_task
+                self._progress_step_data["tasks"][step_id] = progress_task
 
                 if not progress_task.done():
                     # Handle description placeholders
@@ -1028,16 +1043,22 @@ def progress_step[
 
             # Task is done or this is a subsequent call
             try:
-                self.progress_next_step = await progress_task
+                self._progress_step_data["next_step_result"] = await progress_task
             except AbortFlow as err:
-                self.abort_reason = err.reason
-                self.abort_description_placeholders = err.description_placeholders or {}
-                return self.async_show_progress_done(next_step_id="abort")
+                self._progress_step_data["abort_reason"] = err.reason
+                self._progress_step_data["abort_description_placeholders"] = (
+                    err.description_placeholders or {}
+                )
+                return self.async_show_progress_done(
+                    next_step_id="_progress_step_abort"
+                )
             finally:
                 # Clean up task reference
-                self._decorated_progress_tasks.pop(step_id, None)
+                self._progress_step_data["tasks"].pop(step_id, None)
 
-            return self.async_show_progress_done(next_step_id="progress_done")
+            return self.async_show_progress_done(
+                next_step_id="_progress_step_progress_done"
+            )
 
         return wrapper
 

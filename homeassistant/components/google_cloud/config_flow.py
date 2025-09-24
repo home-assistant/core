@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from google.cloud import texttospeech
 import voluptuous as vol
@@ -63,6 +63,7 @@ class GoogleCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _name: str | None = None
     entry: ConfigEntry | None = None
+    abort_reason: str | None = None
 
     def _parse_uploaded_file(self, uploaded_file_id: str) -> dict[str, Any]:
         """Read and parse an uploaded JSON file."""
@@ -87,6 +88,8 @@ class GoogleCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 data = {CONF_SERVICE_ACCOUNT_INFO: service_account_info}
                 if self.entry:
+                    if TYPE_CHECKING:
+                        assert self.abort_reason
                     return self.async_update_reload_and_abort(
                         self.entry, data=data, reason=self.abort_reason
                     )
