@@ -2378,3 +2378,52 @@ async def test_formation_strategy_restore_manual_backup_overwrite_ieee_ezsp_writ
 
     assert mock_restore_backup.call_count == 1
     assert mock_restore_backup.mock_calls[0].kwargs["overwrite_ieee"] is True
+
+
+@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
+async def test_migrate_setup_options_with_ignored_discovery(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test that ignored discovery info is migrated to options."""
+
+    # Ignored ZHA
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="AAAA:AAAA_1234_test_zigbee radio",
+        data={
+            CONF_DEVICE: {
+                CONF_DEVICE_PATH: "/dev/ttyUSB1",
+                CONF_BAUDRATE: 115200,
+                CONF_FLOW_CONTROL: None,
+            }
+        },
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    # Set up one discovery entry
+    discovery_info = UsbServiceInfo(
+        device="/dev/ttyZIGBEE",
+        pid="BBBB",
+        vid="BBBB",
+        serial_number="5678",
+        description="zigbee radio",
+        manufacturer="test manufacturer",
+    )
+    discovery_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
+    )
+    await hass.async_block_till_done()
+
+    # Progress the discovery
+    confirm_result = await hass.config_entries.flow.async_configure(
+        discovery_result["flow_id"], user_input={}
+    )
+    await hass.async_block_till_done()
+
+    # We only show "setup" options, not "migrate"
+    assert confirm_result["step_id"] == "choose_setup_strategy"
+    assert confirm_result["menu_options"] == [
+        "setup_strategy_recommended",
+        "setup_strategy_advanced",
+    ]

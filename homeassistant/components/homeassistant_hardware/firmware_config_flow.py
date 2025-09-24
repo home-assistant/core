@@ -123,8 +123,12 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     ) -> ConfigFlowResult:
         """Pick Thread or Zigbee firmware."""
         # Determine if ZHA or Thread are already configured to present migrate options
-        zha_entries = self.hass.config_entries.async_entries(ZHA_DOMAIN)
-        otbr_entries = self.hass.config_entries.async_entries(OTBR_DOMAIN)
+        zha_entries = self.hass.config_entries.async_entries(
+            ZHA_DOMAIN, include_ignore=False
+        )
+        otbr_entries = self.hass.config_entries.async_entries(
+            OTBR_DOMAIN, include_ignore=False
+        )
 
         return self.async_show_menu(
             step_id="pick_firmware",
