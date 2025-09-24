@@ -4,7 +4,7 @@ import asyncio
 from datetime import timedelta
 import time
 from typing import Any
-from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
@@ -140,7 +140,6 @@ async def test_setup_and_stop_passive(
         "adapter": "hci0",
         "bluez": scanner.PASSIVE_SCANNER_ARGS,  # pylint: disable=c-extension-no-member
         "scanning_mode": "passive",
-        "detection_callback": ANY,
     }
 
 
@@ -190,7 +189,6 @@ async def test_setup_and_stop_old_bluez(
     assert init_kwargs == {
         "adapter": "hci0",
         "scanning_mode": "active",
-        "detection_callback": ANY,
     }
 
 

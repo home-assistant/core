@@ -4,13 +4,14 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
+from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.ai_task import AITaskPreferences
-from homeassistant.components.ai_task.const import DATA_PREFERENCES
+from homeassistant.components.ai_task.const import DATA_MEDIA_SOURCE, DATA_PREFERENCES
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
@@ -291,6 +292,7 @@ async def test_generate_data_service_invalid_structure(
         ),
     ],
 )
+@freeze_time("2025-06-14 22:59:00")
 async def test_generate_image_service(
     hass: HomeAssistant,
     init_components: None,
@@ -302,21 +304,32 @@ async def test_generate_image_service(
     preferences = hass.data[DATA_PREFERENCES]
     preferences.async_set_preferences(**set_preferences)
 
-    result = await hass.services.async_call(
-        "ai_task",
-        "generate_image",
-        {
-            "task_name": "Test Image",
-            "instructions": "Generate a test image",
-        }
-        | msg_extra,
-        blocking=True,
-        return_response=True,
-    )
+    with patch.object(
+        hass.data[DATA_MEDIA_SOURCE],
+        "async_upload_media",
+        return_value="media-source://ai_task/image/2025-06-14_225900_test_task.png",
+    ) as mock_upload_media:
+        result = await hass.services.async_call(
+            "ai_task",
+            "generate_image",
+            {
+                "task_name": "Test Image",
+                "instructions": "Generate a test image",
+            }
+            | msg_extra,
+            blocking=True,
+            return_response=True,
+        )
 
+    mock_upload_media.assert_called_once()
     assert "image_data" not in result
-    assert result["media_source_id"].startswith("media-source://ai_task/images/")
-    assert result["url"].startswith("http://10.10.10.10:8123/api/ai_task/images/")
+    assert (
+        result["media_source_id"]
+        == "media-source://ai_task/image/2025-06-14_225900_test_task.png"
+    )
+    assert result["url"].startswith(
+        "/ai_task/image/2025-06-14_225900_test_task.png?authSig="
+    )
     assert result["mime_type"] == "image/png"
     assert result["model"] == "mock_model"
     assert result["revised_prompt"] == "mock_revised_prompt"

@@ -56,7 +56,7 @@ from .const import (
     CONF_STOPBITS,
     DEFAULT_HUB,
     DEVICE_ID,
-    MODBUS_DOMAIN as DOMAIN,
+    DOMAIN,
     PLATFORMS,
     RTUOVERTCP,
     SERIAL,
@@ -169,43 +169,43 @@ async def async_modbus_setup(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_modbus)
 
+    def _get_service_call_details(
+        service: ServiceCall,
+    ) -> tuple[ModbusHub, int, int]:
+        """Return the details required to process the service call."""
+        device_address = service.data.get(ATTR_SLAVE, service.data.get(ATTR_UNIT, 1))
+        address = service.data[ATTR_ADDRESS]
+        hub = hub_collect[service.data[ATTR_HUB]]
+        return (hub, device_address, address)
+
     async def async_write_register(service: ServiceCall) -> None:
         """Write Modbus registers."""
-        slave = 1
-        if ATTR_UNIT in service.data:
-            slave = int(float(service.data[ATTR_UNIT]))
+        hub, device_address, address = _get_service_call_details(service)
 
-        if ATTR_SLAVE in service.data:
-            slave = int(float(service.data[ATTR_SLAVE]))
-        address = int(float(service.data[ATTR_ADDRESS]))
         value = service.data[ATTR_VALUE]
-        hub = hub_collect[service.data.get(ATTR_HUB, DEFAULT_HUB)]
         if isinstance(value, list):
             await hub.async_pb_call(
-                slave,
-                address,
-                [int(float(i)) for i in value],
-                CALL_TYPE_WRITE_REGISTERS,
+                device_address, address, value, CALL_TYPE_WRITE_REGISTERS
             )
         else:
             await hub.async_pb_call(
-                slave, address, int(float(value)), CALL_TYPE_WRITE_REGISTER
+                device_address, address, value, CALL_TYPE_WRITE_REGISTER
             )
 
     async def async_write_coil(service: ServiceCall) -> None:
         """Write Modbus coil."""
-        slave = 1
-        if ATTR_UNIT in service.data:
-            slave = int(float(service.data[ATTR_UNIT]))
-        if ATTR_SLAVE in service.data:
-            slave = int(float(service.data[ATTR_SLAVE]))
-        address = service.data[ATTR_ADDRESS]
+        hub, device_address, address = _get_service_call_details(service)
+
         state = service.data[ATTR_STATE]
-        hub = hub_collect[service.data.get(ATTR_HUB, DEFAULT_HUB)]
+
         if isinstance(state, list):
-            await hub.async_pb_call(slave, address, state, CALL_TYPE_WRITE_COILS)
+            await hub.async_pb_call(
+                device_address, address, state, CALL_TYPE_WRITE_COILS
+            )
         else:
-            await hub.async_pb_call(slave, address, state, CALL_TYPE_WRITE_COIL)
+            await hub.async_pb_call(
+                device_address, address, state, CALL_TYPE_WRITE_COIL
+            )
 
     for x_write in (
         (SERVICE_WRITE_REGISTER, async_write_register, ATTR_VALUE, cv.positive_int),
@@ -253,7 +253,6 @@ class ModbusHub:
         self._client: (
             AsyncModbusSerialClient | AsyncModbusTcpClient | AsyncModbusUdpClient | None
         ) = None
-        self._lock = asyncio.Lock()
         self.event_connected = asyncio.Event()
         self.hass = hass
         self.name = client_config[CONF_NAME]
@@ -362,23 +361,26 @@ class ModbusHub:
         if not self._connect_task.done():
             self._connect_task.cancel()
 
-        async with self._lock:
-            if self._client:
-                try:
-                    self._client.close()
-                except ModbusException as exception_error:
-                    self._log_error(str(exception_error))
-                del self._client
-                self._client = None
-                message = f"modbus {self.name} communication closed"
-                _LOGGER.info(message)
+        if self._client:
+            try:
+                self._client.close()
+            except ModbusException as exception_error:
+                self._log_error(str(exception_error))
+            self._client = None
+            _LOGGER.info(f"modbus {self.name} communication closed")
 
     async def low_level_pb_call(
-        self, slave: int | None, address: int, value: int | list[int], use_call: str
+        self,
+        device_address: int | None,
+        address: int,
+        value: int | list[int],
+        use_call: str,
     ) -> ModbusPDU | None:
         """Call sync. pymodbus."""
         kwargs: dict[str, Any] = (
-            {DEVICE_ID: slave} if slave is not None else {DEVICE_ID: 1}
+            {DEVICE_ID: device_address}
+            if device_address is not None
+            else {DEVICE_ID: 1}
         )
         entry = self._pb_request[use_call]
 
@@ -390,38 +392,34 @@ class ModbusHub:
         try:
             result: ModbusPDU = await entry.func(address, **kwargs)
         except ModbusException as exception_error:
-            error = f"Error: device: {slave} address: {address} -> {exception_error!s}"
+            error = f"Error: device: {device_address} address: {address} -> {exception_error!s}"
             self._log_error(error)
             return None
         if not result:
-            error = (
-                f"Error: device: {slave} address: {address} -> pymodbus returned None"
-            )
+            error = f"Error: device: {device_address} address: {address} -> pymodbus returned None"
             self._log_error(error)
             return None
         if not hasattr(result, entry.attr):
-            error = f"Error: device: {slave} address: {address} -> {result!s}"
+            error = f"Error: device: {device_address} address: {address} -> {result!s}"
             self._log_error(error)
             return None
         if result.isError():
-            error = f"Error: device: {slave} address: {address} -> pymodbus returned isError True"
+            error = f"Error: device: {device_address} address: {address} -> pymodbus returned isError True"
             self._log_error(error)
             return None
         return result
 
     async def async_pb_call(
         self,
-        unit: int | None,
+        device_address: int | None,
         address: int,
         value: int | list[int],
         use_call: str,
     ) -> ModbusPDU | None:
         """Convert async to sync pymodbus call."""
-        async with self._lock:
-            if not self._client:
-                return None
-            result = await self.low_level_pb_call(unit, address, value, use_call)
-            if self._msg_wait:
-                # small delay until next request/response
-                await asyncio.sleep(self._msg_wait)
-            return result
+        if not self._client:
+            return None
+        result = await self.low_level_pb_call(device_address, address, value, use_call)
+        if self._msg_wait:
+            await asyncio.sleep(self._msg_wait)
+        return result
