@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 from typing import Any
+from enum import IntEnum
 
 from pyephember2.pyephember2 import (
     EphEmber,
@@ -15,6 +16,7 @@ from pyephember2.pyephember2 import (
     zone_mode,
     zone_name,
     zone_target_temperature,
+    boiler_state
 )
 import voluptuous as vol
 
@@ -52,6 +54,14 @@ EPH_TO_HA_STATE = {
     "ON": HVACMode.HEAT,
     "OFF": HVACMode.OFF,
 }
+
+class EPHBoilerStates(IntEnum):
+    """
+    Boiler states for a zone given by the api
+    """
+    FIXME = 0
+    OFF = 1
+    ON = 2
 
 HA_STATE_TO_EPH = {value: key for key, value in EPH_TO_HA_STATE.items()}
 
@@ -123,7 +133,7 @@ class EphEmberThermostat(ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction:
         """Return current HVAC action."""
-        if zone_is_active(self._zone):
+        if boiler_state(self._zone) == EPHBoilerStates.ON:
             return HVACAction.HEATING
 
         return HVACAction.IDLE
