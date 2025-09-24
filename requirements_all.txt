@@ -1929,6 +1929,9 @@ pycsspeechtts==1.0.8
 # homeassistant.components.cups
 # pycups==2.0.4
 
+# homeassistant.components.cync
+pycync==0.4.0
+
 # homeassistant.components.daikin
 pydaikin==2.16.0
 
