@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+import contextlib
 import logging
 from typing import Any
 
@@ -71,6 +72,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Error while initiating Tado")
                 return self.async_abort(reason="cannot_connect")
             assert self.tado is not None
+            assert self.tado.device_verification_url
             tado_device_url = self.tado.device_verification_url
             _LOGGER.debug("Tado device URL: %s", tado_device_url)
             user_code = URL(tado_device_url).query["user_code"]
@@ -147,10 +149,14 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle issues that need transition await from progress step."""
         if user_input is None:
-            return self.async_show_form(
-                step_id="timeout",
-            )
-        del self.login_task
+            return self.async_show_form(step_id="timeout")
+        # Guess I overlooked this part before, but this needs to be cleared
+        if self.login_task and not self.login_task.done():
+            self.login_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self.login_task
+        self.login_task = None
+        self.tado = None
         return await self.async_step_user()
 
     async def async_step_homekit(
