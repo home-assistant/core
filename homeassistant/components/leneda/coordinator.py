@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from typing import Any
 
 from leneda import LenedaClient
@@ -15,29 +14,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _create_statistic_id(metering_point: str, obis: str) -> str:
-    """Create a valid statistic ID from metering point and OBIS code.
-
-    Args:
-        metering_point: The metering point identifier
-        obis: The OBIS code
-
-    Returns:
-        A formatted statistic ID string
-
-    """
-    clean_mp = re.sub(r"[^a-z0-9]", "_", metering_point.lower())
-    clean_obis = re.sub(r"[^a-z0-9]", "_", obis.lower())
-    statistic_id = f"{DOMAIN}:{clean_mp}_{clean_obis}"
-    _LOGGER.debug(
-        "Created statistic ID: %s from metering_point: %s, obis: %s",
-        statistic_id,
-        metering_point,
-        obis,
-    )
-    return statistic_id
 
 
 class LenedaCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
