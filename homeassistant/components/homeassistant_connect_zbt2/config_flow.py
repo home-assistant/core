@@ -90,7 +90,7 @@ class ZBT2FirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
             firmware_name="OpenThread",
             expected_installed_firmware_type=ApplicationType.SPINEL,
             step_id="install_thread_firmware",
-            next_step_id="start_otbr_addon",
+            next_step_id="finish_thread_installation",
         )
 
 
@@ -103,6 +103,7 @@ class HomeAssistantConnectZBT2ConfigFlow(
 
     VERSION = 1
     MINOR_VERSION = 1
+    ZIGBEE_BAUDRATE = 460800
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the config flow."""

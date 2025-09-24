@@ -92,6 +92,343 @@ class DPType(StrEnum):
     STRING = "String"
 
 
+class DeviceCategory(StrEnum):
+    """Tuya device categories.
+
+    https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
+    """
+
+    AMY = "amy"
+    """Massage chair"""
+    BGL = "bgl"
+    """Wall-hung boiler"""
+    BH = "bh"
+    """Smart kettle"""
+    BX = "bx"
+    """Refrigerator"""
+    BXX = "bxx"
+    """Safe box"""
+    CJKG = "cjkg"
+    """Scene switch"""
+    CKMKZQ = "ckmkzq"
+    """Garage door opener
+
+    https://developer.tuya.com/en/docs/iot/categoryckmkzq?id=Kaiuz0ipcboee
+    """
+    CKQDKG = "ckqdkg"
+    """Card switch"""
+    CL = "cl"
+    """Curtain
+
+    https://developer.tuya.com/en/docs/iot/categorycl?id=Kaiuz1hnpo7df
+    """
+    CLKG = "clkg"
+    """Curtain switch
+
+    https://developer.tuya.com/en/docs/iot/category-clkg?id=Kaiuz0gitil39
+    """
+    CN = "cn"
+    """Milk dispenser"""
+    CO2BJ = "co2bj"
+    """CO2 detector
+
+    https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
+    """
+    COBJ = "cobj"
+    """CO detector
+
+    https://developer.tuya.com/en/docs/iot/categorycobj?id=Kaiuz3u1j6q1v
+    """
+    CS = "cs"
+    """Dehumidifier
+
+    https://developer.tuya.com/en/docs/iot/categorycs?id=Kaiuz1vcz4dha
+    """
+    CWTSWSQ = "cwtswsq"
+    """Pet treat feeder"""
+    CWWQFSQ = "cwwqfsq"
+    """Pet ball thrower"""
+    CWWSQ = "cwwsq"
+    """Pet feeder
+
+    https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
+    """
+    CWYSJ = "cwysj"
+    """Pet fountain"""
+    CZ = "cz"
+    """Socket"""
+    DBL = "dbl"
+    """Electric fireplace
+
+    https://developer.tuya.com/en/docs/iot/f?id=Kacpeobojffop
+    """
+    DC = "dc"
+    """String lights"""
+    DCL = "dcl"
+    """Induction cooker"""
+    DD = "dd"
+    """Strip lights"""
+    DGNBJ = "dgnbj"
+    """Multi-functional alarm
+
+    https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
+    """
+    DJ = "dj"
+    """Light"""
+    DLQ = "dlq"
+    """Circuit breaker"""
+    DR = "dr"
+    """Electric blanket"""
+    DS = "ds"
+    """TV set"""
+    FS = "fs"
+    """Fan"""
+    FSD = "fsd"
+    """Ceiling fan light"""
+    FWD = "fwd"
+    """Ambiance light"""
+    GGQ = "ggq"
+    """Irrigator"""
+    GYD = "gyd"
+    """Motion sensor light"""
+    GYMS = "gyms"
+    """Business lock"""
+    HOTELMS = "hotelms"
+    """Hotel lock"""
+    HPS = "hps"
+    """Human presence sensor
+
+    https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
+    """
+    JS = "js"
+    """Water purifier"""
+    JSQ = "jsq"
+    """Humidifier"""
+    JTMSBH = "jtmsbh"
+    """Smart lock (keep alive)"""
+    JTMSPRO = "jtmspro"
+    """Residential lock pro"""
+    JWBJ = "jwbj"
+    """Methane detector
+
+    https://developer.tuya.com/en/docs/iot/categoryjwbj?id=Kaiuz40u98lkm
+    """
+    KFJ = "kfj"
+    """Coffee maker"""
+    KG = "kg"
+    """Switch"""
+    KJ = "kj"
+    """Air purifier"""
+    KQZG = "kqzg"
+    """Air fryer"""
+    KT = "kt"
+    """Air conditioner
+
+    https://developer.tuya.com/en/docs/iot/categorykt?id=Kaiuz0z71ov2n
+    """
+    KTKZQ = "ktkzq"
+    """Air conditioner controller"""
+    LDCG = "ldcg"
+    """Luminance sensor
+
+    https://developer.tuya.com/en/docs/iot/categoryldcg?id=Kaiuz3n7u69l8
+    """
+    LILIAO = "liliao"
+    """Physiotherapy product"""
+    LYJ = "lyj"
+    """Drying rack"""
+    MAL = "mal"
+    """Alarm host
+
+    https://developer.tuya.com/en/docs/iot/categorymal?id=Kaiuz33clqxaf
+    """
+    MB = "mb"
+    """Bread maker"""
+    MC = "mc"
+    """Door/window controller
+
+    https://developer.tuya.com/en/docs/iot/s?id=K9gf48r5zjsy9
+    """
+    MCS = "mcs"
+    """Contact sensor
+
+    https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
+    """
+    MG = "mg"
+    """Rice cabinet"""
+    MJJ = "mjj"
+    """Towel rack"""
+    MK = "mk"
+    """Access control
+
+    https://developer.tuya.com/en/docs/iot/s?id=Kb0o2xhlkxbet
+    """
+    MS = "ms"
+    """Residential lock"""
+    MS_CATEGORY = "ms_category"
+    """Lock accessories"""
+    MSP = "msp"
+    """Cat toilet"""
+    MZJ = "mzj"
+    """Sous vide cooker"""
+    NNQ = "nnq"
+    """Bottle warmer"""
+    NTQ = "ntq"
+    """HVAC"""
+    PC = "pc"
+    """Power strip"""
+    PHOTOLOCK = "photolock"
+    """Audio and video lock"""
+    PIR = "pir"
+    """Human motion sensor
+
+    https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
+    """
+    PM2_5 = "pm2.5"
+    """PM2.5 detector
+
+    https://developer.tuya.com/en/docs/iot/categorypm25?id=Kaiuz3qof3yfu
+    """
+    QN = "qn"
+    """Heater
+
+    https://developer.tuya.com/en/docs/iot/f?id=K9gf46epy4j82
+    """
+    RQBJ = "rqbj"
+    """Gas alarm
+
+    https://developer.tuya.com/en/docs/iot/categoryrqbj?id=Kaiuz3d162ubw
+    """
+    RS = "rs"
+    """Water heater
+
+    https://developer.tuya.com/en/docs/iot/categoryrs?id=Kaiuz0nfferyx
+    """
+    SB = "sb"
+    """Watch/band"""
+    SD = "sd"
+    """Robot vacuum
+
+    https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
+    """
+    SF = "sf"
+    """Sofa"""
+    SGBJ = "sgbj"
+    """Siren alarm
+
+    https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
+    """
+    SJ = "sj"
+    """Water leak detector
+
+    https://developer.tuya.com/en/docs/iot/categorysj?id=Kaiuz3iub2sli
+    """
+    SOS = "sos"
+    """Emergency button
+
+    https://developer.tuya.com/en/docs/iot/categorysos?id=Kaiuz3oi6agjy
+    """
+    SP = "sp"
+    """Smart camera
+
+    https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
+    """
+    SZ = "sz"
+    """Smart indoor garden"""
+    TGKG = "tgkg"
+    """Dimmer switch"""
+    TGQ = "tgq"
+    """Dimmer"""
+    TNQ = "tnq"
+    """Smart milk kettle"""
+    TRACKER = "tracker"
+    """Tracker"""
+    TS = "ts"
+    """Smart jump rope"""
+    TYNDJ = "tyndj"
+    """Solar light"""
+    TYY = "tyy"
+    """Projector"""
+    TZC1 = "tzc1"
+    """Body fat scale"""
+    VIDEOLOCK = "videolock"
+    """Lock with camera"""
+    WK = "wk"
+    """Thermostat
+
+    https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
+    """
+    WSDCG = "wsdcg"
+    """Temperature and humidity sensor
+
+    https://developer.tuya.com/en/docs/iot/categorywsdcg?id=Kaiuz3hinij34
+    """
+    XDD = "xdd"
+    """Ceiling light"""
+    XFJ = "xfj"
+    """Ventilation system"""
+    XXJ = "xxj"
+    """Diffuser"""
+    XY = "xy"
+    """Washing machine"""
+    YB = "yb"
+    """Bathroom heater"""
+    YG = "yg"
+    """Bathtub"""
+    YKQ = "ykq"
+    """Remote control"""
+    YLCG = "ylcg"
+    """Pressure sensor
+
+    https://developer.tuya.com/en/docs/iot/categoryylcg?id=Kaiuz3kc2e4gm
+    """
+    YWBJ = "ywbj"
+    """Smoke alarm
+
+    https://developer.tuya.com/en/docs/iot/categoryywbj?id=Kaiuz3f6sf952
+    """
+    ZD = "zd"
+    """Vibration sensor
+
+    https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
+    """
+    ZNDB = "zndb"
+    """Smart electricity meter"""
+    ZNFH = "znfh"
+    """Bento box"""
+    ZNSB = "znsb"
+    """Smart water meter"""
+    ZNYH = "znyh"
+    """Smart pill box"""
+
+    # Undocumented
+    DGHSXJ = "dghsxj"
+    """Smart Camera - Low power consumption camera (undocumented)
+
+    see https://github.com/home-assistant/core/issues/132844
+    """
+    HXD = "hxd"
+    """Wake Up Light II (undocumented)"""
+    JDCLJQR = "jdcljqr"
+    """Curtain Robot (undocumented)"""
+    JQBJ = "jqbj"
+    """Formaldehyde Detector (undocumented)"""
+    QXJ = "qxj"
+    """Temperature and Humidity Sensor with External Probe (undocumented)
+
+    see https://github.com/home-assistant/core/issues/136472
+    """
+    VOC = "voc"
+    """Volatile Organic Compound Sensor (undocumented)"""
+    WG2 = "wg2"  # Documented, but not in official list
+    """Gateway control
+
+    https://developer.tuya.com/en/docs/iot/wg?id=Kbcdadk79ejok
+    """
+    WKF = "wkf"
+    """Thermostatic Radiator Valve (undocumented)"""
+
+
 class DPCode(StrEnum):
     """Data Point Codes used by Tuya.
 
@@ -124,6 +461,7 @@ class DPCode(StrEnum):
     BASIC_WDR = "basic_wdr"
     BATTERY = "battery"  # Used by non-standard contact sensor implementations
     BATTERY_PERCENTAGE = "battery_percentage"  # Battery percentage
+    BATTERY_POWER = "battery_power"
     BATTERY_STATE = "battery_state"  # Battery state
     BATTERY_VALUE = "battery_value"  # Battery value
     BRIGHT_CONTROLLER = "bright_controller"
@@ -184,11 +522,17 @@ class DPCode(StrEnum):
     COUNTDOWN_LEFT = "countdown_left"
     COUNTDOWN_SET = "countdown_set"  # Countdown setting
     CRY_DETECTION_SWITCH = "cry_detection_switch"
+    CUML_E_EXPORT_OFFGRID1 = "cuml_e_export_offgrid1"
+    CUMULATIVE_ENERGY_CHARGED = "cumulative_energy_charged"
+    CUMULATIVE_ENERGY_DISCHARGED = "cumulative_energy_discharged"
+    CUMULATIVE_ENERGY_GENERATED_PV = "cumulative_energy_generated_pv"
+    CUMULATIVE_ENERGY_OUTPUT_INV = "cumulative_energy_output_inv"
     CUP_NUMBER = "cup_number"  # NUmber of cups
     CUR_CURRENT = "cur_current"  # Actual current
     CUR_NEUTRAL = "cur_neutral"  # Total reverse energy
     CUR_POWER = "cur_power"  # Actual power
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
+    CURRENT_SOC = "current_soc"
     DECIBEL_SENSITIVITY = "decibel_sensitivity"
     DECIBEL_SWITCH = "decibel_switch"
     DEHUMIDITY_SET_ENUM = "dehumidify_set_enum"
@@ -240,6 +584,7 @@ class DPCode(StrEnum):
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
     INSTALLATION_HEIGHT = "installation_height"
+    INVERTER_OUTPUT_POWER = "inverter_output_power"
     IPC_WORK_MODE = "ipc_work_mode"
     LED_TYPE_1 = "led_type_1"
     LED_TYPE_2 = "led_type_2"
@@ -305,6 +650,9 @@ class DPCode(StrEnum):
     PUMP = "pump"
     PUMP_RESET = "pump_reset"  # Water pump reset
     PUMP_TIME = "pump_time"  # Water pump duration
+    PV_POWER_CHANNEL_1 = "pv_power_channel_1"
+    PV_POWER_CHANNEL_2 = "pv_power_channel_2"
+    PV_POWER_TOTAL = "pv_power_total"
     RAIN_24H = "rain_24h"  # Total daily rainfall in mm
     RAIN_RATE = "rain_rate"  # Rain intensity in mm/h
     RECORD_MODE = "record_mode"

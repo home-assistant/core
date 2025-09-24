@@ -30,7 +30,7 @@ from .const import (
     LIGHT_MODBUS_SCALE_MAX,
     LIGHT_MODBUS_SCALE_MIN,
 )
-from .entity import BaseSwitch
+from .entity import ModbusToggleEntity
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -49,7 +49,7 @@ async def async_setup_platform(
     async_add_entities(ModbusLight(hass, hub, config) for config in lights)
 
 
-class ModbusLight(BaseSwitch, LightEntity):
+class ModbusLight(ModbusToggleEntity, LightEntity):
     """Class representing a Modbus light."""
 
     def __init__(
@@ -117,7 +117,7 @@ class ModbusLight(BaseSwitch, LightEntity):
         conv_brightness = self._convert_brightness_to_modbus(brightness)
 
         await self._hub.async_pb_call(
-            unit=self._slave,
+            device_address=self._device_address,
             address=self._brightness_address,
             value=conv_brightness,
             use_call=CALL_TYPE_WRITE_REGISTER,
@@ -133,7 +133,7 @@ class ModbusLight(BaseSwitch, LightEntity):
         conv_color_temp_kelvin = self._convert_color_temp_to_modbus(color_temp_kelvin)
 
         await self._hub.async_pb_call(
-            unit=self._slave,
+            device_address=self._device_address,
             address=self._color_temp_address,
             value=conv_color_temp_kelvin,
             use_call=CALL_TYPE_WRITE_REGISTER,
@@ -150,7 +150,7 @@ class ModbusLight(BaseSwitch, LightEntity):
 
         if self._brightness_address:
             brightness_result = await self._hub.async_pb_call(
-                unit=self._slave,
+                device_address=self._device_address,
                 value=1,
                 address=self._brightness_address,
                 use_call=CALL_TYPE_REGISTER_HOLDING,
@@ -167,7 +167,7 @@ class ModbusLight(BaseSwitch, LightEntity):
 
         if self._color_temp_address:
             color_result = await self._hub.async_pb_call(
-                unit=self._slave,
+                device_address=self._device_address,
                 value=1,
                 address=self._color_temp_address,
                 use_call=CALL_TYPE_REGISTER_HOLDING,

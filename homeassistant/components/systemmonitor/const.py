@@ -1,5 +1,7 @@
 """Constants for System Monitor."""
 
+from psutil import AccessDenied, Error, NoSuchProcess, TimeoutExpired, ZombieProcess
+
 DOMAIN = "systemmonitor"
 
 CONF_INDEX = "index"
@@ -13,6 +15,8 @@ NET_IO_TYPES = [
     "packets_in",
     "packets_out",
 ]
+
+PROCESS_ERRORS = (NoSuchProcess, AccessDenied, Error, TimeoutExpired, ZombieProcess)
 
 # There might be additional keys to be added for different
 # platforms / hardware combinations.

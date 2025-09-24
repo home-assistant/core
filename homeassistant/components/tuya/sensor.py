@@ -1413,6 +1413,79 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     # Wireless Switch
     # https://developer.tuya.com/en/docs/iot/s?id=Kbeoa9fkv6brp
     "wxkg": BATTERY_SENSORS,  # Pressure Sensor
+    # Micro Storage Inverter
+    # Energy storage and solar PV inverter system with monitoring capabilities
+    "xnyjcn": (
+        TuyaSensorEntityDescription(
+            key=DPCode.CURRENT_SOC,
+            translation_key="battery_soc",
+            device_class=SensorDeviceClass.BATTERY,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PV_POWER_TOTAL,
+            translation_key="total_pv_power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PV_POWER_CHANNEL_1,
+            translation_key="pv_channel_power",
+            translation_placeholders={"index": "1"},
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PV_POWER_CHANNEL_2,
+            translation_key="pv_channel_power",
+            translation_placeholders={"index": "2"},
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.BATTERY_POWER,
+            translation_key="battery_power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.INVERTER_OUTPUT_POWER,
+            translation_key="inverter_output_power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUMULATIVE_ENERGY_GENERATED_PV,
+            translation_key="lifetime_pv_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUMULATIVE_ENERGY_OUTPUT_INV,
+            translation_key="lifetime_inverter_output_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUMULATIVE_ENERGY_DISCHARGED,
+            translation_key="lifetime_battery_discharge_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUMULATIVE_ENERGY_CHARGED,
+            translation_key="lifetime_battery_charge_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CUML_E_EXPORT_OFFGRID1,
+            translation_key="lifetime_offgrid_port_energy",
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+    ),
     # https://developer.tuya.com/en/docs/iot/categoryylcg?id=Kaiuz3kc2e4gm
     "ylcg": (
         TuyaSensorEntityDescription(
@@ -1644,24 +1717,24 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya sensor dynamically through Tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya sensor."""
         entities: list[TuyaSensorEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
+            device = manager.device_map[device_id]
             if descriptions := SENSORS.get(device.category):
                 entities.extend(
-                    TuyaSensorEntity(device, hass_data.manager, description)
+                    TuyaSensorEntity(device, manager, description)
                     for description in descriptions
                     if description.key in device.status
                 )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)

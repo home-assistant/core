@@ -37,7 +37,7 @@ REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
 
-# Type alias to avoid 1000 MyPy errors
+# Explicit reexport to allow other modules to import Platform directly from const
 Platform = EntityPlatforms
 
 BASE_PLATFORMS: Final = {platform.value for platform in Platform}
@@ -186,6 +186,7 @@ CONF_MONITORED_VARIABLES: Final = "monitored_variables"
 CONF_NAME: Final = "name"
 CONF_OFFSET: Final = "offset"
 CONF_OPTIMISTIC: Final = "optimistic"
+CONF_OPTIONS: Final = "options"
 CONF_PACKAGES: Final = "packages"
 CONF_PARALLEL: Final = "parallel"
 CONF_PARAMS: Final = "params"
@@ -898,6 +899,7 @@ class UnitOfSpeed(StrEnum):
     BEAUFORT = "Beaufort"
     FEET_PER_SECOND = "ft/s"
     INCHES_PER_SECOND = "in/s"
+    METERS_PER_MINUTE = "m/min"
     METERS_PER_SECOND = "m/s"
     KILOMETERS_PER_HOUR = "km/h"
     KNOTS = "kn"
