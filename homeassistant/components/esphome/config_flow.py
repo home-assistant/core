@@ -57,6 +57,7 @@ from .manager import async_replace_device
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
 ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
+ERROR_INVALID_PASSWORD_AUTH = "invalid_auth"
 _LOGGER = logging.getLogger(__name__)
 
 ZERO_NOISE_PSK = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
@@ -137,7 +138,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             self._password = ""
             return await self.async_step_authenticate()
 
-        if error == "invalid_auth" or (
+        if error == ERROR_INVALID_PASSWORD_AUTH or (
             error is None and self._device_info and self._device_info.uses_password
         ):
             return await self.async_step_authenticate()
@@ -703,7 +704,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             await cli.connect()
             self._device_info = await cli.device_info()
         except InvalidAuthAPIError:
-            return "invalid_auth"
+            return ERROR_INVALID_PASSWORD_AUTH
         except RequiresEncryptionAPIError:
             return ERROR_REQUIRES_ENCRYPTION_KEY
         except InvalidEncryptionKeyAPIError as ex:
