@@ -7,10 +7,7 @@ from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.matter.const import (
-    SERVICE_CLEAN_AREAS,
-    SERVICE_GET_AREAS,
-)
+from homeassistant.components.matter.const import SERVICE_CLEAN_AREAS, SERVICE_GET_AREAS
 from homeassistant.components.matter.vacuum import (
     ATTR_CURRENT_AREA,
     ATTR_CURRENT_AREA_NAME,
