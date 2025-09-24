@@ -136,7 +136,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             and not self._device_info.uses_password
         ):
             self._password = ""
-            return await self.async_step_authenticate()
+            return await self._async_authenticate_or_add()
 
         if error == ERROR_INVALID_PASSWORD_AUTH or (
             error is None and self._device_info and self._device_info.uses_password
