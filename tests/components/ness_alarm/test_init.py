@@ -11,6 +11,8 @@ from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.ness_alarm import (
     CONF_PORT,
     CONFIG_SCHEMA,
+    PLATFORMS,
+    async_setup_entry,
     async_setup_services,
     config_flow,
     update_listener,
@@ -26,6 +28,7 @@ from homeassistant.components.ness_alarm.const import (
     SERVICE_AUX,
     SERVICE_PANIC,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -591,3 +594,43 @@ async def test_shutdown_handler_via_config_entry(
 
         # Client should be closed
         mock_client.close.assert_called_once()
+
+
+async def test_async_setup_entry_callbacks(hass: HomeAssistant) -> None:
+    """Test async_setup_entry registers callbacks without errors."""
+
+    entry = ConfigEntry(
+        version=1,
+        domain="ness_alarm",
+        data={"host": "127.0.0.1", "port": 4025},
+        options={},
+        entry_id="test_entry",
+        title="Ness Alarm",
+        source="user",
+        unique_id="test_unique_id",
+        discovery_keys=set(),
+        minor_version=0,
+        subentries_data=[],
+    )
+
+    with patch(
+        "homeassistant.components.ness_alarm.Client", autospec=True
+    ) as mock_client_cls:
+        mock_client = mock_client_cls.return_value
+
+        mock_client.on_zone_change = lambda callback: setattr(
+            mock_client, "_zone_cb_registered", True
+        )
+        mock_client.on_state_change = lambda callback: setattr(
+            mock_client, "_state_cb_registered", True
+        )
+
+        with patch.object(
+            hass.config_entries, "async_forward_entry_setups", new=AsyncMock()
+        ) as mock_forward:
+            await async_setup_entry(hass, entry)
+
+            assert getattr(mock_client, "_zone_cb_registered", False) is True
+            assert getattr(mock_client, "_state_cb_registered", False) is True
+
+            mock_forward.assert_called_once_with(entry, PLATFORMS)

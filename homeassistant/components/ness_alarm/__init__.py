@@ -16,7 +16,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
@@ -212,6 +216,17 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle removal of the config entry."""
+    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    registry = er.async_get(hass)
+    for entity_id in list(registry.entities):
+        entity = registry.entities[entity_id]
+        if entity.config_entry_id == entry.entry_id:
+            registry.async_remove(entity_id)
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:
