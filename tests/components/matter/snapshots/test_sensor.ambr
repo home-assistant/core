@@ -7324,7 +7324,7 @@
     'last_updated': <ANY>,
     'state': '28.3',
   })
-# name: test_sensors[thermostat][sensor.longan_link_hvac_outdoor_temperature-entry]
+# name: test_sensors[thermostat][sensor.longan_link_hvac_outdoor_temperature_north-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7339,7 +7339,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.longan_link_hvac_outdoor_temperature',
+    'entity_id': 'sensor.longan_link_hvac_outdoor_temperature_north',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -7364,7 +7364,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[thermostat][sensor.longan_link_hvac_outdoor_temperature-state]
+# name: test_sensors[thermostat][sensor.longan_link_hvac_outdoor_temperature_north-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -7373,7 +7373,7 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.longan_link_hvac_outdoor_temperature',
+    'entity_id': 'sensor.longan_link_hvac_outdoor_temperature_north',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
