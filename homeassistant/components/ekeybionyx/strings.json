@@ -55,7 +55,7 @@
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
-      "no_available_webhooks": "There are no available webhooks in the {ekeybionyx} plattform. Please delete some and try again.",
+      "no_available_webhooks": "There are no available webhooks in the {ekeybionyx} system. Please delete some and try again.",
       "no_own_systems": "Your account does not have admin access to any systems.",
       "cannot_connect": "Connection to {ekeybionyx} failed. Please check your Internet connection and try again."
     },
