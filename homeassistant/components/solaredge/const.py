@@ -22,5 +22,6 @@ DETAILS_UPDATE_DELAY = timedelta(hours=12)
 INVENTORY_UPDATE_DELAY = timedelta(hours=12)
 POWER_FLOW_UPDATE_DELAY = timedelta(minutes=15)
 ENERGY_DETAILS_DELAY = timedelta(minutes=15)
+MODULE_STATISTICS_UPDATE_DELAY = timedelta(hours=12)
 
 SCAN_INTERVAL = timedelta(minutes=15)

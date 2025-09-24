@@ -35,6 +35,7 @@ from .const import (
     ENERGY_DETAILS_DELAY,
     INVENTORY_UPDATE_DELAY,
     LOGGER,
+    MODULE_STATISTICS_UPDATE_DELAY,
     OVERVIEW_UPDATE_DELAY,
     POWER_FLOW_UPDATE_DELAY,
 )
@@ -351,7 +352,7 @@ class SolarEdgeModulesCoordinator(DataUpdateCoordinator[None]):
             name="SolarEdge Modules",
             # API refreshes every 15 minutes, but since we only have statistics
             # and no sensors, refresh every 12h.
-            update_interval=timedelta(hours=12),
+            update_interval=MODULE_STATISTICS_UPDATE_DELAY,
         )
         self.api = SolarEdgeWeb(
             username=config_entry.data[CONF_USERNAME],
