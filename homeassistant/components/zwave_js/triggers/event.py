@@ -214,7 +214,7 @@ class EventTrigger(Trigger):
             if event_data[key] != val:
                 return
 
-        payload = {
+        payload: dict[str, Any] = {
             ATTR_EVENT_SOURCE: self._event_source,
             ATTR_EVENT: self._event_name,
             ATTR_EVENT_DATA: event_data,
@@ -230,7 +230,7 @@ class EventTrigger(Trigger):
             payload[ATTR_DEVICE_ID] = device.id
             home_and_node_id = get_home_and_node_id_from_device_entry(device)
             assert home_and_node_id
-            payload[ATTR_NODE_ID] = home_and_node_id[1]  # type: ignore[assignment]
+            payload[ATTR_NODE_ID] = home_and_node_id[1]
             description = f"{primary_desc} on {device_name}"
 
         description = f"{description} with event data: {event_data}"
