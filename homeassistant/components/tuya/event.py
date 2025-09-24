@@ -14,17 +14,14 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default status set of each category (that don't have a set instruction)
 # end up being events.
-# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-EVENTS: dict[str, tuple[EventEntityDescription, ...]] = {
-    # Wireless Switch
-    # https://developer.tuya.com/en/docs/iot/s?id=Kbeoa9fkv6brp
-    "wxkg": (
+EVENTS: dict[DeviceCategory, tuple[EventEntityDescription, ...]] = {
+    DeviceCategory.WXKG: (
         EventEntityDescription(
             key=DPCode.SWITCH_MODE1,
             device_class=EventDeviceClass.BUTTON,

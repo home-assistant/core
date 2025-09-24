@@ -18,7 +18,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
 from .models import IntegerTypeData
 from .util import ActionDPCodeNotFoundError, get_dpcode
@@ -49,19 +49,15 @@ def _has_a_valid_dpcode(
     return any(get_dpcode(device, code) for code in properties_to_check)
 
 
-HUMIDIFIERS: dict[str, TuyaHumidifierEntityDescription] = {
-    # Dehumidifier
-    # https://developer.tuya.com/en/docs/iot/categorycs?id=Kaiuz1vcz4dha
-    "cs": TuyaHumidifierEntityDescription(
+HUMIDIFIERS: dict[DeviceCategory, TuyaHumidifierEntityDescription] = {
+    DeviceCategory.CS: TuyaHumidifierEntityDescription(
         key=DPCode.SWITCH,
         dpcode=(DPCode.SWITCH, DPCode.SWITCH_SPRAY),
         current_humidity=DPCode.HUMIDITY_INDOOR,
         humidity=DPCode.DEHUMIDITY_SET_VALUE,
         device_class=HumidifierDeviceClass.DEHUMIDIFIER,
     ),
-    # Humidifier
-    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
-    "jsq": TuyaHumidifierEntityDescription(
+    DeviceCategory.JSQ: TuyaHumidifierEntityDescription(
         key=DPCode.SWITCH,
         dpcode=(DPCode.SWITCH, DPCode.SWITCH_SPRAY),
         current_humidity=DPCode.HUMIDITY_CURRENT,

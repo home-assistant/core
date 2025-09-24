@@ -15,15 +15,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 
-# All descriptions can be found here. Mostly the Boolean data types in the
-# default instruction set of each category end up being a Valve.
-# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-VALVES: dict[str, tuple[ValveEntityDescription, ...]] = {
-    # Smart Water Timer
-    "sfkzq": (
+VALVES: dict[DeviceCategory, tuple[ValveEntityDescription, ...]] = {
+    DeviceCategory.SFKZQ: (
         ValveEntityDescription(
             key=DPCode.SWITCH,
             translation_key="valve",

@@ -21,7 +21,7 @@ from homeassistant.util.percentage import (
 )
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
 from .models import EnumTypeData, IntegerTypeData
 from .util import get_dpcode
@@ -36,24 +36,13 @@ _SPEED_DPCODES = (
 )
 _SWITCH_DPCODES = (DPCode.SWITCH_FAN, DPCode.FAN_SWITCH, DPCode.SWITCH)
 
-TUYA_SUPPORT_TYPE = {
-    # Dehumidifier
-    # https://developer.tuya.com/en/docs/iot/categorycs?id=Kaiuz1vcz4dha
-    "cs",
-    # Fan
-    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
-    "fs",
-    # Ceiling Fan Light
-    # https://developer.tuya.com/en/docs/iot/fsd?id=Kaof8eiei4c2v
-    "fsd",
-    # Fan wall switch
-    "fskg",
-    # Air Purifier
-    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46h2s6dzm
-    "kj",
-    # Undocumented tower fan
-    # https://github.com/orgs/home-assistant/discussions/329
-    "ks",
+TUYA_SUPPORT_TYPE: set[DeviceCategory] = {
+    DeviceCategory.CS,
+    DeviceCategory.FS,
+    DeviceCategory.FSD,
+    DeviceCategory.FSKG,
+    DeviceCategory.KJ,
+    DeviceCategory.KS,
 }
 
 
