@@ -28,7 +28,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SERVICE_CLEAN_AREAS, SERVICE_GET_AREAS, SERVICE_SELECT_AREAS
+from .const import SERVICE_CLEAN_AREAS, SERVICE_GET_AREAS
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
@@ -84,15 +84,6 @@ async def async_setup_entry(
             vol.Required("areas"): vol.All(cv.ensure_list, [cv.positive_int]),
         },
         func="async_handle_clean_areas",
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_SELECT_AREAS,
-        schema={
-            vol.Required("areas"): vol.All(cv.ensure_list, [cv.positive_int]),
-        },
-        func="async_handle_select_areas",
         supports_response=SupportsResponse.ONLY,
     )
 
@@ -233,20 +224,6 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                 },
             )
         return None
-
-    async def async_handle_select_areas(
-        self, areas: list[int], **kwargs: Any
-    ) -> ServiceResponse:
-        """Select areas to clean."""
-        selected_areas = areas
-        # Matter command to the vacuum cleaner to select the areas.
-        await self.send_device_command(
-            clusters.ServiceArea.Commands.SelectAreas(newAreas=selected_areas)
-        )
-        # Return response indicating selected areas.
-        return cast(
-            ServiceResponse, {"status": "areas selected", "areas": selected_areas}
-        )
 
     async def async_handle_clean_areas(
         self, areas: list[int], **kwargs: Any
