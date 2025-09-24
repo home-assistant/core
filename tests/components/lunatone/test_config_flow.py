@@ -125,6 +125,8 @@ async def test_reconfigure(
     hass: HomeAssistant, mock_lunatone_info: AsyncMock, mock_config_entry: AsyncMock
 ) -> None:
     """Test reconfigure flow."""
+    url = "http://10.0.0.100"
+
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
@@ -132,11 +134,49 @@ async def test_reconfigure(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_URL: "http://10.0.0.100"},
+        result["flow_id"], {CONF_URL: url}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert mock_config_entry.data == {
-        CONF_URL: "http://10.0.0.100",
-    }
+    assert mock_config_entry.data == {CONF_URL: url}
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (aiohttp.InvalidUrlClientError(BASE_URL), "invalid_url"),
+        (aiohttp.ClientConnectionError(), "cannot_connect"),
+    ],
+)
+async def test_reconfigure_fail_with_error(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_config_entry: AsyncMock,
+    exception: Exception,
+    expected_error: str,
+) -> None:
+    """Test reconfigure flow with an error."""
+    url = "http://10.0.0.100"
+
+    mock_lunatone_info.async_update.side_effect = exception
+
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: url}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+
+    mock_lunatone_info.async_update.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_URL: url}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {CONF_URL: url}
