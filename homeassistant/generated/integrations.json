@@ -4300,6 +4300,11 @@
       "integration_type": "virtual",
       "supported_by": "home_connect"
     },
+    "neo": {
+      "name": "Neo",
+      "integration_type": "virtual",
+      "supported_by": "shelly"
+    },
     "ness_alarm": {
       "name": "Ness Alarm",
       "integration_type": "hub",
