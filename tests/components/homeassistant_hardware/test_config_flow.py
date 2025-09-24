@@ -26,7 +26,13 @@ from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_USER,
+    ConfigEntry,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
@@ -1100,3 +1106,48 @@ async def test_config_flow_thread_migrate_handler(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["progress_action"] == "install_firmware"
         assert result["step_id"] == "install_thread_firmware"
+
+
+@pytest.mark.parametrize("zha_source", [SOURCE_USER, SOURCE_IGNORE])
+@pytest.mark.parametrize("otbr_source", [SOURCE_USER, SOURCE_IGNORE])
+async def test_config_flow_pick_firmware_with_ignored_entries(
+    hass: HomeAssistant, zha_source: str, otbr_source: str
+) -> None:
+    """Test that ignored entries are properly excluded from migration menu options."""
+    zha_entry = MockConfigEntry(
+        domain="zha",
+        data={"device": {"path": "/dev/ttyUSB1"}},
+        title="ZHA",
+        source=zha_source,
+    )
+    zha_entry.add_to_hass(hass)
+
+    otbr_entry = MockConfigEntry(
+        domain="otbr",
+        data={"url": "http://192.168.1.100:8081"},
+        title="OTBR",
+        source=otbr_source,
+    )
+    otbr_entry.add_to_hass(hass)
+
+    # Set up the flow
+    init_result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": "hardware"}
+    )
+
+    assert init_result["type"] is FlowResultType.MENU
+    assert init_result["step_id"] == "pick_firmware"
+
+    # Expected menu options based on whether entries are ignored or not
+    assert init_result["menu_options"] == [
+        (
+            "pick_firmware_zigbee_migrate"
+            if zha_source != SOURCE_IGNORE
+            else "pick_firmware_zigbee"
+        ),
+        (
+            "pick_firmware_thread_migrate"
+            if otbr_source != SOURCE_IGNORE
+            else "pick_firmware_thread"
+        ),
+    ]
