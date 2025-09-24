@@ -1186,7 +1186,7 @@ hole==0.9.0
 holidays==0.81
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250903.5
+home-assistant-frontend==20250924.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.9.24
@@ -1465,6 +1465,9 @@ moat-ble==0.1.1
 
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.4.0
+
+# homeassistant.components.route_b_smart_meter
+momonga==0.1.5
 
 # homeassistant.components.monzo
 monzopy==1.5.1
@@ -1926,6 +1929,9 @@ pycsspeechtts==1.0.8
 # homeassistant.components.cups
 # pycups==2.0.4
 
+# homeassistant.components.cync
+pycync==0.4.0
+
 # homeassistant.components.daikin
 pydaikin==2.16.0
 
@@ -2345,6 +2351,7 @@ pyserial-asyncio-fast==0.16
 
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone
+# homeassistant.components.route_b_smart_meter
 # homeassistant.components.usb
 # homeassistant.components.zwave_js
 pyserial==3.5

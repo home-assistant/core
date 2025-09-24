@@ -1163,6 +1163,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "cync": {
+      "name": "Cync",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "dacia": {
       "name": "Dacia",
       "integration_type": "virtual",
@@ -4168,7 +4174,7 @@
           "name": "Manual MQTT Alarm Control Panel"
         },
         "mqtt": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "MQTT"
@@ -5636,6 +5642,12 @@
           "name": "Roth Touchline SL"
         }
       }
+    },
+    "route_b_smart_meter": {
+      "name": "Smart Meter B Route",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "rova": {
       "name": "ROVA",
