@@ -23,6 +23,7 @@ from .entity import (
     ReolinkChannelEntityDescription,
     ReolinkChimeCoordinatorEntity,
     ReolinkChimeEntityDescription,
+    ReolinkHostChimeCoordinatorEntity,
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
@@ -855,6 +856,12 @@ async def async_setup_entry(
         for chime in api.chime_list
         if chime.channel is not None
     )
+    entities.extend(
+        ReolinkHostChimeNumberEntity(reolink_data, chime, entity_description)
+        for entity_description in CHIME_NUMBER_ENTITIES
+        for chime in api.chime_list
+        if chime.channel is None
+    )
     async_add_entities(entities)
 
 
@@ -969,7 +976,36 @@ class ReolinkHostNumberEntity(ReolinkHostCoordinatorEntity, NumberEntity):
 
 
 class ReolinkChimeNumberEntity(ReolinkChimeCoordinatorEntity, NumberEntity):
-    """Base number entity class for Reolink IP cameras."""
+    """Base number entity class for Reolink chimes connected through a camera."""
+
+    entity_description: ReolinkChimeNumberEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        chime: Chime,
+        entity_description: ReolinkChimeNumberEntityDescription,
+    ) -> None:
+        """Initialize Reolink chime number entity."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data, chime)
+
+        self._attr_mode = entity_description.mode
+
+    @property
+    def native_value(self) -> float | None:
+        """State of the number entity."""
+        return self.entity_description.value(self._chime)
+
+    @raise_translated_error
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        await self.entity_description.method(self._chime, value)
+        self.async_write_ha_state()
+
+
+class ReolinkHostChimeNumberEntity(ReolinkHostChimeCoordinatorEntity, NumberEntity):
+    """Base number entity class for Reolink chimes connected to the host."""
 
     entity_description: ReolinkChimeNumberEntityDescription
 
