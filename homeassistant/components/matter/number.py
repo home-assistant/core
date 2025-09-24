@@ -433,7 +433,11 @@ DISCOVERY_SCHEMAS = [
             mode=NumberMode.SLIDER,
         ),
         entity_class=MatterRangeNumber,
-        required_attributes=(clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,),
+        required_attributes=(
+            clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
+            clusters.Thermostat.Attributes.MinTemperature,
+            clusters.Thermostat.Attributes.MaxTemperature,
+        ),
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
