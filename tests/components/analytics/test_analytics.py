@@ -1121,25 +1121,6 @@ async def test_devices_payload_no_entities(
                     },
                 ],
                 "entities": [],
-                "is_custom_integration": False,
-            },
-            "test": {
-                "devices": [
-                    {
-                        "entities": [],
-                        "entry_type": None,
-                        "has_configuration_url": False,
-                        "hw_version": None,
-                        "manufacturer": "test-manufacturer7",
-                        "model": None,
-                        "model_id": "test-model-id7",
-                        "sw_version": None,
-                        "via_device": None,
-                    },
-                ],
-                "entities": [],
-                "is_custom_integration": True,
-                "custom_integration_version": "1.2.3",
             },
         },
     }
@@ -1299,7 +1280,6 @@ async def test_devices_payload_with_entities(
                         "unit_of_measurement": "°C",
                     },
                 ],
-                "is_custom_integration": False,
             },
             "template": {
                 "devices": [],
@@ -1315,7 +1295,6 @@ async def test_devices_payload_with_entities(
                         "unit_of_measurement": None,
                     },
                 ],
-                "is_custom_integration": False,
             },
         },
     }
@@ -1429,7 +1408,6 @@ async def test_analytics_platforms(
                         "unit_of_measurement": None,
                     },
                 ],
-                "is_custom_integration": False,
             },
         },
     }
