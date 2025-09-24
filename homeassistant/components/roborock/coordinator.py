@@ -272,6 +272,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         """Verify that the api is reachable. If it is not, switch clients."""
         if isinstance(self.api, RoborockLocalClientV1):
             try:
+                await self.api.async_connect()
                 await self.api.ping()
             except RoborockException:
                 _LOGGER.warning(
@@ -425,7 +426,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         for map_flag in map_flags:
             if map_flag != cur_map:
                 # Only change the map and sleep if we have multiple maps.
-                await self.api.load_multi_map(map_flag)
+                await self.cloud_api.load_multi_map(map_flag)
                 self.current_map = map_flag
                 # We cannot get the map until the roborock servers fully process the
                 # map change.
@@ -443,7 +444,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             # Set the map back to the map the user previously had selected so that it
             # does not change the end user's app.
             # Only needs to happen when we changed maps above.
-            await self.api.load_multi_map(cur_map)
+            await self.cloud_api.load_multi_map(cur_map)
             self.current_map = cur_map
 
 

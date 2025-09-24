@@ -134,11 +134,7 @@ async def test_unit_of_measurement(
 
     mock_amazon_devices_client.get_devices_data.return_value[
         TEST_DEVICE_1_SN
-    ].sensors = {
-        sensor: AmazonDeviceSensor(
-            name=sensor, value=api_value, error=False, scale=scale
-        )
-    }
+    ].sensors = {sensor: AmazonDeviceSensor(name=sensor, value=api_value, scale=scale)}
 
     await setup_integration(hass, mock_config_entry)
 

@@ -460,9 +460,12 @@ class RpcShellyCctLight(RpcShellyLightBase):
     ) -> None:
         """Initialize light."""
         super().__init__(coordinator, key, attribute, description)
-        color_temp_range = coordinator.device.config[f"cct:{self._id}"]["ct_range"]
-        self._attr_min_color_temp_kelvin = color_temp_range[0]
-        self._attr_max_color_temp_kelvin = color_temp_range[1]
+        if color_temp_range := coordinator.device.config[key].get("ct_range"):
+            self._attr_min_color_temp_kelvin = color_temp_range[0]
+            self._attr_max_color_temp_kelvin = color_temp_range[1]
+        else:
+            self._attr_min_color_temp_kelvin = KELVIN_MIN_VALUE_WHITE
+            self._attr_max_color_temp_kelvin = KELVIN_MAX_VALUE
 
     @property
     def color_temp_kelvin(self) -> int:

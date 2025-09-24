@@ -48,3 +48,27 @@ TEST_DEVICE_2 = AmazonDevice(
         )
     },
 )
+
+TEST_DEVICE_2_SN = "echo_test_2_serial_number"
+TEST_DEVICE_2_ID = "echo_test_2_device_id"
+TEST_DEVICE_2 = AmazonDevice(
+    account_name="Echo Test 2",
+    capabilities=["AUDIO_PLAYER", "MICROPHONE"],
+    device_family="mine",
+    device_type="echo",
+    device_owner_customer_id="amazon_ower_id",
+    device_cluster_members=[TEST_DEVICE_2_SN],
+    online=True,
+    serial_number=TEST_DEVICE_2_SN,
+    software_version="echo_test_2_software_version",
+    do_not_disturb=False,
+    response_style=None,
+    bluetooth_state=True,
+    entity_id="11111111-2222-3333-4444-555555555555",
+    appliance_id="G1234567890123456789012345678A",
+    sensors={
+        "temperature": AmazonDeviceSensor(
+            name="temperature", value="22.5", scale="CELSIUS"
+        )
+    },
+)
