@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_light_attributes[light.bedroom_lamp-entry]
+# name: test_entities[light.bedroom_lamp-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -43,7 +43,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_light_attributes[light.bedroom_lamp-state]
+# name: test_entities[light.bedroom_lamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 205,
@@ -82,7 +82,7 @@
     'state': 'on',
   })
 # ---
-# name: test_light_attributes[light.lamp_bulb_1-entry]
+# name: test_entities[light.lamp_bulb_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -126,7 +126,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_light_attributes[light.lamp_bulb_1-state]
+# name: test_entities[light.lamp_bulb_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 230,
@@ -165,7 +165,7 @@
     'state': 'on',
   })
 # ---
-# name: test_light_attributes[light.lamp_bulb_2-entry]
+# name: test_entities[light.lamp_bulb_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -209,7 +209,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_light_attributes[light.lamp_bulb_2-state]
+# name: test_entities[light.lamp_bulb_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Lamp Bulb 2',
