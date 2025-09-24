@@ -15,6 +15,23 @@
           "api_key": "Optional, used for general site sensors",
           "username": "Optional, used for detailed module-level production statistics",
           "password": "Required if username is provided"
+        },
+        "sections": {
+          "api_auth": {
+            "name": "API key authentication",
+            "description": "Optionally provide your SolarEdge API key. Used for real-time detailed site sensors",
+            "data": {
+              "api_key": "[%key:common::config_flow::data::api_key%]"
+            }
+          },
+          "web_auth": {
+            "name": "Web account authentication",
+            "description": "Optionally provide your SolarEdge web portal credentials. Used for non real-time module-level production statistics",
+            "data": {
+              "username": "[%key:common::config_flow::data::username%]",
+              "password": "[%key:common::config_flow::data::password%]"
+            }
+          }
         }
       }
     },

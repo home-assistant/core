@@ -6,7 +6,13 @@ from aiohttp import ClientError, ClientResponseError
 import pytest
 
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.solaredge.const import CONF_SITE_ID, DEFAULT_NAME, DOMAIN
+from homeassistant.components.solaredge.const import (
+    CONF_SECTION_API_AUTH,
+    CONF_SECTION_WEB_AUTH,
+    CONF_SITE_ID,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -44,7 +50,11 @@ async def test_user_api_key(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_NAME: NAME, CONF_API_KEY: API_KEY, CONF_SITE_ID: SITE_ID},
+        {
+            CONF_NAME: NAME,
+            CONF_SITE_ID: SITE_ID,
+            CONF_SECTION_API_AUTH: {CONF_API_KEY: API_KEY},
+        },
     )
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "solaredge_site_1_2_3"
@@ -75,8 +85,10 @@ async def test_user_web_login(
         {
             CONF_NAME: NAME,
             CONF_SITE_ID: SITE_ID,
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
+            CONF_SECTION_WEB_AUTH: {
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
         },
     )
 
@@ -111,9 +123,11 @@ async def test_user_both_auth(
         {
             CONF_NAME: NAME,
             CONF_SITE_ID: SITE_ID,
-            CONF_API_KEY: API_KEY,
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
+            CONF_SECTION_API_AUTH: {CONF_API_KEY: API_KEY},
+            CONF_SECTION_WEB_AUTH: {
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+            },
         },
     )
 
@@ -141,7 +155,11 @@ async def test_abort_if_already_setup(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_NAME: "test", CONF_SITE_ID: SITE_ID, CONF_API_KEY: "test"},
+        data={
+            CONF_NAME: "test",
+            CONF_SITE_ID: SITE_ID,
+            CONF_SECTION_API_AUTH: {CONF_API_KEY: "test"},
+        },
     )
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {CONF_SITE_ID: "already_configured"}
@@ -161,7 +179,11 @@ async def test_ignored_entry_does_not_cause_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_NAME: "test", CONF_SITE_ID: SITE_ID, CONF_API_KEY: "test"},
+        data={
+            CONF_NAME: "test",
+            CONF_SITE_ID: SITE_ID,
+            CONF_SECTION_API_AUTH: {CONF_API_KEY: "test"},
+        },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test"
@@ -205,7 +227,11 @@ async def test_api_key_errors(
     """Test API key validation errors."""
     solaredge_api.get_details = get_details_setup
 
-    user_input = {CONF_NAME: NAME, CONF_API_KEY: API_KEY, CONF_SITE_ID: SITE_ID}
+    user_input = {
+        CONF_NAME: NAME,
+        CONF_SITE_ID: SITE_ID,
+        CONF_SECTION_API_AUTH: {CONF_API_KEY: API_KEY},
+    }
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -224,7 +250,7 @@ async def test_api_key_errors(
     )
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result.get("data") == {CONF_API_KEY: API_KEY, CONF_SITE_ID: SITE_ID}
+    assert result.get("data") == {CONF_SITE_ID: SITE_ID, CONF_API_KEY: API_KEY}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -256,8 +282,10 @@ async def test_web_login_errors(
     user_input = {
         CONF_NAME: NAME,
         CONF_SITE_ID: SITE_ID,
-        CONF_USERNAME: USERNAME,
-        CONF_PASSWORD: PASSWORD,
+        CONF_SECTION_WEB_AUTH: {
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
     }
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input

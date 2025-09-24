@@ -13,6 +13,8 @@ DATA_MODULES_COORDINATOR: Final = "modules_coordinator"
 
 # Config for solaredge monitoring api requests.
 CONF_SITE_ID = "site_id"
+CONF_SECTION_API_AUTH = "api_auth"
+CONF_SECTION_WEB_AUTH = "web_auth"
 DEFAULT_NAME = "SolarEdge"
 
 OVERVIEW_UPDATE_DELAY = timedelta(minutes=15)
