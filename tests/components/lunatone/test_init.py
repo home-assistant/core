@@ -47,7 +47,7 @@ async def test_config_entry_not_ready_cause_of_info_object(
     mock_lunatone_devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the Lunatone configuration entry not ready."""
+    """Test the Lunatone configuration entry not ready due to a failure in the info API."""
     mock_lunatone_info.async_update.side_effect = aiohttp.ClientConnectionError()
 
     await setup_integration(hass, mock_config_entry)
@@ -70,7 +70,7 @@ async def test_config_entry_not_ready_cause_of_devices_object(
     mock_lunatone_devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the Lunatone configuration entry not ready."""
+    """Test the Lunatone configuration entry not ready due to a failure in the devices API."""
     mock_lunatone_devices.async_update.side_effect = aiohttp.ClientConnectionError()
 
     await setup_integration(hass, mock_config_entry)
@@ -94,7 +94,7 @@ async def test_config_entry_not_ready_no_info_data(
     mock_lunatone_info: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the Lunatone configuration entry not ready."""
+    """Test the Lunatone configuration entry not ready due to missing info data."""
     mock_lunatone_info.data = None
 
     await setup_integration(hass, mock_config_entry)
@@ -109,7 +109,7 @@ async def test_config_entry_not_ready_no_devices_data(
     mock_lunatone_devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the Lunatone configuration entry not ready."""
+    """Test the Lunatone configuration entry not ready due to missing devices data."""
     mock_lunatone_devices.data = None
 
     await setup_integration(hass, mock_config_entry)
@@ -124,7 +124,7 @@ async def test_config_entry_not_ready_no_serial_number(
     mock_lunatone_info: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the Lunatone configuration entry not ready."""
+    """Test the Lunatone configuration entry not ready due to a missing serial number."""
     mock_lunatone_info.serial_number = None
 
     await setup_integration(hass, mock_config_entry)
