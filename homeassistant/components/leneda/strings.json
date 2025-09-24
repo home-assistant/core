@@ -21,7 +21,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Leneda Authentication",
+        "title": "Leneda authentication",
         "description": "Set up your Leneda integration by providing your Energy ID and API key.",
         "data": {
           "api_token": "[%key:common::config_flow::data::api_key%]",
@@ -114,20 +114,20 @@
           }
         },
         "probe_no_sensors": {
-          "title": "No sensors detected",
-          "description": "No sensors detected for metering point {metering_point}. The metering point might be invalid or not accessible. You can still continue to manual setup.",
+          "title": "[%key:component::leneda::config::step::probe_no_sensors::title%]",
+          "description": "[%key:component::leneda::config::step::probe_no_sensors::description%]",
           "menu_options": {
-            "manual": "Continue to manual setup"
+            "manual": "[%key:component::leneda::config::step::probe_no_sensors::menu_options::manual%]"
           }
         },
         "manual": {
-          "title": "Manual setup",
-          "description": "Select the sensors to monitor for {metering_point}{probed_text}",
+          "title": "[%key:component::leneda::config::step::manual::title%]",
+          "description": "[%key:component::leneda::config::step::manual::description%]",
           "data": {
-            "sensors": "Sensors"
+            "sensors": "[%key:component::leneda::config::step::manual::data::sensors%]"
           },
           "data_description": {
-            "sensors": "Select which sensors to enable"
+            "sensors": "[%key:component::leneda::config::step::manual::data_description::sensors%]"
           }
         },
         "finish": {
