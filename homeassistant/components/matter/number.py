@@ -435,8 +435,8 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterRangeNumber,
         required_attributes=(
             clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
-            clusters.Thermostat.Attributes.MinTemperature,
-            clusters.Thermostat.Attributes.MaxTemperature,
+            clusters.Thermostat.Attributes.MinHeatSetpointLimit,
+            clusters.Thermostat.Attributes.MaxHeatSetpointLimit,
         ),
     ),
     MatterDiscoverySchema(
