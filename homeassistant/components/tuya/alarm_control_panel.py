@@ -151,7 +151,18 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         # The 'mode' doesn't change, and stays as 'arm' or 'home'.
         if self._master_state is not None:
             if self.device.status.get(self._master_state.dpcode) == State.ALARM:
-                return AlarmControlPanelState.TRIGGERED
+                # Check if it's a battery warning
+                is_battery_warning = False
+                if self._alarm_msg_dpcode is not None:
+                    encoded_msg = self.device.status.get(self._alarm_msg_dpcode)
+                    if encoded_msg:
+                        if "Sensor Low Battery" in b64decode(encoded_msg).decode(
+                            "utf-16be"
+                        ):
+                            is_battery_warning = True
+                # Only report as triggered if NOT a battery warning
+                if not is_battery_warning:
+                    return AlarmControlPanelState.TRIGGERED
 
         if not (status := self.device.status.get(self.entity_description.key)):
             return None
