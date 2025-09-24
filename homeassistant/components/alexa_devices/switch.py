@@ -18,7 +18,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AmazonConfigEntry
 from .entity import AmazonEntity
-from .utils import alexa_api_call, async_update_unique_id
+from .utils import (
+    alexa_api_call,
+    async_remove_dnd_from_virtual_group,
+    async_update_unique_id,
+)
 
 PARALLEL_UPDATES = 1
 
@@ -55,8 +59,10 @@ async def async_setup_entry(
 
     # Replace unique id for "DND" switch and remove from Speaker Group
     await async_update_unique_id(
-        hass, coordinator, SWITCH_DOMAIN, "do_not_disturb", "dnd", True
+        hass, coordinator, SWITCH_DOMAIN, "do_not_disturb", "dnd"
     )
+
+    await async_remove_dnd_from_virtual_group(hass, coordinator)
 
     async_add_entities(
         AmazonSwitchEntity(coordinator, serial_num, switch_desc)
