@@ -316,6 +316,8 @@ build.json @home-assistant/supervisor
 /tests/components/crownstone/ @Crownstone @RicArch97
 /homeassistant/components/cups/ @fabaff
 /tests/components/cups/ @fabaff
+/homeassistant/components/cync/ @Kinachi249
+/tests/components/cync/ @Kinachi249
 /homeassistant/components/daikin/ @fredrike
 /tests/components/daikin/ @fredrike
 /homeassistant/components/date/ @home-assistant/core
