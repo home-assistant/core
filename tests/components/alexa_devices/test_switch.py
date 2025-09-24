@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-from aioamazondevices.api import AmazonDevice, AmazonDeviceSensor
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
