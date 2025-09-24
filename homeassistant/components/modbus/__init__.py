@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
 from homeassistant.components.switch import (
     DEVICE_CLASSES_SCHEMA as SWITCH_DEVICE_CLASSES_SCHEMA,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_BINARY_SENSORS,
@@ -157,6 +158,7 @@ from .const import (
 )
 from .modbus import DATA_MODBUS_HUBS, ModbusHub, async_modbus_setup
 from .validators import (
+    check_config,
     duplicate_fan_mode_validator,
     duplicate_swing_mode_validator,
     hvac_fixedsize_reglist_validator,
@@ -525,6 +527,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Modbus component."""
     if DOMAIN not in config:
         return True
+    if not config[DOMAIN]:
+        return False
+    config[DOMAIN] = check_config(hass, config[DOMAIN])
+    if not config[DOMAIN]:
+        return False
+    for hub in config[DOMAIN]:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=hub,
+            )
+        )
 
     async def _reload_config(call: Event | ServiceCall) -> None:
         """Reload Modbus."""
@@ -546,5 +561,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await async_modbus_setup(hass, reload_config)
 
     async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
-
     return await async_modbus_setup(hass, config)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up from a config entry."""
+    _LOGGER.debug("modbus_cf async_setup_entry")
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    _LOGGER.debug("modbus_cf async_unload_entry")
+    return True

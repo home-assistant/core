@@ -67,7 +67,6 @@ from .const import (
     TCP,
     UDP,
 )
-from .validators import check_config
 
 DATA_MODBUS_HUBS: HassKey[dict[str, ModbusHub]] = HassKey(DOMAIN)
 
@@ -133,10 +132,6 @@ async def async_modbus_setup(
 ) -> bool:
     """Set up Modbus component."""
 
-    if config[DOMAIN]:
-        config[DOMAIN] = check_config(hass, config[DOMAIN])
-        if not config[DOMAIN]:
-            return False
     if DATA_MODBUS_HUBS in hass.data and config[DOMAIN] == []:
         hubs = hass.data[DATA_MODBUS_HUBS]
         for hub in hubs.values():
