@@ -680,15 +680,11 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
                 "assumed_state": entity_state.attributes.get(ATTR_ASSUMED_STATE, False)
                 if entity_state is not None
                 else None,
-                "capabilities": entity_config.capabilities
-                if entity_config.capabilities is not UNDEFINED
-                else entity_entry.capabilities,
+                "capabilities": None,
                 "domain": entity_entry.domain,
                 "entity_category": entity_entry.entity_category,
                 "has_entity_name": entity_entry.has_entity_name,
-                "modified_by_integration": ["capabilities"]
-                if entity_config.capabilities is not UNDEFINED
-                else None,
+                "modified_by_integration": None,
                 "original_device_class": entity_entry.original_device_class,
                 # LIMITATION: `unit_of_measurement` can be overridden by users;
                 # we should replace it with the original value in the future.
