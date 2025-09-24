@@ -651,7 +651,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     deprecated_show_progress = False
     _progress_step_data: ProgressStepData[_FlowResultT] = {
         "tasks": {},
-        "abort_reason": "abort",
+        "abort_reason": "",
         "abort_description_placeholders": MappingProxyType({}),
         "next_step_result": None,
     }
