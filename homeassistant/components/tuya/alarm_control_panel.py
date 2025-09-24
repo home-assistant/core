@@ -156,10 +156,14 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
                 if self._alarm_msg_dpcode is not None:
                     encoded_msg = self.device.status.get(self._alarm_msg_dpcode)
                     if encoded_msg:
-                        if "Sensor Low Battery" in b64decode(encoded_msg).decode(
-                            "utf-16be"
-                        ):
-                            is_battery_warning = True
+                        try:
+                            if "Sensor Low Battery" in b64decode(encoded_msg).decode(
+                                "utf-16be"
+                            ):
+                                is_battery_warning = True
+                        except (ValueError, UnicodeDecodeError):
+                            # If decoding fails, treat as non-battery warning
+                            pass
                 # Only report as triggered if NOT a battery warning
                 if not is_battery_warning:
                     return AlarmControlPanelState.TRIGGERED
@@ -175,7 +179,10 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
             if self.device.status.get(self._master_state.dpcode) == State.ALARM:
                 encoded_msg = self.device.status.get(self._alarm_msg_dpcode)
                 if encoded_msg:
-                    return b64decode(encoded_msg).decode("utf-16be")
+                    try:
+                        return b64decode(encoded_msg).decode("utf-16be")
+                    except (ValueError, UnicodeDecodeError):
+                        return None
         return None
 
     def alarm_disarm(self, code: str | None = None) -> None:
