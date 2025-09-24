@@ -34,6 +34,16 @@ def mock_supervisor_fixture() -> Generator[None]:
         yield
 
 
+@pytest.fixture(name="setup_entry", autouse=True)
+def setup_entry_fixture() -> Generator[AsyncMock]:
+    """Mock entry setup."""
+    with patch(
+        "homeassistant.components.homeassistant_connect_zbt2.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
 async def test_config_flow_zigbee(
     hass: HomeAssistant,
 ) -> None:

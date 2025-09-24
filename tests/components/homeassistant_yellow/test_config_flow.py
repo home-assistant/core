@@ -76,6 +76,16 @@ def mock_reboot_host(supervisor_client: AsyncMock) -> AsyncMock:
     return supervisor_client.host.reboot
 
 
+@pytest.fixture(name="setup_entry", autouse=True)
+def setup_entry_fixture() -> Generator[AsyncMock]:
+    """Mock entry setup."""
+    with patch(
+        "homeassistant.components.homeassistant_yellow.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
 async def test_config_flow(hass: HomeAssistant) -> None:
     """Test the config flow."""
     mock_integration(hass, MockModule("hassio"))
