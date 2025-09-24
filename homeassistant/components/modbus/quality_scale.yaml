@@ -1,0 +1,94 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands:
+    status: exempt
+    comment: |
+      Modbus have no brand information.
+  common-modules: done
+  config-flow-test-coverage:
+    status: exempt
+    comment: |
+      Modbus is a protocol implementation and do not support config_flow.
+  config-flow:
+    status: exempt
+    comment: |
+      Modbus is a protocol implementation and thus is not required to implement a configuration flow as per ADR-0010.
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Modbus do not use events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data:
+    status: exempt
+    comment: |
+      Modbus do not use runtime data.
+  test-before-configure:
+    status: exempt
+    comment: |
+      Modbus is a protocol implementation and do not support config_flow.
+  test-before-setup:
+    status: exempt
+    comment: |
+      Modbus is a protocol implementation and do not support config_flow.
+  unique-config-entry:
+    status: exempt
+    comment: |
+      Modbus is a protocol implementation and do not support config_flow.
+  # Silver
+  action-exceptions: todo
+  config-entry-unloading: todo
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: todo
+  log-when-unavailable: done
+  parallel-updates: todo
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      No authentication
+  test-coverage: todo
+  # Gold
+  devices: todo
+  diagnostics: todo
+  discovery-update-info: todo
+  discovery:
+    status: exempt
+    comment: |
+      No support by discovery
+  docs-data-update: todo
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      Modbus is a protocol implementation and do not support config_flow.
+  repair-issues: todo
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: |
+      Modbus is not using web.
+  strict-typing: done
