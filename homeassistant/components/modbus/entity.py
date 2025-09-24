@@ -62,14 +62,13 @@ from .const import (
     CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
-    SIGNAL_START_ENTITY,
     SIGNAL_STOP_ENTITY,
     DataType,
 )
 from .modbus import ModbusHub
 
 
-class BasePlatform(Entity):
+class ModbusBaseEntity(Entity):
     """Base for readonly platforms."""
 
     _value: str | None = None
@@ -84,9 +83,9 @@ class BasePlatform(Entity):
 
         self._hub = hub
         if (conf_slave := entry.get(CONF_SLAVE)) is not None:
-            self._slave = conf_slave
+            self._device_address = conf_slave
         else:
-            self._slave = entry.get(CONF_DEVICE_ADDRESS, 1)
+            self._device_address = entry.get(CONF_DEVICE_ADDRESS, 1)
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
@@ -95,18 +94,10 @@ class BasePlatform(Entity):
         self._attr_name = entry[CONF_NAME]
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
 
-        def get_optional_numeric_config(config_name: str) -> int | float | None:
-            if (val := entry.get(config_name)) is None:
-                return None
-            assert isinstance(val, (float, int)), (
-                f"Expected float or int but {config_name} was {type(val)}"
-            )
-            return val
-
-        self._min_value = get_optional_numeric_config(CONF_MIN_VALUE)
-        self._max_value = get_optional_numeric_config(CONF_MAX_VALUE)
+        self._min_value = entry.get(CONF_MIN_VALUE)
+        self._max_value = entry.get(CONF_MAX_VALUE)
         self._nan_value = entry.get(CONF_NAN_VALUE)
-        self._zero_suppress = get_optional_numeric_config(CONF_ZERO_SUPPRESS)
+        self._zero_suppress = entry.get(CONF_ZERO_SUPPRESS)
 
     @abstractmethod
     async def _async_update(self) -> None:
@@ -143,7 +134,6 @@ class BasePlatform(Entity):
             self._cancel_call()
             self._cancel_call = None
         self._attr_available = False
-        self.async_write_ha_state()
 
     async def async_await_connection(self, _now: Any) -> None:
         """Wait for first connect."""
@@ -162,14 +152,9 @@ class BasePlatform(Entity):
         self.async_on_remove(
             async_dispatcher_connect(self.hass, SIGNAL_STOP_ENTITY, self.async_disable)
         )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_START_ENTITY, self.async_local_update
-            )
-        )
 
 
-class BaseStructPlatform(BasePlatform, RestoreEntity):
+class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
     """Base class representing a sensor/climate."""
 
     def __init__(self, hass: HomeAssistant, hub: ModbusHub, config: dict) -> None:
@@ -276,7 +261,7 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
         return self.__process_raw_value(val[0])
 
 
-class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
+class ModbusToggleEntity(ModbusBaseEntity, ToggleEntity, RestoreEntity):
     """Base class representing a Modbus switch."""
 
     def __init__(self, hass: HomeAssistant, hub: ModbusHub, config: dict) -> None:
@@ -338,7 +323,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
     async def async_turn(self, command: int) -> None:
         """Evaluate switch result."""
         result = await self._hub.async_pb_call(
-            self._slave, self._address, command, self._write_type
+            self._device_address, self._address, command, self._write_type
         )
         if result is None:
             self._attr_available = False
@@ -352,7 +337,6 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             return
 
         if self._verify_delay:
-            assert self._verify_delay == 1
             if self._cancel_call:
                 self._cancel_call()
                 self._cancel_call = None
@@ -374,7 +358,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
 
         # do not allow multiple active calls to the same platform
         result = await self._hub.async_pb_call(
-            self._slave, self._verify_address, 1, self._verify_type
+            self._device_address, self._verify_address, 1, self._verify_type
         )
         if result is None:
             self._attr_available = False
@@ -395,7 +379,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
                         "Unexpected response from modbus device slave %s register %s,"
                         " got 0x%2x"
                     ),
-                    self._slave,
+                    self._device_address,
                     self._verify_address,
                     value,
                 )
