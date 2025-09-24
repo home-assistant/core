@@ -26,6 +26,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_TITLE,
     BrowseMedia,
     MediaPlayerDeviceClass,
@@ -540,7 +541,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         if share_link.is_share_link(media_id):
             # Pass the title to SoCo to fill metadata.
             # Use empty string, if no title is provided.
-            title = kwargs.get("extra", {}).get("title", "")
+            title = kwargs.get(ATTR_MEDIA_EXTRA, {}).get("title", "")
             soco_kwargs = {"dc_title": title}
             if enqueue == MediaPlayerEnqueue.ADD:
                 share_link.add_share_link_to_queue(
