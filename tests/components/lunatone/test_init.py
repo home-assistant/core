@@ -131,22 +131,3 @@ async def test_config_entry_not_ready_no_serial_number(
 
     mock_lunatone_info.async_update.assert_called_once()
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_serial_number_is_missing(
-    hass: HomeAssistant,
-    mock_lunatone_devices: AsyncMock,
-    mock_lunatone_info: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test device registry integration."""
-    mock_lunatone_info.serial_number = None
-
-    mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(mock_config_entry)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert not device_registry.devices
