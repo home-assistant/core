@@ -415,6 +415,7 @@ async def test_play_media_lib_track_add(
 
 
 _share_link: str = "spotify:playlist:abcdefghij0123456789XY"
+_share_link_title: str = "playlist title"
 
 
 async def test_play_media_share_link_add(
@@ -432,6 +433,7 @@ async def test_play_media_share_link_add(
             ATTR_MEDIA_CONTENT_TYPE: "playlist",
             ATTR_MEDIA_CONTENT_ID: _share_link,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.ADD,
+            ATTR_MEDIA_EXTRA: {"title": _share_link_title},
         },
         blocking=True,
     )
@@ -442,6 +444,10 @@ async def test_play_media_share_link_add(
     assert (
         soco_sharelink.add_share_link_to_queue.call_args_list[0].kwargs["timeout"]
         == LONG_SERVICE_TIMEOUT
+    )
+    assert (
+        soco_sharelink.add_share_link_to_queue.call_args_list[0].kwargs["dc_title"]
+        == _share_link_title
     )
 
 
@@ -460,6 +466,7 @@ async def test_play_media_share_link_next(
             ATTR_MEDIA_CONTENT_TYPE: "playlist",
             ATTR_MEDIA_CONTENT_ID: _share_link,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.NEXT,
+            ATTR_MEDIA_EXTRA: {"title": _share_link_title},
         },
         blocking=True,
     )
@@ -473,6 +480,10 @@ async def test_play_media_share_link_next(
     )
     assert (
         soco_sharelink.add_share_link_to_queue.call_args_list[0].kwargs["position"] == 1
+    )
+    assert (
+        soco_sharelink.add_share_link_to_queue.call_args_list[0].kwargs["dc_title"]
+        == _share_link_title
     )
 
 
@@ -492,6 +503,7 @@ async def test_play_media_share_link_play(
             ATTR_MEDIA_CONTENT_TYPE: "playlist",
             ATTR_MEDIA_CONTENT_ID: _share_link,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.PLAY,
+            ATTR_MEDIA_EXTRA: {"title": _share_link_title},
         },
         blocking=True,
     )
@@ -505,6 +517,10 @@ async def test_play_media_share_link_play(
     )
     assert (
         soco_sharelink.add_share_link_to_queue.call_args_list[0].kwargs["position"] == 1
+    )
+    assert (
+        soco_sharelink.add_share_link_to_queue.call_args_list[0].kwargs["dc_title"]
+        == _share_link_title
     )
     assert soco_mock.play_from_queue.call_count == 1
     soco_mock.play_from_queue.assert_called_with(9)
@@ -526,6 +542,7 @@ async def test_play_media_share_link_replace(
             ATTR_MEDIA_CONTENT_TYPE: "playlist",
             ATTR_MEDIA_CONTENT_ID: _share_link,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.REPLACE,
+            ATTR_MEDIA_EXTRA: {"title": _share_link_title},
         },
         blocking=True,
     )
@@ -537,6 +554,10 @@ async def test_play_media_share_link_replace(
     assert (
         soco_sharelink.add_share_link_to_queue.call_args_list[0].kwargs["timeout"]
         == LONG_SERVICE_TIMEOUT
+    )
+    assert (
+        soco_sharelink.add_share_link_to_queue.call_args_list[0].kwargs["dc_title"]
+        == _share_link_title
     )
     assert soco_mock.play_from_queue.call_count == 1
     soco_mock.play_from_queue.assert_called_with(0)
