@@ -641,20 +641,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         """Pre-confirm OTBR setup."""
 
         # This step is necessary to prevent `user_input` from being passed through
-        return await self.async_step_confirm_otbr()
-
-    async def async_step_confirm_otbr(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm OTBR setup."""
-        assert self._device is not None
-
-        if user_input is None:
-            return self.async_show_form(
-                step_id="confirm_otbr",
-                description_placeholders=self._get_translation_placeholders(),
-            )
-
         # OTBR discovery is done automatically via hassio
         return self._async_flow_finished()
 
