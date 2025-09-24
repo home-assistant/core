@@ -5,7 +5,14 @@ from datetime import timedelta
 from ipaddress import ip_address
 import json
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, create_autospec, patch
+from unittest.mock import (
+    AsyncMock,
+    MagicMock,
+    PropertyMock,
+    call,
+    create_autospec,
+    patch,
+)
 import uuid
 
 import pytest
@@ -585,14 +592,21 @@ async def test_migration_strategy_recommended(
 
         assert result_confirm["step_id"] == "choose_migration_strategy"
 
-    with patch(
-        "homeassistant.components.zha.radio_manager.ZhaRadioManager.restore_backup",
-    ) as mock_restore_backup:
+    with (
+        patch(
+            "homeassistant.components.zha.radio_manager.ZhaRadioManager.restore_backup",
+        ) as mock_restore_backup,
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_unload",
+            return_value=True,
+        ) as mock_async_unload,
+    ):
         result_recommended = await hass.config_entries.flow.async_configure(
             result_confirm["flow_id"],
             user_input={"next_step_id": config_flow.MIGRATION_STRATEGY_RECOMMENDED},
         )
 
+    assert mock_async_unload.mock_calls == [call(entry.entry_id)]
     assert result_recommended["type"] is FlowResultType.ABORT
     assert result_recommended["reason"] == "reconfigure_successful"
     mock_restore_backup.assert_called_once()

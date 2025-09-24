@@ -444,6 +444,10 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             assert len(config_entries) == 1
             config_entry = config_entries[0]
 
+            # Unload ZHA before connecting to the old adapter
+            with suppress(OperationNotAllowed):
+                await self.hass.config_entries.async_unload(config_entry.entry_id)
+
             # Create a radio manager to connect to the old stick to reset it
             temp_radio_mgr = ZhaRadioManager()
             temp_radio_mgr.hass = self.hass
