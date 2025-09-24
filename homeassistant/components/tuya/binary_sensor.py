@@ -48,7 +48,7 @@ TAMPER_BINARY_SENSOR = TuyaBinarySensorEntityDescription(
 # All descriptions can be found here. Mostly the Boolean data types in the
 # default status set of each category (that don't have a set instruction)
 # end up being a binary sensor.
-BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
+BINARY_SENSORS: dict[DeviceCategory, tuple[TuyaBinarySensorEntityDescription, ...]] = {
     DeviceCategory.CO2BJ: (
         TuyaBinarySensorEntityDescription(
             key=DPCode.CO2_STATE,
