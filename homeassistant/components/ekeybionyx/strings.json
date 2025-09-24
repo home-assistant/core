@@ -14,26 +14,26 @@
         "description": "Please select the {ekeybionyx} system which you want to connect to Home Assistant."
       },
       "webhooks": {
-        "description": "Please name your event entities. These event entities will be mapped as functions in the {ekeybionyx} app. You can configure up to {webhooks_available} events. Leaving a name empty will skip the setup of that event.",
+        "description": "Please name your event entities. These event entities will be mapped as functions in the {ekeybionyx} app. You can configure up to {webhooks_available} event entities. Leaving a name empty will skip the setup of that event entity.",
         "data": {
-          "webhook1": "Webhook 1",
-          "webhook2": "Webhook 2",
-          "webhook3": "Webhook 3",
-          "webhook4": "Webhook 4",
-          "webhook5": "Webhook 5",
+          "webhook1": "Event entity 1",
+          "webhook2": "Event entity 2",
+          "webhook3": "Event entity 3",
+          "webhook4": "Event entity 4",
+          "webhook5": "Event entity 5",
           "url": "Home Assistant URL"
         },
         "data_description": {
-          "webhook1": "Webhook 1",
-          "webhook2": "Webhook 2",
-          "webhook3": "Webhook 3",
-          "webhook4": "Webhook 4",
-          "webhook5": "Webhook 5",
+          "webhook1": "Name of event entity 1, that will be mapped into a function",
+          "webhook2": "Name of event entity 2, that will be mapped into a function",
+          "webhook3": "Name of event entity 3, that will be mapped into a function",
+          "webhook4": "Name of event entity 4, that will be mapped into a function",
+          "webhook5": "Name of event entity 5, that will be mapped into a function",
           "url": "Home Assistant instance URL which can be reached from the fingerprint controller"
         }
       },
       "delete_webhooks": {
-        "description": "Connection with Home Assistant was already configured. If you continue the configured functions will be deleted."
+        "description": "This system has already been connected to Home Assistant. If you continue, the previously configured functions will be deleted."
       }
     },
     "progress": {
