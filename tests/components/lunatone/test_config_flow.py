@@ -122,7 +122,9 @@ async def test_user_step_fail_with_error(
 
 
 async def test_reconfigure(
-    hass: HomeAssistant, mock_lunatone_info: AsyncMock, mock_config_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow."""
     url = "http://10.0.0.100"
@@ -151,7 +153,7 @@ async def test_reconfigure(
 async def test_reconfigure_fail_with_error(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
-    mock_config_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     exception: Exception,
     expected_error: str,
 ) -> None:

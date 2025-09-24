@@ -9,9 +9,10 @@ import pytest
 
 from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.components.lunatone.light import LunatoneLight
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import DEVICE_DATA_LIST, SERIAL_NUMBER
+from . import DEVICE_DATA_LIST, SERIAL_NUMBER, setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -72,11 +73,16 @@ def light_entity(
 
 
 async def test_setup(
-    setup_integration: MockConfigEntry,
+    hass: HomeAssistant,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the Lunatone configuration entry loading/unloading."""
+    await setup_integration(hass, mock_config_entry)
+
     for device_data in DEVICE_DATA_LIST:
         expected_unique_id = f"{SERIAL_NUMBER}-device{device_data.id}"
 

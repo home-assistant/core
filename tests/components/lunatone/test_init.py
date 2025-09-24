@@ -9,24 +9,27 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import BASE_URL, VERSION
+from . import BASE_URL, VERSION, setup_integration
 
 from tests.common import MockConfigEntry
 
 
 async def test_load_unload_config_entry(
-    hass: HomeAssistant, setup_integration: MockConfigEntry
+    hass: HomeAssistant,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the Lunatone configuration entry loading/unloading."""
-    config_entry = setup_integration
+    await setup_integration(hass, mock_config_entry)
 
-    assert config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert not hass.data.get(DOMAIN)
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_config_entry_not_ready_cause_of_info_object(
@@ -37,9 +40,7 @@ async def test_config_entry_not_ready_cause_of_info_object(
     """Test the Lunatone configuration entry not ready."""
     mock_lunatone_info.async_update.side_effect = aiohttp.ClientConnectionError()
 
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     mock_lunatone_info.async_update.assert_called_once()
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -54,9 +55,7 @@ async def test_config_entry_not_ready_cause_of_devices_object(
     """Test the Lunatone configuration entry not ready."""
     mock_lunatone_devices.async_update.side_effect = aiohttp.ClientConnectionError()
 
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     mock_lunatone_info.async_update.assert_called_once()
     mock_lunatone_devices.async_update.assert_called_once()
@@ -71,9 +70,7 @@ async def test_config_entry_not_ready_no_info_data(
     """Test the Lunatone configuration entry not ready."""
     mock_lunatone_info.data = None
 
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     mock_lunatone_info.async_update.assert_called_once()
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -88,9 +85,7 @@ async def test_config_entry_not_ready_no_devices_data(
     """Test the Lunatone configuration entry not ready."""
     mock_lunatone_devices.data = None
 
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     mock_lunatone_info.async_update.assert_called_once()
     mock_lunatone_devices.async_update.assert_called_once()
@@ -105,22 +100,24 @@ async def test_config_entry_not_ready_no_serial_number(
     """Test the Lunatone configuration entry not ready."""
     mock_lunatone_info.serial_number = None
 
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     mock_lunatone_info.async_update.assert_called_once()
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_device_info(
-    setup_integration: MockConfigEntry, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test device registry integration."""
-    config_entry = setup_integration
+    await setup_integration(hass, mock_config_entry)
 
     device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, config_entry.unique_id)}
+        identifiers={(DOMAIN, mock_config_entry.unique_id)}
     )
     assert device_entry is not None
     assert device_entry.manufacturer == "Lunatone"

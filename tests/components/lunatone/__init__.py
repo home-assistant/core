@@ -12,6 +12,10 @@ from lunatone_rest_api_client.models import (
 from lunatone_rest_api_client.models.common import ColorRGBData, ColorWAFData, Status
 from lunatone_rest_api_client.models.devices import DeviceStatus
 
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
+
 BASE_URL: Final = "http://10.0.0.131"
 SERIAL_NUMBER: Final = 12345
 VERSION: Final = "v1.14.1/1.4.3"
@@ -61,3 +65,12 @@ INFO_DATA: Final[InfoData] = InfoData(
         productionWeek=1,
     ),
 )
+
+
+async def setup_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Set up the Lunatone integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
