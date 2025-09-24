@@ -16,7 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
 from .models import EnumTypeData
 from .util import get_dpcode
@@ -63,7 +63,7 @@ async def async_setup_entry(
         entities: list[TuyaVacuumEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if device.category == "sd":
+            if device.category == DeviceCategory.SD:
                 entities.append(TuyaVacuumEntity(device, manager))
         async_add_entities(entities)
 
