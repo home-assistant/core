@@ -101,6 +101,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             DOMAIN,
             f"yaml_duplicate_{yaml_config[CONF_HOST]}_{yaml_config.get(CONF_PORT, DEFAULT_PORT)}",
             is_fixable=False,
+            is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
             translation_key="yaml_config_duplicate",
             translation_placeholders={
