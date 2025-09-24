@@ -546,8 +546,7 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
 
         sensor: SensorModel = self._flow_data[CONF_SENSOR]
         if TYPE_CHECKING:
-            if TYPE_CHECKING:
-                assert sensor is not None
+            assert sensor is not None
 
         return self.async_create_entry(
             title=self._get_title(sensor),
@@ -599,7 +598,7 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
 
         data: dict[str, Any] = {CONF_SENSOR_INDEX: sensor.sensor_index}
         read_key: str | None = self._flow_data[CONF_SENSOR_READ_KEY]
-        if read_key is not None and type(read_key) is str and len(read_key) > 0:
+        if read_key is not None and isinstance(read_key, str) and len(read_key) > 0:
             data[CONF_SENSOR_READ_KEY] = read_key
 
         return self.async_create_entry(
