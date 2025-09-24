@@ -24,11 +24,11 @@
           "url": "Home Assistant URL"
         },
         "data_description": {
-          "webhook1": "Name of event entity 1, that will be mapped into a function",
-          "webhook2": "Name of event entity 2, that will be mapped into a function",
-          "webhook3": "Name of event entity 3, that will be mapped into a function",
-          "webhook4": "Name of event entity 4, that will be mapped into a function",
-          "webhook5": "Name of event entity 5, that will be mapped into a function",
+          "webhook1": "Name of event entity 1 that will be mapped into a function",
+          "webhook2": "Name of event entity 2 that will be mapped into a function",
+          "webhook3": "Name of event entity 3 that will be mapped into a function",
+          "webhook4": "Name of event entity 4 that will be mapped into a function",
+          "webhook5": "Name of event entity 5 that will be mapped into a function",
           "url": "Home Assistant instance URL which can be reached from the fingerprint controller"
         }
       },
