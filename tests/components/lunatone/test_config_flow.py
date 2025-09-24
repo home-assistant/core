@@ -61,7 +61,7 @@ async def test_full_flow_fail_because_of_missing_device_infos(
 async def test_device_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test that errors are shown when duplicates are added."""
+    """Test that the flow is aborted when the device is already configured."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
