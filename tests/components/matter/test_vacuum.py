@@ -10,7 +10,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.matter.const import (
     SERVICE_CLEAN_AREAS,
     SERVICE_GET_AREAS,
-    SERVICE_SELECT_AREAS,
 )
 from homeassistant.components.matter.vacuum import (
     ATTR_CURRENT_AREA,
@@ -158,29 +157,7 @@ async def test_k11_vacuum_actions(
     await async_setup_component(hass, "homeassistant", {})
     entity_id = "vacuum.k11"
     state = hass.states.get(entity_id)
-    # test selected_areas action
-    assert state
-
-    selected_areas = [1, 2, 3]
-    await hass.services.async_call(
-        "matter",
-        SERVICE_SELECT_AREAS,
-        {
-            "entity_id": entity_id,
-            "areas": selected_areas,
-        },
-        blocking=True,
-        return_response=True,
-    )
-    assert matter_client.send_device_command.call_count == 1
-    assert matter_client.send_device_command.call_args == call(
-        node_id=matter_node.node_id,
-        endpoint_id=1,
-        command=clusters.ServiceArea.Commands.SelectAreas(newAreas=selected_areas),
-    )
-    matter_client.send_device_command.reset_mock()
-
-    # test clean_areasss action
+    # test clean_areas action
     assert state
 
     selected_areas = [1, 2, 3]
