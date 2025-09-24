@@ -1458,6 +1458,45 @@ async def test_reauth_encryption_key_removed(hass: HomeAssistant) -> None:
     assert entry.data[CONF_NOISE_PSK] == ""
 
 
+async def test_reauth_different_device_at_same_address(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test reauth aborts when a different device is found at the same IP address."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_NOISE_PSK: VALID_NOISE_PSK,
+            CONF_DEVICE_NAME: "old_device",
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    # Mock a different device at the same IP (different MAC address)
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=False,
+        name="new_device",
+        legacy_bluetooth_proxy_version=0,
+        # Different MAC address than the entry
+        mac_address="AA:BB:CC:DD:EE:FF",
+        esphome_version="1.0.0",
+    )
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_unique_id_changed"
+    assert result["description_placeholders"] == {
+        "name": "old_device",
+        "host": "127.0.0.1",
+        "expected_mac": "11:22:33:44:55:aa",
+        "unexpected_mac": "aa:bb:cc:dd:ee:ff",
+        "unexpected_device_name": "new_device",
+    }
+
+
 @pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
 async def test_discovery_dhcp_updates_host(
     hass: HomeAssistant, mock_client: APIClient
