@@ -43,8 +43,8 @@ from .util import (
 # Defaults for color temperature clamping
 # if the device does not report min/max physical mireds (it should!),
 # or device has ranges outside normal implementations, use these defaults
-DEFAULT_MIRADS_MAX = 65279  # 15 Kelvin
-DEFAULT_MIRADS_MIN = 153  # 6535 kelvin
+DEFAULT_MIREDS_MAX = 65279  # 15 Kelvin
+DEFAULT_MIREDS_MIN = 153  # 6535 Kelvin
 
 COLOR_MODE_MAP = {
     clusters.ColorControl.Enums.ColorModeEnum.kCurrentHueAndCurrentSaturation: ColorMode.HS,
@@ -155,13 +155,13 @@ class MatterLight(MatterEntity, LightEntity):
             self.get_matter_attribute_value(
                 clusters.ColorControl.Attributes.ColorTempPhysicalMaxMireds
             )
-            or DEFAULT_MIRADS_MAX
+            or DEFAULT_MIREDS_MAX
         )
         min_mireds = (
             self.get_matter_attribute_value(
                 clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds
             )
-            or DEFAULT_MIRADS_MIN
+            or DEFAULT_MIREDS_MIN
         )
         color_temp_mired = min(color_temp_mired, max_mireds)
         color_temp_mired = max(color_temp_mired, min_mireds)
@@ -396,22 +396,22 @@ class MatterLight(MatterEntity, LightEntity):
                         self.get_matter_attribute_value(
                             clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds
                         )
-                        or DEFAULT_MIRADS_MIN
+                        or DEFAULT_MIREDS_MIN
                     )
                     self._attr_max_color_temp_kelvin = (
                         color_util.color_temperature_mired_to_kelvin(
-                            max(min_mireds, DEFAULT_MIRADS_MIN)
+                            max(min_mireds, DEFAULT_MIREDS_MIN)
                         )
                     )
                     max_mireds = (
                         self.get_matter_attribute_value(
                             clusters.ColorControl.Attributes.ColorTempPhysicalMaxMireds
                         )
-                        or DEFAULT_MIRADS_MAX
+                        or DEFAULT_MIREDS_MAX
                     )
                     self._attr_min_color_temp_kelvin = (
                         color_util.color_temperature_mired_to_kelvin(
-                            min(max_mireds, DEFAULT_MIRADS_MAX)
+                            min(max_mireds, DEFAULT_MIREDS_MAX)
                         )
                     )
 
