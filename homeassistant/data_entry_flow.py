@@ -603,19 +603,17 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     ) -> list[_FlowResultT]:
         """Convert a list of FlowHandler to a partial FlowResult that can be serialized."""
         return [
-            (
-                self._flow_result(
-                    flow_id=flow.flow_id,
-                    handler=flow.handler,
-                    context=flow.context,
-                    step_id=flow.cur_step["step_id"],
-                )
-                if flow.cur_step
-                else self._flow_result(
-                    flow_id=flow.flow_id,
-                    handler=flow.handler,
-                    context=flow.context,
-                )
+            self._flow_result(
+                flow_id=flow.flow_id,
+                handler=flow.handler,
+                context=flow.context,
+                step_id=flow.cur_step["step_id"],
+            )
+            if flow.cur_step
+            else self._flow_result(
+                flow_id=flow.flow_id,
+                handler=flow.handler,
+                context=flow.context,
             )
             for flow in flows
             if include_uninitialized or flow.cur_step is not None
@@ -988,7 +986,6 @@ def progress_step[
     ResultT: FlowResult[Any, Any],
     **P,
 ](
-    progress_action: str | None = None,
     description_placeholders: (
         dict[str, str] | Callable[[Any], dict[str, str]] | None
     ) = None,
@@ -1003,7 +1000,6 @@ def progress_step[
     to update progress.
 
     Args:
-        progress_action: The progress action name for the UI. If None, inferred from method name.
         description_placeholders: Static dict or callable that returns dict for progress UI placeholders.
     """
 
@@ -1015,7 +1011,6 @@ def progress_step[
             self: FlowHandler[Any, ResultT], *args: P.args, **kwargs: P.kwargs
         ) -> ResultT:
             step_id = func.__name__.replace("async_step_", "")
-            action = progress_action or step_id
 
             # Check if we have a progress task running
             progress_task = self._progress_step_data["tasks"].get(step_id)
@@ -1039,7 +1034,7 @@ def progress_step[
 
                     return self.async_show_progress(
                         step_id=step_id,
-                        progress_action=action,
+                        progress_action=step_id,
                         progress_task=progress_task,
                         description_placeholders=placeholders,
                     )
