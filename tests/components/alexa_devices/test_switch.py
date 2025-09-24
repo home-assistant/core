@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .conftest import TEST_SERIAL_NUMBER
+from .conftest import TEST_DEVICE_1_SN
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -67,7 +67,7 @@ async def test_switch_dnd(
     assert mock_amazon_devices_client.set_do_not_disturb.call_count == 1
 
     mock_amazon_devices_client.get_devices_data.return_value[
-        TEST_SERIAL_NUMBER
+        TEST_DEVICE_1_SN
     ].do_not_disturb = True
 
     freezer.tick(SCAN_INTERVAL)
@@ -85,7 +85,7 @@ async def test_switch_dnd(
     )
 
     mock_amazon_devices_client.get_devices_data.return_value[
-        TEST_SERIAL_NUMBER
+        TEST_DEVICE_1_SN
     ].do_not_disturb = False
 
     freezer.tick(SCAN_INTERVAL)
@@ -108,7 +108,7 @@ async def test_offline_device(
     entity_id = "switch.echo_test_do_not_disturb"
 
     mock_amazon_devices_client.get_devices_data.return_value[
-        TEST_SERIAL_NUMBER
+        TEST_DEVICE_1_SN
     ].online = False
 
     await setup_integration(hass, mock_config_entry)
@@ -117,7 +117,7 @@ async def test_offline_device(
     assert state.state == STATE_UNAVAILABLE
 
     mock_amazon_devices_client.get_devices_data.return_value[
-        TEST_SERIAL_NUMBER
+        TEST_DEVICE_1_SN
     ].online = True
 
     freezer.tick(SCAN_INTERVAL)
