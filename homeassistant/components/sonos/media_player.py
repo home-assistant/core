@@ -659,7 +659,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         media_id: str,
         enqueue: MediaPlayerEnqueue,
         title: str,
-    ):
+    ) -> None:
         share_link = self.coordinator.share_link
         kwargs = {}
         if title:
