@@ -11,18 +11,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 
-# All descriptions can be found here:
-# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-CAMERAS: tuple[str, ...] = (
-    # Smart Camera - Low power consumption camera
-    # Undocumented, see https://github.com/home-assistant/core/issues/132844
-    "dghsxj",
-    # Smart Camera (including doorbells)
-    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
-    "sp",
+CAMERAS: tuple[DeviceCategory, ...] = (
+    DeviceCategory.DGHSXJ,
+    DeviceCategory.SP,
 )
 
 
