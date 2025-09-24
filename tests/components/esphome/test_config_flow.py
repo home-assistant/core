@@ -1196,11 +1196,9 @@ async def test_reauth_password_changed(
     )
     entry.add_to_hass(hass)
 
-    # Mock that the old password is invalid
     mock_client.connect.side_effect = InvalidAuthAPIError("Invalid password")
 
     result = await entry.start_reauth_flow(hass)
-    # Should directly show password form since invalid_auth was detected
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authenticate"
     assert result["description_placeholders"] == {
