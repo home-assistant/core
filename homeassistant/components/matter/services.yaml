@@ -13,9 +13,6 @@ select_areas:
     areas:
       required: true
       example: [1, 3]
-      selector:
-        select:
-          multiple: true
 
 clean_areas:
   target:
