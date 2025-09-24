@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from synology_dsm.api.core.external_usb import (
     SynoCoreExternalUSB,
@@ -345,7 +345,8 @@ async def async_setup_entry(
     api = data.api
     coordinator = data.coordinator_central
     storage = api.storage
-    assert storage is not None
+    if TYPE_CHECKING:
+        assert storage is not None
     known_usb_devices: set[str] = set()
 
     def _check_usb_devices() -> None:
@@ -504,7 +505,8 @@ class SynoDSMExternalUSBSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
     def native_value(self) -> StateType:
         """Return the state."""
         external_usb = self._api.external_usb
-        assert external_usb is not None
+        if TYPE_CHECKING:
+            assert external_usb is not None
         if "device" in self.entity_description.key:
             for device in external_usb.get_devices.values():
                 if device.device_name == self._device_id:
