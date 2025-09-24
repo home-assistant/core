@@ -840,7 +840,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Auto cycle link',
+    'original_name': 'Auto Cycle Link',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -853,7 +853,7 @@
 # name: test_all_entities[da_wm_sc_000001][switch.airdresser_auto_cycle_link-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AirDresser Auto cycle link',
+      'friendly_name': 'AirDresser Auto Cycle Link',
     }),
     'context': <ANY>,
     'entity_id': 'switch.airdresser_auto_cycle_link',
