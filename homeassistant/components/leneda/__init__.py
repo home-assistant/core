@@ -21,8 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: LenedaConfigEntry) -> bool:
     """Set up Leneda from a config entry or subentry."""
-    _LOGGER.debug("Setting up entry %s", entry.entry_id)
-
     api_token, energy_id = entry.data[CONF_API_TOKEN], entry.data[CONF_ENERGY_ID]
     coordinator = LenedaCoordinator(hass, entry, api_token, energy_id)
     entry.runtime_data = coordinator
@@ -30,15 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LenedaConfigEntry) -> bo
     await coordinator.async_config_entry_first_refresh()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Set up a listener for subentry changes
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
     return True
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
