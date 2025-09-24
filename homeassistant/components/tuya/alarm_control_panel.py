@@ -19,7 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
 from .models import EnumTypeData
 from .util import get_dpcode
@@ -57,12 +57,8 @@ STATE_MAPPING: dict[str, AlarmControlPanelState] = {
 }
 
 
-# All descriptions can be found here:
-# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-ALARM: dict[str, tuple[TuyaAlarmControlPanelEntityDescription, ...]] = {
-    # Alarm Host
-    # https://developer.tuya.com/en/docs/iot/categorymal?id=Kaiuz33clqxaf
-    "mal": (
+ALARM: dict[DeviceCategory, tuple[TuyaAlarmControlPanelEntityDescription, ...]] = {
+    DeviceCategory.MAL: (
         TuyaAlarmControlPanelEntityDescription(
             key=DPCode.MASTER_MODE,
             master_state=DPCode.MASTER_STATE,
