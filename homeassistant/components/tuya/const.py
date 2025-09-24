@@ -103,7 +103,10 @@ class DeviceCategory(StrEnum):
     BGL = "bgl"
     """Wall-hung boiler"""
     BH = "bh"
-    """Smart kettle"""
+    """Smart kettle
+
+    https://developer.tuya.com/en/docs/iot/fbh?id=K9gf484m21yq7
+    """
     BX = "bx"
     """Refrigerator"""
     BXX = "bxx"
@@ -187,7 +190,10 @@ class DeviceCategory(StrEnum):
     DLQ = "dlq"
     """Circuit breaker"""
     DR = "dr"
-    """Electric blanket"""
+    """Electric blanket
+
+    https://developer.tuya.com/en/docs/iot/categorydr?id=Kaiuz22dyc66p
+    """
     DS = "ds"
     """TV set"""
     FS = "fs"
@@ -238,7 +244,10 @@ class DeviceCategory(StrEnum):
     https://developer.tuya.com/en/docs/iot/categoryjwbj?id=Kaiuz40u98lkm
     """
     KFJ = "kfj"
-    """Coffee maker"""
+    """Coffee maker
+
+    https://developer.tuya.com/en/docs/iot/categorykfj?id=Kaiuz2p12pc7f
+    """
     KG = "kg"
     """Switch
 
@@ -300,7 +309,10 @@ class DeviceCategory(StrEnum):
     MSP = "msp"
     """Cat toilet"""
     MZJ = "mzj"
-    """Sous vide cooker"""
+    """Sous vide cooker
+
+    https://developer.tuya.com/en/docs/iot/categorymzj?id=Kaiuz2vy130ux
+    """
     NNQ = "nnq"
     """Bottle warmer"""
     NTQ = "ntq"
@@ -379,7 +391,7 @@ class DeviceCategory(StrEnum):
     TGQ = "tgq"
     """Dimmer
 
-    https://developer.tuya.com/en/docs/iot/tgq?id=Kaof8ke9il4k4
+    https://developer.tuya.com/en/docs/iot/categorytgkg?id=Kaiuz0ktx7m0o
     """
     TNQ = "tnq"
     """Smart milk kettle"""
@@ -455,6 +467,11 @@ class DeviceCategory(StrEnum):
     # Undocumented
     BZYD = "bzyd"
     """White noise machine (undocumented)"""
+    CWJWQ = "cwjwq"
+    """Smart Odor Eliminator-Pro (undocumented)
+
+    see https://github.com/orgs/home-assistant/discussions/79
+    """
     DGHSXJ = "dghsxj"
     """Smart Camera - Low power consumption camera (undocumented)
 
@@ -497,6 +514,12 @@ class DeviceCategory(StrEnum):
     """
     SFKZQ = "sfkzq"
     """Smart Water Timer (undocumented)"""
+    SJZ = "sjz"
+    """Electric desk (undocumented)"""
+    SZJQR = "szjqr"
+    """Fingerbot (undocumented)"""
+    SWTZ = "swtz"
+    """Cooking thermometer (undocumented)"""
     TDQ = "tdq"
     """Dimmer (undocumented)"""
     TYD = "tyd"
@@ -515,6 +538,15 @@ class DeviceCategory(StrEnum):
 
     https://developer.tuya.com/en/docs/iot/s?id=Kbeoa9fkv6brp
     """
+    XNYJCN = "xnyjcn"
+    """Micro Storage Inverter
+
+        Energy storage and solar PV inverter system with monitoring capabilities
+    """
+    YWCGQ = "ywcgq"
+    """Tank Level Sensor (undocumented)"""
+    ZNRB = "znrb"
+    """Pool HeatPump"""
 
 
 class DPCode(StrEnum):
