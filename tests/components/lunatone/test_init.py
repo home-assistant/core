@@ -19,11 +19,20 @@ async def test_load_unload_config_entry(
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_info: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test the Lunatone configuration entry loading/unloading."""
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    )
+    assert device_entry is not None
+    assert device_entry.manufacturer == "Lunatone"
+    assert device_entry.sw_version == VERSION
+    assert device_entry.configuration_url == BASE_URL
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -122,25 +131,6 @@ async def test_config_entry_not_ready_no_serial_number(
 
     mock_lunatone_info.async_update.assert_called_once()
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_device_info(
-    hass: HomeAssistant,
-    mock_lunatone_devices: AsyncMock,
-    mock_lunatone_info: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test device registry integration."""
-    await setup_integration(hass, mock_config_entry)
-
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
-    )
-    assert device_entry is not None
-    assert device_entry.manufacturer == "Lunatone"
-    assert device_entry.sw_version == VERSION
-    assert device_entry.configuration_url == BASE_URL
 
 
 async def test_serial_number_is_missing(
