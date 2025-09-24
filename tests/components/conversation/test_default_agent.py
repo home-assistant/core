@@ -12,9 +12,14 @@ from syrupy.assertion import SnapshotAssertion
 import yaml
 
 from homeassistant.components import conversation, cover, media_player, weather
-from homeassistant.components.conversation import async_get_agent, default_agent
+from homeassistant.components.conversation import (
+    async_get_agent,
+    default_agent,
+    get_agent_manager,
+)
 from homeassistant.components.conversation.default_agent import METADATA_CUSTOM_SENTENCE
 from homeassistant.components.conversation.models import ConversationInput
+from homeassistant.components.conversation.trigger import TriggerDetails
 from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.homeassistant.exposed_entities import (
     async_get_assistant_settings,
@@ -415,10 +420,10 @@ async def test_trigger_sentences(hass: HomeAssistant) -> None:
     trigger_sentences = ["It's party time", "It is time to party"]
     trigger_response = "Cowabunga!"
 
-    agent = async_get_agent(hass)
+    manager = get_agent_manager(hass)
 
     callback = AsyncMock(return_value=trigger_response)
-    unregister = agent.register_trigger(trigger_sentences, callback)
+    unregister = manager.register_trigger(TriggerDetails(trigger_sentences, callback))
 
     result = await conversation.async_converse(hass, "Not the trigger", None, Context())
     assert result.response.response_type == intent.IntentResponseType.ERROR
@@ -461,7 +466,7 @@ async def test_trigger_sentence_response_translation(
     """Test translation of default response 'done'."""
     hass.config.language = language
 
-    agent = async_get_agent(hass)
+    manager = get_agent_manager(hass)
 
     translations = {
         "en": {"component.conversation.conversation.agent.done": "English done"},
@@ -473,8 +478,8 @@ async def test_trigger_sentence_response_translation(
         "homeassistant.components.conversation.default_agent.translation.async_get_translations",
         return_value=translations.get(language),
     ):
-        unregister = agent.register_trigger(
-            ["test sentence"], AsyncMock(return_value=None)
+        unregister = manager.register_trigger(
+            TriggerDetails(["test sentence"], AsyncMock(return_value=None))
         )
         result = await conversation.async_converse(
             hass, "test sentence", None, Context()
@@ -522,13 +527,13 @@ async def test_respond_intent(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("init_components")
-async def test_device_area_context(
+async def test_satellite_area_context(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that including a device_id will target a specific area."""
+    """Test that including a satellite will target a specific area."""
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
     turn_off_calls = async_mock_service(hass, "light", "turn_off")
 
@@ -560,12 +565,12 @@ async def test_device_area_context(
     entry = MockConfigEntry()
     entry.add_to_hass(hass)
 
-    kitchen_satellite = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections=set(),
-        identifiers={("demo", "id-satellite-kitchen")},
+    kitchen_satellite = entity_registry.async_get_or_create(
+        "assist_satellite", "demo", "kitchen"
     )
-    device_registry.async_update_device(kitchen_satellite.id, area_id=area_kitchen.id)
+    entity_registry.async_update_entity(
+        kitchen_satellite.entity_id, area_id=area_kitchen.id
+    )
 
     bedroom_satellite = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -581,7 +586,7 @@ async def test_device_area_context(
         None,
         Context(),
         None,
-        device_id=kitchen_satellite.id,
+        satellite_id=kitchen_satellite.entity_id,
     )
     await hass.async_block_till_done()
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -605,7 +610,7 @@ async def test_device_area_context(
         None,
         Context(),
         None,
-        device_id=kitchen_satellite.id,
+        satellite_id=kitchen_satellite.entity_id,
     )
     await hass.async_block_till_done()
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE

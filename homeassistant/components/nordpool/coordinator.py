@@ -71,21 +71,34 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
         self.unsub = async_track_point_in_utc_time(
             self.hass, self.fetch_data, self.get_next_interval(dt_util.utcnow())
         )
+        if self.config_entry.pref_disable_polling and not initial:
+            self.async_update_listeners()
+            return
+        try:
+            data = await self.handle_data(initial)
+        except UpdateFailed as err:
+            self.async_set_update_error(err)
+            return
+        self.async_set_updated_data(data)
+
+    async def handle_data(self, initial: bool = False) -> DeliveryPeriodsData:
+        """Fetch data from Nord Pool."""
         data = await self.api_call()
         if data and data.entries:
             current_day = dt_util.utcnow().strftime("%Y-%m-%d")
             for entry in data.entries:
                 if entry.requested_date == current_day:
                     LOGGER.debug("Data for current day found")
-                    self.async_set_updated_data(data)
-                    return
+                    return data
         if data and not data.entries and not initial:
             # Empty response, use cache
             LOGGER.debug("No data entries received")
-            return
-        self.async_set_update_error(
-            UpdateFailed(translation_domain=DOMAIN, translation_key="no_day_data")
-        )
+            return self.data
+        raise UpdateFailed(translation_domain=DOMAIN, translation_key="no_day_data")
+
+    async def _async_update_data(self) -> DeliveryPeriodsData:
+        """Fetch the latest data from the source."""
+        return await self.handle_data()
 
     async def api_call(self, retry: int = 3) -> DeliveryPeriodsData | None:
         """Make api call to retrieve data with retry if failure."""

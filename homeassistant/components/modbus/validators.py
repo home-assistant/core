@@ -44,7 +44,7 @@ from .const import (
     DEFAULT_OFFSET,
     DEFAULT_SCALE,
     DEFAULT_SCAN_INTERVAL,
-    MODBUS_DOMAIN as DOMAIN,
+    DOMAIN,
     PLATFORMS,
     SERIAL,
     DataType,
