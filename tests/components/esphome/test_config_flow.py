@@ -1200,17 +1200,9 @@ async def test_reauth_password_changed(
     mock_client.connect.side_effect = InvalidAuthAPIError("Invalid password")
 
     result = await entry.start_reauth_flow(hass)
+    # Should directly show password form since invalid_auth was detected
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    # Try with encryption key first (will fail with invalid_auth)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_NOISE_PSK: "wrong_key"}
-    )
-
-    # Should now show password form
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_password"
+    assert result["step_id"] == "authenticate"
     assert result["description_placeholders"] == {
         "name": "Mock Title",
     }

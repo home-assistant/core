@@ -135,12 +135,12 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             and not self._device_info.uses_password
         ):
             self._password = ""
-            return await self._async_authenticate_or_add()
+            return await self.async_step_authenticate()
 
         if error == "invalid_auth" or (
             error is None and self._device_info and self._device_info.uses_password
         ):
-            return await self._async_authenticate_or_add()
+            return await self.async_step_authenticate()
 
         if error is None and entry_data.get(CONF_NOISE_PSK):
             # Device was configured with encryption but now connects without it.
