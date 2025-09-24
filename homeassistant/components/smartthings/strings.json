@@ -78,6 +78,21 @@
         "name": "[%key:common::action::stop%]"
       }
     },
+    "climate": {
+      "air_conditioner": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "wind_free": "WindFree",
+              "wind_free_sleep": "WindFree sleep",
+              "quiet": "Quiet",
+              "long_wind": "Long wind",
+              "smart": "Smart"
+            }
+          }
+        }
+      }
+    },
     "event": {
       "button": {
         "state": {
