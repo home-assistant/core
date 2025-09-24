@@ -793,7 +793,10 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
     ) -> _FlowResultT:
         """Progress done. Return the next step.
 
-        Used by progress_step decorator to keep the API consistent.
+        Used by the progress_step decorator
+        to allow decorated step methods
+        to call the next step method, to change step,
+        without using async_show_progress_done.
         If no next step is set, abort the flow.
         """
         if self._progress_step_data["next_step_result"] is None:
