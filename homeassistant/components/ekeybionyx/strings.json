@@ -11,10 +11,10 @@
         "data_description": {
           "system": "System the event entities should be set up for."
         },
-        "description": "Please select the {ekeybionyx} system in which you want to set up the event entities."
+        "description": "Please select the {ekeybionyx} system which you want to connect to Home Assistant."
       },
       "webhooks": {
-        "description": "Please name your event entities. You can configure up to {webhooks_available} events. Leaving a name empty will skip the setup of that event. These names will be reflected in the {ekeybionyx} app.",
+        "description": "Please name your event entities. These event entities will be mapped as functions in the {ekeybionyx} app. You can configure up to {webhooks_available} events. Leaving a name empty will skip the setup of that event.",
         "data": {
           "webhook1": "Webhook 1",
           "webhook2": "Webhook 2",
@@ -33,7 +33,7 @@
         }
       },
       "delete_webhooks": {
-        "description": "Event entites with Home Assistant were already configured. If you continue they will be removed."
+        "description": "Connection with Home Assistant was already configured. If you continue the configured functions will be deleted."
       }
     },
     "progress": {
@@ -56,7 +56,7 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "no_available_webhooks": "There are no available webhooks in the {ekeybionyx} plattform. Please delete some and try again.",
-      "no_own_systems": "Your account does not have admin access to any systems",
+      "no_own_systems": "Your account does not have admin access to any systems.",
       "cannot_connect": "Connection to {ekeybionyx} failed. Please check your Internet connection and try again."
     },
     "create_entry": {
