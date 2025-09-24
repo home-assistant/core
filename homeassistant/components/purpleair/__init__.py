@@ -63,7 +63,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PurpleAirConfigEntry) 
         )
         sensor_index = next(identifiers, None)
         if TYPE_CHECKING:
-            assert sensor_index in index_list, "Sensor not in config entry"
+            assert sensor_index in index_list
 
         dev_reg.async_remove_device(device.id)
 

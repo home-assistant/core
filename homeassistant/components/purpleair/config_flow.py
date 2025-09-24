@@ -362,7 +362,7 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
             self._errors[CONF_BASE] = CONF_UNKNOWN
             return False
 
-        if not nearby_sensor_list or len(nearby_sensor_list) == 0:
+        if not nearby_sensor_list:
             self._errors[CONF_LOCATION] = CONF_NO_SENSORS_FOUND
             return False
 
@@ -494,7 +494,6 @@ class PurpleAirSubentryFlow(ConfigSubentryFlow):
                 data_schema=self.map_location_schema,
                 errors=self._errors,
             )
-
         if TYPE_CHECKING:
             assert self._flow_data.get(CONF_NEARBY_SENSOR_LIST) is not None
 

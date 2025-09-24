@@ -48,6 +48,7 @@ class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
         """Return entity specific state attributes."""
         attrs: dict[str, Any] = {}
         if self.sensor_data.latitude is None or self.sensor_data.longitude is None:
+            # If either latitude or longitude is missing, do not include location attributes.
             return attrs
 
         if self._entry.options.get(CONF_SHOW_ON_MAP, False):
