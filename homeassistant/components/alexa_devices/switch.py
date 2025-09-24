@@ -58,13 +58,6 @@ async def async_setup_entry(
         hass, coordinator, SWITCH_DOMAIN, "do_not_disturb", "dnd"
     )
 
-    async_add_entities(
-        AmazonSwitchEntity(coordinator, serial_num, switch_desc)
-        for switch_desc in SWITCHES
-        for serial_num in coordinator.data
-        if switch_desc.key in coordinator.data[serial_num].sensors
-    )
-
     known_devices: set[str] = set()
 
     def _check_device() -> None:
@@ -76,7 +69,7 @@ async def async_setup_entry(
                 AmazonSwitchEntity(coordinator, serial_num, switch_desc)
                 for switch_desc in SWITCHES
                 for serial_num in new_devices
-                if switch_desc.subkey in coordinator.data[serial_num].capabilities
+                if switch_desc.key in coordinator.data[serial_num].sensors
             )
 
     _check_device()

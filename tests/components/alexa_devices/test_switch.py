@@ -1,7 +1,9 @@
 """Tests for the Alexa Devices switch platform."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
+from aioamazondevices.api import AmazonDeviceSensor
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -23,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .conftest import TEST_DEVICE_1_SN
+from .conftest import TEST_DEVICE_1, TEST_DEVICE_1_SN
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -66,9 +68,16 @@ async def test_switch_dnd(
 
     assert mock_amazon_devices_client.set_do_not_disturb.call_count == 1
 
-    mock_amazon_devices_client.get_devices_data.return_value[
-        TEST_DEVICE_1_SN
-    ].do_not_disturb = True
+    device_data = deepcopy(TEST_DEVICE_1)
+    device_data.sensors = {
+        "dnd": AmazonDeviceSensor(name="dnd", value=True, error=False, scale=None),
+        "temperature": AmazonDeviceSensor(
+            name="temperature", value="22.5", error=False, scale="CELSIUS"
+        ),
+    }
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_1_SN: device_data
+    }
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -84,9 +93,15 @@ async def test_switch_dnd(
         blocking=True,
     )
 
-    mock_amazon_devices_client.get_devices_data.return_value[
-        TEST_DEVICE_1_SN
-    ].do_not_disturb = False
+    device_data.sensors = {
+        "dnd": AmazonDeviceSensor(name="dnd", value=False, error=False, scale=None),
+        "temperature": AmazonDeviceSensor(
+            name="temperature", value="22.5", error=False, scale="CELSIUS"
+        ),
+    }
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_1_SN: device_data
+    }
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
