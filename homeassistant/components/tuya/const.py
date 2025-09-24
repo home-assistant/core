@@ -130,17 +130,29 @@ class DeviceCategory(StrEnum):
     CN = "cn"
     """Milk dispenser"""
     CO2BJ = "co2bj"
-    """CO2 detector"""
+    """CO2 detector
+
+    https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
+    """
     COBJ = "cobj"
-    """CO detector"""
+    """CO detector
+
+    https://developer.tuya.com/en/docs/iot/categorycobj?id=Kaiuz3u1j6q1v
+    """
     CS = "cs"
-    """Dehumidifier"""
+    """Dehumidifier
+
+    https://developer.tuya.com/en/docs/iot/categorycs?id=Kaiuz1vcz4dha
+    """
     CWTSWSQ = "cwtswsq"
     """Pet treat feeder"""
     CWWQFSQ = "cwwqfsq"
     """Pet ball thrower"""
     CWWSQ = "cwwsq"
-    """Pet feeder"""
+    """Pet feeder
+
+    https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
+    """
     CWYSJ = "cwysj"
     """Pet fountain"""
     CZ = "cz"
@@ -157,7 +169,10 @@ class DeviceCategory(StrEnum):
     DD = "dd"
     """Strip lights"""
     DGNBJ = "dgnbj"
-    """Multi-functional alarm"""
+    """Multi-functional alarm
+
+    https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
+    """
     DJ = "dj"
     """Light"""
     DLQ = "dlq"
@@ -181,7 +196,10 @@ class DeviceCategory(StrEnum):
     HOTELMS = "hotelms"
     """Hotel lock"""
     HPS = "hps"
-    """Human presence sensor"""
+    """Human presence sensor
+
+    https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
+    """
     JS = "js"
     """Water purifier"""
     JSQ = "jsq"
@@ -191,7 +209,10 @@ class DeviceCategory(StrEnum):
     JTMSPRO = "jtmspro"
     """Residential lock pro"""
     JWBJ = "jwbj"
-    """Methane detector"""
+    """Methane detector
+
+    https://developer.tuya.com/en/docs/iot/categoryjwbj?id=Kaiuz40u98lkm
+    """
     KFJ = "kfj"
     """Coffee maker"""
     KG = "kg"
@@ -208,7 +229,10 @@ class DeviceCategory(StrEnum):
     KTKZQ = "ktkzq"
     """Air conditioner controller"""
     LDCG = "ldcg"
-    """Luminance sensor"""
+    """Luminance sensor
+
+    https://developer.tuya.com/en/docs/iot/categoryldcg?id=Kaiuz3n7u69l8
+    """
     LILIAO = "liliao"
     """Physiotherapy product"""
     LYJ = "lyj"
@@ -221,15 +245,24 @@ class DeviceCategory(StrEnum):
     MB = "mb"
     """Bread maker"""
     MC = "mc"
-    """Door/window controller"""
+    """Door/window controller
+
+    https://developer.tuya.com/en/docs/iot/s?id=K9gf48r5zjsy9
+    """
     MCS = "mcs"
-    """Contact sensor"""
+    """Contact sensor
+
+    https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
+    """
     MG = "mg"
     """Rice cabinet"""
     MJJ = "mjj"
     """Towel rack"""
     MK = "mk"
-    """Access control"""
+    """Access control
+
+    https://developer.tuya.com/en/docs/iot/s?id=Kb0o2xhlkxbet
+    """
     MS = "ms"
     """Residential lock"""
     MS_CATEGORY = "ms_category"
@@ -247,16 +280,25 @@ class DeviceCategory(StrEnum):
     PHOTOLOCK = "photolock"
     """Audio and video lock"""
     PIR = "pir"
-    """Human motion sensor"""
+    """Human motion sensor
+
+    https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
+    """
     PM2_5 = "pm2.5"
-    """PM2.5 detector"""
+    """PM2.5 detector
+
+    https://developer.tuya.com/en/docs/iot/categorypm25?id=Kaiuz3qof3yfu
+    """
     QN = "qn"
     """Heater
 
     https://developer.tuya.com/en/docs/iot/f?id=K9gf46epy4j82
     """
     RQBJ = "rqbj"
-    """Gas alarm"""
+    """Gas alarm
+
+    https://developer.tuya.com/en/docs/iot/categoryrqbj?id=Kaiuz3d162ubw
+    """
     RS = "rs"
     """Water heater
 
@@ -272,11 +314,20 @@ class DeviceCategory(StrEnum):
     SF = "sf"
     """Sofa"""
     SGBJ = "sgbj"
-    """Siren alarm"""
+    """Siren alarm
+
+    https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
+    """
     SJ = "sj"
-    """Water leak detector"""
+    """Water leak detector
+
+    https://developer.tuya.com/en/docs/iot/categorysj?id=Kaiuz3iub2sli
+    """
     SOS = "sos"
-    """Emergency button"""
+    """Emergency button
+
+    https://developer.tuya.com/en/docs/iot/categorysos?id=Kaiuz3oi6agjy
+    """
     SP = "sp"
     """Smart camera
 
@@ -308,7 +359,10 @@ class DeviceCategory(StrEnum):
     https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
     """
     WSDCG = "wsdcg"
-    """Temperature and humidity sensor"""
+    """Temperature and humidity sensor
+
+    https://developer.tuya.com/en/docs/iot/categorywsdcg?id=Kaiuz3hinij34
+    """
     XDD = "xdd"
     """Ceiling light"""
     XFJ = "xfj"
@@ -324,11 +378,20 @@ class DeviceCategory(StrEnum):
     YKQ = "ykq"
     """Remote control"""
     YLCG = "ylcg"
-    """Pressure sensor"""
+    """Pressure sensor
+
+    https://developer.tuya.com/en/docs/iot/categoryylcg?id=Kaiuz3kc2e4gm
+    """
     YWBJ = "ywbj"
-    """Smoke alarm"""
+    """Smoke alarm
+
+    https://developer.tuya.com/en/docs/iot/categoryywbj?id=Kaiuz3f6sf952
+    """
     ZD = "zd"
-    """Vibration sensor"""
+    """Vibration sensor
+
+    https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
+    """
     ZNDB = "zndb"
     """Smart electricity meter"""
     ZNFH = "znfh"
@@ -348,6 +411,20 @@ class DeviceCategory(StrEnum):
     """Wake Up Light II (undocumented)"""
     JDCLJQR = "jdcljqr"
     """Curtain Robot (undocumented)"""
+    JQBJ = "jqbj"
+    """Formaldehyde Detector (undocumented)"""
+    QXJ = "qxj"
+    """Temperature and Humidity Sensor with External Probe (undocumented)
+
+    see https://github.com/home-assistant/core/issues/136472
+    """
+    VOC = "voc"
+    """Volatile Organic Compound Sensor (undocumented)"""
+    WG2 = "wg2"  # Documented, but not in official list
+    """Gateway control
+
+    https://developer.tuya.com/en/docs/iot/wg?id=Kbcdadk79ejok
+    """
     WKF = "wkf"
     """Thermostatic Radiator Valve (undocumented)"""
 
