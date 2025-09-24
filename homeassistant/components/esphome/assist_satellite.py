@@ -44,8 +44,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.network import get_url
 
-from .const import DOMAIN
+from .const import DOMAIN, WAKE_WORDS_DIR_NAME
 from .entity import EsphomeAssistEntity, convert_api_error_ha_error
 from .entry_data import ESPHomeConfigEntry
 from .enum_mapper import EsphomeEnumMapper
@@ -136,12 +137,19 @@ class EsphomeAssistSatellite(
 
         # id -> wake word info
         self._external_wake_words: dict[str, VoiceAssistantExternalWakeWord] = {}
-        self._wake_words_dir = Path(self.hass.config.path("custom_wake_word"))
+        self._wake_words_dir = Path(self.hass.config.path(WAKE_WORDS_DIR_NAME))
 
     def _get_entity_id(self, suffix: str) -> str | None:
         """Return the entity id for pipeline select, etc."""
         if self._entry_data.device_info is None:
             return None
+
+        ent_reg = er.async_get(self.hass)
+        return ent_reg.async_get_entity_id(
+            Platform.SELECT,
+            DOMAIN,
+            f"{self._entry_data.device_info.mac_address}-{suffix}",
+        )
 
     @property
     def pipeline_entity_id(self) -> str | None:
@@ -191,7 +199,7 @@ class EsphomeAssistSatellite(
             with open(config_path, encoding="utf-8") as config_file:
                 config_dict = json.load(config_file)
                 if not (model := config_dict.get("model")) or (
-                    not (self._wake_words_dir / model).exists()
+                    not (model_path := (self._wake_words_dir / model)).exists()
                 ):
                     # Missing model file
                     continue
@@ -202,12 +210,17 @@ class EsphomeAssistSatellite(
                     # Invalid config
                     continue
 
+                model_size = model_path.stat().st_size
+                config_rel_path = config_path.relative_to(self._wake_words_dir)
+                base_url = get_url(self.hass)
+
                 wake_words[wake_word_id] = VoiceAssistantExternalWakeWord(
                     id=wake_word_id,
                     wake_word=wake_word,
                     trained_languages=config_dict.get("trained_languages", []),
                     model_type=model_type,
-                    url="",  # TODO
+                    model_size=model_size,
+                    url=f"{base_url}/api/esphome/wake_words/{config_rel_path}",
                 )
 
         return wake_words
@@ -831,12 +844,22 @@ class WakeWordModelView(HomeAssistantView):
     name = "api:esphome:wake_words"
 
     def __init__(self, wake_words_dir: Path) -> None:
+        """Initialize web view."""
         self._wake_words_dir = wake_words_dir
 
     async def get(self, request: web.Request, filename: str) -> web.FileResponse:
         """Start a get request."""
         model_path = (self._wake_words_dir / filename).resolve()
         if not model_path.is_relative_to(self._wake_words_dir):
-            raise RuntimeError  # TODO
+            # Must be within the custom wake words directory
+            raise web.HTTPForbidden
 
         return web.FileResponse(model_path)
+
+
+@callback
+def async_setup(hass: HomeAssistant) -> None:
+    """Set up the ffmpeg proxy."""
+    hass.http.register_view(
+        WakeWordModelView(Path(hass.config.path(WAKE_WORDS_DIR_NAME)))
+    )
