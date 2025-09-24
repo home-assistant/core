@@ -13,6 +13,10 @@ from syrupy.matchers import path_type
 
 from homeassistant.components.analytics.analytics import (
     Analytics,
+    AnalyticsInput,
+    AnalyticsModifications,
+    DeviceAnalyticsModifications,
+    EntityAnalyticsModifications,
     async_devices_payload,
 )
 from homeassistant.components.analytics.const import (
@@ -33,7 +37,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, MockModule, mock_integration
+from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -1236,6 +1240,7 @@ async def test_devices_payload_with_entities(
                                 "domain": "light",
                                 "entity_category": None,
                                 "has_entity_name": True,
+                                "modified_by_integration": None,
                                 "original_device_class": None,
                                 "unit_of_measurement": None,
                             },
@@ -1245,6 +1250,7 @@ async def test_devices_payload_with_entities(
                                 "domain": "number",
                                 "entity_category": "config",
                                 "has_entity_name": True,
+                                "modified_by_integration": None,
                                 "original_device_class": "temperature",
                                 "unit_of_measurement": None,
                             },
@@ -1266,6 +1272,7 @@ async def test_devices_payload_with_entities(
                                 "domain": "light",
                                 "entity_category": None,
                                 "has_entity_name": False,
+                                "modified_by_integration": None,
                                 "original_device_class": None,
                                 "unit_of_measurement": None,
                             },
@@ -1287,6 +1294,7 @@ async def test_devices_payload_with_entities(
                         "domain": "sensor",
                         "entity_category": None,
                         "has_entity_name": False,
+                        "modified_by_integration": None,
                         "original_device_class": "temperature",
                         "unit_of_measurement": "°C",
                     },
@@ -1302,6 +1310,121 @@ async def test_devices_payload_with_entities(
                         "domain": "light",
                         "entity_category": None,
                         "has_entity_name": True,
+                        "modified_by_integration": None,
+                        "original_device_class": None,
+                        "unit_of_measurement": None,
+                    },
+                ],
+                "is_custom_integration": False,
+            },
+        },
+    }
+
+
+async def test_analytics_platforms(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test analytics platforms."""
+    assert await async_setup_component(hass, "analytics", {})
+
+    mock_config_entry = MockConfigEntry(domain="test")
+    mock_config_entry.add_to_hass(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "1")},
+        manufacturer="test-manufacturer",
+        model_id="test-model-id",
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "2")},
+        manufacturer="test-manufacturer",
+        model_id="test-model-id-2",
+    )
+
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="test",
+        unique_id="1",
+        capabilities={"options": ["secret1", "secret2"]},
+    )
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform="test",
+        unique_id="2",
+        capabilities={"options": ["secret1", "secret2"]},
+    )
+
+    async def async_modify_analytics(
+        hass: HomeAssistant,
+        analytics_input: AnalyticsInput,
+    ) -> AnalyticsModifications:
+        first = True
+        devices_configs = {}
+        for device_id in analytics_input.device_ids:
+            device_config = DeviceAnalyticsModifications()
+            devices_configs[device_id] = device_config
+            if first:
+                first = False
+            else:
+                device_config.remove = True
+
+        first = True
+        entities_configs = {}
+        for entity_id in analytics_input.entity_ids:
+            entity_entry = entity_registry.async_get(entity_id)
+            entity_config = EntityAnalyticsModifications()
+            entities_configs[entity_id] = entity_config
+            if first:
+                first = False
+                entity_config.capabilities = dict(entity_entry.capabilities)
+                entity_config.capabilities["options"] = len(
+                    entity_config.capabilities["options"]
+                )
+            else:
+                entity_config.remove = True
+
+        return AnalyticsModifications(
+            devices=devices_configs,
+            entities=entities_configs,
+        )
+
+    platform_mock = Mock(async_modify_analytics=async_modify_analytics)
+    mock_platform(hass, "test.analytics", platform_mock)
+
+    client = await hass_client()
+    response = await client.get("/api/analytics/devices")
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == {
+        "version": "home-assistant:1",
+        "home_assistant": MOCK_VERSION,
+        "integrations": {
+            "test": {
+                "devices": [
+                    {
+                        "entities": [],
+                        "entry_type": None,
+                        "has_configuration_url": False,
+                        "hw_version": None,
+                        "manufacturer": "test-manufacturer",
+                        "model": None,
+                        "model_id": "test-model-id",
+                        "sw_version": None,
+                        "via_device": None,
+                    },
+                ],
+                "entities": [
+                    {
+                        "assumed_state": None,
+                        "capabilities": {"options": 2},
+                        "domain": "sensor",
+                        "entity_category": None,
+                        "has_entity_name": False,
+                        "modified_by_integration": ["capabilities"],
                         "original_device_class": None,
                         "unit_of_measurement": None,
                     },
