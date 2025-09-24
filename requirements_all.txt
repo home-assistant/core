@@ -247,7 +247,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==41.6.0
+aioesphomeapi==41.9.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -265,7 +265,7 @@ aioguardian==2022.07.0
 aioharmony==0.5.3
 
 # homeassistant.components.hassio
-aiohasupervisor==0.3.2
+aiohasupervisor==0.3.3b0
 
 # homeassistant.components.home_connect
 aiohomeconnect==0.19.0
@@ -2528,7 +2528,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.44.1
+python-roborock==2.47.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.44
@@ -3222,7 +3222,7 @@ zeroconf==0.147.2
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.71
+zha==0.0.72
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13

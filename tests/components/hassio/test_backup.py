@@ -268,6 +268,7 @@ TEST_JOB_NOT_DONE = supervisor_jobs.Job(
     errors=[],
     created=datetime.fromisoformat("1970-01-01T00:00:00Z"),
     child_jobs=[],
+    extra=None,
 )
 TEST_JOB_DONE = supervisor_jobs.Job(
     name="backup_manager_partial_backup",
@@ -279,6 +280,7 @@ TEST_JOB_DONE = supervisor_jobs.Job(
     errors=[],
     created=datetime.fromisoformat("1970-01-01T00:00:00Z"),
     child_jobs=[],
+    extra=None,
 )
 TEST_RESTORE_JOB_DONE_WITH_ERROR = supervisor_jobs.Job(
     name="backup_manager_partial_restore",
@@ -299,6 +301,7 @@ TEST_RESTORE_JOB_DONE_WITH_ERROR = supervisor_jobs.Job(
     ],
     created=datetime.fromisoformat("1970-01-01T00:00:00Z"),
     child_jobs=[],
+    extra=None,
 )
 
 
