@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any
 
 from tuya_sharing import CustomerDevice, Manager
@@ -142,6 +142,25 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
     ),
 }
 
+_QUIRKS: dict[str, dict[str, Any]] = {
+    "cl_lfkr93x0ukp5gaia_control": {
+        # This model has percent_control / percent_state / situation_set
+        # but they never change - use control instead
+        "current_state": DPCode.CONTROL,
+        "current_position": None,
+        "set_position": None,
+    }
+}
+
+
+def _apply_quirk(
+    device: CustomerDevice, description: TuyaCoverEntityDescription
+) -> TuyaCoverEntityDescription:
+    """Apply quirk for specific device."""
+    if quirk := _QUIRKS.get(f"{device.category}_{device.product_id}_{description.key}"):
+        return replace(description, **quirk)
+    return description
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -159,7 +178,7 @@ async def async_setup_entry(
             device = manager.device_map[device_id]
             if descriptions := COVERS.get(device.category):
                 entities.extend(
-                    TuyaCoverEntity(device, manager, description)
+                    TuyaCoverEntity(device, manager, _apply_quirk(device, description))
                     for description in descriptions
                     if (
                         description.key in device.function
