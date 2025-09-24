@@ -137,6 +137,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             self._password = ""
             return await self._async_authenticate_or_add()
 
+        if error == "invalid_auth" or (
+            error is None and self._device_info and self._device_info.uses_password
+        ):
+            return await self._async_authenticate_or_add()
+
         if error is None and entry_data.get(CONF_NOISE_PSK):
             # Device was configured with encryption but now connects without it.
             # Check if it's the same device before offering to remove encryption.
@@ -690,13 +695,15 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         cli = APIClient(
             host,
             port or DEFAULT_PORT,
-            "",
+            self._password or "",
             zeroconf_instance=zeroconf_instance,
             noise_psk=noise_psk,
         )
         try:
             await cli.connect()
             self._device_info = await cli.device_info()
+        except InvalidAuthAPIError:
+            return "invalid_auth"
         except RequiresEncryptionAPIError:
             return ERROR_REQUIRES_ENCRYPTION_KEY
         except InvalidEncryptionKeyAPIError as ex:
