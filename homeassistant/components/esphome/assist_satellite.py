@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterable
 from functools import partial
+import hashlib
 import io
 from itertools import chain
 import json
@@ -211,6 +212,9 @@ class EsphomeAssistSatellite(
                     # Invalid config
                     continue
 
+                with open(model_path, "rb") as model_file:
+                    model_hash = hashlib.sha256(model_file.read()).hexdigest()
+
                 model_size = model_path.stat().st_size
                 config_rel_path = config_path.relative_to(self._wake_words_dir)
                 base_url = get_url(self.hass)
@@ -221,6 +225,7 @@ class EsphomeAssistSatellite(
                     trained_languages=config_dict.get("trained_languages", []),
                     model_type=model_type,
                     model_size=model_size,
+                    model_hash=model_hash,
                     url=f"{base_url}/api/esphome/wake_words/{config_rel_path}",
                 )
 
@@ -235,7 +240,7 @@ class EsphomeAssistSatellite(
         try:
             config = await self.cli.get_voice_assistant_configuration(
                 _CONFIG_TIMEOUT_SEC,
-                external_wake_words=self._external_wake_words.values(),
+                external_wake_words=list(self._external_wake_words.values()),
             )
         except TimeoutError:
             # Placeholder config will be used
