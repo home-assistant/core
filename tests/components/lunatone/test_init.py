@@ -35,6 +35,7 @@ async def test_load_unload_config_entry(
 async def test_config_entry_not_ready_cause_of_info_object(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the Lunatone configuration entry not ready."""
@@ -44,6 +45,14 @@ async def test_config_entry_not_ready_cause_of_info_object(
 
     mock_lunatone_info.async_update.assert_called_once()
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    mock_lunatone_info.async_update.side_effect = None
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_lunatone_info.async_update.assert_called()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_config_entry_not_ready_cause_of_devices_object(
@@ -60,6 +69,15 @@ async def test_config_entry_not_ready_cause_of_devices_object(
     mock_lunatone_info.async_update.assert_called_once()
     mock_lunatone_devices.async_update.assert_called_once()
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    mock_lunatone_devices.async_update.side_effect = None
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_lunatone_info.async_update.assert_called()
+    mock_lunatone_devices.async_update.assert_called()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_config_entry_not_ready_no_info_data(
