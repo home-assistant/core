@@ -1055,6 +1055,16 @@ async def test_devices_payload_no_entities(
         model_id="test-model-id7",
     )
 
+    # Device from an integration with a service type
+    mock_service_config_entry = MockConfigEntry(domain="uptime")
+    mock_service_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_service_config_entry.entry_id,
+        identifiers={("device", "8")},
+        manufacturer="test-manufacturer8",
+        model_id="test-model-id8",
+    )
+
     client = await hass_client()
     response = await client.get("/api/analytics/devices")
     assert response.status == HTTPStatus.OK
@@ -1121,25 +1131,6 @@ async def test_devices_payload_no_entities(
                     },
                 ],
                 "entities": [],
-                "is_custom_integration": False,
-            },
-            "test": {
-                "devices": [
-                    {
-                        "entities": [],
-                        "entry_type": None,
-                        "has_configuration_url": False,
-                        "hw_version": None,
-                        "manufacturer": "test-manufacturer7",
-                        "model": None,
-                        "model_id": "test-model-id7",
-                        "sw_version": None,
-                        "via_device": None,
-                    },
-                ],
-                "entities": [],
-                "is_custom_integration": True,
-                "custom_integration_version": "1.2.3",
             },
         },
     }
@@ -1192,21 +1183,29 @@ async def test_devices_payload_with_entities(
         original_device_class=NumberDeviceClass.TEMPERATURE,
     )
     hass.states.async_set("number.hue_1", "2")
-    # Helper entity with assumed state
+    # Entity with assumed state
     entity_registry.async_get_or_create(
         domain="light",
-        platform="template",
+        platform="hue",
+        unique_id="2",
+        device_id=device_entry.id,
+        has_entity_name=True,
+    )
+    hass.states.async_set("light.hue_2", "on", {ATTR_ASSUMED_STATE: True})
+    # Entity from a different integration
+    entity_registry.async_get_or_create(
+        domain="light",
+        platform="roomba",
         unique_id="1",
         device_id=device_entry.id,
         has_entity_name=True,
     )
-    hass.states.async_set("light.template_1", "on", {ATTR_ASSUMED_STATE: True})
 
     # Second device
     entity_registry.async_get_or_create(
         domain="light",
         platform="hue",
-        unique_id="2",
+        unique_id="3",
         device_id=device_entry_2.id,
     )
 
@@ -1254,6 +1253,16 @@ async def test_devices_payload_with_entities(
                                 "original_device_class": "temperature",
                                 "unit_of_measurement": None,
                             },
+                            {
+                                "assumed_state": True,
+                                "capabilities": None,
+                                "domain": "light",
+                                "entity_category": None,
+                                "has_entity_name": True,
+                                "modified_by_integration": None,
+                                "original_device_class": None,
+                                "unit_of_measurement": None,
+                            },
                         ],
                         "entry_type": None,
                         "has_configuration_url": False,
@@ -1299,13 +1308,12 @@ async def test_devices_payload_with_entities(
                         "unit_of_measurement": "°C",
                     },
                 ],
-                "is_custom_integration": False,
             },
-            "template": {
+            "roomba": {
                 "devices": [],
                 "entities": [
                     {
-                        "assumed_state": True,
+                        "assumed_state": None,
                         "capabilities": None,
                         "domain": "light",
                         "entity_category": None,
@@ -1315,7 +1323,6 @@ async def test_devices_payload_with_entities(
                         "unit_of_measurement": None,
                     },
                 ],
-                "is_custom_integration": False,
             },
         },
     }
@@ -1429,7 +1436,6 @@ async def test_analytics_platforms(
                         "unit_of_measurement": None,
                     },
                 ],
-                "is_custom_integration": False,
             },
         },
     }

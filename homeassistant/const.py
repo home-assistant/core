@@ -37,7 +37,7 @@ REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
 
-# Type alias to avoid 1000 MyPy errors
+# Explicit reexport to allow other modules to import Platform directly from const
 Platform = EntityPlatforms
 
 BASE_PLATFORMS: Final = {platform.value for platform in Platform}
