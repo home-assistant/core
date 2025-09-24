@@ -103,7 +103,7 @@ async def async_setup_entry(
     if entry_data.device_info.voice_assistant_feature_flags_compat(
         entry_data.api_version
     ):
-        async_add_entities([EsphomeAssistSatellite(entry)])
+        async_add_entities([EsphomeAssistSatellite(hass, entry)])
 
 
 class EsphomeAssistSatellite(
@@ -115,10 +115,11 @@ class EsphomeAssistSatellite(
         key="assist_satellite", translation_key="assist_satellite"
     )
 
-    def __init__(self, entry: ESPHomeConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:
         """Initialize satellite."""
         super().__init__(entry.runtime_data)
 
+        self.hass = hass
         self.config_entry = entry
         self.cli = self._entry_data.client
 
