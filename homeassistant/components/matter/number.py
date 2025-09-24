@@ -69,7 +69,8 @@ class MatterRangeNumberEntityDescription(
 
     # command: a custom callback to create the command to send to the device
     # the callback's argument will be the index of the selected list value
-    command: Callable[[int], ClusterCommand]
+    # if omitted the command will just be a write_attribute command to the primary attribute
+    command: Callable[[int], ClusterCommand] | None = None
 
 
 class MatterNumber(MatterEntity, NumberEntity):
