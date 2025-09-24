@@ -18,7 +18,7 @@ MANUFACTURER: Final[str] = "PurpleAir, Inc."
 
 
 class PurpleAirEntity(CoordinatorEntity[PurpleAirDataUpdateCoordinator]):
-    """Entity."""
+    """Define a base PurpleAir entity."""
 
     _attr_has_entity_name = True
 

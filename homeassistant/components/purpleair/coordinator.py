@@ -1,4 +1,4 @@
-"""PurpleAir data update coordinator."""
+"""Define a PurpleAir DataUpdateCoordinator."""
 
 from __future__ import annotations
 
