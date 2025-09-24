@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+from homelink.model.button import Button
+from homelink.model.device import Device
 import pytest
 
 from homeassistant.components.gentex_homelink import async_setup_entry
@@ -11,8 +13,6 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
-from .mocks.mock_device import MockDevice
-
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
@@ -20,6 +20,16 @@ from tests.typing import ClientSessionGenerator
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 TEST_CONFIG_ENTRY_ID = "ABC123"
+
+"""Mock classes for testing."""
+
+
+deviceInst = Device(id="TestDevice", name="TestDevice")
+deviceInst.buttons = [
+    Button(id="1", name="Button 1", device=deviceInst),
+    Button(id="2", name="Button 2", device=deviceInst),
+    Button(id="3", name="Button 3", device=deviceInst),
+]
 
 
 @pytest.fixture
@@ -34,7 +44,7 @@ async def test_setup_config(
         "homeassistant.components.gentex_homelink.MQTTProvider", autospec=True
     ) as MockProvider:
         instance = MockProvider.return_value
-        instance.discover.return_value = [MockDevice()]
+        instance.discover.return_value = [deviceInst]
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             unique_id=None,

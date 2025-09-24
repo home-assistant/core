@@ -29,6 +29,10 @@
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "error": {
+      "srp_auth_failed": "Error authenticating HomeLink account",
+      "unknown": "An unknown error occurred. Please try again later"
     }
   }
 }

@@ -1,6 +1,7 @@
 """Tests for the homelink coordinator."""
 
 import asyncio
+import json
 import logging
 import time
 from unittest.mock import patch
@@ -13,8 +14,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from .mocks.mock_provider import MockProvider
-
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
@@ -23,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "gentex_homelink"
 
 
-@pytest.mark.asyncio
 async def test_get_state_updates(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -33,9 +31,8 @@ async def test_get_state_updates(
     """Test state updates.
 
     Tests that get_state calls are called by home assistant, and the homeassistant components respond appropriately to the data returned.
-    This is done as one test to share the freezer state, in order to simulate a continuous stream of messages like we get in the real world.
     """
-    with patch("homeassistant.components.gentex_homelink.MQTTProvider", MockProvider):
+    with patch("homeassistant.components.gentex_homelink.MQTTProvider", autospec=True):
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             unique_id=None,
@@ -71,7 +68,7 @@ async def test_get_state_updates(
 
         _LOGGER.info("Fire first event. Buttons should be on")
 
-        provider._call_listeners(state_data)
+        provider._on_message(None, None, json.dumps(state_data))
 
         await hass.async_block_till_done(wait_background_tasks=True)
         await asyncio.gather(*asyncio.all_tasks() - {asyncio.current_task()})
