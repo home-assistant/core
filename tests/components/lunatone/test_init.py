@@ -41,7 +41,7 @@ async def test_load_unload_config_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_config_entry_not_ready_cause_of_info_object(
+async def test_config_entry_not_ready_info_api_fail(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
