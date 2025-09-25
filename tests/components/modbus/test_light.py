@@ -22,7 +22,7 @@ from homeassistant.components.modbus.const import (
     CONF_STATE_ON,
     CONF_VERIFY,
     CONF_WRITE_TYPE,
-    MODBUS_DOMAIN,
+    DOMAIN,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -311,7 +311,7 @@ async def test_light_service_turn(
 ) -> None:
     """Run test for service turn_on/turn_off."""
 
-    assert MODBUS_DOMAIN in hass.config.components
+    assert DOMAIN in hass.config.components
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     await hass.services.async_call(
         LIGHT_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID}
@@ -535,7 +535,7 @@ async def test_no_discovery_info_light(
     assert await async_setup_component(
         hass,
         LIGHT_DOMAIN,
-        {LIGHT_DOMAIN: {CONF_PLATFORM: MODBUS_DOMAIN}},
+        {LIGHT_DOMAIN: {CONF_PLATFORM: DOMAIN}},
     )
     await hass.async_block_till_done()
     assert LIGHT_DOMAIN in hass.config.components

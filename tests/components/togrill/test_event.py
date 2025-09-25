@@ -68,11 +68,11 @@ async def test_events(
 
     mock_client.mocked_notify(PacketA5Notify(probe=1, message=message))
 
-    state = hass.states.get("event.pro_05_probe_2")
+    state = hass.states.get("event.probe_2_event")
     assert state
     assert state.state == STATE_UNKNOWN
 
-    state = hass.states.get("event.pro_05_probe_1")
+    state = hass.states.get("event.probe_1_event")
     assert state
     assert state.state == "2023-10-21T00:00:00.000+00:00"
     assert state.attributes.get(ATTR_EVENT_TYPE) == slugify(message.name)
