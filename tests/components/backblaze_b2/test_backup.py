@@ -1,4 +1,4 @@
-"""Clean and organized Backblaze backup agent tests."""
+"""Clean and organized Backblaze B2 backup agent tests."""
 
 import json
 import logging

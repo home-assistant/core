@@ -1,4 +1,4 @@
-"""Repair issues for the Backblaze integration."""
+"""Repair issues for the Backblaze B2 integration."""
 
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ def _create_issue(
         severity=ir.IssueSeverity.ERROR,
         translation_key=issue_type,
         translation_placeholders={
-            "brand_name": "Backblaze",
+            "brand_name": "Backblaze B2",
             "title": entry.title,
             "bucket_name": bucket_name,
             "entry_id": entry.entry_id,
@@ -89,6 +89,6 @@ async def async_create_fix_flow(
     issue_id: str,
     data: dict[str, str | int | float | None] | None,
 ) -> ConfirmRepairFlow:
-    """Create a fix flow for Backblaze issues."""
+    """Create a fix flow for Backblaze B2 issues."""
     del hass, issue_id, data
     return ConfirmRepairFlow()

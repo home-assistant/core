@@ -1,4 +1,4 @@
-"""The Backblaze integration."""
+"""The Backblaze B2 integration."""
 
 from __future__ import annotations
 
@@ -33,13 +33,13 @@ type BackblazeConfigEntry = ConfigEntry[Bucket]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) -> bool:
-    """Set up Backblaze from a config entry."""
+    """Set up Backblaze B2 from a config entry."""
 
     info = InMemoryAccountInfo()
     b2_api = B2Api(info)
 
     def _authorize_and_get_bucket_sync() -> Bucket:
-        """Synchronously authorize the Backblaze account and retrieve the bucket.
+        """Synchronously authorize the Backblaze B2 account and retrieve the bucket.
 
         This function runs in the event loop's executor as b2sdk operations are blocking.
         """
@@ -54,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
         bucket = await hass.async_add_executor_job(_authorize_and_get_bucket_sync)
     except exception.Unauthorized as err:
         _LOGGER.error(
-            "Backblaze authentication failed for key ID '%s': %s",
+            "Backblaze B2 authentication failed for key ID '%s': %s",
             entry.data[CONF_KEY_ID],
             err,
         )
@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
         ) from err
     except exception.RestrictedBucket as err:
         _LOGGER.error(
-            "Access to Backblaze bucket '%s' is restricted for key ID '%s': %s",
+            "Access to Backblaze B2 bucket '%s' is restricted for key ID '%s': %s",
             entry.data[CONF_BUCKET],
             entry.data[CONF_KEY_ID],
             err,
@@ -79,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
         ) from err
     except exception.NonExistentBucket as err:
         _LOGGER.error(
-            "Backblaze bucket '%s' does not exist for key ID '%s': %s",
+            "Backblaze B2 bucket '%s' does not exist for key ID '%s': %s",
             entry.data[CONF_BUCKET],
             entry.data[CONF_KEY_ID],
             err,
@@ -90,14 +90,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
             translation_key="invalid_bucket_name",
         ) from err
     except exception.ConnectionReset as err:
-        _LOGGER.error("Failed to connect to Backblaze. Connection reset: %s", err)
+        _LOGGER.error("Failed to connect to Backblaze B2. Connection reset: %s", err)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
         ) from err
     except exception.MissingAccountData as err:
         _LOGGER.error(
-            "Missing account data during Backblaze authorization for key ID '%s': %s",
+            "Missing account data during Backblaze B2 authorization for key ID '%s': %s",
             entry.data[CONF_KEY_ID],
             err,
         )
@@ -107,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
         ) from err
     except Exception as err:
         _LOGGER.exception(
-            "An unexpected error occurred during Backblaze setup for key ID '%s'",
+            "An unexpected error occurred during Backblaze B2 setup for key ID '%s'",
             entry.data[CONF_KEY_ID],
         )
         raise ConfigEntryNotReady(
@@ -140,7 +140,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) -> bool:
-    """Unload a Backblaze config entry.
+    """Unload a Backblaze B2 config entry.
 
     Any resources directly managed by this entry that need explicit shutdown
     would be handled here. In this case, the `async_on_state_change` listener

@@ -1,4 +1,4 @@
-"""Test Backblaze repairs."""
+"""Test Backblaze B2 repairs."""
 
 from unittest.mock import Mock, patch
 

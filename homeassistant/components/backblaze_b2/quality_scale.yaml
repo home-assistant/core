@@ -62,10 +62,10 @@ rules:
   diagnostics: done
   discovery-update-info:
     status: exempt
-    comment: Backblaze is a cloud service that is not discovered on the network.
+    comment: Backblaze B2 is a cloud service that is not discovered on the network.
   discovery:
     status: exempt
-    comment: Backblaze is a cloud service that is not discovered on the network.
+    comment: Backblaze B2 is a cloud service that is not discovered on the network.
   docs-data-update:
     status: exempt
     comment: This integration does not poll.

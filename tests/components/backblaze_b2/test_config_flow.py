@@ -1,4 +1,4 @@
-"""Consolidated Backblaze config flow tests - optimized for minimal lines with 100% coverage."""
+"""Consolidated Backblaze B2 config flow tests - optimized for minimal lines with 100% coverage."""
 
 from unittest.mock import patch
 
@@ -211,12 +211,12 @@ async def test_config_flow_errors(
     # Check description placeholders for specific errors
     if error_type == "restricted_bucket":
         assert result.get("description_placeholders") == {
-            "brand_name": "Backblaze",
+            "brand_name": "Backblaze B2",
             "restricted_bucket_name": "testBucket",
         }
     elif error_type == "invalid_prefix":
         assert result.get("description_placeholders") == {
-            "brand_name": "Backblaze",
+            "brand_name": "Backblaze B2",
             "allowed_prefix": "test/",
         }
 

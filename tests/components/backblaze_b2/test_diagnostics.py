@@ -1,4 +1,4 @@
-"""Test Backblaze diagnostics."""
+"""Test Backblaze B2 diagnostics."""
 
 from unittest.mock import patch
 

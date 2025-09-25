@@ -1,4 +1,4 @@
-"""Common fixtures for the Backblaze tests."""
+"""Common fixtures for the Backblaze B2 tests."""
 
 from collections.abc import Generator
 import hashlib
@@ -322,7 +322,7 @@ def mock_config_entry(b2_fixture: Any) -> MockConfigEntry:
 
 
 class BackblazeFixture:
-    """Mock Backblaze account."""
+    """Mock Backblaze B2 account."""
 
     def __init__(  # noqa: D107
         self,

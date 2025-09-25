@@ -1,4 +1,4 @@
-"""Constants for the Backblaze integration."""
+"""Constants for the Backblaze B2 integration."""
 
 from collections.abc import Callable
 from typing import Final

@@ -1,4 +1,4 @@
-"""Test the Backblaze storage integration."""
+"""Test the Backblaze B2 storage integration."""
 
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch

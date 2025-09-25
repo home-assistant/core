@@ -1,4 +1,4 @@
-"""Config flow for the Backblaze integration."""
+"""Config flow for the Backblaze B2 integration."""
 
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Backblaze."""
+    """Handle a config flow for Backblaze B2."""
 
     VERSION = 1
 
@@ -89,13 +89,13 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA, user_input
             ),
             errors=errors,
-            description_placeholders={"brand_name": "Backblaze", **placeholders},
+            description_placeholders={"brand_name": "Backblaze B2", **placeholders},
         )
 
     async def _async_validate_backblaze_connection(
         self, user_input: dict[str, Any]
     ) -> tuple[dict[str, str], dict[str, str]]:
-        """Validate Backblaze credentials, bucket, capabilities, and prefix.
+        """Validate Backblaze B2 credentials, bucket, capabilities, and prefix.
 
         Returns a tuple of (errors_dict, placeholders_dict).
         """
@@ -133,7 +133,7 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 if missing_caps:
                     _LOGGER.warning(
-                        "Missing required Backblaze capabilities for Key ID '%s': %s",
+                        "Missing required Backblaze B2 capabilities for Key ID '%s': %s",
                         user_input[CONF_KEY_ID],
                         ", ".join(sorted(missing_caps)),
                     )
@@ -144,20 +144,20 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
 
             configured_prefix: str = user_input[CONF_PREFIX]
             allowed_prefix = allowed.get("namePrefix") or ""
-            # Ensure configured prefix starts with Backblaze's allowed prefix
+            # Ensure configured prefix starts with Backblaze B2's allowed prefix
             if allowed_prefix and not configured_prefix.startswith(allowed_prefix):
                 errors[CONF_PREFIX] = "invalid_prefix"
                 placeholders["allowed_prefix"] = allowed_prefix
 
         except exception.Unauthorized:
             _LOGGER.debug(
-                "Backblaze authentication failed for Key ID '%s'",
+                "Backblaze B2 authentication failed for Key ID '%s'",
                 user_input[CONF_KEY_ID],
             )
             errors["base"] = "invalid_credentials"
         except exception.RestrictedBucket as err:
             _LOGGER.debug(
-                "Access to Backblaze bucket '%s' is restricted: %s",
+                "Access to Backblaze B2 bucket '%s' is restricted: %s",
                 user_input[CONF_BUCKET],
                 err,
             )
@@ -165,22 +165,22 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors[CONF_BUCKET] = "restricted_bucket"
         except exception.NonExistentBucket:
             _LOGGER.debug(
-                "Backblaze bucket '%s' does not exist", user_input[CONF_BUCKET]
+                "Backblaze B2 bucket '%s' does not exist", user_input[CONF_BUCKET]
             )
             errors[CONF_BUCKET] = "invalid_bucket_name"
         except exception.ConnectionReset:
-            _LOGGER.error("Failed to connect to Backblaze. Connection reset")
+            _LOGGER.error("Failed to connect to Backblaze B2. Connection reset")
             errors["base"] = "cannot_connect"
         except exception.MissingAccountData:
             # This generally indicates an issue with how InMemoryAccountInfo is used
             _LOGGER.error(
-                "Missing account data during Backblaze authorization for Key ID '%s'",
+                "Missing account data during Backblaze B2 authorization for Key ID '%s'",
                 user_input[CONF_KEY_ID],
             )
             errors["base"] = "invalid_credentials"
         except Exception:
             _LOGGER.exception(
-                "An unexpected error occurred during Backblaze configuration for Key ID '%s'",
+                "An unexpected error occurred during Backblaze B2 configuration for Key ID '%s'",
                 user_input[CONF_KEY_ID],
             )
             errors["base"] = "unknown"
@@ -241,7 +241,7 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={
-                "brand_name": "Backblaze",
+                "brand_name": "Backblaze B2",
                 "bucket": self.reauth_entry.data[CONF_BUCKET],
                 **placeholders,
             },
@@ -281,5 +281,5 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA, user_input or entry.data
             ),
             errors=errors,
-            description_placeholders={"brand_name": "Backblaze", **placeholders},
+            description_placeholders={"brand_name": "Backblaze B2", **placeholders},
         )

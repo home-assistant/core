@@ -1,4 +1,4 @@
-"""Backup platform for the Backblaze integration."""
+"""Backup platform for the Backblaze B2 integration."""
 
 # pylint: disable=hass-component-root-import
 
@@ -104,7 +104,7 @@ def handle_b2_errors[T](
 async def async_get_backup_agents(
     hass: HomeAssistant,
 ) -> list[BackupAgent]:
-    """Return a list of backup agents for all configured Backblaze entries."""
+    """Return a list of backup agents for all configured Backblaze B2 entries."""
     entries: list[BackblazeConfigEntry] = hass.config_entries.async_loaded_entries(
         DOMAIN
     )
@@ -140,7 +140,7 @@ class BackblazeBackupAgent(BackupAgent):
     domain = DOMAIN
 
     def __init__(self, hass: HomeAssistant, entry: BackblazeConfigEntry) -> None:
-        """Initialize the Backblaze agent."""
+        """Initialize the Backblaze B2 agent."""
         super().__init__()
         self._hass = hass
         self._bucket = entry.runtime_data

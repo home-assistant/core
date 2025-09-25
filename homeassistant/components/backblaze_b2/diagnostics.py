@@ -1,4 +1,4 @@
-"""Diagnostics support for Backblaze."""
+"""Diagnostics support for Backblaze B2."""
 
 from __future__ import annotations
 

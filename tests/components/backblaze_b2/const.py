@@ -1,4 +1,4 @@
-"""Consts for Backblaze tests."""
+"""Consts for Backblaze B2 tests."""
 
 from homeassistant.components.backblaze_b2.const import CONF_BUCKET, CONF_PREFIX
 from homeassistant.components.backup import AgentBackup
