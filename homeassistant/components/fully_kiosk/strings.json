@@ -162,8 +162,8 @@
       "description": "Sets a configuration parameter on Fully Kiosk Browser.",
       "fields": {
         "device_id": {
-          "name": "%key:component::fully_kiosk::services::load_url::fields::device_id::name%",
-          "description": "%key:component::fully_kiosk::services::load_url::fields::device_id::description%"
+          "name": "[%key:component::fully_kiosk::services::load_url::fields::device_id::name%]",
+          "description": "[%key:component::fully_kiosk::services::load_url::fields::device_id::description%]"
         },
         "key": {
           "name": "Key",
@@ -184,8 +184,8 @@
           "description": "Package name of the application to start."
         },
         "device_id": {
-          "name": "%key:component::fully_kiosk::services::load_url::fields::device_id::name%",
-          "description": "%key:component::fully_kiosk::services::load_url::fields::device_id::description%"
+          "name": "[%key:component::fully_kiosk::services::load_url::fields::device_id::name%]",
+          "description": "[%key:component::fully_kiosk::services::load_url::fields::device_id::description%]"
         }
       }
     }
