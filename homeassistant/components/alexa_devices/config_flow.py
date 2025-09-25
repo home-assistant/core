@@ -64,7 +64,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 data = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except (CannotAuthenticate, TypeError):
+            except CannotAuthenticate:
                 errors["base"] = "invalid_auth"
             except CannotRetrieveData:
                 errors["base"] = "cannot_retrieve_data"
@@ -112,7 +112,7 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except (CannotAuthenticate, TypeError):
+            except CannotAuthenticate:
                 errors["base"] = "invalid_auth"
             except CannotRetrieveData:
                 errors["base"] = "cannot_retrieve_data"

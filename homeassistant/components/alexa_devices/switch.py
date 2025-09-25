@@ -8,13 +8,17 @@ from typing import TYPE_CHECKING, Any, Final
 
 from aioamazondevices.api import AmazonDevice
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AmazonConfigEntry
 from .entity import AmazonEntity
-from .utils import alexa_api_call
+from .utils import alexa_api_call, async_update_unique_id
 
 PARALLEL_UPDATES = 1
 
@@ -24,16 +28,17 @@ class AmazonSwitchEntityDescription(SwitchEntityDescription):
     """Alexa Devices switch entity description."""
 
     is_on_fn: Callable[[AmazonDevice], bool]
-    subkey: str
+    is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
+        device.online and device.sensors[key].error is False
+    )
     method: str
 
 
 SWITCHES: Final = (
     AmazonSwitchEntityDescription(
-        key="do_not_disturb",
-        subkey="AUDIO_PLAYER",
+        key="dnd",
         translation_key="do_not_disturb",
-        is_on_fn=lambda _device: _device.do_not_disturb,
+        is_on_fn=lambda device: bool(device.sensors["dnd"].value),
         method="set_do_not_disturb",
     ),
 )
@@ -48,6 +53,11 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
+    # Replace unique id for "DND" switch and remove from Speaker Group
+    await async_update_unique_id(
+        hass, coordinator, SWITCH_DOMAIN, "do_not_disturb", "dnd"
+    )
+
     known_devices: set[str] = set()
 
     def _check_device() -> None:
@@ -59,7 +69,7 @@ async def async_setup_entry(
                 AmazonSwitchEntity(coordinator, serial_num, switch_desc)
                 for switch_desc in SWITCHES
                 for serial_num in new_devices
-                if switch_desc.subkey in coordinator.data[serial_num].capabilities
+                if switch_desc.key in coordinator.data[serial_num].sensors
             )
 
     _check_device()
@@ -94,3 +104,13 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return True if switch is on."""
         return self.entity_description.is_on_fn(self.device)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            self.entity_description.is_available_fn(
+                self.device, self.entity_description.key
+            )
+            and super().available
+        )
