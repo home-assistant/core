@@ -43,6 +43,18 @@ from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMIDITY
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.sensor import SensorDeviceClass
+
+# Alias water_heater constants to avoid name clashes with similarly named climate constants
+from homeassistant.components.water_heater import (
+    ATTR_AWAY_MODE as WATER_HEATER_ATTR_AWAY_MODE,
+    ATTR_CURRENT_TEMPERATURE as WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
+    ATTR_MAX_TEMP as WATER_HEATER_ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP as WATER_HEATER_ATTR_MIN_TEMP,
+    ATTR_OPERATION_LIST as WATER_HEATER_ATTR_OPERATION_LIST,
+    ATTR_OPERATION_MODE as WATER_HEATER_ATTR_OPERATION_MODE,
+    ATTR_TARGET_TEMP_HIGH as WATER_HEATER_ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW as WATER_HEATER_ATTR_TARGET_TEMP_LOW,
+)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
@@ -667,6 +679,69 @@ class PrometheusMetrics:
                     "Humidifier Mode",
                     self._labels(state, {"mode": mode}),
                 ).set(float(mode == current_mode))
+
+    def _handle_water_heater(self, state: State) -> None:
+        # Temperatures
+        self._handle_climate_temp(
+            state,
+            ATTR_TEMPERATURE,
+            "water_heater_temperature_celsius",
+            "Target temperature in degrees Celsius",
+        )
+        self._handle_climate_temp(
+            state,
+            WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
+            "water_heater_current_temperature_celsius",
+            "Target temperature in degrees Celsius",
+        )
+        self._handle_climate_temp(
+            state,
+            WATER_HEATER_ATTR_TARGET_TEMP_HIGH,
+            "water_heater_target_temperature_high_celsius",
+            "Target high temperature in degrees Celsius",
+        )
+        self._handle_climate_temp(
+            state,
+            WATER_HEATER_ATTR_TARGET_TEMP_LOW,
+            "water_heater_target_temperature_low_celsius",
+            "Target low temperature in degrees Celsius",
+        )
+        self._handle_climate_temp(
+            state,
+            WATER_HEATER_ATTR_MIN_TEMP,
+            "water_heater_min_temperature_celsius",
+            "Minimum allowed temperature in degrees Celsius",
+        )
+        self._handle_climate_temp(
+            state,
+            WATER_HEATER_ATTR_MAX_TEMP,
+            "water_heater_max_temperature_celsius",
+            "Maximum allowed temperature in degrees Celsius",
+        )
+
+        # Operation mode enum
+        current_mode = (
+            state.attributes.get(WATER_HEATER_ATTR_OPERATION_MODE) or state.state
+        )
+        available_modes = state.attributes.get(WATER_HEATER_ATTR_OPERATION_LIST)
+        if current_mode and available_modes:
+            for mode in available_modes:
+                self._metric(
+                    "water_heater_operation_mode",
+                    prometheus_client.Gauge,
+                    "Water heater operation mode",
+                    self._labels(state, {"mode": mode}),
+                ).set(float(mode == current_mode))
+
+        # Away mode bool
+        away = state.attributes.get(WATER_HEATER_ATTR_AWAY_MODE)
+        if away is not None:
+            self._metric(
+                "water_heater_away_mode",
+                prometheus_client.Gauge,
+                "Whether away mode is on (0/1)",
+                self._labels(state),
+            ).set(float(away == STATE_ON))
 
     def _handle_sensor(self, state: State) -> None:
         unit = self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
