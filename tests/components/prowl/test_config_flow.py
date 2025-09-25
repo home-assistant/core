@@ -4,7 +4,7 @@ import prowlpy
 
 from homeassistant import config_entries
 from homeassistant.components.prowl.const import DOMAIN
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -25,7 +25,7 @@ async def test_flow_user(hass: HomeAssistant, mock_prowlpy) -> None:
     assert mock_prowlpy.verify_key.call_count > 0
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == CONF_INPUT[CONF_NAME]
-    assert result["data"] == CONF_INPUT
+    assert result["data"] == {CONF_API_KEY: CONF_INPUT[CONF_API_KEY]}
 
 
 async def test_flow_user_bad_key(hass: HomeAssistant, mock_prowlpy) -> None:

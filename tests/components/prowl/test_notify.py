@@ -58,7 +58,7 @@ async def test_send_notification_entity_service(
         notify.DOMAIN,
         notify.SERVICE_SEND_MESSAGE,
         {
-            "entity_id": "notify.testprowl",
+            "entity_id": "notify.mocked_prowl",
             notify.ATTR_MESSAGE: SERVICE_DATA["message"],
             notify.ATTR_TITLE: SERVICE_DATA["title"],
         },
@@ -121,7 +121,7 @@ async def test_fail_send_notification_entity_service(
             notify.DOMAIN,
             notify.SERVICE_SEND_MESSAGE,
             {
-                "entity_id": "notify.testprowl",
+                "entity_id": "notify.mocked_prowl",
                 notify.ATTR_MESSAGE: SERVICE_DATA["message"],
                 notify.ATTR_TITLE: SERVICE_DATA["title"],
             },
@@ -220,4 +220,4 @@ async def test_other_exception_send_notification(
             blocking=True,
         )
 
-    mock_prowlpy.send.assert_called_once_with(**EXPECTED_SEND_PARAMETERS)
+    mock_prowlpy.send.assert_called_once_with(**expected_send_parameters)

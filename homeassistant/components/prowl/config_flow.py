@@ -38,15 +38,14 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
             self.api_key = user_input[CONF_API_KEY]
             if user_input[CONF_NAME] and len(user_input[CONF_NAME]) > 0:
                 self.name = user_input[CONF_NAME]
-            await self.async_set_unique_id(self.name)
-            self._abort_if_unique_id_configured()
+
             errors = await self._validate_api_key(self.api_key)
             if not errors:
                 return self.async_create_entry(
                     title=self.name,
                     data={
                         CONF_API_KEY: self.api_key,
-                        CONF_NAME: self.name,
+                        #                        CONF_NAME: self.name,
                     },
                 )
 
