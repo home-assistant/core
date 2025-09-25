@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 import prowlpy
+from prowlpy import Prowl
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -21,6 +22,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,9 +36,7 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> ProwlNotificationService:
     """Get the Prowl notification service."""
-    prowl = await hass.async_add_executor_job(
-        partial(prowlpy.Prowl, apikey=config[CONF_API_KEY])
-    )
+    prowl = Prowl(apikey=config[CONF_API_KEY], client=get_async_client(hass))
     return ProwlNotificationService(hass, prowl)
 
 
