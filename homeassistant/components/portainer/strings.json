@@ -3,11 +3,11 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
+          "url": "[%key:common::config_flow::data::url%]",
           "api_token": "[%key:common::config_flow::data::api_token%]"
         },
         "data_description": {
-          "host": "The URL, including the port, of your Portainer instance",
+          "url": "The URL, including the port, of your Portainer instance",
           "api_token": "The Access token for authenticating with Portainer"
         },
         "description": "You can create an Access token in the Portainer UI. Go to **My account > Access tokens** and select **Add access token**"
