@@ -93,7 +93,7 @@ async def test_flow_api_failure(hass: HomeAssistant, mock_prowlpy: Mock) -> None
     assert result["errors"] == BAD_API_RESPONSE
 
 
-@pytest.fixure("mock_prowlpy")
+@pytest.mark.usefixtures("mock_prowlpy")
 async def test_flow_reauth(
     hass: HomeAssistant, mock_prowlpy_config_entry: MockConfigEntry
 ) -> None:
