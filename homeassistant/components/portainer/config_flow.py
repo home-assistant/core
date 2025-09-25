@@ -14,7 +14,7 @@ from pyportainer import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_HOST
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_API_KEY): str,
+        vol.Required(CONF_API_TOKEN): str,
     }
 )
 
@@ -35,7 +35,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     client = Portainer(
         api_url=data[CONF_HOST],
-        api_key=data[CONF_API_KEY],
+        api_key=data[CONF_API_TOKEN],
         session=async_get_clientsession(hass),
     )
     try:
@@ -72,7 +72,7 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(user_input[CONF_API_KEY])
+                await self.async_set_unique_id(user_input[CONF_API_TOKEN])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_HOST], data=user_input
