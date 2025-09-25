@@ -14,12 +14,12 @@ from zwave_js_server.model.value import Value, get_value_id_str
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_OPTIONS, MATCH_ALL
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.trigger import (
     Trigger,
     TriggerActionRunnerType,
     TriggerConfig,
-    move_top_level_schema_fields_to_options,
 )
 from homeassistant.helpers.typing import ConfigType
 

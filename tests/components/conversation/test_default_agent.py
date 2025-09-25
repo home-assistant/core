@@ -2542,7 +2542,7 @@ async def test_non_default_response(hass: HomeAssistant, init_components) -> Non
         )
     )
     assert len(calls) == 1
-    assert result.response.speech["plain"]["speech"] == "Opened"
+    assert result.response.speech["plain"]["speech"] == "Opening"
 
 
 async def test_turn_on_area(

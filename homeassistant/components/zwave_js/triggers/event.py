@@ -20,12 +20,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.trigger import (
     Trigger,
     TriggerActionRunnerType,
     TriggerConfig,
-    move_top_level_schema_fields_to_options,
 )
 from homeassistant.helpers.typing import ConfigType
 

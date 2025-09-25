@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    CONF_CONDITION,
     CONF_ENTITY_ID,
+    CONF_OPTIONS,
     CONF_ZONE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -17,26 +19,25 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ConditionErrorContainer, ConditionErrorMessage
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.condition import (
     Condition,
     ConditionCheckerType,
+    ConditionConfig,
     trace_condition_function,
 )
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import in_zone
 
-_CONDITION_SCHEMA = vol.Schema(
-    {
-        **cv.CONDITION_BASE_SCHEMA,
-        vol.Required(CONF_CONDITION): "zone",
-        vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-        vol.Required("zone"): cv.entity_ids,
-        # To support use_trigger_value in automation
-        # Deprecated 2016/04/25
-        vol.Optional("event"): vol.Any("enter", "leave"),
-    }
-)
+_OPTIONS_SCHEMA_DICT = {
+    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
+    vol.Required("zone"): cv.entity_ids,
+    # To support use_trigger_value in automation
+    # Deprecated 2016/04/25
+    vol.Optional("event"): vol.Any("enter", "leave"),
+}
+_CONDITION_SCHEMA = vol.Schema({CONF_OPTIONS: _OPTIONS_SCHEMA_DICT})
 
 
 def zone(
@@ -95,21 +96,34 @@ def zone(
 class ZoneCondition(Condition):
     """Zone condition."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
-        """Initialize condition."""
-        self._config = config
+    _options: dict[str, Any]
+
+    @classmethod
+    async def async_validate_complete_config(
+        cls, hass: HomeAssistant, complete_config: ConfigType
+    ) -> ConfigType:
+        """Validate complete config."""
+        complete_config = move_top_level_schema_fields_to_options(
+            complete_config, _OPTIONS_SCHEMA_DICT
+        )
+        return await super().async_validate_complete_config(hass, complete_config)
 
     @classmethod
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
-        return _CONDITION_SCHEMA(config)  # type: ignore[no-any-return]
+        return cast(ConfigType, _CONDITION_SCHEMA(config))
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize condition."""
+        assert config.options is not None
+        self._options = config.options
 
     async def async_get_checker(self) -> ConditionCheckerType:
         """Wrap action method with zone based condition."""
-        entity_ids = self._config.get(CONF_ENTITY_ID, [])
-        zone_entity_ids = self._config.get(CONF_ZONE, [])
+        entity_ids = self._options.get(CONF_ENTITY_ID, [])
+        zone_entity_ids = self._options.get(CONF_ZONE, [])
 
         @trace_condition_function
         def if_in_zone(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
