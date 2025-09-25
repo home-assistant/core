@@ -22,6 +22,16 @@
       "wrong_account": "Wrong account: Please authenticate with the API token for {email}."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "card": "Card"
+        },
+        "description": "Select the default charging card you want to use"
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "activity": {
@@ -124,6 +134,51 @@
       "reset": {
         "name": "Reset"
       }
+    },
+    "switch": {
+      "plug_and_charge": {
+        "name": "Plug & Charge"
+      },
+      "linked_charge_cards_only": {
+        "name": "Linked charging cards only"
+      },
+      "block": {
+        "name": "Block charge point"
+      }
+    }
+  },
+  "selector": {
+    "select_charging_card": {
+      "options": {
+        "without_charging_card": "Without charging card"
+      }
+    }
+  },
+  "services": {
+    "start_charge_session": {
+      "name": "Start charge session",
+      "description": "Starts a new charge session on a specified charge point.",
+      "fields": {
+        "charging_card_id": {
+          "name": "Charging card ID",
+          "description": "Optional charging card ID that will be used to start a charge session. When not provided, no charging card will be used."
+        },
+        "device_id": {
+          "name": "Device ID",
+          "description": "The ID of the Blue Current charge point."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_device_id": {
+      "message": "Invalid device ID given."
+    },
+    "config_entry_not_loaded": {
+      "message": "Config entry not loaded."
+    },
+    "no_config_entry": {
+      "message": "Device has not a valid blue_current config entry."
     }
   }
 }

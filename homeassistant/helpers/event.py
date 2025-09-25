@@ -54,7 +54,8 @@ from .entity_registry import (
 )
 from .ratelimit import KeyedRateLimit
 from .sun import get_astral_event_next
-from .template import RenderInfo, Template, result_as_boolean
+from .template import Template, result_as_boolean
+from .template.render_info import RenderInfo
 from .typing import TemplateVarsType
 
 _TRACK_STATE_CHANGE_DATA: HassKey[_KeyedEventData[EventStateChangedData]] = HassKey(
@@ -402,7 +403,7 @@ def _async_track_state_change_event(
 _KEYED_TRACK_STATE_REPORT = _KeyedEventTracker(
     key=_TRACK_STATE_REPORT_DATA,
     event_type=EVENT_STATE_REPORTED,
-    dispatcher_callable=_async_dispatch_entity_id_event,
+    dispatcher_callable=_async_dispatch_entity_id_event_soon,
     filter_callable=_async_state_filter,
 )
 

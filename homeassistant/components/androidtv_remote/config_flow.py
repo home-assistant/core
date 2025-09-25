@@ -19,7 +19,7 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import callback
@@ -37,7 +37,7 @@ from .helpers import AndroidTVRemoteConfigEntry, create_api, get_enable_ime
 
 _LOGGER = logging.getLogger(__name__)
 
-APPS_NEW_ID = "NewApp"
+APPS_NEW_ID = "add_new"
 CONF_APP_DELETE = "app_delete"
 CONF_APP_ID = "app_id"
 
@@ -66,9 +66,14 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.host = user_input[CONF_HOST]
             api = create_api(self.hass, self.host, enable_ime=False)
+            await api.async_generate_cert_if_missing()
             try:
-                await api.async_generate_cert_if_missing()
                 self.name, self.mac = await api.async_get_name_and_mac()
+            except CannotConnect:
+                # Likely invalid IP address or device is network unreachable. Stay
+                # in the user step allowing the user to enter a different host.
+                errors["base"] = "cannot_connect"
+            else:
                 await self.async_set_unique_id(format_mac(self.mac))
                 if self.source == SOURCE_RECONFIGURE:
                     self._abort_if_unique_id_mismatch()
@@ -81,11 +86,10 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                         },
                     )
                 self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
-                return await self._async_start_pair()
-            except (CannotConnect, ConnectionClosed):
-                # Likely invalid IP address or device is network unreachable. Stay
-                # in the user step allowing the user to enter a different host.
-                errors["base"] = "cannot_connect"
+                try:
+                    return await self._async_start_pair()
+                except (CannotConnect, ConnectionClosed):
+                    errors["base"] = "cannot_connect"
         else:
             user_input = {}
         default_host = user_input.get(CONF_HOST, vol.UNDEFINED)
@@ -112,22 +116,9 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the pair step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            pin = user_input["pin"]
             try:
-                pin = user_input["pin"]
                 await self.api.async_finish_pairing(pin)
-                if self.source == SOURCE_REAUTH:
-                    await self.hass.config_entries.async_reload(
-                        self._get_reauth_entry().entry_id
-                    )
-                    return self.async_abort(reason="reauth_successful")
-                return self.async_create_entry(
-                    title=self.name,
-                    data={
-                        CONF_HOST: self.host,
-                        CONF_NAME: self.name,
-                        CONF_MAC: self.mac,
-                    },
-                )
             except InvalidAuth:
                 # Invalid PIN. Stay in the pair step allowing the user to enter
                 # a different PIN.
@@ -145,6 +136,20 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                     # them to enter a new IP address but we cannot do that for the zeroconf
                     # flow. Simpler to abort for both flows.
                     return self.async_abort(reason="cannot_connect")
+            else:
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), reload_even_if_entry_is_unchanged=True
+                    )
+
+                return self.async_create_entry(
+                    title=self.name,
+                    data={
+                        CONF_HOST: self.host,
+                        CONF_NAME: self.name,
+                        CONF_MAC: self.mac,
+                    },
+                )
         return self.async_show_form(
             step_id="pair",
             data_schema=STEP_PAIR_DATA_SCHEMA,
@@ -243,7 +248,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         return AndroidTVRemoteOptionsFlowHandler(config_entry)
 
 
-class AndroidTVRemoteOptionsFlowHandler(OptionsFlow):
+class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithReload):
     """Android TV Remote options flow."""
 
     def __init__(self, config_entry: AndroidTVRemoteConfigEntry) -> None:
@@ -282,7 +287,9 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlow):
                 {
                     vol.Optional(CONF_APPS): SelectSelector(
                         SelectSelectorConfig(
-                            options=apps, mode=SelectSelectorMode.DROPDOWN
+                            options=apps,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            translation_key="apps",
                         )
                     ),
                     vol.Required(

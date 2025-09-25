@@ -16,8 +16,15 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -98,6 +105,14 @@ async def test_no_change(
     attributes: list[dict[str, Any]],
 ) -> None:
     """Test derivative sensor state updated when source sensor doesn't change."""
+    events: list[Event[EventStateChangedData]] = []
+
+    @callback
+    def _capture_event(event: Event) -> None:
+        events.append(event)
+
+    async_track_state_change_event(hass, "sensor.derivative", _capture_event)
+
     config = {
         "sensor": {
             "platform": "derivative",
@@ -110,6 +125,7 @@ async def test_no_change(
     }
 
     assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
 
     entity_id = config["sensor"]["source"]
     base = dt_util.utcnow()
@@ -125,8 +141,16 @@ async def test_no_change(
     state = hass.states.get("sensor.derivative")
     assert state is not None
 
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    states = [events[0].data["new_state"].state] + [
+        round(float(event.data["new_state"].state), config["sensor"]["round"])
+        for event in events[1:]
+    ]
     # Testing a energy sensor at 1 kWh for 1hour = 0kW
-    assert round(float(state.state), config["sensor"]["round"]) == 0.0
+    assert states == ["unavailable", 0.0, 1.0, 0.0]
+
+    state = events[-1].data["new_state"]
 
     assert state.attributes.get("unit_of_measurement") == "kW"
 
@@ -268,6 +292,14 @@ async def test_data_moving_average_with_zeroes(
     # Therefore, we can expect the derivative to peak at 1 after 10 minutes
     # and then fall down to 0 in steps of 10%.
 
+    events: list[Event[EventStateChangedData]] = []
+
+    @callback
+    def _capture_event(event: Event) -> None:
+        events.append(event)
+
+    async_track_state_change_event(hass, "sensor.power", _capture_event)
+
     temperature_values = []
     for temperature in range(10):
         temperature_values += [temperature]
@@ -296,19 +328,23 @@ async def test_data_moving_average_with_zeroes(
             hass.states.async_set(
                 entity_id, value, extra_attributes, force_update=force_update
             )
-            await hass.async_block_till_done()
 
-            state = hass.states.get("sensor.power")
-            derivative = round(float(state.state), config["sensor"]["round"])
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-            if time_window == time:
-                assert derivative == 1.0
-            elif time_window < time < time_window * 2:
-                assert (0.1 - 1e-6) < abs(derivative - last_derivative) < (0.1 + 1e-6)
-            elif time == time_window * 2:
-                assert derivative == 0
+    assert len(events[2:]) == len(times)
+    for time, event in zip(times, events[2:], strict=True):
+        state = event.data["new_state"]
+        derivative = round(float(state.state), config["sensor"]["round"])
 
-            last_derivative = derivative
+        if time_window == time:
+            assert derivative == 1.0
+        elif time_window < time < time_window * 2:
+            assert (0.1 - 1e-6) < abs(derivative - last_derivative) < (0.1 + 1e-6)
+        elif time == time_window * 2:
+            assert derivative == 0
+
+        last_derivative = derivative
 
 
 async def test_data_moving_average_for_discrete_sensor(hass: HomeAssistant) -> None:
@@ -681,7 +717,7 @@ async def test_total_increasing_reset(hass: HomeAssistant) -> None:
     expected_times = [0, 20, 30, 35, 50, 60]
     expected_values = ["0.00", "0.50", "2.00", "2.00", "1.00", "3.00"]
 
-    config, entity_id = await _setup_sensor(hass, {"unit_time": UnitOfTime.SECONDS})
+    _config, entity_id = await _setup_sensor(hass, {"unit_time": UnitOfTime.SECONDS})
 
     base_time = dt_util.utcnow()
     actual_times = []

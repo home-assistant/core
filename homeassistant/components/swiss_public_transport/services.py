@@ -3,6 +3,7 @@
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -19,7 +20,6 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
-    ATTR_CONFIG_ENTRY_ID,
     ATTR_LIMIT,
     CONNECTIONS_COUNT,
     CONNECTIONS_MAX,

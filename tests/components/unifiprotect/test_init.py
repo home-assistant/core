@@ -5,9 +5,10 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from uiprotect import NotAuthorized, NvrError, ProtectApiClient
+from uiprotect import NvrError, ProtectApiClient
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import NVR, Bootstrap, CloudAccount, Light
+from uiprotect.exceptions import BadRequest, NotAuthorized
 
 from homeassistant.components.unifiprotect.const import (
     AUTH_RETRIES,
@@ -18,6 +19,7 @@ from homeassistant.components.unifiprotect.data import (
     async_ufp_instance_for_config_entry_ids,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -27,6 +29,19 @@ from .utils import MockUFPFixture, init_entry, time_changed
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
+
+
+@pytest.fixture
+def mock_user_can_write_nvr(request: pytest.FixtureRequest, ufp: MockUFPFixture):
+    """Fixture to mock can_write method on NVR objects with indirect parametrization."""
+    can_write_result = getattr(request, "param", True)
+    original_can_write = ufp.api.bootstrap.nvr.can_write
+    mock_can_write = Mock(return_value=can_write_result)
+    object.__setattr__(ufp.api.bootstrap.nvr, "can_write", mock_can_write)
+    try:
+        yield mock_can_write
+    finally:
+        object.__setattr__(ufp.api.bootstrap.nvr, "can_write", original_can_write)
 
 
 async def test_setup(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
@@ -68,6 +83,7 @@ async def test_setup_multiple(
                 "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
+                CONF_API_KEY: "test-api-key",
                 "id": "UnifiProtect",
                 "port": 443,
                 "verify_ssl": False,
@@ -331,6 +347,134 @@ async def test_async_ufp_instance_for_config_entry_ids(
     assert result == expected_result
 
 
+@pytest.mark.parametrize("mock_user_can_write_nvr", [True], indirect=True)
+async def test_setup_creates_api_key_when_missing(
+    hass: HomeAssistant, ufp: MockUFPFixture, mock_user_can_write_nvr: Mock
+) -> None:
+    """Test that API key is created when missing and user has write permissions."""
+    # Setup: API key is not set initially, user has write permissions
+    ufp.api.is_api_key_set.return_value = False
+    ufp.api.create_api_key = AsyncMock(return_value="new-api-key-123")
+
+    # Mock set_api_key to update is_api_key_set return value when called
+    def set_api_key_side_effect(key):
+        ufp.api.is_api_key_set.return_value = True
+
+    ufp.api.set_api_key.side_effect = set_api_key_side_effect
+
+    await hass.config_entries.async_setup(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify API key was created and set
+    ufp.api.create_api_key.assert_called_once_with(name="Home Assistant (test home)")
+    ufp.api.set_api_key.assert_called_once_with("new-api-key-123")
+
+    # Verify config entry was updated with new API key
+    assert ufp.entry.data[CONF_API_KEY] == "new-api-key-123"
+    assert ufp.entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize("mock_user_can_write_nvr", [False], indirect=True)
+async def test_setup_skips_api_key_creation_when_no_write_permission(
+    hass: HomeAssistant, ufp: MockUFPFixture, mock_user_can_write_nvr: Mock
+) -> None:
+    """Test that API key creation is skipped when user has no write permissions."""
+    # Setup: API key is not set, user has no write permissions
+    ufp.api.is_api_key_set.return_value = False
+
+    # Should fail with auth error since no API key and can't create one
+    await hass.config_entries.async_setup(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert ufp.entry.state is ConfigEntryState.SETUP_ERROR
+
+    # Verify API key creation was not attempted
+    ufp.api.create_api_key.assert_not_called()
+    ufp.api.set_api_key.assert_not_called()
+
+
+@pytest.mark.parametrize("mock_user_can_write_nvr", [True], indirect=True)
+async def test_setup_handles_api_key_creation_failure(
+    hass: HomeAssistant, ufp: MockUFPFixture, mock_user_can_write_nvr: Mock
+) -> None:
+    """Test handling of API key creation failure."""
+    # Setup: API key is not set, user has write permissions, but creation fails
+    ufp.api.is_api_key_set.return_value = False
+    ufp.api.create_api_key = AsyncMock(
+        side_effect=NotAuthorized("Failed to create API key")
+    )
+
+    # Should fail with auth error due to API key creation failure
+    await hass.config_entries.async_setup(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert ufp.entry.state is ConfigEntryState.SETUP_ERROR
+
+    # Verify API key creation was attempted but set_api_key was not called
+    ufp.api.create_api_key.assert_called_once_with(name="Home Assistant (test home)")
+    ufp.api.set_api_key.assert_not_called()
+
+
+@pytest.mark.parametrize("mock_user_can_write_nvr", [True], indirect=True)
+async def test_setup_handles_api_key_creation_bad_request(
+    hass: HomeAssistant, ufp: MockUFPFixture, mock_user_can_write_nvr: Mock
+) -> None:
+    """Test handling of API key creation BadRequest error."""
+    # Setup: API key is not set, user has write permissions, but creation fails with BadRequest
+    ufp.api.is_api_key_set.return_value = False
+    ufp.api.create_api_key = AsyncMock(
+        side_effect=BadRequest("Invalid API key creation request")
+    )
+
+    # Should fail with auth error due to API key creation failure
+    await hass.config_entries.async_setup(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert ufp.entry.state is ConfigEntryState.SETUP_ERROR
+
+    # Verify API key creation was attempted but set_api_key was not called
+    ufp.api.create_api_key.assert_called_once_with(name="Home Assistant (test home)")
+    ufp.api.set_api_key.assert_not_called()
+
+
+async def test_setup_with_existing_api_key(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
+    """Test setup when API key is already set."""
+    # Setup: API key is already set
+    ufp.api.is_api_key_set.return_value = True
+
+    await hass.config_entries.async_setup(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert ufp.entry.state is ConfigEntryState.LOADED
+
+    # Verify API key creation was not attempted
+    ufp.api.create_api_key.assert_not_called()
+    ufp.api.set_api_key.assert_not_called()
+
+
+@pytest.mark.parametrize("mock_user_can_write_nvr", [True], indirect=True)
+async def test_setup_api_key_creation_returns_none(
+    hass: HomeAssistant, ufp: MockUFPFixture, mock_user_can_write_nvr: Mock
+) -> None:
+    """Test handling when API key creation returns None."""
+    # Setup: API key is not set, creation returns None (empty response)
+    # set_api_key will be called with None but is_api_key_set will still be False
+    ufp.api.is_api_key_set.return_value = False
+    ufp.api.create_api_key = AsyncMock(return_value=None)
+
+    # Should fail with auth error since API key creation returned None
+    await hass.config_entries.async_setup(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert ufp.entry.state is ConfigEntryState.SETUP_ERROR
+
+    # Verify API key creation was attempted and set_api_key was called with None
+    ufp.api.create_api_key.assert_called_once_with(name="Home Assistant (test home)")
+    ufp.api.set_api_key.assert_called_once_with(None)
+
+
 async def test_migrate_entry_version_2(hass: HomeAssistant) -> None:
     """Test remove CONF_ALLOW_EA from options while migrating a 1 config entry to 2."""
     with (
@@ -350,3 +494,47 @@ async def test_migrate_entry_version_2(hass: HomeAssistant) -> None:
         assert entry.version == 2
         assert entry.options.get(CONF_ALLOW_EA) is None
         assert entry.unique_id == "123456"
+
+
+async def test_setup_skips_api_key_creation_when_no_auth_user(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
+    """Test that API key creation is skipped when auth_user is None."""
+    # Setup: API key is not set, auth_user is None
+    ufp.api.is_api_key_set.return_value = False
+
+    # Mock the users dictionary to return None for any user ID
+    with patch.dict(ufp.api.bootstrap.users, {}, clear=True):
+        # Should fail with auth error since no API key and no auth user to create one
+        await hass.config_entries.async_setup(ufp.entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert ufp.entry.state is ConfigEntryState.SETUP_ERROR
+
+        # Verify API key creation was not attempted
+        ufp.api.create_api_key.assert_not_called()
+        ufp.api.set_api_key.assert_not_called()
+
+
+@pytest.mark.parametrize("mock_user_can_write_nvr", [True], indirect=True)
+async def test_setup_fails_when_api_key_still_missing_after_creation(
+    hass: HomeAssistant, ufp: MockUFPFixture, mock_user_can_write_nvr: Mock
+) -> None:
+    """Test that setup fails when API key is still missing after creation attempts."""
+    # Setup: API key is not set and remains not set even after attempts
+    ufp.api.is_api_key_set.return_value = False  # type: ignore[attr-defined]
+    ufp.api.create_api_key = AsyncMock(return_value="new-api-key-123")  # type: ignore[method-assign]
+    ufp.api.set_api_key = Mock()  # type: ignore[method-assign] # Mock this but API key still won't be "set"
+
+    # Setup should fail since API key is still not set after creation
+    await hass.config_entries.async_setup(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify entry is in setup error state (which will trigger reauth automatically)
+    assert ufp.entry.state is ConfigEntryState.SETUP_ERROR
+
+    # Verify API key creation was attempted
+    ufp.api.create_api_key.assert_called_once_with(  # type: ignore[attr-defined]
+        name="Home Assistant (test home)"
+    )
+    ufp.api.set_api_key.assert_called_once_with("new-api-key-123")  # type: ignore[attr-defined]

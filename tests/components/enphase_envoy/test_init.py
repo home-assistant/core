@@ -509,7 +509,7 @@ async def test_coordinator_interface_information(
     # verify first time add of mac to connections is in log
     assert "added connection" in caplog.text
 
-    # trigger integration reload by changing options
+    # update options and reload
     hass.config_entries.async_update_entry(
         config_entry,
         options={
@@ -517,6 +517,7 @@ async def test_coordinator_interface_information(
             OPTION_DISABLE_KEEP_ALIVE: True,
         },
     )
+    await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert config_entry.state is ConfigEntryState.LOADED
 
