@@ -1,27 +1,45 @@
-# Bronze quality scale rules
 rules:
-  # Bronze tier requirements
-  config-flow: done
-  entity-unique-id: done
+  # Bronze
   action-setup:
     status: exempt
-    comment: Integration does not register custom actions.
-  appropriate-polling: done
+    comment: Integration does not register custom service actions.
+  appropriate-polling:
+    status: done
+    comment: 30-minute interval defined in DEFAULT_UPDATE_INTERVAL.
   brands:
-    status: exempt
-    comment: No custom branding needed for weather service.
-  common-modules: done
-  config-flow-test-coverage: done
-  dependency-transparency: done
+    status: done
+  common-modules:
+    status: done
+  config-flow-test-coverage:
+    status: done
+  config-flow:
+    status: done
+  dependency-transparency:
+    status: done
+    comment: Uses meteo-lt-pkg==0.2.4
   docs-actions:
     status: exempt
-    comment: Integration does not register custom actions.
-  docs-high-level-description: done
-  docs-installation-instructions: done
-  docs-removal-instructions: done
-  entity-event-setup: done
-  has-entity-name: done
-  runtime-data: done
-  test-before-configure: done
-  test-before-setup: done
-  unique-config-entry: done
+    comment: Integration does not provide custom service actions to document.
+  docs-high-level-description:
+    status: done
+  docs-installation-instructions:
+    status: done
+  docs-removal-instructions:
+    status: done
+  entity-event-setup:
+    status: exempt
+    comment: Weather entities do not require event subscriptions.
+  entity-unique-id:
+    status: done
+  has-entity-name:
+    status: done
+  runtime-data:
+    status: done
+  test-before-configure:
+    status: done
+    comment: Tests API connection via get_nearest_place and fetch_places.
+  test-before-setup:
+    status: done
+    comment: Validates coordinator refresh before completing setup.
+  unique-config-entry:
+    status: done

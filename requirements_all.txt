@@ -1430,6 +1430,9 @@ melnor-bluetooth==0.0.25
 # homeassistant.components.message_bird
 messagebird==1.2.0
 
+# homeassistant.components.meteo_lt
+meteo-lt-pkg==0.2.4
+
 # homeassistant.components.meteoalarm
 meteoalertapi==0.3.1
 

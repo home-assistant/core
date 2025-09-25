@@ -2,21 +2,47 @@
   "config": {
     "step": {
       "user": {
-        "title": "Select location",
-        "description": "Choose a location in Lithuania for weather forecasts.",
+        "title": "Choose setup method",
+        "menu_options": {
+          "coordinates": "Use coordinates to find closest station",
+          "manual": "Pick station manually from list"
+        }
+      },
+      "coordinates": {
+        "title": "Enter coordinates",
         "data": {
-          "place_code": "Location",
-          "name": "Name"
+          "latitude": "Latitude",
+          "longitude": "Longitude"
+        },
+        "data_description": {
+          "latitude": "Latitude coordinate",
+          "longitude": "Longitude coordinate"
+        }
+      },
+      "location_from_coordinates": {
+        "title": "Found station",
+        "description": "**{location_name}** ({distance} km away)",
+        "menu_options": {
+          "use_location": "Use this station",
+          "find_manual": "Find station manually"
+        }
+      },
+      "manual": {
+        "title": "Select station",
+        "data": {
+          "place_code": "Station"
         }
       }
     },
     "error": {
       "cannot_connect": "Failed to connect to Meteo.lt API",
+      "no_location_found": "No weather station found near coordinates",
+      "invalid_location": "Selected station is invalid",
       "unknown": "Unexpected error occurred"
     },
     "abort": {
-      "already_configured": "Location is already configured",
-      "no_places_found": "No locations found from the API"
+      "already_configured": "Station is already configured",
+      "no_places_found": "No stations found from the API"
     }
   }
 }

@@ -4,8 +4,7 @@
   "codeowners": ["@xE1H"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/meteo_lt",
-  "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": []
+  "requirements": ["meteo-lt-pkg==0.2.4"]
 }

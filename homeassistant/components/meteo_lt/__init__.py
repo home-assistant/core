@@ -2,20 +2,14 @@
 
 from __future__ import annotations
 
-import logging
+from meteo_lt import MeteoLtAPI
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .api import MeteoLtApi, MeteoLtApiConnectionError
-from .const import CONF_PLACE_CODE, DOMAIN
+from .const import CONF_PLACE_CODE, PLATFORMS
 from .coordinator import MeteoLtUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORMS: list[Platform] = [Platform.WEATHER]
 
 type MeteoLtConfigEntry = ConfigEntry[MeteoLtUpdateCoordinator]
 
@@ -24,13 +18,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeteoLtConfigEntry) -> b
     """Set up Meteo.lt from a config entry."""
     place_code = entry.data[CONF_PLACE_CODE]
 
-    api = MeteoLtApi(hass)
-    coordinator = MeteoLtUpdateCoordinator(hass, api, place_code)
+    client = MeteoLtAPI()
+    coordinator = MeteoLtUpdateCoordinator(hass, client, place_code, entry)
 
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except MeteoLtApiConnectionError as err:
-        raise ConfigEntryNotReady(f"Unable to connect to Meteo.lt API: {err}") from err
+    await coordinator.async_refresh()
+
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
 
     entry.runtime_data = coordinator
 
