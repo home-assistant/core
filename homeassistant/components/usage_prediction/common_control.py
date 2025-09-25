@@ -108,6 +108,9 @@ async def async_predict_common_control(
         time_cat: Counter() for time_cat in TIME_CATEGORIES
     }
 
+    allowed_entities = set(hass.states.async_entity_ids(ALLOWED_DOMAINS))
+    hidden_entities = set()
+
     # Keep track of contexts that we processed so that we will only process
     # the first service call in a context, and not subsequent calls.
     context_processed: set[bytes] = set()
@@ -159,25 +162,23 @@ async def async_predict_common_control(
         if not isinstance(entity_ids, list):
             entity_ids = [entity_ids]
 
-        # Filter out entity IDs that are not in allowed domains
-        entity_ids = [
-            entity_id
-            for entity_id in entity_ids
-            if entity_id.split(".")[0] in ALLOWED_DOMAINS
-            and ((entry := ent_reg.async_get(entity_id)) is None or not entry.hidden)
-        ]
-
-        if not entity_ids:
-            continue
-
         # Convert to local time for time category determination
         period = time_category(
             datetime.fromtimestamp(time_fired_ts, local_time_zone).hour
         )
+        period_results = results[period]
 
         # Count entity usage
         for entity_id in entity_ids:
-            results[period][entity_id] += 1
+            if entity_id not in allowed_entities or entity_id in hidden_entities:
+                continue
+
+            if entity_id not in period_results:
+                if (entry := ent_reg.async_get(entity_id)) and entry.hidden:
+                    hidden_entities.add(entity_id)
+                    continue
+
+            period_results[entity_id] += 1
 
     return EntityUsagePredictions(
         morning=[
