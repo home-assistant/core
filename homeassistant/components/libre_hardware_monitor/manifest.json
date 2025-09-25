@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/libre_hardware_monitor",
   "iot_class": "local_polling",
   "quality_scale": "silver",
-  "requirements": ["librehardwaremonitor-api==1.3.1"]
+  "requirements": ["librehardwaremonitor-api==1.4.0"]
 }
