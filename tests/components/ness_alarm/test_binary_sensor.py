@@ -5,15 +5,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.ness_alarm import CONF_NAME, SIGNAL_ZONE_CHANGED
-from homeassistant.components.ness_alarm.const import (
-    CONF_ID,
-    CONF_MAX_SUPPORTED_ZONES,
-    CONF_TYPE,
-    CONF_ZONES,
-    DOMAIN,
-)
+from homeassistant.components.ness_alarm import SIGNAL_ZONE_CHANGED
+from homeassistant.components.ness_alarm.const import CONF_MAX_SUPPORTED_ZONES, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import dispatcher, entity_registry as er
@@ -96,51 +89,6 @@ async def test_zone_state_changes(
 
     assert hass.states.get("binary_sensor.zone_1").state == STATE_ON
     assert hass.states.get("binary_sensor.zone_2").state == STATE_OFF
-
-
-async def test_zone_with_custom_device_class(
-    hass: HomeAssistant,
-    mock_client,
-) -> None:
-    """Test binary sensor with custom device class."""
-
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "192.168.1.100",
-            CONF_PORT: 2401,
-            CONF_MAX_SUPPORTED_ZONES: 2,
-            CONF_ZONES: [
-                {
-                    CONF_ID: 1,
-                    CONF_NAME: "Door Sensor",
-                    CONF_TYPE: BinarySensorDeviceClass.DOOR,
-                },
-                {
-                    CONF_ID: 2,
-                    CONF_NAME: "Window Sensor",
-                    CONF_TYPE: BinarySensorDeviceClass.WINDOW,
-                },
-            ],
-        },
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.ness_alarm.Client",
-        return_value=mock_client,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Check device classes
-    state1 = hass.states.get("binary_sensor.door_sensor")
-    assert state1 is not None
-    assert state1.attributes.get("device_class") == BinarySensorDeviceClass.DOOR
-
-    state2 = hass.states.get("binary_sensor.window_sensor")
-    assert state2 is not None
-    assert state2.attributes.get("device_class") == BinarySensorDeviceClass.WINDOW
 
 
 async def test_zone_attributes(

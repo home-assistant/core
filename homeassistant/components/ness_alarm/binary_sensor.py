@@ -17,16 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SIGNAL_ZONE_CHANGED
-from .const import (
-    CONF_ID,
-    CONF_NAME,
-    CONF_TYPE,
-    CONF_ZONES,
-    DEFAULT_MAX_SUPPORTED_ZONES,
-    DOMAIN,
-    PANEL_MODEL_ZONES,
-    TOTAL_ZONES,
-)
+from .const import DEFAULT_MAX_SUPPORTED_ZONES, DOMAIN, PANEL_MODEL_ZONES, TOTAL_ZONES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,8 +28,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ness zone binary sensors from a config entry."""
-    data = config_entry.runtime_data
-    config = data["config"]
 
     entity_registry = er.async_get(hass)
 
@@ -72,25 +61,13 @@ async def async_setup_entry(
         )
 
     # Map custom names and types if any are provided within the YAML config
-    custom_zones = {}
-    for zone in config.get(CONF_ZONES, []):
-        zone_id = zone.get(CONF_ID)
-        if zone_id:
-            custom_zones[zone_id] = {
-                CONF_NAME: zone.get(CONF_NAME, f"Zone {zone_id}"),
-                CONF_TYPE: zone.get(CONF_TYPE, BinarySensorDeviceClass.MOTION),
-            }
 
     entities = []
 
     # Always create 32 zones
     for zone_id in range(1, TOTAL_ZONES + 1):
-        if zone_id in custom_zones:
-            name = custom_zones[zone_id][CONF_NAME]
-            zone_type = custom_zones[zone_id][CONF_TYPE]
-        else:
-            name = f"Zone {zone_id}"
-            zone_type = BinarySensorDeviceClass.MOTION
+        name = f"Zone {zone_id}"
+        zone_type = BinarySensorDeviceClass.MOTION
 
         # Determine if zone should be enabled
         should_be_enabled = zone_id <= enabled_zones
