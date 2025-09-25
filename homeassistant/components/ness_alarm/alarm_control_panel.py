@@ -44,7 +44,11 @@ async def async_setup_entry(
 
     entities = []
 
+    # Support for Home ARM lets users enable or disable home arm mode.
+    # Since newer panels/keypads don’t enable it by default and some users may not want it,
+    # we provide an option to turn it off via options flow.
     support_home_arm = config.get(CONF_SUPPORT_HOME_ARM, True)
+
     entities.append(
         NessAlarmPanel(
             client,

@@ -39,7 +39,7 @@ PANEL_MODEL_ZONES = {
     "D16X_CEL_4G": 16,
     # 32 Zone Variants
     "D32X": 32,
-    # Manual Selected zone override
+    # Manual Selected zone override (in the case of extender board etc)
     "MANUAL_8": 8,
     "MANUAL_16": 16,
     "MANUAL_24": 24,

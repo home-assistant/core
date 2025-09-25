@@ -43,15 +43,8 @@ async def async_setup_entry(
                 panel_model,
                 DEFAULT_MAX_SUPPORTED_ZONES,
             )
-
     elif panel_model in PANEL_MODEL_ZONES:
         enabled_zones = PANEL_MODEL_ZONES[panel_model]
-        _LOGGER.info(
-            "Panel model %s detected, enabling %s zones out of %s total",
-            panel_model,
-            enabled_zones,
-            TOTAL_ZONES,
-        )
     else:
         enabled_zones = DEFAULT_MAX_SUPPORTED_ZONES
         _LOGGER.warning(
@@ -60,38 +53,30 @@ async def async_setup_entry(
             enabled_zones,
         )
 
-    # Map custom names and types if any are provided within the YAML config
-
     entities = []
 
-    # Always create 32 zones
+    # Always create 32 zones, and disable based on the number of supported zones from
     for zone_id in range(1, TOTAL_ZONES + 1):
         name = f"Zone {zone_id}"
         zone_type = BinarySensorDeviceClass.MOTION
 
-        # Determine if zone should be enabled
         should_be_enabled = zone_id <= enabled_zones
 
-        # Check if entity already exists and update its disabled state
         unique_id = f"{config_entry.entry_id}_zone_{zone_id}"
         existing_entity = entity_registry.async_get_entity_id(
             "binary_sensor", DOMAIN, unique_id
         )
 
         if existing_entity:
-            # Entity exists, update its disabled state
             current_entry = entity_registry.entities.get(existing_entity)
             if current_entry:
-                # Check if the disabled state needs to change
                 is_currently_disabled = current_entry.disabled_by is not None
 
                 if should_be_enabled and is_currently_disabled:
-                    # Enable the entity
                     entity_registry.async_update_entity(
                         existing_entity, disabled_by=None
                     )
                 elif not should_be_enabled and not is_currently_disabled:
-                    # Disable the entity
                     entity_registry.async_update_entity(
                         existing_entity,
                         disabled_by=er.RegistryEntryDisabler.INTEGRATION,
@@ -137,7 +122,6 @@ class NessZoneSensor(BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks and restore state."""
-        # Register zone change callback
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,

@@ -96,10 +96,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Check if already configured
     existing_entries = hass.config_entries.async_entries(DOMAIN)
     if existing_entries:
-        # Already configured via UI, create issue about duplicate YAML
-        _LOGGER.warning(
-            "Ness Alarm already configured via UI, ignoring YAML configuration"
-        )
         ir.async_create_issue(
             hass,
             DOMAIN,
