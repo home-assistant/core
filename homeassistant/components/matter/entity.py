@@ -105,7 +105,7 @@ class MatterEntityLabeling(EntityDescription):
     label_concatenator: str | None = ", "
 
     # If both tags and labels are found, which one takes precedence.
-    prefer_tags: bool = False
+    prefer_tags: bool = True
 
     def find_matching_labels(self, entity: MatterEntity) -> list[str]:
         """Find all labels for a Matter entity."""
