@@ -12,7 +12,7 @@ from homeassistant.components.sonos.const import (
     SONOS_SPEAKER_ACTIVITY,
     SONOS_STATE_UPDATED,
 )
-from homeassistant.components.sonos.number import SonosGroupVolumeEntity
+from homeassistant.components.sonos.number import GV_REFRESH_DELAY
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -171,7 +171,9 @@ async def test_group_volume_sets_backend_and_updates_state(
     # State updates on activity (refresh is scheduled -> advance time)
     async_dispatcher_send(hass, SONOS_SPEAKER_ACTIVITY, "test")
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=GV_REFRESH_DELAY + 0.1)
+    )
     await hass.async_block_till_done()
 
     # Verify HA state reflects the new value
@@ -282,9 +284,8 @@ async def test_group_fanout_unsubscribe_and_resubscribe_on_group_change(
     """When group uid changes, entity rebinds; polling refresh reflects new group volume."""
     # Start grouped with deterministic G-1 and bring up the platform
     gid1 = _force_grouped(soco)
-    if gid1 != "G-1":
-        soco.group.uid = "G-1"
-        gid1 = "G-1"
+    soco.group.uid = "G-1"
+    gid1 = "G-1"
 
     await _setup_numbers_only(async_setup_sonos)
 
@@ -310,13 +311,17 @@ async def test_group_fanout_unsubscribe_and_resubscribe_on_group_change(
     # Notify topology change & let the entity schedule its delayed refresh
     async_dispatcher_send(hass, f"{SONOS_STATE_UPDATED}-{soco.uid}")
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=GV_REFRESH_DELAY + 0.1)
+    )
     await hass.async_block_till_done()
 
     # Drive the refresh path used by the integration after activity
     async_dispatcher_send(hass, SONOS_SPEAKER_ACTIVITY, "topology-change")
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=GV_REFRESH_DELAY + 0.1)
+    )
     await hass.async_block_till_done()
 
     # State should now reflect the new group's volume (66)
@@ -338,7 +343,6 @@ async def test_group_volume_exception(
     assert state.state == STATE_UNKNOWN
 
 
-# Minimal mock classes to simulate speaker topology
 class _FakeSoCoGroup:
     def __init__(self, uid: str, coordinator=None, members=None) -> None:
         # Represent a SoCo group with uid, coordinator, and members
@@ -381,68 +385,15 @@ class _FakeSpeaker:
         self.available = True
 
 
-# Subclass to expose and test internal rebinding logic
-class _TestEntity(SonosGroupVolumeEntity):
-    def _current_coord_uid(self) -> str | None:
-        """Return the current coordinator UID from the fake speaker."""
-        return getattr(self.speaker.coordinator, "uid", None)
-
-    def _current_group_uid(self) -> str | None:
-        """Return the current group UID from the fake soco group."""
-        return getattr(getattr(self.speaker.soco, "group", None), "uid", None)
-
-    def _rebind_for_topology_change(self):
-        # Drop old coord subscription if coord uid changed
-        new_coord_uid = self._current_coord_uid()
-        if self._coord_uid != new_coord_uid:
-            if self._unsubscribe_coord:
-                self._unsubscribe_coord()
-            self._unsubscribe_coord = (
-                self.hass.helpers.dispatcher.async_dispatcher_connect(
-                    self.hass,
-                    f"{SONOS_STATE_UPDATED}-{new_coord_uid}",
-                    self._handle_coordinator_update,
-                )
-            )
-            self._coord_uid = new_coord_uid
-
-        # Always subscribe to own uid and new group uid
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            self.hass,
-            f"{SONOS_STATE_UPDATED}-{self.speaker.uid}",
-            self._handle_coordinator_update,
-        )
-        self._group_uid = self._current_group_uid()
-        self._unsubscribe_gv_signal = (
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                self.hass,
-                f"{SONOS_STATE_UPDATED}-{self._group_uid}",
-                self._handle_group_volume_update,
-            )
-        )
-        # Trigger refresh from device after rebind
-        self._async_refresh_from_device()
-
-    def _handle_coordinator_update(self, *args, **kwargs):
-        pass
-
-    def _handle_group_volume_update(self, *args, **kwargs):
-        pass
-
-
 async def test_group_volume_rebinds_on_topology_change(
-    hass: HomeAssistant, async_setup_sonos
+    hass: HomeAssistant, async_setup_sonos, soco
 ) -> None:
     """Verify group volume entity rebinds when topology (group UID / coord UID) changes."""
     await async_setup_sonos()
 
-    # Grab the group-volume entity object created by the fixture
-    entity = next(
-        ent
-        for ent in hass.data["entity_components"]["number"].entities
-        if isinstance(ent, SonosGroupVolumeEntity)
-    )
-    soco = entity.speaker.soco
+    # Ensure entity exists
+    state = hass.states.get(GROUP_VOLUME_ENTITY_ID)
+    assert state is not None
 
     # Initial group with 2 members
     member2 = MagicMock()
@@ -456,13 +407,9 @@ async def test_group_volume_rebinds_on_topology_change(
     initial_group.volume = 15
     type(soco).group = PropertyMock(return_value=initial_group)
 
-    # Trigger HA update to register/refresh state (value may be fixture-default)
+    # Trigger HA update to register/refresh state
     async_dispatcher_send(hass, f"{SONOS_STATE_UPDATED}-{soco.uid}")
     await hass.async_block_till_done()
-
-    # Ensure entity exists
-    state = hass.states.get(GROUP_VOLUME_ENTITY_ID)
-    assert state is not None
 
     # Change topology: new gid/coord and volume
     new_group = MagicMock()
@@ -476,7 +423,9 @@ async def test_group_volume_rebinds_on_topology_change(
     # Trigger update → entity schedules a delayed refresh; advance time to run it
     async_dispatcher_send(hass, f"{SONOS_STATE_UPDATED}-{soco.uid}")
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=GV_REFRESH_DELAY + 0.1)
+    )
     await hass.async_block_till_done()
 
     # Entity state should now reflect the new group volume
