@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from enum import Enum
+import logging
 from types import ModuleType
 from typing import Any
 
@@ -31,7 +32,6 @@ from .common import async_start
 from tests.common import (
     MockConfigEntry,
     MockEntity,
-    MockEntityPlatform,
     MockModule,
     help_test_all,
     import_and_test_deprecated_constant_enum,
@@ -263,44 +263,6 @@ async def test_send_command(hass: HomeAssistant, config_flow_fixture: None) -> N
     assert "test" in strings
 
 
-async def test_supported_features_compat(hass: HomeAssistant) -> None:
-    """Test StateVacuumEntity using deprecated feature constants features."""
-
-    features = (
-        VacuumEntityFeature.BATTERY
-        | VacuumEntityFeature.FAN_SPEED
-        | VacuumEntityFeature.START
-        | VacuumEntityFeature.STOP
-        | VacuumEntityFeature.PAUSE
-    )
-
-    class _LegacyConstantsStateVacuum(StateVacuumEntity):
-        _attr_supported_features = int(features)
-        _attr_fan_speed_list = ["silent", "normal", "pet hair"]
-
-    entity = _LegacyConstantsStateVacuum()
-    entity.hass = hass
-    entity.platform = MockEntityPlatform(hass)
-    assert isinstance(entity.supported_features, int)
-    assert entity.supported_features == int(features)
-    assert entity.supported_features_compat is (
-        VacuumEntityFeature.BATTERY
-        | VacuumEntityFeature.FAN_SPEED
-        | VacuumEntityFeature.START
-        | VacuumEntityFeature.STOP
-        | VacuumEntityFeature.PAUSE
-    )
-    assert entity.state_attributes == {
-        "battery_level": None,
-        "battery_icon": "mdi:battery-unknown",
-        "fan_speed": None,
-    }
-    assert entity.capability_attributes == {
-        "fan_speed_list": ["silent", "normal", "pet hair"]
-    }
-    assert entity._deprecated_supported_features_reported
-
-
 async def test_vacuum_not_log_deprecated_state_warning(
     hass: HomeAssistant,
     mock_vacuum_entity: MockVacuum,
@@ -474,3 +436,214 @@ async def test_vacuum_deprecated_state_does_not_break_state(
     state = hass.states.get(entity.entity_id)
     assert state is not None
     assert state.state == "cleaning"
+
+
+@pytest.mark.parametrize(("is_built_in", "log_warnings"), [(True, 0), (False, 3)])
+async def test_vacuum_log_deprecated_battery_using_properties(
+    hass: HomeAssistant,
+    config_flow_fixture: None,
+    caplog: pytest.LogCaptureFixture,
+    is_built_in: bool,
+    log_warnings: int,
+) -> None:
+    """Test incorrectly using battery properties logs warning."""
+
+    class MockLegacyVacuum(MockVacuum):
+        """Mocked vacuum entity."""
+
+        @property
+        def activity(self) -> VacuumActivity:
+            """Return the state of the entity."""
+            return VacuumActivity.CLEANING
+
+        @property
+        def battery_level(self) -> int:
+            """Return the battery level of the vacuum."""
+            return 50
+
+        @property
+        def battery_icon(self) -> str:
+            """Return the battery icon of the vacuum."""
+            return "mdi:battery-50"
+
+    entity = MockLegacyVacuum(
+        name="Testing",
+        entity_id="vacuum.test",
+    )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+        built_in=is_built_in,
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+
+    assert (
+        len([record for record in caplog.records if record.levelno >= logging.WARNING])
+        == log_warnings
+    )
+
+    assert (
+        "integration 'test' is setting the battery_icon which has been deprecated."
+        in caplog.text
+    ) != is_built_in
+    assert (
+        "integration 'test' is setting the battery_level which has been deprecated."
+        in caplog.text
+    ) != is_built_in
+
+
+@pytest.mark.parametrize(("is_built_in", "log_warnings"), [(True, 0), (False, 3)])
+async def test_vacuum_log_deprecated_battery_using_attr(
+    hass: HomeAssistant,
+    config_flow_fixture: None,
+    caplog: pytest.LogCaptureFixture,
+    is_built_in: bool,
+    log_warnings: int,
+) -> None:
+    """Test incorrectly using _attr_battery_* attribute does log issue and raise repair."""
+
+    class MockLegacyVacuum(MockVacuum):
+        """Mocked vacuum entity."""
+
+        def start(self) -> None:
+            """Start cleaning."""
+            self._attr_battery_level = 50
+            self._attr_battery_icon = "mdi:battery-50"
+
+    entity = MockLegacyVacuum(
+        name="Testing",
+        entity_id="vacuum.test",
+    )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+        built_in=is_built_in,
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    entity.start()
+
+    assert (
+        len([record for record in caplog.records if record.levelno >= logging.WARNING])
+        == log_warnings
+    )
+
+    assert (
+        "integration 'test' is setting the battery_level which has been deprecated."
+        in caplog.text
+    ) != is_built_in
+    assert (
+        "integration 'test' is setting the battery_icon which has been deprecated."
+        in caplog.text
+    ) != is_built_in
+
+    await async_start(hass, entity.entity_id)
+
+    caplog.clear()
+
+    await async_start(hass, entity.entity_id)
+
+    # Test we only log once
+    assert (
+        len([record for record in caplog.records if record.levelno >= logging.WARNING])
+        == 0
+    )
+
+
+@pytest.mark.parametrize(("is_built_in", "log_warnings"), [(True, 0), (False, 1)])
+async def test_vacuum_log_deprecated_battery_supported_feature(
+    hass: HomeAssistant,
+    config_flow_fixture: None,
+    caplog: pytest.LogCaptureFixture,
+    is_built_in: bool,
+    log_warnings: int,
+) -> None:
+    """Test incorrectly setting battery supported feature logs warning."""
+
+    class MockVacuum(StateVacuumEntity):
+        """Mock vacuum class."""
+
+        _attr_supported_features = (
+            VacuumEntityFeature.STATE | VacuumEntityFeature.BATTERY
+        )
+        _attr_name = "Testing"
+
+    entity = MockVacuum()
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+        built_in=is_built_in,
+    )
+    setup_test_component_platform(hass, DOMAIN, [entity], from_config_entry=True)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+
+    assert (
+        len([record for record in caplog.records if record.levelno >= logging.WARNING])
+        == log_warnings
+    )
+
+    assert (
+        "integration 'test' is setting the battery supported feature" in caplog.text
+    ) != is_built_in
+
+
+async def test_vacuum_not_log_deprecated_battery_properties_during_init(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test not logging deprecation until after added to hass."""
+
+    class MockLegacyVacuum(MockVacuum):
+        """Mocked vacuum entity."""
+
+        def __init__(self, **kwargs: Any) -> None:
+            """Initialize a mock vacuum entity."""
+            super().__init__(**kwargs)
+            self._attr_battery_level = 50
+
+        @property
+        def activity(self) -> VacuumActivity:
+            """Return the state of the entity."""
+            return VacuumActivity.CLEANING
+
+    entity = MockLegacyVacuum(
+        name="Testing",
+        entity_id="vacuum.test",
+    )
+    assert entity.battery_level == 50
+
+    assert (
+        len([record for record in caplog.records if record.levelno >= logging.WARNING])
+        == 0
+    )

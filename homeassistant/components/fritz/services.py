@@ -10,7 +10,7 @@ from fritzconnection.core.exceptions import (
 from fritzconnection.lib.fritzwlan import DEFAULT_PASSWORD_LENGTH
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
@@ -31,11 +31,12 @@ SERVICE_SCHEMA_SET_GUEST_WIFI_PW = vol.Schema(
 
 async def _async_set_guest_wifi_password(service_call: ServiceCall) -> None:
     """Call Fritz set guest wifi password service."""
-    hass = service_call.hass
-    target_entry_ids = await async_extract_config_entry_ids(hass, service_call)
+    target_entry_ids = await async_extract_config_entry_ids(service_call)
     target_entries: list[FritzConfigEntry] = [
         loaded_entry
-        for loaded_entry in hass.config_entries.async_loaded_entries(DOMAIN)
+        for loaded_entry in service_call.hass.config_entries.async_loaded_entries(
+            DOMAIN
+        )
         if loaded_entry.entry_id in target_entry_ids
     ]
 
@@ -64,7 +65,8 @@ async def _async_set_guest_wifi_password(service_call: ServiceCall) -> None:
             ) from ex
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Fritz integration."""
 
     hass.services.async_register(

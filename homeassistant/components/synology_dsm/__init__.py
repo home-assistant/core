@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from itertools import chain
 import logging
+from typing import TYPE_CHECKING
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 from synology_dsm.api.surveillance_station.camera import SynoCamera
@@ -45,7 +46,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Synology DSM component."""
 
-    await async_setup_services(hass)
+    async_setup_services(hass)
 
     return True
 
@@ -136,7 +137,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) 
         coordinator_switches=coordinator_switches,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     if entry.options[CONF_BACKUP_SHARE]:
 
@@ -172,23 +172,18 @@ async def async_unload_entry(
     return unload_ok
 
 
-async def _async_update_listener(
-    hass: HomeAssistant, entry: SynologyDSMConfigEntry
-) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
 async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: SynologyDSMConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove synology_dsm config entry from a device."""
     data = entry.runtime_data
     api = data.api
-    assert api.information is not None
+    if TYPE_CHECKING:
+        assert api.information is not None
     serial = api.information.serial
     storage = api.storage
-    assert storage is not None
+    if TYPE_CHECKING:
+        assert storage is not None
     all_cameras: list[SynoCamera] = []
     if api.surveillance_station is not None:
         # get_all_cameras does not do I/O

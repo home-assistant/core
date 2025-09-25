@@ -82,6 +82,9 @@
       },
       "usb_capture": {
         "name": "Component USB capture"
+      },
+      "audio_capture": {
+        "name": "Component Audio capture"
       }
     },
     "sensor": {

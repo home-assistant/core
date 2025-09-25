@@ -2,27 +2,25 @@
 
 from __future__ import annotations
 
-from aiolyric import Lyric
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
 from aiolyric.objects.priority import LyricAccessory, LyricRoom
 
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .coordinator import LyricDataUpdateCoordinator
 
 
-class LyricEntity(CoordinatorEntity[DataUpdateCoordinator[Lyric]]):
+class LyricEntity(CoordinatorEntity[LyricDataUpdateCoordinator]):
     """Defines a base Honeywell Lyric entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Lyric],
+        coordinator: LyricDataUpdateCoordinator,
         location: LyricLocation,
         device: LyricDevice,
         key: str,
@@ -71,7 +69,7 @@ class LyricAccessoryEntity(LyricDeviceEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Lyric],
+        coordinator: LyricDataUpdateCoordinator,
         location: LyricLocation,
         device: LyricDevice,
         room: LyricRoom,

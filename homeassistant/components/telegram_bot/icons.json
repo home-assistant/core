@@ -3,6 +3,9 @@
     "send_message": {
       "service": "mdi:send"
     },
+    "send_chat_action": {
+      "service": "mdi:send"
+    },
     "send_photo": {
       "service": "mdi:camera"
     },
@@ -44,6 +47,9 @@
     },
     "leave_chat": {
       "service": "mdi:exit-run"
+    },
+    "set_message_reaction": {
+      "service": "mdi:emoticon-happy"
     }
   }
 }
