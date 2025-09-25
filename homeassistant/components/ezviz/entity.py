@@ -28,8 +28,8 @@ class EzvizEntity(CoordinatorEntity[EzvizDataUpdateCoordinator], Entity):
         self._camera_name = self.data["name"]
 
         connections = set()
-        if self.data["mac_address"]:
-            connections.add((CONNECTION_NETWORK_MAC, self.data["mac_address"]))
+        if mac_address := self.data["mac_address"]:
+            connections.add((CONNECTION_NETWORK_MAC, mac_address))
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial)},
@@ -67,8 +67,8 @@ class EzvizBaseEntity(Entity):
         self._camera_name = self.data["name"]
 
         connections = set()
-        if self.data["mac_address"]:
-            connections.add((CONNECTION_NETWORK_MAC, self.data["mac_address"]))
+        if mac_address := self.data["mac_address"]:
+            connections.add((CONNECTION_NETWORK_MAC, mac_address))
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial)},
