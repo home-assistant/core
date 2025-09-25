@@ -37,9 +37,9 @@ from homeassistant.util.hass_dict import HassKey
 from .const import (
     _LOGGER,
     ATTR_ADDRESS,
+    ATTR_DEVICE_ADDRESS,
     ATTR_HUB,
     ATTR_SLAVE,
-    ATTR_UNIT,
     ATTR_VALUE,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
@@ -169,11 +169,15 @@ async def async_modbus_setup(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_modbus)
 
+    UNIT = "unit"
+
     def _get_service_call_details(
         service: ServiceCall,
     ) -> tuple[ModbusHub, int, int]:
         """Return the details required to process the service call."""
-        device_address = service.data.get(ATTR_SLAVE, service.data.get(ATTR_UNIT, 1))
+        device_address = service.data.get(
+            ATTR_SLAVE, service.data.get(ATTR_DEVICE_ADDRESS, service.data.get(UNIT, 1))
+        )
         address = service.data[ATTR_ADDRESS]
         hub = hub_collect[service.data[ATTR_HUB]]
         return (hub, device_address, address)
@@ -218,8 +222,9 @@ async def async_modbus_setup(
             schema=vol.Schema(
                 {
                     vol.Optional(ATTR_HUB, default=DEFAULT_HUB): cv.string,
-                    vol.Exclusive(ATTR_SLAVE, "unit"): cv.positive_int,
-                    vol.Exclusive(ATTR_UNIT, "unit"): cv.positive_int,
+                    vol.Exclusive(ATTR_DEVICE_ADDRESS, "addr"): cv.positive_int,
+                    vol.Exclusive(ATTR_SLAVE, "addr"): cv.positive_int,
+                    vol.Exclusive(UNIT, "addr"): cv.positive_int,
                     vol.Required(ATTR_ADDRESS): cv.positive_int,
                     vol.Required(x_write[2]): vol.Any(
                         cv.positive_int, vol.All(cv.ensure_list, [x_write[3]])
