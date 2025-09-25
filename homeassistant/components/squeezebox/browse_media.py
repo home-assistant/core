@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 from dataclasses import dataclass, field
+import logging
 from typing import Any
 
 from pysqueezebox import Player
@@ -20,6 +21,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import is_internal_request
 
 from .const import DOMAIN, UNPLAYABLE_TYPES
+
+_LOGGER = logging.getLogger(__name__)
 
 LIBRARY = [
     "favorites",
@@ -113,6 +116,7 @@ CONTENT_TYPE_TO_CHILD_TYPE: dict[
     MediaType.APPS: MediaType.APP,
     MediaType.APP: MediaType.TRACK,
     "favorite": None,
+    "track": MediaType.TRACK,
 }
 
 
@@ -138,18 +142,44 @@ class BrowseData:
         self.squeezebox_id_by_type.update(SQUEEZEBOX_ID_BY_TYPE)
         self.media_type_to_squeezebox.update(MEDIA_TYPE_TO_SQUEEZEBOX)
 
+    def add_new_command(self, cmd: str | MediaType, type: str) -> None:
+        """Add items to maps for new apps or radios."""
+        self.known_apps_radios.add(cmd)
+        self.media_type_to_squeezebox[cmd] = cmd
+        self.squeezebox_id_by_type[cmd] = type
+        self.content_type_media_class[cmd] = {
+            "item": MediaClass.DIRECTORY,
+            "children": MediaClass.TRACK,
+        }
+        self.content_type_to_child_type[cmd] = MediaType.TRACK
 
-def _add_new_command_to_browse_data(
-    browse_data: BrowseData, cmd: str | MediaType, type: str
-) -> None:
-    """Add items to maps for new apps or radios."""
-    browse_data.media_type_to_squeezebox[cmd] = cmd
-    browse_data.squeezebox_id_by_type[cmd] = type
-    browse_data.content_type_media_class[cmd] = {
-        "item": MediaClass.DIRECTORY,
-        "children": MediaClass.TRACK,
-    }
-    browse_data.content_type_to_child_type[cmd] = MediaType.TRACK
+    async def async_init(self, player: Player, browse_limit: int) -> None:
+        """Initialize known apps and radios from the player."""
+
+        cmd = ["apps", 0, browse_limit]
+        result = await player.async_query(*cmd)
+        if result and result.get("appss_loop"):
+            for app in result["appss_loop"]:
+                app_cmd = "app-" + app["cmd"]
+                if app_cmd not in self.known_apps_radios:
+                    self.add_new_command(app_cmd, "item_id")
+                    _LOGGER.debug(
+                        "Adding new command %s to browse data for player %s",
+                        app_cmd,
+                        player.player_id,
+                    )
+        cmd = ["radios", 0, browse_limit]
+        result = await player.async_query(*cmd)
+        if result and result.get("radioss_loop"):
+            for app in result["radioss_loop"]:
+                app_cmd = "app-" + app["cmd"]
+                if app_cmd not in self.known_apps_radios:
+                    self.add_new_command(app_cmd, "item_id")
+                    _LOGGER.debug(
+                        "Adding new command %s to browse data for player %s",
+                        app_cmd,
+                        player.player_id,
+                    )
 
 
 def _build_response_apps_radios_category(
@@ -218,11 +248,16 @@ def _get_item_thumbnail(
     item_type: str | MediaType | None,
     search_type: str,
     internal_request: bool,
+    known_apps_radios: set[str],
 ) -> str | None:
     """Construct path to thumbnail image."""
     item_thumbnail: str | None = None
+
     track_id = item.get("artwork_track_id") or (
-        item.get("id") if item_type == "track" else None
+        item.get("id")
+        if item_type == "track"
+        and search_type not in known_apps_radios | {"apps", "radios"}
+        else None
     )
 
     if track_id:
@@ -292,8 +327,7 @@ async def build_item_response(
                 app_cmd = "app-" + item["cmd"]
 
                 if app_cmd not in browse_data.known_apps_radios:
-                    browse_data.known_apps_radios.add(app_cmd)
-                    _add_new_command_to_browse_data(browse_data, app_cmd, "item_id")
+                    browse_data.add_new_command(app_cmd, "item_id")
 
                 child_media = _build_response_apps_radios_category(
                     browse_data=browse_data, cmd=app_cmd, item=item
@@ -328,6 +362,7 @@ async def build_item_response(
                 item_type=item_type,
                 search_type=search_type,
                 internal_request=internal_request,
+                known_apps_radios=browse_data.known_apps_radios,
             )
 
             children.append(child_media)
@@ -394,7 +429,7 @@ async def library_payload(
                 )
             )
 
-    with contextlib.suppress(media_source.BrowseError):
+    with contextlib.suppress(BrowseError):
         browse = await media_source.async_browse_media(
             hass, None, content_filter=media_source_content_filter
         )

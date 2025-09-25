@@ -24,8 +24,7 @@ from .entity import IRobotEntity
 from .models import RoombaData
 
 SUPPORT_IROBOT = (
-    VacuumEntityFeature.BATTERY
-    | VacuumEntityFeature.PAUSE
+    VacuumEntityFeature.PAUSE
     | VacuumEntityFeature.RETURN_HOME
     | VacuumEntityFeature.SEND_COMMAND
     | VacuumEntityFeature.START

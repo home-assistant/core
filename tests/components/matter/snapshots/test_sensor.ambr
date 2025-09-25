@@ -353,14 +353,14 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.NITROGEN_DIOXIDE: 'nitrogen_dioxide'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Nitrogen dioxide',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'nitrogen_dioxide',
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-NitrogenDioxideSensor-1043-0',
     'unit_of_measurement': 'ppm',
   })
@@ -368,7 +368,6 @@
 # name: test_sensors[air_purifier][sensor.air_purifier_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'nitrogen_dioxide',
       'friendly_name': 'Air Purifier Nitrogen dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppm',
@@ -468,7 +467,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-PM1Sensor-1068-0',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[air_purifier][sensor.air_purifier_pm1-state]
@@ -477,7 +476,7 @@
       'device_class': 'pm1',
       'friendly_name': 'Air Purifier PM1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_pm1',
@@ -521,7 +520,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-PM10Sensor-1069-0',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[air_purifier][sensor.air_purifier_pm10-state]
@@ -530,7 +529,7 @@
       'device_class': 'pm10',
       'friendly_name': 'Air Purifier PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_pm10',
@@ -574,7 +573,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-000000000000008F-MatterNodeDevice-2-PM25Sensor-1066-0',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[air_purifier][sensor.air_purifier_pm2_5-state]
@@ -583,7 +582,7 @@
       'device_class': 'pm25',
       'friendly_name': 'Air Purifier PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_pm2_5',
@@ -955,14 +954,14 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.NITROGEN_DIOXIDE: 'nitrogen_dioxide'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Nitrogen dioxide',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'nitrogen_dioxide',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-NitrogenDioxideSensor-1043-0',
     'unit_of_measurement': 'ppm',
   })
@@ -970,7 +969,6 @@
 # name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'nitrogen_dioxide',
       'friendly_name': 'lightfi-aq1-air-quality-sensor Nitrogen dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppm',
@@ -1017,7 +1015,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PM1Sensor-1068-0',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_pm1-state]
@@ -1026,7 +1024,7 @@
       'device_class': 'pm1',
       'friendly_name': 'lightfi-aq1-air-quality-sensor PM1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.lightfi_aq1_air_quality_sensor_pm1',
@@ -1070,7 +1068,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PM10Sensor-1069-0',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_pm10-state]
@@ -1079,7 +1077,7 @@
       'device_class': 'pm10',
       'friendly_name': 'lightfi-aq1-air-quality-sensor PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.lightfi_aq1_air_quality_sensor_pm10',
@@ -1123,7 +1121,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-PM25Sensor-1066-0',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_pm2_5-state]
@@ -1132,7 +1130,7 @@
       'device_class': 'pm25',
       'friendly_name': 'lightfi-aq1-air-quality-sensor PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.lightfi_aq1_air_quality_sensor_pm2_5',
@@ -1249,6 +1247,438 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '189.0',
+  })
+# ---
+# name: test_sensors[aqara_door_window_p2][sensor.aqara_door_and_window_sensor_p2_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqara_door_and_window_sensor_p2_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-000000000000005B-MatterNodeDevice-2-PowerSource-47-12',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[aqara_door_window_p2][sensor.aqara_door_and_window_sensor_p2_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Aqara Door and Window Sensor P2 Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_door_and_window_sensor_p2_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensors[aqara_door_window_p2][sensor.aqara_door_and_window_sensor_p2_battery_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqara_door_and_window_sensor_p2_battery_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery type',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_replacement_description',
+    'unique_id': '00000000000004D2-000000000000005B-MatterNodeDevice-2-PowerSourceBatReplacementDescription-47-19',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_door_window_p2][sensor.aqara_door_and_window_sensor_p2_battery_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara Door and Window Sensor P2 Battery type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_door_and_window_sensor_p2_battery_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'CR123A',
+  })
+# ---
+# name: test_sensors[aqara_door_window_p2][sensor.aqara_door_and_window_sensor_p2_battery_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqara_door_and_window_sensor_p2_battery_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Battery voltage',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_voltage',
+    'unique_id': '00000000000004D2-000000000000005B-MatterNodeDevice-2-PowerSourceBatVoltage-47-11',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[aqara_door_window_p2][sensor.aqara_door_and_window_sensor_p2_battery_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Aqara Door and Window Sensor P2 Battery voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_door_and_window_sensor_p2_battery_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.01',
+  })
+# ---
+# name: test_sensors[aqara_motion_p2][sensor.aqara_motion_and_light_sensor_p2_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqara_motion_and_light_sensor_p2_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-3-PowerSource-47-12',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[aqara_motion_p2][sensor.aqara_motion_and_light_sensor_p2_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Aqara Motion and Light Sensor P2 Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_motion_and_light_sensor_p2_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50',
+  })
+# ---
+# name: test_sensors[aqara_motion_p2][sensor.aqara_motion_and_light_sensor_p2_battery_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqara_motion_and_light_sensor_p2_battery_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery type',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_replacement_description',
+    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-3-PowerSourceBatReplacementDescription-47-19',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[aqara_motion_p2][sensor.aqara_motion_and_light_sensor_p2_battery_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara Motion and Light Sensor P2 Battery type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_motion_and_light_sensor_p2_battery_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'CR2450',
+  })
+# ---
+# name: test_sensors[aqara_motion_p2][sensor.aqara_motion_and_light_sensor_p2_battery_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.aqara_motion_and_light_sensor_p2_battery_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Battery voltage',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_voltage',
+    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-3-PowerSourceBatVoltage-47-11',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[aqara_motion_p2][sensor.aqara_motion_and_light_sensor_p2_battery_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Aqara Motion and Light Sensor P2 Battery voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_motion_and_light_sensor_p2_battery_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.904',
+  })
+# ---
+# name: test_sensors[aqara_motion_p2][sensor.aqara_motion_and_light_sensor_p2_illuminance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aqara_motion_and_light_sensor_p2_illuminance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
+    'original_icon': None,
+    'original_name': 'Illuminance',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-2-LightSensor-1024-0',
+    'unit_of_measurement': 'lx',
+  })
+# ---
+# name: test_sensors[aqara_motion_p2][sensor.aqara_motion_and_light_sensor_p2_illuminance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'illuminance',
+      'friendly_name': 'Aqara Motion and Light Sensor P2 Illuminance',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'lx',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aqara_motion_and_light_sensor_p2_illuminance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '37.0',
+  })
+# ---
+# name: test_sensors[battery_storage][sensor.mock_battery_storage_active_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_battery_storage_active_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Active current',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_current',
+    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-ElectricalPowerMeasurementActiveCurrent-144-5',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensors[battery_storage][sensor.mock_battery_storage_active_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Mock Battery Storage Active current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_battery_storage_active_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[battery_storage][sensor.mock_battery_storage_appliance_energy_state-entry]
@@ -1425,65 +1855,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '48.0',
-  })
-# ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_current-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_battery_storage_current',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Current',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-ElectricalPowerMeasurementActiveCurrent-144-5',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-  })
-# ---
-# name: test_sensors[battery_storage][sensor.mock_battery_storage_current-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Mock Battery Storage Current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_battery_storage_current',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
   })
 # ---
 # name: test_sensors[battery_storage][sensor.mock_battery_storage_energy_optimization_opt_out-entry]
@@ -1763,7 +2134,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'voltage',
     'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-1-ElectricalPowerMeasurementVoltage-144-4',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -2176,7 +2547,7 @@
     'state': '238.800003051758',
   })
 # ---
-# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_current-entry]
+# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_active_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2191,7 +2562,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.eve_energy_plug_patched_current',
+    'entity_id': 'sensor.eve_energy_plug_patched_active_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2209,26 +2580,26 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'Active current',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'active_current',
     'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_current-state]
+# name: test_sensors[eve_energy_plug_patched][sensor.eve_energy_plug_patched_active_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Eve Energy Plug Patched Current',
+      'friendly_name': 'Eve Energy Plug Patched Active current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.eve_energy_plug_patched_current',
+    'entity_id': 'sensor.eve_energy_plug_patched_active_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2391,7 +2762,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'voltage',
     'unique_id': '00000000000004D2-00000000000000B7-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -2904,6 +3275,68 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '16.03',
+  })
+# ---
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_weather_trend-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'sunny',
+        'cloudy',
+        'rainy',
+        'stormy',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.eve_weather_weather_trend',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Weather trend',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'eve_weather_trend',
+    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-1-EveWeatherWeatherTrend-319486977-319422485',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[eve_weather_sensor][sensor.eve_weather_weather_trend-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Eve Weather Weather trend',
+      'options': list([
+        'sunny',
+        'cloudy',
+        'rainy',
+        'stormy',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eve_weather_weather_trend',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'rainy',
   })
 # ---
 # name: test_sensors[extractor_hood][sensor.mock_extractor_hood_activated_carbon_filter_condition-entry]
@@ -4333,7 +4766,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[silabs_dishwasher][sensor.dishwasher_current-entry]
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_effective_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4348,7 +4781,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.dishwasher_current',
+    'entity_id': 'sensor.dishwasher_effective_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4366,30 +4799,89 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'Effective current',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
+    'translation_key': 'rms_current',
+    'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-2-ElectricalPowerMeasurementRMSCurrent-144-12',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[silabs_dishwasher][sensor.dishwasher_current-state]
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_effective_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Dishwasher Current',
+      'friendly_name': 'Dishwasher Effective current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.dishwasher_current',
+    'entity_id': 'sensor.dishwasher_effective_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_effective_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dishwasher_effective_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Effective voltage',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rms_voltage',
+    'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-2-ElectricalPowerMeasurementRMSVoltage-144-11',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[silabs_dishwasher][sensor.dishwasher_effective_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Dishwasher Effective voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dishwasher_effective_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '120.0',
   })
 # ---
 # name: test_sensors[silabs_dishwasher][sensor.dishwasher_energy-entry]
@@ -4572,65 +5064,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
-  })
-# ---
-# name: test_sensors[silabs_dishwasher][sensor.dishwasher_voltage-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.dishwasher_voltage',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Voltage',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-  })
-# ---
-# name: test_sensors[silabs_dishwasher][sensor.dishwasher_voltage-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Dishwasher Voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.dishwasher_voltage',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '120.0',
   })
 # ---
 # name: test_sensors[silabs_evse_charging][sensor.evse_appliance_energy_state-entry]
@@ -5134,65 +5567,6 @@
     'state': '32.0',
   })
 # ---
-# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_current-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.laundrywasher_current',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Current',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-  })
-# ---
-# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_current-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'LaundryWasher Current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.laundrywasher_current',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
 # name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_current_phase-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5251,6 +5625,124 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'pre-soak',
+  })
+# ---
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_effective_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.laundrywasher_effective_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Effective current',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rms_current',
+    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementRMSCurrent-144-12',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_effective_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'LaundryWasher Effective current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laundrywasher_effective_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_effective_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.laundrywasher_effective_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Effective voltage',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rms_voltage',
+    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementRMSVoltage-144-11',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_effective_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'LaundryWasher Effective voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.laundrywasher_effective_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '120.0',
   })
 # ---
 # name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_energy-entry]
@@ -5433,7 +5925,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_voltage-entry]
+# name: test_sensors[silabs_water_heater][sensor.water_heater_active_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5448,7 +5940,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.laundrywasher_voltage',
+    'entity_id': 'sensor.water_heater_active_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5458,38 +5950,38 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 0,
+        'suggested_display_precision': 2,
       }),
       'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Voltage',
+    'original_name': 'Active current',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    'translation_key': 'active_current',
+    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[silabs_laundrywasher][sensor.laundrywasher_voltage-state]
+# name: test_sensors[silabs_water_heater][sensor.water_heater_active_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'LaundryWasher Voltage',
+      'device_class': 'current',
+      'friendly_name': 'Water Heater Active current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.laundrywasher_voltage',
+    'entity_id': 'sensor.water_heater_active_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '120.0',
+    'state': '0.1',
   })
 # ---
 # name: test_sensors[silabs_water_heater][sensor.water_heater_appliance_energy_state-entry]
@@ -5554,65 +6046,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'online',
-  })
-# ---
-# name: test_sensors[silabs_water_heater][sensor.water_heater_current-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.water_heater_current',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Current',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-  })
-# ---
-# name: test_sensors[silabs_water_heater][sensor.water_heater_current-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Water Heater Current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.water_heater_current',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.1',
   })
 # ---
 # name: test_sensors[silabs_water_heater][sensor.water_heater_energy_optimization_opt_out-entry]
@@ -5941,7 +6374,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'voltage',
     'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -6122,7 +6555,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_current-entry]
+# name: test_sensors[solar_power][sensor.solarpower_active_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6137,7 +6570,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.solarpower_current',
+    'entity_id': 'sensor.solarpower_active_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -6155,26 +6588,26 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Current',
+    'original_name': 'Active current',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'active_current',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementActiveCurrent-144-5',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_sensors[solar_power][sensor.solarpower_current-state]
+# name: test_sensors[solar_power][sensor.solarpower_active_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'SolarPower Current',
+      'friendly_name': 'SolarPower Active current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.solarpower_current',
+    'entity_id': 'sensor.solarpower_active_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -6337,7 +6770,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'voltage',
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-ElectricalPowerMeasurementVoltage-144-4',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -6414,6 +6847,62 @@
     'state': '21.0',
   })
 # ---
+# name: test_sensors[thermostat][sensor.longan_link_hvac_outdoor_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.longan_link_hvac_outdoor_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Outdoor temperature',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'outdoor_temperature',
+    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-ThermostatOutdoorTemperature-513-1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[thermostat][sensor.longan_link_hvac_outdoor_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Longan link HVAC Outdoor temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.longan_link_hvac_outdoor_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12.5',
+  })
+# ---
 # name: test_sensors[thermostat][sensor.longan_link_hvac_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6468,6 +6957,55 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '28.3',
+  })
+# ---
+# name: test_sensors[vacuum_cleaner][sensor.mock_vacuum_estimated_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_vacuum_estimated_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Estimated end time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'estimated_end_time',
+    'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-1-ServiceAreaEstimatedEndTime-336-4',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[vacuum_cleaner][sensor.mock_vacuum_estimated_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Vacuum Estimated end time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_vacuum_estimated_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-08-29T21:00:00+00:00',
   })
 # ---
 # name: test_sensors[vacuum_cleaner][sensor.mock_vacuum_operational_state-entry]

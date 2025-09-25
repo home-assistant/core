@@ -22,6 +22,7 @@ from aiohttp_sse import sse_response
 import anyio
 from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
 from mcp import types
+from mcp.shared.message import SessionMessage
 
 from homeassistant.components import conversation
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
@@ -98,12 +99,12 @@ class ModelContextProtocolSSEView(HomeAssistantView):
             server.create_initialization_options  # Reads package for version info
         )
 
-        read_stream: MemoryObjectReceiveStream[types.JSONRPCMessage | Exception]
-        read_stream_writer: MemoryObjectSendStream[types.JSONRPCMessage | Exception]
+        read_stream: MemoryObjectReceiveStream[SessionMessage | Exception]
+        read_stream_writer: MemoryObjectSendStream[SessionMessage | Exception]
         read_stream_writer, read_stream = anyio.create_memory_object_stream(0)
 
-        write_stream: MemoryObjectSendStream[types.JSONRPCMessage]
-        write_stream_reader: MemoryObjectReceiveStream[types.JSONRPCMessage]
+        write_stream: MemoryObjectSendStream[SessionMessage]
+        write_stream_reader: MemoryObjectReceiveStream[SessionMessage]
         write_stream, write_stream_reader = anyio.create_memory_object_stream(0)
 
         async with (
@@ -116,17 +117,20 @@ class ModelContextProtocolSSEView(HomeAssistantView):
 
             async def sse_reader() -> None:
                 """Forward MCP server responses to the client."""
-                async for message in write_stream_reader:
-                    _LOGGER.debug("Sending SSE message: %s", message)
+                async for session_message in write_stream_reader:
+                    _LOGGER.debug("Sending SSE message: %s", session_message)
                     await response.send(
-                        message.model_dump_json(by_alias=True, exclude_none=True),
+                        session_message.message.model_dump_json(
+                            by_alias=True, exclude_none=True
+                        ),
                         event="message",
                     )
 
             async with anyio.create_task_group() as tg:
                 tg.start_soon(sse_reader)
                 await server.run(read_stream, write_stream, options)
-                return response
+
+            return response
 
 
 class ModelContextProtocolMessagesView(HomeAssistantView):
@@ -162,5 +166,5 @@ class ModelContextProtocolMessagesView(HomeAssistantView):
             raise HTTPBadRequest(text="Could not parse message") from err
 
         _LOGGER.debug("Received client message: %s", message)
-        await session.read_stream_writer.send(message)
+        await session.read_stream_writer.send(SessionMessage(message))
         return web.Response(status=200)

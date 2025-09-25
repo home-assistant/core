@@ -37,7 +37,28 @@
       "initiate_flow": {
         "user": "Add conversation agent"
       },
-      "entry_type": "Conversation agent"
+      "entry_type": "Conversation agent",
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      }
+    },
+    "ai_task_data": {
+      "step": {
+        "user": {
+          "data": {
+            "model": "[%key:component::open_router::config_subentries::conversation::step::user::data::model%]"
+          }
+        }
+      },
+      "initiate_flow": {
+        "user": "Add AI task"
+      },
+      "entry_type": "AI task",
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      }
     }
   }
 }

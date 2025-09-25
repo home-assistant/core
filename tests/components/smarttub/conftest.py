@@ -81,6 +81,16 @@ def mock_spa(spa_state):
 
     spa_state.lights = [mock_light_off, mock_light_on]
 
+    mock_cover_sensor = create_autospec(smarttub.SpaSensor, instance=True)
+    mock_cover_sensor.spa = mock_spa
+    mock_cover_sensor.address = "address1"
+    mock_cover_sensor.name = "{cover-sensor-1}"
+    mock_cover_sensor.type = "ibs0x"
+    mock_cover_sensor.subType = "magnet"
+    mock_cover_sensor.magnet = True  # closed
+
+    spa_state.sensors = [mock_cover_sensor]
+
     mock_filter_reminder = create_autospec(smarttub.SpaReminder, instance=True)
     mock_filter_reminder.id = "FILTER01"
     mock_filter_reminder.name = "MyFilter"
@@ -127,6 +137,7 @@ def mock_spa_state():
             "cleanupCycle": "INACTIVE",
             "lights": [],
             "pumps": [],
+            "sensors": [],
         },
     )
 

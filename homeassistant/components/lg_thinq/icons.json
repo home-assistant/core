@@ -45,6 +45,9 @@
       },
       "display_light": {
         "default": "mdi:lightbulb-on-outline"
+      },
+      "air_clean_operation_mode": {
+        "default": "mdi:air-filter"
       }
     },
     "binary_sensor": {
@@ -92,7 +95,7 @@
             "state": {
               "slow": "mdi:fan-chevron-down",
               "low": "mdi:fan-speed-1",
-              "mid": "mdi:fan-speed-2",
+              "medium": "mdi:fan-speed-2",
               "high": "mdi:fan-speed-3",
               "power": "mdi:fan-chevron-up",
               "auto": "mdi:fan-auto"
@@ -437,6 +440,15 @@
       },
       "cycle_count_for_location": {
         "default": "mdi:counter"
+      },
+      "energy_usage_yesterday": {
+        "default": "mdi:chart-bar"
+      },
+      "energy_usage_this_month": {
+        "default": "mdi:chart-bar"
+      },
+      "energy_usage_last_month": {
+        "default": "mdi:chart-bar"
       }
     }
   }
