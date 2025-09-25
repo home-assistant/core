@@ -134,10 +134,38 @@ async def test_unit_of_measurement(
 
     mock_amazon_devices_client.get_devices_data.return_value[
         TEST_DEVICE_1_SN
-    ].sensors = {sensor: AmazonDeviceSensor(name=sensor, value=api_value, scale=scale)}
+    ].sensors = {
+        sensor: AmazonDeviceSensor(
+            name=sensor, value=api_value, error=False, scale=scale
+        )
+    }
 
     await setup_integration(hass, mock_config_entry)
 
     assert (state := hass.states.get(entity_id))
     assert state.state == state_value
     assert state.attributes["unit_of_measurement"] == unit
+
+
+async def test_sensor_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test sensor is unavailable."""
+
+    entity_id = "sensor.echo_test_illuminance"
+
+    mock_amazon_devices_client.get_devices_data.return_value[
+        TEST_DEVICE_1_SN
+    ].sensors = {
+        "illuminance": AmazonDeviceSensor(
+            name="illuminance", value="800", error=True, scale=None
+        )
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
