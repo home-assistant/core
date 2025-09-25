@@ -5,7 +5,13 @@ from __future__ import annotations
 from pyportainer import Portainer
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_TOKEN, CONF_URL, Platform
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_API_TOKEN,
+    CONF_HOST,
+    CONF_URL,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
@@ -38,3 +44,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
 async def async_unload_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
+    """Migrate old entry."""
+
+    if entry.version < 2:
+        data = dict(entry.data)
+        data[CONF_URL] = data.pop(CONF_HOST)
+        data[CONF_API_TOKEN] = data.pop(CONF_API_KEY)
+        hass.config_entries.async_update_entry(entry=entry, data=data, version=2)
+
+    return True
