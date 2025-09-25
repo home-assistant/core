@@ -1089,6 +1089,12 @@
       "config_flow": false,
       "iot_class": "calculated"
     },
+    "compit": {
+      "name": "Compit",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "concord232": {
       "name": "Concord232",
       "integration_type": "hub",
@@ -1156,6 +1162,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "cync": {
+      "name": "Cync",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "dacia": {
       "name": "Dacia",
@@ -1602,6 +1614,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "ekeybionyx": {
+      "name": "ekey bionyx",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "electrasmart": {
       "name": "Electra Smart",
@@ -3112,6 +3130,11 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "irm_kmi": {
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "iron_os": {
       "name": "IronOS",
       "integration_type": "hub",
@@ -4151,7 +4174,7 @@
           "name": "Manual MQTT Alarm Control Panel"
         },
         "mqtt": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "MQTT"
@@ -4288,6 +4311,11 @@
       "name": "Neff",
       "integration_type": "virtual",
       "supported_by": "home_connect"
+    },
+    "neo": {
+      "name": "Neo",
+      "integration_type": "virtual",
+      "supported_by": "shelly"
     },
     "ness_alarm": {
       "name": "Ness Alarm",
@@ -5614,6 +5642,12 @@
           "name": "Roth Touchline SL"
         }
       }
+    },
+    "route_b_smart_meter": {
+      "name": "Smart Meter B Route",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "rova": {
       "name": "ROVA",
@@ -7252,6 +7286,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "victron_remote_monitoring": {
+      "name": "Victron Remote Monitoring",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "vilfo": {
       "name": "Vilfo Router",
       "integration_type": "hub",
@@ -7957,6 +7997,7 @@
     "input_select",
     "input_text",
     "integration",
+    "irm_kmi",
     "islamic_prayer_times",
     "local_calendar",
     "local_ip",
