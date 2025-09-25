@@ -131,7 +131,7 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
         self.entity_description = entity_description
         super().__init__(device_info, coordinator, via_device)
 
-        # Container ID's are empherical, so use the container name for the unique ID
+        # Container ID's are ephemeral, so use the container name for the unique ID
         # The first one, should always be unique, it's fine if users have aliases
         # According to Docker's API docs, the first name is unique
         device_identifier = (
