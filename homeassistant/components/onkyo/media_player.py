@@ -6,7 +6,7 @@ import asyncio
 import logging
 from typing import Any
 
-from aioonkyo import Code, Kind, Status, Zone, command, query, status
+from aioonkyo import Code, Kind, Status, Zone, command, instruction, query, status
 
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
@@ -336,6 +336,12 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             return
 
         message = command.TunerPreset(self._zone, int(media_id))
+        await self._manager.write(message)
+
+    async def async_raw_command(self, rawCommand: str) -> None:
+        """Send a raw eISCP command."""
+
+        message = instruction.Raw(rawCommand.encode(), b"")
         await self._manager.write(message)
 
     def process_update(self, message: status.Known) -> None:

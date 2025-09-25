@@ -29,6 +29,15 @@ ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
 )
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"
 
+ATTR_COMMAND = "command"
+ONKYO_RAW_COMMAND_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_COMMAND): cv.string,
+    }
+)
+SERVICE_RAW_COMMAND = "onkyo_raw_command"
+
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
@@ -51,10 +60,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
         for target in targets:
             if service.service == SERVICE_SELECT_HDMI_OUTPUT:
                 await target.async_select_output(service.data[ATTR_HDMI_OUTPUT])
+            elif service.service == SERVICE_RAW_COMMAND:
+                await target.async_raw_command(service.data[ATTR_COMMAND])
 
     hass.services.async_register(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_HDMI_OUTPUT,
         async_service_handle,
         schema=ONKYO_SELECT_OUTPUT_SCHEMA,
+    )
+
+    hass.services.async_register(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_RAW_COMMAND,
+        async_service_handle,
+        schema=ONKYO_RAW_COMMAND_SCHEMA,
     )
