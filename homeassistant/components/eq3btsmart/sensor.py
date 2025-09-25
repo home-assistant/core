@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.components.sensor.const import SensorStateClass
 from homeassistant.const import PERCENTAGE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import Eq3ConfigEntry
@@ -51,7 +51,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the entry."""
-
     async_add_entities(
         Eq3SensorEntity(entry, entity_description)
         for entity_description in SENSOR_ENTITY_DESCRIPTIONS
@@ -67,12 +66,13 @@ class Eq3SensorEntity(Eq3Entity, SensorEntity):
         self, entry: Eq3ConfigEntry, entity_description: Eq3SensorEntityDescription
     ) -> None:
         """Initialize the entity."""
-
         super().__init__(entry, entity_description.key)
         self.entity_description = entity_description
 
-    @property
-    def native_value(self) -> int | datetime | None:
-        """Return the value reported by the sensor."""
-
-        return self.entity_description.value_func(self._thermostat.status)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_native_value = self.entity_description.value_func(
+            self.coordinator.data
+        )
+        super()._handle_coordinator_update()

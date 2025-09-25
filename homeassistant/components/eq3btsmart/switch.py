@@ -11,7 +11,7 @@ from eq3btsmart.const import EQ3_DEFAULT_AWAY_TEMP, Eq3OperationMode
 from eq3btsmart.models import Status
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 import homeassistant.util.dt as dt_util
 
@@ -27,7 +27,6 @@ from .entity import Eq3Entity
 
 async def async_set_away(thermostat: Thermostat, enable: bool) -> Status:
     """Backport old async_set_away behavior."""
-
     if not enable:
         return await thermostat.async_set_mode(Eq3OperationMode.AUTO)
 
@@ -71,7 +70,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the entry."""
-
     async_add_entities(
         Eq3SwitchEntity(entry, entity_description)
         for entity_description in SWITCH_ENTITY_DESCRIPTIONS
@@ -89,22 +87,19 @@ class Eq3SwitchEntity(Eq3Entity, SwitchEntity):
         entity_description: Eq3SwitchEntityDescription,
     ) -> None:
         """Initialize the entity."""
-
         super().__init__(entry, entity_description.key)
         self.entity_description = entity_description
 
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_is_on = self.entity_description.value_func(self.coordinator.data)
+        super()._handle_coordinator_update()
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-
         await self.entity_description.toggle_func(self._thermostat)(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
-
         await self.entity_description.toggle_func(self._thermostat)(False)
-
-    @property
-    def is_on(self) -> bool:
-        """Return the state of the switch."""
-
-        return self.entity_description.value_func(self._thermostat.status)

@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import Eq3ConfigEntry
@@ -53,7 +53,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the entry."""
-
     async_add_entities(
         Eq3BinarySensorEntity(entry, entity_description)
         for entity_description in BINARY_SENSOR_ENTITY_DESCRIPTIONS
@@ -71,12 +70,11 @@ class Eq3BinarySensorEntity(Eq3Entity, BinarySensorEntity):
         entity_description: Eq3BinarySensorEntityDescription,
     ) -> None:
         """Initialize the entity."""
-
         super().__init__(entry, entity_description.key)
         self.entity_description = entity_description
 
-    @property
-    def is_on(self) -> bool:
-        """Return the state of the binary sensor."""
-
-        return self.entity_description.value_func(self._thermostat.status)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_is_on = self.entity_description.value_func(self.coordinator.data)
+        super()._handle_coordinator_update()
