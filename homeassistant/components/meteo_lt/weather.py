@@ -146,6 +146,8 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast."""
         # Using hourly data to create daily summaries, since daily data is not provided directly
+        if not self.coordinator.data:
+            return None
 
         forecasts_by_date = defaultdict(list)
         for timestamp in self.coordinator.data.forecast_timestamps:
