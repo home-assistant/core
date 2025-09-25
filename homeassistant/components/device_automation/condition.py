@@ -83,7 +83,7 @@ class DeviceCondition(Condition):
 
         This is here just to satisfy the abstract class interface. It is never called.
         """
-        return config
+        raise NotImplementedError
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize condition."""

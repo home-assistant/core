@@ -2208,15 +2208,34 @@ async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:
         hass, "test.condition", Mock(async_get_conditions=async_get_conditions)
     )
 
-    config_1 = {"condition": "test", "option_1": "value_1", "option_2": 2}
-    config_2 = {"condition": "test", "option_1": "value_1"}
-    config_3 = {"condition": "test", "options": {"option_1": "value_1", "option_2": 2}}
-    config_4 = {"condition": "test", "options": {"option_1": "value_1"}}
+    config_1 = {
+        "condition": "test",
+        "option_1": "value_1",
+        "option_2": 2,
+    }
+    config_2 = {
+        "condition": "test",
+        "option_1": "value_1",
+    }
+    config_1_migrated = {
+        "condition": "test",
+        "options": {"option_1": "value_1", "option_2": 2},
+    }
+    config_2_migrated = {
+        "condition": "test",
+        "options": {"option_1": "value_1"},
+    }
 
-    assert await async_validate_condition_config(hass, config_1) == config_3
-    assert await async_validate_condition_config(hass, config_2) == config_4
-    assert await async_validate_condition_config(hass, config_3) == config_3
-    assert await async_validate_condition_config(hass, config_4) == config_4
+    assert await async_validate_condition_config(hass, config_1) == config_1_migrated
+    assert await async_validate_condition_config(hass, config_2) == config_2_migrated
+    assert (
+        await async_validate_condition_config(hass, config_1_migrated)
+        == config_1_migrated
+    )
+    assert (
+        await async_validate_condition_config(hass, config_2_migrated)
+        == config_2_migrated
+    )
 
 
 @pytest.mark.parametrize("enabled_value", [True, "{{ 1 == 1 }}"])
