@@ -157,13 +157,16 @@ class DeviceCategory(StrEnum):
     https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
     """
     CWYSJ = "cwysj"
-    """Pet fountain"""
+    """Pet fountain
+
+    https://developer.tuya.com/en/docs/iot/categorycwysj?id=Kaiuz2dfro0nd
+    """
     CZ = "cz"
     """Socket"""
     DBL = "dbl"
     """Electric fireplace
 
-    https://developer.tuya.com/en/docs/iot/f?id=Kacpeobojffop
+    https://developer.tuya.com/en/docs/iot/electric-fireplace?id=Kaiuz2hz4iyp6
     """
     DC = "dc"
     """String lights
@@ -188,7 +191,10 @@ class DeviceCategory(StrEnum):
     https://developer.tuya.com/en/docs/iot/categorydj?id=Kaiuyzy3eheyy
     """
     DLQ = "dlq"
-    """Circuit breaker"""
+    """Circuit breaker
+
+    https://developer.tuya.com/en/docs/iot/dlq?id=Kb0kidk9enyh8
+    """
     DR = "dr"
     """Electric blanket
 
@@ -212,7 +218,10 @@ class DeviceCategory(StrEnum):
     https://developer.tuya.com/en/docs/iot/ambient-light?id=Kaiuz06amhe6g
     """
     GGQ = "ggq"
-    """Irrigator"""
+    """Irrigator
+
+    https://developer.tuya.com/en/docs/iot/categoryggq?id=Kaiuz1qib7z0k
+    """
     GYD = "gyd"
     """Motion sensor light
 
@@ -307,7 +316,10 @@ class DeviceCategory(StrEnum):
     MS_CATEGORY = "ms_category"
     """Lock accessories"""
     MSP = "msp"
-    """Cat toilet"""
+    """Cat toilet
+
+    https://developer.tuya.com/en/docs/iot/s?id=Kakg3srr4ora7
+    """
     MZJ = "mzj"
     """Sous vide cooker
 
@@ -428,7 +440,10 @@ class DeviceCategory(StrEnum):
     XFJ = "xfj"
     """Ventilation system"""
     XXJ = "xxj"
-    """Diffuser"""
+    """Diffuser
+
+    https://developer.tuya.com/en/docs/iot/categoryxxj?id=Kaiuz1f9mo6bl
+    """
     XY = "xy"
     """Washing machine"""
     YB = "yb"
@@ -456,7 +471,10 @@ class DeviceCategory(StrEnum):
     https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
     """
     ZNDB = "zndb"
-    """Smart electricity meter"""
+    """Smart electricity meter
+
+    https://developer.tuya.com/en/docs/iot/smart-meter?id=Kaiuz4gv6ack7
+    """
     ZNFH = "znfh"
     """Bento box"""
     ZNSB = "znsb"
@@ -465,6 +483,8 @@ class DeviceCategory(StrEnum):
     """Smart pill box"""
 
     # Undocumented
+    AQCZ = "aqcz"
+    """Single Phase power meter (undocumented)"""
     BZYD = "bzyd"
     """White noise machine (undocumented)"""
     CWJWQ = "cwjwq"
@@ -486,6 +506,11 @@ class DeviceCategory(StrEnum):
     """
     FSKG = "fskg"
     """Fan wall switch (undocumented)"""
+    HJJCY = "hjjcy"
+    """Air Quality Monitor
+
+    https://developer.tuya.com/en/docs/iot/hjjcy?id=Kbeoad8y1nnlv
+    """
     HXD = "hxd"
     """Wake Up Light II (undocumented)"""
     JDCLJQR = "jdcljqr"
@@ -502,6 +527,8 @@ class DeviceCategory(StrEnum):
 
     Found as VECINO RGBW as provided by diagnostics
     """
+    QCCDZ = "qccdz"
+    """AC charging (undocumented)"""
     QJDCZ = "qjdcz"
     """ Unknown product with light capabilities
 
@@ -516,6 +543,8 @@ class DeviceCategory(StrEnum):
     """Smart Water Timer (undocumented)"""
     SJZ = "sjz"
     """Electric desk (undocumented)"""
+    SZJCY = "szjcy"
+    """Water tester (undocumented)"""
     SZJQR = "szjqr"
     """Fingerbot (undocumented)"""
     SWTZ = "swtz"
@@ -531,8 +560,19 @@ class DeviceCategory(StrEnum):
 
     https://developer.tuya.com/en/docs/iot/wg?id=Kbcdadk79ejok
     """
+    WKCZ = "wkcz"
+    """Two-way temperature and humidity switch (undocumented)
+
+    "MOES Temperature and Humidity Smart Switch Module MS-103"
+    """
     WKF = "wkf"
     """Thermostatic Radiator Valve (undocumented)"""
+    WNYKQ = "wnykq"
+    """Smart WiFi IR Remote (undocumented)
+
+    eMylo Smart WiFi IR Remote
+    Air Conditioner Mate (Smart IR Socket)
+    """
     WXKG = "wxkg"  # Documented, but not in official list
     """Wireless Switch
 
@@ -545,8 +585,14 @@ class DeviceCategory(StrEnum):
     """
     YWCGQ = "ywcgq"
     """Tank Level Sensor (undocumented)"""
+    ZNNBQ = "znnbq"
+    """VESKA-micro inverter (undocumented)"""
+    ZWJCY = "zwjcy"
+    """Soil sensor - plant monitor (undocumented)"""
+    ZNJXS = "znjxs"
+    """Hejhome whitelabel Fingerbot (undocumented)"""
     ZNRB = "znrb"
-    """Pool HeatPump"""
+    """Pool HeatPump (undocumented)"""
 
 
 class DPCode(StrEnum):

@@ -1184,6 +1184,42 @@ async def test_reauth_attempt_to_change_mac_aborts(
     }
 
 
+@pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
+async def test_reauth_password_changed(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test reauth when password has changed."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053, CONF_PASSWORD: "old_password"},
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    mock_client.connect.side_effect = InvalidAuthAPIError("Invalid password")
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "authenticate"
+    assert result["description_placeholders"] == {
+        "name": "Mock Title",
+    }
+
+    mock_client.connect.side_effect = None
+    mock_client.connect.return_value = None
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=True, name="test", mac_address="11:22:33:44:55:aa"
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_PASSWORD: "new_password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_PASSWORD] == "new_password"
+
+
 @pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
 async def test_reauth_fixed_via_dashboard(
     hass: HomeAssistant,
@@ -1239,7 +1275,7 @@ async def test_reauth_fixed_via_dashboard_add_encryption_remove_password(
 ) -> None:
     """Test reauth fixed automatically via dashboard with password removed."""
     mock_client.device_info.side_effect = (
-        InvalidAuthAPIError,
+        InvalidEncryptionKeyAPIError("Wrong key", "test"),
         DeviceInfo(uses_password=False, name="test", mac_address="11:22:33:44:55:aa"),
     )
 
