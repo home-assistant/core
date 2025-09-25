@@ -51,8 +51,6 @@ def _async_pilot_builder(**kwargs: Any) -> PilotBuilder:
             colortemp=kwargs[ATTR_COLOR_TEMP_KELVIN],
         )
 
-    
-
     return PilotBuilder(brightness=brightness)
 
 
@@ -71,6 +69,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
 
     _attr_name = None
     _fixed_color_mode: ColorMode | None = None
+
     def __init__(self, wiz_data: WizData, name: str) -> None:
         """Initialize an WiZLight."""
         super().__init__(wiz_data, name)
