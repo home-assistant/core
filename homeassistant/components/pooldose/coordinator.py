@@ -22,6 +22,7 @@ class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for PoolDose integration."""
 
     device_info: dict[str, Any]
+    config_entry: PooldoseConfigEntry
 
     def __init__(
         self,
