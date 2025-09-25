@@ -1512,6 +1512,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "dynamic_dns": {
+      "name": "Dynamic DNS",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "eafm": {
       "name": "Environment Agency Flood Gauges",
       "integration_type": "hub",

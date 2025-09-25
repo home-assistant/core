@@ -1,0 +1,10 @@
+{
+  "domain": "dynamic_dns",
+  "name": "Dynamic DNS",
+  "codeowners": ["@tr4nt0r"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/dynamic_dns",
+  "iot_class": "cloud_push",
+  "quality_scale": "bronze",
+  "requirements": ["dynamicdns==0.1.0rc1"]
+}

@@ -159,6 +159,7 @@ FLOWS = {
         "duotecno",
         "dwd_weather_warnings",
         "dynalite",
+        "dynamic_dns",
         "eafm",
         "easyenergy",
         "ecobee",

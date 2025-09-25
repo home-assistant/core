@@ -175,6 +175,7 @@ homeassistant.components.dsmr.*
 homeassistant.components.duckdns.*
 homeassistant.components.dunehd.*
 homeassistant.components.duotecno.*
+homeassistant.components.dynamic_dns.*
 homeassistant.components.easyenergy.*
 homeassistant.components.ecovacs.*
 homeassistant.components.ecowitt.*

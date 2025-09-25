@@ -395,6 +395,8 @@ build.json @home-assistant/supervisor
 /tests/components/dwd_weather_warnings/ @runningman84 @stephan192 @andarotajo
 /homeassistant/components/dynalite/ @ziv1234
 /tests/components/dynalite/ @ziv1234
+/homeassistant/components/dynamic_dns/ @tr4nt0r
+/tests/components/dynamic_dns/ @tr4nt0r
 /homeassistant/components/eafm/ @Jc2k
 /tests/components/eafm/ @Jc2k
 /homeassistant/components/easyenergy/ @klaasnicolaas
