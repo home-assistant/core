@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import aiohttp
 from meteo_lt import MeteoLtAPI, Place
 import voluptuous as vol
 
@@ -92,7 +93,7 @@ class MeteoLtConfigFlow(ConfigFlow, domain=DOMAIN):
             )  # returns meters
             if place_distance is not None:
                 place_distance = place_distance / 1000
-        except Exception as err:  # noqa: BLE001
+        except (aiohttp.ClientError, TimeoutError) as err:
             _LOGGER.error("Error finding nearest place: %s", err)
             return self.async_show_form(
                 step_id="location_from_coordinates",
@@ -148,7 +149,7 @@ class MeteoLtConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await self._api.fetch_places()
                 self._places = self._api.places
-            except Exception as err:  # noqa: BLE001
+            except (aiohttp.ClientError, TimeoutError) as err:
                 _LOGGER.error("Error fetching places: %s", err)
                 errors["base"] = "cannot_connect"
 
