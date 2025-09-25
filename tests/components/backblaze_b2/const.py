@@ -1,6 +1,6 @@
 """Consts for Backblaze tests."""
 
-from homeassistant.components.backblaze.const import CONF_BUCKET, CONF_PREFIX
+from homeassistant.components.backblaze_b2.const import CONF_BUCKET, CONF_PREFIX
 from homeassistant.components.backup import AgentBackup
 
 USER_INPUT = {

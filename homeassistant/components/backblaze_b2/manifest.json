@@ -1,9 +1,9 @@
 {
-  "domain": "backblaze",
+  "domain": "backblaze_b2",
   "name": "Backblaze B2",
   "codeowners": ["@hugo-vrijswijk", "@ElCruncharino"],
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/backblaze",
+  "documentation": "https://www.home-assistant.io/integrations/backblaze_b2",
   "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["b2sdk"],

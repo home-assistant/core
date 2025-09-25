@@ -5,7 +5,7 @@ from typing import Final
 
 from homeassistant.util.hass_dict import HassKey
 
-DOMAIN: Final = "backblaze"
+DOMAIN: Final = "backblaze_b2"
 
 CONF_KEY_ID = "key_id"
 CONF_APPLICATION_KEY = "application_key"

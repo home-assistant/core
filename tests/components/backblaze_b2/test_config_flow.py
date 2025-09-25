@@ -5,7 +5,7 @@ from unittest.mock import patch
 from b2sdk.v2 import exception
 import pytest
 
-from homeassistant.components.backblaze.const import (
+from homeassistant.components.backblaze_b2.const import (
     CONF_APPLICATION_KEY,
     CONF_KEY_ID,
     DOMAIN,
@@ -211,10 +211,14 @@ async def test_config_flow_errors(
     # Check description placeholders for specific errors
     if error_type == "restricted_bucket":
         assert result.get("description_placeholders") == {
-            "restricted_bucket_name": "testBucket"
+            "brand_name": "Backblaze",
+            "restricted_bucket_name": "testBucket",
         }
     elif error_type == "invalid_prefix":
-        assert result.get("description_placeholders") == {"allowed_prefix": "test/"}
+        assert result.get("description_placeholders") == {
+            "brand_name": "Backblaze",
+            "allowed_prefix": "test/",
+        }
 
 
 @pytest.mark.parametrize(

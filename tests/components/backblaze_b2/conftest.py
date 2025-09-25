@@ -11,7 +11,7 @@ from b2sdk._internal.raw_simulator import BucketSimulator
 from b2sdk.v2 import FileVersion, RawSimulator
 import pytest
 
-from homeassistant.components.backblaze.const import (
+from homeassistant.components.backblaze_b2.const import (
     CONF_APPLICATION_KEY,
     CONF_BUCKET,
     CONF_KEY_ID,
@@ -28,7 +28,7 @@ from tests.common import MockConfigEntry
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.backblaze.async_setup_entry", return_value=True
+        "homeassistant.components.backblaze_b2.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
 
@@ -39,7 +39,7 @@ def b2_fixture():
     sim = RawSimulator()
     with (
         patch("b2sdk.v2.B2Api", return_value=sim) as mock_client,
-        patch("homeassistant.components.backblaze.B2Api", return_value=sim),
+        patch("homeassistant.components.backblaze_b2.B2Api", return_value=sim),
     ):
         RawSimulator.get_bucket_by_name = RawSimulator._get_bucket_by_name
 

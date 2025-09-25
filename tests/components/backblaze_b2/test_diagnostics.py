@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.backblaze.diagnostics import (
+from homeassistant.components.backblaze_b2.diagnostics import (
     async_get_config_entry_diagnostics,
 )
 from homeassistant.core import HomeAssistant

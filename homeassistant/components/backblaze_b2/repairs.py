@@ -37,6 +37,7 @@ def create_bucket_access_restricted_issue(
         severity=ir.IssueSeverity.ERROR,
         translation_key=ISSUE_BUCKET_ACCESS_RESTRICTED,
         translation_placeholders={
+            "brand_name": "Backblaze",
             "title": entry.title,
             "bucket_name": bucket_name,
             "entry_id": entry.entry_id,
@@ -57,6 +58,7 @@ def create_bucket_not_found_issue(
         severity=ir.IssueSeverity.ERROR,
         translation_key=ISSUE_BUCKET_NOT_FOUND,
         translation_placeholders={
+            "brand_name": "Backblaze",
             "title": entry.title,
             "bucket_name": bucket_name,
             "entry_id": entry.entry_id,
@@ -85,6 +87,7 @@ async def async_check_for_repair_issues(
             severity=ir.IssueSeverity.ERROR,
             translation_key=ISSUE_BUCKET_ACCESS_RESTRICTED,
             translation_placeholders={
+                "brand_name": "Backblaze",
                 "title": entry.title,
                 "bucket_name": err.bucket_name,
                 "entry_id": entry.entry_id,
@@ -100,6 +103,7 @@ async def async_check_for_repair_issues(
             severity=ir.IssueSeverity.ERROR,
             translation_key=ISSUE_BUCKET_NOT_FOUND,
             translation_placeholders={
+                "brand_name": "Backblaze",
                 "title": entry.title,
                 "bucket_name": entry.data.get("bucket", "unknown"),
                 "entry_id": entry.entry_id,

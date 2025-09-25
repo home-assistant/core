@@ -90,7 +90,7 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA, user_input
             ),
             errors=errors,
-            description_placeholders=placeholders,
+            description_placeholders={"brand_name": "Backblaze", **placeholders},
         )
 
     async def _async_validate_backblaze_connection(
@@ -248,6 +248,7 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={
+                "brand_name": "Backblaze",
                 "bucket": self.reauth_entry.data[CONF_BUCKET],
                 **placeholders,
             },
@@ -289,5 +290,5 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA, user_input or entry.data
             ),
             errors=errors,
-            description_placeholders=placeholders,
+            description_placeholders={"brand_name": "Backblaze", **placeholders},
         )

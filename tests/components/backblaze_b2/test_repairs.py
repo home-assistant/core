@@ -10,7 +10,7 @@ from b2sdk.v2.exception import (
 )
 import pytest
 
-from homeassistant.components.backblaze.repairs import (
+from homeassistant.components.backblaze_b2.repairs import (
     async_check_for_repair_issues,
     async_create_fix_flow,
 )

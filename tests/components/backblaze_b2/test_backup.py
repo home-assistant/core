@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 from b2sdk.v2.exception import B2Error
 import pytest
 
-from homeassistant.components.backblaze.backup import (
+from homeassistant.components.backblaze_b2.backup import (
     BackblazeBackupAgent,
     _parse_metadata,
     async_get_backup_agents,
@@ -17,7 +17,7 @@ from homeassistant.components.backblaze.backup import (
     suggested_filename,
     suggested_filenames,
 )
-from homeassistant.components.backblaze.const import (
+from homeassistant.components.backblaze_b2.const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
     MAX_BACKUP_SIZE,
@@ -431,7 +431,7 @@ class TestErrorHandling:
         with (
             patch.object(agent, "_bucket", mock_bucket),
             patch(
-                "homeassistant.components.backblaze.backup.AsyncIteratorReader"
+                "homeassistant.components.backblaze_b2.backup.AsyncIteratorReader"
             ) as mock_reader_class,
             caplog.at_level(logging.ERROR),
         ):
@@ -462,7 +462,7 @@ class TestErrorHandling:
         with (
             patch.object(agent, "_bucket", mock_bucket),
             patch(
-                "homeassistant.components.backblaze.backup.AsyncIteratorReader"
+                "homeassistant.components.backblaze_b2.backup.AsyncIteratorReader"
             ) as mock_reader_class,
             caplog.at_level(logging.ERROR),
         ):
@@ -609,11 +609,11 @@ class TestMetadataProcessing:
                 return_value=(mock_file, mock_metadata_file),
             ),
             patch(
-                "homeassistant.components.backblaze.backup._parse_metadata",
+                "homeassistant.components.backblaze_b2.backup._parse_metadata",
                 return_value=mock_metadata_content,
             ),
             patch(
-                "homeassistant.components.backblaze.backup._create_backup_from_metadata",
+                "homeassistant.components.backblaze_b2.backup._create_backup_from_metadata",
                 return_value=test_backup,
             ),
         ):
@@ -664,7 +664,7 @@ class TestWebSocketAPI:
 
         elif scenario == "get_backup_not_found":
             with patch(
-                "homeassistant.components.backblaze.backup.BackblazeBackupAgent._find_file_and_metadata_version_by_id",
+                "homeassistant.components.backblaze_b2.backup.BackblazeBackupAgent._find_file_and_metadata_version_by_id",
                 return_value=(None, None),
             ):
                 await client.send_json_auto_id(
@@ -774,11 +774,11 @@ class TestEdgeCases:
                 return_value=(mock_file, mock_metadata_file),
             ),
             patch(
-                "homeassistant.components.backblaze.backup._parse_metadata",
+                "homeassistant.components.backblaze_b2.backup._parse_metadata",
                 return_value=mock_metadata_content,
             ),
             patch(
-                "homeassistant.components.backblaze.backup._create_backup_from_metadata",
+                "homeassistant.components.backblaze_b2.backup._create_backup_from_metadata",
                 return_value=test_backup,
             ),
         ):
