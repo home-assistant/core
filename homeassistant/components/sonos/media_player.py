@@ -660,6 +660,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         enqueue: MediaPlayerEnqueue,
         title: str,
     ) -> None:
+        """Play a sharelink."""
         share_link = self.coordinator.share_link
         kwargs = {}
         if title:
