@@ -813,9 +813,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                 _LOGGER.debug("Synthetic ID %s not found in cache", media_image_id)
                 return (None, None)
         else:
-            image_url = self._player.generate_image_url_from_track_id(
-                media_image_id
-            )
+            image_url = self._player.generate_image_url_from_track_id(media_image_id)
 
         result = await self._async_fetch_image(image_url)
         if result == (None, None):

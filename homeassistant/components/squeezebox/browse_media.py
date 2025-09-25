@@ -262,10 +262,8 @@ def _get_item_thumbnail(
     if track_id:
         if internal_request:
             return player.generate_image_url_from_track_id(track_id)
-        elif item_type is not None:
-            return entity.get_browse_image_url(
-                item_type, item["id"], track_id
-            )
+        if item_type is not None:
+            return entity.get_browse_image_url(item_type, item["id"], track_id)
 
     url = None
     content_type = item_type or "unknown"
@@ -277,11 +275,9 @@ def _get_item_thumbnail(
 
     if internal_request:
         return url
-    else:
-        synthetic_id = entity.get_synthetic_id_and_cache_url(url)
-        return entity.get_browse_image_url(
-            content_type, "synthetic", synthetic_id
-        )
+
+    synthetic_id = entity.get_synthetic_id_and_cache_url(url)
+    return entity.get_browse_image_url(content_type, "synthetic", synthetic_id)
 
 
 async def build_item_response(
