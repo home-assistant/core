@@ -219,14 +219,16 @@ class EsphomeAssistSatellite(
                 config_rel_path = config_path.relative_to(self._wake_words_dir)
                 base_url = get_url(self.hass)
 
-                wake_words[wake_word_id] = VoiceAssistantExternalWakeWord(
-                    id=wake_word_id,
-                    wake_word=wake_word,
-                    trained_languages=config_dict.get("trained_languages", []),
-                    model_type=model_type,
-                    model_size=model_size,
-                    model_hash=model_hash,
-                    url=f"{base_url}/api/esphome/wake_words/{config_rel_path}",
+                wake_words[wake_word_id] = VoiceAssistantExternalWakeWord.from_dict(
+                    {
+                        "id": wake_word_id,
+                        "wake_word": wake_word,
+                        "trained_languages": config_dict.get("trained_languages", []),
+                        "model_type": model_type,
+                        "model_size": model_size,
+                        "model_hash": model_hash,
+                        "url": f"{base_url}/api/esphome/wake_words/{config_rel_path}",
+                    }
                 )
 
         return wake_words
