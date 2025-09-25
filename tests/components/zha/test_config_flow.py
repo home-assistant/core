@@ -2323,34 +2323,28 @@ async def test_config_flow_serial_resolution_oserror(
 ) -> None:
     """Test that OSError during serial port resolution is handled."""
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": "manual_pick_radio_type"},
-        data={CONF_RADIO_TYPE: RadioType.ezsp.description},
+    discovery_info = UsbServiceInfo(
+        device="/dev/ttyZIGBEE",
+        pid="AAAA",
+        vid="AAAA",
+        serial_number="1234",
+        description="zigbee radio",
+        manufacturer="test",
     )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"},
-    )
-
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "choose_setup_strategy"
 
     with (
         patch(
-            "homeassistant.components.usb.get_serial_by_id",
+            "homeassistant.components.zha.config_flow.usb.get_serial_by_id",
             side_effect=OSError("Test error"),
         ),
     ):
-        setup_result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"next_step_id": config_flow.SETUP_STRATEGY_RECOMMENDED},
+        result_init = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
         )
 
-    assert setup_result["type"] is FlowResultType.ABORT
-    assert setup_result["reason"] == "cannot_resolve_path"
-    assert setup_result["description_placeholders"] == {"path": "/dev/ttyUSB33"}
+    assert result_init["type"] is FlowResultType.ABORT
+    assert result_init["reason"] == "cannot_resolve_path"
+    assert result_init["description_placeholders"] == {"path": "/dev/ttyZIGBEE"}
 
 
 @patch("homeassistant.components.zha.radio_manager._allow_overwrite_ezsp_ieee")
