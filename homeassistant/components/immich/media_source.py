@@ -9,9 +9,8 @@ from aioimmich.assets.models import ImmichAsset
 from aioimmich.exceptions import ImmichError
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.media_player import MediaClass
+from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source import (
-    BrowseError,
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
