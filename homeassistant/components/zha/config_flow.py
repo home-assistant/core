@@ -703,6 +703,19 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             DOMAIN, include_ignore=False
         )
 
+        if self._radio_mgr.device_path is not None:
+            # Ensure the radio manager device path is unique and will match ZHA's
+            self._radio_mgr.device_path = await self.hass.async_add_executor_job(
+                usb.get_serial_by_id, self._radio_mgr.device_path
+            )
+
+            for entry in zha_config_entries:
+                if (
+                    entry.data.get(CONF_DEVICE, {}).get(CONF_DEVICE_PATH)
+                    == self._radio_mgr.device_path
+                ):
+                    return self.async_abort(reason="single_instance_allowed")
+
         # Without confirmation, discovery can automatically progress into parts of the
         # config flow logic that interacts with hardware.
         if user_input is not None or (

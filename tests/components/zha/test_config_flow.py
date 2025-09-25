@@ -857,6 +857,40 @@ async def test_discovery_via_usb_zha_ignored_updates(hass: HomeAssistant) -> Non
     }
 
 
+async def test_discovery_via_usb_same_device_already_setup(hass: HomeAssistant) -> None:
+    """Test discovery aborting if ZHA is already setup."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_DEVICE: {CONF_DEVICE_PATH: "/dev/serial/by-id/usb-device123"}},
+    ).add_to_hass(hass)
+
+    # Discovery info with the same device but different path format
+    discovery_info = UsbServiceInfo(
+        device="/dev/ttyUSB0",
+        pid="AAAA",
+        vid="AAAA",
+        serial_number="1234",
+        description="zigbee radio",
+        manufacturer="test",
+    )
+
+    with patch(
+        "homeassistant.components.zha.config_flow.usb.get_serial_by_id",
+        return_value="/dev/serial/by-id/usb-device123",
+    ) as mock_get_serial_by_id:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
+        )
+        await hass.async_block_till_done()
+
+    # Verify get_serial_by_id was called to normalize the path
+    assert mock_get_serial_by_id.mock_calls == [call("/dev/ttyUSB0")]
+
+    # Should abort since it's the same device
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
 async def test_legacy_zeroconf_discovery_already_setup(hass: HomeAssistant) -> None:
