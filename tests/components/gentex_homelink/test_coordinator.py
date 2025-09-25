@@ -1,11 +1,11 @@
 """Tests for the homelink coordinator."""
 
 import asyncio
-import json
-import logging
 import time
 from unittest.mock import patch
 
+from homelink.model.button import Button
+from homelink.model.device import Device
 import pytest
 
 from homeassistant.components.gentex_homelink import async_setup_entry
@@ -18,8 +18,14 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
-_LOGGER = logging.getLogger(__name__)
 DOMAIN = "gentex_homelink"
+
+deviceInst = Device(id="TestDevice", name="TestDevice")
+deviceInst.buttons = [
+    Button(id="Button 1", name="Button 1", device=deviceInst),
+    Button(id="Button 2", name="Button 2", device=deviceInst),
+    Button(id="Button 3", name="Button 3", device=deviceInst),
+]
 
 
 async def test_get_state_updates(
@@ -32,7 +38,11 @@ async def test_get_state_updates(
 
     Tests that get_state calls are called by home assistant, and the homeassistant components respond appropriately to the data returned.
     """
-    with patch("homeassistant.components.gentex_homelink.MQTTProvider", autospec=True):
+    with patch(
+        "homeassistant.components.gentex_homelink.MQTTProvider", autospec=True
+    ) as MockProvider:
+        instance = MockProvider.return_value
+        instance.discover.return_value = [deviceInst]
         config_entry = MockConfigEntry(
             domain=DOMAIN,
             unique_id=None,
@@ -49,9 +59,12 @@ async def test_get_state_updates(
 
         provider = config_entry.runtime_data.provider
         state_data = {
-            "Button 1": {"requestId": "id", "timestamp": time.time()},
-            "Button 2": {"requestId": "id", "timestamp": time.time()},
-            "Button 3": {"requestId": "id", "timestamp": time.time()},
+            "type": "state",
+            "data": {
+                "Button 1": {"requestId": "rid1", "timestamp": time.time()},
+                "Button 2": {"requestId": "rid2", "timestamp": time.time()},
+                "Button 3": {"requestId": "rid3", "timestamp": time.time()},
+            },
         }
 
         # Assert configuration worked without errors
@@ -60,19 +73,23 @@ async def test_get_state_updates(
         # Test successful setup and first data fetch. The buttons should be unknown at the start
         await hass.async_block_till_done(wait_background_tasks=True)
         states = hass.states.async_all()
-
-        assert (state != STATE_UNAVAILABLE for state in states)
+        assert states, "No states were loaded"
+        assert all(state != STATE_UNAVAILABLE for state in states), (
+            "At least one state was not initialized as STATE_UNAVAILABLE"
+        )
         buttons_unknown = [s.state == "unknown" for s in states]
-        assert all(buttons_unknown)
+        assert all(buttons_unknown), (
+            "At least one button state was not initialized to unknown"
+        )
 
-        provider._on_message(None, None, json.dumps(state_data))
+        provider.listen.mock_calls[0].args[0](None, state_data)
 
         await hass.async_block_till_done(wait_background_tasks=True)
         await asyncio.gather(*asyncio.all_tasks() - {asyncio.current_task()})
         await asyncio.sleep(0.01)
         states = hass.states.async_all()
 
-        assert (state != STATE_UNAVAILABLE for state in states), (
+        assert all(state != STATE_UNAVAILABLE for state in states), (
             "Some button became unavailable"
         )
         buttons_pressed = [s.attributes["event_type"] == EVENT_PRESSED for s in states]
