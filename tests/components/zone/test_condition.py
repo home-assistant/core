@@ -12,8 +12,7 @@ async def test_zone_raises(hass: HomeAssistant) -> None:
     """Test that zone raises ConditionError on errors."""
     config = {
         "condition": "zone",
-        "entity_id": "device_tracker.cat",
-        "zone": "zone.home",
+        "options": {"entity_id": "device_tracker.cat", "zone": "zone.home"},
     }
     config = cv.CONDITION_SCHEMA(config)
     config = await condition.async_validate_condition_config(hass, config)
@@ -66,8 +65,10 @@ async def test_zone_raises(hass: HomeAssistant) -> None:
 
     config = {
         "condition": "zone",
-        "entity_id": ["device_tracker.cat", "device_tracker.dog"],
-        "zone": ["zone.home", "zone.work"],
+        "options": {
+            "entity_id": ["device_tracker.cat", "device_tracker.dog"],
+            "zone": ["zone.home", "zone.work"],
+        },
     }
     config = cv.CONDITION_SCHEMA(config)
     config = await condition.async_validate_condition_config(hass, config)
@@ -102,8 +103,10 @@ async def test_zone_multiple_entities(hass: HomeAssistant) -> None:
             {
                 "alias": "Zone Condition",
                 "condition": "zone",
-                "entity_id": ["device_tracker.person_1", "device_tracker.person_2"],
-                "zone": "zone.home",
+                "options": {
+                    "entity_id": ["device_tracker.person_1", "device_tracker.person_2"],
+                    "zone": "zone.home",
+                },
             },
         ],
     }
@@ -161,8 +164,10 @@ async def test_multiple_zones(hass: HomeAssistant) -> None:
         "conditions": [
             {
                 "condition": "zone",
-                "entity_id": "device_tracker.person",
-                "zone": ["zone.home", "zone.work"],
+                "options": {
+                    "entity_id": "device_tracker.person",
+                    "zone": ["zone.home", "zone.work"],
+                },
             },
         ],
     }
