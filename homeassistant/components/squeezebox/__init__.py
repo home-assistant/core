@@ -65,15 +65,7 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 
-
-@dataclass
-class SqueezeboxHassData:
-    """Init Data Class for hass.data."""
-
-    discovery_task: asyncio.Task
-
-
-SQUEEZEBOX_HASS_DATA: HassKey[SqueezeboxHassData] = HassKey(DOMAIN)
+SQUEEZEBOX_HASS_DATA: HassKey[asyncio.Task] = HassKey(DOMAIN)
 
 
 @dataclass
@@ -251,7 +243,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) 
     current_entries = hass.config_entries.async_entries(DOMAIN)
     if len(current_entries) == 1 and current_entries[0] == entry:
         _LOGGER.debug("Stopping server discovery task")
-        hass.data[SQUEEZEBOX_HASS_DATA].discovery_task.cancel()
+        hass.data[SQUEEZEBOX_HASS_DATA].cancel()
         hass.data.pop(SQUEEZEBOX_HASS_DATA)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

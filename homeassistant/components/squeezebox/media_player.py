@@ -44,7 +44,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.start import async_at_start
 from homeassistant.util.dt import utcnow
 
-from . import SQUEEZEBOX_HASS_DATA, SqueezeboxHassData
+from . import SQUEEZEBOX_HASS_DATA
 from .browse_media import (
     BrowseData,
     build_item_response,
@@ -112,11 +112,8 @@ async def start_server_discovery(hass: HomeAssistant) -> None:
 
     if not hass.data.get(SQUEEZEBOX_HASS_DATA):
         _LOGGER.debug("Adding server discovery task for squeezebox")
-        hass.data[SQUEEZEBOX_HASS_DATA] = SqueezeboxHassData(
-            discovery_task=hass.async_create_background_task(
-                async_discover(_discovered_server),
-                name="squeezebox server discovery",
-            ),
+        hass.data[SQUEEZEBOX_HASS_DATA] = hass.async_create_background_task(
+            async_discover(_discovered_server), name="squeezebox server discovery"
         )
 
 
