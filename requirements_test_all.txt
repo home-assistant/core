@@ -357,7 +357,7 @@ aioridwell==2025.09.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.8.1
+aiorussound==4.8.2
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
