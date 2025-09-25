@@ -1145,7 +1145,7 @@ habiticalib==0.4.5
 habluetooth==5.6.4
 
 # homeassistant.components.cloud
-hass-nabucasa==1.1.1
+hass-nabucasa==1.1.2
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1186,7 +1186,7 @@ hole==0.9.0
 holidays==0.81
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250924.0
+home-assistant-frontend==20250925.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.9.24
@@ -1364,7 +1364,7 @@ libpyfoscamcgi==0.0.7
 libpyvivotek==0.4.0
 
 # homeassistant.components.libre_hardware_monitor
-librehardwaremonitor-api==1.3.1
+librehardwaremonitor-api==1.4.0
 
 # homeassistant.components.mikrotik
 librouteros==3.2.0
