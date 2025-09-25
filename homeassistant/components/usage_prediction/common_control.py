@@ -173,10 +173,13 @@ async def async_predict_common_control(
             if entity_id not in allowed_entities or entity_id in hidden_entities:
                 continue
 
-            if entity_id not in period_results:
-                if (entry := ent_reg.async_get(entity_id)) and entry.hidden:
-                    hidden_entities.add(entity_id)
-                    continue
+            if (
+                entity_id not in period_results
+                and (entry := ent_reg.async_get(entity_id))
+                and entry.hidden
+            ):
+                hidden_entities.add(entity_id)
+                continue
 
             period_results[entity_id] += 1
 
