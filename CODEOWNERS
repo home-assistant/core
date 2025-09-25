@@ -316,6 +316,8 @@ build.json @home-assistant/supervisor
 /tests/components/crownstone/ @Crownstone @RicArch97
 /homeassistant/components/cups/ @fabaff
 /tests/components/cups/ @fabaff
+/homeassistant/components/cync/ @Kinachi249
+/tests/components/cync/ @Kinachi249
 /homeassistant/components/daikin/ @fredrike
 /tests/components/daikin/ @fredrike
 /homeassistant/components/date/ @home-assistant/core
@@ -410,6 +412,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/egardia/ @jeroenterheerdt
 /homeassistant/components/eheimdigital/ @autinerd
 /tests/components/eheimdigital/ @autinerd
+/homeassistant/components/ekeybionyx/ @richardpolzer
+/tests/components/ekeybionyx/ @richardpolzer
 /homeassistant/components/electrasmart/ @jafar-atili
 /tests/components/electrasmart/ @jafar-atili
 /homeassistant/components/electric_kiwi/ @mikey0000
@@ -972,8 +976,6 @@ build.json @home-assistant/supervisor
 /tests/components/moat/ @bdraco
 /homeassistant/components/mobile_app/ @home-assistant/core
 /tests/components/mobile_app/ @home-assistant/core
-/homeassistant/components/modbus/ @janiversen
-/tests/components/modbus/ @janiversen
 /homeassistant/components/modem_callerid/ @tkdrob
 /tests/components/modem_callerid/ @tkdrob
 /homeassistant/components/modern_forms/ @wonderslug
@@ -1332,6 +1334,8 @@ build.json @home-assistant/supervisor
 /tests/components/roomba/ @pschmitt @cyr-ius @shenxn @Orhideous
 /homeassistant/components/roon/ @pavoni
 /tests/components/roon/ @pavoni
+/homeassistant/components/route_b_smart_meter/ @SeraphicRav
+/tests/components/route_b_smart_meter/ @SeraphicRav
 /homeassistant/components/rpi_power/ @shenxn @swetoast
 /tests/components/rpi_power/ @shenxn @swetoast
 /homeassistant/components/rss_feed_template/ @home-assistant/core

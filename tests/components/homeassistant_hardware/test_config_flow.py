@@ -26,7 +26,13 @@ from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_USER,
+    ConfigEntry,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
@@ -705,7 +711,7 @@ async def test_config_flow_thread(
         await hass.async_block_till_done(wait_background_tasks=True)
 
         # Progress the flow, it is now installing firmware
-        confirm_otbr_result = await consume_progress_flow(
+        create_result = await consume_progress_flow(
             hass,
             flow_id=pick_result["flow_id"],
             valid_step_ids=(
@@ -717,9 +723,6 @@ async def test_config_flow_thread(
         )
 
         # Installation will conclude with the config entry being created
-        create_result = await hass.config_entries.flow.async_configure(
-            confirm_otbr_result["flow_id"], user_input={}
-        )
         assert create_result["type"] is FlowResultType.CREATE_ENTRY
 
         config_entry = create_result["result"]
@@ -766,7 +769,7 @@ async def test_config_flow_thread_addon_already_installed(
         )
 
         # Progress
-        confirm_otbr_result = await consume_progress_flow(
+        create_result = await consume_progress_flow(
             hass,
             flow_id=pick_result["flow_id"],
             valid_step_ids=(
@@ -776,35 +779,26 @@ async def test_config_flow_thread_addon_already_installed(
             ),
         )
 
-        # We're now waiting to confirm OTBR
-        assert confirm_otbr_result["type"] is FlowResultType.FORM
-        assert confirm_otbr_result["step_id"] == "confirm_otbr"
-
-        # The addon has been installed
-        assert set_addon_options.call_args == call(
-            "core_openthread_border_router",
-            AddonsOptions(
-                config={
-                    "device": "/dev/SomeDevice123",
-                    "baudrate": 460800,
-                    "flow_control": True,
-                    "autoflash_firmware": False,
-                },
-            ),
-        )
-        assert start_addon.call_count == 1
-        assert start_addon.call_args == call("core_openthread_border_router")
-
-        # Finally, create the config entry
-        create_result = await hass.config_entries.flow.async_configure(
-            confirm_otbr_result["flow_id"], user_input={}
-        )
-        assert create_result["type"] is FlowResultType.CREATE_ENTRY
-        assert create_result["result"].data == {
-            "firmware": "spinel",
-            "device": TEST_DEVICE,
-            "hardware": TEST_HARDWARE_NAME,
-        }
+    # The add-on has been installed
+    assert set_addon_options.call_args == call(
+        "core_openthread_border_router",
+        AddonsOptions(
+            config={
+                "device": "/dev/SomeDevice123",
+                "baudrate": 460800,
+                "flow_control": True,
+                "autoflash_firmware": False,
+            },
+        ),
+    )
+    assert start_addon.call_count == 1
+    assert start_addon.call_args == call("core_openthread_border_router")
+    assert create_result["type"] is FlowResultType.CREATE_ENTRY
+    assert create_result["result"].data == {
+        "firmware": "spinel",
+        "device": TEST_DEVICE,
+        "hardware": TEST_HARDWARE_NAME,
+    }
 
 
 @pytest.mark.usefixtures("addon_not_installed")
@@ -856,7 +850,7 @@ async def test_options_flow_zigbee_to_thread(
 
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "install_otbr_addon"
-        assert result["progress_action"] == "install_addon"
+        assert result["progress_action"] == "install_otbr_addon"
 
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -870,33 +864,26 @@ async def test_options_flow_zigbee_to_thread(
 
         result = await hass.config_entries.options.async_configure(result["flow_id"])
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "confirm_otbr"
-        assert install_addon.call_count == 1
-        assert install_addon.call_args == call("core_openthread_border_router")
-        assert set_addon_options.call_count == 1
-        assert set_addon_options.call_args == call(
-            "core_openthread_border_router",
-            AddonsOptions(
-                config={
-                    "device": "/dev/SomeDevice123",
-                    "baudrate": 460800,
-                    "flow_control": True,
-                    "autoflash_firmware": False,
-                },
-            ),
-        )
-        assert start_addon.call_count == 1
-        assert start_addon.call_args == call("core_openthread_border_router")
+    assert install_addon.call_count == 1
+    assert install_addon.call_args == call("core_openthread_border_router")
+    assert set_addon_options.call_count == 1
+    assert set_addon_options.call_args == call(
+        "core_openthread_border_router",
+        AddonsOptions(
+            config={
+                "device": "/dev/SomeDevice123",
+                "baudrate": 460800,
+                "flow_control": True,
+                "autoflash_firmware": False,
+            },
+        ),
+    )
+    assert start_addon.call_count == 1
+    assert start_addon.call_args == call("core_openthread_border_router")
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-        # We are now done
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={}
-        )
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-
-        # The firmware type has been updated
-        assert config_entry.data["firmware"] == "spinel"
+    # The firmware type has been updated
+    assert config_entry.data["firmware"] == "spinel"
 
 
 @pytest.mark.usefixtures("addon_store_info")
@@ -1119,3 +1106,59 @@ async def test_config_flow_thread_migrate_handler(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["progress_action"] == "install_firmware"
         assert result["step_id"] == "install_thread_firmware"
+
+
+@pytest.mark.parametrize(
+    ("zha_source", "otbr_source", "expected_menu"),
+    [
+        (
+            SOURCE_USER,
+            SOURCE_USER,
+            ["pick_firmware_zigbee_migrate", "pick_firmware_thread_migrate"],
+        ),
+        (
+            SOURCE_IGNORE,
+            SOURCE_USER,
+            ["pick_firmware_zigbee", "pick_firmware_thread_migrate"],
+        ),
+        (
+            SOURCE_USER,
+            SOURCE_IGNORE,
+            ["pick_firmware_zigbee_migrate", "pick_firmware_thread"],
+        ),
+        (
+            SOURCE_IGNORE,
+            SOURCE_IGNORE,
+            ["pick_firmware_zigbee", "pick_firmware_thread"],
+        ),
+    ],
+)
+async def test_config_flow_pick_firmware_with_ignored_entries(
+    hass: HomeAssistant, zha_source: str, otbr_source: str, expected_menu: str
+) -> None:
+    """Test that ignored entries are properly excluded from migration menu options."""
+    zha_entry = MockConfigEntry(
+        domain="zha",
+        data={"device": {"path": "/dev/ttyUSB1"}},
+        title="ZHA",
+        source=zha_source,
+    )
+    zha_entry.add_to_hass(hass)
+
+    otbr_entry = MockConfigEntry(
+        domain="otbr",
+        data={"url": "http://192.168.1.100:8081"},
+        title="OTBR",
+        source=otbr_source,
+    )
+    otbr_entry.add_to_hass(hass)
+
+    # Set up the flow
+    init_result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": "hardware"}
+    )
+
+    assert init_result["type"] is FlowResultType.MENU
+    assert init_result["step_id"] == "pick_firmware"
+
+    assert init_result["menu_options"] == expected_menu
