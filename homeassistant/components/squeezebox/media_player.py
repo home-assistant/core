@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime
-import hashlib
 import json
 import logging
 from typing import TYPE_CHECKING, Any, cast
@@ -45,6 +44,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.start import async_at_start
 from homeassistant.util.dt import utcnow
+from homeassistant.util.ulid import ulid_now
 
 from .browse_media import (
     BrowseData,
@@ -95,8 +95,6 @@ SQUEEZEBOX_MODE = {
     "play": MediaPlayerState.PLAYING,
     "stop": MediaPlayerState.IDLE,
 }
-
-SYNTHETIC_ID_PREFIX = "synthetic_"
 
 
 async def start_server_discovery(hass: HomeAssistant) -> None:
@@ -754,8 +752,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
         This enables us to proxy thumbnails for apps and favorites, as those do not have IDs.
         """
-        url_hash = hashlib.md5(url.encode()).hexdigest()
-        synthetic_id = f"{SYNTHETIC_ID_PREFIX}{url_hash}"
+        synthetic_id = f"s_{ulid_now()}"
 
         self._synthetic_media_browser_thumbnail_items[synthetic_id] = url
 
@@ -804,23 +801,23 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         media_image_id: str | None = None,
     ) -> tuple[bytes | None, str | None]:
         """Get album art from Squeezebox server."""
-        if media_image_id:
-            if media_image_id.startswith(SYNTHETIC_ID_PREFIX):
-                image_url = self._synthetic_media_browser_thumbnail_items.get(
-                    media_image_id
-                )
+        if not media_image_id:
+            return (None, None)
 
-                if image_url is None:
-                    _LOGGER.debug("Synthetic ID %s not found in cache", media_image_id)
-                    return (None, None)
-            else:
-                image_url = self._player.generate_image_url_from_track_id(
-                    media_image_id
-                )
+        if media_content_id == "synthetic":
+            image_url = self._synthetic_media_browser_thumbnail_items.get(
+                media_image_id
+            )
 
-            result = await self._async_fetch_image(image_url)
-            if result == (None, None):
-                _LOGGER.debug("Error retrieving proxied album art from %s", image_url)
-            return result
+            if image_url is None:
+                _LOGGER.debug("Synthetic ID %s not found in cache", media_image_id)
+                return (None, None)
+        else:
+            image_url = self._player.generate_image_url_from_track_id(
+                media_image_id
+            )
 
-        return (None, None)
+        result = await self._async_fetch_image(image_url)
+        if result == (None, None):
+            _LOGGER.debug("Error retrieving proxied album art from %s", image_url)
+        return result
