@@ -204,9 +204,7 @@ class LevelLockEntity(LockEntity):
         )
 
     async def async_lock(self, **kwargs: Any) -> None:  # type: ignore[override]
-        await self._client.async_lock(self._lock_id)
-        await self._coordinator.async_request_refresh()
+        await self._coordinator.async_send_command(self._lock_id, "lock")
 
     async def async_unlock(self, **kwargs: Any) -> None:  # type: ignore[override]
-        await self._client.async_unlock(self._lock_id)
-        await self._coordinator.async_request_refresh()
+        await self._coordinator.async_send_command(self._lock_id, "unlock")

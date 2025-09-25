@@ -16,6 +16,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import LevelApiClient, LevelLocksCoordinator
+from .ws import LevelWebsocketManager
 
 # For your initial PR, limit it to 1 platform.
 _PLATFORMS: list[Platform] = [Platform.LOCK]
@@ -59,10 +60,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: New_NameConfigEntry) -> 
     # First refresh: if it fails due to network/auth, raise ConfigEntryNotReady here
     await coordinator.async_config_entry_first_refresh()
 
+    # Set up websocket push manager
+    async def _on_state(
+        lock_id: str, is_locked: bool | None, payload: dict | None
+    ) -> None:
+        await coordinator.async_handle_push_update(lock_id, is_locked, payload)
+
+    ws_manager = LevelWebsocketManager(hass, auth, base_url, _on_state)
+    coordinator.attach_ws_manager(ws_manager)
+    await coordinator.async_start_push()
+
     # Store coordinator for platforms
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "coordinator": coordinator,
         "client": client,
+        "ws_manager": ws_manager,
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
@@ -74,6 +86,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: New_NameConfigEntry) -> 
 async def async_unload_entry(hass: HomeAssistant, entry: New_NameConfigEntry) -> bool:
     """Unload a config entry."""
     unloaded = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
-    if unloaded and DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
-        hass.data[DOMAIN].pop(entry.entry_id, None)
+    if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
+        data = hass.data[DOMAIN].pop(entry.entry_id, {})
+        ws_manager: LevelWebsocketManager | None = data.get("ws_manager")
+        if ws_manager is not None:
+            await ws_manager.async_stop()
     return unloaded

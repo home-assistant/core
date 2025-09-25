@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -21,9 +20,10 @@ from .const import (
     API_LOCK_STATUS_PATH,
     API_LOCKS_LIST_PATH,
 )
+from .ws import LevelWebsocketManager
 
 LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = None  # Use push updates; no periodic polling
 
 
 @dataclass(slots=True)
@@ -121,6 +121,7 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
             config_entry=config_entry,
         )
         self._client = client
+        self._ws_manager: LevelWebsocketManager | None = None
 
     async def _async_update_data(self) -> dict[str, LevelLockDevice]:
         devices = await self._client.async_list_locks()
@@ -132,3 +133,53 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
                     device.lock_id
                 )
         return result
+
+    def attach_ws_manager(self, ws_manager: LevelWebsocketManager) -> None:
+        """Attach a WebSocket manager and start listening for push updates."""
+        self._ws_manager = ws_manager
+
+    async def async_start_push(self) -> None:
+        """Start push connections for current locks."""
+        if self._ws_manager is None:
+            return
+        if not self.data:
+            return
+        await self._ws_manager.async_start(list(self.data.keys()))
+
+    async def async_stop_push(self) -> None:
+        """Stop push connections."""
+        if self._ws_manager is not None:
+            await self._ws_manager.async_stop()
+
+    async def async_handle_push_update(
+        self, lock_id: str, is_locked: bool | None, payload: dict[str, Any] | None
+    ) -> None:
+        """Handle a push state update from the WebSocket."""
+        current = dict(self.data or {})
+        device = current.get(lock_id)
+        if device is None:
+            # Unknown lock; fetch list once to incorporate
+            try:
+                devices = await self._client.async_list_locks()
+                current = {d.lock_id: d for d in devices}
+                device = current.get(lock_id)
+            except Exception:  # noqa: BLE001
+                LOGGER.debug("Push update for unknown lock %s", lock_id)
+                return
+        if device is not None and is_locked is not None:
+            device.is_locked = is_locked
+        self.async_set_updated_data(current)
+
+    async def async_send_command(self, lock_id: str, command: str) -> None:
+        """Send a command via push channel if available; fallback to HTTP."""
+        if self._ws_manager is not None and command in ("lock", "unlock"):
+            try:
+                # type: ignore[arg-type]
+                await self._ws_manager.async_send_command(lock_id, command)
+                return
+            except Exception as err:  # noqa: BLE001
+                LOGGER.debug("WS command failed; falling back to HTTP: %s", err)
+        if command == "lock":
+            await self._client.async_lock(lock_id)
+        elif command == "unlock":
+            await self._client.async_unlock(lock_id)

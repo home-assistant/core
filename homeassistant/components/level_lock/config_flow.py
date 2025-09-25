@@ -239,7 +239,7 @@ class OAuth2FlowHandler(
             )
             return self.async_abort(reason="oauth_error")
 
-        # Exchange code for token
+        # Exchange code for token (PKCE: include code_verifier; include client_secret if available)
         token_url = f"{self._oauth2_base_url}{OAUTH2_TOKEN_EXCHANGE_PATH}"
         payload: dict[str, Any] = {
             "grant_type": "authorization_code",
@@ -247,8 +247,15 @@ class OAuth2FlowHandler(
             "redirect_uri": self.flow_impl.redirect_uri,
             "client_id": self.flow_impl.client_id,
         }
-        # Include client_secret if present
-        client_secret = getattr(self.flow_impl, "client_secret", "")
+        # Add PKCE token parameters if provided by the implementation
+        try:
+            payload.update(self.flow_impl.extra_token_resolve_data)
+        except Exception:  # noqa: BLE001
+            # Fallback to no-op if implementation does not support PKCE
+            pass
+
+        # Some authorization servers require a client_secret even with PKCE
+        client_secret: str | None = getattr(self.flow_impl, "client_secret", None)
         if client_secret:
             payload["client_secret"] = client_secret
 
