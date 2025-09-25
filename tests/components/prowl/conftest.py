@@ -86,4 +86,6 @@ async def mock_prowlpy_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     )
     await hass.async_block_till_done()
 
-    return MockConfigEntry(title="Mocked Prowl", domain=DOMAIN, data=CONF_INPUT)
+    return MockConfigEntry(
+        title="Mocked Prowl", domain=DOMAIN, data={CONF_API_KEY: TEST_API_KEY}
+    )

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from functools import partial
 import logging
 from typing import Any
@@ -45,7 +46,6 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=self.name,
                     data={
                         CONF_API_KEY: self.api_key,
-                        #                        CONF_NAME: self.name,
                     },
                 )
 
@@ -57,6 +57,35 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_NAME): str,
                 }
             ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication when the API key is invalid."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        errors = {}
+        entry = self._get_reauth_entry()
+
+        if user_input:
+            api_key = user_input[CONF_API_KEY]
+            errors = await self._validate_api_key(api_key)
+
+            if not errors:
+                # Update existing entry with new API key
+                data = {CONF_API_KEY: api_key}
+                self.hass.config_entries.async_update_entry(entry, data=data)
+                return self.async_abort(reason="reauth_successful")
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
             errors=errors,
         )
 
