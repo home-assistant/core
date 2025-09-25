@@ -217,7 +217,7 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
             "place_code": place.code,
             "place_name": place.name,
             "administrative_division": place.administrative_division,
-            "country": place.country or "Lithuania",
+            "country": place.country,
             "forecast_creation_time": self.coordinator.data.forecast_created,
         }
 
