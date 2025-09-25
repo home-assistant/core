@@ -21,6 +21,7 @@ from .const import (
     DOMAIN,
     LOGGER,
     TUYA_DISCOVERY_NEW,
+    DeviceCategory,
     DPCode,
     DPType,
 )
@@ -28,13 +29,8 @@ from .entity import TuyaEntity
 from .models import IntegerTypeData
 from .util import ActionDPCodeNotFoundError
 
-# All descriptions can be found here. Mostly the Integer data types in the
-# default instructions set of each category end up being a number.
-# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
-    # Smart Kettle
-    # https://developer.tuya.com/en/docs/iot/fbh?id=K9gf484m21yq7
-    "bh": (
+NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
+    DeviceCategory.BH: (
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
             translation_key="temperature",
@@ -65,9 +61,14 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # CO2 Detector
-    # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
-    "co2bj": (
+    DeviceCategory.BZYD: (
+        NumberEntityDescription(
+            key=DPCode.VOLUME_SET,
+            translation_key="volume",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.CO2BJ: (
         NumberEntityDescription(
             key=DPCode.ALARM_TIME,
             translation_key="alarm_duration",
@@ -76,9 +77,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Smart Pet Feeder
-    # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
-    "cwwsq": (
+    DeviceCategory.CWWSQ: (
         NumberEntityDescription(
             key=DPCode.MANUAL_FEED,
             translation_key="feed",
@@ -88,27 +87,21 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             translation_key="voice_times",
         ),
     ),
-    # Multi-functional Sensor
-    # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
-    "dgnbj": (
+    DeviceCategory.DGNBJ: (
         NumberEntityDescription(
             key=DPCode.ALARM_TIME,
             translation_key="time",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Fan
-    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
-    "fs": (
+    DeviceCategory.FS: (
         NumberEntityDescription(
             key=DPCode.TEMP,
             translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
         ),
     ),
-    # Human Presence Sensor
-    # https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
-    "hps": (
+    DeviceCategory.HPS: (
         NumberEntityDescription(
             key=DPCode.SENSITIVITY,
             translation_key="sensitivity",
@@ -132,9 +125,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             device_class=NumberDeviceClass.DISTANCE,
         ),
     ),
-    # Humidifier
-    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
-    "jsq": (
+    DeviceCategory.JSQ: (
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
             translation_key="temperature",
@@ -146,9 +137,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             device_class=NumberDeviceClass.TEMPERATURE,
         ),
     ),
-    # Coffee maker
-    # https://developer.tuya.com/en/docs/iot/categorykfj?id=Kaiuz2p12pc7f
-    "kfj": (
+    DeviceCategory.KFJ: (
         NumberEntityDescription(
             key=DPCode.WATER_SET,
             translation_key="water_level",
@@ -171,9 +160,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Alarm Host
-    # https://developer.tuya.com/en/docs/iot/alarm-hosts?id=K9gf48r87hyjk
-    "mal": (
+    DeviceCategory.MAL: (
         NumberEntityDescription(
             key=DPCode.DELAY_SET,
             # This setting is called "Arm Delay" in the official Tuya app
@@ -195,9 +182,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Sous Vide Cooker
-    # https://developer.tuya.com/en/docs/iot/categorymzj?id=Kaiuz2vy130ux
-    "mzj": (
+    DeviceCategory.MZJ: (
         NumberEntityDescription(
             key=DPCode.COOK_TEMPERATURE,
             translation_key="cook_temperature",
@@ -215,17 +200,27 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Robot Vacuum
-    # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
-    "sd": (
+    DeviceCategory.SWTZ: (
+        NumberEntityDescription(
+            key=DPCode.COOK_TEMPERATURE,
+            translation_key="cook_temperature",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.COOK_TEMPERATURE_2,
+            translation_key="indexed_cook_temperature",
+            translation_placeholders={"index": "2"},
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.SD: (
         NumberEntityDescription(
             key=DPCode.VOLUME_SET,
             translation_key="volume",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Smart Water Timer
-    "sfkzq": (
+    DeviceCategory.SFKZQ: (
         # Controls the irrigation duration for the water valve
         NumberEntityDescription(
             key=DPCode.COUNTDOWN_1,
@@ -284,26 +279,21 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Siren Alarm
-    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
-    "sgbj": (
+    DeviceCategory.SGBJ: (
         NumberEntityDescription(
             key=DPCode.ALARM_TIME,
             translation_key="time",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Smart Camera
-    # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
-    "sp": (
+    DeviceCategory.SP: (
         NumberEntityDescription(
             key=DPCode.BASIC_DEVICE_VOLUME,
             translation_key="volume",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Fingerbot
-    "szjqr": (
+    DeviceCategory.SZJQR: (
         NumberEntityDescription(
             key=DPCode.ARM_DOWN_PERCENT,
             translation_key="move_down",
@@ -322,9 +312,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Dimmer Switch
-    # https://developer.tuya.com/en/docs/iot/categorytgkg?id=Kaiuz0ktx7m0o
-    "tgkg": (
+    DeviceCategory.TGKG: (
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_1,
             translation_key="indexed_minimum_brightness",
@@ -362,9 +350,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Dimmer Switch
-    # https://developer.tuya.com/en/docs/iot/categorytgkg?id=Kaiuz0ktx7m0o
-    "tgq": (
+    DeviceCategory.TGQ: (
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_1,
             translation_key="indexed_minimum_brightness",
@@ -390,18 +376,27 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Thermostat
-    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
-    "wk": (
+    DeviceCategory.WK: (
         NumberEntityDescription(
             key=DPCode.TEMP_CORRECTION,
             translation_key="temp_correction",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Tank Level Sensor
-    # Note: Undocumented
-    "ywcgq": (
+    DeviceCategory.XNYJCN: (
+        NumberEntityDescription(
+            key=DPCode.BACKUP_RESERVE,
+            translation_key="battery_backup_reserve",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.OUTPUT_POWER_LIMIT,
+            translation_key="inverter_output_power_limit",
+            device_class=NumberDeviceClass.POWER,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.YWCGQ: (
         NumberEntityDescription(
             key=DPCode.MAX_SET,
             translation_key="alarm_maximum",
@@ -425,17 +420,14 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Vibration Sensor
-    # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
-    "zd": (
+    DeviceCategory.ZD: (
         NumberEntityDescription(
             key=DPCode.SENSITIVITY,
             translation_key="sensitivity",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Pool HeatPump
-    "znrb": (
+    DeviceCategory.ZNRB: (
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
             translation_key="temperature",
@@ -445,8 +437,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
 }
 
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
-# Undocumented, see https://github.com/home-assistant/core/issues/132844
-NUMBERS["dghsxj"] = NUMBERS["sp"]
+NUMBERS[DeviceCategory.DGHSXJ] = NUMBERS[DeviceCategory.SP]
 
 
 async def async_setup_entry(
@@ -455,24 +446,24 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya number dynamically through Tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya number."""
         entities: list[TuyaNumberEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
+            device = manager.device_map[device_id]
             if descriptions := NUMBERS.get(device.category):
                 entities.extend(
-                    TuyaNumberEntity(device, hass_data.manager, description)
+                    TuyaNumberEntity(device, manager, description)
                     for description in descriptions
                     if description.key in device.status
                 )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
