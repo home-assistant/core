@@ -52,7 +52,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
 
     try:
         bucket = await hass.async_add_executor_job(_authorize_and_get_bucket_sync)
-
     except exception.Unauthorized as err:
         _LOGGER.error(
             "Backblaze authentication failed for key ID '%s': %s",
