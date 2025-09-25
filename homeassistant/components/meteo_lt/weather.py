@@ -208,6 +208,8 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return additional state attributes."""
+        if not self.coordinator.data:
+            return None
         place = self.coordinator.data.place
         current = self.coordinator.data.current_conditions
 
