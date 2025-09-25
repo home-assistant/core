@@ -13,9 +13,9 @@ from voip_utils.sip import SipEndpoint
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN, STORAGE_VER
+from .const import DOMAIN
+from .store import DeviceContact, DeviceContacts, VoipStore
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ class VoIPDevices:
         self.config_entry = config_entry
         self._new_device_listeners: list[Callable[[VoIPDevice], None]] = []
         self.devices: dict[str, VoIPDevice] = {}
-        self.device_store: Store = Store(self.hass, STORAGE_VER, "voip_devices")
+        self.device_store: VoipStore = config_entry.runtime_data
 
     async def async_setup(self) -> None:
         """Set up devices."""
@@ -98,16 +98,14 @@ class VoIPDevices:
             )
             if voip_id is None:
                 continue
-            devices_data: dict[str, dict[str, Any]] = (
-                await self.device_store.async_load() or {}
+            devices_data: DeviceContacts = (
+                await self.device_store.async_load() or DeviceContacts()
             )
-            device_data: dict[str, Any] = devices_data.setdefault(voip_id, {})
+            device_data: DeviceContact | None = devices_data.get(voip_id)
             self.devices[voip_id] = VoIPDevice(
                 voip_id=voip_id,
                 device_id=device.id,
-                contact=SipEndpoint(device_data.get("contact"))
-                if device_data.get("contact")
-                else None,
+                contact=SipEndpoint(device_data.contact) if device_data else None,
             )
 
         @callback
@@ -198,11 +196,14 @@ class VoIPDevices:
         )
 
         if voip_device is not None:
-            if voip_device.contact is None and call_info.contact_endpoint is not None:
+            if (
+                call_info.contact_endpoint is not None
+                and voip_device.contact != call_info.contact_endpoint
+            ):
                 # Update VOIP device with contact information from call info
                 voip_device.contact = call_info.contact_endpoint
                 self.hass.async_create_task(
-                    self.async_update_device_store(
+                    self.device_store.async_update_device(
                         voip_id, call_info.contact_endpoint.sip_header
                     )
                 )
@@ -213,7 +214,7 @@ class VoIPDevices:
         )
         if call_info.contact_endpoint is not None:
             self.hass.async_create_task(
-                self.async_update_device_store(
+                self.device_store.async_update_device(
                     voip_id, call_info.contact_endpoint.sip_header
                 )
             )
@@ -222,15 +223,6 @@ class VoIPDevices:
             listener(voip_device)
 
         return voip_device
-
-    async def async_update_device_store(self, voip_id: str, contact_header: str):
-        """Update the device store with the contact information."""
-        _LOGGER.debug("Saving new VOIP device %s contact %s", voip_id, contact_header)
-        devices_data: dict[str, Any] = await self.device_store.async_load() or {}
-        device_data = devices_data.setdefault(voip_id, {})
-        device_data["contact"] = contact_header
-        await self.device_store.async_save(devices_data)
-        _LOGGER.debug("Saved new VOIP device contact")
 
     def __iter__(self) -> Iterator[VoIPDevice]:
         """Iterate over devices."""

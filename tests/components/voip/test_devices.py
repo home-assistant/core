@@ -10,6 +10,7 @@ from voip_utils.sip import SipEndpoint
 
 from homeassistant.components.voip import DOMAIN
 from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
+from homeassistant.components.voip.store import DeviceContact
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -109,8 +110,10 @@ async def test_device_load_contact(
     voip_id = call_info.caller_endpoint.uri
     mock_store = AsyncMock()
     mock_store.async_load.return_value = {
-        voip_id: {"contact": "Test <sip:example.com:5061>"}
+        voip_id: DeviceContact("Test <sip:example.com:5061>")
     }
+
+    config_entry.runtime_data = mock_store
 
     # Initialize voip device
     device_registry.async_get_or_create(
@@ -123,7 +126,9 @@ async def test_device_load_contact(
         configuration_url=f"http://{call_info.caller_ip}",
     )
 
-    with patch("homeassistant.components.voip.devices.Store", return_value=mock_store):
+    with patch(
+        "homeassistant.components.voip.devices.VoipStore", return_value=mock_store
+    ):
         voip = VoIPDevices(hass, config_entry)
 
         await voip.async_setup()
