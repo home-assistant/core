@@ -58,15 +58,12 @@ async def test_get_state_updates(
         assert result
 
         # Test successful setup and first data fetch. The buttons should be unknown at the start
-        _LOGGER.info("Initial sync")
         await hass.async_block_till_done(wait_background_tasks=True)
         states = hass.states.async_all()
 
         assert (state != STATE_UNAVAILABLE for state in states)
         buttons_unknown = [s.state == "unknown" for s in states]
         assert all(buttons_unknown)
-
-        _LOGGER.info("Fire first event. Buttons should be on")
 
         provider._on_message(None, None, json.dumps(state_data))
 
