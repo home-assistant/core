@@ -149,7 +149,7 @@
       "fields": {
         "device_id": {
           "name": "Device ID",
-          "description": "ID of the device."
+          "description": "The target device for this action."
         },
         "url": {
           "name": "[%key:common::config_flow::data::url%]",
