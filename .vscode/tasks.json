@@ -90,7 +90,7 @@
       "detail": "Generate code coverage report for a given integration.",
       "type": "shell",
       "command": "${command:python.interpreterPath} -m pytest ./tests/components/${input:integrationName}/ --cov=homeassistant.components.${input:integrationName} --cov-report term-missing --durations-min=1 --durations=0 --numprocesses=auto",
-      "dependsOn": ["Compile English Translations"],
+      "dependsOn": ["Compile English translations"],
       "group": {
         "kind": "test",
         "isDefault": true
