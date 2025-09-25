@@ -67,7 +67,9 @@ def patch_restore_sensor() -> Generator[None]:
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the sensor data."""
         data = real_as_dict(self)
-        if not (_type := data["native_value"].get("__type")):
+        if not isinstance(data["native_value"], dict) or not (
+            _type := data["native_value"].get("__type")
+        ):
             return data
         if _type == "<class 'freezegun.api.FakeDate'>":
             data["native_value"]["__type"] = "<class 'datetime.date'>"
