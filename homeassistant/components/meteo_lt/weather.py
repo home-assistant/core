@@ -175,12 +175,16 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
                 native_templow=min_temp,
                 native_apparent_temperature=midday_forecast.apparent_temperature,
                 condition=midday_forecast.condition,
-                native_precipitation=sum(
-                    ts.precipitation
-                    for ts in day_forecasts
-                    if ts.precipitation is not None
-                )
-                or None,
+                # Calculate precipitation: sum if any values, else None
+                native_precipitation=(
+                    sum(
+                        ts.precipitation
+                        for ts in day_forecasts
+                        if ts.precipitation is not None
+                    )
+                    if any(ts.precipitation is not None for ts in day_forecasts)
+                    else None
+                ),
                 precipitation_probability=None,
                 native_wind_speed=midday_forecast.wind_speed,
                 wind_bearing=midday_forecast.wind_bearing,
