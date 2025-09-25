@@ -94,9 +94,6 @@ async def async_predict_common_control(
     Args:
         hass: Home Assistant instance
         user_id: User ID to filter events by.
-
-    Returns:
-        Dictionary with time categories as keys and lists of most common entity IDs as values
     """
     # Get the recorder instance to ensure it's ready
     recorder = get_instance(hass)
@@ -128,7 +125,7 @@ async def async_predict_common_control(
         context_processed.add(context_id)
 
         # Parse the event data
-        if not shared_data:
+        if not time_fired_ts or not shared_data:
             continue
 
         try:
@@ -173,16 +170,14 @@ async def async_predict_common_control(
         if not entity_ids:
             continue
 
-        # Convert timestamp to datetime and determine time category
-        if time_fired_ts:
-            # Convert to local time for time category determination
-            period = time_category(
-                datetime.fromtimestamp(time_fired_ts, local_time_zone).hour
-            )
+        # Convert to local time for time category determination
+        period = time_category(
+            datetime.fromtimestamp(time_fired_ts, local_time_zone).hour
+        )
 
-            # Count entity usage
-            for entity_id in entity_ids:
-                results[period][entity_id] += 1
+        # Count entity usage
+        for entity_id in entity_ids:
+            results[period][entity_id] += 1
 
     return EntityUsagePredictions(
         morning=[
