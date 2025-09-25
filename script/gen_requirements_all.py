@@ -245,7 +245,7 @@ num2words==0.5.14
 # pymodbus does not follow SemVer, and it keeps getting
 # downgraded or upgraded by custom components
 # This ensures all use the same version
-pymodbus==3.11.2
+pymodbus==3.11.3
 
 # Some packages don't support gql 4.0.0 yet
 gql<4.0.0
