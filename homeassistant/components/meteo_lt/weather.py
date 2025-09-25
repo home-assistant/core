@@ -198,6 +198,8 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
 
     async def async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast."""
+        if not self.coordinator.data:
+            return None
         return [
             self._convert_forecast_data(forecast_data)
             for forecast_data in self.coordinator.data.forecast_timestamps[:24]
