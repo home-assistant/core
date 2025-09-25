@@ -924,6 +924,39 @@ async def test_legacy_zeroconf_discovery_already_setup(hass: HomeAssistant) -> N
     assert confirm_result["step_id"] == "choose_migration_strategy"
 
 
+async def test_zeroconf_discovery_via_socket_already_setup_with_ip_match(
+    hass: HomeAssistant,
+) -> None:
+    """Test zeroconf discovery aborting when ZHA is already setup with socket and one IP matches."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_DEVICE: {CONF_DEVICE_PATH: "socket://192.168.1.101:6638"}},
+    ).add_to_hass(hass)
+
+    service_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.1.100"),
+        ip_addresses=[
+            ip_address("192.168.1.100"),
+            ip_address("192.168.1.101"),  # Matches config entry
+        ],
+        hostname="tube-zigbee-gw.local.",
+        name="mock_name",
+        port=6638,
+        properties={"name": "tube_123456"},
+        type="mock_type",
+    )
+
+    # Discovery should abort due to single instance check
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
+    )
+    await hass.async_block_till_done()
+
+    # Should abort since one of the advertised IPs matches existing socket path
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
 @patch(
     "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",
     mock_detect_radio_type(radio_type=RadioType.deconz),
