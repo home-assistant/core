@@ -231,25 +231,25 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_SITE_ID: reconfigure_entry.data[CONF_SITE_ID],
             }
 
+            errors = {}
             try:
                 hub = await get_unifi_api(self.hass, MappingProxyType(self.config))
                 await hub.sites.update()
-                self.sites = hub.sites
 
             except AuthenticationRequired:
-                return self.async_show_form(
-                    step_id="reconfigure",
-                    data_schema=self._get_reconfigure_schema(reconfigure_entry),
-                    errors={"base": "faulty_credentials"},
-                )
+                errors["base"] = "faulty_credentials"
 
             except CannotConnect:
+                errors["base"] = "service_unavailable"
+
+            if errors:
                 return self.async_show_form(
                     step_id="reconfigure",
                     data_schema=self._get_reconfigure_schema(reconfigure_entry),
-                    errors={"base": "service_unavailable"},
+                    errors=errors,
                 )
 
+            self.sites = hub.sites
             # Verify we can access the same site
             site_id = reconfigure_entry.unique_id
             if site_id is None or site_id not in self.sites:
