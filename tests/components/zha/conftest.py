@@ -184,6 +184,9 @@ async def zigpy_app_controller():
             warnings.simplefilter("ignore", DeprecationWarning)
             mock_app = _wrap_mock_instance(app)
             mock_app.backups = _wrap_mock_instance(app.backups)
+            mock_app._concurrent_requests_semaphore = _wrap_mock_instance(
+                app._concurrent_requests_semaphore
+            )
 
         yield mock_app
 
