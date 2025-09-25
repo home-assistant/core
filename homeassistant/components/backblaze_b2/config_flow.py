@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import Any
 
 from b2sdk.v2 import B2Api, InMemoryAccountInfo, exception
 import voluptuous as vol
@@ -50,6 +50,15 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     reauth_entry: ConfigEntry[Any] | None
 
+    def _abort_if_duplicate_credentials(self, user_input: dict[str, Any]) -> None:
+        """Abort if credentials already exist in another entry."""
+        self._async_abort_entries_match(
+            {
+                CONF_KEY_ID: user_input[CONF_KEY_ID],
+                CONF_APPLICATION_KEY: user_input[CONF_APPLICATION_KEY],
+            }
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -58,32 +67,22 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
         placeholders: dict[str, str] = {}
 
         if user_input is not None:
-            # Abort if an entry with the exact same Key ID and Application Key already exists
-            self._async_abort_entries_match(
-                {
-                    CONF_KEY_ID: user_input[CONF_KEY_ID],
-                    CONF_APPLICATION_KEY: user_input[CONF_APPLICATION_KEY],
-                }
-            )
+            self._abort_if_duplicate_credentials(user_input)
 
-            # Validate the provided Backblaze credentials and bucket
             errors, placeholders = await self._async_validate_backblaze_connection(
                 user_input
             )
 
             if not errors:
-                # Ensure the prefix always ends with a slash if it's not empty
                 if user_input[CONF_PREFIX] and not user_input[CONF_PREFIX].endswith(
                     "/"
                 ):
                     user_input[CONF_PREFIX] += "/"
 
-                # Create the configuration entry
                 return self.async_create_entry(
                     title=user_input[CONF_BUCKET], data=user_input
                 )
 
-        # Show the configuration form to the user
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
@@ -119,18 +118,16 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
             b2_api.get_bucket_by_name(user_input[CONF_BUCKET])
 
         try:
-            # Execute the blocking API calls in the event loop's executor
             await self.hass.async_add_executor_job(_authorize_and_get_bucket_sync)
 
-            # Retrieve allowed capabilities after successful authorization
             allowed = b2_api.account_info.get_allowed()
 
-            # Check for required capabilities
             if (
                 allowed is None
                 or not allowed.get("capabilities")
                 or not REQUIRED_CAPABILITIES.issubset(set(allowed["capabilities"]))
             ):
+                # Check which required capabilities are missing
                 missing_caps = REQUIRED_CAPABILITIES - set(
                     allowed.get("capabilities", [])
                 )
@@ -141,17 +138,13 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                         ", ".join(sorted(missing_caps)),
                     )
                     errors["base"] = "invalid_capability"
-                    # Provide specific missing capabilities for the frontend to display
                     placeholders["missing_capabilities"] = ", ".join(
                         sorted(missing_caps)
                     )
 
-            # Validate the specified prefix against the allowed prefix (if any)
             configured_prefix: str = user_input[CONF_PREFIX]
-            # cast to str as get() could return None, but namePrefix is expected to be str
-            allowed_prefix = cast(str, allowed.get("namePrefix", ""))
-
-            # If an allowed prefix is defined by Backblaze, ensure the configured prefix starts with it
+            allowed_prefix = allowed.get("namePrefix") or ""
+            # Ensure configured prefix starts with Backblaze's allowed prefix
             if allowed_prefix and not configured_prefix.startswith(allowed_prefix):
                 errors[CONF_PREFIX] = "invalid_prefix"
                 placeholders["allowed_prefix"] = allowed_prefix
@@ -198,6 +191,7 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauthentication flow."""
+        del entry_data  # Required by interface but not used
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
@@ -213,7 +207,8 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
         placeholders: dict[str, str] = {}
 
         if user_input is not None:
-            # Validate the new credentials
+            self._abort_if_duplicate_credentials(user_input)
+
             validation_input = {
                 CONF_KEY_ID: user_input[CONF_KEY_ID],
                 CONF_APPLICATION_KEY: user_input[CONF_APPLICATION_KEY],
@@ -226,7 +221,6 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             if not errors:
-                # Update the config entry with new credentials
                 return self.async_update_reload_and_abort(
                     self.reauth_entry,
                     data_updates={
@@ -235,7 +229,6 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-        # Show the reauthentication form
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema(
@@ -262,19 +255,18 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
         assert entry is not None
 
         if user_input is not None:
-            # Validate the reconfigured settings
+            self._abort_if_duplicate_credentials(user_input)
+
             errors, placeholders = await self._async_validate_backblaze_connection(
                 user_input
             )
 
             if not errors:
-                # Ensure the prefix always ends with a slash if it's not empty
                 if user_input[CONF_PREFIX] and not user_input[CONF_PREFIX].endswith(
                     "/"
                 ):
                     user_input[CONF_PREFIX] += "/"
 
-                # Update the configuration entry
                 return self.async_update_reload_and_abort(
                     entry,
                     data_updates=user_input,
@@ -283,7 +275,6 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = {}
             placeholders = {}
 
-        # Show the reconfiguration form with current values
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(

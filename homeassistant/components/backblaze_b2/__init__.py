@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
+from typing import Any
 
 from b2sdk.v2 import B2Api, Bucket, InMemoryAccountInfo, exception
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     BACKBLAZE_REALM,
@@ -67,7 +70,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
             entry.data[CONF_KEY_ID],
             err,
         )
-        # Create repair issue for user to address
         create_bucket_access_restricted_issue(hass, entry, err.bucket_name)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -83,10 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
             entry.data[CONF_KEY_ID],
             err,
         )
-        # Create repair issue for user to address
-        create_bucket_not_found_issue(
-            hass, entry, entry.data.get(CONF_BUCKET, "unknown")
-        )
+        create_bucket_not_found_issue(hass, entry, entry.data[CONF_BUCKET])
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="invalid_bucket_name",
@@ -117,7 +116,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
             translation_key="unknown_error",
         ) from err
 
-    # Store the initialized B2 Bucket object in runtime_data
     entry.runtime_data = bucket
 
     def _async_notify_backup_listeners() -> None:
@@ -128,7 +126,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
 
     entry.async_on_unload(entry.async_on_state_change(_async_notify_backup_listeners))
 
-    # Check for repair issues periodically (not blocking setup)
+    async def _periodic_issue_check(_now: Any) -> None:
+        """Periodically check for repair issues."""
+        del _now  # Required by async_track_time_interval interface
+        await async_check_for_repair_issues(hass, entry)
+
+    entry.async_on_unload(
+        async_track_time_interval(hass, _periodic_issue_check, timedelta(minutes=30))
+    )
+
     hass.async_create_task(async_check_for_repair_issues(hass, entry))
 
     return True
@@ -141,5 +147,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) -
     would be handled here. In this case, the `async_on_state_change` listener
     handles the notification logic on unload.
     """
-    # No explicit resource cleanup for B2Api with InMemoryAccountInfo needed here.
+    del hass, entry  # Required by interface but not used
     return True

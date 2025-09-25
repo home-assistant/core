@@ -217,17 +217,37 @@ def b2_fixture():
 
         BucketSimulator.ls = ls
 
+        # Patch BucketSimulator to have the same attributes as real Bucket for diagnostics
+        original_init = BucketSimulator.__init__
+
+        def patched_init(self, *args, **kwargs):
+            original_init(self, *args, **kwargs)
+            # Add attributes that match real Bucket class for diagnostics compatibility
+            self.name = self.bucket_name
+            self.id_ = self.bucket_id
+            self.type_ = self.bucket_type
+            self.cors_rules = []
+            self.lifecycle_rules = []
+            self.revision = 1
+
+        BucketSimulator.__init__ = patched_init
+
         # Mock start_large_file and cancel_large_file for BucketSimulator
         def mock_start_large_file(
             file_name, content_type, file_info, account_auth_token
         ):
+            del (
+                content_type,
+                file_info,
+                account_auth_token,
+            )  # Required by interface but not used
             mock_large_file = Mock()
             mock_large_file.file_name = file_name
             mock_large_file.file_id = "mock_file_id"
             return mock_large_file
 
         def mock_cancel_large_file(file_id, account_auth_token):
-            pass
+            del file_id, account_auth_token  # Required by interface but not used
 
         BucketSimulator.start_large_file = mock_start_large_file
         BucketSimulator.cancel_large_file = mock_cancel_large_file
@@ -240,6 +260,7 @@ def b2_fixture():
             file_info=None,
             progress_listener=None,
         ):
+            del progress_listener  # Required by interface but not used
             # Read the file content
             with open(local_file, "rb") as f:
                 content = f.read()
@@ -281,6 +302,7 @@ def b2_fixture():
 @pytest.fixture
 def backup_fixture(request: pytest.FixtureRequest) -> AgentBackup:
     """Test backup fixture."""
+    del request  # Required by pytest but not used
     return TEST_BACKUP
 
 
@@ -328,3 +350,19 @@ class AccountInfo:
     def get_allowed(self):
         """Return allowed capabilities."""
         return self._allowed
+
+    def get_account_id(self):
+        """Return account ID."""
+        return "test_account_id"
+
+    def get_api_url(self):
+        """Return API URL."""
+        return "https://api001.backblazeb2.com"
+
+    def get_download_url(self):
+        """Return download URL."""
+        return "https://f001.backblazeb2.com"
+
+    def get_minimum_part_size(self):
+        """Return minimum part size."""
+        return 5000000

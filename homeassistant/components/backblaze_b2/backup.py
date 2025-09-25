@@ -489,7 +489,7 @@ class BackblazeBackupAgent(BackupAgent):
             except ValueError:
                 return None, None
 
-            if metadata_content.get("backup_id") == target_backup_id:
+            if metadata_content["backup_id"] == target_backup_id:
                 found_backup_file = _find_backup_file_for_metadata(
                     file_name, all_files_in_prefix, self._prefix
                 )
