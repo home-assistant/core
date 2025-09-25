@@ -109,7 +109,7 @@ async def async_predict_common_control(
     }
 
     allowed_entities = set(hass.states.async_entity_ids(ALLOWED_DOMAINS))
-    hidden_entities = set()
+    hidden_entities: set[str] = set()
 
     # Keep track of contexts that we processed so that we will only process
     # the first service call in a context, and not subsequent calls.
