@@ -25,7 +25,7 @@ from .const import _LOGGER, DEFAULT_PORT, DEVICE_TYPE_LIST, DOMAIN
 from .utils import async_client_session
 
 DEFAULT_HOST = "192.168.1.252"
-DEFAULT_PIN = 111111
+DEFAULT_PIN = "111111"
 
 
 pin_regex = r"^[0-9]{4,10}$"
