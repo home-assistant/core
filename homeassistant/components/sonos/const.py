@@ -196,6 +196,7 @@ ATTR_SPEECH_ENHANCEMENT_ENABLED = "speech_enhance_enabled"
 SPEECH_DIALOG_LEVEL = "speech_dialog_level"
 ATTR_DIALOG_LEVEL = "dialog_level"
 ATTR_DIALOG_LEVEL_ENUM = "dialog_level_enum"
+ATTR_QUEUE_POSITION = "queue_position"
 
 AVAILABILITY_CHECK_INTERVAL = datetime.timedelta(minutes=1)
 AVAILABILITY_TIMEOUT = AVAILABILITY_CHECK_INTERVAL.total_seconds() * 4.5
