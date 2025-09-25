@@ -80,11 +80,6 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
         return None
 
     @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return super().available
-
-    @property
     def native_temperature(self) -> float | None:
         """Return the temperature."""
         return self._get_current_forecast_attr("temperature")

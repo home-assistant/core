@@ -21,10 +21,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeteoLtConfigEntry) -> b
     client = MeteoLtAPI()
     coordinator = MeteoLtUpdateCoordinator(hass, client, place_code, entry)
 
-    await coordinator.async_refresh()
+    try:
+        await coordinator.async_refresh()
+    except Exception as err:
+        raise ConfigEntryNotReady(
+            f"Failed to connect to Meteo.lt API for {place_code}"
+        ) from err
 
     if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady(f"Failed to fetch initial data for {place_code}")
 
     entry.runtime_data = coordinator
 

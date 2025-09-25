@@ -31,6 +31,9 @@
         "title": "Select station",
         "data": {
           "place_code": "Station"
+        },
+        "data_description": {
+          "place_code": "Weather station to get data from"
         }
       }
     },

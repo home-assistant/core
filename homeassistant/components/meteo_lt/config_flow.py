@@ -92,7 +92,8 @@ class MeteoLtConfigFlow(ConfigFlow, domain=DOMAIN):
             )  # returns meters
             if place_distance is not None:
                 place_distance = place_distance / 1000
-        except Exception:  # noqa: BLE001
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error("Error finding nearest place: %s", err)
             return self.async_show_form(
                 step_id="location_from_coordinates",
                 data_schema=vol.Schema({}),
@@ -147,7 +148,8 @@ class MeteoLtConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await self._api.fetch_places()
                 self._places = self._api.places
-            except Exception:  # noqa: BLE001
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.error("Error fetching places: %s", err)
                 errors["base"] = "cannot_connect"
 
         if not self._places:
