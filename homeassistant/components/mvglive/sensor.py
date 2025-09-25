@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from copy import deepcopy
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -15,11 +15,12 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,23 +51,26 @@ ATTRIBUTION = "Data provided by mvg.de"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_NEXT_DEPARTURE): [
-            {
-                vol.Required(CONF_STATION): cv.string,
-                vol.Optional(CONF_DESTINATIONS, default=[""]): cv.ensure_list_csv,
-                vol.Optional(CONF_DIRECTIONS, default=[""]): cv.ensure_list_csv,
-                vol.Optional(CONF_LINES, default=[""]): cv.ensure_list_csv,
-                vol.Optional(
-                    CONF_PRODUCTS, default=DEFAULT_PRODUCT
-                ): cv.ensure_list_csv,
-                vol.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
-                vol.Optional(CONF_NUMBER, default=1): cv.positive_int,
-                vol.Optional(CONF_NAME): cv.string,
-            }
-        ]
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_DIRECTIONS),
+    SENSOR_PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_NEXT_DEPARTURE): [
+                {
+                    vol.Required(CONF_STATION): cv.string,
+                    vol.Optional(CONF_DESTINATIONS, default=[""]): cv.ensure_list_csv,
+                    vol.Optional(CONF_DIRECTIONS, default=[""]): cv.ensure_list_csv,
+                    vol.Optional(CONF_LINES, default=[""]): cv.ensure_list_csv,
+                    vol.Optional(
+                        CONF_PRODUCTS, default=DEFAULT_PRODUCT
+                    ): cv.ensure_list_csv,
+                    vol.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
+                    vol.Optional(CONF_NUMBER, default=1): cv.positive_int,
+                    vol.Optional(CONF_NAME): cv.string,
+                }
+            ]
+        }
+    ),
 )
 
 
@@ -115,7 +119,7 @@ class MVGLiveSensor(SensorEntity):
         self.data = MVGLiveData(
             hass, station_name, destinations, lines, products, timeoffset, number
         )
-        self._state = "-"
+        self._state = None
         self._icon = ICONS["-"]
 
     @property
@@ -126,7 +130,7 @@ class MVGLiveSensor(SensorEntity):
         return self._station_name
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Return the next departure time."""
         return self._state
 
@@ -144,11 +148,16 @@ class MVGLiveSensor(SensorEntity):
         """Icon to use in the frontend, if any."""
         return self._icon
 
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit this state is expressed in."""
+        return UnitOfTime.MINUTES
+
     async def async_update(self) -> None:
         """Get the latest data and update the state."""
         await self.data.update()
         if not self.data.departures:
-            self._state = "-"
+            self._state = None
             self._icon = ICONS["-"]
         else:
             self._state = self.data.departures[0].get("time_in_mins", "-")
@@ -165,8 +174,8 @@ def _get_minutes_until_departure(departure_time: int) -> int:
         The time difference in minutes, as an integer.
 
     """
-    current_time = datetime.now()
-    departure_datetime = datetime.fromtimestamp(departure_time)
+    current_time = dt_util.utcnow()
+    departure_datetime = dt_util.utc_from_timestamp(departure_time)
     time_difference = (departure_datetime - current_time).total_seconds()
     return int(time_difference / 60.0)
 
