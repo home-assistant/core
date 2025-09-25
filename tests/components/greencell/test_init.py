@@ -1,123 +1,163 @@
-"""Test cases for the Greencell discovery listener setup in Home Assistant."""
+"""Test cases for the Greencell integration in Home Assistant initialization."""
 
 import asyncio
-import json
-from types import SimpleNamespace
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 
 from homeassistant.components.greencell import (
-    CONF_SERIAL_NUMBER,
-    GREENCELL_DISC_TOPIC,
-    setup_discovery_listener,
+    DOMAIN,
+    async_setup_entry,
+    async_unload_entry,
+    wait_for_device_ready,
 )
+from homeassistant.components.greencell.const import (
+    CONF_SERIAL_NUMBER,
+    DISCOVERY_TIMEOUT,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
-from .conftest import TEST_SERIAL_NUMBER, DummyHass, DummyMessage
+from .conftest import TEST_SERIAL_NUMBER
 
-# --- Happy-path test for setup_discovery_listener ---
+
+class DummyConfigEntry:
+    """Minimal stub for ConfigEntry."""
+
+    def __init__(
+        self, serial: str | None = TEST_SERIAL_NUMBER, entry_id: str = "entry1"
+    ) -> None:
+        """Initialize the dummy ConfigEntry."""
+        self.entry_id = entry_id
+        self.data = {CONF_SERIAL_NUMBER: serial} if serial else {}
+        self.runtime_data = None
 
 
 @pytest.mark.asyncio
-async def test_setup_discovery_listener_happy_path(
-    stub_subscribe, hass: HomeAssistant
+async def test_wait_for_device_ready_sets_event(
+    hass_with_runtime: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Happy path: sending QUERY for a newly discovered device."""
+    """Test that wait_for_device_ready sets the event on first message."""
+    subs: list[tuple[str, Callable[[Any], None]]] = []
 
-    unsubscribe = setup_discovery_listener(hass)
+    async def fake_subscribe(
+        hass: HomeAssistant, topic: str, callback: Callable[[Any], None]
+    ) -> Callable[[], None]:
+        subs.append((topic, callback))
+        return lambda: subs.remove((topic, callback))
 
-    await asyncio.sleep(0)
+    monkeypatch.setattr(
+        "homeassistant.components.greencell.async_subscribe",
+        fake_subscribe,
+        raising=True,
+    )
 
-    assert len(stub_subscribe) == 1
-    topic, callback = stub_subscribe[0]
-    assert topic == GREENCELL_DISC_TOPIC
-
-    msg = DummyMessage(payload=json.dumps({"id": TEST_SERIAL_NUMBER}))
-    callback(msg)
-
-    expected_call = (
-        f"/greencell/evse/{TEST_SERIAL_NUMBER}/cmd",
-        json.dumps({"name": "QUERY"}),
-        0,
-        False,
+    unsub, event = wait_for_device_ready(
+        hass_with_runtime, TEST_SERIAL_NUMBER, DISCOVERY_TIMEOUT
     )
 
     await asyncio.sleep(0)
-    assert expected_call in hass.published
 
-    unsubscribe()
-    assert stub_subscribe == []
+    assert subs, "No subscriptions were registered by wait_for_device_ready()"
+
+    for _, cb in subs:
+        cb("dummy-message")
+        break
+
+    await asyncio.sleep(0)
+    assert event.is_set(), "Event was not set after invoking the subscribed callback"
+
+    unsub()
 
 
 @pytest.mark.asyncio
-async def test_known_device_logs_debug(
-    stub_subscribe, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+async def test_async_setup_entry_success(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Known device should log debug and not send publish."""
+    """Test successful setup of Greencell entry with runtime data."""
+    entry = DummyConfigEntry()
 
-    entry = SimpleNamespace(data={CONF_SERIAL_NUMBER: TEST_SERIAL_NUMBER})
-    local_hass = DummyHass(entries=[entry])
-    unsubscribe = setup_discovery_listener(local_hass)
-    await asyncio.sleep(0)
-    topic, callback = stub_subscribe[0]
+    monkeypatch.setattr(
+        "homeassistant.components.greencell.mqtt.async_wait_for_mqtt_client",
+        lambda h: asyncio.sleep(0),
+    )
 
-    caplog.set_level("DEBUG")
-    msg = DummyMessage(payload=json.dumps({"id": TEST_SERIAL_NUMBER}))
-    callback(msg)
+    ev = asyncio.Event()
+    ev.set()
+    monkeypatch.setattr(
+        "homeassistant.components.greencell.wait_for_device_ready",
+        lambda hass, serial, timeout: (lambda: None, ev),
+    )
 
-    assert "already configured" in caplog.text
-    assert local_hass.services.calls == []
-    unsubscribe()
-    assert stub_subscribe == []
+    called = {}
+
+    async def fake_forward(entry: ConfigEntry, platforms: list[str]) -> None:
+        called["yes"] = True
+
+    monkeypatch.setattr(hass.config_entries, "async_forward_entry_setups", fake_forward)
+
+    result = await async_setup_entry(hass, entry)  # type: ignore[arg-type]
+
+    assert result is True
+    assert entry.runtime_data is not None
+    assert DOMAIN in hass.data
+    assert entry.entry_id in hass.data[DOMAIN]
+    assert called["yes"]
 
 
-# --- Error cases ---
 @pytest.mark.asyncio
-async def test_invalid_json_payload(
-    stub_subscribe, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+async def test_async_setup_entry_missing_serial(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Invalid JSON should be logged and not trigger publish."""
+    """Test async_setup_entry with no serial number in entry."""
+    entry = DummyConfigEntry(serial=None)
 
-    unsubscribe = setup_discovery_listener(hass)
-    await asyncio.sleep(0)
-    _, callback = stub_subscribe[0]
-    msg = DummyMessage(payload="not-a-json")
-    caplog.clear()
-    caplog.set_level("ERROR")
-    callback(msg)
-    assert "Invalid JSON" in caplog.text
-    assert hass.services.calls == []
-    unsubscribe()
+    monkeypatch.setattr(
+        "homeassistant.components.greencell.mqtt.async_wait_for_mqtt_client",
+        lambda h: asyncio.sleep(0),
+    )
+
+    with pytest.raises(ConfigEntryNotReady):
+        await async_setup_entry(hass, entry)  # type: ignore[arg-type]
 
 
 @pytest.mark.asyncio
-async def test_missing_id_in_payload(
-    stub_subscribe, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+async def test_async_setup_entry_timeout(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """JSON without 'id' key should log warning and not trigger publish."""
+    """Test async_setup_entry with timeout waiting for device readiness."""
+    entry = DummyConfigEntry()
 
-    unsubscribe = setup_discovery_listener(hass)
-    await asyncio.sleep(0)
-    _, callback = stub_subscribe[0]
-    msg = DummyMessage(payload=json.dumps({"foo": "bar"}))
-    caplog.clear()
-    caplog.set_level("WARNING")
-    callback(msg)
-    assert "without valid 'id'" in caplog.text
-    assert hass.services.calls == []
-    unsubscribe()
+    monkeypatch.setattr(
+        "homeassistant.components.greencell.mqtt.async_wait_for_mqtt_client",
+        lambda h: asyncio.sleep(0),
+    )
+
+    ev = asyncio.Event()
+    monkeypatch.setattr(
+        "homeassistant.components.greencell.wait_for_device_ready",
+        lambda hass, serial, timeout: (lambda: None, ev),
+    )
+
+    with pytest.raises(ConfigEntryNotReady):
+        await async_setup_entry(hass, entry)  # type: ignore[arg-type]
 
 
 @pytest.mark.asyncio
-async def test_known_device_does_not_publish(stub_subscribe) -> None:
-    """If device is already configured, no publish should occur."""
+async def test_async_unload_entry(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test unloading a Greencell config entry."""
+    entry = DummyConfigEntry()
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {"dummy": "runtime"}
 
-    entry = SimpleNamespace(data={CONF_SERIAL_NUMBER: TEST_SERIAL_NUMBER})
-    hass = DummyHass(entries=[entry])
-    unsubscribe = setup_discovery_listener(hass)
-    await asyncio.sleep(0)
-    _, callback = stub_subscribe[0]
-    msg = DummyMessage(payload=json.dumps({"id": TEST_SERIAL_NUMBER}))
-    callback(msg)
-    assert hass.services.calls == []
-    unsubscribe()
+    async def fake_unload(entry_: ConfigEntry, platforms: list[str]) -> bool:
+        return True
+
+    monkeypatch.setattr(hass.config_entries, "async_unload_platforms", fake_unload)
+
+    ok = await async_unload_entry(hass, entry)  # type: ignore[arg-type]
+    assert ok
+    assert entry.entry_id not in hass.data[DOMAIN]

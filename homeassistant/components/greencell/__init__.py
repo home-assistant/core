@@ -20,8 +20,6 @@ Key functions:
 
 import asyncio
 from collections.abc import Callable
-import json
-from json import JSONDecodeError
 import logging
 from typing import Any
 
@@ -34,7 +32,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_SERIAL_NUMBER,
@@ -51,60 +48,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
-
-
-def setup_discovery_listener(hass: HomeAssistant) -> Callable[[], None]:
-    """Set up listener for discovery/hello messages; returns unsubscribe function."""
-    unsub: Callable[[], None] | None = None
-
-    @callback
-    def _handle_hello(message: Any) -> None:
-        try:
-            payload = json.loads(message.payload)
-        except JSONDecodeError as err:
-            _LOGGER.error("Invalid JSON on discovery topic: %s", err)
-            return
-        device_id = payload.get("id")
-        if not isinstance(device_id, str) or not device_id:
-            _LOGGER.warning("Discovery message without valid 'id': %s", payload)
-            return
-
-        known = {
-            e.data.get(CONF_SERIAL_NUMBER)
-            for e in hass.config_entries.async_entries(DOMAIN)
-        }
-        if device_id in known:
-            _LOGGER.debug("Device %s already configured", device_id)
-            return
-
-        topic = f"/greencell/evse/{device_id}/cmd"
-        pub_payload = json.dumps({"name": "QUERY"})
-
-        async def _async_send_query() -> None:
-            try:
-                await mqtt.async_wait_for_mqtt_client(hass)
-                await mqtt.async_publish(hass, topic, pub_payload, qos=0, retain=False)
-                _LOGGER.info("Sent QUERY to new device %s", device_id)
-            except HomeAssistantError as err:
-                _LOGGER.error("Error publishing QUERY for %s: %s", device_id, err)
-
-        hass.async_create_task(_async_send_query())
-
-    async def _async_subscribe() -> None:
-        nonlocal unsub
-        try:
-            unsub = await async_subscribe(hass, GREENCELL_DISC_TOPIC, _handle_hello)
-            _LOGGER.debug("Subscribed to discovery topic %s", GREENCELL_DISC_TOPIC)
-        except HomeAssistantError as err:
-            _LOGGER.error("Failed to subscribe to discovery topic: %s", err)
-
-    hass.async_create_task(_async_subscribe())
-
-    def _unsubscribe() -> None:
-        if unsub:
-            unsub()
-
-    return _unsubscribe
 
 
 def wait_for_device_ready(
@@ -149,13 +92,11 @@ def wait_for_device_ready(
     return _unsubscribe_all, event
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Setup by YAML configuration is not supported."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Greencell from a config entry with test-before-setup and runtime_data."""
+
+    await mqtt.async_wait_for_mqtt_client(hass)
+
     serial = entry.data.get(CONF_SERIAL_NUMBER)
     if not serial:
         raise ConfigEntryNotReady("Missing serial_number in config entry")
@@ -182,7 +123,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    setup_discovery_listener(hass)
     return True
 
 

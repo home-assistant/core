@@ -2,14 +2,23 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up your Greencell HabuDen EVSE"
+        "title": "Set up your Greencell HabuDen EVSE",
+        "description": "The integration will try to discover your EVSE devices over MQTT."
+      },
+      "select": {
+        "title": "Select your device",
+        "description": "Multiple Greencell devices were found (total: {count}). Please choose which one you want to configure.",
+        "data": {
+          "serial_number": "Device serial number"
+        }
       }
     },
     "abort": {
       "discovery_timeout": "No device responded to the discovery request.",
       "invalid_discovery_data": "The received discovery data is invalid.",
-      "mqtt_subscription_failed": "Failed to subscribe to the MQTT topic for discovery. It could be caused by uninstalled MQTT integration.",
-      "no_discovery_data": "No discovery data received. Ensure the device is online and broadcasting."
+      "mqtt_subscription_failed": "Failed to subscribe to the MQTT topic for discovery.",
+      "no_discovery_data": "No discovery data received. Ensure the device is online and broadcasting.",
+      "mqtt_not_connected": "MQTT is not connected. Ensure the MQTT broker is running and configured."
     }
   },
   "entity": {

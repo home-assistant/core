@@ -11,12 +11,12 @@ This module implements:
 """
 
 import asyncio
-from collections.abc import Callable
 import json
 import logging
 from typing import Any
 
 from greencell_client.utils import GreencellUtils
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
@@ -36,84 +36,97 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Config flow for EVSE device."""
+    """Config flow for Greencell EVSE devices."""
 
-    _remove_listener: Callable[[], None] | None
     VERSION = 1
     MINOR_VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.discovery_event = asyncio.Event()
-        self.discovery_data = None
-        self._remove_listener: Callable[[], None] | None = None
+        self._discovered: dict[str, dict[str, Any]] = {}
 
-    def get_device_name(self, serial_number: str) -> str:
-        """Get device name based on serial number."""
-        if GreencellUtils.device_is_habu_den(serial_number):
-            return GREENCELL_HABU_DEN
-        return GREENCELL_OTHER_DEVICE
+    def _get_device_name(self, serial: str) -> str:
+        """Determine the device name based on the serial number."""
+        return (
+            GREENCELL_HABU_DEN
+            if GreencellUtils.device_is_habu_den(serial)
+            else GREENCELL_OTHER_DEVICE
+        )
 
-    async def _publish_disc_request(self):
-        """Publish a discovery request to the MQTT topic."""
+    async def _publish_disc_request(self) -> None:
+        """Publish a discovery request to the GREENCELL_BROADCAST_TOPIC."""
         payload = json.dumps({"name": "BROADCAST"})
-        await mqtt.async_publish(self.hass, GREENCELL_BROADCAST_TOPIC, payload, 0, True)
+        await mqtt.async_publish(
+            self.hass, GREENCELL_BROADCAST_TOPIC, payload, qos=0, retain=True
+        )
 
     @callback
-    def _mqtt_message_received(self, msg):
-        """Handle incoming MQTT messages."""
+    def _mqtt_message_received(self, msg) -> None:
+        """Handle incoming MQTT messages on the discovery topic."""
         try:
             payload = json.loads(msg.payload)
-            self.discovery_data = payload
-            self.discovery_event.set()
+            serial = payload.get("id")
+            if isinstance(serial, str) and serial.strip():
+                self._discovered[serial] = payload
         except json.JSONDecodeError:
-            _LOGGER.error("Failed to decode MQTT message payload: %s", msg.payload)
+            _LOGGER.debug("Invalid JSON in discovery payload: %s", msg.payload)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
-        """Handle the initial step."""
+        """Initial step: broadcast discovery and collect responses."""
 
         try:
-            self._remove_listener = await mqtt.async_subscribe(
+            remove_listener = await mqtt.async_subscribe(
                 self.hass, GREENCELL_DISC_TOPIC, self._mqtt_message_received
             )
-        except HomeAssistantError as e:
-            _LOGGER.error("Failed to subscribe to MQTT topic: %s", e)
+        except HomeAssistantError as err:
+            _LOGGER.error("Failed to subscribe to discovery topic: %s", err)
             return self.async_abort(reason="mqtt_subscription_failed")
 
-        await self._publish_disc_request()
-
         try:
-            await asyncio.wait_for(
-                self.discovery_event.wait(), timeout=DISCOVERY_TIMEOUT
-            )
-        except TimeoutError:
-            _LOGGER.warning("Device discovery timed out")
-            return self.async_abort(reason="discovery_timeout")
+            await self._publish_disc_request()
+            await asyncio.sleep(DISCOVERY_TIMEOUT)
         finally:
-            if self._remove_listener is not None:
-                self._remove_listener()
+            remove_listener()
 
-        discovery_payload = self.discovery_data
-        if not discovery_payload:
-            _LOGGER.error("No discovery data received")
+        if not self._discovered:
             return self.async_abort(reason="no_discovery_data")
-        serial_number = discovery_payload.get("id")
 
-        if not serial_number:
-            _LOGGER.error("Invalid discovery payload: {discovery_payload}")
-            return self.async_abort(reason="invalid_discovery_data")
+        if len(self._discovered) == 1:
+            serial = next(iter(self._discovered))
+            return await self._create_entry(serial)
 
-        await self.async_set_unique_id(serial_number)
+        return await self.async_step_select()
+
+    async def async_step_select(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Second step: let the user select one of the discovered devices."""
+
+        if user_input is not None:
+            serial = user_input["serial_number"]
+            return await self._create_entry(serial)
+
+        return self.async_show_form(
+            step_id="select",
+            data_schema=vol.Schema(
+                {vol.Required("serial_number"): vol.In(list(self._discovered.keys()))}
+            ),
+            description_placeholders={"count": str(len(self._discovered))},
+        )
+
+    async def _create_entry(self, serial: str) -> config_entries.ConfigFlowResult:
+        """Finalize entry creation for selected device."""
+        await self.async_set_unique_id(serial)
         self._abort_if_unique_id_configured()
 
-        _LOGGER.info("Device %s successfully added via config flow", serial_number)
+        device_name = self._get_device_name(serial)
+        title = f"{device_name} {serial}"
 
-        dev_name = self.get_device_name(serial_number)
+        _LOGGER.info("Discovered and added device: %s", title)
+
         return self.async_create_entry(
-            title=f"{dev_name} {serial_number}",
-            data={
-                "serial_number": serial_number,
-            },
+            title=title,
+            data={"serial_number": serial},
         )

@@ -120,7 +120,7 @@ async def test_config_flow_discovery_timeout(
     monkeypatch.setattr(mqtt, "async_publish", fake_publish)
     monkeypatch.setattr(asyncio, "wait_for", fake_wait_for)
     res = await flow.async_step_user(user_input=None)
-    assert res["reason"] == "discovery_timeout"
+    assert res["reason"] == "no_discovery_data"
 
 
 @pytest.mark.asyncio
@@ -144,4 +144,4 @@ async def test_config_flow_invalid_discovery_payload(
     monkeypatch.setattr(mqtt, "async_subscribe", fake_subscribe)
     monkeypatch.setattr(mqtt, "async_publish", fake_publish)
     res = await flow.async_step_user(user_input=None)
-    assert res["reason"] == "invalid_discovery_data"
+    assert res["reason"] == "no_discovery_data"
