@@ -212,6 +212,16 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             self._attr_supported_features |= (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
+            # Some devices have fields inverted, so we need to check the values
+            lower_value = self.device.status.get(lower_type.dpcode)
+            upper_value = self.device.status.get(upper_type.dpcode)
+            if (
+                lower_value is not None
+                and upper_value is not None
+                and lower_value > upper_value
+            ):
+                lower_type, upper_type = upper_type, lower_type
+
             self._set_temperature_lower = lower_type
             self._set_temperature_upper = upper_type
 

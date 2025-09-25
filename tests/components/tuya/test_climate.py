@@ -59,8 +59,9 @@ async def test_platform_setup_and_discovery(
             "climate.boiler_temperature_controller",
             {ATTR_TARGET_TEMP_HIGH: 22.7, ATTR_TARGET_TEMP_LOW: 20.2},
             [
-                {"code": "lower_temp", "value": 202},
-                {"code": "upper_temp", "value": 227},
+                # On this device, the values are inverted
+                {"code": "upper_temp", "value": 202},
+                {"code": "lower_temp", "value": 227},
             ],
         ),
         (
