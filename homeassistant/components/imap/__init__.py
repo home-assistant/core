@@ -67,9 +67,10 @@ SERVICE_MOVE_SCHEMA = _SERVICE_UID_SCHEMA.extend(
     }
 )
 SERVICE_DELETE_SCHEMA = _SERVICE_UID_SCHEMA
-SERVICE_FETCH_TEXT_SCHEMA = _SERVICE_UID_SCHEMA.extend(
+SERVICE_FETCH_TEXT_SCHEMA = _SERVICE_UID_SCHEMA
+SERVICE_FETCH_PART_SCHEMA = _SERVICE_UID_SCHEMA.extend(
     {
-        vol.Optional(CONF_PART): cv.string,
+        vol.Required(CONF_PART): cv.string,
     }
 )
 
@@ -208,6 +209,44 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def async_fetch(call: ServiceCall) -> ServiceResponse:
         """Process fetch email service and return content."""
 
+        entry_id: str = call.data[CONF_ENTRY]
+        uid: str = call.data[CONF_UID]
+        _LOGGER.debug(
+            "Fetch text for message %s. Entry: %s",
+            uid,
+            entry_id,
+        )
+        client = await async_get_imap_client(hass, entry_id)
+        try:
+            response = await client.fetch(uid, "BODY.PEEK[]")
+        except (TimeoutError, AioImapException) as exc:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="imap_server_fail",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
+        raise_on_error(response, "fetch_failed")
+        message = ImapMessage(response.lines[1])
+        await client.close()
+        return {
+            "text": message.text,
+            "sender": message.sender,
+            "subject": message.subject,
+            "parts": get_parts(message.email_message),
+            "uid": uid,
+        }
+
+    hass.services.async_register(
+        DOMAIN,
+        "fetch",
+        async_fetch,
+        SERVICE_FETCH_TEXT_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async def async_fetch_part(call: ServiceCall) -> ServiceResponse:
+        """Process fetch email part service and return content."""
+
         @callback
         def get_message_part(message: Message, part_key: str) -> Message:
             part: Message | Any = message
@@ -226,9 +265,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         entry_id: str = call.data[CONF_ENTRY]
         uid: str = call.data[CONF_UID]
-        part_key: str | None = call.data.get(CONF_PART)
+        part_key: str = call.data[CONF_PART]
         _LOGGER.debug(
-            "Fetch text for message %s. Entry: %s",
+            "Fetch part %s for message %s. Entry: %s",
+            part_key,
             uid,
             entry_id,
         )
@@ -244,14 +284,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         raise_on_error(response, "fetch_failed")
         message = ImapMessage(response.lines[1])
         await client.close()
-        if part_key is None:
-            return {
-                "text": message.text,
-                "sender": message.sender,
-                "subject": message.subject,
-                "parts": get_parts(message.email_message),
-                "uid": uid,
-            }
         part_data = get_message_part(message.email_message, part_key)
         part_data_content = part_data.get_payload(decode=False)
         try:
@@ -272,9 +304,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.services.async_register(
         DOMAIN,
-        "fetch",
-        async_fetch,
-        SERVICE_FETCH_TEXT_SCHEMA,
+        "fetch_part",
+        async_fetch_part,
+        SERVICE_FETCH_PART_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
 

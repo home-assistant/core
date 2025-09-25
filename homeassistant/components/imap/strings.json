@@ -148,6 +148,20 @@
         "uid": {
           "name": "UID",
           "description": "The email identifier (UID)."
+        }
+      }
+    },
+    "fetch_part": {
+      "name": "Fetch message part",
+      "description": "Fetches a message part or attachment from an email message.",
+      "fields": {
+        "entry": {
+          "name": "[%key:component::imap::services::fetch::fields::entry::name%]",
+          "description": "[%key:component::imap::services::fetch::fields::entry::description%]"
+        },
+        "uid": {
+          "name": "[%key:component::imap::services::fetch::fields::uid::name%]",
+          "description": "[%key:component::imap::services::fetch::fields::uid::description%]"
         },
         "part": {
           "name": "Part",

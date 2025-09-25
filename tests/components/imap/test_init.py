@@ -985,11 +985,11 @@ async def test_services(
     assert response["uid"] == "1"
     assert response["parts"] == message_parts
 
-    # Test fetch service with attachment response
+    # Test fetch part service with attachment response
     mock_imap_protocol.reset_mock()
     data = {"entry": config_entry.entry_id, "uid": "1", "part": "1"}
     response = await hass.services.async_call(
-        DOMAIN, "fetch", data, blocking=True, return_response=True
+        DOMAIN, "fetch_part", data, blocking=True, return_response=True
     )
     mock_imap_protocol.fetch.assert_called_with("1", "BODY.PEEK[]")
     assert response["part_data"] == "VGV4dCBhdHRhY2htZW50IGNvbnRlbnQ=\n"
@@ -1000,12 +1000,12 @@ async def test_services(
     assert response["uid"] == "1"
     assert b64decode(response["part_data"]) == b"Text attachment content"
 
-    # Test fetch service with invalid part index
+    # Test fetch part service with invalid part index
     for part in ("A", "2", "0"):
         data = {"entry": config_entry.entry_id, "uid": "1", "part": part}
         with pytest.raises(ServiceValidationError) as exc:
             await hass.services.async_call(
-                DOMAIN, "fetch", data, blocking=True, return_response=True
+                DOMAIN, "fetch_part", data, blocking=True, return_response=True
             )
         assert exc.value.translation_key == "invalid_part_index"
 
@@ -1052,12 +1052,14 @@ async def test_services(
         ),
         "delete": ({"entry": config_entry.entry_id, "uid": "1"}, False),
         "fetch": ({"entry": config_entry.entry_id, "uid": "1"}, True),
+        "fetch_part": ({"entry": config_entry.entry_id, "uid": "1", "part": "1"}, True),
     }
     patch_error_translation_key = {
         "seen": ("store", "seen_failed"),
         "move": ("copy", "copy_failed"),
         "delete": ("store", "delete_failed"),
         "fetch": ("fetch", "fetch_failed"),
+        "fetch_part": ("fetch", "fetch_failed"),
     }
     for service, (data, response) in service_calls_response.items():
         with (
