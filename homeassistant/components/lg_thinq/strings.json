@@ -70,6 +70,9 @@
       },
       "display_light": {
         "name": "Lighting"
+      },
+      "air_clean_operation_mode": {
+        "name": "[%key:component::lg_thinq::entity::climate::climate_air_conditioner::state_attributes::preset_mode::state::air_clean%]"
       }
     },
     "binary_sensor": {
@@ -120,7 +123,7 @@
             "state": {
               "slow": "Slow",
               "low": "[%key:common::state::low%]",
-              "mid": "[%key:common::state::medium%]",
+              "medium": "[%key:common::state::medium%]",
               "high": "[%key:common::state::high%]",
               "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
               "auto": "[%key:common::state::auto%]"
@@ -920,6 +923,15 @@
       },
       "cycle_count_for_location": {
         "name": "{location} cycles"
+      },
+      "energy_usage_yesterday": {
+        "name": "Energy yesterday"
+      },
+      "energy_usage_this_month": {
+        "name": "Energy this month"
+      },
+      "energy_usage_last_month": {
+        "name": "Energy last month"
       }
     },
     "select": {

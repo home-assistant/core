@@ -24,10 +24,12 @@ from homeassistant.helpers.trigger import (
     PluggableAction,
     Trigger,
     TriggerActionType,
+    TriggerConfig,
     TriggerInfo,
     _async_get_trigger_platform,
     async_initialize_triggers,
     async_validate_trigger_config,
+    move_top_level_schema_fields_to_options,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
@@ -54,14 +56,10 @@ async def test_trigger_subtype(hass: HomeAssistant) -> None:
         assert integration_mock.call_args == call(hass, "test")
 
 
-async def test_trigger_variables(hass: HomeAssistant) -> None:
-    """Test trigger variables."""
-
-
-async def test_if_fires_on_event(
+async def test_trigger_variables(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
-    """Test the firing of events."""
+    """Test trigger variables."""
     assert await async_setup_component(
         hass,
         "automation",
@@ -451,14 +449,81 @@ async def test_pluggable_action(
     assert not plug_2
 
 
+@pytest.mark.parametrize(
+    ("config", "schema_dict", "expected_config"),
+    [
+        (
+            {
+                "platform": "test",
+                "entity": "sensor.test",
+                "from": "open",
+                "to": "closed",
+                "for": {"hours": 1},
+                "attribute": "state",
+                "value_template": "{{ value_json.val }}",
+                "extra_field": "extra_value",
+            },
+            {},
+            {
+                "platform": "test",
+                "entity": "sensor.test",
+                "from": "open",
+                "to": "closed",
+                "for": {"hours": 1},
+                "attribute": "state",
+                "value_template": "{{ value_json.val }}",
+                "extra_field": "extra_value",
+                "options": {},
+            },
+        ),
+        (
+            {
+                "platform": "test",
+                "entity": "sensor.test",
+                "from": "open",
+                "to": "closed",
+                "for": {"hours": 1},
+                "attribute": "state",
+                "value_template": "{{ value_json.val }}",
+                "extra_field": "extra_value",
+            },
+            {
+                vol.Required("entity"): str,
+                vol.Optional("from"): str,
+                vol.Optional("to"): str,
+                vol.Optional("for"): dict,
+                vol.Optional("attribute"): str,
+                vol.Optional("value_template"): str,
+            },
+            {
+                "platform": "test",
+                "extra_field": "extra_value",
+                "options": {
+                    "entity": "sensor.test",
+                    "from": "open",
+                    "to": "closed",
+                    "for": {"hours": 1},
+                    "attribute": "state",
+                    "value_template": "{{ value_json.val }}",
+                },
+            },
+        ),
+    ],
+)
+async def test_move_schema_fields_to_options(
+    config, schema_dict, expected_config
+) -> None:
+    """Test moving schema fields to options."""
+    assert (
+        move_top_level_schema_fields_to_options(config, schema_dict) == expected_config
+    )
+
+
 async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
     """Test a trigger platform with multiple trigger."""
 
     class MockTrigger(Trigger):
         """Mock trigger."""
-
-        def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
-            """Initialize trigger."""
 
         @classmethod
         async def async_validate_config(
@@ -466,6 +531,9 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
         ) -> ConfigType:
             """Validate config."""
             return config
+
+        def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+            """Initialize trigger."""
 
     class MockTrigger1(MockTrigger):
         """Mock trigger 1."""
@@ -489,9 +557,7 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
             """Attach a trigger."""
             action({"trigger": "test_trigger_2"})
 
-    async def async_get_triggers(
-        hass: HomeAssistant,
-    ) -> dict[str, type[Trigger]]:
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "_": MockTrigger1,
             "trig_2": MockTrigger2,
@@ -501,7 +567,7 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
     mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
 
     config_1 = [{"platform": "test"}]
-    config_2 = [{"platform": "test.trig_2"}]
+    config_2 = [{"platform": "test.trig_2", "options": {"x": 1}}]
     config_3 = [{"platform": "test.unknown_trig"}]
     assert await async_validate_trigger_config(hass, config_1) == config_1
     assert await async_validate_trigger_config(hass, config_2) == config_2
@@ -528,6 +594,53 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
 
     with pytest.raises(KeyError):
         await async_initialize_triggers(hass, config_3, cb_action, "test", "", log_cb)
+
+
+async def test_platform_migrate_trigger(hass: HomeAssistant) -> None:
+    """Test a trigger platform with a migration."""
+
+    OPTIONS_SCHEMA_DICT = {
+        vol.Required("option_1"): str,
+        vol.Optional("option_2"): int,
+    }
+
+    class MockTrigger(Trigger):
+        """Mock trigger."""
+
+        @classmethod
+        async def async_validate_complete_config(
+            cls, hass: HomeAssistant, complete_config: ConfigType
+        ) -> ConfigType:
+            """Validate complete config."""
+            complete_config = move_top_level_schema_fields_to_options(
+                complete_config, OPTIONS_SCHEMA_DICT
+            )
+            return await super().async_validate_complete_config(hass, complete_config)
+
+        @classmethod
+        async def async_validate_config(
+            cls, hass: HomeAssistant, config: ConfigType
+        ) -> ConfigType:
+            """Validate config."""
+            return config
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {
+            "_": MockTrigger,
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    config_1 = [{"platform": "test", "option_1": "value_1", "option_2": 2}]
+    config_2 = [{"platform": "test", "option_1": "value_1"}]
+    config_3 = [{"platform": "test", "options": {"option_1": "value_1", "option_2": 2}}]
+    config_4 = [{"platform": "test", "options": {"option_1": "value_1"}}]
+
+    assert await async_validate_trigger_config(hass, config_1) == config_3
+    assert await async_validate_trigger_config(hass, config_2) == config_4
+    assert await async_validate_trigger_config(hass, config_3) == config_3
+    assert await async_validate_trigger_config(hass, config_4) == config_4
 
 
 @pytest.mark.parametrize(
