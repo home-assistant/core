@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.event import async_call_later
@@ -62,6 +63,7 @@ from .const import (
     CONF_VIRTUAL_COUNT,
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
+    MODBUS_DOMAIN,
     SIGNAL_STOP_ENTITY,
     DataType,
 )
@@ -90,14 +92,30 @@ class ModbusBaseEntity(Entity):
         self._input_type = entry[CONF_INPUT_TYPE]
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
         self._cancel_call: Callable[[], None] | None = None
-        self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
+        uiid = f"{list(self._hub.device_connection.identifiers)[0]} {self._device_address} {self._address}"
+        self._attr_unique_id = entry.get(CONF_UNIQUE_ID, uiid)
         self._attr_name = entry[CONF_NAME]
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
-
         self._min_value = entry.get(CONF_MIN_VALUE)
         self._max_value = entry.get(CONF_MAX_VALUE)
         self._nan_value = entry.get(CONF_NAN_VALUE)
         self._zero_suppress = entry.get(CONF_ZERO_SUPPRESS)
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        hub_id = list(self._hub.device_connection.identifiers)[0]
+        return DeviceInfo(
+            identifiers={
+                (
+                    MODBUS_DOMAIN,
+                    f"{hub_id} {self._device_address}",
+                )
+            },
+            name=f"modbus device {self._device_address}",
+            model="modbus device",
+            via_device=hub_id,
+        )
 
     @abstractmethod
     async def _async_update(self) -> None:

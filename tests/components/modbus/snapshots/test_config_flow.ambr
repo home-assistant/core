@@ -1,0 +1,53 @@
+# serializer version: 1
+# name: test_import_flow
+  list([
+    ConfigEntrySnapshot({
+      'data': dict({
+        'host': '1.2.3.4',
+        'name': 'tcp_config',
+        'port': 502,
+        'type': 'tcp',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'modbus',
+      'entry_id': <ANY>,
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'import',
+      'subentries': list([
+      ]),
+      'title': 'tcp_config',
+      'unique_id': None,
+      'version': 1,
+    }),
+    ConfigEntrySnapshot({
+      'data': dict({
+        'host': '1.2.3.4',
+        'name': 'tcp_config2',
+        'port': 503,
+        'type': 'tcp',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'modbus',
+      'entry_id': <ANY>,
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'import',
+      'subentries': list([
+      ]),
+      'title': 'tcp_config2',
+      'unique_id': None,
+      'version': 1,
+    }),
+  ])
+# ---

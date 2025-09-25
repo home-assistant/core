@@ -16,6 +16,7 @@ from pymodbus.framer import FramerType
 from pymodbus.pdu import ModbusPDU
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_STATE,
     CONF_DELAY,
@@ -28,8 +29,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
@@ -55,9 +55,7 @@ from .const import (
     CONF_PARITY,
     CONF_STOPBITS,
     DEFAULT_HUB,
-    DEVICE_ID,
     DOMAIN,
-    PLATFORMS,
     RTUOVERTCP,
     SERIAL,
     SERVICE_STOP,
@@ -67,7 +65,6 @@ from .const import (
     TCP,
     UDP,
 )
-from .validators import check_config
 
 DATA_MODBUS_HUBS: HassKey[dict[str, ModbusHub]] = HassKey(DOMAIN)
 
@@ -133,10 +130,6 @@ async def async_modbus_setup(
 ) -> bool:
     """Set up Modbus component."""
 
-    if config[DOMAIN]:
-        config[DOMAIN] = check_config(hass, config[DOMAIN])
-        if not config[DOMAIN]:
-            return False
     if DATA_MODBUS_HUBS in hass.data and config[DOMAIN] == []:
         hubs = hass.data[DATA_MODBUS_HUBS]
         for hub in hubs.values():
@@ -164,7 +157,7 @@ async def async_modbus_setup(
 
     async def async_stop_modbus(event: Event) -> None:
         """Stop Modbus service."""
-        for client in hub_collect.values():
+        for client in hass.data[DATA_MODBUS_HUBS].values():
             await client.async_close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_modbus)
@@ -175,13 +168,12 @@ async def async_modbus_setup(
         """Return the details required to process the service call."""
         device_address = service.data.get(ATTR_SLAVE, service.data.get(ATTR_UNIT, 1))
         address = service.data[ATTR_ADDRESS]
-        hub = hub_collect[service.data[ATTR_HUB]]
+        hub = hass.data[DATA_MODBUS_HUBS][service.data[ATTR_HUB]]
         return (hub, device_address, address)
 
     async def async_write_register(service: ServiceCall) -> None:
         """Write Modbus registers."""
         hub, device_address, address = _get_service_call_details(service)
-
         value = service.data[ATTR_VALUE]
         if isinstance(value, list):
             await hub.async_pb_call(
@@ -195,9 +187,7 @@ async def async_modbus_setup(
     async def async_write_coil(service: ServiceCall) -> None:
         """Write Modbus coil."""
         hub, device_address, address = _get_service_call_details(service)
-
         state = service.data[ATTR_STATE]
-
         if isinstance(state, list):
             await hub.async_pb_call(
                 device_address, address, state, CALL_TYPE_WRITE_COILS
@@ -231,7 +221,7 @@ async def async_modbus_setup(
     async def async_stop_hub(service: ServiceCall) -> None:
         """Stop Modbus hub."""
         async_dispatcher_send(hass, SIGNAL_STOP_ENTITY)
-        hub = hub_collect[service.data[ATTR_HUB]]
+        hub = hass.data[DATA_MODBUS_HUBS][service.data[ATTR_HUB]]
         await hub.async_close()
 
     hass.services.async_register(
@@ -246,7 +236,7 @@ async def async_modbus_setup(
 class ModbusHub:
     """Thread safe wrapper class for pymodbus."""
 
-    def __init__(self, hass: HomeAssistant, client_config: dict[str, Any]) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Modbus hub."""
 
         # generic configuration
@@ -255,11 +245,11 @@ class ModbusHub:
         ) = None
         self.event_connected = asyncio.Event()
         self.hass = hass
-        self.name = client_config[CONF_NAME]
-        self._config_type = client_config[CONF_TYPE]
-        self.config_delay = client_config[CONF_DELAY]
+        self.name = entry.data[CONF_NAME]
+        self._config_type = entry.data[CONF_TYPE]
+        self.config_delay = entry.data[CONF_DELAY]
         self._pb_request: dict[str, RunEntry] = {}
-        self._connect_task: asyncio.Task
+        self._connect_task: asyncio.Task | None = None
         self._last_log_error: str = ""
         self._pb_class = {
             SERIAL: AsyncModbusSerialClient,
@@ -268,38 +258,50 @@ class ModbusHub:
             RTUOVERTCP: AsyncModbusTcpClient,
         }
         self._pb_params = {
-            "port": client_config[CONF_PORT],
-            "timeout": client_config[CONF_TIMEOUT],
+            "port": entry.data[CONF_PORT],
+            "timeout": entry.data[CONF_TIMEOUT],
             "retries": 3,
         }
         if self._config_type == SERIAL:
             # serial configuration
-            if client_config[CONF_METHOD] == "ascii":
+            if entry.data[CONF_METHOD] == "ascii":
                 self._pb_params["framer"] = FramerType.ASCII
             else:
                 self._pb_params["framer"] = FramerType.RTU
             self._pb_params.update(
                 {
-                    "baudrate": client_config[CONF_BAUDRATE],
-                    "stopbits": client_config[CONF_STOPBITS],
-                    "bytesize": client_config[CONF_BYTESIZE],
-                    "parity": client_config[CONF_PARITY],
+                    "baudrate": entry.data[CONF_BAUDRATE],
+                    "stopbits": entry.data[CONF_STOPBITS],
+                    "bytesize": entry.data[CONF_BYTESIZE],
+                    "parity": entry.data[CONF_PARITY],
                 }
             )
         else:
             # network configuration
-            self._pb_params["host"] = client_config[CONF_HOST]
+            self._pb_params["host"] = entry.data[CONF_HOST]
             if self._config_type == RTUOVERTCP:
                 self._pb_params["framer"] = FramerType.RTU
             else:
                 self._pb_params["framer"] = FramerType.SOCKET
 
-        if CONF_MSG_WAIT in client_config:
-            self._msg_wait = client_config[CONF_MSG_WAIT] / 1000
+        if CONF_MSG_WAIT in entry.data:
+            self._msg_wait = entry.data[CONF_MSG_WAIT] / 1000
         elif self._config_type == SERIAL:
             self._msg_wait = 30 / 1000
         else:
             self._msg_wait = 0
+
+        self.device_connection = dr.async_get(hass).async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={
+                (
+                    DOMAIN,
+                    f"{entry.data.get(CONF_HOST, '')} {entry.data[CONF_PORT]}",
+                )
+            },
+            name=self.name,
+            model="modbus connection",
+        )
 
     def _log_error(self, text: str) -> None:
         if text == self._last_log_error:
@@ -358,7 +360,7 @@ class ModbusHub:
     async def async_close(self) -> None:
         """Disconnect client."""
         self.event_connected.set()
-        if not self._connect_task.done():
+        if self._connect_task and not self._connect_task.done():
             self._connect_task.cancel()
 
         if self._client:

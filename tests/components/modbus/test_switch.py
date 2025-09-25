@@ -327,14 +327,14 @@ async def test_restore_state_switch(
                 },
                 {
                     CONF_NAME: f"{TEST_ENTITY_NAME} 3",
-                    CONF_ADDRESS: 18,
+                    CONF_ADDRESS: 19,
                     CONF_WRITE_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_SCAN_INTERVAL: 0,
                     CONF_VERIFY: {CONF_STATE_ON: [1, 3]},
                 },
                 {
                     CONF_NAME: f"{TEST_ENTITY_NAME} 4",
-                    CONF_ADDRESS: 19,
+                    CONF_ADDRESS: 20,
                     CONF_WRITE_TYPE: CALL_TYPE_X_REGISTER_HOLDINGS,
                     CONF_SCAN_INTERVAL: 0,
                     CONF_VERIFY: {CONF_STATE_ON: [1, 3]},
