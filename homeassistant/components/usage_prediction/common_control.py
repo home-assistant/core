@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import datetime, timedelta
 from functools import cache
 import logging
 from typing import Any, Literal, cast
 
 from sqlalchemy import select
+from sqlalchemy.engine.row import Row
 from sqlalchemy.orm import Session
 
 from homeassistant.components.recorder import get_instance
@@ -102,15 +103,9 @@ async def async_predict_common_control(
     ent_reg = er.async_get(hass)
 
     # Execute the database operation in the recorder's executor
-    return await recorder.async_add_executor_job(
+    data = await recorder.async_add_executor_job(
         _fetch_with_session, hass, _fetch_and_process_data, ent_reg, user_id
     )
-
-
-def _fetch_and_process_data(
-    session: Session, ent_reg: er.EntityRegistry, user_id: str
-) -> EntityUsagePredictions:
-    """Fetch and process service call events from the database."""
     # Prepare a dictionary to track results
     results: dict[str, Counter[str]] = {
         time_cat: Counter() for time_cat in TIME_CATEGORIES
@@ -119,35 +114,12 @@ def _fetch_and_process_data(
     # Keep track of contexts that we processed so that we will only process
     # the first service call in a context, and not subsequent calls.
     context_processed: set[bytes] = set()
-    thirty_days_ago_ts = (dt_util.utcnow() - timedelta(days=30)).timestamp()
-    user_id_bytes = uuid_hex_to_bytes_or_none(user_id)
-    if not user_id_bytes:
-        raise ValueError("Invalid user_id format")
-
-    # Build the main query for events with their data
-    query = (
-        select(
-            Events.context_id_bin,
-            Events.time_fired_ts,
-            EventData.shared_data,
-        )
-        .select_from(Events)
-        .outerjoin(EventData, Events.data_id == EventData.data_id)
-        .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
-        .where(Events.time_fired_ts >= thirty_days_ago_ts)
-        .where(Events.context_user_id_bin == user_id_bytes)
-        .where(EventTypes.event_type == "call_service")
-        .order_by(Events.time_fired_ts)
-    )
-
     # Execute the query
     context_id: bytes
     time_fired_ts: float
     shared_data: str | None
     local_time_zone = dt_util.get_default_time_zone()
-    for context_id, time_fired_ts, shared_data in (
-        session.connection().execute(query).all()
-    ):
+    for context_id, time_fired_ts, shared_data in data:
         # Skip if we have already processed an event that was part of this context
         if context_id in context_processed:
             continue
@@ -229,11 +201,40 @@ def _fetch_and_process_data(
     )
 
 
+def _fetch_and_process_data(
+    session: Session, ent_reg: er.EntityRegistry, user_id: str
+) -> Sequence[Row[tuple[bytes | None, float | None, str | None]]]:
+    """Fetch and process service call events from the database."""
+    thirty_days_ago_ts = (dt_util.utcnow() - timedelta(days=30)).timestamp()
+    user_id_bytes = uuid_hex_to_bytes_or_none(user_id)
+    if not user_id_bytes:
+        raise ValueError("Invalid user_id format")
+
+    # Build the main query for events with their data
+    query = (
+        select(
+            Events.context_id_bin,
+            Events.time_fired_ts,
+            EventData.shared_data,
+        )
+        .select_from(Events)
+        .outerjoin(EventData, Events.data_id == EventData.data_id)
+        .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
+        .where(Events.time_fired_ts >= thirty_days_ago_ts)
+        .where(Events.context_user_id_bin == user_id_bytes)
+        .where(EventTypes.event_type == "call_service")
+        .order_by(Events.time_fired_ts)
+    )
+    return session.connection().execute(query).all()
+
+
 def _fetch_with_session(
     hass: HomeAssistant,
-    fetch_func: Callable[[Session], EntityUsagePredictions],
+    fetch_func: Callable[
+        [Session], Sequence[Row[tuple[bytes | None, float | None, str | None]]]
+    ],
     *args: object,
-) -> EntityUsagePredictions:
+) -> Sequence[Row[tuple[bytes | None, float | None, str | None]]]:
     """Execute a fetch function with a database session."""
     with session_scope(hass=hass, read_only=True) as session:
         return fetch_func(session, *args)
