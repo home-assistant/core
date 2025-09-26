@@ -1,0 +1,36 @@
+unoccupied_cooling_target_temp:
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.OCCUPANCY
+  fields:
+    target_unoccupied_cool_temp:
+      filter:
+        supported_features:
+          - climate.ClimateEntityFeature.OCCUPANCY
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
+          mode: box
+
+unoccupied_heating_target_temp:
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.OCCUPANCY
+  fields:
+    target_unoccupied_heat_temp:
+      filter:
+        supported_features:
+          - climate.ClimateEntityFeature.OCCUPANCY
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
+          mode: box

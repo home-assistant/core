@@ -23,17 +23,26 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ATTR_OCCUPANCY,
     ATTR_UNOCCUPIED_COOLING_TARGET_TEMP,
     ATTR_UNOCCUPIED_HEATING_TARGET_TEMP,
+    SERVICE_SET_UNOCCUPIED_COOLING_TEMPERATURE,
+    SERVICE_SET_UNOCCUPIED_HEATING_TEMPERATURE,
 )
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
+import voluptuous as vol
 
 TEMPERATURE_SCALING_FACTOR = 100
 HVAC_SYSTEM_MODE_MAP = {
@@ -174,6 +183,26 @@ class ThermostatRunningState(IntEnum):
     CoolStage2 = 16  # 1 << 4 = 16
     FanStage2 = 32  # 1 << 5 = 32
     FanStage3 = 64  # 1 << 6 = 64
+
+    """
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_SET_UNOCCUPIED_COOLING_TEMPERATURE,
+        schema={
+            vol.Required("unoccupied_cooling_target_temp"): vol.All(cv.positive_int),
+        },
+        func="async_handle_set_unoccupied_cooling_target_temperature",
+        supports_response=SupportsResponse.ONLY,
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_UNOCCUPIED_HEATING_TEMPERATURE,
+        schema={
+            vol.Required("unoccupied_heating_target_temp"): vol.All(cv.positive_int),
+        },
+        func="async_handle_set_unoccupied_heating_target_temperature",
+        supports_response=SupportsResponse,
+    )
+    """
 
 
 async def async_setup_entry(
