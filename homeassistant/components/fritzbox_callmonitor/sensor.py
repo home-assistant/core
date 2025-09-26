@@ -7,8 +7,7 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
 import queue
-from threading import Event as ThreadingEvent, Thread
-import threading
+from threading import Event as ThreadingEvent, Thread, Lock
 from time import sleep
 from typing import Any, cast
 
@@ -186,7 +185,6 @@ class FritzBoxCallMonitor:
 
         # thread and lock to guard connect/stop
         self._thread: Thread | None = None
-        from threading import Lock
         self._lock = Lock()
 
     def connect(self) -> None:
@@ -202,22 +200,30 @@ class FritzBoxCallMonitor:
             if self.connection:
                 try:
                     self.connection.stop()
-                except Exception:
-                    _LOGGER.debug("Error stopping previous FritzMonitor (ignored)")
+                except (RuntimeError, OSError) as err:
+                    _LOGGER.debug(
+                        "Error stopping previous FritzMonitor (ignored): %s", err
+                    )
                 finally:
                     self.connection = None
 
             try:
                 self.connection = FritzMonitor(address=self.host, port=self.port)
-                event_queue = self.connection.start(reconnect_tries=5, reconnect_delay=5)
+                event_queue = self.connection.start(
+                    reconnect_tries=5, reconnect_delay=5
+                )
 
                 # start processing thread (daemon so HA shutdown isn't blocked)
-                self._thread = Thread(target=self._process_events, args=(event_queue,), daemon=True)
+                self._thread = Thread(
+                    target=self._process_events, args=(event_queue,), daemon=True
+                )
                 self._thread.start()
                 _LOGGER.debug("FritzMonitor thread started")
             except OSError as err:
                 self.connection = None
-                _LOGGER.error("Cannot connect to %s on port %s: %s", self.host, self.port, err)
+                _LOGGER.error(
+                    "Cannot connect to %s on port %s: %s", self.host, self.port, err
+                )
 
     def _process_events(self, event_queue: queue.Queue[str]) -> None:
         """Listen to incoming or outgoing calls."""
@@ -231,15 +237,18 @@ class FritzBoxCallMonitor:
                     _LOGGER.warning("Connection lost, attempting reconnect")
                     try:
                         self.connect()
-                    except Exception as err:
+                    except (RuntimeError, OSError) as err:
+                        # prefer logging.exception when inside except handling real exceptions,
+                        # but here we caught specific exceptions so .error is fine:
                         _LOGGER.error("Reconnect attempt failed: %s", err)
                 continue
             else:
                 _LOGGER.debug("Received event: %s", event)
                 try:
                     self._parse(event)
-                except Exception as err:
-                    _LOGGER.exception("Failed to parse Fritz event: %s", err)
+                except Exception:
+                    # log full traceback but do NOT pass the exception object into the format string
+                    _LOGGER.exception("Failed to parse Fritz event")
                 sleep(1)
 
     def _parse(self, event: str) -> None:
@@ -300,8 +309,8 @@ class FritzBoxCallMonitor:
             if self.connection:
                 try:
                     self.connection.stop()
-                except Exception:
-                    _LOGGER.debug("Error stopping connection (ignored)")
+                except (RuntimeError, OSError) as err:
+                    _LOGGER.debug("Error stopping connection (ignored): %s", err)
                 self.connection = None
             if self._thread and self._thread.is_alive():
                 self._thread.join(timeout=2)
