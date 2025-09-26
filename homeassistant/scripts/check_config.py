@@ -96,6 +96,9 @@ def run(script_args: list) -> int:
 
     config_dir = os.path.join(os.getcwd(), args.config)
 
+    if not args.json:
+        print(color("bold", "Testing configuration at", config_dir))
+
     res = check(config_dir, args.secrets)
 
     # JSON output branch
@@ -112,8 +115,6 @@ def run(script_args: list) -> int:
 
         # Determine exit code for JSON mode
         return len(res["except"]) + int(args.fail_on_warnings and res["warn"])
-
-    print(color("bold", "Testing configuration at", config_dir))
 
     domain_info: list[str] = []
     if args.info:
