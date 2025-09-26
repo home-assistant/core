@@ -20,6 +20,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfDataRate,
     UnitOfInformation,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -27,8 +28,9 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
 from .const import DSL_CONNECTION, UPTIME_DEVIATION
-from .coordinator import ConnectionInfo, FritzConfigEntry
+from .coordinator import FritzConfigEntry
 from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
+from .models import ConnectionInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -139,6 +141,13 @@ def _retrieve_link_attenuation_received_state(
 ) -> float:
     """Return download line attenuation."""
     return status.attenuation[1] / 10  # type: ignore[no-any-return]
+
+
+def _retrieve_cpu_temperature_state(
+    status: FritzStatus, last_value: float | None
+) -> float:
+    """Return the first CPU temperature value."""
+    return status.get_cpu_temperatures()[0]  # type: ignore[no-any-return]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -272,6 +281,16 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=_retrieve_link_attenuation_received_state,
         is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
+    ),
+    FritzSensorEntityDescription(
+        key="cpu_temperature",
+        translation_key="cpu_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_retrieve_cpu_temperature_state,
+        is_suitable=lambda info: True,
     ),
 )
 

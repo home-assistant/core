@@ -33,11 +33,10 @@ async def test_switch(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
 ) -> None:
     """Test switch entity."""
-    reolink_connect.camera_name.return_value = TEST_CAM_NAME
-    reolink_connect.audio_record.return_value = True
+    reolink_host.audio_record.return_value = True
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -47,7 +46,7 @@ async def test_switch(
     entity_id = f"{Platform.SWITCH}.{TEST_CAM_NAME}_record_audio"
     assert hass.states.get(entity_id).state == STATE_ON
 
-    reolink_connect.audio_record.return_value = False
+    reolink_host.audio_record.return_value = False
     freezer.tick(DEVICE_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -61,9 +60,9 @@ async def test_switch(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    reolink_connect.set_audio.assert_called_with(0, True)
+    reolink_host.set_audio.assert_called_with(0, True)
 
-    reolink_connect.set_audio.side_effect = ReolinkError("Test error")
+    reolink_host.set_audio.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -73,16 +72,16 @@ async def test_switch(
         )
 
     # test switch turn off
-    reolink_connect.set_audio.reset_mock(side_effect=True)
+    reolink_host.set_audio.reset_mock(side_effect=True)
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    reolink_connect.set_audio.assert_called_with(0, False)
+    reolink_host.set_audio.assert_called_with(0, False)
 
-    reolink_connect.set_audio.side_effect = ReolinkError("Test error")
+    reolink_host.set_audio.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -91,29 +90,26 @@ async def test_switch(
             blocking=True,
         )
 
-    reolink_connect.set_audio.reset_mock(side_effect=True)
+    reolink_host.set_audio.reset_mock(side_effect=True)
 
-    reolink_connect.camera_online.return_value = False
+    reolink_host.camera_online.return_value = False
     freezer.tick(DEVICE_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
-    reolink_connect.camera_online.return_value = True
-
 
 async def test_host_switch(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
 ) -> None:
     """Test host switch entity."""
-    reolink_connect.camera_name.return_value = TEST_CAM_NAME
-    reolink_connect.email_enabled.return_value = True
-    reolink_connect.is_hub = False
-    reolink_connect.supported.return_value = True
+    reolink_host.email_enabled.return_value = True
+    reolink_host.is_hub = False
+    reolink_host.supported.return_value = True
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -123,7 +119,7 @@ async def test_host_switch(
     entity_id = f"{Platform.SWITCH}.{TEST_NVR_NAME}_email_on_event"
     assert hass.states.get(entity_id).state == STATE_ON
 
-    reolink_connect.email_enabled.return_value = False
+    reolink_host.email_enabled.return_value = False
     freezer.tick(DEVICE_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -137,9 +133,9 @@ async def test_host_switch(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    reolink_connect.set_email.assert_called_with(None, True)
+    reolink_host.set_email.assert_called_with(None, True)
 
-    reolink_connect.set_email.side_effect = ReolinkError("Test error")
+    reolink_host.set_email.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -149,16 +145,16 @@ async def test_host_switch(
         )
 
     # test switch turn off
-    reolink_connect.set_email.reset_mock(side_effect=True)
+    reolink_host.set_email.reset_mock(side_effect=True)
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    reolink_connect.set_email.assert_called_with(None, False)
+    reolink_host.set_email.assert_called_with(None, False)
 
-    reolink_connect.set_email.side_effect = ReolinkError("Test error")
+    reolink_host.set_email.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -167,17 +163,19 @@ async def test_host_switch(
             blocking=True,
         )
 
-    reolink_connect.set_email.reset_mock(side_effect=True)
 
-
+@pytest.mark.parametrize("channel", [0, None])
 async def test_chime_switch(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    reolink_connect: MagicMock,
-    test_chime: Chime,
+    reolink_host: MagicMock,
+    reolink_chime: Chime,
+    channel: int | None,
 ) -> None:
     """Test host switch entity."""
+    reolink_chime.channel = channel
+
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -186,7 +184,7 @@ async def test_chime_switch(
     entity_id = f"{Platform.SWITCH}.test_chime_led"
     assert hass.states.get(entity_id).state == STATE_ON
 
-    test_chime.led_state = False
+    reolink_chime.led_state = False
     freezer.tick(DEVICE_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -194,16 +192,16 @@ async def test_chime_switch(
     assert hass.states.get(entity_id).state == STATE_OFF
 
     # test switch turn on
-    test_chime.set_option = AsyncMock()
+    reolink_chime.set_option = AsyncMock()
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    test_chime.set_option.assert_called_with(led=True)
+    reolink_chime.set_option.assert_called_with(led=True)
 
-    test_chime.set_option.side_effect = ReolinkError("Test error")
+    reolink_chime.set_option.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -213,16 +211,16 @@ async def test_chime_switch(
         )
 
     # test switch turn off
-    test_chime.set_option.reset_mock(side_effect=True)
+    reolink_chime.set_option.reset_mock(side_effect=True)
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    test_chime.set_option.assert_called_with(led=False)
+    reolink_chime.set_option.assert_called_with(led=False)
 
-    test_chime.set_option.side_effect = ReolinkError("Test error")
+    reolink_chime.set_option.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -230,8 +228,6 @@ async def test_chime_switch(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-
-    test_chime.set_option.reset_mock(side_effect=True)
 
 
 @pytest.mark.parametrize(
@@ -265,7 +261,7 @@ async def test_chime_switch(
 async def test_cleanup_hub_switches(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
     entity_registry: er.EntityRegistry,
     original_id: str,
     capability: str,
@@ -279,9 +275,9 @@ async def test_cleanup_hub_switches(
 
     domain = Platform.SWITCH
 
-    reolink_connect.channels = [0]
-    reolink_connect.is_hub = True
-    reolink_connect.supported = mock_supported
+    reolink_host.channels = [0]
+    reolink_host.is_hub = True
+    reolink_host.supported = mock_supported
 
     entity_registry.async_get_or_create(
         domain=domain,
@@ -300,9 +296,6 @@ async def test_cleanup_hub_switches(
     await hass.async_block_till_done()
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
-
-    reolink_connect.is_hub = False
-    reolink_connect.supported.return_value = True
 
 
 @pytest.mark.parametrize(
@@ -336,7 +329,7 @@ async def test_cleanup_hub_switches(
 async def test_hub_switches_repair_issue(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
     original_id: str,
@@ -351,9 +344,9 @@ async def test_hub_switches_repair_issue(
 
     domain = Platform.SWITCH
 
-    reolink_connect.channels = [0]
-    reolink_connect.is_hub = True
-    reolink_connect.supported = mock_supported
+    reolink_host.channels = [0]
+    reolink_host.is_hub = True
+    reolink_host.supported = mock_supported
 
     entity_registry.async_get_or_create(
         domain=domain,
@@ -373,6 +366,3 @@ async def test_hub_switches_repair_issue(
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
     assert (DOMAIN, "hub_switch_deprecated") in issue_registry.issues
-
-    reolink_connect.is_hub = False
-    reolink_connect.supported.return_value = True

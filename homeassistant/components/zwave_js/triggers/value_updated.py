@@ -4,17 +4,30 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import functools
+from typing import Any
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value, get_value_id_str
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM, MATCH_ALL
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    CONF_OPTIONS,
+    CONF_PLATFORM,
+    MATCH_ALL,
+)
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.trigger import Trigger, TriggerActionType, TriggerInfo
+from homeassistant.helpers.trigger import (
+    Trigger,
+    TriggerActionType,
+    TriggerConfig,
+    TriggerInfo,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from ..config_validation import VALUE_SCHEMA
@@ -37,33 +50,35 @@ from ..const import (
 from ..helpers import async_get_nodes_from_targets, get_device_id
 from .trigger_helpers import async_bypass_dynamic_config_validation
 
+# Relative platform type should be <SUBMODULE_NAME>
+RELATIVE_PLATFORM_TYPE = f"{__name__.rsplit('.', maxsplit=1)[-1]}"
+
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
-PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
+PLATFORM_TYPE = f"{DOMAIN}.{RELATIVE_PLATFORM_TYPE}"
 
 ATTR_FROM = "from"
 ATTR_TO = "to"
 
-TRIGGER_SCHEMA = vol.All(
-    cv.TRIGGER_BASE_SCHEMA.extend(
-        {
-            vol.Required(CONF_PLATFORM): PLATFORM_TYPE,
-            vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-            vol.Required(ATTR_COMMAND_CLASS): vol.In(
-                {cc.value: cc.name for cc in CommandClass}
-            ),
-            vol.Required(ATTR_PROPERTY): vol.Any(vol.Coerce(int), cv.string),
-            vol.Optional(ATTR_ENDPOINT): vol.Coerce(int),
-            vol.Optional(ATTR_PROPERTY_KEY): vol.Any(vol.Coerce(int), cv.string),
-            vol.Optional(ATTR_FROM, default=MATCH_ALL): vol.Any(
-                VALUE_SCHEMA, [VALUE_SCHEMA]
-            ),
-            vol.Optional(ATTR_TO, default=MATCH_ALL): vol.Any(
-                VALUE_SCHEMA, [VALUE_SCHEMA]
-            ),
-        },
+_OPTIONS_SCHEMA_DICT = {
+    vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_COMMAND_CLASS): vol.In(
+        {cc.value: cc.name for cc in CommandClass}
     ),
-    cv.has_at_least_one_key(ATTR_ENTITY_ID, ATTR_DEVICE_ID),
+    vol.Required(ATTR_PROPERTY): vol.Any(vol.Coerce(int), cv.string),
+    vol.Optional(ATTR_ENDPOINT): vol.Coerce(int),
+    vol.Optional(ATTR_PROPERTY_KEY): vol.Any(vol.Coerce(int), cv.string),
+    vol.Optional(ATTR_FROM, default=MATCH_ALL): vol.Any(VALUE_SCHEMA, [VALUE_SCHEMA]),
+    vol.Optional(ATTR_TO, default=MATCH_ALL): vol.Any(VALUE_SCHEMA, [VALUE_SCHEMA]),
+}
+
+_CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_OPTIONS): vol.All(
+            _OPTIONS_SCHEMA_DICT,
+            cv.has_at_least_one_key(ATTR_ENTITY_ID, ATTR_DEVICE_ID),
+        ),
+    },
 )
 
 
@@ -71,12 +86,13 @@ async def async_validate_trigger_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
     """Validate config."""
-    config = TRIGGER_SCHEMA(config)
+    config = _CONFIG_SCHEMA(config)
+    options = config[CONF_OPTIONS]
 
-    if async_bypass_dynamic_config_validation(hass, config):
+    if async_bypass_dynamic_config_validation(hass, options):
         return config
 
-    if not async_get_nodes_from_targets(hass, config):
+    if not async_get_nodes_from_targets(hass, options):
         raise vol.Invalid(
             f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
         )
@@ -85,7 +101,7 @@ async def async_validate_trigger_config(
 
 async def async_attach_trigger(
     hass: HomeAssistant,
-    config: ConfigType,
+    options: ConfigType,
     action: TriggerActionType,
     trigger_info: TriggerInfo,
     *,
@@ -93,17 +109,17 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     dev_reg = dr.async_get(hass)
-    if not async_get_nodes_from_targets(hass, config, dev_reg=dev_reg):
+    if not async_get_nodes_from_targets(hass, options, dev_reg=dev_reg):
         raise ValueError(
             f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
         )
 
-    from_value = config[ATTR_FROM]
-    to_value = config[ATTR_TO]
-    command_class = config[ATTR_COMMAND_CLASS]
-    property_ = config[ATTR_PROPERTY]
-    endpoint = config.get(ATTR_ENDPOINT)
-    property_key = config.get(ATTR_PROPERTY_KEY)
+    from_value = options[ATTR_FROM]
+    to_value = options[ATTR_TO]
+    command_class = options[ATTR_COMMAND_CLASS]
+    property_ = options[ATTR_PROPERTY]
+    endpoint = options.get(ATTR_ENDPOINT)
+    property_key = options.get(ATTR_PROPERTY_KEY)
     unsubs: list[Callable] = []
     job = HassJob(action)
 
@@ -171,7 +187,7 @@ async def async_attach_trigger(
         # Nodes list can come from different drivers and we will need to listen to
         # server connections for all of them.
         drivers: set[Driver] = set()
-        for node in async_get_nodes_from_targets(hass, config, dev_reg=dev_reg):
+        for node in async_get_nodes_from_targets(hass, options, dev_reg=dev_reg):
             driver = node.client.driver
             assert driver is not None  # The node comes from the driver.
             drivers.add(driver)
@@ -207,24 +223,38 @@ async def async_attach_trigger(
 class ValueUpdatedTrigger(Trigger):
     """Z-Wave JS value updated trigger."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
-        """Initialize trigger."""
-        self._config = config
-        self._hass = hass
+    _hass: HomeAssistant
+    _options: dict[str, Any]
 
     @classmethod
-    async def async_validate_trigger_config(
+    async def async_validate_complete_config(
+        cls, hass: HomeAssistant, complete_config: ConfigType
+    ) -> ConfigType:
+        """Validate complete config."""
+        complete_config = move_top_level_schema_fields_to_options(
+            complete_config, _OPTIONS_SCHEMA_DICT
+        )
+        return await super().async_validate_complete_config(hass, complete_config)
+
+    @classmethod
+    async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
         return await async_validate_trigger_config(hass, config)
 
-    async def async_attach_trigger(
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize trigger."""
+        self._hass = hass
+        assert config.options is not None
+        self._options = config.options
+
+    async def async_attach(
         self,
         action: TriggerActionType,
         trigger_info: TriggerInfo,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
         return await async_attach_trigger(
-            self._hass, self._config, action, trigger_info
+            self._hass, self._options, action, trigger_info
         )

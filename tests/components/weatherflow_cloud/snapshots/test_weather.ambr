@@ -37,7 +37,7 @@
 # name: test_weather[weather.my_home_station-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest REST Api',
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
       'dew_point': -13.0,
       'friendly_name': 'My Home Station',
       'humidity': 27,

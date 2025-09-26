@@ -1,0 +1,508 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Landing",
+  "category": "dj",
+  "product_id": "AqHUMdcbYzIq1Of4",
+  "product_name": "Smart Bulb",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2023-04-28T06:04:01+00:00",
+  "create_time": "2023-04-28T06:04:01+00:00",
+  "update_time": "2023-04-28T06:04:01+00:00",
+  "function": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 25,
+        "scale": 0,
+        "unit": "",
+        "max": 255,
+        "step": 1
+      }
+    },
+    "flash_scene_1": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    },
+    "flash_scene_2": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    },
+    "flash_scene_3": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour"]
+      }
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "scale": 0,
+        "unit": "",
+        "max": 255,
+        "step": 1
+      }
+    },
+    "colour_data": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    },
+    "scene_data": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    },
+    "flash_scene_4": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    }
+  },
+  "status_range": {
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 25,
+        "scale": 0,
+        "unit": "",
+        "max": 255,
+        "step": 1
+      }
+    },
+    "colour_data": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    },
+    "scene_data": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    },
+    "flash_scene_2": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    },
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour"]
+      }
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "scale": 0,
+        "unit": "",
+        "max": 255,
+        "step": 1
+      }
+    },
+    "flash_scene_1": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    },
+    "flash_scene_3": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    },
+    "flash_scene_4": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 1,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    }
+  },
+  "status": {
+    "switch_led": false,
+    "work_mode": "colour",
+    "bright_value": 255,
+    "temp_value": 127,
+    "colour_data": {
+      "h": 1.0,
+      "s": 1.0,
+      "v": 255.0
+    },
+    "scene_data": {
+      "h": 0.0,
+      "s": 0.0,
+      "v": 0.0
+    },
+    "flash_scene_1": {
+      "bright": 255,
+      "frequency": 80,
+      "hsv": [
+        {
+          "h": 120.0,
+          "s": 255.0,
+          "v": 255.0
+        }
+      ],
+      "temperature": 255
+    },
+    "flash_scene_2": {
+      "bright": 255,
+      "frequency": 128,
+      "hsv": [
+        {
+          "h": 0.0,
+          "s": 255.0,
+          "v": 255.0
+        },
+        {
+          "h": 120.0,
+          "s": 255.0,
+          "v": 255.0
+        },
+        {
+          "h": 240.0,
+          "s": 255.0,
+          "v": 255.0
+        },
+        {
+          "h": 0.0,
+          "s": 0.0,
+          "v": 0.0
+        },
+        {
+          "h": 0.0,
+          "s": 0.0,
+          "v": 0.0
+        },
+        {
+          "h": 0.0,
+          "s": 0.0,
+          "v": 0.0
+        }
+      ],
+      "temperature": 255
+    },
+    "flash_scene_3": {
+      "bright": 255,
+      "frequency": 80,
+      "hsv": [
+        {
+          "h": 0.0,
+          "s": 255.0,
+          "v": 255.0
+        }
+      ],
+      "temperature": 255
+    },
+    "flash_scene_4": {
+      "bright": 255,
+      "frequency": 5,
+      "hsv": [
+        {
+          "h": 0.0,
+          "s": 255.0,
+          "v": 255.0
+        },
+        {
+          "h": 120.0,
+          "s": 255.0,
+          "v": 255.0
+        },
+        {
+          "h": 60.0,
+          "s": 255.0,
+          "v": 255.0
+        },
+        {
+          "h": 300.0,
+          "s": 255.0,
+          "v": 255.0
+        },
+        {
+          "h": 240.0,
+          "s": 255.0,
+          "v": 255.0
+        },
+        {
+          "h": 0.0,
+          "s": 0.0,
+          "v": 0.0
+        }
+      ],
+      "temperature": 255
+    }
+  },
+  "set_up": true,
+  "support_local": true
+}

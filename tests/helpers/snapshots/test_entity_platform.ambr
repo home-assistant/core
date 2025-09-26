@@ -21,7 +21,6 @@
         '1234',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'test-manuf',
@@ -31,7 +30,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Heliport',
     'sw_version': 'test-sw',
     'via_device_id': <ANY>,
   })
@@ -58,7 +56,6 @@
         'efgh',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'test-manuf',
@@ -68,7 +65,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Heliport',
     'sw_version': 'test-sw',
     'via_device_id': <ANY>,
   })

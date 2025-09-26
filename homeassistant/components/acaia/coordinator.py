@@ -8,6 +8,7 @@ import logging
 from aioacaia.acaiascale import AcaiaScale
 from aioacaia.exceptions import AcaiaDeviceNotFound, AcaiaError
 
+from homeassistant.components.bluetooth import async_get_scanner
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
@@ -42,6 +43,7 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
             name=entry.title,
             is_new_style_scale=entry.data[CONF_IS_NEW_STYLE_SCALE],
             notify_callback=self.async_update_listeners,
+            scanner=async_get_scanner(hass),
         )
 
     @property

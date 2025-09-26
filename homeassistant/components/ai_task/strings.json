@@ -1,11 +1,11 @@
 {
   "services": {
-    "generate_text": {
-      "name": "Generate text",
-      "description": "Use AI to run a task that generates text.",
+    "generate_data": {
+      "name": "Generate data",
+      "description": "Uses AI to run a task that generates data.",
       "fields": {
         "task_name": {
-          "name": "Task Name",
+          "name": "Task name",
           "description": "Name of the task."
         },
         "instructions": {
@@ -15,6 +15,36 @@
         "entity_id": {
           "name": "Entity ID",
           "description": "Entity ID to run the task on. If not provided, the preferred entity will be used."
+        },
+        "structure": {
+          "name": "Structured output",
+          "description": "When set, the AI Task will output fields with this in structure. The structure is a dictionary where the keys are the field names and the values contain a 'description', a 'selector', and an optional 'required' field."
+        },
+        "attachments": {
+          "name": "Attachments",
+          "description": "List of files to attach for multi-modal AI analysis."
+        }
+      }
+    },
+    "generate_image": {
+      "name": "Generate image",
+      "description": "Uses AI to generate image.",
+      "fields": {
+        "task_name": {
+          "name": "Task name",
+          "description": "Name of the task."
+        },
+        "instructions": {
+          "name": "Instructions",
+          "description": "Instructions that explains the image to be generated."
+        },
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "Entity ID to run the task on."
+        },
+        "attachments": {
+          "name": "Attachments",
+          "description": "List of files to attach for using as references."
         }
       }
     }

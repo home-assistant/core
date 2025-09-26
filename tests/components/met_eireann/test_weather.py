@@ -6,8 +6,8 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.met_eireann import UPDATE_INTERVAL
 from homeassistant.components.met_eireann.const import DOMAIN
+from homeassistant.components.met_eireann.coordinator import UPDATE_INTERVAL
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
     SERVICE_GET_FORECASTS,

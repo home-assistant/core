@@ -31,7 +31,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import TEST_NVR_NAME, TEST_UID, TEST_UID_CAM
+from .conftest import TEST_CAM_NAME, TEST_UID, TEST_UID_CAM
 
 from tests.common import MockConfigEntry
 
@@ -103,21 +103,21 @@ DEV_ID_STANDALONE_CAM = f"{TEST_UID_CAM}"
 async def test_try_function(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
     side_effect: ReolinkError,
     expected: HomeAssistantError,
 ) -> None:
     """Test try_function error translations using number entity."""
-    reolink_connect.volume.return_value = 80
+    reolink_host.volume.return_value = 80
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.NUMBER]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.NUMBER}.{TEST_NVR_NAME}_volume"
+    entity_id = f"{Platform.NUMBER}.{TEST_CAM_NAME}_volume"
 
-    reolink_connect.set_volume.side_effect = side_effect
+    reolink_host.set_volume.side_effect = side_effect
     with pytest.raises(expected.__class__) as err:
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -127,8 +127,6 @@ async def test_try_function(
         )
 
     assert err.value.translation_key == expected.translation_key
-
-    reolink_connect.set_volume.reset_mock(side_effect=True)
 
 
 @pytest.mark.parametrize(
@@ -141,12 +139,12 @@ async def test_try_function(
 async def test_get_device_uid_and_ch(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
     device_registry: dr.DeviceRegistry,
     identifiers: set[tuple[str, str]],
 ) -> None:
     """Test get_device_uid_and_ch with multiple identifiers."""
-    reolink_connect.channels = [0]
+    reolink_host.channels = [0]
 
     dev_entry = device_registry.async_get_or_create(
         identifiers=identifiers,
