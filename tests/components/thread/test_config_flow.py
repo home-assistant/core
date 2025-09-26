@@ -83,7 +83,7 @@ async def test_single_instance_allowed_zeroconf(
         )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
     assert len(mock_setup_entry.mock_calls) == 0
 
 
@@ -187,7 +187,7 @@ async def test_import_and_user(
         )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
     assert len(mock_setup_entry.mock_calls) == 0
 
 
@@ -216,7 +216,7 @@ async def test_zeroconf_then_import_user(
         )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
     assert len(mock_setup_entry.mock_calls) == 0
 
 
