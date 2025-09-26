@@ -264,7 +264,7 @@ async def test_xiaomi_vacuum_services(
     state = hass.states.get(entity_id)
 
     assert state.state == VacuumActivity.ERROR
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 30588
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 14204
     assert state.attributes.get(ATTR_ERROR) == "Error message"
     assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-80"
     assert state.attributes.get(ATTR_TIMERS) == [
@@ -450,7 +450,7 @@ async def test_xiaomi_specific_services(
     # Check state attributes
     state = hass.states.get(entity_id)
     assert state.state == VacuumActivity.CLEANING
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 30588
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 14204
     assert state.attributes.get(ATTR_ERROR) is None
     assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-30"
     assert state.attributes.get(ATTR_TIMERS) == [
