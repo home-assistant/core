@@ -25,23 +25,27 @@ from .const import _LOGGER, DEFAULT_PORT, DEVICE_TYPE_LIST, DOMAIN
 from .utils import async_client_session
 
 DEFAULT_HOST = "192.168.1.252"
-DEFAULT_PIN = 111111
+DEFAULT_PIN = "111111"
 
+
+pin_regex = r"^[0-9]{4,10}$"
 
 USER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.positive_int,
+        vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.matches_regex(pin_regex),
         vol.Required(CONF_TYPE, default=BRIDGE): vol.In(DEVICE_TYPE_LIST),
     }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PIN): cv.positive_int})
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {vol.Required(CONF_PIN): cv.matches_regex(pin_regex)}
+)
 STEP_RECONFIGURE = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.port,
-        vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.positive_int,
+        vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.matches_regex(pin_regex),
     }
 )
 
