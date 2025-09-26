@@ -4,13 +4,11 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Awaitable, Callable, Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import Enum, auto
-import functools
 import logging
 from pathlib import Path
-import re
 import time
 from typing import IO, Any, cast
 
@@ -35,7 +33,7 @@ from hassil.recognize import (
 )
 from hassil.string_matcher import UnmatchedRangeEntity, UnmatchedTextEntity
 from hassil.trie import Trie
-from hassil.util import merge_dict
+from hassil.util import merge_dict, remove_punctuation
 from home_assistant_intents import (
     ErrorKey,
     FuzzyConfig,
@@ -53,6 +51,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_should_expose,
 )
 from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
+from homeassistant.core import Event, callback
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -68,25 +67,22 @@ from homeassistant.helpers.event import async_track_state_added_domain
 from homeassistant.util import language as language_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
+from .agent_manager import get_agent_manager
 from .chat_log import AssistantContent, ChatLog
-from .const import (
-    DATA_DEFAULT_ENTITY,
-    DEFAULT_EXPOSED_ATTRIBUTES,
-    DOMAIN,
-    ConversationEntityFeature,
-)
+from .const import DOMAIN, ConversationEntityFeature
 from .entity import ConversationEntity
 from .models import ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
+from .trigger import TriggerDetails
 
 _LOGGER = logging.getLogger(__name__)
+
+
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
 _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
 
-REGEX_TYPE = type(re.compile(""))
-TRIGGER_CALLBACK_TYPE = Callable[
-    [ConversationInput, RecognizeResult], Awaitable[str | None]
-]
+_DEFAULT_EXPOSED_ATTRIBUTES = {"device_class"}
+
 METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
 METADATA_CUSTOM_FILE = "hass_custom_file"
 METADATA_FUZZY_MATCH = "hass_fuzzy_match"
@@ -110,14 +106,6 @@ class LanguageIntents:
     language_variant: str | None
     fuzzy_matcher: FuzzyNgramMatcher | None = None
     fuzzy_responses: FuzzyLanguageResponses | None = None
-
-
-@dataclass(slots=True)
-class TriggerData:
-    """List of sentences and the callback for a trigger."""
-
-    sentences: list[str]
-    callback: TRIGGER_CALLBACK_TYPE
 
 
 @dataclass(slots=True)
@@ -155,8 +143,8 @@ class IntentCacheKey:
     language: str
     """Language of text."""
 
-    device_id: str | None
-    """Device id from user input."""
+    satellite_id: str | None
+    """Satellite id from user input."""
 
 
 @dataclass(frozen=True)
@@ -209,9 +197,9 @@ async def async_setup_default_agent(
     config_intents: dict[str, Any],
 ) -> None:
     """Set up entity registry listener for the default agent."""
-    entity = DefaultAgent(hass, config_intents)
-    await entity_component.async_add_entities([entity])
-    hass.data[DATA_DEFAULT_ENTITY] = entity
+    agent = DefaultAgent(hass, config_intents)
+    await entity_component.async_add_entities([agent])
+    await get_agent_manager(hass).async_setup_default_agent(agent)
 
     @core.callback
     def async_entity_state_listener(
@@ -242,20 +230,22 @@ class DefaultAgent(ConversationEntity):
         """Initialize the default agent."""
         self.hass = hass
         self._lang_intents: dict[str, LanguageIntents | object] = {}
+        self._load_intents_lock = asyncio.Lock()
 
         # intent -> [sentences]
         self._config_intents: dict[str, Any] = config_intents
+
+        # Sentences that will trigger a callback (skipping intent recognition)
+        self._triggers_details: list[TriggerDetails] = []
+        self._trigger_intents: Intents | None = None
+
+        # Slot lists for entities, areas, etc.
         self._slot_lists: dict[str, SlotList] | None = None
+        self._unsub_clear_slot_list: list[Callable[[], None]] | None = None
 
         # Used to filter slot lists before intent matching
         self._exposed_names_trie: Trie | None = None
         self._unexposed_names_trie: Trie | None = None
-
-        # Sentences that will trigger a callback (skipping intent recognition)
-        self.trigger_sentences: list[TriggerData] = []
-        self._trigger_intents: Intents | None = None
-        self._unsub_clear_slot_list: list[Callable[[], None]] | None = None
-        self._load_intents_lock = asyncio.Lock()
 
         # LRU cache to avoid unnecessary intent matching
         self._intent_cache = IntentCache(capacity=128)
@@ -327,12 +317,10 @@ class DefaultAgent(ConversationEntity):
 
         if self._exposed_names_trie is not None:
             # Filter by input string
-            text_lower = user_input.text.strip().lower()
+            text = remove_punctuation(user_input.text).strip().lower()
             slot_lists["name"] = TextSlotList(
                 name="name",
-                values=[
-                    result[2] for result in self._exposed_names_trie.find(text_lower)
-                ],
+                values=[result[2] for result in self._exposed_names_trie.find(text)],
             )
 
         start = time.monotonic()
@@ -373,7 +361,6 @@ class DefaultAgent(ConversationEntity):
             response = intent.IntentResponse(
                 language=user_input.language or self.hass.config.language
             )
-            response.response_type = intent.IntentResponseType.ACTION_DONE
             response.async_set_speech(response_text)
 
         if response is None:
@@ -448,9 +435,15 @@ class DefaultAgent(ConversationEntity):
             }
             for entity in result.entities_list
         }
-        device_area = self._get_device_area(user_input.device_id)
-        if device_area:
-            slots["preferred_area_id"] = {"value": device_area.id}
+
+        satellite_id = user_input.satellite_id
+        device_id = user_input.device_id
+        satellite_area, device_id = self._get_satellite_area_and_device(
+            satellite_id, device_id
+        )
+        if satellite_area is not None:
+            slots["preferred_area_id"] = {"value": satellite_area.id}
+
         async_conversation_trace_append(
             ConversationTraceEventType.TOOL_CALL,
             {
@@ -472,7 +465,8 @@ class DefaultAgent(ConversationEntity):
                 user_input.context,
                 language,
                 assistant=DOMAIN,
-                device_id=user_input.device_id,
+                device_id=device_id,
+                satellite_id=satellite_id,
                 conversation_agent_id=user_input.agent_id,
             )
         except intent.MatchFailedError as match_error:
@@ -538,7 +532,9 @@ class DefaultAgent(ConversationEntity):
 
         # Try cache first
         cache_key = IntentCacheKey(
-            text=user_input.text, language=language, device_id=user_input.device_id
+            text=user_input.text,
+            language=language,
+            satellite_id=user_input.satellite_id,
         )
         cache_value = self._intent_cache.get(cache_key)
         if cache_value is not None:
@@ -848,7 +844,7 @@ class DefaultAgent(ConversationEntity):
             context = {"domain": state.domain}
             if state.attributes:
                 # Include some attributes
-                for attr in DEFAULT_EXPOSED_ATTRIBUTES:
+                for attr in _DEFAULT_EXPOSED_ATTRIBUTES:
                     if attr not in state.attributes:
                         continue
                     context[attr] = state.attributes[attr]
@@ -1194,8 +1190,8 @@ class DefaultAgent(ConversationEntity):
             fuzzy_responses=fuzzy_responses,
         )
 
-    @core.callback
-    def _async_clear_slot_list(self, event: core.Event[Any] | None = None) -> None:
+    @callback
+    def _async_clear_slot_list(self, event: Event[Any] | None = None) -> None:
         """Clear slot lists when a registry has changed."""
         # Two subscribers can be scheduled at same time
         _LOGGER.debug("Clearing slot lists")
@@ -1263,7 +1259,7 @@ class DefaultAgent(ConversationEntity):
         name_list = TextSlotList.from_tuples(exposed_entity_names, allow_template=False)
         for name_value in name_list.values:
             assert isinstance(name_value.text_in, TextChunk)
-            name_text = name_value.text_in.text.strip().lower()
+            name_text = remove_punctuation(name_value.text_in.text).strip().lower()
             self._exposed_names_trie.insert(name_text, name_value)
 
         self._slot_lists = {
@@ -1308,28 +1304,40 @@ class DefaultAgent(ConversationEntity):
         self, user_input: ConversationInput
     ) -> dict[str, Any] | None:
         """Return intent recognition context for user input."""
-        if not user_input.device_id:
+        satellite_area, _ = self._get_satellite_area_and_device(
+            user_input.satellite_id, user_input.device_id
+        )
+        if satellite_area is None:
             return None
 
-        device_area = self._get_device_area(user_input.device_id)
-        if device_area is None:
-            return None
+        return {"area": {"value": satellite_area.name, "text": satellite_area.name}}
 
-        return {"area": {"value": device_area.name, "text": device_area.name}}
+    def _get_satellite_area_and_device(
+        self, satellite_id: str | None, device_id: str | None = None
+    ) -> tuple[ar.AreaEntry | None, str | None]:
+        """Return area entry and device id."""
+        hass = self.hass
 
-    def _get_device_area(self, device_id: str | None) -> ar.AreaEntry | None:
-        """Return area object for given device identifier."""
-        if device_id is None:
-            return None
+        area_id: str | None = None
 
-        devices = dr.async_get(self.hass)
-        device = devices.async_get(device_id)
-        if (device is None) or (device.area_id is None):
-            return None
+        if (
+            satellite_id is not None
+            and (entity_entry := er.async_get(hass).async_get(satellite_id)) is not None
+        ):
+            area_id = entity_entry.area_id
+            device_id = entity_entry.device_id
 
-        areas = ar.async_get(self.hass)
+        if (
+            area_id is None
+            and device_id is not None
+            and (device_entry := dr.async_get(hass).async_get(device_id)) is not None
+        ):
+            area_id = device_entry.area_id
 
-        return areas.async_get_area(device.area_id)
+        if area_id is None:
+            return None, device_id
+
+        return ar.async_get(hass).async_get_area(area_id), device_id
 
     def _get_error_text(
         self,
@@ -1353,22 +1361,14 @@ class DefaultAgent(ConversationEntity):
 
         return response_template.async_render(response_args)
 
-    @core.callback
-    def register_trigger(
-        self,
-        sentences: list[str],
-        callback: TRIGGER_CALLBACK_TYPE,
-    ) -> core.CALLBACK_TYPE:
-        """Register a list of sentences that will trigger a callback when recognized."""
-        trigger_data = TriggerData(sentences=sentences, callback=callback)
-        self.trigger_sentences.append(trigger_data)
+    @callback
+    def update_triggers(self, triggers_details: list[TriggerDetails]) -> None:
+        """Update triggers."""
+        self._triggers_details = triggers_details
 
         # Force rebuild on next use
         self._trigger_intents = None
 
-        return functools.partial(self._unregister_trigger, trigger_data)
-
-    @core.callback
     def _rebuild_trigger_intents(self) -> None:
         """Rebuild the HassIL intents object from the current trigger sentences."""
         intents_dict = {
@@ -1377,8 +1377,8 @@ class DefaultAgent(ConversationEntity):
                 # Use trigger data index as a virtual intent name for HassIL.
                 # This works because the intents are rebuilt on every
                 # register/unregister.
-                str(trigger_id): {"data": [{"sentences": trigger_data.sentences}]}
-                for trigger_id, trigger_data in enumerate(self.trigger_sentences)
+                str(trigger_id): {"data": [{"sentences": trigger_details.sentences}]}
+                for trigger_id, trigger_details in enumerate(self._triggers_details)
             },
         }
 
@@ -1398,14 +1398,6 @@ class DefaultAgent(ConversationEntity):
 
         _LOGGER.debug("Rebuilt trigger intents: %s", intents_dict)
 
-    @core.callback
-    def _unregister_trigger(self, trigger_data: TriggerData) -> None:
-        """Unregister a set of trigger sentences."""
-        self.trigger_sentences.remove(trigger_data)
-
-        # Force rebuild on next use
-        self._trigger_intents = None
-
     async def async_recognize_sentence_trigger(
         self, user_input: ConversationInput
     ) -> SentenceTriggerResult | None:
@@ -1414,7 +1406,7 @@ class DefaultAgent(ConversationEntity):
         Calls the registered callbacks if there's a match and returns a sentence
         trigger result.
         """
-        if not self.trigger_sentences:
+        if not self._triggers_details:
             # No triggers registered
             return None
 
@@ -1459,7 +1451,7 @@ class DefaultAgent(ConversationEntity):
 
         # Gather callback responses in parallel
         trigger_callbacks = [
-            self.trigger_sentences[trigger_id].callback(user_input, trigger_result)
+            self._triggers_details[trigger_id].callback(user_input, trigger_result)
             for trigger_id, trigger_result in result.matched_triggers.items()
         ]
 
