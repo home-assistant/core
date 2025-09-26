@@ -130,10 +130,10 @@ class RpcConsumedEnergySensor(RpcSensor):
         """Return value of sensor."""
         total_energy = self.status["aenergy"]["total"]
 
-        if not isinstance(total_energy, float | int):
+        if not isinstance(total_energy, float):
             return None
 
-        if not isinstance(self.attribute_value, float | int):
+        if not isinstance(self.attribute_value, float):
             return None
 
         return total_energy - self.attribute_value
