@@ -69,12 +69,10 @@
         "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::confirm_zigbee::description%]"
       },
       "install_otbr_addon": {
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_otbr_addon::title%]",
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_otbr_addon::description%]"
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_otbr_addon::title%]"
       },
       "start_otbr_addon": {
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::start_otbr_addon::title%]",
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::start_otbr_addon::description%]"
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::start_otbr_addon::title%]"
       },
       "otbr_failed": {
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::otbr_failed::title%]",
@@ -129,9 +127,10 @@
     },
     "progress": {
       "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
+      "install_firmware": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::install_firmware%]",
+      "install_otbr_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::install_otbr_addon%]",
       "start_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
-      "start_otbr_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
-      "install_firmware": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::install_firmware%]"
+      "start_otbr_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::start_otbr_addon%]"
     }
   },
   "config": {
@@ -158,12 +157,10 @@
         "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::confirm_zigbee::description%]"
       },
       "install_otbr_addon": {
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_otbr_addon::title%]",
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_otbr_addon::description%]"
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_otbr_addon::title%]"
       },
       "start_otbr_addon": {
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::start_otbr_addon::title%]",
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::start_otbr_addon::description%]"
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::start_otbr_addon::title%]"
       },
       "otbr_failed": {
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::otbr_failed::title%]",
@@ -215,9 +212,10 @@
     },
     "progress": {
       "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
+      "install_firmware": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::install_firmware%]",
+      "install_otbr_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::install_otbr_addon%]",
       "start_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
-      "start_otbr_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
-      "install_firmware": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::install_firmware%]"
+      "start_otbr_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::start_otbr_addon%]"
     }
   },
   "exceptions": {
