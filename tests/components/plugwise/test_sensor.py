@@ -136,7 +136,8 @@ async def test_p1_3ph_dsmr_sensor_disabled_entities(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test disabled power related sensor entities intent."""
-    state = hass.states.get("sensor.p1_voltage_phase_one")
+    entity_id = "sensor.p1_voltage_phase_one"
+    state = hass.states.get(entity_id)
     assert not state
 
     entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
