@@ -13,11 +13,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.components.sensor.const import SensorStateClass
 from homeassistant.const import PERCENTAGE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import Eq3ConfigEntry
 from .const import ENTITY_KEY_AWAY_UNTIL, ENTITY_KEY_VALVE
+from .coordinator import Eq3ConfigEntry
 from .entity import Eq3Entity
 
 
@@ -69,10 +69,7 @@ class Eq3SensorEntity(Eq3Entity, SensorEntity):
         super().__init__(entry, entity_description.key)
         self.entity_description = entity_description
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_native_value = self.entity_description.value_func(
-            self.coordinator.data
-        )
-        super()._handle_coordinator_update()
+    @property
+    def native_value(self) -> int | datetime | None:
+        """Return the state of the sensor."""
+        return self.entity_description.value_func(self.coordinator.data)

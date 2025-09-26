@@ -15,12 +15,12 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import Eq3ConfigEntry
 from .const import EQ_TO_HA_HVAC, HA_TO_EQ_HVAC, Preset
+from .coordinator import Eq3ConfigEntry
 from .entity import Eq3Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,45 +53,37 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     _attr_precision = PRECISION_HALVES
     _attr_hvac_modes = list(HA_TO_EQ_HVAC.keys())
     _attr_preset_modes = list(Preset)
-    _attr_hvac_mode: HVACMode | None = None
-    _attr_hvac_action: HVACAction | None = None
-    _attr_preset_mode: str | None = None
-    _target_temperature: float | None = None
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._target_temperature = self.coordinator.data.target_temperature
-        self._attr_hvac_mode = EQ_TO_HA_HVAC[self.coordinator.data.operation_mode]
-        self._attr_target_temperature = self._get_target_temperature()
-        self._attr_preset_mode = self._get_current_preset_mode()
-        self._attr_hvac_action = self._get_current_hvac_action()
-
-        super()._handle_coordinator_update()
-
-    def _get_target_temperature(self) -> float | None:
+    @property
+    def target_temperature(self) -> float | None:
         """Return the target temperature."""
-        return self._thermostat.status.target_temperature
+        return self.coordinator.data.target_temperature
 
-    def _get_current_preset_mode(self) -> str:
+    @property
+    def hvac_mode(self) -> HVACMode | None:
+        """Return current hvac mode."""
+        return EQ_TO_HA_HVAC[self.coordinator.data.operation_mode]
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return the current hvac action."""
+        if self.coordinator.data.operation_mode is Eq3OperationMode.OFF:
+            return HVACAction.OFF
+        if self.coordinator.data.valve == 0:
+            return HVACAction.IDLE
+        return HVACAction.HEATING
+
+    @property
+    def preset_mode(self) -> str | None:
         """Return the current preset mode."""
-        status = self._thermostat.status
+        status = self.coordinator.data
         if status.presets is None:
             return PRESET_NONE
         if status.target_temperature == status.presets.eco_temperature:
             return Preset.ECO
         if status.target_temperature == status.presets.comfort_temperature:
             return Preset.COMFORT
-
         return PRESET_NONE
-
-    def _get_current_hvac_action(self) -> HVACAction:
-        """Return the current hvac action."""
-        if self._thermostat.status.operation_mode is Eq3OperationMode.OFF:
-            return HVACAction.OFF
-        if self._thermostat.status.valve == 0:
-            return HVACAction.IDLE
-        return HVACAction.HEATING
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -111,17 +103,10 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
-        previous_temperature = self._target_temperature
-        self._target_temperature = temperature
-
-        self.async_write_ha_state()
-
         try:
             await self._thermostat.async_set_temperature(temperature)
         except Eq3Exception as ex:
             _LOGGER.error("[%s] Failed setting temperature: %s", self._mac_address, ex)
-            self._target_temperature = previous_temperature
-            self.async_write_ha_state()
         except ValueError as ex:
             raise ServiceValidationError("Invalid temperature") from ex
 
@@ -137,8 +122,11 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        match preset_mode:
-            case Preset.ECO:
-                await self._thermostat.async_set_preset(Eq3Preset.ECO)
-            case Preset.COMFORT:
-                await self._thermostat.async_set_preset(Eq3Preset.COMFORT)
+        try:
+            match preset_mode:
+                case Preset.ECO:
+                    await self._thermostat.async_set_preset(Eq3Preset.ECO)
+                case Preset.COMFORT:
+                    await self._thermostat.async_set_preset(Eq3Preset.COMFORT)
+        except Eq3Exception as ex:
+            _LOGGER.error("[%s] Failed setting preset mode: %s", self._mac_address, ex)

@@ -16,8 +16,6 @@ DOMAIN = "eq3btsmart"
 MANUFACTURER = "eQ-3 AG"
 DEVICE_MODEL = "CC-RT-BLE-EQ"
 
-CONF_MAC_ADDRESS = "mac_address"
-
 ENTITY_KEY_DST = "dst"
 ENTITY_KEY_BATTERY = "battery"
 ENTITY_KEY_WINDOW = "window"

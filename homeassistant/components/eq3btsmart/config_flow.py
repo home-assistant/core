@@ -6,14 +6,15 @@ import voluptuous as vol
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_MAC
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util import slugify
 
-from .const import CONF_MAC_ADDRESS, DOMAIN
+from .const import DOMAIN
 
 SCHEMA_MAC = vol.Schema(
     {
-        vol.Required(CONF_MAC_ADDRESS): str,
+        vol.Required(CONF_MAC): str,
     }
 )
 
@@ -37,10 +38,10 @@ class EQ3ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
 
-        mac_address = format_mac(user_input[CONF_MAC_ADDRESS])
+        mac_address = format_mac(user_input[CONF_MAC])
 
         if not validate_mac(mac_address):
-            errors[CONF_MAC_ADDRESS] = "invalid_mac_address"
+            errors[CONF_MAC] = "invalid_mac_address"
             return self.async_show_form(
                 step_id="user",
                 data_schema=SCHEMA_MAC,
@@ -52,9 +53,7 @@ class EQ3ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # We can not validate if this mac actually is an eQ-3 thermostat,
         # since the thermostat might not be advertising right now.
-        return self.async_create_entry(
-            title=slugify(mac_address), data={CONF_MAC_ADDRESS: mac_address}
-        )
+        return self.async_create_entry(title=slugify(mac_address), data={})
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -65,9 +64,7 @@ class EQ3ConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self.mac_address)
         self._abort_if_unique_id_configured()
 
-        self.context.update(
-            {"title_placeholders": {CONF_MAC_ADDRESS: self.mac_address}}
-        )
+        self.context.update({"title_placeholders": {CONF_MAC: self.mac_address}})
 
         return await self.async_step_init()
 
@@ -78,7 +75,7 @@ class EQ3ConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="init",
-                description_placeholders={CONF_MAC_ADDRESS: self.mac_address},
+                description_placeholders={CONF_MAC: self.mac_address},
             )
 
         await self.async_set_unique_id(self.mac_address)
@@ -86,7 +83,7 @@ class EQ3ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=slugify(self.mac_address),
-            data={CONF_MAC_ADDRESS: self.mac_address},
+            data={CONF_MAC: self.mac_address},
         )
 
 

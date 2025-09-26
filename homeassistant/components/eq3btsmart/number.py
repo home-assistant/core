@@ -14,10 +14,9 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import Eq3ConfigEntry
 from .const import (
     ENTITY_KEY_COMFORT,
     ENTITY_KEY_ECO,
@@ -26,6 +25,7 @@ from .const import (
     ENTITY_KEY_WINDOW_OPEN_TIMEOUT,
     EQ3BT_STEP,
 )
+from .coordinator import Eq3ConfigEntry
 from .entity import Eq3Entity
 
 
@@ -129,16 +129,12 @@ class Eq3NumberEntity(Eq3Entity, NumberEntity):
         """Return whether the entity is available."""
         return super().available and self.coordinator.data.presets is not None
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        if not self.coordinator.data.presets:
-            return
-
-        self._attr_native_value = self.entity_description.value_func(
-            self.coordinator.data.presets
-        )
-        super()._handle_coordinator_update()
+    @property
+    def native_value(self) -> float | None:
+        """Return the state of the entity."""
+        if self.coordinator.data.presets is None:
+            return None
+        return self.entity_description.value_func(self.coordinator.data.presets)
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the state of the entity."""

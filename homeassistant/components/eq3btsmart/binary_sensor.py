@@ -11,11 +11,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import Eq3ConfigEntry
 from .const import ENTITY_KEY_BATTERY, ENTITY_KEY_DST, ENTITY_KEY_WINDOW
+from .coordinator import Eq3ConfigEntry
 from .entity import Eq3Entity
 
 
@@ -73,8 +73,7 @@ class Eq3BinarySensorEntity(Eq3Entity, BinarySensorEntity):
         super().__init__(entry, entity_description.key)
         self.entity_description = entity_description
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_is_on = self.entity_description.value_func(self.coordinator.data)
-        super()._handle_coordinator_update()
+    @property
+    def is_on(self) -> bool | None:
+        """Return the state of the entity."""
+        return self.entity_description.value_func(self.coordinator.data)

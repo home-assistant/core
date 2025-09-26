@@ -1,6 +1,7 @@
 """Base class for all eQ-3 entities."""
 
-from homeassistant.core import callback
+from typing import TYPE_CHECKING
+
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
     DeviceInfo,
@@ -9,9 +10,8 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from . import Eq3ConfigEntry
-from .const import CONF_MAC_ADDRESS, DEVICE_MODEL, MANUFACTURER
-from .coordinator import Eq3Coordinator
+from .const import DEVICE_MODEL, MANUFACTURER
+from .coordinator import Eq3ConfigEntry, Eq3Coordinator
 
 
 class Eq3Entity(CoordinatorEntity[Eq3Coordinator]):
@@ -26,8 +26,10 @@ class Eq3Entity(CoordinatorEntity[Eq3Coordinator]):
     ) -> None:
         """Initialize the eq3 entity."""
         super().__init__(entry.runtime_data.coordinator)
-        self._thermostat = entry.runtime_data.thermostat
-        self._mac_address = entry.data[CONF_MAC_ADDRESS]
+        self._thermostat = entry.runtime_data.coordinator.thermostat
+        if TYPE_CHECKING:
+            assert entry.unique_id is not None
+        self._mac_address: str = entry.unique_id
         self._attr_device_info = DeviceInfo(
             name=slugify(self._mac_address),
             manufacturer=MANUFACTURER,
@@ -40,9 +42,3 @@ class Eq3Entity(CoordinatorEntity[Eq3Coordinator]):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_available = self.coordinator.last_update_success
-        super()._handle_coordinator_update()

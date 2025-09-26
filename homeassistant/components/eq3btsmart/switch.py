@@ -11,17 +11,17 @@ from eq3btsmart.const import EQ3_DEFAULT_AWAY_TEMP, Eq3OperationMode
 from eq3btsmart.models import Status
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import Eq3ConfigEntry
 from .const import (
     DEFAULT_AWAY_HOURS,
     ENTITY_KEY_AWAY,
     ENTITY_KEY_BOOST,
     ENTITY_KEY_LOCK,
 )
+from .coordinator import Eq3ConfigEntry
 from .entity import Eq3Entity
 
 
@@ -90,11 +90,10 @@ class Eq3SwitchEntity(Eq3Entity, SwitchEntity):
         super().__init__(entry, entity_description.key)
         self.entity_description = entity_description
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._attr_is_on = self.entity_description.value_func(self.coordinator.data)
-        super()._handle_coordinator_update()
+    @property
+    def is_on(self) -> bool:
+        """Return if the switch is on."""
+        return self.entity_description.value_func(self.coordinator.data)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
