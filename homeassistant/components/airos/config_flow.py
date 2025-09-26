@@ -138,6 +138,12 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_HOST: current_entry.data[CONF_HOST],
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
                 CONF_USERNAME: current_entry.data[CONF_USERNAME],
+                SECTION_ADVANCED_SETTINGS: {
+                    CONF_SSL: current_entry.data[SECTION_ADVANCED_SETTINGS][CONF_SSL],
+                    CONF_VERIFY_SSL: current_entry.data[SECTION_ADVANCED_SETTINGS][
+                        CONF_VERIFY_SSL
+                    ],
+                },
             }
             if await self._validate_and_get_device_info(
                 config_data=validate_data, reauth=True
