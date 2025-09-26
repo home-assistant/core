@@ -4,8 +4,7 @@ from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.components.eq3btsmart.const import DOMAIN
-from homeassistant.const import CONF_MAC
+from homeassistant.components.eq3btsmart.const import CONF_MAC_ADDRESS, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
@@ -29,13 +28,13 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_MAC: MAC},
+            {CONF_MAC_ADDRESS: MAC},
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == slugify(MAC)
-    assert result["data"] == {}
+    assert result["data"] == {CONF_MAC_ADDRESS: MAC}
     assert result["context"]["unique_id"] == MAC
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -53,23 +52,23 @@ async def test_user_flow_invalid_mac(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_MAC: "invalid"},
+            {CONF_MAC_ADDRESS: "invalid"},
         )
         await hass.async_block_till_done()
 
         assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {CONF_MAC: "invalid_mac_address"}
+        assert result["errors"] == {CONF_MAC_ADDRESS: "invalid_mac_address"}
         assert len(mock_setup_entry.mock_calls) == 0
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_MAC: MAC},
+            {CONF_MAC_ADDRESS: MAC},
         )
         await hass.async_block_till_done()
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == slugify(MAC)
-        assert result["data"] == {}
+        assert result["data"] == {CONF_MAC_ADDRESS: MAC}
         assert result["context"]["unique_id"] == MAC
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -97,7 +96,7 @@ async def test_bluetooth_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == slugify(MAC)
-    assert result["data"] == {}
+    assert result["data"] == {CONF_MAC_ADDRESS: MAC}
     assert result["context"]["unique_id"] == MAC
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -108,7 +107,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_MAC: MAC,
+            CONF_MAC_ADDRESS: MAC,
         },
         unique_id=format_mac(MAC),
     )
@@ -125,7 +124,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_MAC: MAC,
+                CONF_MAC_ADDRESS: MAC,
             },
         )
         await hass.async_block_till_done()
