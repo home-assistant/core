@@ -1,7 +1,7 @@
 """Test the Home Assistant Yellow config flow."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 
@@ -74,6 +74,16 @@ def mock_set_yellow_settings():
 def mock_reboot_host(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock rebooting host."""
     return supervisor_client.host.reboot
+
+
+@pytest.fixture(name="setup_entry", autouse=True)
+def setup_entry_fixture() -> Generator[AsyncMock]:
+    """Mock entry setup."""
+    with patch(
+        "homeassistant.components.homeassistant_yellow.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 async def test_config_flow(hass: HomeAssistant) -> None:
@@ -352,19 +362,12 @@ async def test_firmware_options_flow_zigbee(hass: HomeAssistant) -> None:
         step_id: str,
         next_step_id: str,
     ) -> ConfigFlowResult:
-        if next_step_id == "start_otbr_addon":
-            next_step_id = "pre_confirm_otbr"
-
-        return await getattr(self, f"async_step_{next_step_id}")(user_input={})
+        return await getattr(self, f"async_step_{next_step_id}")()
 
     with (
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.guess_hardware_owners",
             return_value=[],
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareInstallFlow._ensure_thread_addon_setup",
-            return_value=None,
         ),
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareInstallFlow._install_firmware_step",
@@ -403,8 +406,10 @@ async def test_firmware_options_flow_zigbee(hass: HomeAssistant) -> None:
     }
 
 
-@pytest.mark.usefixtures("addon_store_info")
-async def test_firmware_options_flow_thread(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("addon_installed")
+async def test_firmware_options_flow_thread(
+    hass: HomeAssistant, start_addon: AsyncMock
+) -> None:
     """Test the firmware options flow for Yellow with Thread."""
     fw_type = ApplicationType.SPINEL
     fw_version = "2.4.4.0"
@@ -448,19 +453,12 @@ async def test_firmware_options_flow_thread(hass: HomeAssistant) -> None:
         step_id: str,
         next_step_id: str,
     ) -> ConfigFlowResult:
-        if next_step_id == "start_otbr_addon":
-            next_step_id = "pre_confirm_otbr"
-
-        return await getattr(self, f"async_step_{next_step_id}")(user_input={})
+        return await getattr(self, f"async_step_{next_step_id}")()
 
     with (
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.guess_hardware_owners",
             return_value=[],
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareInstallFlow._ensure_thread_addon_setup",
-            return_value=None,
         ),
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareInstallFlow._install_firmware_step",
@@ -478,20 +476,24 @@ async def test_firmware_options_flow_thread(hass: HomeAssistant) -> None:
             ),
         ),
     ):
-        confirm_result = await hass.config_entries.options.async_configure(
+        result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
         )
 
-        assert confirm_result["type"] is FlowResultType.FORM
-        assert confirm_result["step_id"] == ("confirm_otbr")
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "start_otbr_addon"
+
+        # Make sure the flow continues when the progress task is done.
+        await hass.async_block_till_done()
 
         create_result = await hass.config_entries.options.async_configure(
-            confirm_result["flow_id"], user_input={}
+            result["flow_id"]
         )
 
+    assert start_addon.call_count == 1
+    assert start_addon.call_args == call("core_openthread_border_router")
     assert create_result["type"] is FlowResultType.CREATE_ENTRY
-
     assert config_entry.data == {
         "firmware": fw_type.value,
         "firmware_version": fw_version,
