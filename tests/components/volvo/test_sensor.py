@@ -93,6 +93,7 @@ async def test_charging_power_value(
     assert hass.states.get("sensor.volvo_ex30_charging_power").state == "0"
 
 
+@pytest.mark.usefixtures("mock_api", "full_model")
 @pytest.mark.parametrize(
     "full_model",
     [

@@ -34,6 +34,7 @@ async def test_binary_sensor(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("mock_api", "full_model")
 @pytest.mark.parametrize(
     "full_model",
     [
