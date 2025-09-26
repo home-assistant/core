@@ -96,7 +96,9 @@ async def test_anna_sensor_states(
 
 
 @pytest.mark.parametrize("chosen_env", ["p1v4_442_single"], indirect=True)
-@pytest.mark.parametrize("gateway_id", ["a455b61e52394b2db5081ce025a430f3"], indirect=True)
+@pytest.mark.parametrize(
+    "gateway_id", ["a455b61e52394b2db5081ce025a430f3"], indirect=True
+)
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_p1_dsmr_sensor_entities(
@@ -111,7 +113,9 @@ async def test_p1_dsmr_sensor_entities(
 
 
 @pytest.mark.parametrize("chosen_env", ["p1v4_442_triple"], indirect=True)
-@pytest.mark.parametrize("gateway_id", ["03e65b16e4b247a29ae0d75a78cb492e"], indirect=True)
+@pytest.mark.parametrize(
+    "gateway_id", ["03e65b16e4b247a29ae0d75a78cb492e"], indirect=True
+)
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_p1_3ph_dsmr_sensor_entities(
