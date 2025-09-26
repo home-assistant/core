@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+import typing
 
 import aiohttp
 import voluptuous as vol
@@ -135,7 +136,7 @@ class CityBikesRequestError(Exception):
     """Error to indicate a CityBikes API request has failed."""
 
 
-async def async_citybikes_request(hass, uri, schema):
+async def async_citybikes_request(hass: HomeAssistant, uri: str, schema: vol.Schema):
     """Perform a request to CityBikes API endpoint, and parse the response."""
     try:
         session = async_get_clientsession(hass)
@@ -199,7 +200,9 @@ async def async_setup_platform(
         station_id = station[ATTR_ID]
         station_uid = str(station.get(ATTR_EXTRA, {}).get(ATTR_UID, ""))
 
-        if radius > dist or stations_list.intersection((station_id, station_uid)):
+        if dist is not None and (
+            radius > dist or stations_list.intersection((station_id, station_uid))
+        ):
             if name:
                 uid = f"{network.network_id}_{name}_{station_id}"
             else:
@@ -213,7 +216,7 @@ async def async_setup_platform(
 class CityBikesNetworks:
     """Represent all CityBikes networks."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the networks instance."""
         self.hass = hass
         self.networks = None
@@ -239,7 +242,7 @@ class CityBikesNetworks:
                 dist = location_util.distance(
                     latitude, longitude, network_latitude, network_longitude
                 )
-                if minimum_dist is None or dist < minimum_dist:
+                if dist is not None and (minimum_dist is None or dist < minimum_dist):
                     minimum_dist = dist
                     result = network[ATTR_ID]
 
@@ -251,14 +254,14 @@ class CityBikesNetworks:
 class CityBikesNetwork:
     """Thin wrapper around a CityBikes network object."""
 
-    def __init__(self, hass, network_id):
+    def __init__(self, hass: HomeAssistant, network_id: str) -> None:
         """Initialize the network object."""
         self.hass = hass
         self.network_id = network_id
-        self.stations = []
+        self.stations: list[dict[str, typing.Any]] = []
         self.ready = asyncio.Event()
 
-    async def async_refresh(self, now=None):
+    async def async_refresh(self, now=None) -> None:
         """Refresh the state of the network."""
         try:
             network = await async_citybikes_request(
@@ -282,7 +285,7 @@ class CityBikesStation(SensorEntity):
     _attr_native_unit_of_measurement = "bikes"
     _attr_icon = "mdi:bike"
 
-    def __init__(self, network, station_id, entity_id):
+    def __init__(self, network, station_id, entity_id) -> None:
         """Initialize the sensor."""
         self._network = network
         self._station_id = station_id
@@ -290,6 +293,7 @@ class CityBikesStation(SensorEntity):
 
     async def async_update(self) -> None:
         """Update station state."""
+        station_data = {}
         for station in self._network.stations:
             if station[ATTR_ID] == self._station_id:
                 station_data = station
