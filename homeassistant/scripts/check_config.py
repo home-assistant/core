@@ -94,6 +94,13 @@ def run(script_args: list) -> int:
     if unknown:
         print(color("red", "Unknown arguments:", ", ".join(unknown)))
 
+    if args.json and args.secrets:
+        print(
+            color(
+                "yellow", "Warning: --secrets flag is ignored when using --json output"
+            )
+        )
+
     config_dir = os.path.join(os.getcwd(), args.config)
 
     if not args.json:
