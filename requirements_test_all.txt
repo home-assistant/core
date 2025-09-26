@@ -357,7 +357,7 @@ aioridwell==2025.09.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.8.1
+aiorussound==4.8.2
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -2682,7 +2682,7 @@ zeroconf==0.147.2
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.72
+zha==0.0.73
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.67.1
