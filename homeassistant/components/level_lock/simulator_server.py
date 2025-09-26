@@ -165,6 +165,38 @@ class LockRegistry:
             self._locks[default.lock_id] = default
             return default
 
+    async def create(self, *, lock_id: str | None = None, name: str | None = None) -> LockState:
+        async with self._lock:
+            if lock_id is None:
+                # Generate a unique simple id
+                base = "sim-lock-"
+                idx = 1
+                while f"{base}{idx}" in self._locks:
+                    idx += 1
+                lock_id = f"{base}{idx}"
+            if lock_id in self._locks:
+                raise HTTPException(status_code=409, detail="lock_id already exists")
+            lock = LockState(lock_id, name=name or f"Level Lock {lock_id}")
+            self._locks[lock_id] = lock
+            return lock
+
+    async def remove(self, lock_id: str) -> None:
+        async with self._lock:
+            lock = self._locks.pop(lock_id, None)
+        if lock is None:
+            raise HTTPException(status_code=404, detail="not_found")
+        # Close any websocket connections
+        try:
+            stale = list(lock._connections)
+            for ws in stale:
+                try:
+                    await ws.close()
+                except Exception:
+                    pass
+            lock._connections.clear()
+        except Exception:
+            pass
+
 
 REGISTRY = LockRegistry()
 
@@ -556,6 +588,18 @@ async def list_locks(
     return JSONResponse(payload)
 
 
+@app.post("/v1/locks")
+async def create_lock(
+    body: dict[str, Any],
+    authorization: str | None = None,
+    _=Depends(_require_bearer),
+) -> JSONResponse:  # type: ignore[override]
+    name = body.get("name")
+    lock_id = body.get("id")
+    lock = await REGISTRY.create(lock_id=lock_id, name=name)
+    return JSONResponse({"id": lock.lock_id, "name": lock.name, "state": lock.state}, status_code=201)
+
+
 @app.get("/v1/locks/{lock_id}")
 async def get_lock(
     lock_id: str, authorization: str | None = None, _=Depends(_require_bearer)
@@ -599,6 +643,14 @@ async def command_unlock(
     return JSONResponse({"result": "unlocked"})
 
 
+@app.delete("/v1/locks/{lock_id}")
+async def delete_lock(
+    lock_id: str, authorization: str | None = None, _=Depends(_require_bearer)
+) -> JSONResponse:  # type: ignore[override]
+    await REGISTRY.remove(lock_id)
+    return JSONResponse({"result": "deleted"})
+
+
 # Convenience root
 @app.get("/")
 async def root() -> dict[str, Any]:
@@ -610,9 +662,11 @@ async def root() -> dict[str, Any]:
         "oauth2_otp_confirm": "/v1/authenticate/otp/confirm",
         "oauth2_grant_accept": "/v1/grant-permissions/accept",
         "locks_list": "/v1/locks",
+        "lock_create": "/v1/locks",
         "lock_status": "/v1/locks/{lock_id}/status",
         "lock_command": "/v1/locks/{lock_id}/lock",
         "unlock_command": "/v1/locks/{lock_id}/unlock",
+        "lock_delete": "/v1/locks/{lock_id}",
         "websocket": "/v1/locks/{lock_id}/ws",
         "debug_get": "/v1/locks/{lock_id}",
         "debug_set": "/v1/locks/{lock_id}",
