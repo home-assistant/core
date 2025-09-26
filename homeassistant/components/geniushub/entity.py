@@ -78,9 +78,9 @@ class GeniusDevice(GeniusEntity):
     async def async_update(self) -> None:
         """Update an entity's state data."""
         if (state := self._device.data.get("_state")) and (
-            lastComms := state.get("lastComms")
+            last_comms := state.get("lastComms")
         ) is not None:  # only via v3 API
-            self._last_comms = dt_util.utc_from_timestamp(lastComms)
+            self._last_comms = dt_util.utc_from_timestamp(last_comms)
 
 
 class GeniusZone(GeniusEntity):
