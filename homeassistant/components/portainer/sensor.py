@@ -35,13 +35,11 @@ CONTAINER_SENSORS: tuple[PortainerSensorEntityDescription, ...] = (
         key="image",
         translation_key="image",
         value_fn=lambda data: data.image,
-        state_class=None,
     ),
     PortainerSensorEntityDescription(
         key="status",
         translation_key="status",
         value_fn=lambda data: data.status,
-        state_class=None,
     ),
 )
 
