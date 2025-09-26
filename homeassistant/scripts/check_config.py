@@ -111,10 +111,7 @@ def run(script_args: list) -> int:
         print(json.dumps(json_object, indent=2))
 
         # Determine exit code for JSON mode
-        exit_code = len(res["except"])
-        if args.fail_on_warnings and res["warn"]:
-            exit_code = max(exit_code, 1)
-        return exit_code
+        return len(res["except"]) + int(args.fail_on_warnings and res["warn"])
 
     print(color("bold", "Testing configuration at", config_dir))
 
@@ -191,10 +188,7 @@ def run(script_args: list) -> int:
             print(" -", skey + ":", sval)
 
     # Determine final exit code
-    exit_code = len(res["except"])
-    if args.fail_on_warnings and res["warn"]:
-        exit_code = max(exit_code, 1)
-    return exit_code
+    return len(res["except"]) + int(args.fail_on_warnings and res["warn"])
 
 
 def check(config_dir, secrets=False):
