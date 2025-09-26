@@ -1073,7 +1073,7 @@ def _async_register_service(
         service_name,
         {
             "description": (
-                f"Calls the service {service.name} of the node {device_info.name}"
+                f"Performs the action {service.name} of the node {device_info.name}"
             ),
             "fields": fields,
         },
