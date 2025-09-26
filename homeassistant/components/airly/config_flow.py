@@ -39,14 +39,14 @@ class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             self._abort_if_unique_id_configured()
             try:
-                location_point_valid = await test_location(
+                location_point_valid = await check_location(
                     websession,
                     user_input["api_key"],
                     user_input["latitude"],
                     user_input["longitude"],
                 )
                 if not location_point_valid:
-                    location_nearest_valid = await test_location(
+                    location_nearest_valid = await check_location(
                         websession,
                         user_input["api_key"],
                         user_input["latitude"],
@@ -88,7 +88,7 @@ class AirlyFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-async def test_location(
+async def check_location(
     client: ClientSession,
     api_key: str,
     latitude: float,

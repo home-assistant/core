@@ -16,11 +16,16 @@ from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
+    PRESET_BOOST,
+    PRESET_NONE,
+    PRESET_SLEEP,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
@@ -439,27 +444,40 @@ async def test_ac_set_swing_mode(
     )
 
 
-@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000003"])
+@pytest.mark.parametrize(
+    ("mode", "expected_mode"),
+    [
+        (PRESET_NONE, "off"),
+        (PRESET_SLEEP, "sleep"),
+        ("quiet", "quiet"),
+        (PRESET_BOOST, "speed"),
+        ("wind_free", "windFree"),
+        ("wind_free_sleep", "windFreeSleep"),
+    ],
+)
 async def test_ac_set_preset_mode(
     hass: HomeAssistant,
     devices: AsyncMock,
+    mode: str,
+    expected_mode: str,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test climate set preset mode."""
+    """Test setting and retrieving AC preset modes."""
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.ac_office_granit", ATTR_PRESET_MODE: "windFree"},
+        {ATTR_ENTITY_ID: "climate.office_airfree", ATTR_PRESET_MODE: mode},
         blocking=True,
     )
-    devices.execute_device_command.assert_called_once_with(
-        "96a5ef74-5832-a84b-f1f7-ca799957065d",
+    devices.execute_device_command.assert_called_with(
+        "c76d6f38-1b7f-13dd-37b5-db18d5272783",
         Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
         Command.SET_AC_OPTIONAL_MODE,
         MAIN,
-        argument="windFree",
+        argument=expected_mode,
     )
 
 
@@ -863,6 +881,258 @@ async def test_thermostat_state_attributes_update(
     )
 
     assert hass.states.get("climate.asd").attributes[state_attribute] == expected_value
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+async def test_heat_pump_hvac_mode(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test heat pump set HVAC mode."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: "climate.warmepumpe_indoor1", ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "3810e5ad-5351-d9f9-12ff-000001200000",
+        Capability.AIR_CONDITIONER_MODE,
+        Command.SET_AIR_CONDITIONER_MODE,
+        "INDOOR1",
+        argument="heat",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+async def test_heat_pump_hvac_mode_off(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test heat pump set HVAC mode."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: "climate.warmepumpe_indoor1", ATTR_HVAC_MODE: HVACMode.OFF},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "3810e5ad-5351-d9f9-12ff-000001200000",
+        Capability.SWITCH,
+        Command.OFF,
+        "INDOOR1",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+async def test_heat_pump_hvac_mode_from_off(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test heat pump set HVAC mode."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: "climate.warmepumpe_indoor2", ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+    assert devices.execute_device_command.mock_calls == [
+        call(
+            "3810e5ad-5351-d9f9-12ff-000001200000",
+            Capability.SWITCH,
+            Command.ON,
+            "INDOOR2",
+        ),
+        call(
+            "3810e5ad-5351-d9f9-12ff-000001200000",
+            Capability.AIR_CONDITIONER_MODE,
+            Command.SET_AIR_CONDITIONER_MODE,
+            "INDOOR2",
+            argument="heat",
+        ),
+    ]
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+async def test_heat_pump_set_temperature(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test heat pump set temperature."""
+    set_attribute_value(
+        devices,
+        Capability.AIR_CONDITIONER_MODE,
+        Attribute.AIR_CONDITIONER_MODE,
+        "heat",
+        component="INDOOR1",
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "climate.warmepumpe_indoor1", ATTR_TEMPERATURE: 35},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "3810e5ad-5351-d9f9-12ff-000001200000",
+        Capability.THERMOSTAT_COOLING_SETPOINT,
+        Command.SET_COOLING_SETPOINT,
+        "INDOOR1",
+        argument=35,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+@pytest.mark.parametrize(
+    ("service", "command"),
+    [
+        (SERVICE_TURN_ON, Command.ON),
+        (SERVICE_TURN_OFF, Command.OFF),
+    ],
+)
+async def test_heat_pump_turn_on_off(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    command: Command,
+) -> None:
+    """Test heat pump turn on/off."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "climate.warmepumpe_indoor1"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "3810e5ad-5351-d9f9-12ff-000001200000",
+        Capability.SWITCH,
+        command,
+        "INDOOR1",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+async def test_heat_pump_hvac_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("climate.warmepumpe_indoor1").state == HVACMode.AUTO
+
+    await trigger_update(
+        hass,
+        devices,
+        "3810e5ad-5351-d9f9-12ff-000001200000",
+        Capability.AIR_CONDITIONER_MODE,
+        Attribute.AIR_CONDITIONER_MODE,
+        "cool",
+        component="INDOOR1",
+    )
+
+    assert hass.states.get("climate.warmepumpe_indoor1").state == HVACMode.COOL
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000001_sub"])
+@pytest.mark.parametrize(
+    (
+        "capability",
+        "attribute",
+        "value",
+        "state_attribute",
+        "original_value",
+        "expected_value",
+    ),
+    [
+        (
+            Capability.TEMPERATURE_MEASUREMENT,
+            Attribute.TEMPERATURE,
+            20,
+            ATTR_CURRENT_TEMPERATURE,
+            23.1,
+            20,
+        ),
+        (
+            Capability.THERMOSTAT_COOLING_SETPOINT,
+            Attribute.COOLING_SETPOINT,
+            20,
+            ATTR_TEMPERATURE,
+            25,
+            20,
+        ),
+        (
+            Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL,
+            Attribute.MINIMUM_SETPOINT,
+            6,
+            ATTR_MIN_TEMP,
+            25,
+            6,
+        ),
+        (
+            Capability.CUSTOM_THERMOSTAT_SETPOINT_CONTROL,
+            Attribute.MAXIMUM_SETPOINT,
+            36,
+            ATTR_MAX_TEMP,
+            65,
+            36,
+        ),
+    ],
+    ids=[
+        ATTR_CURRENT_TEMPERATURE,
+        ATTR_TEMPERATURE,
+        ATTR_MIN_TEMP,
+        ATTR_MAX_TEMP,
+    ],
+)
+async def test_heat_pump_state_attributes_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    capability: Capability,
+    attribute: Attribute,
+    value: Any,
+    state_attribute: str,
+    original_value: Any,
+    expected_value: Any,
+) -> None:
+    """Test state attributes update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("climate.eco_heating_system_indoor").attributes[state_attribute]
+        == original_value
+    )
+
+    await trigger_update(
+        hass,
+        devices,
+        "1f98ebd0-ac48-d802-7f62-000001200100",
+        capability,
+        attribute,
+        value,
+        component="INDOOR",
+    )
+
+    assert (
+        hass.states.get("climate.eco_heating_system_indoor").attributes[state_attribute]
+        == expected_value
+    )
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])

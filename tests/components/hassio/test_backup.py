@@ -49,12 +49,11 @@ from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.backup import RESTORE_JOB_ID_ENV
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
 
-from tests.common import load_json_object_fixture, mock_platform
+from tests.common import async_load_json_object_fixture, mock_platform
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_BACKUP = supervisor_backups.Backup(
@@ -269,6 +268,7 @@ TEST_JOB_NOT_DONE = supervisor_jobs.Job(
     errors=[],
     created=datetime.fromisoformat("1970-01-01T00:00:00Z"),
     child_jobs=[],
+    extra=None,
 )
 TEST_JOB_DONE = supervisor_jobs.Job(
     name="backup_manager_partial_backup",
@@ -280,6 +280,7 @@ TEST_JOB_DONE = supervisor_jobs.Job(
     errors=[],
     created=datetime.fromisoformat("1970-01-01T00:00:00Z"),
     child_jobs=[],
+    extra=None,
 )
 TEST_RESTORE_JOB_DONE_WITH_ERROR = supervisor_jobs.Job(
     name="backup_manager_partial_restore",
@@ -295,10 +296,12 @@ TEST_RESTORE_JOB_DONE_WITH_ERROR = supervisor_jobs.Job(
                 "Backup was made on supervisor version 2025.02.2.dev3105, "
                 "can't restore on 2025.01.2.dev3105"
             ),
+            stage=None,
         )
     ],
     created=datetime.fromisoformat("1970-01-01T00:00:00Z"),
     child_jobs=[],
+    extra=None,
 )
 
 
@@ -326,7 +329,6 @@ async def setup_backup_integration(
     hass: HomeAssistant, hassio_enabled: None, supervisor_client: AsyncMock
 ) -> None:
     """Set up Backup integration."""
-    async_initialize_backup(hass)
     assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
     await hass.async_block_till_done()
 
@@ -466,7 +468,6 @@ async def test_agent_info(
     client = await hass_ws_client(hass)
     supervisor_client.mounts.info.return_value = mounts
 
-    async_initialize_backup(hass)
     assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
 
     await client.send_json_auto_id({"type": "backup/agents/info"})
@@ -497,7 +498,9 @@ async def test_agent_info(
                 "database_included": True,
                 "date": "1970-01-01T00:00:00+00:00",
                 "extra_metadata": {},
+                "failed_addons": [],
                 "failed_agent_ids": [],
+                "failed_folders": [],
                 "folders": ["share"],
                 "homeassistant_included": True,
                 "homeassistant_version": "2024.12.0",
@@ -517,7 +520,9 @@ async def test_agent_info(
                 "database_included": False,
                 "date": "1970-01-01T00:00:00+00:00",
                 "extra_metadata": {},
+                "failed_addons": [],
                 "failed_agent_ids": [],
+                "failed_folders": [],
                 "folders": ["share"],
                 "homeassistant_included": False,
                 "homeassistant_version": None,
@@ -653,7 +658,9 @@ async def test_agent_get_backup(
             "database_included": True,
             "date": "1970-01-01T00:00:00+00:00",
             "extra_metadata": {},
+            "failed_addons": [],
             "failed_agent_ids": [],
+            "failed_folders": [],
             "folders": ["share"],
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
@@ -992,7 +999,7 @@ async def test_reader_writer_create(
 @pytest.mark.parametrize(
     "addon_info_side_effect",
     # Getting info fails for one of the addons, should fall back to slug
-    [[Mock(), SupervisorError("Boom")]],
+    [[Mock(slug="core_ssh", version="0.0.0"), SupervisorError("Boom")]],
 )
 async def test_reader_writer_create_addon_folder_error(
     hass: HomeAssistant,
@@ -1012,8 +1019,10 @@ async def test_reader_writer_create_addon_folder_error(
     supervisor_client.jobs.get_job.side_effect = [
         TEST_JOB_NOT_DONE,
         supervisor_jobs.Job.from_dict(
-            load_json_object_fixture(
-                "backup_done_with_addon_folder_errors.json", DOMAIN
+            (
+                await async_load_json_object_fixture(
+                    hass, "backup_done_with_addon_folder_errors.json", DOMAIN
+                )
             )["data"]
         ),
     ]
@@ -1300,6 +1309,16 @@ async def test_reader_writer_create_job_done(
             False,
             [],
         ),
+        # LOCATION_LOCAL_STORAGE should be moved to the front of the list
+        (
+            [],
+            None,
+            ["hassio.share1", "hassio.local", "hassio.share2", "hassio.share3"],
+            None,
+            [LOCATION_LOCAL_STORAGE, "share1", "share2", "share3"],
+            False,
+            [],
+        ),
         (
             [],
             "hunter2",
@@ -1309,54 +1328,86 @@ async def test_reader_writer_create_job_done(
             True,
             [],
         ),
+        # LOCATION_LOCAL_STORAGE should be moved to the front of the list
         (
-            [
-                {
-                    "type": "backup/config/update",
-                    "agents": {
-                        "hassio.local": {"protected": False},
-                    },
-                }
-            ],
+            [],
             "hunter2",
-            ["hassio.local", "hassio.share1", "hassio.share2", "hassio.share3"],
+            ["hassio.share1", "hassio.local", "hassio.share2", "hassio.share3"],
             "hunter2",
-            ["share1", "share2", "share3"],
+            [LOCATION_LOCAL_STORAGE, "share1", "share2", "share3"],
             True,
-            [LOCATION_LOCAL_STORAGE],
+            [],
         ),
+        # Prefer the list of locations which has LOCATION_LOCAL_STORAGE
         (
             [
                 {
                     "type": "backup/config/update",
                     "agents": {
                         "hassio.local": {"protected": False},
-                        "hassio.share1": {"protected": False},
-                    },
-                }
-            ],
-            "hunter2",
-            ["hassio.local", "hassio.share1", "hassio.share2", "hassio.share3"],
-            "hunter2",
-            ["share2", "share3"],
-            True,
-            [LOCATION_LOCAL_STORAGE, "share1"],
-        ),
-        (
-            [
-                {
-                    "type": "backup/config/update",
-                    "agents": {
-                        "hassio.local": {"protected": False},
-                        "hassio.share1": {"protected": False},
-                        "hassio.share2": {"protected": False},
                     },
                 }
             ],
             "hunter2",
             ["hassio.local", "hassio.share1", "hassio.share2", "hassio.share3"],
             None,
-            [LOCATION_LOCAL_STORAGE, "share1", "share2"],
+            [LOCATION_LOCAL_STORAGE],
+            True,
+            ["share1", "share2", "share3"],
+        ),
+        # If the list of locations does not have LOCATION_LOCAL_STORAGE, send the
+        # longest list
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "hassio.share0": {"protected": False},
+                    },
+                }
+            ],
+            "hunter2",
+            ["hassio.share0", "hassio.share1", "hassio.share2", "hassio.share3"],
+            "hunter2",
+            ["share1", "share2", "share3"],
+            True,
+            ["share0"],
+        ),
+        # Prefer the list of encrypted locations if the lists are the same length
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "hassio.share0": {"protected": False},
+                        "hassio.share1": {"protected": False},
+                    },
+                }
+            ],
+            "hunter2",
+            ["hassio.share0", "hassio.share1", "hassio.share2", "hassio.share3"],
+            "hunter2",
+            ["share2", "share3"],
+            True,
+            ["share0", "share1"],
+        ),
+        # If the list of locations does not have LOCATION_LOCAL_STORAGE, send the
+        # longest list
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "hassio.share0": {"protected": False},
+                        "hassio.share1": {"protected": False},
+                        "hassio.share2": {"protected": False},
+                    },
+                }
+            ],
+            "hunter2",
+            ["hassio.share0", "hassio.share1", "hassio.share2", "hassio.share3"],
+            None,
+            ["share0", "share1", "share2"],
             True,
             ["share3"],
         ),
@@ -1407,7 +1458,7 @@ async def test_reader_writer_create_per_agent_encryption(
                 server=f"share{i}",
                 type=supervisor_mounts.MountType.CIFS,
             )
-            for i in range(1, 4)
+            for i in range(4)
         ],
     )
     supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
@@ -1424,7 +1475,6 @@ async def test_reader_writer_create_per_agent_encryption(
     )
     supervisor_client.jobs.get_job.return_value = TEST_JOB_NOT_DONE
     supervisor_client.mounts.info.return_value = mounts
-    async_initialize_backup(hass)
     assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
 
     for command in commands:
@@ -2560,7 +2610,6 @@ async def test_restore_progress_after_restart(
 
     supervisor_client.jobs.get_job.return_value = get_job_result
 
-    async_initialize_backup(hass)
     with patch.dict(os.environ, MOCK_ENVIRON | {RESTORE_JOB_ID_ENV: TEST_JOB_ID}):
         assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
 
@@ -2584,7 +2633,6 @@ async def test_restore_progress_after_restart_report_progress(
 
     supervisor_client.jobs.get_job.return_value = TEST_JOB_NOT_DONE
 
-    async_initialize_backup(hass)
     with patch.dict(os.environ, MOCK_ENVIRON | {RESTORE_JOB_ID_ENV: TEST_JOB_ID}):
         assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
 
@@ -2667,7 +2715,6 @@ async def test_restore_progress_after_restart_unknown_job(
 
     supervisor_client.jobs.get_job.side_effect = SupervisorError
 
-    async_initialize_backup(hass)
     with patch.dict(os.environ, MOCK_ENVIRON | {RESTORE_JOB_ID_ENV: TEST_JOB_ID}):
         assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
 
@@ -2767,7 +2814,6 @@ async def test_config_load_config_info(
 
     hass_storage.update(storage_data)
 
-    async_initialize_backup(hass)
     assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
     await hass.async_block_till_done()
 

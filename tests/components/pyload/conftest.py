@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -37,6 +38,21 @@ NEW_INPUT = {
     CONF_USERNAME: "new-username",
     CONF_VERIFY_SSL: False,
 }
+
+
+ADDON_DISCOVERY_INFO = {
+    "addon": "pyLoad-ng",
+    CONF_URL: "http://539df76c-pyload-ng:8000/",
+    CONF_USERNAME: "pyload",
+    CONF_PASSWORD: "pyload",
+}
+
+ADDON_SERVICE_INFO = HassioServiceInfo(
+    config=ADDON_DISCOVERY_INFO,
+    name="pyLoad-ng Addon",
+    slug="p539df76c_pyload-ng",
+    uuid="1234",
+)
 
 
 @pytest.fixture

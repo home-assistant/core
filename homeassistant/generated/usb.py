@@ -5,6 +5,12 @@ To update, run python3 -m script.hassfest
 
 USB = [
     {
+        "description": "*zbt-2*",
+        "domain": "homeassistant_connect_zbt2",
+        "pid": "4001",
+        "vid": "303A",
+    },
+    {
         "description": "*skyconnect v1.0*",
         "domain": "homeassistant_sky_connect",
         "pid": "EA60",
@@ -135,6 +141,18 @@ USB = [
         "description": "*bv 2010/10*",
         "domain": "zha",
         "pid": "8B34",
+        "vid": "10C4",
+    },
+    {
+        "description": "*sonoff*max*",
+        "domain": "zha",
+        "pid": "EA60",
+        "vid": "10C4",
+    },
+    {
+        "description": "*sonoff*lite*mg21*",
+        "domain": "zha",
+        "pid": "EA60",
         "vid": "10C4",
     },
     {

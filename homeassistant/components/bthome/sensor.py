@@ -25,6 +25,7 @@ from homeassistant.const import (
     DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfConductivity,
@@ -72,7 +73,7 @@ SENSOR_DESCRIPTIONS = {
         key=str(BTHomeExtendedSensorDeviceClass.CHANNEL),
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Conductivity (µS/cm)
+    # Conductivity (μS/cm)
     (
         BTHomeSensorDeviceClass.CONDUCTIVITY,
         Units.CONDUCTIVITY,
@@ -215,7 +216,7 @@ SENSOR_DESCRIPTIONS = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    # PM10 (µg/m3)
+    # PM10 (μg/m3)
     (
         BTHomeSensorDeviceClass.PM10,
         Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -225,7 +226,7 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # PM2.5 (µg/m3)
+    # PM2.5 (μg/m3)
     (
         BTHomeSensorDeviceClass.PM25,
         Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -267,6 +268,15 @@ SENSOR_DESCRIPTIONS = {
     (BTHomeSensorDeviceClass.ROTATION, Units.DEGREE): SensorEntityDescription(
         key=f"{BTHomeSensorDeviceClass.ROTATION}_{Units.DEGREE}",
         native_unit_of_measurement=DEGREE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Rotational speed (rpm)
+    (
+        BTHomeExtendedSensorDeviceClass.ROTATIONAL_SPEED,
+        Units.REVOLUTIONS_PER_MINUTE,
+    ): SensorEntityDescription(
+        key=f"{BTHomeExtendedSensorDeviceClass.ROTATIONAL_SPEED}_{Units.REVOLUTIONS_PER_MINUTE}",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Signal Strength (RSSI) (dB)
@@ -318,7 +328,7 @@ SENSOR_DESCRIPTIONS = {
         key=str(BTHomeSensorDeviceClass.UV_INDEX),
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Volatile organic Compounds (VOC) (µg/m3)
+    # Volatile organic Compounds (VOC) (μg/m3)
     (
         BTHomeSensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,

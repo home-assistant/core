@@ -24,4 +24,5 @@ class ImmichEntity(CoordinatorEntity[ImmichDataUpdateCoordinator]):
             manufacturer="Immich",
             sw_version=coordinator.data.server_about.version,
             entry_type=DeviceEntryType.SERVICE,
+            configuration_url=coordinator.configuration_url,
         )

@@ -373,6 +373,17 @@ def entity_id(value: Any) -> str:
     raise vol.Invalid(f"Entity ID {value} is an invalid entity ID")
 
 
+def strict_entity_id(value: Any) -> str:
+    """Validate Entity ID, strictly."""
+    if not isinstance(value, str):
+        raise vol.Invalid(f"Entity ID {value} is not a string")
+
+    if valid_entity_id(value):
+        return value
+
+    raise vol.Invalid(f"Entity ID {value} is not a valid entity ID")
+
+
 def entity_id_or_uuid(value: Any) -> str:
     """Validate Entity specified by entity_id or uuid."""
     with contextlib.suppress(vol.Invalid):
@@ -644,6 +655,13 @@ def slug(value: Any) -> str:
     raise vol.Invalid(f"invalid slug {value} (try {slg})")
 
 
+def underscore_slug(value: Any) -> str:
+    """Validate value is a valid slug, possibly starting with an underscore."""
+    if value.startswith("_"):
+        return f"_{slug(value[1:])}"
+    return slug(value)
+
+
 def schema_with_slug_keys(
     value_schema: dict | Callable, *, slug_validator: Callable[[Any], str] = slug
 ) -> Callable:
@@ -721,8 +739,7 @@ def template(value: Any | None) -> template_helper.Template:
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
     if not (hass := _async_get_hass_or_none()):
-        # pylint: disable-next=import-outside-toplevel
-        from .frame import ReportBehavior, report_usage
+        from .frame import ReportBehavior, report_usage  # noqa: PLC0415
 
         report_usage(
             (
@@ -750,8 +767,7 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
     if not template_helper.is_template_string(str(value)):
         raise vol.Invalid("template value does not contain a dynamic template")
     if not (hass := _async_get_hass_or_none()):
-        # pylint: disable-next=import-outside-toplevel
-        from .frame import ReportBehavior, report_usage
+        from .frame import ReportBehavior, report_usage  # noqa: PLC0415
 
         report_usage(
             (
@@ -1092,11 +1108,21 @@ def key_value_schemas(
     value_schemas: ValueSchemas,
     default_schema: VolSchemaType | Callable[[Any], dict[str, Any]] | None = None,
     default_description: str | None = None,
+    list_alternatives: bool = True,
 ) -> Callable[[Any], dict[Hashable, Any]]:
     """Create a validator that validates based on a value for specific key.
 
     This gives better error messages.
+
+    default_schema: An optional schema to use if the key value is not in value_schemas.
+    default_description: A description of what is expected by the default schema, this
+    will be added to the error message.
+    list_alternatives: If True, list the keys in `value_schemas` in the error message.
     """
+    if not list_alternatives and not default_description:
+        raise ValueError(
+            "default_description must be provided if list_alternatives is False"
+        )
 
     def key_value_validator(value: Any) -> dict[Hashable, Any]:
         if not isinstance(value, dict):
@@ -1111,9 +1137,13 @@ def key_value_schemas(
             with contextlib.suppress(vol.Invalid):
                 return cast(dict[Hashable, Any], default_schema(value))
 
-        alternatives = ", ".join(str(alternative) for alternative in value_schemas)
-        if default_description:
-            alternatives = f"{alternatives}, {default_description}"
+        if list_alternatives:
+            alternatives = ", ".join(str(alternative) for alternative in value_schemas)
+            if default_description:
+                alternatives = f"{alternatives}, {default_description}"
+        else:
+            # mypy does not understand that default_description is not None here
+            alternatives = default_description  # type: ignore[assignment]
         raise vol.Invalid(
             f"Unexpected value for {key}: '{key_value}'. Expected {alternatives}"
         )
@@ -1151,9 +1181,9 @@ def custom_serializer(schema: Any) -> Any:
 
 def _custom_serializer(schema: Any, *, allow_section: bool) -> Any:
     """Serialize additional types for voluptuous_serialize."""
-    from homeassistant import data_entry_flow  # pylint: disable=import-outside-toplevel
+    from homeassistant import data_entry_flow  # noqa: PLC0415
 
-    from . import selector  # pylint: disable=import-outside-toplevel
+    from . import selector  # noqa: PLC0415
 
     if schema is positive_time_period_dict:
         return {"type": "positive_time_period_dict"}
@@ -1216,8 +1246,7 @@ def _no_yaml_config_schema(
     """Return a config schema which logs if attempted to setup from YAML."""
 
     def raise_issue() -> None:
-        # pylint: disable-next=import-outside-toplevel
-        from .issue_registry import IssueSeverity, async_create_issue
+        from .issue_registry import IssueSeverity, async_create_issue  # noqa: PLC0415
 
         # HomeAssistantError is raised if called from the wrong thread
         with contextlib.suppress(HomeAssistantError):
@@ -1287,6 +1316,15 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
+
+
+TARGET_FIELDS: VolDictType = {
+    vol.Optional(ATTR_ENTITY_ID): vol.All(ensure_list, [strict_entity_id]),
+    vol.Optional(ATTR_DEVICE_ID): vol.All(ensure_list, [str]),
+    vol.Optional(ATTR_AREA_ID): vol.All(ensure_list, [str]),
+    vol.Optional(ATTR_FLOOR_ID): vol.All(ensure_list, [str]),
+    vol.Optional(ATTR_LABEL_ID): vol.All(ensure_list, [str]),
+}
 
 ENTITY_SERVICE_FIELDS: VolDictType = {
     # Either accept static entity IDs, a single dynamic template or a mixed list
@@ -1507,9 +1545,6 @@ STATE_CONDITION_BASE_SCHEMA = {
     ),
     vol.Optional(CONF_ATTRIBUTE): str,
     vol.Optional(CONF_FOR): positive_time_period_template,
-    # To support use_trigger_value in automation
-    # Deprecated 2016/04/25
-    vol.Optional("from"): str,
 }
 
 STATE_CONDITION_STATE_SCHEMA = vol.Schema(
@@ -1539,22 +1574,6 @@ def STATE_CONDITION_SCHEMA(value: Any) -> dict[str, Any]:
 
     return key_dependency("for", "state")(validated)
 
-
-SUN_CONDITION_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            **CONDITION_BASE_SCHEMA,
-            vol.Required(CONF_CONDITION): "sun",
-            vol.Optional("before"): sun_event,
-            vol.Optional("before_offset"): time_period,
-            vol.Optional("after"): vol.All(
-                vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE)
-            ),
-            vol.Optional("after_offset"): time_period,
-        }
-    ),
-    has_at_least_one_key("before", "after"),
-)
 
 TEMPLATE_CONDITION_SCHEMA = vol.Schema(
     {
@@ -1586,18 +1605,6 @@ TRIGGER_CONDITION_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "trigger",
         vol.Required(CONF_ID): vol.All(ensure_list, [string]),
-    }
-)
-
-ZONE_CONDITION_SCHEMA = vol.Schema(
-    {
-        **CONDITION_BASE_SCHEMA,
-        vol.Required(CONF_CONDITION): "zone",
-        vol.Required(CONF_ENTITY_ID): entity_ids,
-        vol.Required("zone"): entity_ids,
-        # To support use_trigger_value in automation
-        # Deprecated 2016/04/25
-        vol.Optional("event"): vol.Any("enter", "leave"),
     }
 )
 
@@ -1748,7 +1755,6 @@ BUILT_IN_CONDITIONS: ValueSchemas = {
     "template": TEMPLATE_CONDITION_SCHEMA,
     "time": TIME_CONDITION_SCHEMA,
     "trigger": TRIGGER_CONDITION_SCHEMA,
-    "zone": ZONE_CONDITION_SCHEMA,
 }
 
 
@@ -1758,7 +1764,7 @@ def _base_condition_validator(value: Any) -> Any:
     vol.Schema(
         {
             **CONDITION_BASE_SCHEMA,
-            CONF_CONDITION: vol.NotIn(BUILT_IN_CONDITIONS),
+            CONF_CONDITION: vol.All(str, vol.NotIn(BUILT_IN_CONDITIONS)),
         },
         extra=vol.ALLOW_EXTRA,
     )(value)
@@ -1773,6 +1779,8 @@ CONDITION_SCHEMA: vol.Schema = vol.Schema(
                 CONF_CONDITION,
                 BUILT_IN_CONDITIONS,
                 _base_condition_validator,
+                "a condition, a list of conditions or a valid template",
+                list_alternatives=False,
             ),
         ),
         dynamic_template_condition,
@@ -1804,7 +1812,8 @@ CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
                 dynamic_template_condition_action,
                 _base_condition_validator,
             ),
-            "a list of conditions or a valid template",
+            "a condition, a list of conditions or a valid template",
+            list_alternatives=False,
         ),
     )
 )

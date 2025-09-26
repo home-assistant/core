@@ -6,11 +6,11 @@ from pathlib import Path
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.blueprint import importer
+from homeassistant.components.blueprint import DOMAIN, importer
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -146,7 +146,9 @@ async def test_fetch_blueprint_from_github_url(
     assert imported_blueprint.blueprint.domain == "automation"
     assert imported_blueprint.blueprint.inputs == {
         "service_to_call": None,
-        "trigger_event": {"selector": {"text": {}}},
+        "trigger_event": {
+            "selector": {"text": {"multiline": False, "multiple": False}}
+        },
         "a_number": {"selector": {"number": {"mode": "box", "step": 1.0}}},
     }
     assert imported_blueprint.suggested_filename == "balloob/motion_light"
@@ -161,7 +163,7 @@ async def test_fetch_blueprint_from_github_gist_url(
     """Test fetching blueprint from url."""
     aioclient_mock.get(
         "https://api.github.com/gists/e717ce85dd0d2f1bdcdfc884ea25a344",
-        text=load_fixture("blueprint/github_gist.json"),
+        text=await async_load_fixture(hass, "github_gist.json", DOMAIN),
     )
 
     url = "https://gist.github.com/balloob/e717ce85dd0d2f1bdcdfc884ea25a344"

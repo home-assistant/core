@@ -9,6 +9,7 @@ from datapoint.Forecast import Forecast as ForecastData
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_IS_DAYTIME,
     ATTR_FORECAST_NATIVE_APPARENT_TEMP,
     ATTR_FORECAST_NATIVE_PRESSURE,
     ATTR_FORECAST_NATIVE_TEMP,
@@ -41,12 +42,15 @@ from .const import (
     ATTRIBUTION,
     CONDITION_MAP,
     DAILY_FORECAST_ATTRIBUTE_MAP,
+    DAY_FORECAST_ATTRIBUTE_MAP,
     DOMAIN,
     HOURLY_FORECAST_ATTRIBUTE_MAP,
     METOFFICE_COORDINATES,
     METOFFICE_DAILY_COORDINATOR,
     METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
+    METOFFICE_TWICE_DAILY_COORDINATOR,
+    NIGHT_FORECAST_ATTRIBUTE_MAP,
 )
 from .helpers import get_attribute
 
@@ -73,6 +77,7 @@ async def async_setup_entry(
             MetOfficeWeather(
                 hass_data[METOFFICE_DAILY_COORDINATOR],
                 hass_data[METOFFICE_HOURLY_COORDINATOR],
+                hass_data[METOFFICE_TWICE_DAILY_COORDINATOR],
                 hass_data,
             )
         ],
@@ -89,6 +94,19 @@ def _build_hourly_forecast_data(timestep: dict[str, Any]) -> Forecast:
 def _build_daily_forecast_data(timestep: dict[str, Any]) -> Forecast:
     data = Forecast(datetime=timestep["time"].isoformat())
     _populate_forecast_data(data, timestep, DAILY_FORECAST_ATTRIBUTE_MAP)
+    return data
+
+
+def _build_twice_daily_forecast_data(timestep: dict[str, Any]) -> Forecast:
+    data = Forecast(datetime=timestep["time"].isoformat())
+
+    # day and night forecasts have slightly different format
+    if "daySignificantWeatherCode" in timestep:
+        data[ATTR_FORECAST_IS_DAYTIME] = True
+        _populate_forecast_data(data, timestep, DAY_FORECAST_ATTRIBUTE_MAP)
+    else:
+        data[ATTR_FORECAST_IS_DAYTIME] = False
+        _populate_forecast_data(data, timestep, NIGHT_FORECAST_ATTRIBUTE_MAP)
     return data
 
 
@@ -152,13 +170,16 @@ class MetOfficeWeather(
     _attr_native_visibility_unit = UnitOfLength.METERS
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
     _attr_supported_features = (
-        WeatherEntityFeature.FORECAST_HOURLY | WeatherEntityFeature.FORECAST_DAILY
+        WeatherEntityFeature.FORECAST_HOURLY
+        | WeatherEntityFeature.FORECAST_TWICE_DAILY
+        | WeatherEntityFeature.FORECAST_DAILY
     )
 
     def __init__(
         self,
         coordinator_daily: TimestampDataUpdateCoordinator[ForecastData],
         coordinator_hourly: TimestampDataUpdateCoordinator[ForecastData],
+        coordinator_twice_daily: TimestampDataUpdateCoordinator[ForecastData],
         hass_data: dict[str, Any],
     ) -> None:
         """Initialise the platform with a data instance."""
@@ -167,6 +188,7 @@ class MetOfficeWeather(
             observation_coordinator,
             daily_coordinator=coordinator_daily,
             hourly_coordinator=coordinator_hourly,
+            twice_daily_coordinator=coordinator_twice_daily,
         )
 
         self._attr_device_info = get_device_info(
@@ -180,7 +202,7 @@ class MetOfficeWeather(
         weather_now = self.coordinator.data.now()
         value = get_attribute(weather_now, "significantWeatherCode")
 
-        if value:
+        if value is not None:
             return CONDITION_MAP.get(value)
         return None
 
@@ -265,6 +287,20 @@ class MetOfficeWeather(
         timesteps = coordinator.data.timesteps
         return [
             _build_hourly_forecast_data(timestep)
+            for timestep in timesteps
+            if timestep["time"] > datetime.now(tz=timesteps[0]["time"].tzinfo)
+        ]
+
+    @callback
+    def _async_forecast_twice_daily(self) -> list[Forecast] | None:
+        """Return the twice daily forecast in native units."""
+        coordinator = cast(
+            TimestampDataUpdateCoordinator[ForecastData],
+            self.forecast_coordinators["twice_daily"],
+        )
+        timesteps = coordinator.data.timesteps
+        return [
+            _build_twice_daily_forecast_data(timestep)
             for timestep in timesteps
             if timestep["time"] > datetime.now(tz=timesteps[0]["time"].tzinfo)
         ]

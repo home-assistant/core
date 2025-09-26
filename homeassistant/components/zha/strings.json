@@ -24,16 +24,49 @@
       },
       "manual_port_config": {
         "title": "Serial port settings",
-        "description": "Enter the serial port settings",
+        "description": "ZHA was not able to automatically detect serial port settings for your adapter. This usually is an issue with the firmware or permissions.\n\nIf you are using firmware with nonstandard settings, enter the serial port settings",
         "data": {
           "path": "Serial device path",
-          "baudrate": "Port speed",
-          "flow_control": "Data flow control"
+          "baudrate": "Serial port speed",
+          "flow_control": "Serial port flow control"
+        },
+        "data_description": {
+          "path": "Path to the serial port or `socket://` TCP address",
+          "baudrate": "Baudrate to use when communicating with the serial port, usually 115200 or 460800",
+          "flow_control": "Check your adapter's documentation for the correct option, usually `None` or `Hardware`"
         }
       },
       "verify_radio": {
         "title": "Radio is not recommended",
         "description": "The radio you are using ({name}) is not recommended and support for it may be removed in the future. Please see the Zigbee Home Automation integration's documentation for [a list of recommended adapters]({docs_recommended_adapters_url})."
+      },
+      "choose_setup_strategy": {
+        "title": "Set up Zigbee",
+        "description": "Choose how you want to set up Zigbee. Automatic setup is recommended unless you are restoring your network from a backup or setting up an adapter with nonstandard settings.",
+        "menu_options": {
+          "setup_strategy_recommended": "Set up automatically (recommended)",
+          "setup_strategy_advanced": "Advanced setup"
+        },
+        "menu_option_descriptions": {
+          "setup_strategy_recommended": "This is the quickest option to create a new network and get started.",
+          "setup_strategy_advanced": "This will let you restore from a backup."
+        }
+      },
+      "choose_migration_strategy": {
+        "title": "Migrate to a new adapter",
+        "description": "Choose how you want to migrate your Zigbee network backup from your old adapter to a new one.",
+        "menu_options": {
+          "migration_strategy_recommended": "Migrate automatically (recommended)",
+          "migration_strategy_advanced": "Advanced migration"
+        },
+        "menu_option_descriptions": {
+          "migration_strategy_recommended": "This is the quickest option to migrate to a new adapter.",
+          "migration_strategy_advanced": "This will let you restore a specific network backup or upload your own."
+        }
+      },
+      "maybe_reset_old_radio": {
+        "title": "Resetting old radio",
+        "description": "A backup was created earlier and your old radio is being reset as part of the migration."
       },
       "choose_formation_strategy": {
         "title": "Network formation",
@@ -44,6 +77,13 @@
           "reuse_settings": "Keep radio network settings",
           "choose_automatic_backup": "Restore an automatic backup",
           "upload_manual_backup": "Upload a manual backup"
+        },
+        "menu_option_descriptions": {
+          "form_new_network": "This will create a new Zigbee network.",
+          "form_initial_network": "[%key:component::zha::config::step::choose_formation_strategy::menu_option_descriptions::form_new_network%]",
+          "reuse_settings": "This will let ZHA import the settings from a stick that was used with other software, migrating some of the network automatically.",
+          "choose_automatic_backup": "This will let you change your adapter's network settings back to a previous state, in case you have changed them.",
+          "upload_manual_backup": "This will let you upload a backup JSON file from ZHA or the Zigbee2MQTT `coordinator_backup.json` file."
         }
       },
       "choose_automatic_backup": {
@@ -76,8 +116,12 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "not_zha_device": "This device is not a ZHA device",
       "usb_probe_failed": "Failed to probe the USB device",
+      "cannot_resolve_path": "Could not resolve device path: {path}",
       "wrong_firmware_installed": "Your device is running the wrong firmware and cannot be used with ZHA until the correct firmware is installed. [A repair has been created]({repair_url}) with more information and instructions for how to fix this.",
-      "invalid_zeroconf_data": "The coordinator has invalid Zeroconf service info and cannot be identified by ZHA"
+      "invalid_zeroconf_data": "The coordinator has invalid Zeroconf service info and cannot be identified by ZHA",
+      "cannot_restore_backup": "The adapter you are restoring to does not properly support backup restoration. Please upgrade the firmware.\n\nError: {error}",
+      "cannot_restore_backup_no_ieee_confirm": "The adapter you are restoring to has outdated firmware and cannot write the adapter IEEE address multiple times. Please upgrade the firmware or confirm permanent overwrite in the previous step.",
+      "reconfigure_successful": "ZHA has successfully migrated from your old adapter to the new one. Give your Zigbee network a few minutes to stabilize.\n\nIf you no longer need the old adapter, you can now unplug it."
     }
   },
   "options": {
@@ -85,7 +129,7 @@
     "step": {
       "init": {
         "title": "Reconfigure ZHA",
-        "description": "ZHA will be stopped. Do you wish to continue?"
+        "description": "A backup will be performed and ZHA will be stopped. Do you wish to continue?"
       },
       "prompt_migrate_or_reconfigure": {
         "title": "Migrate or re-configure",
@@ -93,6 +137,10 @@
         "menu_options": {
           "intent_migrate": "Migrate to a new radio",
           "intent_reconfigure": "Re-configure the current radio"
+        },
+        "menu_option_descriptions": {
+          "intent_migrate": "This will help you migrate your Zigbee network from your old radio to a new one.",
+          "intent_reconfigure": "This will let you change the serial port for your current Zigbee radio."
         }
       },
       "intent_migrate": {
@@ -130,6 +178,18 @@
         "title": "[%key:component::zha::config::step::verify_radio::title%]",
         "description": "[%key:component::zha::config::step::verify_radio::description%]"
       },
+      "choose_migration_strategy": {
+        "title": "[%key:component::zha::config::step::choose_migration_strategy::title%]",
+        "description": "[%key:component::zha::config::step::choose_migration_strategy::description%]",
+        "menu_options": {
+          "migration_strategy_recommended": "[%key:component::zha::config::step::choose_migration_strategy::menu_options::migration_strategy_recommended%]",
+          "migration_strategy_advanced": "[%key:component::zha::config::step::choose_migration_strategy::menu_options::migration_strategy_advanced%]"
+        },
+        "menu_option_descriptions": {
+          "migration_strategy_recommended": "[%key:component::zha::config::step::choose_migration_strategy::menu_option_descriptions::migration_strategy_recommended%]",
+          "migration_strategy_advanced": "[%key:component::zha::config::step::choose_migration_strategy::menu_option_descriptions::migration_strategy_advanced%]"
+        }
+      },
       "choose_formation_strategy": {
         "title": "[%key:component::zha::config::step::choose_formation_strategy::title%]",
         "description": "[%key:component::zha::config::step::choose_formation_strategy::description%]",
@@ -139,6 +199,13 @@
           "reuse_settings": "[%key:component::zha::config::step::choose_formation_strategy::menu_options::reuse_settings%]",
           "choose_automatic_backup": "[%key:component::zha::config::step::choose_formation_strategy::menu_options::choose_automatic_backup%]",
           "upload_manual_backup": "[%key:component::zha::config::step::choose_formation_strategy::menu_options::upload_manual_backup%]"
+        },
+        "menu_option_descriptions": {
+          "form_new_network": "[%key:component::zha::config::step::choose_formation_strategy::menu_option_descriptions::form_new_network%]",
+          "form_initial_network": "[%key:component::zha::config::step::choose_formation_strategy::menu_option_descriptions::form_new_network%]",
+          "reuse_settings": "[%key:component::zha::config::step::choose_formation_strategy::menu_option_descriptions::reuse_settings%]",
+          "choose_automatic_backup": "[%key:component::zha::config::step::choose_formation_strategy::menu_option_descriptions::choose_automatic_backup%]",
+          "upload_manual_backup": "[%key:component::zha::config::step::choose_formation_strategy::menu_option_descriptions::upload_manual_backup%]"
         }
       },
       "choose_automatic_backup": {
@@ -168,10 +235,12 @@
       "invalid_backup_json": "[%key:component::zha::config::error::invalid_backup_json%]"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "not_zha_device": "[%key:component::zha::config::abort::not_zha_device%]",
       "usb_probe_failed": "[%key:component::zha::config::abort::usb_probe_failed%]",
-      "wrong_firmware_installed": "[%key:component::zha::config::abort::wrong_firmware_installed%]"
+      "cannot_resolve_path": "[%key:component::zha::config::abort::cannot_resolve_path%]",
+      "wrong_firmware_installed": "[%key:component::zha::config::abort::wrong_firmware_installed%]",
+      "cannot_restore_backup": "[%key:component::zha::config::abort::cannot_restore_backup%]",
+      "cannot_restore_backup_no_ieee_confirm": "[%key:component::zha::config::abort::cannot_restore_backup_no_ieee_confirm%]"
     }
   },
   "config_panel": {
@@ -182,9 +251,9 @@
       "group_members_assume_state": "Group members assume state of group",
       "enable_identify_on_join": "Enable identify effect when devices join the network",
       "default_light_transition": "Default light transition time (seconds)",
-      "consider_unavailable_mains": "Consider mains powered devices unavailable after (seconds)",
-      "enable_mains_startup_polling": "Refresh state for mains powered devices on startup",
-      "consider_unavailable_battery": "Consider battery powered devices unavailable after (seconds)"
+      "consider_unavailable_mains": "Consider mains-powered devices unavailable after (seconds)",
+      "enable_mains_startup_polling": "Refresh state for mains-powered devices on startup",
+      "consider_unavailable_battery": "Consider battery-powered devices unavailable after (seconds)"
     },
     "zha_alarm_options": {
       "title": "Alarm control panel options",
@@ -532,6 +601,10 @@
             "menu_options": {
               "use_new_settings": "Keep the new settings",
               "restore_old_settings": "Restore backup (recommended)"
+            },
+            "menu_option_descriptions": {
+              "use_new_settings": "This will keep the new settings written to the stick. Only choose this option if you have intentionally changed settings.",
+              "restore_old_settings": "This will restore your network settings back to the last working state."
             }
           }
         }
@@ -616,6 +689,18 @@
       },
       "water_supply": {
         "name": "Water supply"
+      },
+      "frient_in_1": {
+        "name": "IN1"
+      },
+      "frient_in_2": {
+        "name": "IN2"
+      },
+      "frient_in_3": {
+        "name": "IN3"
+      },
+      "frient_in_4": {
+        "name": "IN4"
       }
     },
     "button": {
@@ -639,6 +724,12 @@
       },
       "frost_lock_reset": {
         "name": "Frost lock reset"
+      },
+      "reset_alarm": {
+        "name": "Reset alarm"
+      },
+      "calibrate_valve": {
+        "name": "Calibrate valve"
       }
     },
     "climate": {
@@ -659,7 +750,15 @@
     },
     "fan": {
       "fan": {
-        "name": "[%key:component::fan::title%]"
+        "name": "[%key:component::fan::title%]",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "smart": "Smart"
+            }
+          }
+        }
       },
       "fan_group": {
         "name": "Fan group"
@@ -667,7 +766,14 @@
     },
     "light": {
       "light": {
-        "name": "[%key:component::light::title%]"
+        "name": "[%key:component::light::title%]",
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "colorloop": "Color loop"
+            }
+          }
+        }
       },
       "light_group": {
         "name": "Light group"
@@ -1103,7 +1209,7 @@
         "name": "Comfort temperature"
       },
       "valve_state_auto_shutdown": {
-        "name": "Valve state auto shutdown"
+        "name": "Valve state auto-shutdown"
       },
       "shutdown_timer": {
         "name": "Shutdown timer"
@@ -1137,6 +1243,51 @@
       },
       "external_temperature_sensor_value": {
         "name": "External temperature sensor value"
+      },
+      "update_frequency": {
+        "name": "Update frequency"
+      },
+      "sound_volume": {
+        "name": "Sound volume"
+      },
+      "lift_drive_up_time": {
+        "name": "Lift drive up time"
+      },
+      "lift_drive_down_time": {
+        "name": "Lift drive down time"
+      },
+      "tilt_open_close_and_step_time": {
+        "name": "Tilt open close and step time"
+      },
+      "tilt_position_percentage_after_move_to_level": {
+        "name": "Tilt position percentage after move to level"
+      },
+      "display_on_time": {
+        "name": "Display on-time"
+      },
+      "closing_duration": {
+        "name": "Closing duration"
+      },
+      "opening_duration": {
+        "name": "Opening duration"
+      },
+      "long_press_duration": {
+        "name": "Long press duration"
+      },
+      "motor_start_delay": {
+        "name": "Motor start delay"
+      },
+      "max_brightness": {
+        "name": "Maximum brightness"
+      },
+      "min_brightness": {
+        "name": "Minimum brightness"
+      },
+      "reporting_interval": {
+        "name": "Reporting interval"
+      },
+      "sensitivity": {
+        "name": "Sensitivity"
       }
     },
     "select": {
@@ -1186,7 +1337,7 @@
         "name": "Smart fan LED display levels"
       },
       "increased_non_neutral_output": {
-        "name": "Non neutral output"
+        "name": "Increased non-neutral output"
       },
       "leading_or_trailing_edge": {
         "name": "Dimming mode"
@@ -1367,6 +1518,30 @@
       },
       "alarm_sound_mode": {
         "name": "Alarm sound mode"
+      },
+      "external_switch_type": {
+        "name": "External switch type"
+      },
+      "switch_indication": {
+        "name": "Switch indication"
+      },
+      "switch_actions": {
+        "name": "Switch actions"
+      },
+      "ctrl_sequence_of_oper": {
+        "name": "Control sequence"
+      },
+      "displayed_temperature": {
+        "name": "Displayed temperature"
+      },
+      "calibration_mode": {
+        "name": "Calibration mode"
+      },
+      "mode_switch": {
+        "name": "Mode switch"
+      },
+      "phase": {
+        "name": "Phase"
       }
     },
     "sensor": {
@@ -1429,6 +1604,9 @@
       },
       "tier6_summation_delivered": {
         "name": "Tier 6 summation delivered"
+      },
+      "total_active_power": {
+        "name": "Total power"
       },
       "summation_received": {
         "name": "Summation received"
@@ -1720,6 +1898,41 @@
       },
       "lifetime": {
         "name": "Lifetime"
+      },
+      "last_action_source": {
+        "name": "Last action source",
+        "state": {
+          "zigbee": "Zigbee",
+          "keypad": "Keypad",
+          "fingerprint": "Fingerprint",
+          "rfid": "RFID",
+          "self": "Self"
+        }
+      },
+      "last_action": {
+        "name": "Last action",
+        "state": {
+          "lock": "[%key:common::state::locked%]",
+          "unlock": "[%key:common::state::unlocked%]"
+        }
+      },
+      "last_action_user": {
+        "name": "Last action user"
+      },
+      "last_pin_code": {
+        "name": "Last PIN code"
+      },
+      "opening": {
+        "name": "Opening"
+      },
+      "operating_mode": {
+        "name": "Operating mode"
+      },
+      "valve_adapt_status": {
+        "name": "Valve adaptation status"
+      },
+      "motor_state": {
+        "name": "Motor state"
       }
     },
     "switch": {
@@ -1928,13 +2141,43 @@
         "name": "Schedule mode"
       },
       "auto_clean": {
-        "name": "Auto clean"
+        "name": "Autoclean"
       },
       "test_mode": {
         "name": "Test mode"
       },
       "external_temperature_sensor": {
         "name": "External temperature sensor"
+      },
+      "auto_relock": {
+        "name": "Autorelock"
+      },
+      "distance_tracking": {
+        "name": "Distance tracking"
+      },
+      "water_shortage_auto_close": {
+        "name": "Water shortage auto-close"
+      },
+      "frient_com_1": {
+        "name": "COM 1"
+      },
+      "frient_com_2": {
+        "name": "COM 2"
+      },
+      "window_open": {
+        "name": "Window open"
+      },
+      "turn_on_led_when_off": {
+        "name": "Turn on LED when off"
+      },
+      "turn_on_led_when_on": {
+        "name": "Turn on LED when on"
+      },
+      "dimmer_mode": {
+        "name": "Dimmer mode"
+      },
+      "flip_indicator_light": {
+        "name": "Flip indicator light"
       }
     }
   }

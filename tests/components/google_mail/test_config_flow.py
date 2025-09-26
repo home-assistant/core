@@ -13,7 +13,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import CLIENT_ID, GOOGLE_AUTH_URI, GOOGLE_TOKEN_URI, SCOPES, TITLE
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -54,7 +54,10 @@ async def test_full_flow(
             "httplib2.Http.request",
             return_value=(
                 Response({}),
-                bytes(load_fixture("google_mail/get_profile.json"), encoding="UTF-8"),
+                bytes(
+                    await async_load_fixture(hass, "get_profile.json", DOMAIN),
+                    encoding="UTF-8",
+                ),
             ),
         ),
     ):
@@ -152,7 +155,10 @@ async def test_reauth(
             "httplib2.Http.request",
             return_value=(
                 Response({}),
-                bytes(load_fixture(f"google_mail/{fixture}.json"), encoding="UTF-8"),
+                bytes(
+                    await async_load_fixture(hass, f"{fixture}.json", DOMAIN),
+                    encoding="UTF-8",
+                ),
             ),
         ),
     ):
@@ -208,7 +214,10 @@ async def test_already_configured(
         "httplib2.Http.request",
         return_value=(
             Response({}),
-            bytes(load_fixture("google_mail/get_profile.json"), encoding="UTF-8"),
+            bytes(
+                await async_load_fixture(hass, "get_profile.json", DOMAIN),
+                encoding="UTF-8",
+            ),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])

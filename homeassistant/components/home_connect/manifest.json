@@ -10,17 +10,18 @@
       "macaddress": "C8D778*"
     },
     {
-      "hostname": "(bosch|siemens)-*",
+      "hostname": "(balay|bosch|neff|siemens)-*",
       "macaddress": "68A40E*"
     },
     {
-      "hostname": "siemens-*",
+      "hostname": "(bosch|neff|siemens)-*",
       "macaddress": "38B4D3*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/home_connect",
   "iot_class": "cloud_push",
   "loggers": ["aiohomeconnect"],
-  "requirements": ["aiohomeconnect==0.17.0"],
+  "quality_scale": "platinum",
+  "requirements": ["aiohomeconnect==0.20.0"],
   "zeroconf": ["_homeconnect._tcp.local."]
 }

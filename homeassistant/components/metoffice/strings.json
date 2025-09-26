@@ -11,7 +11,7 @@
       },
       "reauth_confirm": {
         "title": "Reauthenticate with DataHub API",
-        "description": "Please re-enter you DataHub API key. If you are still using an old Datapoint API key, you need to sign up for DataHub API now, see [documentation]({docs_url}) for details.",
+        "description": "Please re-enter your DataHub API key. If you are still using an old Datapoint API key, you need to sign up for DataHub API now, see [documentation]({docs_url}) for details.",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }

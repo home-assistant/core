@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 
 from . import TwitchIterObject, get_generator_from_data, setup_integration
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 ENTITY_ID = "sensor.channel123"
 
@@ -53,7 +53,7 @@ async def test_oauth_without_sub_and_follow(
 ) -> None:
     """Test state with oauth."""
     twitch_mock.return_value.get_followed_channels.return_value = TwitchIterObject(
-        "empty_response.json", FollowedChannel
+        hass, "empty_response.json", FollowedChannel
     )
     twitch_mock.return_value.check_user_subscription.side_effect = (
         TwitchResourceNotFound
@@ -70,10 +70,13 @@ async def test_oauth_with_sub(
 ) -> None:
     """Test state with oauth and sub."""
     twitch_mock.return_value.get_followed_channels.return_value = TwitchIterObject(
-        "empty_response.json", FollowedChannel
+        hass, "empty_response.json", FollowedChannel
+    )
+    subscription = await async_load_json_object_fixture(
+        hass, "check_user_subscription_2.json", DOMAIN
     )
     twitch_mock.return_value.check_user_subscription.return_value = UserSubscription(
-        **load_json_object_fixture("check_user_subscription_2.json", DOMAIN)
+        **subscription
     )
     await setup_integration(hass, config_entry)
 

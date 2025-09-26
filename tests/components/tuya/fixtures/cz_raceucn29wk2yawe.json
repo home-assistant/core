@@ -1,0 +1,56 @@
+{
+  "endpoint": "https://openapi.tuyaeu.com",
+  "auth_type": 0,
+  "country_code": "61",
+  "app_type": "smartlife",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Bathroom Mirror",
+  "model": "",
+  "category": "cz",
+  "product_id": "raceucn29wk2yawe",
+  "product_name": "Inline Switch 6000HA",
+  "online": true,
+  "sub": false,
+  "time_zone": "+10:00",
+  "active_time": "2021-08-18T13:03:59+00:00",
+  "create_time": "2021-08-18T13:03:59+00:00",
+  "update_time": "2022-02-12T10:40:14+00:00",
+  "function": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "switch_1": true,
+    "countdown_1": 0
+  }
+}

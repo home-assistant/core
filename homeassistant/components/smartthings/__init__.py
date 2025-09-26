@@ -103,6 +103,7 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
+    Platform.VACUUM,
     Platform.VALVE,
     Platform.WATER_HEATER,
 ]
@@ -289,7 +290,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             for identifier in device_entry.identifiers
             if identifier[0] == DOMAIN
         )
-        if device_id in device_status:
+        if any(
+            device_id.startswith(device_identifier)
+            for device_identifier in device_status
+        ):
             continue
         device_registry.async_update_device(
             device_entry.id, remove_config_entry_id=entry.entry_id
@@ -498,6 +502,9 @@ KEEP_CAPABILITY_QUIRK: dict[
         lambda status: status[Attribute.SUPPORTED_MACHINE_STATES].value is not None
     ),
     Capability.DEMAND_RESPONSE_LOAD_CONTROL: lambda _: True,
+    Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING: (
+        lambda status: status[Attribute.LIGHTING].value is not None
+    ),
 }
 
 

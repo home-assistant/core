@@ -2,6 +2,7 @@
   "title": "Sensor",
   "device_automation": {
     "condition_type": {
+      "is_absolute_humidity": "Current {entity_name} absolute humidity",
       "is_apparent_power": "Current {entity_name} apparent power",
       "is_aqi": "Current {entity_name} air quality index",
       "is_area": "Current {entity_name} area",
@@ -24,7 +25,7 @@
       "is_illuminance": "Current {entity_name} illuminance",
       "is_irradiance": "Current {entity_name} irradiance",
       "is_moisture": "Current {entity_name} moisture",
-      "is_monetary": "Current {entity_name} balance",
+      "is_monetary": "Current {entity_name} monetary balance",
       "is_nitrogen_dioxide": "Current {entity_name} nitrogen dioxide concentration level",
       "is_nitrogen_monoxide": "Current {entity_name} nitrogen monoxide concentration level",
       "is_nitrous_oxide": "Current {entity_name} nitrous oxide concentration level",
@@ -33,6 +34,7 @@
       "is_pm1": "Current {entity_name} PM1 concentration level",
       "is_pm10": "Current {entity_name} PM10 concentration level",
       "is_pm25": "Current {entity_name} PM2.5 concentration level",
+      "is_pm4": "Current {entity_name} PM4 concentration level",
       "is_power": "Current {entity_name} power",
       "is_power_factor": "Current {entity_name} power factor",
       "is_precipitation": "Current {entity_name} precipitation",
@@ -57,6 +59,7 @@
       "is_wind_speed": "Current {entity_name} wind speed"
     },
     "trigger_type": {
+      "absolute_humidity": "{entity_name} absolute humidity changes",
       "apparent_power": "{entity_name} apparent power changes",
       "aqi": "{entity_name} air quality index changes",
       "area": "{entity_name} area changes",
@@ -79,7 +82,7 @@
       "illuminance": "{entity_name} illuminance changes",
       "irradiance": "{entity_name} irradiance changes",
       "moisture": "{entity_name} moisture changes",
-      "monetary": "{entity_name} balance changes",
+      "monetary": "{entity_name} monetary balance changes",
       "nitrogen_dioxide": "{entity_name} nitrogen dioxide concentration changes",
       "nitrogen_monoxide": "{entity_name} nitrogen monoxide concentration changes",
       "nitrous_oxide": "{entity_name} nitrous oxide concentration changes",
@@ -88,6 +91,7 @@
       "pm1": "{entity_name} PM1 concentration changes",
       "pm10": "{entity_name} PM10 concentration changes",
       "pm25": "{entity_name} PM2.5 concentration changes",
+      "pm4": "{entity_name} PM4 concentration changes",
       "power": "{entity_name} power changes",
       "power_factor": "{entity_name} power factor changes",
       "precipitation": "{entity_name} precipitation changes",
@@ -135,6 +139,7 @@
           "name": "State class",
           "state": {
             "measurement": "Measurement",
+            "measurement_angle": "Measurement angle",
             "total": "Total",
             "total_increasing": "Total increasing"
           }
@@ -146,6 +151,9 @@
     },
     "duration": {
       "name": "Duration"
+    },
+    "absolute_humidity": {
+      "name": "Absolute humidity"
     },
     "apparent_power": {
       "name": "Apparent power"
@@ -217,7 +225,7 @@
       "name": "Moisture"
     },
     "monetary": {
-      "name": "Balance"
+      "name": "Monetary balance"
     },
     "nitrogen_dioxide": {
       "name": "Nitrogen dioxide"

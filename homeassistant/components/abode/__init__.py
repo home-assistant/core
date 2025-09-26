@@ -14,30 +14,24 @@ from jaraco.abode.exceptions import (
 )
 from jaraco.abode.helpers.timeline import Groups as GROUPS
 from requests.exceptions import ConnectTimeout, HTTPError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DATE,
     ATTR_DEVICE_ID,
-    ATTR_ENTITY_ID,
     ATTR_TIME,
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, ServiceCall
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_POLLING, DOMAIN, LOGGER
-
-SERVICE_SETTINGS = "change_setting"
-SERVICE_CAPTURE_IMAGE = "capture_image"
-SERVICE_TRIGGER_AUTOMATION = "trigger_automation"
+from .services import async_setup_services
 
 ATTR_DEVICE_NAME = "device_name"
 ATTR_DEVICE_TYPE = "device_type"
@@ -45,21 +39,11 @@ ATTR_EVENT_CODE = "event_code"
 ATTR_EVENT_NAME = "event_name"
 ATTR_EVENT_TYPE = "event_type"
 ATTR_EVENT_UTC = "event_utc"
-ATTR_SETTING = "setting"
 ATTR_USER_NAME = "user_name"
 ATTR_APP_TYPE = "app_type"
 ATTR_EVENT_BY = "event_by"
-ATTR_VALUE = "value"
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
-
-CHANGE_SETTING_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_SETTING): cv.string, vol.Required(ATTR_VALUE): cv.string}
-)
-
-CAPTURE_IMAGE_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
-
-AUTOMATION_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
@@ -85,7 +69,7 @@ class AbodeSystem:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Abode component."""
-    setup_hass_services(hass)
+    async_setup_services(hass)
     return True
 
 
@@ -136,60 +120,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.pop(DOMAIN)
 
     return unload_ok
-
-
-def setup_hass_services(hass: HomeAssistant) -> None:
-    """Home Assistant services."""
-
-    def change_setting(call: ServiceCall) -> None:
-        """Change an Abode system setting."""
-        setting = call.data[ATTR_SETTING]
-        value = call.data[ATTR_VALUE]
-
-        try:
-            hass.data[DOMAIN].abode.set_setting(setting, value)
-        except AbodeException as ex:
-            LOGGER.warning(ex)
-
-    def capture_image(call: ServiceCall) -> None:
-        """Capture a new image."""
-        entity_ids = call.data[ATTR_ENTITY_ID]
-
-        target_entities = [
-            entity_id
-            for entity_id in hass.data[DOMAIN].entity_ids
-            if entity_id in entity_ids
-        ]
-
-        for entity_id in target_entities:
-            signal = f"abode_camera_capture_{entity_id}"
-            dispatcher_send(hass, signal)
-
-    def trigger_automation(call: ServiceCall) -> None:
-        """Trigger an Abode automation."""
-        entity_ids = call.data[ATTR_ENTITY_ID]
-
-        target_entities = [
-            entity_id
-            for entity_id in hass.data[DOMAIN].entity_ids
-            if entity_id in entity_ids
-        ]
-
-        for entity_id in target_entities:
-            signal = f"abode_trigger_automation_{entity_id}"
-            dispatcher_send(hass, signal)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SETTINGS, change_setting, schema=CHANGE_SETTING_SCHEMA
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_CAPTURE_IMAGE, capture_image, schema=CAPTURE_IMAGE_SCHEMA
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_TRIGGER_AUTOMATION, trigger_automation, schema=AUTOMATION_SCHEMA
-    )
 
 
 async def setup_hass_events(hass: HomeAssistant) -> None:

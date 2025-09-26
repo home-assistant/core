@@ -1,5 +1,7 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
 
+from typing import Any
+
 from homeassistant.components.device_tracker import (
     ATTR_SOURCE_TYPE,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -64,34 +66,34 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, dev_id, data=None):
+    def __init__(self, dev_id: str, data: dict[str, Any] | None = None) -> None:
         """Set up OwnTracks entity."""
         self._dev_id = dev_id
         self._data = data or {}
         self.entity_id = f"{DEVICE_TRACKER_DOMAIN}.{dev_id}"
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique ID."""
         return self._dev_id
 
     @property
-    def battery_level(self):
+    def battery_level(self) -> int | None:
         """Return the battery level of the device."""
         return self._data.get("battery")
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific attributes."""
         return self._data.get("attributes")
 
     @property
-    def location_accuracy(self):
+    def location_accuracy(self) -> float:
         """Return the gps accuracy of the device."""
-        return self._data.get("gps_accuracy")
+        return self._data.get("gps_accuracy", 0)
 
     @property
-    def latitude(self):
+    def latitude(self) -> float | None:
         """Return latitude value of the device."""
         # Check with "get" instead of "in" because value can be None
         if self._data.get("gps"):
@@ -100,7 +102,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         return None
 
     @property
-    def longitude(self):
+    def longitude(self) -> float | None:
         """Return longitude value of the device."""
         # Check with "get" instead of "in" because value can be None
         if self._data.get("gps"):
@@ -109,7 +111,7 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         return None
 
     @property
-    def location_name(self):
+    def location_name(self) -> str | None:
         """Return a location name for the current location of the device."""
         return self._data.get("location_name")
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 import logging
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, Protocol, final
 
 import aiohttp
 import voluptuous as vol
@@ -31,6 +31,7 @@ from homeassistant.components.homeassistant_hardware.util import (
 from homeassistant.config_entries import (
     SOURCE_HARDWARE,
     ConfigEntry,
+    ConfigEntryBaseFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
@@ -41,6 +42,7 @@ from .const import (
     DOMAIN,
     FIRMWARE,
     FIRMWARE_VERSION,
+    NABU_CASA_FIRMWARE_RELEASES_URL,
     RADIO_DEVICE,
     ZHA_DOMAIN,
     ZHA_HW_DISCOVERY_DATA,
@@ -57,8 +59,59 @@ STEP_HW_SETTINGS_SCHEMA = vol.Schema(
     }
 )
 
+if TYPE_CHECKING:
 
-class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
+    class FirmwareInstallFlowProtocol(Protocol):
+        """Protocol describing `BaseFirmwareInstallFlow` for a mixin."""
+
+        async def _install_firmware_step(
+            self,
+            fw_update_url: str,
+            fw_type: str,
+            firmware_name: str,
+            expected_installed_firmware_type: ApplicationType,
+            step_id: str,
+            next_step_id: str,
+        ) -> ConfigFlowResult: ...
+
+else:
+    # Multiple inheritance with `Protocol` seems to break
+    FirmwareInstallFlowProtocol = object
+
+
+class YellowFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
+    """Mixin for Home Assistant Yellow firmware methods."""
+
+    async def async_step_install_zigbee_firmware(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Install Zigbee firmware."""
+        return await self._install_firmware_step(
+            fw_update_url=NABU_CASA_FIRMWARE_RELEASES_URL,
+            fw_type="yellow_zigbee_ncp",
+            firmware_name="Zigbee",
+            expected_installed_firmware_type=ApplicationType.EZSP,
+            step_id="install_zigbee_firmware",
+            next_step_id="pre_confirm_zigbee",
+        )
+
+    async def async_step_install_thread_firmware(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Install Thread firmware."""
+        return await self._install_firmware_step(
+            fw_update_url=NABU_CASA_FIRMWARE_RELEASES_URL,
+            fw_type="yellow_openthread_rcp",
+            firmware_name="OpenThread",
+            expected_installed_firmware_type=ApplicationType.SPINEL,
+            step_id="install_thread_firmware",
+            next_step_id="finish_thread_installation",
+        )
+
+
+class HomeAssistantYellowConfigFlow(
+    YellowFirmwareMixin, BaseFirmwareConfigFlow, domain=DOMAIN
+):
     """Handle a config flow for Home Assistant Yellow."""
 
     VERSION = 1
@@ -275,7 +328,9 @@ class HomeAssistantYellowMultiPanOptionsFlowHandler(
 
 
 class HomeAssistantYellowOptionsFlowHandler(
-    BaseHomeAssistantYellowOptionsFlow, BaseFirmwareOptionsFlow
+    YellowFirmwareMixin,
+    BaseHomeAssistantYellowOptionsFlow,
+    BaseFirmwareOptionsFlow,
 ):
     """Handle a firmware options flow for Home Assistant Yellow."""
 
