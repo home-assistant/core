@@ -16,7 +16,6 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
@@ -116,13 +115,6 @@ class PortainerButton(PortainerContainerEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Trigger the Portainer button press service."""
-        try:
-            await self.entity_description.press_action(
-                self.coordinator, self.endpoint_id, self.device_id
-            )
-        except Exception as err:  # broad as API/library may raise varying exceptions
-            # Map any client/transport error to HomeAssistantError so the UI and
-            # tests receive a consistent domain-agnostic failure.
-            raise HomeAssistantError(
-                f"Failed to execute {self.entity_description.key} for container"
-            ) from err
+        await self.entity_description.press_action(
+            self.coordinator, self.endpoint_id, self.device_id
+        )

@@ -77,17 +77,6 @@ async def test_buttons(
 
     assert len(method_mock.mock_calls) == pre_calls + 1
 
-    method_mock.side_effect = Exception("click,click,boom")
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            BUTTON_DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: entity_id},
-            blocking=True,
-        )
-
-    assert len(method_mock.mock_calls) == pre_calls + 2
-
 
 @pytest.mark.parametrize(
     ("exception", "client_method"),
