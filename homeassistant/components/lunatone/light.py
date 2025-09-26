@@ -90,16 +90,14 @@ class LunatoneLight(
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        if self._device is None:
-            return
+        assert self._device
         await self._device.switch_on()
         await asyncio.sleep(STATUS_UPDATE_DELAY)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        if self._device is None:
-            return
+        assert self._device
         await self._device.switch_off()
         await asyncio.sleep(STATUS_UPDATE_DELAY)
         await self.coordinator.async_refresh()
