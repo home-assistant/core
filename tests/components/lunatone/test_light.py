@@ -2,13 +2,14 @@
 
 from unittest.mock import AsyncMock
 
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import DEVICE_DATA_LIST, SERIAL_NUMBER, setup_integration
+from . import DEVICE_DATA_LIST, setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -22,22 +23,19 @@ async def test_setup(
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Lunatone configuration entry loading/unloading."""
     await setup_integration(hass, mock_config_entry)
 
     for device_data in DEVICE_DATA_LIST:
-        expected_unique_id = f"{SERIAL_NUMBER}-device{device_data.id}"
+        entity_id = f"light.device_{device_data.id}"
 
-        entry = entity_registry.async_get(f"light.device_{device_data.id}")
-        assert entry
-        assert entry.device_id
-        assert entry.unique_id == expected_unique_id
+        entry = entity_registry.async_get(entity_id)
+        assert entry == snapshot
 
         device_entry = device_registry.async_get(entry.device_id)
-        assert device_entry
-        assert device_entry.identifiers == {(DOMAIN, expected_unique_id)}
-        assert device_entry.name == f"Device {device_data.id}"
+        assert device_entry == snapshot
 
 
 async def test_turn_on_off(
