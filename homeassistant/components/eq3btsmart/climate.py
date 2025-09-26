@@ -16,7 +16,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import EQ_TO_HA_HVAC, HA_TO_EQ_HVAC, Preset
@@ -106,7 +106,9 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         try:
             await self._thermostat.async_set_temperature(temperature)
         except Eq3Exception as ex:
-            _LOGGER.error("[%s] Failed setting temperature: %s", self._mac_address, ex)
+            raise HomeAssistantError(
+                f"[{self._mac_address}] Failed setting temperature"
+            ) from ex
         except ValueError as ex:
             raise ServiceValidationError("Invalid temperature") from ex
 
@@ -118,15 +120,18 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         try:
             await self._thermostat.async_set_mode(HA_TO_EQ_HVAC[hvac_mode])
         except Eq3Exception as ex:
-            _LOGGER.error("[%s] Failed setting HVAC mode: %s", self._mac_address, ex)
+            raise HomeAssistantError(
+                f"[{self._mac_address}] Failed setting HVAC mode"
+            ) from ex
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         try:
-            match preset_mode:
-                case Preset.ECO:
-                    await self._thermostat.async_set_preset(Eq3Preset.ECO)
-                case Preset.COMFORT:
-                    await self._thermostat.async_set_preset(Eq3Preset.COMFORT)
+            if preset_mode is Preset.ECO:
+                await self._thermostat.async_set_preset(Eq3Preset.ECO)
+            elif preset_mode is Preset.COMFORT:
+                await self._thermostat.async_set_preset(Eq3Preset.COMFORT)
         except Eq3Exception as ex:
-            _LOGGER.error("[%s] Failed setting preset mode: %s", self._mac_address, ex)
+            raise HomeAssistantError(
+                f"[{self._mac_address}] Failed setting preset mode"
+            ) from ex
