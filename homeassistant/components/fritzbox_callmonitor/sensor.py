@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
 import queue
-from threading import Event as ThreadingEvent, Thread, Lock
+from threading import Event as ThreadingEvent, Lock, Thread
 from time import sleep
 from typing import Any, cast
 
@@ -233,7 +233,10 @@ class FritzBoxCallMonitor:
                 event = event_queue.get(timeout=10)
             except queue.Empty:
                 # if underlying connection is dead, try to recreate it
-                if not self.connection or not cast(FritzMonitor, self.connection).is_alive:
+                if (
+                    not self.connection
+                    or not cast(FritzMonitor, self.connection).is_alive
+                ):
                     _LOGGER.warning("Connection lost, attempting reconnect")
                     try:
                         self.connect()
