@@ -208,7 +208,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def async_fetch(call: ServiceCall) -> ServiceResponse:
         """Process fetch email service and return content."""
-
         entry_id: str = call.data[CONF_ENTRY]
         uid: str = call.data[CONF_UID]
         _LOGGER.debug(
@@ -226,6 +225,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 translation_placeholders={"error": str(exc)},
             ) from exc
         raise_on_error(response, "fetch_failed")
+        # Index 1 of of the response lines contains the bytearray with the message data
         message = ImapMessage(response.lines[1])
         await client.close()
         return {
@@ -282,6 +282,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 translation_placeholders={"error": str(exc)},
             ) from exc
         raise_on_error(response, "fetch_failed")
+        # Index 1 of of the response lines contains the bytearray with the message data
         message = ImapMessage(response.lines[1])
         await client.close()
         part_data = get_message_part(message.email_message, part_key)
