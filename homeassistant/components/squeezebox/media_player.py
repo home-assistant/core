@@ -44,6 +44,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.start import async_at_start
 from homeassistant.util.dt import utcnow
 
+from . import SQUEEZEBOX_HASS_DATA
 from .browse_media import (
     BrowseData,
     build_item_response,
@@ -58,7 +59,6 @@ from .const import (
     CONF_VOLUME_STEP,
     DEFAULT_BROWSE_LIMIT,
     DEFAULT_VOLUME_STEP,
-    DISCOVERY_TASK,
     DOMAIN,
     SERVER_MANUFACTURER,
     SERVER_MODEL,
@@ -110,12 +110,10 @@ async def start_server_discovery(hass: HomeAssistant) -> None:
             },
         )
 
-    hass.data.setdefault(DOMAIN, {})
-    if DISCOVERY_TASK not in hass.data[DOMAIN]:
+    if not hass.data.get(SQUEEZEBOX_HASS_DATA):
         _LOGGER.debug("Adding server discovery task for squeezebox")
-        hass.data[DOMAIN][DISCOVERY_TASK] = hass.async_create_background_task(
-            async_discover(_discovered_server),
-            name="squeezebox server discovery",
+        hass.data[SQUEEZEBOX_HASS_DATA] = hass.async_create_background_task(
+            async_discover(_discovered_server), name="squeezebox server discovery"
         )
 
 
@@ -607,7 +605,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         _media_content_type_list = (
             query.media_content_type.lower().replace(", ", ",").split(",")
             if query.media_content_type
-            else ["albums", "tracks", "artists", "genres"]
+            else ["albums", "tracks", "artists", "genres", "playlists"]
         )
 
         if query.media_content_type and set(_media_content_type_list).difference(
