@@ -422,7 +422,15 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         for map_flag in map_flags:
             if map_flag != cur_map:
                 # Only change the map and sleep if we have multiple maps.
-                await self.cloud_api.load_multi_map(map_flag)
+                try:
+                    await self.cloud_api.load_multi_map(map_flag)
+                except RoborockException as ex:
+                    _LOGGER.debug(
+                        "Failed to change to map %s when refreshing maps: %s",
+                        map_flag,
+                        ex,
+                    )
+                    continue
                 self.current_map = map_flag
                 # We cannot get the map until the roborock servers fully process the
                 # map change.
@@ -435,12 +443,28 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 tasks.append(self.update_map())
             # If either of these fail, we don't care, and we want to continue.
             await asyncio.gather(*tasks, return_exceptions=True)
+            if self.data.status.in_cleaning:
+                # If the vacuum is cleaning, we cannot change maps again
+                # as it will interrupt the cleaning.
+                _LOGGER.info(
+                    "Vacuum is cleaning, not switching to other maps to fetch rooms"
+                )
+                # Since this is hitting the cloud api, we want to be careful and will just
+                # stop here rather than retrying in the future.
+                return
 
         if len(self.maps) > 1:
             # Set the map back to the map the user previously had selected so that it
             # does not change the end user's app.
             # Only needs to happen when we changed maps above.
-            await self.cloud_api.load_multi_map(cur_map)
+            try:
+                await self.cloud_api.load_multi_map(cur_map)
+            except RoborockException as ex:
+                _LOGGER.warning(
+                    "Failed to change back to map %s when refreshing maps: %s",
+                    cur_map,
+                    ex,
+                )
             self.current_map = cur_map
 
 
