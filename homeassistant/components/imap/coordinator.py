@@ -212,15 +212,13 @@ class ImapMessage:
 @callback
 def get_parts(message: Message, prefix: str | None = None) -> dict[str, Any]:
     """Return information about the parts of a multipart message."""
-    index = 0
     parts: dict[str, Any] = {}
     if not message.is_multipart():
         return {}
-    for part in message.get_payload():
+    for index, part in enumerate(message.get_payload(), 0):
         if TYPE_CHECKING:
             assert isinstance(part, Message)
         key = f"{prefix},{index}" if prefix else f"{index}"
-        index += 1
         if part.is_multipart():
             parts |= get_parts(part, key)
             continue
