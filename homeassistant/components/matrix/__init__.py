@@ -542,7 +542,7 @@ class MatrixBot:
         }
 
         if thread_id is not None:
-            content |= {"m.relates_to": {"event_id": thread_id, "rel_type": "m.thread"}}
+            content["m.relates_to"] = {"event_id": thread_id, "rel_type": "m.thread"}
 
         await self._handle_multi_room_send(
             target_rooms=target_rooms, message_type="m.room.message", content=content
@@ -561,8 +561,9 @@ class MatrixBot:
                     "formatted_body": message,
                 }
             if thread_id is not None:
-                content |= {
-                    "m.relates_to": {"event_id": thread_id, "rel_type": "m.thread"}
+                content["m.relates_to"] = {
+                    "event_id": thread_id,
+                    "rel_type": "m.thread",
                 }
 
         await self._handle_multi_room_send(

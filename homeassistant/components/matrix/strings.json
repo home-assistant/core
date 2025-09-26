@@ -1,4 +1,19 @@
 {
+  "selector": {
+    "send_message_data": {
+      "fields": {
+        "images": "Images",
+        "format": "Message format",
+        "thread_id": "Thread ID"
+      }
+    },
+    "send_message_data_format": {
+      "options": {
+        "text": "Plain text",
+        "html": "HTML"
+      }
+    }
+  },
   "services": {
     "send_message": {
       "name": "Send message",
@@ -14,7 +29,7 @@
         },
         "data": {
           "name": "Data",
-          "description": "Extended information of notification. Supports list of images. Supports message format. Optional."
+          "description": "Extended information of notification. Supports the following keys: images -- a list of image paths to attach to the message, format -- either text or html, and thread_id -- an optional parent message to thread this message under. Optional."
         }
       }
     },
