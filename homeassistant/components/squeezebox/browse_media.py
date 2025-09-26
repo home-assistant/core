@@ -275,10 +275,7 @@ def _get_item_thumbnail(
     elif image_url := item.get("image_url"):
         url = image_url
 
-    if url is None:
-        return None
-
-    if internal_request:
+    if internal_request or not url:
         return url
 
     synthetic_id = entity.get_synthetic_id_and_cache_url(url)
