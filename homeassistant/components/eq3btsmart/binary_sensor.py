@@ -74,6 +74,6 @@ class Eq3BinarySensorEntity(Eq3Entity, BinarySensorEntity):
         self.entity_description = entity_description
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return the state of the entity."""
         return self.entity_description.value_func(self.coordinator.data)
