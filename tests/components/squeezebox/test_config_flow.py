@@ -15,6 +15,8 @@ from homeassistant.components.squeezebox.const import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
@@ -411,19 +413,29 @@ async def test_dhcp_discovery_no_server_found(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
 
 
-async def test_dhcp_discovery_existing_player(hass: HomeAssistant) -> None:
+async def test_dhcp_discovery_existing_player(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that we properly ignore known players during dhcp discover."""
-    with patch(
-        "homeassistant.helpers.entity_registry.EntityRegistry.async_get_entity_id",
-        return_value="test_entity",
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_DHCP},
-            data=DhcpServiceInfo(
-                ip="1.1.1.1",
-                macaddress="aabbccddeeff",
-                hostname="any",
-            ),
-        )
-        assert result["type"] is FlowResultType.ABORT
+
+    # Register a squeezebox media_player entity with the same MAC unique_id
+    entity_registry.async_get_or_create(
+        domain="media_player",
+        platform=DOMAIN,
+        unique_id=format_mac("aabbccddeeff"),
+    )
+
+    # Now fire a DHCP discovery for the same MAC
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="1.1.1.1",
+            macaddress="aabbccddeeff",
+            hostname="any",
+        ),
+    )
+
+    # Because the player is already known, the flow should abort
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
