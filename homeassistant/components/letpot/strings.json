@@ -54,8 +54,7 @@
         "name": "Light brightness"
       },
       "plant_days": {
-        "name": "Plants age",
-        "unit_of_measurement": "days"
+        "name": "Plants age"
       }
     },
     "select": {
