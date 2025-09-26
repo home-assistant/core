@@ -131,7 +131,7 @@ TwitterAPI==2.7.12
 WSDiscovery==2.1.2
 
 # homeassistant.components.accuweather
-accuweather==4.2.1
+accuweather==4.2.2
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -185,7 +185,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.1
 
 # homeassistant.components.alexa_devices
-aioamazondevices==6.0.0
+aioamazondevices==6.2.6
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -250,7 +250,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==41.9.4
+aioesphomeapi==41.10.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -378,7 +378,7 @@ aioridwell==2025.09.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.8.1
+aiorussound==4.8.2
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -1189,7 +1189,7 @@ hole==0.9.0
 holidays==0.81
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250925.0
+home-assistant-frontend==20250925.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.9.24
@@ -2387,7 +2387,7 @@ pysmappee==0.2.29
 pysmarlaapi==0.9.2
 
 # homeassistant.components.smartthings
-pysmartthings==3.2.9
+pysmartthings==3.3.0
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
@@ -3238,7 +3238,7 @@ zeroconf==0.147.2
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.72
+zha==0.0.73
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
