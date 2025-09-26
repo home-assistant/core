@@ -140,15 +140,63 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
         self, endpoint_id: int, container_id: str
     ) -> None:
         """Restarts a Docker container."""
-        await self.portainer.restart_container(endpoint_id, container_id)
+        try:
+            await self.portainer.restart_container(endpoint_id, container_id)
+        except PortainerConnectionError as err:
+            _LOGGER.exception("Connection error")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except PortainerAuthenticationError as err:
+            _LOGGER.exception("Authentication error")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+
         await self.async_request_refresh()
 
     async def async_stop_container(self, endpoint_id: int, container_id: str) -> None:
         """Stops a Docker container."""
-        await self.portainer.stop_container(endpoint_id, container_id)
+        try:
+            await self.portainer.stop_container(endpoint_id, container_id)
+        except PortainerConnectionError as err:
+            _LOGGER.exception("Connection error")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except PortainerAuthenticationError as err:
+            _LOGGER.exception("Authentication error")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+
         await self.async_request_refresh()
 
     async def async_start_container(self, endpoint_id: int, container_id: str) -> None:
         """Starts a Docker container."""
-        await self.portainer.start_container(endpoint_id, container_id)
+        try:
+            await self.portainer.start_container(endpoint_id, container_id)
+        except PortainerConnectionError as err:
+            _LOGGER.exception("Connection error")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except PortainerAuthenticationError as err:
+            _LOGGER.exception("Authentication error")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+
         await self.async_request_refresh()
