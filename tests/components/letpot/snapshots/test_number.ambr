@@ -93,7 +93,7 @@
     'supported_features': 0,
     'translation_key': 'plant_days',
     'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH63ABCD_plant_days',
-    'unit_of_measurement': 'days',
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
 # name: test_all_entities[number.garden_plants_age-state]
@@ -104,7 +104,7 @@
       'min': 0.0,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
-      'unit_of_measurement': 'days',
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.garden_plants_age',

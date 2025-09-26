@@ -12,7 +12,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.const import PRECISION_WHOLE, EntityCategory
+from homeassistant.const import PRECISION_WHOLE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -72,6 +72,7 @@ NUMBERS: tuple[LetPotNumberEntityDescription, ...] = (
     LetPotNumberEntityDescription(
         key="plant_days",
         translation_key="plant_days",
+        native_unit_of_measurement=UnitOfTime.DAYS,
         value_fn=lambda coordinator: coordinator.data.plant_days,
         set_value_fn=(
             lambda device_client, serial, value: device_client.set_plant_days(
