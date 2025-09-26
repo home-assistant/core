@@ -80,7 +80,7 @@ class LunatoneLight(
     @property
     def is_on(self) -> bool:
         """Return True if light is on."""
-        return self._device.is_on if self._device is not None else False
+        return self._device is not None and self._device.is_on
 
     @callback
     def _handle_coordinator_update(self) -> None:
