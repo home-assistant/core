@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_adam_sensor_entities[platforms0][sensor.adam_outdoor_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.adam_outdoor_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -39,7 +39,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.adam_outdoor_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.adam_outdoor_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -55,7 +55,7 @@
     'state': '7.81',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.badkamer_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.badkamer_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -95,7 +95,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.badkamer_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.badkamer_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -111,7 +111,7 @@
     'state': '18.9',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.bios_cv_thermostatic_radiator_battery-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -148,7 +148,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.bios_cv_thermostatic_radiator_battery-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -164,7 +164,7 @@
     'state': '62',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.bios_cv_thermostatic_radiator_setpoint-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -204,7 +204,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.bios_cv_thermostatic_radiator_setpoint-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -220,7 +220,7 @@
     'state': '13.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.bios_cv_thermostatic_radiator_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -260,7 +260,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.bios_cv_thermostatic_radiator_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -276,7 +276,7 @@
     'state': '17.2',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.bios_cv_thermostatic_radiator_temperature_difference-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_temperature_difference-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -316,7 +316,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.bios_cv_thermostatic_radiator_temperature_difference-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_temperature_difference-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -332,7 +332,7 @@
     'state': '-0.2',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.bios_cv_thermostatic_radiator_valve_position-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -369,7 +369,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.bios_cv_thermostatic_radiator_valve_position-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.bios_cv_thermostatic_radiator_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bios Cv Thermostatic Radiator  Valve position',
@@ -384,7 +384,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.bios_electricity_consumed-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.bios_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -424,7 +424,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.bios_electricity_consumed-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.bios_electricity_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -440,7 +440,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.bios_electricity_produced-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.bios_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -480,7 +480,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.bios_electricity_produced-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.bios_electricity_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -496,7 +496,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.bios_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.bios_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -536,7 +536,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.bios_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.bios_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -552,7 +552,7 @@
     'state': '16.5',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.cv_kraan_garage_battery-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -589,7 +589,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.cv_kraan_garage_battery-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -605,7 +605,7 @@
     'state': '68',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.cv_kraan_garage_setpoint-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -645,7 +645,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.cv_kraan_garage_setpoint-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -661,7 +661,7 @@
     'state': '5.5',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.cv_kraan_garage_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -701,7 +701,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.cv_kraan_garage_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -717,7 +717,7 @@
     'state': '15.6',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.cv_kraan_garage_temperature_difference-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_temperature_difference-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -757,7 +757,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.cv_kraan_garage_temperature_difference-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_temperature_difference-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -773,7 +773,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.cv_kraan_garage_valve_position-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -810,7 +810,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.cv_kraan_garage_valve_position-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.cv_kraan_garage_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'CV Kraan Garage Valve position',
@@ -825,7 +825,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.cv_pomp_electricity_consumed-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.cv_pomp_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -865,7 +865,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.cv_pomp_electricity_consumed-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.cv_pomp_electricity_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -881,7 +881,7 @@
     'state': '35.6',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.cv_pomp_electricity_consumed_interval-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.cv_pomp_electricity_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -921,7 +921,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.cv_pomp_electricity_consumed_interval-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.cv_pomp_electricity_consumed_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -937,7 +937,7 @@
     'state': '7.37',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.cv_pomp_electricity_produced-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.cv_pomp_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -977,7 +977,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.cv_pomp_electricity_produced-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.cv_pomp_electricity_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -993,7 +993,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.cv_pomp_electricity_produced_interval-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.cv_pomp_electricity_produced_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1033,7 +1033,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.cv_pomp_electricity_produced_interval-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.cv_pomp_electricity_produced_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -1049,7 +1049,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.fibaro_hc2_electricity_consumed-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.fibaro_hc2_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1089,7 +1089,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.fibaro_hc2_electricity_consumed-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.fibaro_hc2_electricity_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -1105,7 +1105,7 @@
     'state': '12.5',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.fibaro_hc2_electricity_consumed_interval-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.fibaro_hc2_electricity_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1145,7 +1145,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.fibaro_hc2_electricity_consumed_interval-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.fibaro_hc2_electricity_consumed_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -1161,7 +1161,7 @@
     'state': '3.8',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.fibaro_hc2_electricity_produced-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.fibaro_hc2_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1201,7 +1201,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.fibaro_hc2_electricity_produced-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.fibaro_hc2_electricity_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -1217,7 +1217,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.fibaro_hc2_electricity_produced_interval-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.fibaro_hc2_electricity_produced_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1257,7 +1257,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.fibaro_hc2_electricity_produced_interval-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.fibaro_hc2_electricity_produced_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -1273,7 +1273,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.floor_kraan_setpoint-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.floor_kraan_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1313,7 +1313,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.floor_kraan_setpoint-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.floor_kraan_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -1329,7 +1329,7 @@
     'state': '21.5',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.floor_kraan_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.floor_kraan_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1369,7 +1369,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.floor_kraan_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.floor_kraan_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -1385,7 +1385,7 @@
     'state': '26.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.floor_kraan_temperature_difference-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.floor_kraan_temperature_difference-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1425,7 +1425,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.floor_kraan_temperature_difference-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.floor_kraan_temperature_difference-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -1441,7 +1441,7 @@
     'state': '3.5',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.floor_kraan_valve_position-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.floor_kraan_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1478,7 +1478,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.floor_kraan_valve_position-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.floor_kraan_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Floor kraan Valve position',
@@ -1493,7 +1493,7 @@
     'state': '100',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.garage_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.garage_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1533,7 +1533,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.garage_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.garage_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -1549,7 +1549,7 @@
     'state': '15.6',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.jessie_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.jessie_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1589,7 +1589,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.jessie_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.jessie_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -1605,7 +1605,7 @@
     'state': '17.2',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.nas_electricity_consumed-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.nas_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1645,7 +1645,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.nas_electricity_consumed-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.nas_electricity_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -1661,7 +1661,7 @@
     'state': '16.5',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.nas_electricity_consumed_interval-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.nas_electricity_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1701,7 +1701,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.nas_electricity_consumed_interval-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.nas_electricity_consumed_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -1717,7 +1717,7 @@
     'state': '0.5',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.nas_electricity_produced-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.nas_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1757,7 +1757,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.nas_electricity_produced-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.nas_electricity_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -1773,7 +1773,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.nas_electricity_produced_interval-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.nas_electricity_produced_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1813,7 +1813,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.nas_electricity_produced_interval-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.nas_electricity_produced_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -1829,7 +1829,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.nvr_electricity_consumed-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.nvr_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1869,7 +1869,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.nvr_electricity_consumed-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.nvr_electricity_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -1885,7 +1885,7 @@
     'state': '34.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.nvr_electricity_consumed_interval-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.nvr_electricity_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1925,7 +1925,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.nvr_electricity_consumed_interval-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.nvr_electricity_consumed_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -1941,7 +1941,7 @@
     'state': '9.15',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.nvr_electricity_produced-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.nvr_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1981,7 +1981,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.nvr_electricity_produced-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.nvr_electricity_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -1997,7 +1997,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.nvr_electricity_produced_interval-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.nvr_electricity_produced_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2037,7 +2037,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.nvr_electricity_produced_interval-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.nvr_electricity_produced_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -2053,7 +2053,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.onoff_intended_boiler_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.onoff_intended_boiler_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2093,7 +2093,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.onoff_intended_boiler_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.onoff_intended_boiler_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -2109,7 +2109,7 @@
     'state': '70.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.onoff_modulation_level-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.onoff_modulation_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2146,7 +2146,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.onoff_modulation_level-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.onoff_modulation_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'OnOff Modulation level',
@@ -2161,7 +2161,7 @@
     'state': '1',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.onoff_water_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.onoff_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2201,7 +2201,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.onoff_water_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.onoff_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -2217,7 +2217,7 @@
     'state': '70.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.playstation_smart_plug_electricity_consumed-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.playstation_smart_plug_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2257,7 +2257,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.playstation_smart_plug_electricity_consumed-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.playstation_smart_plug_electricity_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -2273,7 +2273,7 @@
     'state': '84.1',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.playstation_smart_plug_electricity_consumed_interval-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.playstation_smart_plug_electricity_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2313,7 +2313,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.playstation_smart_plug_electricity_consumed_interval-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.playstation_smart_plug_electricity_consumed_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -2329,7 +2329,7 @@
     'state': '8.6',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.playstation_smart_plug_electricity_produced-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.playstation_smart_plug_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2369,7 +2369,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.playstation_smart_plug_electricity_produced-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.playstation_smart_plug_electricity_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -2385,7 +2385,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.playstation_smart_plug_electricity_produced_interval-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.playstation_smart_plug_electricity_produced_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2425,7 +2425,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.playstation_smart_plug_electricity_produced_interval-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.playstation_smart_plug_electricity_produced_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -2441,7 +2441,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_badkamer_1_battery-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2478,7 +2478,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_badkamer_1_battery-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -2494,7 +2494,7 @@
     'state': '51',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_badkamer_1_setpoint-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2534,7 +2534,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_badkamer_1_setpoint-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -2550,7 +2550,7 @@
     'state': '14.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_badkamer_1_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2590,7 +2590,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_badkamer_1_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -2606,7 +2606,7 @@
     'state': '19.1',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_badkamer_1_temperature_difference-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_temperature_difference-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2646,7 +2646,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_badkamer_1_temperature_difference-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_temperature_difference-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -2662,7 +2662,7 @@
     'state': '-0.4',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_badkamer_1_valve_position-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2699,7 +2699,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_badkamer_1_valve_position-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_1_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Thermostatic Radiator Badkamer 1 Valve position',
@@ -2714,7 +2714,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_badkamer_2_battery-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_2_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2751,7 +2751,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_badkamer_2_battery-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_2_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -2767,7 +2767,7 @@
     'state': '92',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_badkamer_2_setpoint-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_2_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2807,7 +2807,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_badkamer_2_setpoint-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_2_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -2823,7 +2823,7 @@
     'state': '14.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_badkamer_2_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_2_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2863,7 +2863,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_badkamer_2_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_badkamer_2_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -2879,7 +2879,7 @@
     'state': '18.9',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_jessie_battery-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2916,7 +2916,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_jessie_battery-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -2932,7 +2932,7 @@
     'state': '62',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_jessie_setpoint-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2972,7 +2972,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_jessie_setpoint-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -2988,7 +2988,7 @@
     'state': '15.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_jessie_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3028,7 +3028,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_jessie_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -3044,7 +3044,7 @@
     'state': '17.1',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_jessie_temperature_difference-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_temperature_difference-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3084,7 +3084,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_jessie_temperature_difference-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_temperature_difference-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -3100,7 +3100,7 @@
     'state': '0.1',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_jessie_valve_position-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_valve_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3137,7 +3137,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.thermostatic_radiator_jessie_valve_position-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.thermostatic_radiator_jessie_valve_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Thermostatic Radiator Jessie Valve position',
@@ -3152,7 +3152,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.usg_smart_plug_electricity_consumed-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.usg_smart_plug_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3192,7 +3192,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.usg_smart_plug_electricity_consumed-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.usg_smart_plug_electricity_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -3208,7 +3208,7 @@
     'state': '8.5',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.usg_smart_plug_electricity_consumed_interval-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.usg_smart_plug_electricity_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3248,7 +3248,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.usg_smart_plug_electricity_consumed_interval-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.usg_smart_plug_electricity_consumed_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -3264,7 +3264,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.usg_smart_plug_electricity_produced-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.usg_smart_plug_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3304,7 +3304,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.usg_smart_plug_electricity_produced-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.usg_smart_plug_electricity_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -3320,7 +3320,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.usg_smart_plug_electricity_produced_interval-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.usg_smart_plug_electricity_produced_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3360,7 +3360,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.usg_smart_plug_electricity_produced_interval-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.usg_smart_plug_electricity_produced_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -3376,7 +3376,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.woonkamer_electricity_consumed-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.woonkamer_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3416,7 +3416,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.woonkamer_electricity_consumed-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.woonkamer_electricity_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -3432,7 +3432,7 @@
     'state': '35.6',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.woonkamer_electricity_produced-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.woonkamer_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3472,7 +3472,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.woonkamer_electricity_produced-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.woonkamer_electricity_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -3488,7 +3488,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.woonkamer_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.woonkamer_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3528,7 +3528,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.woonkamer_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.woonkamer_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -3544,7 +3544,7 @@
     'state': '20.9',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.ziggo_modem_electricity_consumed-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.ziggo_modem_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3584,7 +3584,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.ziggo_modem_electricity_consumed-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.ziggo_modem_electricity_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -3600,7 +3600,7 @@
     'state': '12.2',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.ziggo_modem_electricity_consumed_interval-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.ziggo_modem_electricity_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3640,7 +3640,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.ziggo_modem_electricity_consumed_interval-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.ziggo_modem_electricity_consumed_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -3656,7 +3656,7 @@
     'state': '2.97',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.ziggo_modem_electricity_produced-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.ziggo_modem_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3696,7 +3696,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.ziggo_modem_electricity_produced-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.ziggo_modem_electricity_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -3712,7 +3712,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.ziggo_modem_electricity_produced_interval-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.ziggo_modem_electricity_produced_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3752,7 +3752,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.ziggo_modem_electricity_produced_interval-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.ziggo_modem_electricity_produced_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -3768,7 +3768,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.zone_lisa_bios_battery-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_bios_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3805,7 +3805,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.zone_lisa_bios_battery-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_bios_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -3821,7 +3821,7 @@
     'state': '67',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.zone_lisa_bios_setpoint-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_bios_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3861,7 +3861,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.zone_lisa_bios_setpoint-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_bios_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -3877,7 +3877,7 @@
     'state': '13.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.zone_lisa_bios_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_bios_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3917,7 +3917,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.zone_lisa_bios_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_bios_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -3933,7 +3933,7 @@
     'state': '16.5',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.zone_lisa_wk_battery-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_wk_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3970,7 +3970,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.zone_lisa_wk_battery-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_wk_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -3986,7 +3986,7 @@
     'state': '34',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.zone_lisa_wk_setpoint-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_wk_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4026,7 +4026,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.zone_lisa_wk_setpoint-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_wk_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -4042,7 +4042,7 @@
     'state': '21.5',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.zone_lisa_wk_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_wk_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4082,7 +4082,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.zone_lisa_wk_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.zone_lisa_wk_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -4098,7 +4098,7 @@
     'state': '20.9',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.zone_thermostat_jessie_battery-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.zone_thermostat_jessie_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4135,7 +4135,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.zone_thermostat_jessie_battery-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.zone_thermostat_jessie_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -4151,7 +4151,7 @@
     'state': '37',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.zone_thermostat_jessie_setpoint-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.zone_thermostat_jessie_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4191,7 +4191,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.zone_thermostat_jessie_setpoint-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.zone_thermostat_jessie_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -4207,7 +4207,7 @@
     'state': '15.0',
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.zone_thermostat_jessie_temperature-entry]
+# name: test_adam_sensor_snapshot[platforms0][sensor.zone_thermostat_jessie_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4247,7 +4247,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_adam_sensor_entities[platforms0][sensor.zone_thermostat_jessie_temperature-state]
+# name: test_adam_sensor_snapshot[platforms0][sensor.zone_thermostat_jessie_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -4263,7 +4263,7 @@
     'state': '17.2',
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.anna_cooling_setpoint-entry]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.anna_cooling_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4303,7 +4303,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.anna_cooling_setpoint-state]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.anna_cooling_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -4319,7 +4319,7 @@
     'state': '30.0',
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.anna_heating_setpoint-entry]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.anna_heating_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4359,7 +4359,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.anna_heating_setpoint-state]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.anna_heating_setpoint-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -4375,7 +4375,7 @@
     'state': '20.5',
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.anna_illuminance-entry]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.anna_illuminance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4412,7 +4412,7 @@
     'unit_of_measurement': 'lx',
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.anna_illuminance-state]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.anna_illuminance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'illuminance',
@@ -4428,7 +4428,7 @@
     'state': '86.0',
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.anna_temperature-entry]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.anna_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4468,7 +4468,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.anna_temperature-state]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.anna_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -4484,7 +4484,7 @@
     'state': '19.3',
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.opentherm_dhw_temperature-entry]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_dhw_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4524,7 +4524,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.opentherm_dhw_temperature-state]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_dhw_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -4540,7 +4540,7 @@
     'state': '46.3',
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.opentherm_intended_boiler_temperature-entry]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_intended_boiler_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4580,7 +4580,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.opentherm_intended_boiler_temperature-state]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_intended_boiler_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -4596,7 +4596,7 @@
     'state': '35.0',
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.opentherm_modulation_level-entry]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_modulation_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4633,7 +4633,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.opentherm_modulation_level-state]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_modulation_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'OpenTherm Modulation level',
@@ -4648,7 +4648,7 @@
     'state': '52',
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.opentherm_outdoor_air_temperature-entry]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_outdoor_air_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4688,7 +4688,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.opentherm_outdoor_air_temperature-state]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_outdoor_air_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -4704,7 +4704,7 @@
     'state': '3.0',
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.opentherm_return_temperature-entry]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_return_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4744,7 +4744,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.opentherm_return_temperature-state]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_return_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -4760,7 +4760,7 @@
     'state': '25.1',
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.opentherm_water_pressure-entry]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_water_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4800,7 +4800,7 @@
     'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.opentherm_water_pressure-state]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_water_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pressure',
@@ -4816,7 +4816,7 @@
     'state': '1.57',
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.opentherm_water_temperature-entry]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4856,7 +4856,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.opentherm_water_temperature-state]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.opentherm_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -4872,7 +4872,7 @@
     'state': '29.1',
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.smile_anna_outdoor_temperature-entry]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.smile_anna_outdoor_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4912,7 +4912,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_anna_sensor_states[platforms0-True-anna_heatpump_heating][sensor.smile_anna_outdoor_temperature-state]
+# name: test_anna_sensor_snapshot[platforms0-True-anna_heatpump_heating][sensor.smile_anna_outdoor_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -4928,7 +4928,7 @@
     'state': '20.2',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_off_peak_cumulative-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_off_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4968,7 +4968,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_off_peak_cumulative-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_off_peak_cumulative-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -4984,7 +4984,7 @@
     'state': '70537.898',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_off_peak_interval-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_off_peak_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5024,7 +5024,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_off_peak_interval-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_off_peak_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -5040,7 +5040,7 @@
     'state': '314',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_off_peak_point-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_off_peak_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5080,7 +5080,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_off_peak_point-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_off_peak_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -5096,7 +5096,7 @@
     'state': '5553',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_peak_cumulative-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5136,7 +5136,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_peak_cumulative-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_peak_cumulative-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -5152,7 +5152,7 @@
     'state': '161328.641',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_peak_interval-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_peak_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5192,7 +5192,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_peak_interval-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_peak_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -5208,7 +5208,7 @@
     'state': '0',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_peak_point-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_peak_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5248,7 +5248,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_peak_point-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_consumed_peak_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -5264,7 +5264,7 @@
     'state': '0',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_one_consumed-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_one_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5304,7 +5304,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_one_consumed-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_one_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -5320,7 +5320,7 @@
     'state': '1763',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_one_produced-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_one_produced-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5360,7 +5360,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_one_produced-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_one_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -5376,7 +5376,7 @@
     'state': '0',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_three_consumed-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_three_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5416,7 +5416,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_three_consumed-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_three_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -5432,7 +5432,7 @@
     'state': '2080',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_three_produced-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_three_produced-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5472,7 +5472,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_three_produced-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_three_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -5488,7 +5488,7 @@
     'state': '0',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_two_consumed-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_two_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5528,7 +5528,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_two_consumed-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_two_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -5544,7 +5544,7 @@
     'state': '1703',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_two_produced-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_two_produced-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5584,7 +5584,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_two_produced-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_phase_two_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -5600,7 +5600,7 @@
     'state': '0',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_off_peak_cumulative-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_off_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5640,7 +5640,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_off_peak_cumulative-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_off_peak_cumulative-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -5656,7 +5656,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_off_peak_interval-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_off_peak_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5696,7 +5696,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_off_peak_interval-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_off_peak_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -5712,7 +5712,7 @@
     'state': '0',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_off_peak_point-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_off_peak_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5752,7 +5752,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_off_peak_point-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_off_peak_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -5768,7 +5768,7 @@
     'state': '0',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_peak_cumulative-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5808,7 +5808,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_peak_cumulative-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_peak_cumulative-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -5824,7 +5824,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_peak_interval-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_peak_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5864,7 +5864,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_peak_interval-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_peak_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -5880,7 +5880,7 @@
     'state': '0',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_peak_point-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_peak_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5920,7 +5920,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_peak_point-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_electricity_produced_peak_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -5936,7 +5936,7 @@
     'state': '0',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_gas_consumed_cumulative-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_gas_consumed_cumulative-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5976,7 +5976,7 @@
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_gas_consumed_cumulative-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_gas_consumed_cumulative-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'gas',
@@ -5992,7 +5992,7 @@
     'state': '16811.37',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_gas_consumed_interval-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_gas_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6029,7 +6029,7 @@
     'unit_of_measurement': <UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: 'm³/h'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_gas_consumed_interval-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_gas_consumed_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'P1 Gas consumed interval',
@@ -6044,7 +6044,7 @@
     'state': '0.06',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_net_electricity_cumulative-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_net_electricity_cumulative-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6084,7 +6084,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_net_electricity_cumulative-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_net_electricity_cumulative-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -6100,7 +6100,7 @@
     'state': '231866.539',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_net_electricity_point-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_net_electricity_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6140,7 +6140,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_net_electricity_point-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_net_electricity_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -6156,7 +6156,7 @@
     'state': '5553',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_voltage_phase_one-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_voltage_phase_one-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6196,7 +6196,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_voltage_phase_one-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_voltage_phase_one-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -6212,7 +6212,7 @@
     'state': '233.2',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_voltage_phase_three-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_voltage_phase_three-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6252,7 +6252,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_voltage_phase_three-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_voltage_phase_three-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -6268,7 +6268,7 @@
     'state': '234.7',
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_voltage_phase_two-entry]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_voltage_phase_two-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6308,7 +6308,7 @@
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_p1_3ph_dsmr_sensor_entities[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_voltage_phase_two-state]
+# name: test_p1_3ph_dsmr_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][sensor.p1_voltage_phase_two-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -6324,7 +6324,7 @@
     'state': '234.4',
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_off_peak_cumulative-entry]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_off_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6364,7 +6364,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_off_peak_cumulative-state]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_off_peak_cumulative-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -6380,7 +6380,7 @@
     'state': '17643.423',
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_off_peak_interval-entry]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_off_peak_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6420,7 +6420,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_off_peak_interval-state]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_off_peak_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -6436,7 +6436,7 @@
     'state': '15',
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_off_peak_point-entry]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_off_peak_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6476,7 +6476,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_off_peak_point-state]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_off_peak_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -6492,7 +6492,7 @@
     'state': '486',
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_peak_cumulative-entry]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6532,7 +6532,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_peak_cumulative-state]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_peak_cumulative-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -6548,7 +6548,7 @@
     'state': '13966.608',
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_peak_interval-entry]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_peak_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6588,7 +6588,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_peak_interval-state]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_peak_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -6604,7 +6604,7 @@
     'state': '0',
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_peak_point-entry]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_peak_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6644,7 +6644,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_peak_point-state]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_consumed_peak_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -6660,7 +6660,7 @@
     'state': '0',
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_phase_one_consumed-entry]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_phase_one_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6700,7 +6700,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_phase_one_consumed-state]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_phase_one_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -6716,7 +6716,7 @@
     'state': '486',
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_phase_one_produced-entry]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_phase_one_produced-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6756,7 +6756,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_phase_one_produced-state]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_phase_one_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -6772,7 +6772,7 @@
     'state': '0',
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_off_peak_cumulative-entry]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_off_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6812,7 +6812,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_off_peak_cumulative-state]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_off_peak_cumulative-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -6828,7 +6828,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_off_peak_interval-entry]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_off_peak_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6868,7 +6868,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_off_peak_interval-state]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_off_peak_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -6884,7 +6884,7 @@
     'state': '0',
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_off_peak_point-entry]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_off_peak_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6924,7 +6924,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_off_peak_point-state]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_off_peak_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -6940,7 +6940,7 @@
     'state': '0',
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_peak_cumulative-entry]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_peak_cumulative-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -6980,7 +6980,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_peak_cumulative-state]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_peak_cumulative-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -6996,7 +6996,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_peak_interval-entry]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_peak_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7036,7 +7036,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_peak_interval-state]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_peak_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -7052,7 +7052,7 @@
     'state': '0',
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_peak_point-entry]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_peak_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7092,7 +7092,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_peak_point-state]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_electricity_produced_peak_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -7108,7 +7108,7 @@
     'state': '0',
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_net_electricity_cumulative-entry]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_net_electricity_cumulative-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7148,7 +7148,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_net_electricity_cumulative-state]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_net_electricity_cumulative-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -7164,7 +7164,7 @@
     'state': '31610.031',
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_net_electricity_point-entry]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_net_electricity_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7204,7 +7204,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_p1_dsmr_sensor_entities[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_net_electricity_point-state]
+# name: test_p1_dsmr_sensor_snapshot[platforms0-a455b61e52394b2db5081ce025a430f3-p1v4_442_single][sensor.p1_net_electricity_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -7220,7 +7220,7 @@
     'state': '486',
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.boiler_1eb31_electricity_consumed-entry]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.boiler_1eb31_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7260,7 +7260,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.boiler_1eb31_electricity_consumed-state]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.boiler_1eb31_electricity_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -7276,7 +7276,7 @@
     'state': '1.19',
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.boiler_1eb31_electricity_consumed_interval-entry]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.boiler_1eb31_electricity_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7316,7 +7316,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.boiler_1eb31_electricity_consumed_interval-state]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.boiler_1eb31_electricity_consumed_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -7332,7 +7332,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.boiler_1eb31_electricity_produced-entry]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.boiler_1eb31_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7372,7 +7372,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.boiler_1eb31_electricity_produced-state]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.boiler_1eb31_electricity_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -7388,7 +7388,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.droger_52559_electricity_consumed-entry]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.droger_52559_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7428,7 +7428,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.droger_52559_electricity_consumed-state]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.droger_52559_electricity_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -7444,7 +7444,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.droger_52559_electricity_consumed_interval-entry]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.droger_52559_electricity_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7484,7 +7484,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.droger_52559_electricity_consumed_interval-state]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.droger_52559_electricity_consumed_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -7500,7 +7500,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.droger_52559_electricity_produced-entry]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.droger_52559_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7540,7 +7540,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.droger_52559_electricity_produced-state]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.droger_52559_electricity_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -7556,7 +7556,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.koelkast_92c4a_electricity_consumed-entry]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.koelkast_92c4a_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7596,7 +7596,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.koelkast_92c4a_electricity_consumed-state]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.koelkast_92c4a_electricity_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -7612,7 +7612,7 @@
     'state': '50.5',
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.koelkast_92c4a_electricity_consumed_interval-entry]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.koelkast_92c4a_electricity_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7652,7 +7652,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.koelkast_92c4a_electricity_consumed_interval-state]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.koelkast_92c4a_electricity_consumed_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -7668,7 +7668,7 @@
     'state': '0.08',
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.koelkast_92c4a_electricity_produced-entry]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.koelkast_92c4a_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7708,7 +7708,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.koelkast_92c4a_electricity_produced-state]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.koelkast_92c4a_electricity_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -7724,7 +7724,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.vaatwasser_2a1ab_electricity_consumed-entry]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.vaatwasser_2a1ab_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7764,7 +7764,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.vaatwasser_2a1ab_electricity_consumed-state]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.vaatwasser_2a1ab_electricity_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -7780,7 +7780,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.vaatwasser_2a1ab_electricity_consumed_interval-entry]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.vaatwasser_2a1ab_electricity_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7820,7 +7820,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.vaatwasser_2a1ab_electricity_consumed_interval-state]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.vaatwasser_2a1ab_electricity_consumed_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -7836,7 +7836,7 @@
     'state': '0.71',
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.vaatwasser_2a1ab_electricity_produced-entry]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.vaatwasser_2a1ab_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7876,7 +7876,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.vaatwasser_2a1ab_electricity_produced-state]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.vaatwasser_2a1ab_electricity_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -7892,7 +7892,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.wasmachine_52ac1_electricity_consumed-entry]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.wasmachine_52ac1_electricity_consumed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7932,7 +7932,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.wasmachine_52ac1_electricity_consumed-state]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.wasmachine_52ac1_electricity_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -7948,7 +7948,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.wasmachine_52ac1_electricity_consumed_interval-entry]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.wasmachine_52ac1_electricity_consumed_interval-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -7988,7 +7988,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.wasmachine_52ac1_electricity_consumed_interval-state]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.wasmachine_52ac1_electricity_consumed_interval-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -8004,7 +8004,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.wasmachine_52ac1_electricity_produced-entry]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.wasmachine_52ac1_electricity_produced-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8044,7 +8044,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_stretch_sensor_entities[platforms0][sensor.wasmachine_52ac1_electricity_produced-state]
+# name: test_stretch_sensor_snapshot[platforms0][sensor.wasmachine_52ac1_electricity_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
