@@ -14,6 +14,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("mock_api", "full_model")
 @pytest.mark.parametrize(
     "full_model",
     [
@@ -40,6 +41,7 @@ async def test_sensor(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("mock_api", "full_model")
 @pytest.mark.parametrize(
     "full_model",
     ["xc40_electric_2024"],
@@ -56,6 +58,7 @@ async def test_distance_to_empty_battery(
     assert hass.states.get("sensor.volvo_xc40_distance_to_empty_battery").state == "250"
 
 
+@pytest.mark.usefixtures("mock_api", "full_model")
 @pytest.mark.parametrize(
     ("full_model", "short_model"),
     [("ex30_2024", "ex30"), ("xc60_phev_2020", "xc60")],
@@ -73,6 +76,7 @@ async def test_skip_invalid_api_fields(
     assert not hass.states.get(f"sensor.volvo_{short_model}_charging_current_limit")
 
 
+@pytest.mark.usefixtures("mock_api", "full_model")
 @pytest.mark.parametrize(
     "full_model",
     ["ex30_2024"],

@@ -358,7 +358,7 @@ async def async_setup_entry(
     entities: list[VolvoSensor] = []
     added_keys: set[str] = set()
 
-    coordinators = entry.runtime_data
+    coordinators = entry.runtime_data.interval_coordinators
 
     for coordinator in coordinators:
         for description in _DESCRIPTIONS:
