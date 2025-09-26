@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_adam_sensor_entities(
+async def test_adam_sensor_snapshot(
     hass: HomeAssistant,
     mock_smile_adam: MagicMock,
     snapshot: SnapshotAssertion,
@@ -84,7 +84,7 @@ async def test_unique_id_migration_humidity(
 @pytest.mark.parametrize("cooling_present", [True], indirect=True)
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_anna_sensor_states(
+async def test_anna_sensor_snapshot(
     hass: HomeAssistant,
     mock_smile_anna: MagicMock,
     snapshot: SnapshotAssertion,
@@ -101,7 +101,7 @@ async def test_anna_sensor_states(
 )
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_p1_dsmr_sensor_entities(
+async def test_p1_dsmr_sensor_snapshot(
     hass: HomeAssistant,
     mock_smile_p1: MagicMock,
     snapshot: SnapshotAssertion,
@@ -118,7 +118,7 @@ async def test_p1_dsmr_sensor_entities(
 )
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_p1_3ph_dsmr_sensor_entities(
+async def test_p1_3ph_dsmr_sensor_snapshot(
     hass: HomeAssistant,
     mock_smile_p1: MagicMock,
     snapshot: SnapshotAssertion,
@@ -157,7 +157,7 @@ async def test_p1_3ph_dsmr_sensor_disabled_entities(
 
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_stretch_sensor_entities(
+async def test_stretch_sensor_snapshot(
     hass: HomeAssistant,
     mock_stretch: MagicMock,
     snapshot: SnapshotAssertion,
