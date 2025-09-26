@@ -708,8 +708,8 @@ async def test_multiple_zha_entries_aborts(hass: HomeAssistant, mock_app) -> Non
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-async def test_discovery_via_usb_path_does_not_change(hass: HomeAssistant) -> None:
-    """Test usb flow already set up and the path does not change."""
+async def test_discovery_via_usb_duplicate_unique_id(hass: HomeAssistant) -> None:
+    """Test USB discovery when a config entry with a duplicate unique_id already exists."""
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -737,13 +737,8 @@ async def test_discovery_via_usb_path_does_not_change(hass: HomeAssistant) -> No
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert entry.data[CONF_DEVICE] == {
-        CONF_DEVICE_PATH: "/dev/ttyUSB1",
-        CONF_BAUDRATE: 115200,
-        CONF_FLOW_CONTROL: None,
-    }
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
 
 
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
