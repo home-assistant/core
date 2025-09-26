@@ -8,13 +8,14 @@ from pyportainer.models.portainer import Endpoint
 import pytest
 
 from homeassistant.components.portainer.const import DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_HOST
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_VERIFY_SSL
 
 from tests.common import MockConfigEntry, load_json_array_fixture
 
 MOCK_TEST_CONFIG = {
     CONF_HOST: "https://127.0.0.1:9000/",
     CONF_API_KEY: "test_api_key",
+    CONF_VERIFY_SSL: True,
 }
 
 

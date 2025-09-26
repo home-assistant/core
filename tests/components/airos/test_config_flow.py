@@ -10,9 +10,15 @@ from airos.exceptions import (
 )
 import pytest
 
-from homeassistant.components.airos.const import DOMAIN
+from homeassistant.components.airos.const import DOMAIN, SECTION_ADVANCED_SETTINGS
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -22,6 +28,10 @@ MOCK_CONFIG = {
     CONF_HOST: "1.1.1.1",
     CONF_USERNAME: "ubnt",
     CONF_PASSWORD: "test-password",
+    SECTION_ADVANCED_SETTINGS: {
+        CONF_SSL: True,
+        CONF_VERIFY_SSL: False,
+    },
 }
 
 
@@ -33,7 +43,8 @@ async def test_form_creates_entry(
 ) -> None:
     """Test we get the form and create the appropriate entry."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN,
+        context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
