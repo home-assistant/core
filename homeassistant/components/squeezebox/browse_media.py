@@ -5,7 +5,7 @@ from __future__ import annotations
 import contextlib
 from dataclasses import dataclass, field
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 from pysqueezebox import Player
 
@@ -14,13 +14,15 @@ from homeassistant.components.media_player import (
     BrowseError,
     BrowseMedia,
     MediaClass,
-    MediaPlayerEntity,
     MediaType,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import is_internal_request
 
 from .const import DOMAIN, UNPLAYABLE_TYPES
+
+if TYPE_CHECKING:
+    from .media_player import SqueezeBoxMediaPlayerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -244,7 +246,7 @@ def _build_response_favorites(item: dict[str, Any]) -> BrowseMedia:
 def _get_item_thumbnail(
     item: dict[str, Any],
     player: Player,
-    entity: MediaPlayerEntity,
+    entity: SqueezeBoxMediaPlayerEntity,
     item_type: str | MediaType | None,
     search_type: str,
     internal_request: bool,
@@ -261,7 +263,7 @@ def _get_item_thumbnail(
 
     if track_id:
         if internal_request:
-            return player.generate_image_url_from_track_id(track_id)
+            return cast(str, player.generate_image_url_from_track_id(track_id))
         if item_type is not None:
             return entity.get_browse_image_url(item_type, item["id"], track_id)
 
@@ -269,9 +271,12 @@ def _get_item_thumbnail(
     content_type = item_type or "unknown"
 
     if search_type in ["apps", "radios"]:
-        url = player.generate_image_url(item["icon"])
+        url = cast(str, player.generate_image_url(item["icon"]))
     elif image_url := item.get("image_url"):
         url = image_url
+
+    if url is None:
+        return None
 
     if internal_request:
         return url
@@ -281,7 +286,7 @@ def _get_item_thumbnail(
 
 
 async def build_item_response(
-    entity: MediaPlayerEntity,
+    entity: SqueezeBoxMediaPlayerEntity,
     player: Player,
     payload: dict[str, str | None],
     browse_limit: int,
