@@ -251,11 +251,14 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
             raise UpdateFailed("Received invalid data")
 
         # Add all time periods together
-        output = dict.fromkeys(ENERGY_HISTORY_FIELDS, 0)
+        output = dict.fromkeys(ENERGY_HISTORY_FIELDS, None)
         for period in data.get("time_series", []):
             for key in ENERGY_HISTORY_FIELDS:
                 if key in period:
-                    output[key] += period[key]
+                    if output[key] is None:
+                        output[key] = period[key]
+                    else:
+                        output[key] += period[key]
 
         return output
 
