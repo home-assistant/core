@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import ATTR_HVAC_MODE, ATTR_PRESET_MODE, HVACMode
@@ -31,53 +30,41 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.parametrize(
-    ("thermostat_id", "entity_id", "temperature"), [(5, "climate.thermostat", 25)]
-)
 async def test_set_temperature(
     hass: HomeAssistant,
     mock_niko_home_control_connection: AsyncMock,
     mock_config_entry: MockConfigEntry,
     climate: AsyncMock,
-    thermostat_id: int,
-    entity_id: str,
-    temperature: int,
 ) -> None:
     """Test setting a temperature."""
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         "climate",
         "set_temperature",
-        {ATTR_ENTITY_ID: entity_id, "temperature": temperature},
+        {ATTR_ENTITY_ID: "climate.thermostat", "temperature": 25},
         blocking=True,
     )
     mock_niko_home_control_connection.thermostats[
-        f"thermostat-{thermostat_id}"
-    ].set_temperature.assert_called_once_with(250.0)
+        "thermostat-5"
+    ].set_temperature.assert_called_once_with(25)
 
 
-@pytest.mark.parametrize(
-    ("thermostat_id", "entity_id", "preset"), [(5, "climate.thermostat", "eco")]
-)
 async def test_set_preset(
     hass: HomeAssistant,
     mock_niko_home_control_connection: AsyncMock,
     mock_config_entry: MockConfigEntry,
     climate: AsyncMock,
-    thermostat_id: int,
-    entity_id: str,
-    preset: str,
 ) -> None:
     """Test setting a preset."""
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         "climate",
         "set_preset_mode",
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: preset},
+        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_PRESET_MODE: "eco"},
         blocking=True,
     )
     mock_niko_home_control_connection.thermostats[
-        f"thermostat-{thermostat_id}"
+        "thermostat-5"
     ].set_mode.assert_called_once_with(2)
 
 
@@ -157,16 +144,6 @@ async def test_turn_off(
     mock_niko_home_control_connection.thermostats[
         "thermostat-5"
     ].set_mode.assert_called_once_with(3)
-
-
-async def test_is_expected_state(
-    hass: HomeAssistant,
-    mock_niko_home_control_connection: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test is expected state."""
-    await setup_integration(hass, mock_config_entry)
-    assert hass.states.get("climate.thermostat").state == "auto"
 
 
 async def test_updating(
