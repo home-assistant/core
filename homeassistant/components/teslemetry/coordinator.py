@@ -100,7 +100,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         return flatten(
             data,
-            exceptions=["daily_charges", "demand_charges", "energy_charges", "seasons"],
+            skip_keys=["daily_charges", "demand_charges", "energy_charges", "seasons"],
         )
 
 
@@ -186,7 +186,7 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
         return flatten(
             data,
-            exceptions=["daily_charges", "demand_charges", "energy_charges", "seasons"],
+            skip_keys=["daily_charges", "demand_charges", "energy_charges", "seasons"],
         )
 
 
