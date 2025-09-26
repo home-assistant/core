@@ -1,7 +1,8 @@
 """Constants for the Watts Vision+ integration."""
 
-from homeassistant.components.climate import HVACMode
 from visionpluspython.models import ThermostatMode
+
+from homeassistant.components.climate import HVACMode
 
 DOMAIN = "watts"
 

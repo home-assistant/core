@@ -3,9 +3,10 @@
 import logging
 from typing import Any
 
+from visionpluspython.auth import WattsVisionAuth
+
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
-from visionpluspython.auth import WattsVisionAuth
 
 from .const import DOMAIN, OAUTH2_SCOPES
 

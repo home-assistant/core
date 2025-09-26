@@ -5,10 +5,11 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from visionpluspython.client import WattsVisionClient
 from visionpluspython.models import Device
+
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, UPDATE_INTERVAL
 

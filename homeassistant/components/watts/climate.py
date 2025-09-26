@@ -6,6 +6,8 @@ import asyncio
 import logging
 from typing import Any
 
+from visionpluspython.models import ThermostatDevice
+
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -14,7 +16,6 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from visionpluspython.models import ThermostatDevice
 
 from . import WattsVisionConfigEntry
 from .const import (

@@ -7,6 +7,8 @@ import logging
 from typing import TypedDict
 
 from aiohttp import ClientError, ClientResponseError
+from visionpluspython.auth import WattsVisionAuth
+from visionpluspython.client import WattsVisionClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -14,14 +16,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from visionpluspython.auth import WattsVisionAuth
-from visionpluspython.client import WattsVisionClient
 
 from .coordinator import WattsVisionCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
 
 class WattsVisionRuntimeData(TypedDict):
