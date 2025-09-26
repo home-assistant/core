@@ -54,7 +54,8 @@ from .entity_registry import (
 )
 from .ratelimit import KeyedRateLimit
 from .sun import get_astral_event_next
-from .template import RenderInfo, Template, result_as_boolean
+from .template import Template, result_as_boolean
+from .template.render_info import RenderInfo
 from .typing import TemplateVarsType
 
 _TRACK_STATE_CHANGE_DATA: HassKey[_KeyedEventData[EventStateChangedData]] = HassKey(
@@ -316,6 +317,10 @@ def async_track_state_change_event(
     Unlike async_track_state_change, async_track_state_change_event
     passes the full event to the callback.
 
+    The action will not be called immediately, but will be scheduled to run
+    in the next event loop iteration, even if the action is decorated with
+    @callback.
+
     In order to avoid having to iterate a long list
     of EVENT_STATE_CHANGED and fire and create a job
     for each one, we keep a dict of entity ids that
@@ -398,7 +403,7 @@ def _async_track_state_change_event(
 _KEYED_TRACK_STATE_REPORT = _KeyedEventTracker(
     key=_TRACK_STATE_REPORT_DATA,
     event_type=EVENT_STATE_REPORTED,
-    dispatcher_callable=_async_dispatch_entity_id_event,
+    dispatcher_callable=_async_dispatch_entity_id_event_soon,
     filter_callable=_async_state_filter,
 )
 
@@ -865,6 +870,10 @@ def async_track_state_change_filtered(
     action: Callable[[Event[EventStateChangedData]], Any],
 ) -> _TrackStateChangeFiltered:
     """Track state changes with a TrackStates filter that can be updated.
+
+    The action will not be called immediately, but will be scheduled to run
+    in the next event loop iteration, even if the action is decorated with
+    @callback.
 
     Args:
         hass:
@@ -1348,8 +1357,12 @@ def async_track_template_result(
     then whenever the output from the template changes. The template will
     be reevaluated if any states referenced in the last run of the
     template change, or if manually triggered. If the result of the
-    evaluation is different from the previous run, the listener is passed
+    evaluation is different from the previous run, the action is passed
     the result.
+
+    The action will not be called immediately, but will be scheduled to run
+    in the next event loop iteration, even if the action is decorated with
+    @callback.
 
     If the template results in an TemplateError, this will be returned to
     the listener the first time this happens but not for subsequent errors.

@@ -26,7 +26,6 @@ async def test_generic_text_entity(
             object_id="mytext",
             key=1,
             name="my text",
-            unique_id="my_text",
             max_length=100,
             min_length=0,
             pattern=None,
@@ -51,7 +50,7 @@ async def test_generic_text_entity(
         {ATTR_ENTITY_ID: "text.test_my_text", ATTR_VALUE: "goodbye"},
         blocking=True,
     )
-    mock_client.text_command.assert_has_calls([call(1, "goodbye")])
+    mock_client.text_command.assert_has_calls([call(1, "goodbye", device_id=0)])
     mock_client.text_command.reset_mock()
 
 
@@ -66,7 +65,6 @@ async def test_generic_text_entity_no_state(
             object_id="mytext",
             key=1,
             name="my text",
-            unique_id="my_text",
             max_length=100,
             min_length=0,
             pattern=None,
@@ -97,7 +95,6 @@ async def test_generic_text_entity_missing_state(
             object_id="mytext",
             key=1,
             name="my text",
-            unique_id="my_text",
             max_length=100,
             min_length=0,
             pattern=None,

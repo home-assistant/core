@@ -45,6 +45,8 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         errors = {}
+        await self.async_set_unique_id(user_input[CONF_ID])
+        self._abort_if_unique_id_configured()
 
         try:
             await airthings.get_token(
@@ -60,9 +62,6 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(user_input[CONF_ID])
-            self._abort_if_unique_id_configured()
-
             return self.async_create_entry(title="Airthings", data=user_input)
 
         return self.async_show_form(

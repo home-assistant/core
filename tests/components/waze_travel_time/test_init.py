@@ -62,6 +62,33 @@ async def test_service_get_travel_times(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
+)
+@pytest.mark.usefixtures("mock_update", "mock_config")
+async def test_service_get_travel_times_empty_response(
+    hass: HomeAssistant, mock_update
+) -> None:
+    """Test service get_travel_times."""
+    mock_update.return_value = []
+    response_data = await hass.services.async_call(
+        "waze_travel_time",
+        "get_travel_times",
+        {
+            "origin": "location1",
+            "destination": "location2",
+            "vehicle_type": "car",
+            "region": "us",
+            "units": "imperial",
+            "incl_filter": ["IncludeThis"],
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response_data == {"routes": []}
+
+
 @pytest.mark.usefixtures("mock_update")
 async def test_migrate_entry_v1_v2(hass: HomeAssistant) -> None:
     """Test successful migration of entry data."""
@@ -101,8 +128,8 @@ async def test_migrate_entry_v1_v2(hass: HomeAssistant) -> None:
             CONF_AVOID_FERRIES: DEFAULT_AVOID_FERRIES,
             CONF_AVOID_SUBSCRIPTION_ROADS: DEFAULT_AVOID_SUBSCRIPTION_ROADS,
             CONF_AVOID_TOLL_ROADS: DEFAULT_AVOID_TOLL_ROADS,
-            CONF_INCL_FILTER: "include",
-            CONF_EXCL_FILTER: "exclude",
+            CONF_INCL_FILTER: "IncludeThis",
+            CONF_EXCL_FILTER: "ExcludeThis",
         },
     )
 
@@ -114,5 +141,5 @@ async def test_migrate_entry_v1_v2(hass: HomeAssistant) -> None:
 
     assert updated_entry.state is ConfigEntryState.LOADED
     assert updated_entry.version == 2
-    assert updated_entry.options[CONF_INCL_FILTER] == ["include"]
-    assert updated_entry.options[CONF_EXCL_FILTER] == ["exclude"]
+    assert updated_entry.options[CONF_INCL_FILTER] == ["IncludeThis"]
+    assert updated_entry.options[CONF_EXCL_FILTER] == ["ExcludeThis"]

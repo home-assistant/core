@@ -16,8 +16,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
-from .entity import EnumTypeData, IntegerTypeData, TuyaEntity
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
+from .entity import TuyaEntity
+from .models import EnumTypeData
+from .util import get_dpcode
 
 TUYA_MODE_RETURN_HOME = "chargego"
 TUYA_STATUS_TO_HA = {
@@ -53,19 +55,19 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya vacuum dynamically through Tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya vacuum."""
         entities: list[TuyaVacuumEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
-            if device.category == "sd":
-                entities.append(TuyaVacuumEntity(device, hass_data.manager))
+            device = manager.device_map[device_id]
+            if device.category == DeviceCategory.SD:
+                entities.append(TuyaVacuumEntity(device, manager))
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -76,7 +78,6 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
     """Tuya Vacuum Device."""
 
     _fan_speed: EnumTypeData | None = None
-    _battery_level: IntegerTypeData | None = None
     _attr_name = None
 
     def __init__(self, device: CustomerDevice, device_manager: Manager) -> None:
@@ -88,11 +89,11 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         self._attr_supported_features = (
             VacuumEntityFeature.SEND_COMMAND | VacuumEntityFeature.STATE
         )
-        if self.find_dpcode(DPCode.PAUSE, prefer_function=True):
+        if get_dpcode(self.device, DPCode.PAUSE):
             self._attr_supported_features |= VacuumEntityFeature.PAUSE
 
         self._return_home_use_switch_charge = False
-        if self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True):
+        if get_dpcode(self.device, DPCode.SWITCH_CHARGE):
             self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
             self._return_home_use_switch_charge = True
         elif (
@@ -102,10 +103,10 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         ) and TUYA_MODE_RETURN_HOME in enum_type.range:
             self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
 
-        if self.find_dpcode(DPCode.SEEK, prefer_function=True):
+        if get_dpcode(self.device, DPCode.SEEK):
             self._attr_supported_features |= VacuumEntityFeature.LOCATE
 
-        if self.find_dpcode(DPCode.POWER_GO, prefer_function=True):
+        if get_dpcode(self.device, DPCode.POWER_GO):
             self._attr_supported_features |= (
                 VacuumEntityFeature.STOP | VacuumEntityFeature.START
             )
@@ -116,19 +117,6 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             self._fan_speed = enum_type
             self._attr_fan_speed_list = enum_type.range
             self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
-
-        if int_type := self.find_dpcode(DPCode.ELECTRICITY_LEFT, dptype=DPType.INTEGER):
-            self._attr_supported_features |= VacuumEntityFeature.BATTERY
-            self._battery_level = int_type
-
-    @property
-    def battery_level(self) -> int | None:
-        """Return Tuya device state."""
-        if self._battery_level is None or not (
-            status := self.device.status.get(DPCode.ELECTRICITY_LEFT)
-        ):
-            return None
-        return round(self._battery_level.scale_value(status))
 
     @property
     def fan_speed(self) -> str | None:

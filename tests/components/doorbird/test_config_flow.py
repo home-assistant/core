@@ -108,7 +108,9 @@ async def test_form_zeroconf_link_local_ignored(hass: HomeAssistant) -> None:
     assert result["reason"] == "link_local_address"
 
 
-async def test_form_zeroconf_ipv4_address(hass: HomeAssistant) -> None:
+async def test_form_zeroconf_ipv4_address(
+    hass: HomeAssistant, doorbird_api: DoorBird
+) -> None:
     """Test we abort and update the ip address from zeroconf with an ipv4 address."""
 
     config_entry = MockConfigEntry(
@@ -118,6 +120,13 @@ async def test_form_zeroconf_ipv4_address(hass: HomeAssistant) -> None:
         options={CONF_EVENTS: ["event1", "event2", "event3"]},
     )
     config_entry.add_to_hass(hass)
+
+    # Mock the API to return the correct MAC when validating
+    doorbird_api.info.return_value = {
+        "PRIMARY_MAC_ADDR": "1CCAE3AAAAAA",
+        "WIFI_MAC_ADDR": "1CCAE3BBBBBB",
+    }
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -134,6 +143,79 @@ async def test_form_zeroconf_ipv4_address(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_HOST] == "4.4.4.4"
+
+
+async def test_form_zeroconf_ipv4_address_wrong_device(
+    hass: HomeAssistant, doorbird_api: DoorBird
+) -> None:
+    """Test we abort when the device MAC doesn't match during zeroconf update."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1CCAE3AAAAAA",
+        data=VALID_CONFIG,
+        options={CONF_EVENTS: ["event1", "event2", "event3"]},
+    )
+    config_entry.add_to_hass(hass)
+
+    # Mock the API to return a different MAC (wrong device)
+    doorbird_api.info.return_value = {
+        "PRIMARY_MAC_ADDR": "1CCAE3DIFFERENT",  # Different MAC!
+        "WIFI_MAC_ADDR": "1CCAE3BBBBBB",
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("4.4.4.4"),
+            ip_addresses=[ip_address("4.4.4.4")],
+            hostname="mock_hostname",
+            name="Doorstation - abc123._axis-video._tcp.local.",
+            port=None,
+            properties={"macaddress": "1CCAE3AAAAAA"},
+            type="mock_type",
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
+    # Host should not be updated since it's the wrong device
+    assert config_entry.data[CONF_HOST] == "1.2.3.4"
+
+
+async def test_form_zeroconf_ipv4_address_cannot_connect(
+    hass: HomeAssistant, doorbird_api: DoorBird
+) -> None:
+    """Test we abort when we cannot connect to validate during zeroconf update."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1CCAE3AAAAAA",
+        data=VALID_CONFIG,
+        options={CONF_EVENTS: ["event1", "event2", "event3"]},
+    )
+    config_entry.add_to_hass(hass)
+
+    # Mock the API to fail connection (e.g., wrong credentials or network error)
+    doorbird_api.info.side_effect = mock_unauthorized_exception()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("4.4.4.4"),
+            ip_addresses=[ip_address("4.4.4.4")],
+            hostname="mock_hostname",
+            name="Doorstation - abc123._axis-video._tcp.local.",
+            port=None,
+            properties={"macaddress": "1CCAE3AAAAAA"},
+            type="mock_type",
+        ),
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    # Host should not be updated since we couldn't validate
+    assert config_entry.data[CONF_HOST] == "1.2.3.4"
 
 
 async def test_form_zeroconf_non_ipv4_ignored(hass: HomeAssistant) -> None:

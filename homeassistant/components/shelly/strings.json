@@ -105,7 +105,7 @@
     "abort": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_scripts_support": "Device does not support scripts and cannot be used as a Bluetooth scanner.",
-      "zigbee_enabled": "Device with Zigbee enabled cannot be used as a Bluetooth scanner. Please disable it to use the device as a Bluetooth scanner."
+      "zigbee_firmware": "A device with Zigbee firmware cannot be used as a Bluetooth scanner. Please switch to Matter firmware to use the device as a Bluetooth scanner."
     }
   },
   "selector": {
@@ -118,20 +118,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "gas": {
-        "state_attributes": {
-          "detected": {
-            "state": {
-              "none": "None",
-              "mild": "Mild",
-              "heavy": "Heavy",
-              "test": "Test"
-            }
-          }
-        }
-      }
-    },
     "event": {
       "input": {
         "state_attributes": {
@@ -155,6 +141,9 @@
       }
     },
     "sensor": {
+      "detected_objects": {
+        "unit_of_measurement": "objects"
+      },
       "gas_detected": {
         "state": {
           "none": "None",
@@ -178,16 +167,6 @@
           "warmup": "Warm-up",
           "normal": "[%key:common::state::normal%]",
           "fault": "[%key:common::state::fault%]"
-        },
-        "state_attributes": {
-          "self_test": {
-            "state": {
-              "not_completed": "[%key:component::shelly::entity::sensor::self_test::state::not_completed%]",
-              "completed": "[%key:component::shelly::entity::sensor::self_test::state::completed%]",
-              "running": "[%key:component::shelly::entity::sensor::self_test::state::running%]",
-              "pending": "[%key:component::shelly::entity::sensor::self_test::state::pending%]"
-            }
-          }
         }
       },
       "self_test": {
@@ -216,6 +195,13 @@
           "failure": "Failure",
           "opened": "Opened",
           "opening": "[%key:common::state::opening%]"
+        }
+      },
+      "illuminance_level": {
+        "state": {
+          "dark": "Dark",
+          "twilight": "Twilight",
+          "bright": "Bright"
         }
       }
     }
@@ -300,6 +286,21 @@
         },
         "abort": {
           "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+        }
+      }
+    },
+    "wall_display_firmware_unsupported": {
+      "title": "{device_name} is running outdated firmware",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "{device_name} is running outdated firmware",
+            "description": "Your Shelly device {device_name} with IP address {ip_address} is running firmware {firmware}. This firmware version will not be supported by Shelly integration starting from Home Assistant 2025.11.0.\n\nSelect **Submit** button to start the OTA update to the latest stable firmware version."
+          }
+        },
+        "abort": {
+          "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+          "update_not_available": "[%key:component::shelly::issues::ble_scanner_firmware_unsupported::fix_flow::abort::update_not_available%]"
         }
       }
     }

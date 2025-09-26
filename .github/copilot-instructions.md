@@ -45,6 +45,12 @@ rules:
 
 **When Reviewing/Creating Code**: Always check the integration's quality scale level and exemption status before applying rules.
 
+## Code Review Guidelines
+
+**When reviewing code, do NOT comment on:**
+- **Missing imports** - We use static analysis tooling to catch that
+- **Code formatting** - We have ruff as a formatting tool that will catch those if needed (unless specifically instructed otherwise in these instructions)
+
 ## Python Requirements
 
 - **Compatibility**: Python 3.13+
@@ -1067,7 +1073,11 @@ async def test_flow_connection_error(hass, mock_api_error):
 
 ### Entity Testing Patterns
 ```python
-@pytest.mark.parametrize("init_integration", [Platform.SENSOR], indirect=True)
+@pytest.fixture 
+def platforms() -> list[Platform]: 
+    """Overridden fixture to specify platforms to test.""" 
+    return [Platform.SENSOR]  # Or another specific platform as needed.
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_entities(
     hass: HomeAssistant,
@@ -1114,16 +1124,25 @@ def mock_device_api() -> Generator[MagicMock]:
         )
         yield api
 
+@pytest.fixture 
+def platforms() -> list[Platform]: 
+    """Fixture to specify platforms to test.""" 
+    return PLATFORMS
+
 @pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_device_api: MagicMock,
+    platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the integration for testing."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    
+    with patch("homeassistant.components.my_integration.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
     return mock_config_entry
 ```
 

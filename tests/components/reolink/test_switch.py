@@ -36,7 +36,6 @@ async def test_switch(
     reolink_host: MagicMock,
 ) -> None:
     """Test switch entity."""
-    reolink_host.camera_name.return_value = TEST_CAM_NAME
     reolink_host.audio_record.return_value = True
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
@@ -108,7 +107,6 @@ async def test_host_switch(
     reolink_host: MagicMock,
 ) -> None:
     """Test host switch entity."""
-    reolink_host.camera_name.return_value = TEST_CAM_NAME
     reolink_host.email_enabled.return_value = True
     reolink_host.is_hub = False
     reolink_host.supported.return_value = True
@@ -166,14 +164,18 @@ async def test_host_switch(
         )
 
 
+@pytest.mark.parametrize("channel", [0, None])
 async def test_chime_switch(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     reolink_host: MagicMock,
     reolink_chime: Chime,
+    channel: int | None,
 ) -> None:
     """Test host switch entity."""
+    reolink_chime.channel = channel
+
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
