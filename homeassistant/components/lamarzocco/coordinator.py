@@ -21,7 +21,7 @@ from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=15)
 SETTINGS_UPDATE_INTERVAL = timedelta(hours=8)
-SCHEDULE_UPDATE_INTERVAL = timedelta(minutes=30)
+SCHEDULE_UPDATE_INTERVAL = timedelta(minutes=29)
 STATISTICS_UPDATE_INTERVAL = timedelta(minutes=15)
 _LOGGER = logging.getLogger(__name__)
 
