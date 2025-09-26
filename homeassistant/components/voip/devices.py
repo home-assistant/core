@@ -100,6 +100,7 @@ class VoIPDevices:
                 continue
             devices_data: DeviceContacts = await self.device_store.async_load_devices()
             device_data: DeviceContact | None = devices_data.get(voip_id)
+            _LOGGER.debug("Loaded device data for %s: %s", voip_id, device_data)
             self.devices[voip_id] = VoIPDevice(
                 voip_id=voip_id,
                 device_id=device.id,

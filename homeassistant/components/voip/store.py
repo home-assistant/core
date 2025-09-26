@@ -32,7 +32,6 @@ class VoipStore(Store):
     async def async_load_devices(self) -> DeviceContacts:
         """Load data from store as DeviceContacts."""
         raw_data: dict[str, dict[str, str]] = await self.async_load() or {}
-        _LOGGER.debug("raw_data: %s", raw_data)
         return self._dict_to_devices(raw_data)
 
     async def async_update_device(self, voip_id: str, contact_header: str) -> None:
@@ -52,5 +51,4 @@ class VoipStore(Store):
         contacts = DeviceContacts()
         for k, v in (raw_data or {}).items():
             contacts[k] = DeviceContact(**v)
-        _LOGGER.debug("contacts: %s", contacts)
         return contacts

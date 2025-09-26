@@ -119,6 +119,8 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         AssistSatelliteEntity.__init__(self)
         RtpDatagramProtocol.__init__(self)
 
+        _LOGGER.debug("Assist satellite with device: %s", voip_device)
+
         self.config_entry = config_entry
 
         self._audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
