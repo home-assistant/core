@@ -3,6 +3,9 @@
   "name": "CityBikes",
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/citybikes",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "quality_scale": "legacy"
+  "loggers": ["citybikes"],
+  "quality_scale": "legacy",
+  "requirements": []
 }
