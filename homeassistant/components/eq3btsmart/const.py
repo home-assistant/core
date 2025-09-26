@@ -1,15 +1,8 @@
 """Constants for EQ3 Bluetooth Smart Radiator Valves."""
 
-from enum import Enum
-
 from eq3btsmart.const import Eq3OperationMode
 
-from homeassistant.components.climate import (
-    PRESET_COMFORT,
-    PRESET_ECO,
-    PRESET_NONE,
-    HVACMode,
-)
+from homeassistant.components.climate import HVACMode
 
 DOMAIN = "eq3btsmart"
 
@@ -42,15 +35,6 @@ HA_TO_EQ_HVAC = {
     HVACMode.AUTO: Eq3OperationMode.AUTO,
     HVACMode.HEAT: Eq3OperationMode.MANUAL,
 }
-
-
-class Preset(str, Enum):
-    """Preset modes for the eQ-3 radiator valve."""
-
-    NONE = PRESET_NONE
-    ECO = PRESET_ECO
-    COMFORT = PRESET_COMFORT
-
 
 SCAN_INTERVAL = 10  # seconds
 DEFAULT_AWAY_HOURS = 30 * 24

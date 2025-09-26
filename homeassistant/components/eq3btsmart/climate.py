@@ -8,6 +8,8 @@ from eq3btsmart.exceptions import Eq3Exception
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    PRESET_COMFORT,
+    PRESET_ECO,
     PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
@@ -19,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import EQ_TO_HA_HVAC, HA_TO_EQ_HVAC, Preset
+from .const import EQ_TO_HA_HVAC, HA_TO_EQ_HVAC
 from .coordinator import Eq3ConfigEntry
 from .entity import Eq3Entity
 
@@ -52,7 +54,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     _attr_max_temp = EQ3_ON_TEMP
     _attr_precision = PRECISION_HALVES
     _attr_hvac_modes = list(HA_TO_EQ_HVAC.keys())
-    _attr_preset_modes = list(Preset)
+    _attr_preset_modes = [PRESET_ECO, PRESET_COMFORT, PRESET_NONE]
 
     @property
     def target_temperature(self) -> float | None:
@@ -80,9 +82,9 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         if status.presets is None:
             return PRESET_NONE
         if status.target_temperature == status.presets.eco_temperature:
-            return Preset.ECO
+            return PRESET_ECO
         if status.target_temperature == status.presets.comfort_temperature:
-            return Preset.COMFORT
+            return PRESET_COMFORT
         return PRESET_NONE
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -127,9 +129,9 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         try:
-            if preset_mode is Preset.ECO:
+            if preset_mode is PRESET_ECO:
                 await self._thermostat.async_set_preset(Eq3Preset.ECO)
-            elif preset_mode is Preset.COMFORT:
+            elif preset_mode is PRESET_COMFORT:
                 await self._thermostat.async_set_preset(Eq3Preset.COMFORT)
         except Eq3Exception as ex:
             raise HomeAssistantError(
