@@ -8,6 +8,7 @@ DOMAIN = "miele"
 MANUFACTURER = "Miele"
 
 ACTIONS = "actions"
+MODES = "modes"
 POWER_ON = "powerOn"
 POWER_OFF = "powerOff"
 PROCESS_ACTION = "processAction"
@@ -166,6 +167,15 @@ PROCESS_ACTIONS = {
     "start_supercooling": MieleActions.START_SUPERCOOL,
     "stop_supercooling": MieleActions.STOP_SUPERCOOL,
 }
+
+
+class MieleMode(IntEnum):
+    """Define appliance modes."""
+
+    NORMAL = 0
+    SABBATH = 1
+    PARTY = 2
+    HOLIDAY = 3
 
 
 class ProgramPhaseWashingMachine(MieleEnum, missing_to_none=True):

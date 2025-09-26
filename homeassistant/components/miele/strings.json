@@ -1061,6 +1061,9 @@
       "power": {
         "name": "Power"
       },
+      "sabbath": {
+        "name": "Sabbath"
+      },
       "supercooling": {
         "name": "Supercooling"
       },

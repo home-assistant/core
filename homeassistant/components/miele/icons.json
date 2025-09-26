@@ -97,6 +97,9 @@
       "power": {
         "default": "mdi:power"
       },
+      "sabbath": {
+        "default": "mdi:candle"
+      },
       "supercooling": {
         "default": "mdi:snowflake-variant"
       },

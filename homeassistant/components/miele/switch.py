@@ -18,11 +18,13 @@ from homeassistant.helpers.typing import StateType
 
 from .const import (
     DOMAIN,
+    MODES,
     POWER_OFF,
     POWER_ON,
     PROCESS_ACTION,
     MieleActions,
     MieleAppliance,
+    MieleMode,
     StateStatus,
 )
 from .coordinator import MieleConfigEntry
@@ -77,6 +79,23 @@ SWITCH_TYPES: Final[tuple[MieleSwitchDefinition, ...]] = (
             translation_key="superfreezing",
             on_cmd_data={PROCESS_ACTION: MieleActions.START_SUPERFREEZE},
             off_cmd_data={PROCESS_ACTION: MieleActions.STOP_SUPERFREEZE},
+        ),
+    ),
+    MieleSwitchDefinition(
+        types=(
+            MieleAppliance.FREEZER,
+            MieleAppliance.FRIDGE,
+            MieleAppliance.FRIDGE_FREEZER,
+            MieleAppliance.WINE_CABINET_FREEZER,
+        ),
+        description=MieleSwitchDescription(
+            key="sabbath",
+            value_fn=lambda value: value.state_status,
+            on_value=MieleMode.SABBATH,
+            translation_key="sabbath",
+            entity_registry_enabled_default=False,
+            on_cmd_data={MODES: MieleMode.SABBATH},
+            off_cmd_data={MODES: MieleMode.NORMAL},
         ),
     ),
     MieleSwitchDefinition(
@@ -138,6 +157,8 @@ async def async_setup_entry(
                             entity_class = MielePowerSwitch
                         case "supercooling" | "superfreezing":
                             entity_class = MieleSuperSwitch
+                        case "sabbath":
+                            entity_class = MieleSabbathSwitch
 
                     entities.append(
                         entity_class(coordinator, device_id, definition.description)
@@ -221,4 +242,18 @@ class MieleSuperSwitch(MieleSwitch):
         return (
             self.entity_description.value_fn(self.device)
             == self.entity_description.on_value
+        )
+
+
+class MieleSabbathSwitch(MieleSwitch):
+    """Representation of a sabbath switch."""
+
+    entity_description: MieleSwitchDescription
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return the state of the switch."""
+        return (
+            MieleMode.SABBATH not in self.action.modes
+            and MieleMode.NORMAL in self.action.modes
         )
