@@ -26,6 +26,10 @@ from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import (
+    ATTR_UNOCCUPIED_COOLING_TARGET_TEMP,
+    ATTR_UNOCCUPIED_HEATING_TARGET_TEMP,
+)
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
@@ -196,6 +200,12 @@ class MatterClimate(MatterEntity, ClimateEntity):
         target_temperature: float | None = kwargs.get(ATTR_TEMPERATURE)
         target_temperature_low: float | None = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temperature_high: float | None = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        target_unoccupied_cooling_temp: float | None = kwargs.get(
+            ATTR_UNOCCUPIED_COOLING_TARGET_TEMP
+        )
+        target_unoccupied_heating_temp: float | None = kwargs.get(
+            ATTR_UNOCCUPIED_HEATING_TARGET_TEMP
+        )
 
         if target_hvac_mode is not None:
             await self.async_set_hvac_mode(target_hvac_mode)
@@ -232,6 +242,29 @@ class MatterClimate(MatterEntity, ClimateEntity):
                 await self.write_attribute(
                     value=int(target_temperature_high * TEMPERATURE_SCALING_FACTOR),
                     matter_attribute=clusters.Thermostat.Attributes.OccupiedCoolingSetpoint,
+                )
+
+        if target_unoccupied_cooling_temp is not None:
+            if (
+                self.extra_state_attributes.get(ATTR_UNOCCUPIED_COOLING_TARGET_TEMP)
+                != target_unoccupied_cooling_temp
+            ):
+                await self.write_attribute(
+                    value=int(
+                        target_unoccupied_cooling_temp * TEMPERATURE_SCALING_FACTOR
+                    ),
+                    matter_attribute=clusters.Thermostat.Attributes.UnoccupiedCoolingSetpoint,
+                )
+        if target_unoccupied_heating_temp is not None:
+            if (
+                self.extra_state_attributes.get(ATTR_UNOCCUPIED_HEATING_TARGET_TEMP)
+                != target_unoccupied_heating_temp
+            ):
+                await self.write_attribute(
+                    value=int(
+                        target_unoccupied_heating_temp * TEMPERATURE_SCALING_FACTOR
+                    ),
+                    matter_attribute=clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
                 )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
