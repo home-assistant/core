@@ -709,7 +709,7 @@ async def test_multiple_zha_entries_aborts(hass: HomeAssistant, mock_app) -> Non
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 async def test_discovery_via_usb_duplicate_unique_id(hass: HomeAssistant) -> None:
-    """Test usb flow already set up and the path does not change."""
+    """Test USB discovery when a config entry with a duplicate unique_id already exists."""
 
     entry = MockConfigEntry(
         domain=DOMAIN,
