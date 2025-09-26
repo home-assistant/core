@@ -16,12 +16,12 @@
         "sections": {
           "advanced_settings": {
             "data": {
-              "ssl": "Use https",
+              "ssl": "Use HTTPS",
               "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
             },
             "data_description": {
-              "ssl": "Use encrypted connection (required for most devices)",
-              "verify_ssl": "Should SSL certificates be verified? This should be off for self-signed certificates"
+              "ssl": "Whether the connection should be encrypted (required for most devices)",
+              "verify_ssl": "Whether the certificate should be verified when using HTTPS. This should be off for self-signed certificates"
             }
           }
         }
