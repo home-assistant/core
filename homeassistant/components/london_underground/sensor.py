@@ -1,99 +1,80 @@
 """Sensor for checking the status of London Underground tube lines."""
+
 from __future__ import annotations
 
-from datetime import timedelta
+import logging
+from typing import Any
 
 from london_tube_status import TubeData
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-ATTRIBUTION = "Powered by TfL Open Data"
+from .const import CONF_LINE, TUBE_LINES
+from .coordinator import LondonTubeCoordinator
 
-CONF_LINE = "line"
+_LOGGER = logging.getLogger(__name__)
 
-ICON = "mdi:subway"
-
-SCAN_INTERVAL = timedelta(seconds=30)
-
-TUBE_LINES = [
-    "Bakerloo",
-    "Central",
-    "Circle",
-    "District",
-    "DLR",
-    "Hammersmith & City",
-    "Jubilee",
-    "London Overground",
-    "Metropolitan",
-    "Northern",
-    "Piccadilly",
-    "TfL Rail",
-    "Victoria",
-    "Waterloo & City",
-]
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_LINE): vol.All(cv.ensure_list, [vol.In(list(TUBE_LINES))])}
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Tube sensor."""
 
-    data = TubeData()
-    data.update()
-    sensors = []
-    for line in config[CONF_LINE]:
-        sensors.append(LondonTubeSensor(line, data))
+    session = async_get_clientsession(hass)
 
-    add_entities(sensors, True)
+    data = TubeData(session)
+    coordinator = LondonTubeCoordinator(hass, data)
+
+    await coordinator.async_refresh()
+
+    if not coordinator.last_update_success:
+        raise PlatformNotReady
+
+    async_add_entities(
+        LondonTubeSensor(coordinator, line) for line in config[CONF_LINE]
+    )
 
 
-class LondonTubeSensor(SensorEntity):
+class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):
     """Sensor that reads the status of a line from Tube Data."""
 
-    def __init__(self, name, data):
+    _attr_attribution = "Powered by TfL Open Data"
+    _attr_icon = "mdi:subway"
+
+    def __init__(self, coordinator: LondonTubeCoordinator, name: str) -> None:
         """Initialize the London Underground sensor."""
-        self._data = data
-        self._description = None
+        super().__init__(coordinator)
         self._name = name
-        self._state = None
-        self.attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def native_value(self):
+    def native_value(self) -> str:
         """Return the state of the sensor."""
-        return self._state
+        return self.coordinator.data[self.name]["State"]
 
     @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return other details about the sensor state."""
-        self.attrs["Description"] = self._description
-        return self.attrs
-
-    def update(self):
-        """Update the sensor."""
-        self._data.update()
-        self._state = self._data.data[self.name]["State"]
-        self._description = self._data.data[self.name]["Description"]
+        return {"Description": self.coordinator.data[self.name]["Description"]}

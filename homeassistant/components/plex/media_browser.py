@@ -1,85 +1,116 @@
 """Support to interface with the Plex API."""
-import logging
 
-from homeassistant.components.media_player import BrowseMedia
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_ALBUM,
-    MEDIA_CLASS_ARTIST,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_EPISODE,
-    MEDIA_CLASS_MOVIE,
-    MEDIA_CLASS_PLAYLIST,
-    MEDIA_CLASS_SEASON,
-    MEDIA_CLASS_TRACK,
-    MEDIA_CLASS_TV_SHOW,
-    MEDIA_CLASS_VIDEO,
-)
-from homeassistant.components.media_player.errors import BrowseError
+from __future__ import annotations
 
-from .const import DOMAIN, PLEX_URI_SCHEME
-from .helpers import pretty_title
+from yarl import URL
+
+from homeassistant.components.media_player import BrowseError, BrowseMedia, MediaClass
+
+from .const import DOMAIN, SERVERS
+from .errors import MediaNotFound
+from .helpers import get_plex_data, get_plex_server, pretty_title
 
 
 class UnknownMediaType(BrowseError):
     """Unknown media type."""
 
 
-HUB_PREFIX = "hub:"
 EXPANDABLES = ["album", "artist", "playlist", "season", "show"]
-PLAYLISTS_BROWSE_PAYLOAD = {
-    "title": "Playlists",
-    "media_class": MEDIA_CLASS_DIRECTORY,
-    "media_content_id": PLEX_URI_SCHEME + "all",
-    "media_content_type": "playlists",
-    "can_play": False,
-    "can_expand": True,
-}
 ITEM_TYPE_MEDIA_CLASS = {
-    "album": MEDIA_CLASS_ALBUM,
-    "artist": MEDIA_CLASS_ARTIST,
-    "clip": MEDIA_CLASS_VIDEO,
-    "episode": MEDIA_CLASS_EPISODE,
-    "mixed": MEDIA_CLASS_DIRECTORY,
-    "movie": MEDIA_CLASS_MOVIE,
-    "playlist": MEDIA_CLASS_PLAYLIST,
-    "season": MEDIA_CLASS_SEASON,
-    "show": MEDIA_CLASS_TV_SHOW,
-    "station": MEDIA_CLASS_ARTIST,
-    "track": MEDIA_CLASS_TRACK,
-    "video": MEDIA_CLASS_VIDEO,
+    "album": MediaClass.ALBUM,
+    "artist": MediaClass.ARTIST,
+    "clip": MediaClass.VIDEO,
+    "episode": MediaClass.EPISODE,
+    "mixed": MediaClass.DIRECTORY,
+    "movie": MediaClass.MOVIE,
+    "playlist": MediaClass.PLAYLIST,
+    "season": MediaClass.SEASON,
+    "show": MediaClass.TV_SHOW,
+    "station": MediaClass.ARTIST,
+    "track": MediaClass.TRACK,
+    "video": MediaClass.VIDEO,
 }
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def browse_media(  # noqa: C901
-    plex_server, is_internal, media_content_type, media_content_id, *, platform=None
+    hass, is_internal, media_content_type, media_content_id, *, platform=None
 ):
     """Implement the websocket media browsing helper."""
+    server_id = None
+    plex_server = None
+    special_folder = None
 
-    def item_payload(item, short_name=False):
+    if media_content_id:
+        url = URL(media_content_id)
+        server_id = url.host
+        plex_server = get_plex_server(hass, server_id)
+        if media_content_type == "hub":
+            _, hub_location, hub_identifier = url.parts
+        elif media_content_type in ["library", "server"] and len(url.parts) > 2:
+            _, media_content_id, special_folder = url.parts
+        else:
+            media_content_id = url.name
+
+    if media_content_type in ("plex_root", None):
+        return root_payload(hass, is_internal, platform=platform)
+
+    def item_payload(item, short_name=False, extra_params=None):
         """Create response payload for a single media item."""
         try:
             media_class = ITEM_TYPE_MEDIA_CLASS[item.type]
         except KeyError as err:
-            _LOGGER.debug("Unknown type received: %s", item.type)
-            raise UnknownMediaType from err
+            raise UnknownMediaType(f"Unknown type received: {item.type}") from err
         payload = {
             "title": pretty_title(item, short_name),
             "media_class": media_class,
-            "media_content_id": PLEX_URI_SCHEME + str(item.ratingKey),
+            "media_content_id": generate_plex_uri(
+                server_id, item.ratingKey, params=extra_params
+            ),
             "media_content_type": item.type,
             "can_play": True,
             "can_expand": item.type in EXPANDABLES,
         }
         if hasattr(item, "thumbUrl"):
-            payload["thumbnail"] = item.thumbUrl
+            plex_server.thumbnail_cache.setdefault(str(item.ratingKey), item.thumbUrl)
+            if is_internal:
+                thumbnail = item.thumbUrl
+            else:
+                thumbnail = get_proxy_image_url(
+                    server_id,
+                    item.ratingKey,
+                )
+            payload["thumbnail"] = thumbnail
 
         return BrowseMedia(**payload)
 
-    def library_payload(library_id):
+    def server_payload():
+        """Create response payload to describe libraries of the Plex server."""
+        server_info = BrowseMedia(
+            title=plex_server.friendly_name,
+            media_class=MediaClass.DIRECTORY,
+            media_content_id=generate_plex_uri(server_id, "server"),
+            media_content_type="server",
+            can_play=False,
+            can_expand=True,
+            children=[],
+            children_media_class=MediaClass.DIRECTORY,
+            thumbnail="https://brands.home-assistant.io/_/plex/logo.png",
+        )
+        if platform != "sonos":
+            server_info.children.append(
+                special_library_payload(server_info, "Recommended")
+            )
+        for library in plex_server.library.sections():
+            if library.type == "photo":
+                continue
+            if library.type != "artist" and platform == "sonos":
+                continue
+            server_info.children.append(library_section_payload(library))
+        server_info.children.append(playlists_payload())
+        return server_info
+
+    def library_contents(library):
         """Create response payload to describe contents of a specific library."""
-        library = plex_server.library.sectionByID(library_id)
         library_info = library_section_payload(library)
         library_info.children = [special_library_payload(library_info, "Recommended")]
         for item in library.all():
@@ -89,25 +120,37 @@ def browse_media(  # noqa: C901
                 continue
         return library_info
 
-    def playlists_payload(platform):
+    def playlists_payload():
         """Create response payload for all available playlists."""
-        playlists_info = {**PLAYLISTS_BROWSE_PAYLOAD, "children": []}
+        playlists_info = {
+            "title": "Playlists",
+            "media_class": MediaClass.DIRECTORY,
+            "media_content_id": generate_plex_uri(server_id, "all"),
+            "media_content_type": "playlists",
+            "can_play": False,
+            "can_expand": True,
+            "children": [],
+        }
         for playlist in plex_server.playlists():
-            if playlist.playlistType != "audio" and platform == "sonos":
+            if (
+                playlist.type != "directory"
+                and playlist.playlistType != "audio"
+                and platform == "sonos"
+            ):
                 continue
             try:
                 playlists_info["children"].append(item_payload(playlist))
             except UnknownMediaType:
                 continue
         response = BrowseMedia(**playlists_info)
-        response.children_media_class = MEDIA_CLASS_PLAYLIST
+        response.children_media_class = MediaClass.PLAYLIST
         return response
 
     def build_item_response(payload):
         """Create response payload for the provided media query."""
-        media = plex_server.lookup_media(**payload)
-
-        if media is None:
+        try:
+            media = plex_server.lookup_media(**payload)
+        except MediaNotFound:
             return None
 
         try:
@@ -126,35 +169,29 @@ def browse_media(  # noqa: C901
                     continue
         return media_info
 
-    if media_content_id:
-        assert media_content_id.startswith(PLEX_URI_SCHEME)
-        media_content_id = media_content_id[len(PLEX_URI_SCHEME) :]
-
-    if media_content_id and media_content_id.startswith(HUB_PREFIX):
-        media_content_id = media_content_id[len(HUB_PREFIX) :]
-        location, hub_identifier = media_content_id.split(":")
-        if location == "server":
+    if media_content_type == "hub":
+        if hub_location == "server":
             hub = next(
                 x
                 for x in plex_server.library.hubs()
                 if x.hubIdentifier == hub_identifier
             )
-            media_content_id = f"{HUB_PREFIX}server:{hub.hubIdentifier}"
+            media_content_id = f"server/{hub.hubIdentifier}"
         else:
-            library_section = plex_server.library.sectionByID(int(location))
+            library_section = plex_server.library.sectionByID(int(hub_location))
             hub = next(
                 x for x in library_section.hubs() if x.hubIdentifier == hub_identifier
             )
-            media_content_id = f"{HUB_PREFIX}{hub.librarySectionID}:{hub.hubIdentifier}"
+            media_content_id = f"{hub.librarySectionID}/{hub.hubIdentifier}"
         try:
             children_media_class = ITEM_TYPE_MEDIA_CLASS[hub.type]
         except KeyError as err:
-            raise BrowseError(f"Unknown type received: {hub.type}") from err
+            raise UnknownMediaType(f"Unknown type received: {hub.type}") from err
         payload = {
             "title": hub.title,
-            "media_class": MEDIA_CLASS_DIRECTORY,
-            "media_content_id": PLEX_URI_SCHEME + media_content_id,
-            "media_content_type": hub.type,
+            "media_class": MediaClass.DIRECTORY,
+            "media_content_id": generate_plex_uri(server_id, media_content_id),
+            "media_content_type": "hub",
             "can_play": False,
             "can_expand": True,
             "children": [],
@@ -166,18 +203,19 @@ def browse_media(  # noqa: C901
                     continue
                 payload["children"].append(station_payload(item))
             else:
-                payload["children"].append(item_payload(item))
+                extra_params = None
+                hub_context = hub.context.split(".")[-1]
+                if hub_context in ("continue", "inprogress", "ondeck"):
+                    extra_params = {"resume": 1}
+                payload["children"].append(
+                    item_payload(item, extra_params=extra_params)
+                )
         return BrowseMedia(**payload)
-
-    if media_content_id and ":" in media_content_id:
-        media_content_id, special_folder = media_content_id.split(":")
-    else:
-        special_folder = None
 
     if special_folder:
         if media_content_type == "server":
             library_or_section = plex_server.library
-            children_media_class = MEDIA_CLASS_DIRECTORY
+            children_media_class = MediaClass.DIRECTORY
             title = plex_server.friendly_name
         elif media_content_type == "library":
             library_or_section = plex_server.library.sectionByID(int(media_content_id))
@@ -185,7 +223,7 @@ def browse_media(  # noqa: C901
             try:
                 children_media_class = ITEM_TYPE_MEDIA_CLASS[library_or_section.TYPE]
             except KeyError as err:
-                raise BrowseError(
+                raise UnknownMediaType(
                     f"Unknown type received: {library_or_section.TYPE}"
                 ) from err
         else:
@@ -195,9 +233,10 @@ def browse_media(  # noqa: C901
 
         payload = {
             "title": title,
-            "media_class": MEDIA_CLASS_DIRECTORY,
-            "media_content_id": PLEX_URI_SCHEME
-            + f"{media_content_id}:{special_folder}",
+            "media_class": MediaClass.DIRECTORY,
+            "media_content_id": generate_plex_uri(
+                server_id, f"{media_content_id}/{special_folder}"
+            ),
             "media_content_type": media_content_type,
             "can_play": False,
             "can_expand": True,
@@ -214,11 +253,13 @@ def browse_media(  # noqa: C901
         return BrowseMedia(**payload)
 
     try:
-        if media_content_type in ("server", None):
-            return server_payload(plex_server, platform)
+        if media_content_type == "server":
+            return server_payload()
 
         if media_content_type == "library":
-            return library_payload(int(media_content_id))
+            library_id = int(media_content_id)
+            library = plex_server.library.sectionByID(library_id)
+            return library_contents(library)
 
     except UnknownMediaType as err:
         raise BrowseError(
@@ -226,7 +267,7 @@ def browse_media(  # noqa: C901
         ) from err
 
     if media_content_type == "playlists":
-        return playlists_payload(platform)
+        return playlists_payload()
 
     payload = {
         "media_type": DOMAIN,
@@ -238,17 +279,60 @@ def browse_media(  # noqa: C901
     return response
 
 
+def generate_plex_uri(server_id, media_id, params=None):
+    """Create a media_content_id URL for playable Plex media."""
+    if isinstance(media_id, int):
+        media_id = str(media_id)
+    if isinstance(media_id, str) and not media_id.startswith("/"):
+        media_id = f"/{media_id}"
+    return str(
+        URL.build(
+            scheme=DOMAIN,
+            host=server_id,
+            path=media_id,
+            query=params,
+        )
+    )
+
+
+def root_payload(hass, is_internal, platform=None):
+    """Return root payload for Plex."""
+    children = [
+        browse_media(
+            hass,
+            is_internal,
+            "server",
+            generate_plex_uri(server_id, ""),
+            platform=platform,
+        )
+        for server_id in get_plex_data(hass)[SERVERS]
+    ]
+
+    if len(children) == 1:
+        return children[0]
+
+    return BrowseMedia(
+        title="Plex",
+        media_class=MediaClass.DIRECTORY,
+        media_content_id="",
+        media_content_type="plex_root",
+        can_play=False,
+        can_expand=True,
+        children=children,
+    )
+
+
 def library_section_payload(section):
     """Create response payload for a single library section."""
     try:
         children_media_class = ITEM_TYPE_MEDIA_CLASS[section.TYPE]
     except KeyError as err:
-        _LOGGER.debug("Unknown type received: %s", section.TYPE)
-        raise UnknownMediaType from err
+        raise UnknownMediaType(f"Unknown type received: {section.TYPE}") from err
+    server_id = section._server.machineIdentifier  # noqa: SLF001
     return BrowseMedia(
         title=section.title,
-        media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_id=PLEX_URI_SCHEME + str(section.key),
+        media_class=MediaClass.DIRECTORY,
+        media_content_id=generate_plex_uri(server_id, section.key),
         media_content_type="library",
         can_play=False,
         can_expand=True,
@@ -259,10 +343,11 @@ def library_section_payload(section):
 def special_library_payload(parent_payload, special_type):
     """Create response payload for special library folders."""
     title = f"{special_type} ({parent_payload.title})"
+    special_library_id = f"{parent_payload.media_content_id}/{special_type}"
     return BrowseMedia(
         title=title,
         media_class=parent_payload.media_class,
-        media_content_id=f"{parent_payload.media_content_id}:{special_type}",
+        media_content_id=special_library_id,
         media_content_type=parent_payload.media_content_type,
         can_play=False,
         can_expand=True,
@@ -270,41 +355,18 @@ def special_library_payload(parent_payload, special_type):
     )
 
 
-def server_payload(plex_server, platform):
-    """Create response payload to describe libraries of the Plex server."""
-    server_info = BrowseMedia(
-        title=plex_server.friendly_name,
-        media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_id=PLEX_URI_SCHEME + plex_server.machine_identifier,
-        media_content_type="server",
-        can_play=False,
-        can_expand=True,
-        children=[],
-        children_media_class=MEDIA_CLASS_DIRECTORY,
-    )
-    if platform != "sonos":
-        server_info.children.append(special_library_payload(server_info, "Recommended"))
-    for library in plex_server.library.sections():
-        if library.type == "photo":
-            continue
-        if library.type != "artist" and platform == "sonos":
-            continue
-        server_info.children.append(library_section_payload(library))
-    server_info.children.append(BrowseMedia(**PLAYLISTS_BROWSE_PAYLOAD))
-    return server_info
-
-
 def hub_payload(hub):
     """Create response payload for a hub."""
     if hasattr(hub, "librarySectionID"):
-        media_content_id = f"{HUB_PREFIX}{hub.librarySectionID}:{hub.hubIdentifier}"
+        media_content_id = f"{hub.librarySectionID}/{hub.hubIdentifier}"
     else:
-        media_content_id = f"{HUB_PREFIX}server:{hub.hubIdentifier}"
+        media_content_id = f"server/{hub.hubIdentifier}"
+    server_id = hub._server.machineIdentifier  # noqa: SLF001
     payload = {
         "title": hub.title,
-        "media_class": MEDIA_CLASS_DIRECTORY,
-        "media_content_id": PLEX_URI_SCHEME + media_content_id,
-        "media_content_type": hub.type,
+        "media_class": MediaClass.DIRECTORY,
+        "media_content_id": generate_plex_uri(server_id, media_content_id),
+        "media_content_type": "hub",
         "can_play": False,
         "can_expand": True,
     }
@@ -313,11 +375,20 @@ def hub_payload(hub):
 
 def station_payload(station):
     """Create response payload for a music station."""
+    server_id = station._server.machineIdentifier  # noqa: SLF001
     return BrowseMedia(
         title=station.title,
         media_class=ITEM_TYPE_MEDIA_CLASS[station.type],
-        media_content_id=PLEX_URI_SCHEME + station.key,
+        media_content_id=generate_plex_uri(server_id, station.key),
         media_content_type="station",
         can_play=True,
         can_expand=False,
     )
+
+
+def get_proxy_image_url(
+    server_id: str,
+    media_content_id: str,
+) -> str:
+    """Generate an url for a Plex media browser image."""
+    return f"/api/plex_image_proxy/{server_id}/{media_content_id}"

@@ -1,6 +1,8 @@
 """Tests for the Wemo binary_sensor entity."""
 
 import pytest
+import pywemo
+from pywemo import StandbyState
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
@@ -11,6 +13,8 @@ from homeassistant.components.wemo.binary_sensor import (
     MakerBinarySensor,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .entity_test_helpers import EntityTestHelpers
@@ -25,8 +29,12 @@ class TestMotion(EntityTestHelpers):
         return "Motion"
 
     async def test_binary_sensor_registry_state_callback(
-        self, hass, pywemo_registry, pywemo_device, wemo_entity
-    ):
+        self,
+        hass: HomeAssistant,
+        pywemo_registry: pywemo.SubscriptionRegistry,
+        pywemo_device: pywemo.WeMoDevice,
+        wemo_entity: er.RegistryEntry,
+    ) -> None:
         """Verify that the binary_sensor receives state updates from the registry."""
         # On state.
         pywemo_device.get_state.return_value = 1
@@ -41,8 +49,12 @@ class TestMotion(EntityTestHelpers):
         assert hass.states.get(wemo_entity.entity_id).state == STATE_OFF
 
     async def test_binary_sensor_update_entity(
-        self, hass, pywemo_registry, pywemo_device, wemo_entity
-    ):
+        self,
+        hass: HomeAssistant,
+        pywemo_registry: pywemo.SubscriptionRegistry,
+        pywemo_device: pywemo.WeMoDevice,
+        wemo_entity: er.RegistryEntry,
+    ) -> None:
         """Verify that the binary_sensor performs state updates."""
         await async_setup_component(hass, HA_DOMAIN, {})
 
@@ -80,22 +92,13 @@ class TestMaker(EntityTestHelpers):
         """Select the MakerBinarySensor entity."""
         return MakerBinarySensor._name_suffix.lower()
 
-    @pytest.fixture(name="pywemo_device")
-    def pywemo_device_fixture(self, pywemo_device):
-        """Fixture for WeMoDevice instances."""
-        pywemo_device.maker_params = {
-            "hassensor": 1,
-            "sensorstate": 1,
-            "switchmode": 1,
-            "switchstate": 0,
-        }
-        pywemo_device.has_sensor = pywemo_device.maker_params["hassensor"]
-        pywemo_device.sensor_state = pywemo_device.maker_params["sensorstate"]
-        yield pywemo_device
-
     async def test_registry_state_callback(
-        self, hass, pywemo_registry, pywemo_device, wemo_entity
-    ):
+        self,
+        hass: HomeAssistant,
+        pywemo_registry: pywemo.SubscriptionRegistry,
+        pywemo_device: pywemo.WeMoDevice,
+        wemo_entity: er.RegistryEntry,
+    ) -> None:
         """Verify that the binary_sensor receives state updates from the registry."""
         # On state.
         pywemo_device.sensor_state = 0
@@ -123,41 +126,31 @@ class TestInsight(EntityTestHelpers):
         """Select the InsightBinarySensor entity."""
         return InsightBinarySensor._name_suffix.lower()
 
-    @pytest.fixture(name="pywemo_device")
-    def pywemo_device_fixture(self, pywemo_device):
-        """Fixture for WeMoDevice instances."""
-        pywemo_device.insight_params = {
-            "currentpower": 1.0,
-            "todaymw": 200000000.0,
-            "state": "0",
-            "onfor": 0,
-            "ontoday": 0,
-            "ontotal": 0,
-            "powerthreshold": 0,
-        }
-        yield pywemo_device
-
     async def test_registry_state_callback(
-        self, hass, pywemo_registry, pywemo_device, wemo_entity
-    ):
+        self,
+        hass: HomeAssistant,
+        pywemo_registry: pywemo.SubscriptionRegistry,
+        pywemo_device: pywemo.WeMoDevice,
+        wemo_entity: er.RegistryEntry,
+    ) -> None:
         """Verify that the binary_sensor receives state updates from the registry."""
         # On state.
         pywemo_device.get_state.return_value = 1
-        pywemo_device.insight_params["state"] = "1"
+        pywemo_device.standby_state = StandbyState.ON
         pywemo_registry.callbacks[pywemo_device.name](pywemo_device, "", "")
         await hass.async_block_till_done()
         assert hass.states.get(wemo_entity.entity_id).state == STATE_ON
 
         # Standby (Off) state.
         pywemo_device.get_state.return_value = 1
-        pywemo_device.insight_params["state"] = "8"
+        pywemo_device.standby_state = StandbyState.STANDBY
         pywemo_registry.callbacks[pywemo_device.name](pywemo_device, "", "")
         await hass.async_block_till_done()
         assert hass.states.get(wemo_entity.entity_id).state == STATE_OFF
 
         # Off state.
         pywemo_device.get_state.return_value = 0
-        pywemo_device.insight_params["state"] = "1"
+        pywemo_device.standby_state = StandbyState.OFF
         pywemo_registry.callbacks[pywemo_device.name](pywemo_device, "", "")
         await hass.async_block_till_done()
         assert hass.states.get(wemo_entity.entity_id).state == STATE_OFF

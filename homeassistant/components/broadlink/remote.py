@@ -1,10 +1,13 @@
 """Support for Broadlink remotes."""
+
 import asyncio
 from base64 import b64encode
 from collections import defaultdict
+from collections.abc import Iterable
 from datetime import timedelta
 from itertools import product
 import logging
+from typing import Any
 
 from broadlink.exceptions import (
     AuthorizationError,
@@ -27,18 +30,17 @@ from homeassistant.components.remote import (
     SERVICE_DELETE_COMMAND,
     SERVICE_LEARN_COMMAND,
     SERVICE_SEND_COMMAND,
-    SUPPORT_DELETE_COMMAND,
-    SUPPORT_LEARN_COMMAND,
     RemoteEntity,
+    RemoteEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, STATE_OFF
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .entity import BroadlinkEntity
@@ -90,7 +92,7 @@ SERVICE_DELETE_SCHEMA = COMMAND_SCHEMA.extend(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Broadlink remote."""
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
@@ -105,6 +107,9 @@ async def async_setup_entry(
 class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
     """Representation of a Broadlink remote."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, device, codes, flags):
         """Initialize the remote."""
         super().__init__(device)
@@ -115,9 +120,10 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         self._flags = defaultdict(int)
         self._lock = asyncio.Lock()
 
-        self._attr_name = f"{device.name} Remote"
         self._attr_is_on = True
-        self._attr_supported_features = SUPPORT_LEARN_COMMAND | SUPPORT_DELETE_COMMAND
+        self._attr_supported_features = (
+            RemoteEntityFeature.LEARN_COMMAND | RemoteEntityFeature.DELETE_COMMAND
+        )
         self._attr_unique_id = device.unique_id
 
     def _extract_codes(self, commands, device=None):
@@ -143,7 +149,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 try:
                     codes = self._codes[device][cmd]
                 except KeyError as err:
-                    raise ValueError(f"Command not found: {repr(cmd)}") from err
+                    raise ValueError(f"Command not found: {cmd!r}") from err
 
                 if isinstance(codes, list):
                     codes = codes[:]
@@ -154,7 +160,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 try:
                     codes[idx] = data_packet(code)
                 except ValueError as err:
-                    raise ValueError(f"Invalid code: {repr(code)}") from err
+                    raise ValueError(f"Invalid code: {code!r}") from err
 
             code_list.append(codes)
         return code_list
@@ -173,18 +179,18 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         """
         return self._flags
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when the remote is added to hass."""
         state = await self.async_get_last_state()
         self._attr_is_on = state is None or state.state != STATE_OFF
         await super().async_added_to_hass()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the remote."""
         self._attr_is_on = True
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the remote."""
         self._attr_is_on = False
         self.async_write_ha_state()
@@ -197,7 +203,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         self._flags.update(await self._flag_storage.async_load() or {})
         self._storage_loaded = True
 
-    async def async_send_command(self, command, **kwargs):
+    async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a list of commands to a device."""
         kwargs[ATTR_COMMAND] = command
         kwargs = SERVICE_SEND_SCHEMA(kwargs)
@@ -254,7 +260,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         if at_least_one_sent:
             self._flag_storage.async_delay_save(self._get_flags, FLAG_SAVE_DELAY)
 
-    async def async_learn_command(self, **kwargs):
+    async def async_learn_command(self, **kwargs: Any) -> None:
         """Learn a list of commands from a remote."""
         kwargs = SERVICE_LEARN_SCHEMA(kwargs)
         commands = kwargs[ATTR_COMMAND]
@@ -326,8 +332,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         )
 
         try:
-            start_time = dt.utcnow()
-            while (dt.utcnow() - start_time) < LEARNING_TIMEOUT:
+            start_time = dt_util.utcnow()
+            while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
                 await asyncio.sleep(1)
                 try:
                     code = await device.async_request(device.api.check_data)
@@ -364,11 +370,14 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         )
 
         try:
-            start_time = dt.utcnow()
-            while (dt.utcnow() - start_time) < LEARNING_TIMEOUT:
+            start_time = dt_util.utcnow()
+            while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
                 await asyncio.sleep(1)
-                found = await device.async_request(device.api.check_frequency)
-                if found:
+                is_found, frequency = await device.async_request(
+                    device.api.check_frequency
+                )
+                if is_found:
+                    _LOGGER.debug("Radiofrequency detected: %s MHz", frequency)
                     break
             else:
                 await device.async_request(device.api.cancel_sweep_frequency)
@@ -399,8 +408,8 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         )
 
         try:
-            start_time = dt.utcnow()
-            while (dt.utcnow() - start_time) < LEARNING_TIMEOUT:
+            start_time = dt_util.utcnow()
+            while (dt_util.utcnow() - start_time) < LEARNING_TIMEOUT:
                 await asyncio.sleep(1)
                 try:
                     code = await device.async_request(device.api.check_data)
@@ -418,7 +427,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 self.hass, notification_id="learn_command"
             )
 
-    async def async_delete_command(self, **kwargs):
+    async def async_delete_command(self, **kwargs: Any) -> None:
         """Delete a list of commands from a remote."""
         kwargs = SERVICE_DELETE_SCHEMA(kwargs)
         commands = kwargs[ATTR_COMMAND]
@@ -439,7 +448,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         try:
             codes = self._codes[subdevice]
         except KeyError as err:
-            err_msg = f"Device not found: {repr(subdevice)}"
+            err_msg = f"Device not found: {subdevice!r}"
             _LOGGER.error("Failed to call %s. %s", service, err_msg)
             raise ValueError(err_msg) from err
 
@@ -452,9 +461,9 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
         if cmds_not_found:
             if len(cmds_not_found) == 1:
-                err_msg = f"Command not found: {repr(cmds_not_found[0])}"
+                err_msg = f"Command not found: {cmds_not_found[0]!r}"
             else:
-                err_msg = f"Commands not found: {repr(cmds_not_found)}"
+                err_msg = f"Commands not found: {cmds_not_found!r}"
 
             if len(cmds_not_found) == len(commands):
                 _LOGGER.error("Failed to call %s. %s", service, err_msg)

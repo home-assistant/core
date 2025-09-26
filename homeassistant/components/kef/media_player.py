@@ -1,4 +1,5 @@
 """Platform for the KEF Wireless Speakers."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -12,27 +13,12 @@ from getmac import get_mac_address
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TYPE,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -73,7 +59,7 @@ SERVICE_UPDATE_DSP = "update_dsp"
 
 DSP_SCAN_INTERVAL = timedelta(seconds=3600)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_TYPE): vol.In(["LS50", "LSX"]),
@@ -93,11 +79,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_ip_mode(host):
     """Get the 'mode' used to retrieve the MAC address."""
     try:
-        if ipaddress.ip_address(host).version == 6:
-            return "ip6"
-        return "ip"
+        ip_address = ipaddress.ip_address(host)
     except ValueError:
         return "hostname"
+
+    if ip_address.version == 6:
+        return "ip6"
+    return "ip"
 
 
 async def async_setup_platform(
@@ -133,7 +121,7 @@ async def async_setup_platform(
 
     mode = get_ip_mode(host)
     mac = await hass.async_add_executor_job(partial(get_mac_address, **{mode: host}))
-    if mac is None:
+    if mac is None or mac == "00:00:00:00:00:00":
         raise PlatformNotReady("Cannot get the ip address of kef speaker.")
 
     unique_id = f"kef-{mac}"
@@ -173,7 +161,7 @@ async def async_setup_platform(
         },
         "set_mode",
     )
-    platform.async_register_entity_service(SERVICE_UPDATE_DSP, {}, "update_dsp")
+    platform.async_register_entity_service(SERVICE_UPDATE_DSP, None, "update_dsp")
 
     def add_service(name, which, option):
         options = DSP_OPTION_MAPPING[which]
@@ -199,6 +187,8 @@ async def async_setup_platform(
 class KefMediaPlayer(MediaPlayerEntity):
     """Kef Player Object."""
 
+    _attr_icon = "mdi:speaker-wireless"
+
     def __init__(
         self,
         name,
@@ -215,8 +205,8 @@ class KefMediaPlayer(MediaPlayerEntity):
         unique_id,
     ):
         """Initialize the media player."""
-        self._name = name
-        self._sources = sources
+        self._attr_name = name
+        self._attr_source_list = sources
         self._speaker = AsyncKefSpeaker(
             host,
             port,
@@ -226,183 +216,131 @@ class KefMediaPlayer(MediaPlayerEntity):
             inverse_speaker_mode,
             loop=loop,
         )
-        self._unique_id = unique_id
+        self._attr_unique_id = unique_id
         self._supports_on = supports_on
         self._speaker_type = speaker_type
 
-        self._state = None
-        self._muted = None
-        self._source = None
-        self._volume = None
-        self._is_online = None
+        self._attr_available = False
         self._dsp = None
         self._update_dsp_task_remover = None
 
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
+        self._attr_supported_features = (
+            MediaPlayerEntityFeature.VOLUME_SET
+            | MediaPlayerEntityFeature.VOLUME_STEP
+            | MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.SELECT_SOURCE
+            | MediaPlayerEntityFeature.TURN_OFF
+            | MediaPlayerEntityFeature.NEXT_TRACK  # only in Bluetooth and Wifi
+            | MediaPlayerEntityFeature.PAUSE  # only in Bluetooth and Wifi
+            | MediaPlayerEntityFeature.PLAY  # only in Bluetooth and Wifi
+            | MediaPlayerEntityFeature.PREVIOUS_TRACK  # only in Bluetooth and Wifi
+        )
+        if supports_on:
+            self._attr_supported_features |= MediaPlayerEntityFeature.TURN_ON
 
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update latest state."""
         _LOGGER.debug("Running async_update")
         try:
-            self._is_online = await self._speaker.is_online()
-            if self._is_online:
+            self._attr_available = await self._speaker.is_online()
+            if self.available:
                 (
-                    self._volume,
-                    self._muted,
+                    self._attr_volume_level,
+                    self._attr_is_volume_muted,
                 ) = await self._speaker.get_volume_and_is_muted()
                 state = await self._speaker.get_state()
-                self._source = state.source
-                self._state = STATE_ON if state.is_on else STATE_OFF
+                self._attr_source = state.source
+                self._attr_state = (
+                    MediaPlayerState.ON if state.is_on else MediaPlayerState.OFF
+                )
                 if self._dsp is None:
                     # Only do this when necessary because it is a slow operation
                     await self.update_dsp()
             else:
-                self._muted = None
-                self._source = None
-                self._volume = None
-                self._state = STATE_OFF
+                self._attr_is_volume_muted = None
+                self._attr_source = None
+                self._attr_volume_level = None
+                self._attr_state = MediaPlayerState.OFF
         except (ConnectionError, TimeoutError) as err:
             _LOGGER.debug("Error in `update`: %s", err)
-            self._state = None
+            self._attr_state = None
 
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        return self._volume
-
-    @property
-    def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
-        return self._muted
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        support_kef = (
-            SUPPORT_VOLUME_SET
-            | SUPPORT_VOLUME_STEP
-            | SUPPORT_VOLUME_MUTE
-            | SUPPORT_SELECT_SOURCE
-            | SUPPORT_TURN_OFF
-            | SUPPORT_NEXT_TRACK  # only in Bluetooth and Wifi
-            | SUPPORT_PAUSE  # only in Bluetooth and Wifi
-            | SUPPORT_PLAY  # only in Bluetooth and Wifi
-            | SUPPORT_PREVIOUS_TRACK  # only in Bluetooth and Wifi
-        )
-        if self._supports_on:
-            support_kef |= SUPPORT_TURN_ON
-
-        return support_kef
-
-    @property
-    def source(self):
-        """Name of the current input source."""
-        return self._source
-
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        return self._sources
-
-    @property
-    def available(self):
-        """Return if the speaker is reachable online."""
-        return self._is_online
-
-    @property
-    def unique_id(self):
-        """Return the device unique id."""
-        return self._unique_id
-
-    @property
-    def icon(self):
-        """Return the device's icon."""
-        return "mdi:speaker-wireless"
-
-    async def async_turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._speaker.turn_off()
 
-    async def async_turn_on(self):
+    async def async_turn_on(self) -> None:
         """Turn the media player on."""
         if not self._supports_on:
-            raise NotImplementedError()
+            raise NotImplementedError
         await self._speaker.turn_on()
 
-    async def async_volume_up(self):
+    async def async_volume_up(self) -> None:
         """Volume up the media player."""
         await self._speaker.increase_volume()
 
-    async def async_volume_down(self):
+    async def async_volume_down(self) -> None:
         """Volume down the media player."""
         await self._speaker.decrease_volume()
 
-    async def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._speaker.set_volume(volume)
 
-    async def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute (True) or unmute (False) media player."""
         if mute:
             await self._speaker.mute()
         else:
             await self._speaker.unmute()
 
-    async def async_select_source(self, source: str):
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        if source in self.source_list:
+        if self.source_list is not None and source in self.source_list:
             await self._speaker.set_source(source)
         else:
             raise ValueError(f"Unknown input source: {source}.")
 
-    async def async_media_play(self):
+    async def async_media_play(self) -> None:
         """Send play command."""
         await self._speaker.set_play_pause()
 
-    async def async_media_pause(self):
+    async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._speaker.set_play_pause()
 
-    async def async_media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._speaker.prev_track()
 
-    async def async_media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._speaker.next_track()
 
     async def update_dsp(self, _=None) -> None:
         """Update the DSP settings."""
-        if self._speaker_type == "LS50" and self._state == STATE_OFF:
+        if self._speaker_type == "LS50" and self.state == MediaPlayerState.OFF:
             # The LSX is able to respond when off the LS50 has to be on.
             return
 
         mode = await self._speaker.get_mode()
-        self._dsp = dict(
-            desk_db=await self._speaker.get_desk_db(),
-            wall_db=await self._speaker.get_wall_db(),
-            treble_db=await self._speaker.get_treble_db(),
-            high_hz=await self._speaker.get_high_hz(),
-            low_hz=await self._speaker.get_low_hz(),
-            sub_db=await self._speaker.get_sub_db(),
+        self._dsp = {
+            "desk_db": await self._speaker.get_desk_db(),
+            "wall_db": await self._speaker.get_wall_db(),
+            "treble_db": await self._speaker.get_treble_db(),
+            "high_hz": await self._speaker.get_high_hz(),
+            "low_hz": await self._speaker.get_low_hz(),
+            "sub_db": await self._speaker.get_sub_db(),
             **mode._asdict(),
-        )
+        }
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to DSP updates."""
         self._update_dsp_task_remover = async_track_time_interval(
             self.hass, self.update_dsp, DSP_SCAN_INTERVAL
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe to DSP updates."""
         self._update_dsp_task_remover()
         self._update_dsp_task_remover = None

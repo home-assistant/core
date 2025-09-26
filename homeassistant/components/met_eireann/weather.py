@@ -1,42 +1,38 @@
 """Support for Met Éireann weather service."""
-import logging
+
+from collections.abc import Mapping
+from typing import Any, cast
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TIME,
-    WeatherEntity,
+    DOMAIN as WEATHER_DOMAIN,
+    Forecast,
+    SingleCoordinatorWeatherEntity,
+    WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
-    LENGTH_INCHES,
-    LENGTH_MILLIMETERS,
-    PRESSURE_HPA,
-    PRESSURE_INHG,
-    SPEED_METERS_PER_SECOND,
-    SPEED_MILES_PER_HOUR,
-    TEMP_CELSIUS,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
-from homeassistant.util.distance import convert as convert_distance
-from homeassistant.util.pressure import convert as convert_pressure
-from homeassistant.util.speed import convert as convert_speed
 
-from .const import ATTRIBUTION, CONDITION_MAP, DEFAULT_NAME, DOMAIN, FORECAST_MAP
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONDITION_MAP, DEFAULT_NAME, DOMAIN, FORECAST_MAP
+from .coordinator import MetEireannWeatherData
 
 
-def format_condition(condition: str):
+def format_condition(condition: str | None) -> str | None:
     """Map the conditions provided by the weather API to those supported by the frontend."""
     if condition is not None:
         for key, value in CONDITION_MAP.items():
@@ -48,156 +44,148 @@ def format_condition(condition: str):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities(
-        [
-            MetEireannWeather(
-                coordinator, config_entry.data, hass.config.units.is_metric, False
-            ),
-            MetEireannWeather(
-                coordinator, config_entry.data, hass.config.units.is_metric, True
-            ),
-        ]
-    )
+    entity_registry = er.async_get(hass)
+
+    # Remove hourly entity from legacy config entries
+    if entity_id := entity_registry.async_get_entity_id(
+        WEATHER_DOMAIN,
+        DOMAIN,
+        _calculate_unique_id(config_entry.data, True),
+    ):
+        entity_registry.async_remove(entity_id)
+
+    async_add_entities([MetEireannWeather(coordinator, config_entry.data)])
 
 
-class MetEireannWeather(CoordinatorEntity, WeatherEntity):
+def _calculate_unique_id(config: Mapping[str, Any], hourly: bool) -> str:
+    """Calculate unique ID."""
+    name_appendix = ""
+    if hourly:
+        name_appendix = "-hourly"
+
+    return f"{config[CONF_LATITUDE]}-{config[CONF_LONGITUDE]}{name_appendix}"
+
+
+class MetEireannWeather(
+    SingleCoordinatorWeatherEntity[DataUpdateCoordinator[MetEireannWeatherData]]
+):
     """Implementation of a Met Éireann weather condition."""
 
-    def __init__(self, coordinator, config, is_metric, hourly):
+    _attr_attribution = "Data provided by Met Éireann"
+    _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
+    _attr_supported_features = (
+        WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
+    )
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[MetEireannWeatherData],
+        config: Mapping[str, Any],
+    ) -> None:
         """Initialise the platform with a data instance and site."""
         super().__init__(coordinator)
+        self._attr_unique_id = _calculate_unique_id(config, False)
         self._config = config
-        self._is_metric = is_metric
-        self._hourly = hourly
+        if (name := self._config.get(CONF_NAME)) is not None:
+            self._attr_name = name
+        else:
+            self._attr_name = DEFAULT_NAME
+        self._attr_device_info = DeviceInfo(
+            name="Forecast",
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN,)},  # type: ignore[arg-type]
+            manufacturer="Met Éireann",
+            model="Forecast",
+            configuration_url="https://www.met.ie",
+        )
 
     @property
-    def unique_id(self):
-        """Return unique ID."""
-        name_appendix = ""
-        if self._hourly:
-            name_appendix = "-hourly"
-
-        return f"{self._config[CONF_LATITUDE]}-{self._config[CONF_LONGITUDE]}{name_appendix}"
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        name = self._config.get(CONF_NAME)
-        name_appendix = ""
-        if self._hourly:
-            name_appendix = " Hourly"
-
-        if name is not None:
-            return f"{name}{name_appendix}"
-
-        return f"{DEFAULT_NAME}{name_appendix}"
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return not self._hourly
-
-    @property
-    def condition(self):
+    def condition(self) -> str | None:
         """Return the current condition."""
         return format_condition(
             self.coordinator.data.current_weather_data.get("condition")
         )
 
     @property
-    def temperature(self):
+    def native_temperature(self) -> float | None:
         """Return the temperature."""
         return self.coordinator.data.current_weather_data.get("temperature")
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def pressure(self):
+    def native_pressure(self) -> float | None:
         """Return the pressure."""
-        pressure_hpa = self.coordinator.data.current_weather_data.get("pressure")
-        if self._is_metric or pressure_hpa is None:
-            return pressure_hpa
-
-        return round(convert_pressure(pressure_hpa, PRESSURE_HPA, PRESSURE_INHG), 2)
+        return self.coordinator.data.current_weather_data.get("pressure")
 
     @property
-    def humidity(self):
+    def humidity(self) -> float | None:
         """Return the humidity."""
         return self.coordinator.data.current_weather_data.get("humidity")
 
     @property
-    def wind_speed(self):
+    def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
-        speed_m_s = self.coordinator.data.current_weather_data.get("wind_speed")
-        if self._is_metric or speed_m_s is None:
-            return speed_m_s
-
-        speed_mi_h = convert_speed(
-            speed_m_s, SPEED_METERS_PER_SECOND, SPEED_MILES_PER_HOUR
-        )
-        return int(round(speed_mi_h))
+        return self.coordinator.data.current_weather_data.get("wind_speed")
 
     @property
-    def wind_bearing(self):
+    def wind_bearing(self) -> float | None:
         """Return the wind direction."""
         return self.coordinator.data.current_weather_data.get("wind_bearing")
 
     @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION
+    def native_wind_gust_speed(self) -> float | None:
+        """Return the wind gust speed in native units."""
+        return self.coordinator.data.current_weather_data.get("wind_gust")
 
     @property
-    def forecast(self):
+    def cloud_coverage(self) -> float | None:
+        """Return the cloud coverage."""
+        return self.coordinator.data.current_weather_data.get("cloudiness")
+
+    def _forecast(self, hourly: bool) -> list[Forecast]:
         """Return the forecast array."""
-        if self._hourly:
+        if hourly:
             me_forecast = self.coordinator.data.hourly_forecast
         else:
             me_forecast = self.coordinator.data.daily_forecast
-        required_keys = {ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME}
+        required_keys = {"temperature", "datetime"}
 
-        ha_forecast = []
+        ha_forecast: list[Forecast] = []
 
         for item in me_forecast:
             if not set(item).issuperset(required_keys):
                 continue
-            ha_item = {
-                k: item[v] for k, v in FORECAST_MAP.items() if item.get(v) is not None
-            }
-            if not self._is_metric and ATTR_FORECAST_PRECIPITATION in ha_item:
-                precip_inches = convert_distance(
-                    ha_item[ATTR_FORECAST_PRECIPITATION],
-                    LENGTH_MILLIMETERS,
-                    LENGTH_INCHES,
-                )
-                ha_item[ATTR_FORECAST_PRECIPITATION] = round(precip_inches, 2)
-            if ha_item.get(ATTR_FORECAST_CONDITION):
-                ha_item[ATTR_FORECAST_CONDITION] = format_condition(
-                    ha_item[ATTR_FORECAST_CONDITION]
-                )
-            # Convert timestamp to UTC
-            if ha_item.get(ATTR_FORECAST_TIME):
+            ha_item: Forecast = cast(
+                Forecast,
+                {
+                    k: item[v]
+                    for k, v in FORECAST_MAP.items()
+                    if item.get(v) is not None
+                },
+            )
+            # Convert condition
+            if item.get("condition"):
+                ha_item[ATTR_FORECAST_CONDITION] = format_condition(item["condition"])
+            # Convert timestamp to UTC string
+            if item.get("datetime"):
                 ha_item[ATTR_FORECAST_TIME] = dt_util.as_utc(
-                    ha_item.get(ATTR_FORECAST_TIME)
+                    item["datetime"]
                 ).isoformat()
             ha_forecast.append(ha_item)
         return ha_forecast
 
-    @property
-    def device_info(self):
-        """Device info."""
-        return DeviceInfo(
-            default_name="Forecast",
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN,)},
-            manufacturer="Met Éireann",
-            model="Forecast",
-            configuration_url="https://www.met.ie",
-        )
+    @callback
+    def _async_forecast_daily(self) -> list[Forecast]:
+        """Return the daily forecast in native units."""
+        return self._forecast(False)
+
+    @callback
+    def _async_forecast_hourly(self) -> list[Forecast]:
+        """Return the hourly forecast in native units."""
+        return self._forecast(True)

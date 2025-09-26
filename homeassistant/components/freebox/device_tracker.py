@@ -1,25 +1,26 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
+
 from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEFAULT_DEVICE_NAME, DEVICE_ICONS, DOMAIN
-from .router import FreeboxRouter
+from .const import DEFAULT_DEVICE_NAME, DEVICE_ICONS
+from .router import FreeboxConfigEntry, FreeboxRouter
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FreeboxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for Freebox component."""
-    router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
+    router = entry.runtime_data
     tracked: set[str] = set()
 
     @callback
@@ -36,7 +37,9 @@ async def async_setup_entry(
 
 @callback
 def add_entities(
-    router: FreeboxRouter, async_add_entities: AddEntitiesCallback, tracked: set[str]
+    router: FreeboxRouter,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    tracked: set[str],
 ) -> None:
     """Add new tracker entities from the router."""
     new_tracked = []
@@ -48,12 +51,13 @@ def add_entities(
         new_tracked.append(FreeboxDevice(router, device))
         tracked.add(mac)
 
-    if new_tracked:
-        async_add_entities(new_tracked, True)
+    async_add_entities(new_tracked, True)
 
 
 class FreeboxDevice(ScannerEntity):
     """Representation of a Freebox device."""
+
+    _attr_should_poll = False
 
     def __init__(self, router: FreeboxRouter, device: dict[str, Any]) -> None:
         """Initialize a Freebox device."""
@@ -61,9 +65,9 @@ class FreeboxDevice(ScannerEntity):
         self._name = device["primary_name"].strip() or DEFAULT_DEVICE_NAME
         self._mac = device["l2ident"]["id"]
         self._manufacturer = device["vendor_name"]
-        self._icon = icon_for_freebox_device(device)
+        self._attr_icon = icon_for_freebox_device(device)
         self._active = False
-        self._attrs: dict[str, Any] = {}
+        self._attr_extra_state_attributes: dict[str, Any] = {}
 
     @callback
     def async_update_state(self) -> None:
@@ -72,7 +76,7 @@ class FreeboxDevice(ScannerEntity):
         self._active = device["active"]
         if device.get("attrs") is None:
             # device
-            self._attrs = {
+            self._attr_extra_state_attributes = {
                 "last_time_reachable": datetime.fromtimestamp(
                     device["last_time_reachable"]
                 ),
@@ -80,7 +84,7 @@ class FreeboxDevice(ScannerEntity):
             }
         else:
             # router
-            self._attrs = device["attrs"]
+            self._attr_extra_state_attributes = device["attrs"]
 
     @property
     def mac_address(self) -> str:
@@ -93,37 +97,17 @@ class FreeboxDevice(ScannerEntity):
         return self._name
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._active
 
-    @property
-    def source_type(self) -> str:
-        """Return the source type."""
-        return SOURCE_TYPE_ROUTER
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the attributes."""
-        return self._attrs
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
     @callback
-    def async_on_demand_update(self):
+    def async_on_demand_update(self) -> None:
         """Update state."""
         self.async_update_state()
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self.async_update_state()
         self.async_on_remove(
@@ -135,6 +119,6 @@ class FreeboxDevice(ScannerEntity):
         )
 
 
-def icon_for_freebox_device(device) -> str:
+def icon_for_freebox_device(device: dict[str, Any]) -> str:
     """Return a device icon from its type."""
     return DEVICE_ICONS.get(device["host_type"], "mdi:help-network")

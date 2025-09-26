@@ -1,27 +1,37 @@
 """Provide functionality to STT."""
+
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-import asyncio
+from abc import abstractmethod
+from collections.abc import AsyncIterable
+from dataclasses import asdict
 import logging
-from typing import Any
+from typing import Any, final
 
-from aiohttp import StreamReader, web
+from aiohttp import web
 from aiohttp.hdrs import istr
 from aiohttp.web_exceptions import (
     HTTPBadRequest,
     HTTPNotFound,
     HTTPUnsupportedMediaType,
 )
-import attr
+import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components import websocket_api
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_per_platform, discovery
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.loader import async_suggest_report_issue
+from homeassistant.util import dt as dt_util, language as language_util
 
 from .const import (
+    DATA_COMPONENT,
+    DATA_PROVIDERS,
     DOMAIN,
     AudioBitRates,
     AudioChannels,
@@ -30,83 +40,132 @@ from .const import (
     AudioSampleRates,
     SpeechResultState,
 )
+from .legacy import (
+    Provider,
+    async_default_provider,
+    async_get_provider,
+    async_setup_legacy,
+)
+from .models import SpeechMetadata, SpeechResult
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
+__all__ = [
+    "DOMAIN",
+    "AudioBitRates",
+    "AudioChannels",
+    "AudioCodecs",
+    "AudioFormats",
+    "AudioSampleRates",
+    "Provider",
+    "SpeechMetadata",
+    "SpeechResult",
+    "SpeechResultState",
+    "SpeechToTextEntity",
+    "async_get_provider",
+    "async_get_speech_to_text_engine",
+    "async_get_speech_to_text_entity",
+]
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
+
+@callback
+def async_default_engine(hass: HomeAssistant) -> str | None:
+    """Return the domain or entity id of the default engine."""
+    default_entity_id: str | None = None
+
+    for entity in hass.data[DATA_COMPONENT].entities:
+        if entity.platform and entity.platform.platform_name == "cloud":
+            return entity.entity_id
+
+        if default_entity_id is None:
+            default_entity_id = entity.entity_id
+
+    return default_entity_id or async_default_provider(hass)
+
+
+@callback
+def async_get_speech_to_text_entity(
+    hass: HomeAssistant, entity_id: str
+) -> SpeechToTextEntity | None:
+    """Return stt entity."""
+    return hass.data[DATA_COMPONENT].get_entity(entity_id)
+
+
+@callback
+def async_get_speech_to_text_engine(
+    hass: HomeAssistant, engine_id: str
+) -> SpeechToTextEntity | Provider | None:
+    """Return stt entity or legacy provider."""
+    if entity := async_get_speech_to_text_entity(hass, engine_id):
+        return entity
+    return async_get_provider(hass, engine_id)
+
+
+@callback
+def async_get_speech_to_text_languages(hass: HomeAssistant) -> set[str]:
+    """Return a set with the union of languages supported by stt engines."""
+    languages = set()
+
+    for entity in hass.data[DATA_COMPONENT].entities:
+        for language_tag in entity.supported_languages:
+            languages.add(language_tag)
+
+    for engine in hass.data[DATA_PROVIDERS].values():
+        for language_tag in engine.supported_languages:
+            languages.add(language_tag)
+
+    return languages
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up STT."""
-    providers = {}
+    websocket_api.async_register_command(hass, websocket_list_engines)
 
-    async def async_setup_platform(p_type, p_config=None, discovery_info=None):
-        """Set up a TTS platform."""
-        if p_config is None:
-            p_config = {}
+    component = hass.data[DATA_COMPONENT] = EntityComponent[SpeechToTextEntity](
+        _LOGGER, DOMAIN, hass
+    )
 
-        platform = await async_prepare_setup_platform(hass, config, DOMAIN, p_type)
-        if platform is None:
-            return
+    component.register_shutdown()
+    platform_setups = async_setup_legacy(hass, config)
 
-        try:
-            provider = await platform.async_get_engine(hass, p_config, discovery_info)
-            if provider is None:
-                _LOGGER.error("Error setting up platform %s", p_type)
-                return
+    for setup in platform_setups:
+        # Tasks are created as tracked tasks to ensure startup
+        # waits for them to finish, but we explicitly do not
+        # want to wait for them to finish here because we want
+        # any config entries that use stt as a base platform
+        # to be able to start with out having to wait for the
+        # legacy platforms to finish setting up.
+        hass.async_create_task(setup, eager_start=True)
 
-            provider.name = p_type
-            provider.hass = hass
-
-            providers[provider.name] = provider
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error setting up platform: %s", p_type)
-            return
-
-    setup_tasks = [
-        asyncio.create_task(async_setup_platform(p_type, p_config))
-        for p_type, p_config in config_per_platform(config, DOMAIN)
-    ]
-
-    if setup_tasks:
-        await asyncio.wait(setup_tasks)
-
-    # Add discovery support
-    async def async_platform_discovered(platform, info):
-        """Handle for discovered platform."""
-        await async_setup_platform(platform, discovery_info=info)
-
-    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
-
-    hass.http.register_view(SpeechToTextView(providers))
+    hass.http.register_view(SpeechToTextView(hass.data[DATA_PROVIDERS]))
     return True
 
 
-@attr.s
-class SpeechMetadata:
-    """Metadata of audio stream."""
-
-    language: str = attr.ib()
-    format: AudioFormats = attr.ib()
-    codec: AudioCodecs = attr.ib()
-    bit_rate: AudioBitRates = attr.ib(converter=int)
-    sample_rate: AudioSampleRates = attr.ib(converter=int)
-    channel: AudioChannels = attr.ib(converter=int)
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up a config entry."""
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
-@attr.s
-class SpeechResult:
-    """Result of audio Speech."""
-
-    text: str | None = attr.ib()
-    result: SpeechResultState = attr.ib()
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
-class Provider(ABC):
+class SpeechToTextEntity(RestoreEntity):
     """Represent a single STT provider."""
 
-    hass: HomeAssistant | None = None
-    name: str | None = None
+    _attr_should_poll = False
+    __last_processed: str | None = None
+
+    @property
+    @final
+    def state(self) -> str | None:
+        """Return the state of the provider entity."""
+        if self.__last_processed is None:
+            return None
+        return self.__last_processed
 
     @property
     @abstractmethod
@@ -138,13 +197,36 @@ class Provider(ABC):
     def supported_channels(self) -> list[AudioChannels]:
         """Return a list of supported channels."""
 
-    @abstractmethod
-    async def async_process_audio_stream(
-        self, metadata: SpeechMetadata, stream: StreamReader
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the provider entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        state = await self.async_get_last_state()
+        if (
+            state is not None
+            and state.state is not None
+            and state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+        ):
+            self.__last_processed = state.state
+
+    @final
+    async def internal_async_process_audio_stream(
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
         """Process an audio stream to STT service.
 
-        Only streaming of content are allow!
+        Only streaming content is allowed!
+        """
+        self.__last_processed = dt_util.utcnow().isoformat()
+        self.async_write_ha_state()
+        return await self.async_process_audio_stream(metadata=metadata, stream=stream)
+
+    @abstractmethod
+    async def async_process_audio_stream(
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
+    ) -> SpeechResult:
+        """Process an audio stream to STT service.
+
+        Only streaming content is allowed!
         """
 
     @callback
@@ -165,6 +247,7 @@ class Provider(ABC):
 class SpeechToTextView(HomeAssistantView):
     """STT view to generate a text from audio stream."""
 
+    _legacy_provider_reported = False
     requires_auth = True
     url = "/api/stt/{provider}"
     name = "api:stt:provider"
@@ -173,66 +256,197 @@ class SpeechToTextView(HomeAssistantView):
         """Initialize a tts view."""
         self.providers = providers
 
-    @staticmethod
-    def _metadata_from_header(request: web.Request) -> SpeechMetadata | None:
-        """Extract metadata from header.
-
-        X-Speech-Content: format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1; language=de_de
-        """
-        try:
-            data = request.headers[istr("X-Speech-Content")].split(";")
-        except KeyError:
-            _LOGGER.warning("Missing X-Speech-Content")
-            return None
-
-        # Convert Header data
-        args: dict[str, Any] = {}
-        for value in data:
-            value = value.strip()
-            args[value.partition("=")[0]] = value.partition("=")[2]
-
-        try:
-            return SpeechMetadata(**args)
-        except TypeError as err:
-            _LOGGER.warning("Wrong format of X-Speech-Content: %s", err)
-            return None
-
     async def post(self, request: web.Request, provider: str) -> web.Response:
         """Convert Speech (audio) to text."""
-        if provider not in self.providers:
-            raise HTTPNotFound()
-        stt_provider: Provider = self.providers[provider]
+        hass = request.app[KEY_HASS]
+        provider_entity: SpeechToTextEntity | None = None
+        if (
+            not (provider_entity := async_get_speech_to_text_entity(hass, provider))
+            and provider not in self.providers
+        ):
+            raise HTTPNotFound
 
         # Get metadata
-        metadata = self._metadata_from_header(request)
-        if not metadata:
-            raise HTTPBadRequest()
+        try:
+            metadata = _metadata_from_header(request)
+        except ValueError as err:
+            raise HTTPBadRequest(text=str(err)) from err
 
-        # Check format
-        if not stt_provider.check_metadata(metadata):
-            raise HTTPUnsupportedMediaType()
+        if not provider_entity:
+            stt_provider = self._get_provider(hass, provider)
 
-        # Process audio stream
-        result = await stt_provider.async_process_audio_stream(
-            metadata, request.content
-        )
+            # Check format
+            if not stt_provider.check_metadata(metadata):
+                raise HTTPUnsupportedMediaType
+
+            # Process audio stream
+            result = await stt_provider.async_process_audio_stream(
+                metadata, request.content
+            )
+        else:
+            # Check format
+            if not provider_entity.check_metadata(metadata):
+                raise HTTPUnsupportedMediaType
+
+            # Process audio stream
+            result = await provider_entity.internal_async_process_audio_stream(
+                metadata, request.content
+            )
 
         # Return result
-        return self.json(attr.asdict(result))
+        return self.json(asdict(result))
 
     async def get(self, request: web.Request, provider: str) -> web.Response:
         """Return provider specific audio information."""
-        if provider not in self.providers:
-            raise HTTPNotFound()
-        stt_provider: Provider = self.providers[provider]
+        hass = request.app[KEY_HASS]
+        if (
+            not (provider_entity := async_get_speech_to_text_entity(hass, provider))
+            and provider not in self.providers
+        ):
+            raise HTTPNotFound
+
+        if not provider_entity:
+            stt_provider = self._get_provider(hass, provider)
+
+            return self.json(
+                {
+                    "languages": stt_provider.supported_languages,
+                    "formats": stt_provider.supported_formats,
+                    "codecs": stt_provider.supported_codecs,
+                    "sample_rates": stt_provider.supported_sample_rates,
+                    "bit_rates": stt_provider.supported_bit_rates,
+                    "channels": stt_provider.supported_channels,
+                }
+            )
 
         return self.json(
             {
-                "languages": stt_provider.supported_languages,
-                "formats": stt_provider.supported_formats,
-                "codecs": stt_provider.supported_codecs,
-                "sample_rates": stt_provider.supported_sample_rates,
-                "bit_rates": stt_provider.supported_bit_rates,
-                "channels": stt_provider.supported_channels,
+                "languages": provider_entity.supported_languages,
+                "formats": provider_entity.supported_formats,
+                "codecs": provider_entity.supported_codecs,
+                "sample_rates": provider_entity.supported_sample_rates,
+                "bit_rates": provider_entity.supported_bit_rates,
+                "channels": provider_entity.supported_channels,
             }
         )
+
+    def _get_provider(self, hass: HomeAssistant, provider: str) -> Provider:
+        """Get provider.
+
+        Method for legacy providers.
+        This can be removed when we remove the legacy provider support.
+        """
+        stt_provider = self.providers[provider]
+
+        if not self._legacy_provider_reported:
+            self._legacy_provider_reported = True
+            report_issue = self._suggest_report_issue(hass, provider, stt_provider)
+            # This should raise in Home Assistant Core 2023.9
+            _LOGGER.warning(
+                "Provider %s (%s) is using a legacy implementation, "
+                "and should be updated to use the SpeechToTextEntity. Please "
+                "%s",
+                provider,
+                type(stt_provider),
+                report_issue,
+            )
+
+        return stt_provider
+
+    def _suggest_report_issue(
+        self, hass: HomeAssistant, provider: str, provider_instance: object
+    ) -> str:
+        """Suggest to report an issue."""
+        return async_suggest_report_issue(
+            hass, integration_domain=provider, module=type(provider_instance).__module__
+        )
+
+
+def _metadata_from_header(request: web.Request) -> SpeechMetadata:
+    """Extract STT metadata from header.
+
+    X-Speech-Content:
+        format=wav; codec=pcm; sample_rate=16000; bit_rate=16; channel=1; language=de_de
+    """
+    try:
+        data = request.headers[istr("X-Speech-Content")].split(";")
+    except KeyError as err:
+        raise ValueError("Missing X-Speech-Content header") from err
+
+    fields = (
+        "language",
+        "format",
+        "codec",
+        "bit_rate",
+        "sample_rate",
+        "channel",
+    )
+
+    # Convert Header data
+    args: dict[str, Any] = {}
+    for entry in data:
+        key, _, value = entry.strip().partition("=")
+        if key not in fields:
+            raise ValueError(f"Invalid field: {key}")
+        args[key] = value
+
+    for field in fields:
+        if field not in args:
+            raise ValueError(f"Missing {field} in X-Speech-Content header")
+
+    try:
+        return SpeechMetadata(
+            language=args["language"],
+            format=args["format"],
+            codec=args["codec"],
+            bit_rate=args["bit_rate"],
+            sample_rate=args["sample_rate"],
+            channel=args["channel"],
+        )
+    except ValueError as err:
+        raise ValueError(f"Wrong format of X-Speech-Content: {err}") from err
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "stt/engine/list",
+        vol.Optional("language"): str,
+        vol.Optional("country"): str,
+    }
+)
+@callback
+def websocket_list_engines(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """List speech-to-text engines and, optionally, if they support a given language."""
+    country = msg.get("country")
+    language = msg.get("language")
+    providers = []
+    provider_info: dict[str, Any]
+
+    for entity in hass.data[DATA_COMPONENT].entities:
+        provider_info = {
+            "engine_id": entity.entity_id,
+            "supported_languages": entity.supported_languages,
+        }
+        if language:
+            provider_info["supported_languages"] = language_util.matches(
+                language, entity.supported_languages, country
+            )
+        providers.append(provider_info)
+
+    for engine_id, provider in hass.data[DATA_PROVIDERS].items():
+        provider_info = {
+            "engine_id": engine_id,
+            "name": provider.name,
+            "supported_languages": provider.supported_languages,
+        }
+        if language:
+            provider_info["supported_languages"] = language_util.matches(
+                language, provider.supported_languages, country
+            )
+        providers.append(provider_info)
+
+    connection.send_message(
+        websocket_api.result_message(msg["id"], {"providers": providers})
+    )

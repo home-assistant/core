@@ -1,4 +1,5 @@
 """Support for Magic Home lights."""
+
 from __future__ import annotations
 
 import ast
@@ -10,40 +11,32 @@ from flux_led.protocol import MusicMode
 from flux_led.utils import rgbcw_brightness, rgbcw_to_rgbwc, rgbw_brightness
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_WHITE,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
     LightEntity,
+    LightEntityFeature,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_EFFECT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired,
-    color_temperature_mired_to_kelvin,
-)
 
 from .const import (
     CONF_COLORS,
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
-    CONF_EFFECT,
     CONF_SPEED_PCT,
     CONF_TRANSITION,
     DEFAULT_EFFECT_SPEED,
-    DOMAIN,
     MIN_CCT_BRIGHTNESS,
     MIN_RGB_BRIGHTNESS,
     MULTI_BRIGHTNESS_COLOR_MODES,
@@ -51,7 +44,7 @@ from .const import (
     TRANSITION_JUMP,
     TRANSITION_STROBE,
 )
-from .coordinator import FluxLedUpdateCoordinator
+from .coordinator import FluxLedConfigEntry, FluxLedUpdateCoordinator
 from .entity import FluxOnOffEntity
 from .util import (
     _effect_brightness,
@@ -67,7 +60,7 @@ _LOGGER = logging.getLogger(__name__)
 
 MODE_ATTRS = {
     ATTR_EFFECT,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
@@ -89,7 +82,7 @@ SERVICE_CUSTOM_EFFECT: Final = "set_custom_effect"
 SERVICE_SET_ZONES: Final = "set_zones"
 SERVICE_SET_MUSIC_MODE: Final = "set_music_mode"
 
-CUSTOM_EFFECT_DICT: Final = {
+CUSTOM_EFFECT_DICT: VolDictType = {
     vol.Required(CONF_COLORS): vol.All(
         cv.ensure_list,
         vol.Length(min=1, max=16),
@@ -103,7 +96,7 @@ CUSTOM_EFFECT_DICT: Final = {
     ),
 }
 
-SET_MUSIC_MODE_DICT: Final = {
+SET_MUSIC_MODE_DICT: VolDictType = {
     vol.Optional(ATTR_SENSITIVITY, default=100): vol.All(
         vol.Coerce(int), vol.Range(min=0, max=100)
     ),
@@ -122,7 +115,7 @@ SET_MUSIC_MODE_DICT: Final = {
     ),
 }
 
-SET_ZONES_DICT: Final = {
+SET_ZONES_DICT: VolDictType = {
     vol.Required(CONF_COLORS): vol.All(
         cv.ensure_list,
         vol.Length(min=1, max=2048),
@@ -139,11 +132,11 @@ SET_ZONES_DICT: Final = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: FluxLedConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Flux lights."""
-    coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -178,7 +171,6 @@ async def async_setup_entry(
             FluxLight(
                 coordinator,
                 entry.unique_id or entry.entry_id,
-                entry.data[CONF_NAME],
                 list(custom_effect_colors),
                 options.get(CONF_CUSTOM_EFFECT_SPEED_PCT, DEFAULT_EFFECT_SPEED),
                 options.get(CONF_CUSTOM_EFFECT_TRANSITION, TRANSITION_GRADUAL),
@@ -187,24 +179,27 @@ async def async_setup_entry(
     )
 
 
-class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
+class FluxLight(
+    FluxOnOffEntity, CoordinatorEntity[FluxLedUpdateCoordinator], LightEntity
+):
     """Representation of a Flux light."""
 
-    _attr_supported_features = SUPPORT_TRANSITION | SUPPORT_EFFECT
+    _attr_name = None
+
+    _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
 
     def __init__(
         self,
         coordinator: FluxLedUpdateCoordinator,
         base_unique_id: str,
-        name: str,
         custom_effect_colors: list[tuple[int, int, int]],
         custom_effect_speed_pct: int,
         custom_effect_transition: str,
     ) -> None:
         """Initialize the light."""
-        super().__init__(coordinator, base_unique_id, name, None)
-        self._attr_min_mireds = color_temperature_kelvin_to_mired(self._device.max_temp)
-        self._attr_max_mireds = color_temperature_kelvin_to_mired(self._device.min_temp)
+        super().__init__(coordinator, base_unique_id, None)
+        self._attr_min_color_temp_kelvin = self._device.min_temp
+        self._attr_max_color_temp_kelvin = self._device.max_temp
         self._attr_supported_color_modes = _hass_color_modes(self._device)
         custom_effects: list[str] = []
         if custom_effect_colors:
@@ -220,9 +215,9 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         return self._device.brightness
 
     @property
-    def color_temp(self) -> int:
-        """Return the kelvin value of this light in mired."""
-        return color_temperature_kelvin_to_mired(self._device.color_temp)
+    def color_temp_kelvin(self) -> int:
+        """Return the kelvin value of this light."""
+        return self._device.color_temp
 
     @property
     def rgb_color(self) -> tuple[int, int, int]:
@@ -302,8 +297,7 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             await self._async_set_effect(effect, brightness)
             return
         # Handle switch to CCT Color Mode
-        if color_temp_mired := kwargs.get(ATTR_COLOR_TEMP):
-            color_temp_kelvin = color_temperature_mired_to_kelvin(color_temp_mired)
+        if color_temp_kelvin := kwargs.get(ATTR_COLOR_TEMP_KELVIN):
             if (
                 ATTR_BRIGHTNESS not in kwargs
                 and self.color_mode in MULTI_BRIGHTNESS_COLOR_MODES

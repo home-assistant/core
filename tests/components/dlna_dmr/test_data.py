@@ -1,11 +1,12 @@
 """Tests for the DLNA DMR data module."""
+
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Generator
 from unittest.mock import ANY, Mock, patch
 
-from async_upnp_client import UpnpEventHandler
 from async_upnp_client.aiohttp import AiohttpNotifyServer
+from async_upnp_client.event_handler import UpnpEventHandler
 import pytest
 
 from homeassistant.components.dlna_dmr.const import DOMAIN
@@ -15,7 +16,7 @@ from homeassistant.core import Event, HomeAssistant
 
 
 @pytest.fixture
-def aiohttp_notify_servers_mock() -> Iterable[Mock]:
+def aiohttp_notify_servers_mock() -> Generator[Mock]:
     """Construct mock AiohttpNotifyServer on demand, eliminating network use.
 
     This fixture provides a list of the constructed servers.
@@ -37,7 +38,10 @@ def aiohttp_notify_servers_mock() -> Iterable[Mock]:
 
         # Every server must be stopped if it was started
         for server in servers:
-            assert server.start_server.call_count == server.stop_server.call_count
+            assert (
+                server.async_start_server.call_count
+                == server.async_stop_server.call_count
+            )
 
 
 async def test_get_domain_data(hass: HomeAssistant) -> None:
@@ -60,7 +64,7 @@ async def test_event_notifier(
 
     # Check that the parameters were passed through to the AiohttpNotifyServer
     aiohttp_notify_servers_mock.assert_called_with(
-        requester=ANY, listen_port=0, listen_host=None, callback_url=None, loop=ANY
+        requester=ANY, source=("0.0.0.0", 0), callback_url=None, loop=ANY
     )
 
     # Same address should give same notifier
@@ -70,7 +74,7 @@ async def test_event_notifier(
 
     # Different address should give different notifier
     listen_addr_3 = EventListenAddr(
-        "192.88.99.4", 9999, "http://192.88.99.4:9999/notify"
+        "198.51.100.4", 9999, "http://198.51.100.4:9999/notify"
     )
     event_notifier_3 = await domain_data.async_get_event_notifier(listen_addr_3, hass)
     assert event_notifier_3 is not None
@@ -79,9 +83,8 @@ async def test_event_notifier(
     # Check that the parameters were passed through to the AiohttpNotifyServer
     aiohttp_notify_servers_mock.assert_called_with(
         requester=ANY,
-        listen_port=9999,
-        listen_host="192.88.99.4",
-        callback_url="http://192.88.99.4:9999/notify",
+        source=("198.51.100.4", 9999),
+        callback_url="http://198.51.100.4:9999/notify",
         loop=ANY,
     )
 

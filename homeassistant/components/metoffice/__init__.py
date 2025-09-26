@@ -1,9 +1,13 @@
 """The Met Office integration."""
 
+from __future__ import annotations
+
 import asyncio
 import logging
 
 import datapoint
+import datapoint.Forecast
+import datapoint.Manager
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -14,10 +18,9 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
@@ -26,11 +29,9 @@ from .const import (
     METOFFICE_DAILY_COORDINATOR,
     METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
-    MODE_3HOURLY,
-    MODE_DAILY,
+    METOFFICE_TWICE_DAILY_COORDINATOR,
 )
-from .data import MetOfficeData
-from .helpers import fetch_data, fetch_site
+from .helpers import fetch_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,37 +46,49 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api_key = entry.data[CONF_API_KEY]
     site_name = entry.data[CONF_NAME]
 
-    connection = datapoint.connection(api_key=api_key)
+    coordinates = f"{latitude}_{longitude}"
 
-    site = await hass.async_add_executor_job(
-        fetch_site, connection, latitude, longitude
-    )
-    if site is None:
-        raise ConfigEntryNotReady()
+    connection = datapoint.Manager.Manager(api_key=api_key)
 
-    async def async_update_3hourly() -> MetOfficeData:
+    async def async_update_hourly() -> datapoint.Forecast:
         return await hass.async_add_executor_job(
-            fetch_data, connection, site, MODE_3HOURLY
+            fetch_data, connection, latitude, longitude, "hourly"
         )
 
-    async def async_update_daily() -> MetOfficeData:
+    async def async_update_daily() -> datapoint.Forecast:
         return await hass.async_add_executor_job(
-            fetch_data, connection, site, MODE_DAILY
+            fetch_data, connection, latitude, longitude, "daily"
         )
 
-    metoffice_hourly_coordinator = DataUpdateCoordinator(
+    async def async_update_twice_daily() -> datapoint.Forecast:
+        return await hass.async_add_executor_job(
+            fetch_data, connection, latitude, longitude, "twice-daily"
+        )
+
+    metoffice_hourly_coordinator = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=f"MetOffice Hourly Coordinator for {site_name}",
-        update_method=async_update_3hourly,
+        update_method=async_update_hourly,
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
 
-    metoffice_daily_coordinator = DataUpdateCoordinator(
+    metoffice_daily_coordinator = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=f"MetOffice Daily Coordinator for {site_name}",
         update_method=async_update_daily,
+        update_interval=DEFAULT_SCAN_INTERVAL,
+    )
+
+    metoffice_twice_daily_coordinator = TimestampDataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        config_entry=entry,
+        name=f"MetOffice Twice Daily Coordinator for {site_name}",
+        update_method=async_update_twice_daily,
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
 
@@ -83,8 +96,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     metoffice_hass_data[entry.entry_id] = {
         METOFFICE_HOURLY_COORDINATOR: metoffice_hourly_coordinator,
         METOFFICE_DAILY_COORDINATOR: metoffice_daily_coordinator,
+        METOFFICE_TWICE_DAILY_COORDINATOR: metoffice_twice_daily_coordinator,
         METOFFICE_NAME: site_name,
-        METOFFICE_COORDINATES: f"{latitude}_{longitude}",
+        METOFFICE_COORDINATES: coordinates,
     }
 
     # Fetch initial data so we have data when entities subscribe
@@ -93,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         metoffice_daily_coordinator.async_config_entry_first_refresh(),
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
@@ -111,7 +125,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def get_device_info(coordinates: str, name: str) -> DeviceInfo:
     """Return device registry information."""
     return DeviceInfo(
-        entry_type=DeviceEntryType.SERVICE,
+        entry_type=dr.DeviceEntryType.SERVICE,
         identifiers={(DOMAIN, coordinates)},
         manufacturer="Met Office",
         name=f"Met Office {name}",

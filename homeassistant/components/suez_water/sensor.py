@@ -1,124 +1,106 @@
 """Sensor for Suez Water Consumption data."""
+
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
+from typing import Any
 
-from pysuez import SuezClient
-from pysuez.client import PySuezError
-import voluptuous as vol
+from pysuez.const import ATTRIBUTION
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, VOLUME_LITERS
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import CURRENCY_EURO, UnitOfVolume
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_COUNTER_ID, DOMAIN
+from .coordinator import SuezWaterConfigEntry, SuezWaterCoordinator, SuezWaterData
 
-SCAN_INTERVAL = timedelta(hours=12)
 
-CONF_COUNTER_ID = "counter_id"
+@dataclass(frozen=True, kw_only=True)
+class SuezWaterSensorEntityDescription(SensorEntityDescription):
+    """Describes Suez water sensor entity."""
 
-NAME = "Suez Water Client"
-ICON = "mdi:water-pump"
+    value_fn: Callable[[SuezWaterData], float | str | None]
+    attr_fn: Callable[[SuezWaterData], dict[str, Any] | None] = lambda _: None
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_COUNTER_ID): cv.string,
-    }
+
+SENSORS: tuple[SuezWaterSensorEntityDescription, ...] = (
+    SuezWaterSensorEntityDescription(
+        key="water_usage_yesterday",
+        translation_key="water_usage_yesterday",
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        device_class=SensorDeviceClass.WATER,
+        value_fn=lambda suez_data: suez_data.aggregated_value,
+        attr_fn=lambda suez_data: asdict(suez_data.aggregated_attr),
+    ),
+    SuezWaterSensorEntityDescription(
+        key="water_price",
+        translation_key="water_price",
+        native_unit_of_measurement=CURRENCY_EURO,
+        device_class=SensorDeviceClass.MONETARY,
+        value_fn=lambda suez_data: suez_data.price,
+    ),
 )
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: SuezWaterConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the sensor platform."""
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-    counter_id = config[CONF_COUNTER_ID]
-    try:
-        client = SuezClient(username, password, counter_id)
+    """Set up Suez Water sensor from a config entry."""
+    coordinator = entry.runtime_data
+    counter_id = entry.data[CONF_COUNTER_ID]
 
-        if not client.check_credentials():
-            _LOGGER.warning("Wrong username and/or password")
-            return
-
-    except PySuezError:
-        _LOGGER.warning("Unable to create Suez Client")
-        return
-
-    add_entities([SuezSensor(client)], True)
+    async_add_entities(
+        SuezWaterSensor(coordinator, counter_id, description) for description in SENSORS
+    )
 
 
-class SuezSensor(SensorEntity):
-    """Representation of a Sensor."""
+class SuezWaterSensor(CoordinatorEntity[SuezWaterCoordinator], SensorEntity):
+    """Representation of a Suez water sensor."""
 
-    _attr_name = NAME
-    _attr_icon = ICON
-    _attr_native_unit_of_measurement = VOLUME_LITERS
+    _attr_has_entity_name = True
+    _attr_attribution = ATTRIBUTION
+    entity_description: SuezWaterSensorEntityDescription
 
-    def __init__(self, client):
-        """Initialize the data object."""
-        self._attributes = {}
-        self._state = None
-        self._available = None
-        self.client = client
+    def __init__(
+        self,
+        coordinator: SuezWaterCoordinator,
+        counter_id: int,
+        entity_description: SuezWaterSensorEntityDescription,
+    ) -> None:
+        """Initialize the suez water sensor entity."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{counter_id}_{entity_description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(counter_id))},
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="Suez",
+        )
+        self.entity_description = entity_description
 
     @property
-    def native_value(self):
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            self.coordinator.last_update_success
+            and self.entity_description.value_fn(self.coordinator.data) is not None
+        )
+
+    @property
+    def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
-        return self._state
+        return self.entity_description.value_fn(self.coordinator.data)
 
     @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
-
-    def _fetch_data(self):
-        """Fetch latest data from Suez."""
-        try:
-            self.client.update()
-            # _state holds the volume of consumed water during previous day
-            self._state = self.client.state
-            self._available = True
-            self._attributes["attribution"] = self.client.attributes["attribution"]
-            self._attributes["this_month_consumption"] = {}
-            for item in self.client.attributes["thisMonthConsumption"]:
-                self._attributes["this_month_consumption"][
-                    item
-                ] = self.client.attributes["thisMonthConsumption"][item]
-            self._attributes["previous_month_consumption"] = {}
-            for item in self.client.attributes["previousMonthConsumption"]:
-                self._attributes["previous_month_consumption"][
-                    item
-                ] = self.client.attributes["previousMonthConsumption"][item]
-            self._attributes["highest_monthly_consumption"] = self.client.attributes[
-                "highestMonthlyConsumption"
-            ]
-            self._attributes["last_year_overall"] = self.client.attributes[
-                "lastYearOverAll"
-            ]
-            self._attributes["this_year_overall"] = self.client.attributes[
-                "thisYearOverAll"
-            ]
-            self._attributes["history"] = {}
-            for item in self.client.attributes["history"]:
-                self._attributes["history"][item] = self.client.attributes["history"][
-                    item
-                ]
-
-        except PySuezError:
-            self._available = False
-            _LOGGER.warning("Unable to fetch data")
-
-    def update(self):
-        """Return the latest collected data from Linky."""
-        self._fetch_data()
-        _LOGGER.debug("Suez data state is: %s", self._state)
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return extra state of the sensor."""
+        return self.entity_description.attr_fn(self.coordinator.data)

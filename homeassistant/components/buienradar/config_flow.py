@@ -1,19 +1,23 @@
 """Config flow for buienradar integration."""
+
 from __future__ import annotations
 
-from typing import Any
+import copy
+from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_COUNTRY_CODE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaCommonFlowHandler,
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 
 from .const import (
-    CONF_COUNTRY,
     CONF_DELTA,
     CONF_TIMEFRAME,
     DEFAULT_COUNTRY,
@@ -23,8 +27,51 @@ from .const import (
     SUPPORTED_COUNTRY_CODES,
 )
 
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(
+            CONF_COUNTRY_CODE, default=DEFAULT_COUNTRY
+        ): selector.CountrySelector(
+            selector.CountrySelectorConfig(countries=SUPPORTED_COUNTRY_CODES)
+        ),
+        vol.Optional(CONF_DELTA, default=DEFAULT_DELTA): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=0,
+                step=1,
+                mode=selector.NumberSelectorMode.BOX,
+                unit_of_measurement="seconds",
+            ),
+        ),
+        vol.Optional(
+            CONF_TIMEFRAME, default=DEFAULT_TIMEFRAME
+        ): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=5,
+                max=120,
+                step=5,
+                mode=selector.NumberSelectorMode.BOX,
+                unit_of_measurement="minutes",
+            ),
+        ),
+    }
+)
 
-class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+
+async def _options_suggested_values(handler: SchemaCommonFlowHandler) -> dict[str, Any]:
+    parent_handler = cast(SchemaOptionsFlowHandler, handler.parent_handler)
+    suggested_values = copy.deepcopy(dict(parent_handler.config_entry.data))
+    suggested_values.update(parent_handler.options)
+    return suggested_values
+
+
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(
+        OPTIONS_SCHEMA, suggested_values=_options_suggested_values
+    ),
+}
+
+
+class BuienradarFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for buienradar."""
 
     VERSION = 1
@@ -33,13 +80,13 @@ class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> BuienradarOptionFlowHandler:
+    ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return BuienradarOptionFlowHandler(config_entry)
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if user_input is not None:
             lat = user_input.get(CONF_LATITUDE)
@@ -65,50 +112,4 @@ class BuienradarFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=data_schema,
             errors={},
-        )
-
-
-class BuienradarOptionFlowHandler(config_entries.OptionsFlow):
-    """Handle options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_COUNTRY,
-                        default=self.config_entry.options.get(
-                            CONF_COUNTRY,
-                            self.config_entry.data.get(CONF_COUNTRY, DEFAULT_COUNTRY),
-                        ),
-                    ): vol.In(SUPPORTED_COUNTRY_CODES),
-                    vol.Optional(
-                        CONF_DELTA,
-                        default=self.config_entry.options.get(
-                            CONF_DELTA,
-                            self.config_entry.data.get(CONF_DELTA, DEFAULT_DELTA),
-                        ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=0)),
-                    vol.Optional(
-                        CONF_TIMEFRAME,
-                        default=self.config_entry.options.get(
-                            CONF_TIMEFRAME,
-                            self.config_entry.data.get(
-                                CONF_TIMEFRAME, DEFAULT_TIMEFRAME
-                            ),
-                        ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=5, max=120)),
-                }
-            ),
         )

@@ -3,10 +3,10 @@
     "step": {
       "user": {
         "data": {
-          "location": "Get data for",
+          "location": "[%key:common::config_flow::data::location%]",
           "api_key": "[%key:common::config_flow::data::access_token%]"
         },
-        "description": "Visit https://co2signal.com/ to request a token."
+        "description": "Visit https://electricitymaps.com/free-tier to request a token."
       },
       "coordinates": {
         "data": {
@@ -18,17 +18,49 @@
         "data": {
           "country_code": "Country code"
         }
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::access_token%]"
+        }
       }
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "api_ratelimit": "API Ratelimit exceeded"
+      "no_data": "No data is available for the location you have selected."
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "api_ratelimit": "API Ratelimit exceeded"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "carbon_intensity": {
+        "name": "CO2 intensity",
+        "state_attributes": {
+          "country_code": {
+            "name": "Country code"
+          }
+        }
+      },
+      "fossil_fuel_percentage": {
+        "name": "Grid fossil fuel percentage",
+        "state_attributes": {
+          "country_code": {
+            "name": "[%key:component::co2signal::entity::sensor::carbon_intensity::state_attributes::country_code::name%]"
+          }
+        }
+      }
+    }
+  },
+  "selector": {
+    "location": {
+      "options": {
+        "use_home_location": "Use home location",
+        "specify_coordinates": "Specify coordinates",
+        "specify_country_code": "Specify country code"
+      }
     }
   }
 }

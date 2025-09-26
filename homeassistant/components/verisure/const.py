@@ -1,13 +1,9 @@
 """Constants for the Verisure integration."""
+
 from datetime import timedelta
 import logging
 
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 
 DOMAIN = "verisure"
 
@@ -36,11 +32,14 @@ DEVICE_TYPE_NAME = {
     "SMOKE3": "Smoke detector",
     "VOICEBOX1": "VoiceBox",
     "WATER1": "Water detector",
+    "SMOKE": "Smoke detector",
+    "SIREN": "Siren",
+    "VOICEBOX": "VoiceBox",
 }
 
 ALARM_STATE_TO_HA = {
-    "DISARMED": STATE_ALARM_DISARMED,
-    "ARMED_HOME": STATE_ALARM_ARMED_HOME,
-    "ARMED_AWAY": STATE_ALARM_ARMED_AWAY,
-    "PENDING": STATE_ALARM_PENDING,
+    "DISARMED": AlarmControlPanelState.DISARMED,
+    "ARMED_HOME": AlarmControlPanelState.ARMED_HOME,
+    "ARMED_AWAY": AlarmControlPanelState.ARMED_AWAY,
+    "PENDING": AlarmControlPanelState.PENDING,
 }

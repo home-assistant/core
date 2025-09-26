@@ -1,51 +1,48 @@
 """Diagnostics support for Guardian."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_UID, DATA_COORDINATOR, DATA_COORDINATOR_PAIRED_SENSOR, DOMAIN
-from .util import GuardianDataUpdateCoordinator
+from . import GuardianConfigEntry
+from .const import CONF_UID
 
 CONF_BSSID = "bssid"
 CONF_PAIRED_UIDS = "paired_uids"
 CONF_SSID = "ssid"
+CONF_TITLE = "title"
 
 TO_REDACT = {
     CONF_BSSID,
     CONF_PAIRED_UIDS,
     CONF_SSID,
+    # Config entry title and unique ID may contain sensitive data:
+    CONF_TITLE,
+    CONF_UNIQUE_ID,
     CONF_UID,
 }
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: GuardianConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
-
-    coordinators: dict[str, GuardianDataUpdateCoordinator] = data[DATA_COORDINATOR]
-    paired_sensor_coordinators: dict[str, GuardianDataUpdateCoordinator] = data[
-        DATA_COORDINATOR_PAIRED_SENSOR
-    ]
+    data = entry.runtime_data
 
     return {
-        "entry": {
-            "title": entry.title,
-            "data": async_redact_data(entry.data, TO_REDACT),
-        },
+        "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "data": {
             "valve_controller": {
                 api_category: async_redact_data(coordinator.data, TO_REDACT)
-                for api_category, coordinator in coordinators.items()
+                for api_category, coordinator in data.valve_controller_coordinators.items()
             },
             "paired_sensors": [
                 async_redact_data(coordinator.data, TO_REDACT)
-                for coordinator in paired_sensor_coordinators.values()
+                for coordinator in data.paired_sensor_manager.coordinators.values()
             ],
         },
     }

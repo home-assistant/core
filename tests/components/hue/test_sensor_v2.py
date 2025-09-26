@@ -1,22 +1,34 @@
 """Philips Hue sensor platform tests for V2 bridge/api."""
 
+from unittest.mock import Mock
+
 from homeassistant.components import hue
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_bridge, setup_platform
 from .const import FAKE_DEVICE, FAKE_SENSOR, FAKE_ZIGBEE_CONNECTIVITY
 
+from tests.common import MockConfigEntry
 
-async def test_sensors(hass, mock_bridge_v2, v2_resources_test_data):
+
+async def test_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+) -> None:
     """Test if all v2 sensors get created with correct features."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
 
-    await setup_platform(hass, mock_bridge_v2, "sensor")
+    await setup_platform(hass, mock_bridge_v2, Platform.SENSOR)
     # there shouldn't have been any requests at this point
     assert len(mock_bridge_v2.mock_requests) == 0
-    # 6 entities should be created from test data
-    assert len(hass.states.async_all()) == 6
+    # 7 entities should be created from test data
+    assert len(hass.states.async_all()) == 7
 
     # test temperature sensor
     sensor = hass.states.get("sensor.hue_motion_sensor_temperature")
@@ -26,7 +38,6 @@ async def test_sensors(hass, mock_bridge_v2, v2_resources_test_data):
     assert sensor.attributes["device_class"] == "temperature"
     assert sensor.attributes["state_class"] == "measurement"
     assert sensor.attributes["unit_of_measurement"] == "°C"
-    assert sensor.attributes["temperature_valid"] is True
 
     # test illuminance sensor
     sensor = hass.states.get("sensor.hue_motion_sensor_illuminance")
@@ -37,7 +48,6 @@ async def test_sensors(hass, mock_bridge_v2, v2_resources_test_data):
     assert sensor.attributes["state_class"] == "measurement"
     assert sensor.attributes["unit_of_measurement"] == "lx"
     assert sensor.attributes["light_level"] == 18027
-    assert sensor.attributes["light_level_valid"] is True
 
     # test battery sensor
     sensor = hass.states.get("sensor.wall_switch_with_2_controls_battery")
@@ -49,10 +59,19 @@ async def test_sensors(hass, mock_bridge_v2, v2_resources_test_data):
     assert sensor.attributes["unit_of_measurement"] == "%"
     assert sensor.attributes["battery_state"] == "normal"
 
+    # test grouped light level sensor
+    sensor = hass.states.get("sensor.sensor_group_illuminance")
+    assert sensor is not None
+    assert sensor.state == "0"
+    assert sensor.attributes["friendly_name"] == "Sensor group Illuminance"
+    assert sensor.attributes["device_class"] == "illuminance"
+    assert sensor.attributes["state_class"] == "measurement"
+    assert sensor.attributes["unit_of_measurement"] == "lx"
+    assert sensor.attributes["light_level"] == 0
+
     # test disabled zigbee_connectivity sensor
     entity_id = "sensor.wall_switch_with_2_controls_zigbee_connectivity"
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(entity_id)
+    entity_entry = entity_registry.async_get(entity_id)
 
     assert entity_entry
     assert entity_entry.disabled
@@ -60,34 +79,43 @@ async def test_sensors(hass, mock_bridge_v2, v2_resources_test_data):
 
 
 async def test_enable_sensor(
-    hass, mock_bridge_v2, v2_resources_test_data, mock_config_entry_v2
-):
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    mock_config_entry_v2: MockConfigEntry,
+) -> None:
     """Test enabling of the by default disabled zigbee_connectivity sensor."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_bridge(hass, mock_bridge_v2, mock_config_entry_v2)
 
     assert await async_setup_component(hass, hue.DOMAIN, {}) is True
     await hass.async_block_till_done()
-    await hass.config_entries.async_forward_entry_setup(mock_config_entry_v2, "sensor")
+    await hass.config_entries.async_forward_entry_setups(
+        mock_config_entry_v2, [Platform.SENSOR]
+    )
 
     entity_id = "sensor.wall_switch_with_2_controls_zigbee_connectivity"
-    ent_reg = er.async_get(hass)
-    entity_entry = ent_reg.async_get(entity_id)
+    entity_entry = entity_registry.async_get(entity_id)
 
     assert entity_entry
     assert entity_entry.disabled
     assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # enable the entity
-    updated_entry = ent_reg.async_update_entity(
-        entity_entry.entity_id, **{"disabled_by": None}
+    updated_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, disabled_by=None
     )
     assert updated_entry != entity_entry
     assert updated_entry.disabled is False
 
     # reload platform and check if entity is correctly there
-    await hass.config_entries.async_forward_entry_unload(mock_config_entry_v2, "sensor")
-    await hass.config_entries.async_forward_entry_setup(mock_config_entry_v2, "sensor")
+    await hass.config_entries.async_forward_entry_unload(
+        mock_config_entry_v2, Platform.SENSOR
+    )
+    await hass.config_entries.async_forward_entry_setups(
+        mock_config_entry_v2, [Platform.SENSOR]
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -95,10 +123,10 @@ async def test_enable_sensor(
     assert state.attributes["mac_address"] == "00:17:88:01:0b:aa:bb:99"
 
 
-async def test_sensor_add_update(hass, mock_bridge_v2):
+async def test_sensor_add_update(hass: HomeAssistant, mock_bridge_v2: Mock) -> None:
     """Test if sensors get added/updated from events."""
     await mock_bridge_v2.api.load_test_data([FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY])
-    await setup_platform(hass, mock_bridge_v2, "sensor")
+    await setup_platform(hass, mock_bridge_v2, Platform.SENSOR)
 
     test_entity_id = "sensor.hue_mocked_device_temperature"
 
@@ -121,3 +149,39 @@ async def test_sensor_add_update(hass, mock_bridge_v2):
     test_entity = hass.states.get(test_entity_id)
     assert test_entity is not None
     assert test_entity.state == "22.5"
+
+
+async def test_grouped_light_level_sensor(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test HueGroupedLightLevelSensor functionality."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await setup_platform(hass, mock_bridge_v2, Platform.SENSOR)
+
+    # test grouped light level sensor exists and has correct state
+    sensor = hass.states.get("sensor.sensor_group_illuminance")
+    assert sensor is not None
+    assert (
+        sensor.state == "0"
+    )  # Light level 0 translates to 10^((0-1)/10000) ≈ 0 lux (rounded)
+    assert sensor.attributes["device_class"] == "illuminance"
+    assert sensor.attributes["light_level"] == 0
+
+    # test update of grouped light level sensor works on incoming event
+    updated_sensor = {
+        "id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+        "type": "grouped_light_level",
+        "light": {
+            "light_level": 30000,
+            "light_level_report": {
+                "changed": "2023-09-23T08:20:51.384Z",
+                "light_level": 30000,
+            },
+        },
+    }
+    mock_bridge_v2.api.emit_event("update", updated_sensor)
+    await hass.async_block_till_done()
+    sensor = hass.states.get("sensor.sensor_group_illuminance")
+    assert (
+        sensor.state == "999"
+    )  # Light level 30000 translates to 10^((30000-1)/10000) ≈ 999 lux

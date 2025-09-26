@@ -1,5 +1,6 @@
 """Tests for greeneye_monitor sensors."""
-from unittest.mock import AsyncMock, MagicMock
+
+from unittest.mock import AsyncMock
 
 from homeassistant.components.greeneye_monitor.sensor import (
     DATA_PULSES,
@@ -7,10 +8,7 @@ from homeassistant.components.greeneye_monitor.sensor import (
 )
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import (
-    RegistryEntryDisabler,
-    async_get as get_entity_registry,
-)
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     MULTI_MONITOR_CONFIG,
@@ -19,38 +17,49 @@ from .common import (
     SINGLE_MONITOR_CONFIG_TEMPERATURE_SENSORS,
     SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS,
     SINGLE_MONITOR_SERIAL_NUMBER,
-    mock_monitor,
+    connect_monitor,
     setup_greeneye_monitor_component_with_config,
 )
 from .conftest import assert_sensor_state
 
 
-async def test_disable_sensor_before_monitor_connected(
-    hass: HomeAssistant, monitors: AsyncMock
+async def test_sensor_does_not_exist_before_monitor_connected(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, monitors: AsyncMock
 ) -> None:
-    """Test that a sensor disabled before its monitor connected stops listening for new monitors."""
+    """Test that a sensor does not exist before its monitor is connected."""
     # The sensor base class handles connecting the monitor, so we test this with a single voltage sensor for ease
     await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS
     )
 
-    assert len(monitors.listeners) == 1
-    await disable_entity(hass, "sensor.voltage_1")
-    assert len(monitors.listeners) == 0  # Make sure we cleaned up the listener
+    assert entity_registry.async_get("sensor.voltage_1") is None
 
 
-async def test_updates_state_when_monitor_connected(
+async def test_sensors_created_when_monitor_connected(
     hass: HomeAssistant, monitors: AsyncMock
 ) -> None:
-    """Test that a sensor updates its state when its monitor first connects."""
+    """Test that sensors get created when the monitor first connects."""
     # The sensor base class handles updating the state on connection, so we test this with a single voltage sensor for ease
     await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS
     )
 
-    assert_sensor_state(hass, "sensor.voltage_1", STATE_UNKNOWN)
     assert len(monitors.listeners) == 1
-    connect_monitor(monitors, SINGLE_MONITOR_SERIAL_NUMBER)
+    await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
+    assert len(monitors.listeners) == 0  # Make sure we cleaned up the listener
+    assert_sensor_state(hass, "sensor.voltage_1", "120.0")
+
+
+async def test_sensors_created_during_setup_if_monitor_already_connected(
+    hass: HomeAssistant, monitors: AsyncMock
+) -> None:
+    """Test that sensors get created during setup if the monitor happens to connect really quickly."""
+    # The sensor base class handles updating the state on connection, so we test this with a single voltage sensor for ease
+    await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
+    await setup_greeneye_monitor_component_with_config(
+        hass, SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS
+    )
+
     assert len(monitors.listeners) == 0  # Make sure we cleaned up the listener
     assert_sensor_state(hass, "sensor.voltage_1", "120.0")
 
@@ -63,7 +72,7 @@ async def test_disable_sensor_after_monitor_connected(
     await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS
     )
-    monitor = connect_monitor(monitors, SINGLE_MONITOR_SERIAL_NUMBER)
+    monitor = await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
 
     assert len(monitor.voltage_sensor.listeners) == 1
     await disable_entity(hass, "sensor.voltage_1")
@@ -78,7 +87,7 @@ async def test_updates_state_when_sensor_pushes(
     await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS
     )
-    monitor = connect_monitor(monitors, SINGLE_MONITOR_SERIAL_NUMBER)
+    monitor = await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
     assert_sensor_state(hass, "sensor.voltage_1", "120.0")
 
     monitor.voltage_sensor.voltage = 119.8
@@ -93,7 +102,7 @@ async def test_power_sensor_initially_unknown(
     await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_POWER_SENSORS
     )
-    connect_monitor(monitors, SINGLE_MONITOR_SERIAL_NUMBER)
+    await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
     assert_sensor_state(
         hass, "sensor.channel_1", STATE_UNKNOWN, {DATA_WATT_SECONDS: 1000}
     )
@@ -109,7 +118,7 @@ async def test_power_sensor(hass: HomeAssistant, monitors: AsyncMock) -> None:
     await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_POWER_SENSORS
     )
-    monitor = connect_monitor(monitors, SINGLE_MONITOR_SERIAL_NUMBER)
+    monitor = await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
     monitor.channels[0].watts = 120.0
     monitor.channels[1].watts = 120.0
     monitor.channels[0].notify_all_listeners()
@@ -120,12 +129,35 @@ async def test_power_sensor(hass: HomeAssistant, monitors: AsyncMock) -> None:
     assert_sensor_state(hass, "sensor.channel_two", "120.0", {DATA_WATT_SECONDS: -400})
 
 
+async def test_pulse_counter_initially_unknown(
+    hass: HomeAssistant, monitors: AsyncMock
+) -> None:
+    """Test that the pulse counter sensor can handle its initial state being unknown (since the GEM API needs at least two packets to arrive before it can compute pulses per time)."""
+    await setup_greeneye_monitor_component_with_config(
+        hass, SINGLE_MONITOR_CONFIG_PULSE_COUNTERS
+    )
+    monitor = await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
+    monitor.pulse_counters[0].pulses_per_second = None
+    monitor.pulse_counters[1].pulses_per_second = None
+    monitor.pulse_counters[2].pulses_per_second = None
+    monitor.pulse_counters[0].notify_all_listeners()
+    monitor.pulse_counters[1].notify_all_listeners()
+    monitor.pulse_counters[2].notify_all_listeners()
+    assert_sensor_state(hass, "sensor.pulse_a", STATE_UNKNOWN, {DATA_PULSES: 1000})
+    # This counter was configured with each pulse meaning 0.5 gallons and
+    # wanting to show gallons per minute, so 10 pulses per second -> 300 gal/min
+    assert_sensor_state(hass, "sensor.pulse_2", STATE_UNKNOWN, {DATA_PULSES: 1000})
+    # This counter was configured with each pulse meaning 0.5 gallons and
+    # wanting to show gallons per hour, so 10 pulses per second -> 18000 gal/hr
+    assert_sensor_state(hass, "sensor.pulse_3", STATE_UNKNOWN, {DATA_PULSES: 1000})
+
+
 async def test_pulse_counter(hass: HomeAssistant, monitors: AsyncMock) -> None:
     """Test that a pulse counter sensor reports its values properly, including calculating different units."""
     await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_PULSE_COUNTERS
     )
-    connect_monitor(monitors, SINGLE_MONITOR_SERIAL_NUMBER)
+    await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
     assert_sensor_state(hass, "sensor.pulse_a", "10.0", {DATA_PULSES: 1000})
     # This counter was configured with each pulse meaning 0.5 gallons and
     # wanting to show gallons per minute, so 10 pulses per second -> 300 gal/min
@@ -140,7 +172,7 @@ async def test_temperature_sensor(hass: HomeAssistant, monitors: AsyncMock) -> N
     await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_TEMPERATURE_SENSORS
     )
-    connect_monitor(monitors, SINGLE_MONITOR_SERIAL_NUMBER)
+    await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
     # The config says that the sensor is reporting in Fahrenheit; if we set that up
     # properly, HA will have converted that to Celsius by default.
     assert_sensor_state(hass, "sensor.temp_a", "0.0")
@@ -151,32 +183,25 @@ async def test_voltage_sensor(hass: HomeAssistant, monitors: AsyncMock) -> None:
     await setup_greeneye_monitor_component_with_config(
         hass, SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS
     )
-    connect_monitor(monitors, SINGLE_MONITOR_SERIAL_NUMBER)
+    await connect_monitor(hass, monitors, SINGLE_MONITOR_SERIAL_NUMBER)
     assert_sensor_state(hass, "sensor.voltage_1", "120.0")
 
 
 async def test_multi_monitor_sensors(hass: HomeAssistant, monitors: AsyncMock) -> None:
     """Test that sensors still work when multiple monitors are registered."""
     await setup_greeneye_monitor_component_with_config(hass, MULTI_MONITOR_CONFIG)
-    connect_monitor(monitors, 1)
-    connect_monitor(monitors, 2)
-    connect_monitor(monitors, 3)
+    await connect_monitor(hass, monitors, 1)
+    await connect_monitor(hass, monitors, 2)
+    await connect_monitor(hass, monitors, 3)
     assert_sensor_state(hass, "sensor.unit_1_temp_1", "32.0")
     assert_sensor_state(hass, "sensor.unit_2_temp_1", "0.0")
     assert_sensor_state(hass, "sensor.unit_3_temp_1", "32.0")
 
 
-def connect_monitor(monitors: AsyncMock, serial_number: int) -> MagicMock:
-    """Simulate a monitor connecting to Home Assistant. Returns the mock monitor API object."""
-    monitor = mock_monitor(serial_number)
-    monitors.add_monitor(monitor)
-    return monitor
-
-
 async def disable_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Disable the given entity."""
-    entity_registry = get_entity_registry(hass)
+    entity_registry = er.async_get(hass)
     entity_registry.async_update_entity(
-        entity_id, disabled_by=RegistryEntryDisabler.USER
+        entity_id, disabled_by=er.RegistryEntryDisabler.USER
     )
     await hass.async_block_till_done()

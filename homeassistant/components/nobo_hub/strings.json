@@ -1,0 +1,60 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Select Nobø Ecohub to configure.",
+        "data": {
+          "device": "Discovered hubs"
+        }
+      },
+      "selected": {
+        "description": "Configuring {hub}.\r\rTo connect to the hub, you need to enter the last 3 digits of the hub's serial number.",
+        "data": {
+          "serial_suffix": "Serial number suffix (3 digits)"
+        }
+      },
+      "manual": {
+        "description": "Configure a Nobø Ecohub not discovered on your local network. If your hub is on another network, you can still connect to it by entering the complete serial number (12 digits) and its IP address.",
+        "data": {
+          "serial": "Serial number (12 digits)",
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect - check serial number",
+      "invalid_serial": "Invalid serial number",
+      "invalid_ip": "Invalid IP address",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "override_type": "Override type"
+        },
+        "description": "Select override type \"Now\" to end override on next week profile change."
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "global_override": {
+        "name": "Global override",
+        "state": {
+          "away": "[%key:common::state::not_home%]",
+          "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
+          "eco": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
+          "none": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::none%]"
+        }
+      },
+      "week_profile": {
+        "name": "Week profile"
+      }
+    }
+  }
+}

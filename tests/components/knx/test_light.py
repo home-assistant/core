@@ -1,37 +1,35 @@
 """Test KNX light."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 
+from freezegun.api import FrozenDateTimeFactory
+import pytest
 from xknx.core import XknxConnectionState
 from xknx.devices.light import Light as XknxLight
 
-from homeassistant.components.knx.const import CONF_STATE_ADDRESS, KNX_ADDRESS
+from homeassistant.components.knx.const import CONF_STATE_ADDRESS, KNX_ADDRESS, Platform
 from homeassistant.components.knx.schema import LightSchema
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_NAME,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_RGBW_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_RGB,
-    COLOR_MODE_RGBW,
-    COLOR_MODE_XY,
+    ColorMode,
 )
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.helpers import entity_registry as er
 
+from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
 from tests.common import async_fire_time_changed
 
 
-async def test_light_simple(hass: HomeAssistant, knx: KNXTestKit):
+async def test_light_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test simple KNX light."""
     test_address = "1/1/1"
     await knx.setup_integration(
@@ -42,9 +40,12 @@ async def test_light_simple(hass: HomeAssistant, knx: KNXTestKit):
             }
         }
     )
-    assert len(hass.states.async_all()) == 1
 
-    knx.assert_state("light.test", STATE_OFF)
+    knx.assert_state(
+        "light.test",
+        STATE_OFF,
+        supported_color_modes=[ColorMode.ONOFF],
+    )
     # turn on light
     await hass.services.async_call(
         "light",
@@ -56,7 +57,7 @@ async def test_light_simple(hass: HomeAssistant, knx: KNXTestKit):
     knx.assert_state(
         "light.test",
         STATE_ON,
-        color_mode=COLOR_MODE_ONOFF,
+        color_mode=ColorMode.ONOFF,
     )
     # turn off light
     await hass.services.async_call(
@@ -80,7 +81,7 @@ async def test_light_simple(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_telegram_count(0)
 
 
-async def test_light_brightness(hass: HomeAssistant, knx: KNXTestKit):
+async def test_light_brightness(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test dimmable KNX light."""
     test_address = "1/1/1"
     test_brightness = "1/1/2"
@@ -97,9 +98,7 @@ async def test_light_brightness(hass: HomeAssistant, knx: KNXTestKit):
     )
     # StateUpdater initialize state
     await knx.assert_read(test_brightness_state)
-    await knx.xknx.connection_manager.connection_state_changed(
-        XknxConnectionState.CONNECTED
-    )
+    knx.xknx.connection_manager.connection_state_changed(XknxConnectionState.CONNECTED)
     # turn on light via brightness
     await hass.services.async_call(
         "light",
@@ -115,7 +114,8 @@ async def test_light_brightness(hass: HomeAssistant, knx: KNXTestKit):
         "light.test",
         STATE_ON,
         brightness=80,
-        color_mode=COLOR_MODE_BRIGHTNESS,
+        supported_color_modes=[ColorMode.BRIGHTNESS],
+        color_mode=ColorMode.BRIGHTNESS,
     )
     # receive brightness changes from KNX
     await knx.receive_write(test_brightness_state, (255,))
@@ -133,7 +133,7 @@ async def test_light_brightness(hass: HomeAssistant, knx: KNXTestKit):
     knx.assert_state("light.test", STATE_OFF)
 
 
-async def test_light_color_temp_absolute(hass: HomeAssistant, knx: KNXTestKit):
+async def test_light_color_temp_absolute(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX light color temperature adjustable in Kelvin."""
     test_address = "1/1/1"
     test_address_state = "1/1/2"
@@ -170,24 +170,31 @@ async def test_light_color_temp_absolute(hass: HomeAssistant, knx: KNXTestKit):
         "light.test",
         STATE_ON,
         brightness=255,
-        color_mode=COLOR_MODE_COLOR_TEMP,
+        supported_color_modes=[ColorMode.COLOR_TEMP],
+        color_mode=ColorMode.COLOR_TEMP,
         color_temp=370,
+        color_temp_kelvin=2700,
     )
     # change color temperature from HA
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": "light.test", ATTR_COLOR_TEMP: 250},  # 4000 Kelvin - 0x0FA0
+        {"entity_id": "light.test", ATTR_COLOR_TEMP_KELVIN: 4000},  # 4000 - 0x0FA0
         blocking=True,
     )
     await knx.assert_write(test_ct, (0x0F, 0xA0))
     knx.assert_state("light.test", STATE_ON, color_temp=250)
     # change color temperature from KNX
     await knx.receive_write(test_ct_state, (0x17, 0x70))  # 6000 Kelvin - 166 Mired
-    knx.assert_state("light.test", STATE_ON, color_temp=166)
+    knx.assert_state(
+        "light.test",
+        STATE_ON,
+        color_temp=166,
+        color_temp_kelvin=6000,
+    )
 
 
-async def test_light_color_temp_relative(hass: HomeAssistant, knx: KNXTestKit):
+async def test_light_color_temp_relative(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX light color temperature adjustable in percent."""
     test_address = "1/1/1"
     test_address_state = "1/1/2"
@@ -226,24 +233,39 @@ async def test_light_color_temp_relative(hass: HomeAssistant, knx: KNXTestKit):
         "light.test",
         STATE_ON,
         brightness=255,
-        color_mode=COLOR_MODE_COLOR_TEMP,
+        supported_color_modes=[ColorMode.COLOR_TEMP],
+        color_mode=ColorMode.COLOR_TEMP,
         color_temp=250,
+        color_temp_kelvin=4000,
     )
     # change color temperature from HA
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": "light.test", ATTR_COLOR_TEMP: 300},  # 3333 Kelvin - 33 % - 0x54
+        {
+            "entity_id": "light.test",
+            ATTR_COLOR_TEMP_KELVIN: 3333,  # 3333 Kelvin - 33.3 % - 0x55
+        },
         blocking=True,
     )
-    await knx.assert_write(test_ct, (0x54,))
-    knx.assert_state("light.test", STATE_ON, color_temp=300)
+    await knx.assert_write(test_ct, (0x55,))
+    knx.assert_state(
+        "light.test",
+        STATE_ON,
+        color_temp=300,
+        color_temp_kelvin=3333,
+    )
     # change color temperature from KNX
-    await knx.receive_write(test_ct_state, (0xE6,))  # 3900 Kelvin - 90 % - 256 Mired
-    knx.assert_state("light.test", STATE_ON, color_temp=256)
+    await knx.receive_write(test_ct_state, (0xE6,))  # 3901 Kelvin - 90.1 % - 256 Mired
+    knx.assert_state(
+        "light.test",
+        STATE_ON,
+        color_temp=256,
+        color_temp_kelvin=3901,
+    )
 
 
-async def test_light_hs_color(hass: HomeAssistant, knx: KNXTestKit):
+async def test_light_hs_color(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX light with hs color."""
     test_address = "1/1/1"
     test_address_state = "1/1/2"
@@ -285,7 +307,8 @@ async def test_light_hs_color(hass: HomeAssistant, knx: KNXTestKit):
         "light.test",
         STATE_ON,
         brightness=255,
-        color_mode=COLOR_MODE_HS,
+        supported_color_modes=[ColorMode.HS],
+        color_mode=ColorMode.HS,
         hs_color=(360, 100),
     )
     # change color from HA - only hue
@@ -331,7 +354,7 @@ async def test_light_hs_color(hass: HomeAssistant, knx: KNXTestKit):
     knx.assert_state("light.test", STATE_ON, brightness=178, hs_color=(176, 82))
 
 
-async def test_light_xyy_color(hass: HomeAssistant, knx: KNXTestKit):
+async def test_light_xyy_color(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX light with xyy color."""
     test_address = "1/1/1"
     test_address_state = "1/1/2"
@@ -360,7 +383,8 @@ async def test_light_xyy_color(hass: HomeAssistant, knx: KNXTestKit):
         "light.test",
         STATE_ON,
         brightness=204,
-        color_mode=COLOR_MODE_XY,
+        supported_color_modes=[ColorMode.XY],
+        color_mode=ColorMode.XY,
         xy_color=(0.8, 0.8),
     )
     # change color and brightness from HA
@@ -404,7 +428,9 @@ async def test_light_xyy_color(hass: HomeAssistant, knx: KNXTestKit):
     knx.assert_state("light.test", STATE_ON, brightness=128, xy_color=(0.18, 0.25))
 
 
-async def test_light_xyy_color_with_brightness(hass: HomeAssistant, knx: KNXTestKit):
+async def test_light_xyy_color_with_brightness(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
     """Test KNX light with xyy color and explicit brightness address."""
     test_address = "1/1/1"
     test_address_state = "1/1/2"
@@ -440,7 +466,8 @@ async def test_light_xyy_color_with_brightness(hass: HomeAssistant, knx: KNXTest
         "light.test",
         STATE_ON,
         brightness=255,  # brightness form xyy_color ignored when extra brightness GA is used
-        color_mode=COLOR_MODE_XY,
+        supported_color_modes=[ColorMode.XY],
+        color_mode=ColorMode.XY,
         xy_color=(0.8, 0.8),
     )
     # change color from HA
@@ -482,7 +509,7 @@ async def test_light_xyy_color_with_brightness(hass: HomeAssistant, knx: KNXTest
     knx.assert_state("light.test", STATE_ON, brightness=21, xy_color=(0.52, 0.31))
 
 
-async def test_light_rgb_individual(hass: HomeAssistant, knx: KNXTestKit):
+async def test_light_rgb_individual(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX light with rgb color in individual GAs."""
     test_red = "1/1/3"
     test_red_state = "1/1/4"
@@ -526,7 +553,8 @@ async def test_light_rgb_individual(hass: HomeAssistant, knx: KNXTestKit):
         "light.test",
         STATE_ON,
         brightness=255,
-        color_mode=COLOR_MODE_RGB,
+        supported_color_modes=[ColorMode.RGB],
+        color_mode=ColorMode.RGB,
         rgb_color=(255, 255, 255),
     )
     # change color from HA
@@ -628,7 +656,9 @@ async def test_light_rgb_individual(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_write(test_blue, (45,))
 
 
-async def test_light_rgbw_individual(hass: HomeAssistant, knx: KNXTestKit):
+async def test_light_rgbw_individual(
+    hass: HomeAssistant, knx: KNXTestKit, freezer: FrozenDateTimeFactory
+) -> None:
     """Test KNX light with rgbw color in individual GAs."""
     test_red = "1/1/3"
     test_red_state = "1/1/4"
@@ -680,7 +710,8 @@ async def test_light_rgbw_individual(hass: HomeAssistant, knx: KNXTestKit):
         "light.test",
         STATE_ON,
         brightness=255,
-        color_mode=COLOR_MODE_RGBW,
+        supported_color_modes=[ColorMode.RGBW],
+        color_mode=ColorMode.RGBW,
         rgbw_color=(0, 0, 0, 255),
     )
     # change color from HA
@@ -748,9 +779,8 @@ async def test_light_rgbw_individual(hass: HomeAssistant, knx: KNXTestKit):
     await knx.receive_write(test_green, (0,))
     # # individual color debounce takes 0.2 seconds if not all 4 addresses received
     knx.assert_state("light.test", STATE_ON)
-    async_fire_time_changed(
-        hass, dt.utcnow() + timedelta(seconds=XknxLight.DEBOUNCE_TIMEOUT)
-    )
+    freezer.tick(timedelta(seconds=XknxLight.DEBOUNCE_TIMEOUT))
+    async_fire_time_changed(hass)
     await knx.xknx.task_registry.block_till_done()
     knx.assert_state("light.test", STATE_OFF)
     # turn ON from KNX
@@ -806,7 +836,7 @@ async def test_light_rgbw_individual(hass: HomeAssistant, knx: KNXTestKit):
     await knx.assert_write(test_white, (45,))
 
 
-async def test_light_rgb(hass: HomeAssistant, knx: KNXTestKit):
+async def test_light_rgb(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX light with rgb color."""
     test_address = "1/1/1"
     test_address_state = "1/1/2"
@@ -835,7 +865,8 @@ async def test_light_rgb(hass: HomeAssistant, knx: KNXTestKit):
         "light.test",
         STATE_ON,
         brightness=255,
-        color_mode=COLOR_MODE_RGB,
+        supported_color_modes=[ColorMode.RGB],
+        color_mode=ColorMode.RGB,
         rgb_color=(255, 255, 255),
     )
     # change color from HA
@@ -914,7 +945,7 @@ async def test_light_rgb(hass: HomeAssistant, knx: KNXTestKit):
     knx.assert_state("light.test", STATE_ON, brightness=180, rgb_color=(0, 255, 0))
 
 
-async def test_light_rgbw(hass: HomeAssistant, knx: KNXTestKit):
+async def test_light_rgbw(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX light with rgbw color."""
     test_address = "1/1/1"
     test_address_state = "1/1/2"
@@ -943,7 +974,8 @@ async def test_light_rgbw(hass: HomeAssistant, knx: KNXTestKit):
         "light.test",
         STATE_ON,
         brightness=255,
-        color_mode=COLOR_MODE_RGBW,
+        supported_color_modes=[ColorMode.RGBW],
+        color_mode=ColorMode.RGBW,
         rgbw_color=(255, 101, 102, 103),
     )
     # change color from HA
@@ -1025,7 +1057,7 @@ async def test_light_rgbw(hass: HomeAssistant, knx: KNXTestKit):
     knx.assert_state("light.test", STATE_ON, brightness=180, rgbw_color=(0, 255, 0, 0))
 
 
-async def test_light_rgbw_brightness(hass: HomeAssistant, knx: KNXTestKit):
+async def test_light_rgbw_brightness(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX light with rgbw color with dedicated brightness."""
     test_address = "1/1/1"
     test_address_state = "1/1/2"
@@ -1060,7 +1092,8 @@ async def test_light_rgbw_brightness(hass: HomeAssistant, knx: KNXTestKit):
         "light.test",
         STATE_ON,
         brightness=255,
-        color_mode=COLOR_MODE_RGBW,
+        supported_color_modes=[ColorMode.RGBW],
+        color_mode=ColorMode.RGBW,
         rgbw_color=(255, 101, 102, 103),
     )
     # change color from HA
@@ -1135,3 +1168,188 @@ async def test_light_rgbw_brightness(hass: HomeAssistant, knx: KNXTestKit):
     knx.assert_state(
         "light.test", STATE_ON, brightness=50, rgbw_color=(100, 200, 55, 12)
     )
+
+
+async def test_light_ui_create(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test creating a light."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.LIGHT,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_switch": {"write": "1/1/1", "state": "2/2/2"},
+            "sync_state": True,
+        },
+    )
+    # created entity sends read-request to KNX bus
+    await knx.assert_read("2/2/2")
+    await knx.receive_response("2/2/2", True)
+    knx.assert_state(
+        "light.test",
+        STATE_ON,
+        supported_color_modes=[ColorMode.ONOFF],
+        color_mode=ColorMode.ONOFF,
+    )
+
+
+@pytest.mark.parametrize(
+    ("color_temp_mode", "raw_ct"),
+    [
+        ("7.600", (0x10, 0x68)),
+        ("9", (0x46, 0x69)),
+        ("5.001", (0x74,)),
+    ],
+)
+async def test_light_ui_color_temp(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    color_temp_mode: str,
+    raw_ct: tuple[int, ...],
+) -> None:
+    """Test creating a color-temp light."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.LIGHT,
+        entity_data={"name": "test"},
+        knx_data={
+            "ga_switch": {"write": "1/1/1", "state": "2/2/2"},
+            "ga_color_temp": {
+                "write": "3/3/3",
+                "dpt": color_temp_mode,
+            },
+            "sync_state": True,
+        },
+    )
+    await knx.assert_read("2/2/2", True)
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": "light.test", ATTR_COLOR_TEMP_KELVIN: 4200},
+        blocking=True,
+    )
+    await knx.assert_write("3/3/3", raw_ct)
+    knx.assert_state(
+        "light.test",
+        STATE_ON,
+        supported_color_modes=[ColorMode.COLOR_TEMP],
+        color_mode=ColorMode.COLOR_TEMP,
+        color_temp_kelvin=pytest.approx(4200, abs=1),
+    )
+
+
+async def test_light_ui_multi_mode(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test creating a light with multiple color modes."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.LIGHT,
+        entity_data={"name": "test"},
+        knx_data={
+            "color_temp_min": 2700,
+            "color_temp_max": 6000,
+            "ga_switch": {
+                "write": "1/1/1",
+                "passive": [],
+                "state": "2/2/2",
+            },
+            "sync_state": True,
+            "ga_brightness": {
+                "write": "0/6/0",
+                "state": "0/6/1",
+                "passive": [],
+            },
+            "ga_color_temp": {
+                "write": "0/6/2",
+                "dpt": "7.600",
+                "state": "0/6/3",
+                "passive": [],
+            },
+            "color": {
+                "ga_color": {
+                    "write": "0/6/4",
+                    "dpt": "251.600",
+                    "state": "0/6/5",
+                    "passive": [],
+                },
+            },
+        },
+    )
+    await knx.assert_read("2/2/2", True)
+    await knx.assert_read("0/6/1", (0xFF,))
+    await knx.assert_read("0/6/5", (0xFF, 0x65, 0x66, 0x67, 0x00, 0x0F))
+    await knx.assert_read("0/6/3", (0x12, 0x34))
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": "light.test",
+            ATTR_COLOR_NAME: "hotpink",
+        },
+        blocking=True,
+    )
+    await knx.assert_write("0/6/4", (255, 0, 128, 178, 0, 15))
+    knx.assert_state(
+        "light.test",
+        STATE_ON,
+        brightness=255,
+        color_temp_kelvin=None,
+        rgbw_color=(255, 0, 128, 178),
+        supported_color_modes=[
+            ColorMode.COLOR_TEMP,
+            ColorMode.RGBW,
+        ],
+        color_mode=ColorMode.RGBW,
+    )
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": "light.test",
+            ATTR_COLOR_TEMP_KELVIN: 4200,
+        },
+        blocking=True,
+    )
+    await knx.assert_write("0/6/2", (0x10, 0x68))
+    knx.assert_state(
+        "light.test",
+        STATE_ON,
+        brightness=255,
+        color_temp_kelvin=4200,
+        rgbw_color=None,
+        supported_color_modes=[
+            ColorMode.COLOR_TEMP,
+            ColorMode.RGBW,
+        ],
+        color_mode=ColorMode.COLOR_TEMP,
+    )
+
+
+async def test_light_ui_load(
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test loading a light from storage."""
+    await knx.setup_integration(config_store_fixture="config_store_light_switch.json")
+
+    await knx.assert_read("1/0/21", response=True, ignore_order=True)
+    # unrelated switch in config store
+    await knx.assert_read("1/0/45", response=True, ignore_order=True)
+
+    knx.assert_state(
+        "light.test",
+        STATE_ON,
+        supported_color_modes=[ColorMode.ONOFF],
+        color_mode=ColorMode.ONOFF,
+    )
+
+    entity = entity_registry.async_get("light.test")
+    assert entity.entity_category is EntityCategory.CONFIG

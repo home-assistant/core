@@ -1,4 +1,5 @@
 """Tests for the Steamist integration."""
+
 from __future__ import annotations
 
 from contextlib import contextmanager
@@ -8,9 +9,9 @@ from aiosteamist import Steamist, SteamistStatus
 from discovery30303 import AIODiscovery30303, Device30303
 
 from homeassistant.components import steamist
-from homeassistant.components.steamist.const import CONF_MODEL, DOMAIN
+from homeassistant.components.steamist.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -73,7 +74,7 @@ async def _async_setup_entry_with_status(
     with _patch_status(status, client):
         await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
         await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     return client, config_entry
 
 

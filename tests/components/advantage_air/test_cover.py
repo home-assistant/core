@@ -1,11 +1,7 @@
 """Test the Advantage Air Cover Platform."""
 
-from json import loads
+from unittest.mock import AsyncMock
 
-from homeassistant.components.advantage_air.const import (
-    ADVANTAGE_AIR_STATE_CLOSE,
-    ADVANTAGE_AIR_STATE_OPEN,
-)
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
@@ -13,48 +9,36 @@ from homeassistant.components.cover import (
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
     CoverDeviceClass,
+    CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OPEN
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.advantage_air import (
-    TEST_SET_RESPONSE,
-    TEST_SET_URL,
-    TEST_SYSTEM_DATA,
-    TEST_SYSTEM_URL,
-    add_mock_config,
-)
+from . import add_mock_config
 
 
-async def test_cover_async_setup_entry(hass, aioclient_mock):
-    """Test climate setup without sensors."""
-
-    aioclient_mock.get(
-        TEST_SYSTEM_URL,
-        text=TEST_SYSTEM_DATA,
-    )
-    aioclient_mock.get(
-        TEST_SET_URL,
-        text=TEST_SET_RESPONSE,
-    )
+async def test_ac_cover(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_get: AsyncMock,
+    mock_update: AsyncMock,
+) -> None:
+    """Test cover platform."""
 
     await add_mock_config(hass)
 
-    registry = er.async_get(hass)
-
-    assert len(aioclient_mock.mock_calls) == 1
-
     # Test Cover Zone Entity
-    entity_id = "cover.zone_open_without_sensor"
+    entity_id = "cover.myauto_zone_y"
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert state.attributes.get("device_class") == CoverDeviceClass.DAMPER
     assert state.attributes.get("current_position") == 100
 
-    entry = registry.async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
-    assert entry.unique_id == "uniqueid-ac2-z01"
+    assert entry.unique_id == "uniqueid-ac3-z01"
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -62,13 +46,8 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,
     )
-    assert len(aioclient_mock.mock_calls) == 3
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
+    mock_update.assert_called_once()
+    mock_update.reset_mock()
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -76,14 +55,8 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
         {ATTR_ENTITY_ID: [entity_id]},
         blocking=True,
     )
-    assert len(aioclient_mock.mock_calls) == 5
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_OPEN
-    assert data["ac2"]["zones"]["z01"]["value"] == 100
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
+    mock_update.assert_called_once()
+    mock_update.reset_mock()
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -91,13 +64,8 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
         {ATTR_ENTITY_ID: [entity_id], ATTR_POSITION: 50},
         blocking=True,
     )
-    assert len(aioclient_mock.mock_calls) == 7
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac2"]["zones"]["z01"]["value"] == 50
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
+    mock_update.assert_called_once()
+    mock_update.reset_mock()
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -105,13 +73,8 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
         {ATTR_ENTITY_ID: [entity_id], ATTR_POSITION: 0},
         blocking=True,
     )
-    assert len(aioclient_mock.mock_calls) == 9
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
+    mock_update.assert_called_once()
+    mock_update.reset_mock()
 
     # Test controlling multiple Cover Zone Entity
     await hass.services.async_call(
@@ -119,28 +82,65 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
         SERVICE_CLOSE_COVER,
         {
             ATTR_ENTITY_ID: [
-                "cover.zone_open_without_sensor",
-                "cover.zone_closed_without_sensor",
+                "cover.myauto_zone_y",
+                "cover.myauto_zone_z",
             ]
         },
         blocking=True,
     )
-    assert len(aioclient_mock.mock_calls) == 11
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
-    assert data["ac2"]["zones"]["z02"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
+    assert len(mock_update.mock_calls) == 2
+    mock_update.reset_mock()
+
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
         {
             ATTR_ENTITY_ID: [
-                "cover.zone_open_without_sensor",
-                "cover.zone_closed_without_sensor",
+                "cover.myauto_zone_y",
+                "cover.myauto_zone_z",
             ]
         },
         blocking=True,
     )
-    assert len(aioclient_mock.mock_calls) == 13
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_OPEN
-    assert data["ac2"]["zones"]["z02"]["state"] == ADVANTAGE_AIR_STATE_OPEN
+
+    assert len(mock_update.mock_calls) == 2
+
+
+async def test_things_cover(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_get: AsyncMock,
+    mock_update: AsyncMock,
+) -> None:
+    """Test cover platform."""
+
+    await add_mock_config(hass)
+
+    # Test Blind 1 Entity
+    entity_id = "cover.blind_1"
+    thing_id = "200"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.OPEN
+    assert state.attributes.get("device_class") == CoverDeviceClass.BLIND
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == f"uniqueid-{thing_id}"
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: [entity_id]},
+        blocking=True,
+    )
+    mock_update.assert_called_once()
+    mock_update.reset_mock()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: [entity_id]},
+        blocking=True,
+    )
+    mock_update.assert_called_once()

@@ -1,4 +1,5 @@
 """Config flow to configure the Whois integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -10,11 +11,12 @@ from whois.exceptions import (
     UnknownDateFormat,
     UnknownTld,
     WhoisCommandFailed,
+    WhoisPrivateRegistry,
+    WhoisQuotaExceeded,
 )
 
-from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_DOMAIN, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_DOMAIN
 
 from .const import DOMAIN
 
@@ -28,7 +30,7 @@ class WhoisFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -48,6 +50,10 @@ class WhoisFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unexpected_response"
             except UnknownDateFormat:
                 errors["base"] = "unknown_date_format"
+            except WhoisPrivateRegistry:
+                errors["base"] = "private_registry"
+            except WhoisQuotaExceeded:
+                errors["base"] = "quota_exceeded"
             else:
                 return self.async_create_entry(
                     title=self.imported_name or user_input[CONF_DOMAIN],
@@ -68,13 +74,4 @@ class WhoisFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-        )
-
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Handle a flow initialized by importing a config."""
-        self.imported_name = config[CONF_NAME]
-        return await self.async_step_user(
-            user_input={
-                CONF_DOMAIN: config[CONF_DOMAIN],
-            }
         )

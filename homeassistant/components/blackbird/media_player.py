@@ -1,18 +1,18 @@
 """Support for interfacing with Monoprice Blackbird 4k 8x8 HDBaseT Matrix."""
+
 from __future__ import annotations
 
 import logging
-import socket
 
 from pyblackbird import get_blackbird
 from serial import SerialException
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -20,19 +20,15 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_TYPE,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN, SERVICE_SETALLZONES
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_BLACKBIRD = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
 
@@ -60,7 +56,7 @@ SOURCE_IDS = vol.All(vol.Coerce(int), vol.Range(min=1, max=8))
 
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_PORT, CONF_HOST),
-    PLATFORM_SCHEMA.extend(
+    MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
         {
             vol.Exclusive(CONF_PORT, CONF_TYPE): cv.string,
             vol.Exclusive(CONF_HOST, CONF_TYPE): cv.string,
@@ -97,7 +93,7 @@ def setup_platform(
         try:
             blackbird = get_blackbird(host, False)
             connection = host
-        except socket.timeout:
+        except TimeoutError:
             _LOGGER.error("Error connecting to the Blackbird controller")
             return
 
@@ -107,7 +103,7 @@ def setup_platform(
 
     devices = []
     for zone_id, extra in config[CONF_ZONES].items():
-        _LOGGER.info("Adding zone %d - %s", zone_id, extra[CONF_NAME])
+        _LOGGER.debug("Adding zone %d - %s", zone_id, extra[CONF_NAME])
         unique_id = f"{connection}-{zone_id}"
         device = BlackbirdZone(blackbird, sources, zone_id, extra[CONF_NAME])
         hass.data[DATA_BLACKBIRD][unique_id] = device
@@ -141,7 +137,11 @@ def setup_platform(
 class BlackbirdZone(MediaPlayerEntity):
     """Representation of a Blackbird matrix zone."""
 
-    _attr_supported_features = SUPPORT_BLACKBIRD
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
 
     def __init__(self, blackbird, sources, zone_id, zone_name):
         """Initialize new zone."""
@@ -157,17 +157,14 @@ class BlackbirdZone(MediaPlayerEntity):
         self._zone_id = zone_id
         self._attr_name = zone_name
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve latest state."""
         state = self._blackbird.zone_status(self._zone_id)
         if not state:
             return
-        self._attr_state = STATE_ON if state.power else STATE_OFF
+        self._attr_state = MediaPlayerState.ON if state.power else MediaPlayerState.OFF
         idx = state.av
-        if idx in self._source_id_name:
-            self._attr_source = self._source_id_name[idx]
-        else:
-            self._attr_source = None
+        self._attr_source = self._source_id_name.get(idx)
 
     @property
     def media_title(self):
@@ -182,7 +179,7 @@ class BlackbirdZone(MediaPlayerEntity):
         _LOGGER.debug("Setting all zones source to %s", idx)
         self._blackbird.set_all_zone_source(idx)
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Set input source."""
         if source not in self._source_name_id:
             return
@@ -190,12 +187,12 @@ class BlackbirdZone(MediaPlayerEntity):
         _LOGGER.debug("Setting zone %d source to %s", self._zone_id, idx)
         self._blackbird.set_zone_source(self._zone_id, idx)
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         _LOGGER.debug("Turning zone %d on", self._zone_id)
         self._blackbird.set_zone_power(self._zone_id, True)
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn the media player off."""
         _LOGGER.debug("Turning zone %d off", self._zone_id)
         self._blackbird.set_zone_power(self._zone_id, False)

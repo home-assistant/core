@@ -1,4 +1,5 @@
 """The Modem Caller ID integration."""
+
 from phone_modem import PhoneModem
 
 from homeassistant.config_entries import ConfigEntry
@@ -8,7 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DATA_KEY_API, DOMAIN, EXCEPTIONS
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -21,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Unable to open port: {device}") from ex
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_KEY_API: api}
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

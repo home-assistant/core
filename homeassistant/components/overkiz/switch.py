@@ -1,7 +1,8 @@
 """Support for Overkiz switches."""
+
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -14,39 +15,32 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeAssistantOverkizData
-from .const import DOMAIN
+from . import OverkizDataConfigEntry
 from .entity import OverkizDescriptiveEntity
 
 
-@dataclass
-class OverkizSwitchDescriptionMixin:
-    """Define an entity description mixin for switch entities."""
-
-    turn_on: Callable[[Callable[..., Awaitable[None]]], Awaitable[None]]
-    turn_off: Callable[[Callable[..., Awaitable[None]]], Awaitable[None]]
-    is_on: Callable[[Callable[[str], OverkizStateType]], bool]
-
-
-@dataclass
-class OverkizSwitchDescription(SwitchEntityDescription, OverkizSwitchDescriptionMixin):
+@dataclass(frozen=True, kw_only=True)
+class OverkizSwitchDescription(SwitchEntityDescription):
     """Class to describe an Overkiz switch."""
+
+    turn_on: str
+    turn_off: str
+    is_on: Callable[[Callable[[str], OverkizStateType]], bool] | None = None
+    turn_on_args: OverkizStateType | list[OverkizStateType] | None = None
+    turn_off_args: OverkizStateType | list[OverkizStateType] | None = None
 
 
 SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
     OverkizSwitchDescription(
         key=UIWidget.DOMESTIC_HOT_WATER_TANK,
-        turn_on=lambda execute_command: execute_command(
-            OverkizCommand.SET_FORCE_HEATING, OverkizCommandParam.ON
-        ),
-        turn_off=lambda execute_command: execute_command(
-            OverkizCommand.SET_FORCE_HEATING, OverkizCommandParam.OFF
-        ),
+        turn_on=OverkizCommand.SET_FORCE_HEATING,
+        turn_on_args=OverkizCommandParam.ON,
+        turn_off=OverkizCommand.SET_FORCE_HEATING,
+        turn_off_args=OverkizCommandParam.OFF,
         is_on=lambda select_state: (
             select_state(OverkizState.IO_FORCE_HEATING) == OverkizCommandParam.ON
         ),
@@ -54,8 +48,8 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
     ),
     OverkizSwitchDescription(
         key=UIClass.ON_OFF,
-        turn_on=lambda execute_command: execute_command(OverkizCommand.ON),
-        turn_off=lambda execute_command: execute_command(OverkizCommand.OFF),
+        turn_on=OverkizCommand.ON,
+        turn_off=OverkizCommand.OFF,
         is_on=lambda select_state: (
             select_state(OverkizState.CORE_ON_OFF) == OverkizCommandParam.ON
         ),
@@ -63,8 +57,8 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
     ),
     OverkizSwitchDescription(
         key=UIClass.SWIMMING_POOL,
-        turn_on=lambda execute_command: execute_command(OverkizCommand.ON),
-        turn_off=lambda execute_command: execute_command(OverkizCommand.OFF),
+        turn_on=OverkizCommand.ON,
+        turn_off=OverkizCommand.OFF,
         is_on=lambda select_state: (
             select_state(OverkizState.CORE_ON_OFF) == OverkizCommandParam.ON
         ),
@@ -72,17 +66,48 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
     ),
     OverkizSwitchDescription(
         key=UIWidget.RTD_INDOOR_SIREN,
-        turn_on=lambda execute_command: execute_command(OverkizCommand.ON),
-        turn_off=lambda execute_command: execute_command(OverkizCommand.OFF),
+        turn_on=OverkizCommand.ON,
+        turn_off=OverkizCommand.OFF,
         icon="mdi:bell",
-        is_on=lambda select_state: False,  # Remove when is_on in SwitchEntity doesn't require a bool value anymore
     ),
     OverkizSwitchDescription(
         key=UIWidget.RTD_OUTDOOR_SIREN,
-        turn_on=lambda execute_command: execute_command(OverkizCommand.ON),
-        turn_off=lambda execute_command: execute_command(OverkizCommand.OFF),
+        turn_on=OverkizCommand.ON,
+        turn_off=OverkizCommand.OFF,
         icon="mdi:bell",
-        is_on=lambda select_state: False,  # Remove when is_on in SwitchEntity doesn't require a bool value anymore
+    ),
+    OverkizSwitchDescription(
+        key=UIWidget.STATELESS_ALARM_CONTROLLER,
+        turn_on=OverkizCommand.ALARM_ON,
+        turn_off=OverkizCommand.ALARM_OFF,
+        icon="mdi:shield-lock",
+    ),
+    OverkizSwitchDescription(
+        key=UIWidget.STATELESS_EXTERIOR_HEATING,
+        turn_on=OverkizCommand.ON,
+        turn_off=OverkizCommand.OFF,
+        icon="mdi:radiator",
+    ),
+    OverkizSwitchDescription(
+        key=UIWidget.MY_FOX_SECURITY_CAMERA,
+        name="Camera shutter",
+        turn_on=OverkizCommand.OPEN,
+        turn_off=OverkizCommand.CLOSE,
+        icon="mdi:camera-lock",
+        is_on=lambda select_state: (
+            select_state(OverkizState.MYFOX_SHUTTER_STATUS)
+            == OverkizCommandParam.OPENED
+        ),
+        entity_category=EntityCategory.CONFIG,
+    ),
+    OverkizSwitchDescription(
+        key=UIWidget.DISCRETE_EXTERIOR_HEATING,
+        turn_on=OverkizCommand.ON,
+        turn_off=OverkizCommand.OFF,
+        icon="mdi:radiator",
+        is_on=lambda select_state: (
+            select_state(OverkizState.CORE_ON_OFF) == OverkizCommandParam.ON
+        ),
     ),
 ]
 
@@ -93,26 +118,24 @@ SUPPORTED_DEVICES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: OverkizDataConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Overkiz switch from a config entry."""
-    data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
-    entities: list[OverkizSwitch] = []
+    data = entry.runtime_data
 
-    for device in data.platforms[Platform.SWITCH]:
-        if description := SUPPORTED_DEVICES.get(device.widget) or SUPPORTED_DEVICES.get(
-            device.ui_class
-        ):
-            entities.append(
-                OverkizSwitch(
-                    device.device_url,
-                    data.coordinator,
-                    description,
-                )
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        OverkizSwitch(
+            device.device_url,
+            data.coordinator,
+            description,
+        )
+        for device in data.platforms[Platform.SWITCH]
+        if (
+            description := SUPPORTED_DEVICES.get(device.widget)
+            or SUPPORTED_DEVICES.get(device.ui_class)
+        )
+    )
 
 
 class OverkizSwitch(OverkizDescriptiveEntity, SwitchEntity):
@@ -121,14 +144,23 @@ class OverkizSwitch(OverkizDescriptiveEntity, SwitchEntity):
     entity_description: OverkizSwitchDescription
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return True if entity is on."""
-        return self.entity_description.is_on(self.executor.select_state)
+        if self.entity_description.is_on:
+            return self.entity_description.is_on(self.executor.select_state)
+
+        return None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self.entity_description.turn_on(self.executor.async_execute_command)
+        await self.executor.async_execute_command(
+            self.entity_description.turn_on,
+            self.entity_description.turn_on_args,
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.entity_description.turn_off(self.executor.async_execute_command)
+        await self.executor.async_execute_command(
+            self.entity_description.turn_off,
+            self.entity_description.turn_off_args,
+        )

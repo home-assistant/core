@@ -1,0 +1,10 @@
+{
+  "services": {
+    "add_event": {
+      "service": "mdi:calendar-plus"
+    },
+    "create_event": {
+      "service": "mdi:calendar-plus"
+    }
+  }
+}

@@ -1,11 +1,11 @@
 """The Bond integration."""
-from asyncio import TimeoutError as AsyncIOTimeoutError
+
 from http import HTTPStatus
 import logging
 from typing import Any
 
 from aiohttp import ClientError, ClientResponseError, ClientTimeout
-from bond_api import Bond, BPUPSubscriptions, start_bpup
+from bond_async import Bond, BPUPSubscriptions, RequestorUUID, start_bpup
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -20,7 +20,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
 
-from .const import BPUP_SUBS, BRIDGE_MAKE, DOMAIN, HUB
+from .const import BRIDGE_MAKE, DOMAIN
+from .models import BondData
 from .utils import BondHub
 
 PLATFORMS = [
@@ -34,8 +35,10 @@ _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
 
 _LOGGER = logging.getLogger(__name__)
 
+type BondConfigEntry = ConfigEntry[BondData]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool:
     """Set up Bond from a config entry."""
     host = entry.data[CONF_HOST]
     token = entry.data[CONF_ACCESS_TOKEN]
@@ -46,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         token=token,
         timeout=ClientTimeout(total=_API_TIMEOUT),
         session=async_get_clientsession(hass),
+        requestor_uuid=RequestorUUID.HOME_ASSISTANT,
     )
     hub = BondHub(bond, host)
     try:
@@ -55,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("Bond token no longer valid: %s", ex)
             return False
         raise ConfigEntryNotReady from ex
-    except (ClientError, AsyncIOTimeoutError, OSError) as error:
+    except (ClientError, TimeoutError, OSError) as error:
         raise ConfigEntryNotReady from error
 
     bpup_subs = BPUPSubscriptions()
@@ -69,11 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _async_stop_event)
     )
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {
-        HUB: hub,
-        BPUP_SUBS: bpup_subs,
-    }
+    entry.runtime_data = BondData(hub, bpup_subs)
 
     if not entry.unique_id:
         hass.config_entries.async_update_entry(entry, unique_id=hub.bond_id)
@@ -95,17 +95,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _async_remove_old_device_identifiers(config_entry_id, device_registry, hub)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 @callback
@@ -119,3 +116,25 @@ def _async_remove_old_device_identifiers(
             continue
         if config_entry_id in dev.config_entries:
             device_registry.async_remove_device(dev.id)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: BondConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove bond config entry from a device."""
+    data = config_entry.runtime_data
+    hub = data.hub
+    for identifier in device_entry.identifiers:
+        if identifier[0] != DOMAIN or len(identifier) != 3:
+            continue
+        bond_id: str = identifier[1]  # type: ignore[unreachable]
+        # Bond still uses the 3 arg tuple before
+        # the identifiers were typed
+        device_id: str = identifier[2]
+        # If device_id is no longer present on
+        # the hub, we allow removal.
+        if hub.bond_id != bond_id or not any(
+            device_id == device.device_id for device in hub.devices
+        ):
+            return True
+    return False

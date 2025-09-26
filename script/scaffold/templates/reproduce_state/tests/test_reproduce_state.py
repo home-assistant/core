@@ -1,7 +1,9 @@
 """Test reproduce state for NEW_NAME."""
+
 import pytest
 
 from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
@@ -17,7 +19,8 @@ async def test_reproducing_states(
     turn_off_calls = async_mock_service(hass, "NEW_DOMAIN", "turn_off")
 
     # These calls should do nothing as entities already in desired state
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("NEW_DOMAIN.entity_off", "off"),
             State("NEW_DOMAIN.entity_on", "on", {"color": "red"}),
@@ -29,8 +32,8 @@ async def test_reproducing_states(
     assert len(turn_off_calls) == 0
 
     # Test invalid state is handled
-    await hass.helpers.state.async_reproduce_state(
-        [State("NEW_DOMAIN.entity_off", "not_supported")], blocking=True
+    await async_reproduce_state(
+        hass, [State("NEW_DOMAIN.entity_off", "not_supported")], blocking=True
     )
 
     assert "not_supported" in caplog.text
@@ -38,7 +41,8 @@ async def test_reproducing_states(
     assert len(turn_off_calls) == 0
 
     # Make sure correct services are called
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("NEW_DOMAIN.entity_on", "off"),
             State("NEW_DOMAIN.entity_off", "on", {"color": "red"}),

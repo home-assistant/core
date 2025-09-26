@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<nowPlaying deviceID="020000000001" source="UPNP" sourceAccount="UPnPUserName">
+    <ContentItem source="UPNP" location="http://homeassistant:8123/media/local/test.mp3" sourceAccount="UPnPUserName" isPresetable="true" />
+    <track>MockTrack</track>
+    <artist>MockArtist</artist>
+    <album>MockAlbum</album>
+    <stationName></stationName>
+    <art artImageStatus="SHOW_DEFAULT_IMAGE" />
+    <time total="42">7</time>
+    <playStatus>PLAY_STATE</playStatus>
+    <skipPreviousEnabled />
+    <streamType>TRACK_ONDEMAND</streamType>
+</nowPlaying>

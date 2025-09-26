@@ -1,33 +1,35 @@
 """WiZ integration switch platform."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from pywizlight import PilotBuilder
+from pywizlight.bulblibrary import BulbClass
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, SOCKET_DEVICE_STR
+from . import WizConfigEntry
 from .entity import WizToggleEntity
 from .models import WizData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: WizConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the WiZ switch platform."""
-    wiz_data: WizData = hass.data[DOMAIN][entry.entry_id]
-    if SOCKET_DEVICE_STR in wiz_data.bulb.bulbtype.name:
-        async_add_entities([WizSocketEntity(wiz_data, entry.title)])
+    if entry.runtime_data.bulb.bulbtype.bulb_type == BulbClass.SOCKET:
+        async_add_entities([WizSocketEntity(entry.runtime_data, entry.title)])
 
 
 class WizSocketEntity(WizToggleEntity, SwitchEntity):
     """Representation of a WiZ socket."""
+
+    _attr_name = None
 
     def __init__(self, wiz_data: WizData, name: str) -> None:
         """Initialize a WiZ socket."""

@@ -1,4 +1,5 @@
 """Support for Hikvision event stream events represented as binary sensors."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,7 +9,7 @@ from pyhik.hikvision import HikCamera
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -26,7 +27,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -46,7 +47,6 @@ DEVICE_CLASS_MAP = {
     "Motion": BinarySensorDeviceClass.MOTION,
     "Line Crossing": BinarySensorDeviceClass.MOTION,
     "Field Detection": BinarySensorDeviceClass.MOTION,
-    "Video Loss": None,
     "Tamper Detection": BinarySensorDeviceClass.MOTION,
     "Shelter Alarm": None,
     "Disk Full": None,
@@ -74,7 +74,7 @@ CUSTOMIZE_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
@@ -199,6 +199,8 @@ class HikvisionData:
 class HikvisionBinarySensor(BinarySensorEntity):
     """Representation of a Hikvision binary sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, hass, sensor, channel, cam, delay):
         """Initialize the binary_sensor."""
         self._hass = hass
@@ -254,11 +256,6 @@ class HikvisionBinarySensor(BinarySensorEntity):
         except KeyError:
             # Sensor must be unknown to us, add as generic
             return None
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def extra_state_attributes(self):

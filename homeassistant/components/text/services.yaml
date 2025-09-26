@@ -1,0 +1,10 @@
+set_value:
+  target:
+    entity:
+      domain: text
+  fields:
+    value:
+      required: true
+      example: "Hello world!"
+      selector:
+        text:

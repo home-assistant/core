@@ -1,67 +1,77 @@
 """Support for Tuya siren."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from tuya_iot import TuyaDevice, TuyaDeviceManager
+from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.siren import SirenEntity, SirenEntityDescription
-from homeassistant.components.siren.const import SUPPORT_TURN_OFF, SUPPORT_TURN_ON
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.siren import (
+    SirenEntity,
+    SirenEntityDescription,
+    SirenEntityFeature,
+)
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeAssistantTuyaData
-from .base import TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
+from . import TuyaConfigEntry
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .entity import TuyaEntity
 
-# All descriptions can be found here:
-# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
-    # Siren Alarm
-    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
-    "sgbj": (
+SIRENS: dict[DeviceCategory, tuple[SirenEntityDescription, ...]] = {
+    DeviceCategory.CO2BJ: (
         SirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
-            name="Siren",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Smart Camera
-    # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
-    "sp": (
+    DeviceCategory.DGNBJ: (
+        SirenEntityDescription(
+            key=DPCode.ALARM_SWITCH,
+        ),
+    ),
+    DeviceCategory.SGBJ: (
+        SirenEntityDescription(
+            key=DPCode.ALARM_SWITCH,
+        ),
+    ),
+    DeviceCategory.SP: (
         SirenEntityDescription(
             key=DPCode.SIREN_SWITCH,
-            name="Siren",
         ),
     ),
 }
 
+# Smart Camera - Low power consumption camera (duplicate of `sp`)
+SIRENS[DeviceCategory.DGHSXJ] = SIRENS[DeviceCategory.SP]
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya siren dynamically through Tuya discovery."""
-    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya siren."""
         entities: list[TuyaSirenEntity] = []
         for device_id in device_ids:
-            device = hass_data.device_manager.device_map[device_id]
+            device = manager.device_map[device_id]
             if descriptions := SIRENS.get(device.category):
-                for description in descriptions:
-                    if description.key in device.status:
-                        entities.append(
-                            TuyaSirenEntity(
-                                device, hass_data.device_manager, description
-                            )
-                        )
+                entities.extend(
+                    TuyaSirenEntity(device, manager, description)
+                    for description in descriptions
+                    if description.key in device.status
+                )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.device_manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -71,17 +81,19 @@ async def async_setup_entry(
 class TuyaSirenEntity(TuyaEntity, SirenEntity):
     """Tuya Siren Entity."""
 
+    _attr_supported_features = SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
+    _attr_name = None
+
     def __init__(
         self,
-        device: TuyaDevice,
-        device_manager: TuyaDeviceManager,
+        device: CustomerDevice,
+        device_manager: Manager,
         description: SirenEntityDescription,
     ) -> None:
         """Init Tuya Siren."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
-        self._attr_supported_features = SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
     @property
     def is_on(self) -> bool:

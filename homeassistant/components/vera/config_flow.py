@@ -1,4 +1,5 @@
 """Config flow for Vera."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -10,11 +11,18 @@ import pyvera as pv
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    SOURCE_USER,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import callback
-from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.typing import VolDictType
 
 from .const import CONF_CONTROLLER, CONF_LEGACY_UNIQUE_ID, DOMAIN
 
@@ -37,12 +45,12 @@ def list_to_str(data: list[Any]) -> str:
     return " ".join([str(i) for i in data])
 
 
-def new_options(lights: list[int], exclude: list[int]) -> dict:
+def new_options(lights: list[int], exclude: list[int]) -> dict[str, list[int]]:
     """Create a standard options object."""
     return {CONF_LIGHTS: lights, CONF_EXCLUDE: exclude}
 
 
-def options_schema(options: Mapping[str, Any] = None) -> dict:
+def options_schema(options: Mapping[str, Any] | None = None) -> VolDictType:
     """Return options schema."""
     options = options or {}
     return {
@@ -57,7 +65,7 @@ def options_schema(options: Mapping[str, Any] = None) -> dict:
     }
 
 
-def options_data(user_input: dict) -> dict:
+def options_data(user_input: dict[str, str]) -> dict[str, list[int]]:
     """Return options dict."""
     return new_options(
         str_to_int_list(user_input.get(CONF_LIGHTS, "")),
@@ -65,14 +73,13 @@ def options_data(user_input: dict) -> dict:
     )
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Options for the component."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Init object."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input: dict = None):
+    async def async_step_init(
+        self,
+        user_input: dict[str, str] | None = None,
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(
@@ -86,42 +93,42 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class VeraFlowHandler(ConfigFlow, domain=DOMAIN):
     """Vera config flow."""
 
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
         """Get the options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
-    async def async_step_user(self, user_input: dict = None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle user initiated flow."""
         if user_input is not None:
             return await self.async_step_finish(
                 {
                     **user_input,
                     **options_data(user_input),
-                    **{CONF_SOURCE: config_entries.SOURCE_USER},
-                    **{CONF_LEGACY_UNIQUE_ID: False},
+                    CONF_SOURCE: SOURCE_USER,
+                    CONF_LEGACY_UNIQUE_ID: False,
                 }
             )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {**{vol.Required(CONF_CONTROLLER): str}, **options_schema()}
+                {vol.Required(CONF_CONTROLLER): str, **options_schema()}
             ),
         )
 
-    async def async_step_import(self, config: dict):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle a flow initialized by import."""
 
         # If there are entities with the legacy unique_id, then this imported config
         # should also use the legacy unique_id for entity creation.
-        entity_registry: EntityRegistry = (
-            await self.hass.helpers.entity_registry.async_get_registry()
-        )
+        entity_registry = er.async_get(self.hass)
         use_legacy_unique_id = (
             len(
                 [
@@ -135,13 +142,13 @@ class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_finish(
             {
-                **config,
-                **{CONF_SOURCE: config_entries.SOURCE_IMPORT},
-                **{CONF_LEGACY_UNIQUE_ID: use_legacy_unique_id},
+                **import_data,
+                CONF_SOURCE: SOURCE_IMPORT,
+                CONF_LEGACY_UNIQUE_ID: use_legacy_unique_id,
             }
         )
 
-    async def async_step_finish(self, config: dict):
+    async def async_step_finish(self, config: dict[str, Any]) -> ConfigFlowResult:
         """Validate and create config entry."""
         base_url = config[CONF_CONTROLLER] = config[CONF_CONTROLLER].rstrip("/")
         controller = pv.VeraController(base_url)

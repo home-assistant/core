@@ -1,12 +1,18 @@
 """Offer time listening automation rules."""
+
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
-from homeassistant.core import HassJob, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_change
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.typing import ConfigType
 
 CONF_HOURS = "hours"
 CONF_MINUTES = "minutes"
@@ -19,18 +25,20 @@ class TimePattern:
     :raises Invalid: If the value has a wrong format or is outside the range.
     """
 
-    def __init__(self, maximum):
+    def __init__(self, maximum: int) -> None:
         """Initialize time pattern."""
         self.maximum = maximum
 
-    def __call__(self, value):
+    def __call__(self, value: Any) -> str | int:
         """Validate input."""
         try:
             if value == "*":
-                return value
+                return value  # type: ignore[no-any-return]
 
             if isinstance(value, str) and value.startswith("/"):
                 number = int(value[1:])
+                if number == 0:
+                    raise vol.Invalid(f"must be a value between 1 and {self.maximum}")
             else:
                 value = number = int(value)
 
@@ -39,7 +47,7 @@ class TimePattern:
         except ValueError as err:
             raise vol.Invalid("invalid time_pattern value") from err
 
-        return value
+        return value  # type: ignore[no-any-return]
 
 
 TRIGGER_SCHEMA = vol.All(
@@ -55,13 +63,18 @@ TRIGGER_SCHEMA = vol.All(
 )
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    trigger_data = automation_info["trigger_data"]
+    trigger_data = trigger_info["trigger_data"]
     hours = config.get(CONF_HOURS)
     minutes = config.get(CONF_MINUTES)
     seconds = config.get(CONF_SECONDS)
-    job = HassJob(action)
+    job = HassJob(action, f"time pattern trigger {trigger_info}")
 
     # If larger units are specified, default the smaller units to zero
     if minutes is None and hours is not None:
@@ -70,7 +83,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
         seconds = 0
 
     @callback
-    def time_automation_listener(now):
+    def time_automation_listener(now: datetime) -> None:
         """Listen for time changes and calls action."""
         hass.async_run_hass_job(
             job,

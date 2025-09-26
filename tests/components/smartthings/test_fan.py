@@ -1,196 +1,206 @@
-"""
-Test for the SmartThings fan platform.
+"""Test for the SmartThings fan platform."""
 
-The only mocking required is of the underlying SmartThings API object so
-real HTTP calls are not initiated during testing.
-"""
-from pysmartthings import Attribute, Capability
+from unittest.mock import AsyncMock
+
+from pysmartthings import Capability, Command
+from pysmartthings.models import HealthStatus
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import (
-    ATTR_SPEED,
-    ATTR_SPEED_LIST,
+    ATTR_PERCENTAGE,
+    ATTR_PRESET_MODE,
     DOMAIN as FAN_DOMAIN,
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
-    SUPPORT_SET_SPEED,
+    SERVICE_SET_PERCENTAGE,
+    SERVICE_SET_PRESET_MODE,
 )
-from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.smartthings import MAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
     STATE_UNAVAILABLE,
+    Platform,
 )
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import setup_platform
+from . import setup_integration, snapshot_smartthings_entities, trigger_health_update
 
-
-async def test_entity_state(hass, device_factory):
-    """Tests the state attributes properly match the fan types."""
-    device = device_factory(
-        "Fan 1",
-        capabilities=[Capability.switch, Capability.fan_speed],
-        status={Attribute.switch: "on", Attribute.fan_speed: 2},
-    )
-    await setup_platform(hass, FAN_DOMAIN, devices=[device])
-
-    # Dimmer 1
-    state = hass.states.get("fan.fan_1")
-    assert state.state == "on"
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_SET_SPEED
-    assert state.attributes[ATTR_SPEED] == SPEED_MEDIUM
-    assert state.attributes[ATTR_SPEED_LIST] == [
-        SPEED_OFF,
-        SPEED_LOW,
-        SPEED_MEDIUM,
-        SPEED_HIGH,
-    ]
+from tests.common import MockConfigEntry
 
 
-async def test_entity_and_device_attributes(hass, device_factory):
-    """Test the attributes of the entity are correct."""
-    # Arrange
-    device = device_factory(
-        "Fan 1",
-        capabilities=[Capability.switch, Capability.fan_speed],
-        status={Attribute.switch: "on", Attribute.fan_speed: 2},
-    )
-    # Act
-    await setup_platform(hass, FAN_DOMAIN, devices=[device])
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-    # Assert
-    entry = entity_registry.async_get("fan.fan_1")
-    assert entry
-    assert entry.unique_id == device.device_id
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    await setup_integration(hass, mock_config_entry)
 
-    entry = device_registry.async_get_device({(DOMAIN, device.device_id)})
-    assert entry
-    assert entry.configuration_url == "https://account.smartthings.com"
-    assert entry.identifiers == {(DOMAIN, device.device_id)}
-    assert entry.name == device.label
-    assert entry.model == device.device_type_name
-    assert entry.manufacturer == "Unavailable"
+    snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.FAN)
 
 
-async def test_turn_off(hass, device_factory):
-    """Test the fan turns of successfully."""
-    # Arrange
-    device = device_factory(
-        "Fan 1",
-        capabilities=[Capability.switch, Capability.fan_speed],
-        status={Attribute.switch: "on", Attribute.fan_speed: 2},
-    )
-    await setup_platform(hass, FAN_DOMAIN, devices=[device])
-    # Act
+@pytest.mark.parametrize("device_fixture", ["fake_fan"])
+@pytest.mark.parametrize(
+    ("action", "command"),
+    [
+        (SERVICE_TURN_ON, Command.ON),
+        (SERVICE_TURN_OFF, Command.OFF),
+    ],
+)
+async def test_turn_on_off(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    action: str,
+    command: Command,
+) -> None:
+    """Test turning on and off."""
+    await setup_integration(hass, mock_config_entry)
+
     await hass.services.async_call(
-        "fan", "turn_off", {"entity_id": "fan.fan_1"}, blocking=True
-    )
-    # Assert
-    state = hass.states.get("fan.fan_1")
-    assert state is not None
-    assert state.state == "off"
-
-
-async def test_turn_on(hass, device_factory):
-    """Test the fan turns of successfully."""
-    # Arrange
-    device = device_factory(
-        "Fan 1",
-        capabilities=[Capability.switch, Capability.fan_speed],
-        status={Attribute.switch: "off", Attribute.fan_speed: 0},
-    )
-    await setup_platform(hass, FAN_DOMAIN, devices=[device])
-    # Act
-    await hass.services.async_call(
-        "fan", "turn_on", {ATTR_ENTITY_ID: "fan.fan_1"}, blocking=True
-    )
-    # Assert
-    state = hass.states.get("fan.fan_1")
-    assert state is not None
-    assert state.state == "on"
-
-
-async def test_turn_on_with_speed(hass, device_factory):
-    """Test the fan turns on to the specified speed."""
-    # Arrange
-    device = device_factory(
-        "Fan 1",
-        capabilities=[Capability.switch, Capability.fan_speed],
-        status={Attribute.switch: "off", Attribute.fan_speed: 0},
-    )
-    await setup_platform(hass, FAN_DOMAIN, devices=[device])
-    # Act
-    await hass.services.async_call(
-        "fan",
-        "turn_on",
-        {ATTR_ENTITY_ID: "fan.fan_1", ATTR_SPEED: SPEED_HIGH},
+        FAN_DOMAIN,
+        action,
+        {ATTR_ENTITY_ID: "fan.fake_fan"},
         blocking=True,
     )
-    # Assert
-    state = hass.states.get("fan.fan_1")
-    assert state is not None
-    assert state.state == "on"
-    assert state.attributes[ATTR_SPEED] == SPEED_HIGH
-
-
-async def test_set_speed(hass, device_factory):
-    """Test setting to specific fan speed."""
-    # Arrange
-    device = device_factory(
-        "Fan 1",
-        capabilities=[Capability.switch, Capability.fan_speed],
-        status={Attribute.switch: "off", Attribute.fan_speed: 0},
+    devices.execute_device_command.assert_called_once_with(
+        "f1af21a2-d5a1-437c-b10a-b34a87394b71",
+        Capability.SWITCH,
+        command,
+        MAIN,
     )
-    await setup_platform(hass, FAN_DOMAIN, devices=[device])
-    # Act
+
+
+@pytest.mark.parametrize("device_fixture", ["fake_fan"])
+async def test_set_percentage(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting the speed percentage of the fan."""
+    await setup_integration(hass, mock_config_entry)
+
     await hass.services.async_call(
-        "fan",
-        "set_speed",
-        {ATTR_ENTITY_ID: "fan.fan_1", ATTR_SPEED: SPEED_HIGH},
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: "fan.fake_fan", ATTR_PERCENTAGE: 50},
         blocking=True,
     )
-    # Assert
-    state = hass.states.get("fan.fan_1")
-    assert state is not None
-    assert state.state == "on"
-    assert state.attributes[ATTR_SPEED] == SPEED_HIGH
-
-
-async def test_update_from_signal(hass, device_factory):
-    """Test the fan updates when receiving a signal."""
-    # Arrange
-    device = device_factory(
-        "Fan 1",
-        capabilities=[Capability.switch, Capability.fan_speed],
-        status={Attribute.switch: "off", Attribute.fan_speed: 0},
+    devices.execute_device_command.assert_called_once_with(
+        "f1af21a2-d5a1-437c-b10a-b34a87394b71",
+        Capability.FAN_SPEED,
+        Command.SET_FAN_SPEED,
+        MAIN,
+        argument=2,
     )
-    await setup_platform(hass, FAN_DOMAIN, devices=[device])
-    await device.switch_on(True)
-    # Act
-    async_dispatcher_send(hass, SIGNAL_SMARTTHINGS_UPDATE, [device.device_id])
-    # Assert
-    await hass.async_block_till_done()
-    state = hass.states.get("fan.fan_1")
-    assert state is not None
-    assert state.state == "on"
 
 
-async def test_unload_config_entry(hass, device_factory):
-    """Test the fan is removed when the config entry is unloaded."""
-    # Arrange
-    device = device_factory(
-        "Fan 1",
-        capabilities=[Capability.switch, Capability.fan_speed],
-        status={Attribute.switch: "off", Attribute.fan_speed: 0},
+@pytest.mark.parametrize("device_fixture", ["fake_fan"])
+async def test_set_percentage_off(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting the speed percentage of the fan."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: "fan.fake_fan", ATTR_PERCENTAGE: 0},
+        blocking=True,
     )
-    config_entry = await setup_platform(hass, FAN_DOMAIN, devices=[device])
-    config_entry.state = ConfigEntryState.LOADED
-    # Act
-    await hass.config_entries.async_forward_entry_unload(config_entry, "fan")
-    # Assert
-    assert hass.states.get("fan.fan_1").state == STATE_UNAVAILABLE
+    devices.execute_device_command.assert_called_once_with(
+        "f1af21a2-d5a1-437c-b10a-b34a87394b71",
+        Capability.SWITCH,
+        Command.OFF,
+        MAIN,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["fake_fan"])
+async def test_set_percentage_on(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting the speed percentage of the fan."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "fan.fake_fan", ATTR_PERCENTAGE: 50},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "f1af21a2-d5a1-437c-b10a-b34a87394b71",
+        Capability.FAN_SPEED,
+        Command.SET_FAN_SPEED,
+        MAIN,
+        argument=2,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["fake_fan"])
+async def test_set_preset_mode(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting the speed percentage of the fan."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: "fan.fake_fan", ATTR_PRESET_MODE: "turbo"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "f1af21a2-d5a1-437c-b10a-b34a87394b71",
+        Capability.AIR_CONDITIONER_FAN_MODE,
+        Command.SET_FAN_MODE,
+        MAIN,
+        argument="turbo",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["fake_fan"])
+async def test_availability(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test availability."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("fan.fake_fan").state == STATE_OFF
+
+    await trigger_health_update(
+        hass, devices, "f1af21a2-d5a1-437c-b10a-b34a87394b71", HealthStatus.OFFLINE
+    )
+
+    assert hass.states.get("fan.fake_fan").state == STATE_UNAVAILABLE
+
+    await trigger_health_update(
+        hass, devices, "f1af21a2-d5a1-437c-b10a-b34a87394b71", HealthStatus.ONLINE
+    )
+
+    assert hass.states.get("fan.fake_fan").state == STATE_OFF
+
+
+@pytest.mark.parametrize("device_fixture", ["fake_fan"])
+async def test_availability_at_start(
+    hass: HomeAssistant,
+    unavailable_device: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unavailable at boot."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("fan.fake_fan").state == STATE_UNAVAILABLE

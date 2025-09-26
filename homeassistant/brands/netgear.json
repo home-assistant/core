@@ -1,0 +1,5 @@
+{
+  "domain": "netgear",
+  "name": "NETGEAR",
+  "integrations": ["netgear", "netgear_lte"]
+}

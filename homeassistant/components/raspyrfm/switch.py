@@ -1,5 +1,8 @@
 """Support for switches that can be controlled using the RaspyRFM rc module."""
+
 from __future__ import annotations
+
+from typing import Any
 
 from raspyrfm_client import RaspyRFMClient
 from raspyrfm_client.device_implementations.controlunit.actions import Action
@@ -12,7 +15,10 @@ from raspyrfm_client.device_implementations.gateway.manufacturer.gateway_constan
 from raspyrfm_client.device_implementations.manufacturer_constants import Manufacturer
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -21,7 +27,7 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -33,7 +39,7 @@ CONF_CHANNEL_CONFIG = "channel_config"
 DEFAULT_HOST = "127.0.0.1"
 
 # define configuration parameters
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT): cv.port,
@@ -96,44 +102,27 @@ def setup_platform(
 class RaspyRFMSwitch(SwitchEntity):
     """Representation of a RaspyRFM switch."""
 
-    def __init__(self, raspyrfm_client, name: str, gateway, controlunit):
+    _attr_assumed_state = True
+    _attr_should_poll = False
+
+    def __init__(self, raspyrfm_client, name: str, gateway, controlunit) -> None:
         """Initialize the switch."""
         self._raspyrfm_client = raspyrfm_client
 
-        self._name = name
+        self._attr_name = name
         self._gateway = gateway
         self._controlunit = controlunit
 
-        self._state = None
+        self._attr_is_on = None
 
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """Return True if polling should be used."""
-        return False
-
-    @property
-    def assumed_state(self):
-        """Return True when the current state can not be queried."""
-        return True
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self._state
-
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
 
         self._raspyrfm_client.send(self._gateway, self._controlunit, Action.ON)
-        self._state = True
+        self._attr_is_on = True
         self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
 
         if Action.OFF in self._controlunit.get_supported_actions():
@@ -141,5 +130,5 @@ class RaspyRFMSwitch(SwitchEntity):
         else:
             self._raspyrfm_client.send(self._gateway, self._controlunit, Action.ON)
 
-        self._state = False
+        self._attr_is_on = False
         self.schedule_update_ha_state()

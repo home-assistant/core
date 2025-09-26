@@ -1,38 +1,22 @@
 """Support for interfacing to iTunes API."""
+
 from __future__ import annotations
+
+from typing import Any
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_SSL,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -42,22 +26,8 @@ DEFAULT_SSL = False
 DEFAULT_TIMEOUT = 10
 DOMAIN = "itunes"
 
-SUPPORT_ITUNES = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_SEEK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_PLAY
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SHUFFLE_SET
-)
 
-SUPPORT_AIRPLAY = SUPPORT_VOLUME_SET | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -96,9 +66,7 @@ class Itunes:
         try:
             if method == "GET":
                 response = requests.get(url, timeout=DEFAULT_TIMEOUT)
-            elif method == "POST":
-                response = requests.put(url, params, timeout=DEFAULT_TIMEOUT)
-            elif method == "PUT":
+            elif method in ("POST", "PUT"):
                 response = requests.put(url, params, timeout=DEFAULT_TIMEOUT)
             elif method == "DELETE":
                 response = requests.delete(url, timeout=DEFAULT_TIMEOUT)
@@ -167,6 +135,8 @@ class Itunes:
             path = f"/playlists/{playlist['id']}/play"
             return self._request("PUT", path)
 
+        raise ValueError(f"Playlist {playlist_id_or_name} not found")
+
     def artwork_url(self):
         """Return a URL of the current track's album art."""
         return f"{self._base_url}/artwork"
@@ -213,6 +183,20 @@ def setup_platform(
 
 class ItunesDevice(MediaPlayerEntity):
     """Representation of an iTunes API instance."""
+
+    _attr_media_content_type = MediaType.MUSIC
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SHUFFLE_SET
+    )
 
     def __init__(self, name, host, port, use_ssl, add_entities):
         """Initialize the iTunes device."""
@@ -269,14 +253,14 @@ class ItunesDevice(MediaPlayerEntity):
             return "error"
 
         if self.player_state == "stopped":
-            return STATE_IDLE
+            return MediaPlayerState.IDLE
 
         if self.player_state == "paused":
-            return STATE_PAUSED
+            return MediaPlayerState.PAUSED
 
-        return STATE_PLAYING
+        return MediaPlayerState.PLAYING
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve latest state."""
         now_playing = self.client.now_playing()
         self.update_state(now_playing)
@@ -319,15 +303,15 @@ class ItunesDevice(MediaPlayerEntity):
         return self.content_id
 
     @property
-    def media_content_type(self):
-        """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
-
-    @property
     def media_image_url(self):
         """Image url of current playing media."""
         if (
-            self.player_state in (STATE_PLAYING, STATE_IDLE, STATE_PAUSED)
+            self.player_state
+            in {
+                MediaPlayerState.PLAYING,
+                MediaPlayerState.IDLE,
+                MediaPlayerState.PAUSED,
+            }
             and self.current_title is not None
         ):
             return f"{self.client.artwork_url()}?id={self.content_id}"
@@ -362,53 +346,50 @@ class ItunesDevice(MediaPlayerEntity):
         """Boolean if shuffle is enabled."""
         return self.shuffled
 
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_ITUNES
-
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         response = self.client.set_volume(int(volume * 100))
         self.update_state(response)
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         response = self.client.set_muted(mute)
         self.update_state(response)
 
-    def set_shuffle(self, shuffle):
+    def set_shuffle(self, shuffle: bool) -> None:
         """Shuffle (true) or no shuffle (false) media player."""
         response = self.client.set_shuffle(shuffle)
         self.update_state(response)
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Send media_play command to media player."""
         response = self.client.play()
         self.update_state(response)
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Send media_pause command to media player."""
         response = self.client.pause()
         self.update_state(response)
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Send media_next command to media player."""
         response = self.client.next()
         self.update_state(response)
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Send media_previous command media player."""
         response = self.client.previous()
         self.update_state(response)
 
-    def play_media(self, media_type, media_id, **kwargs):
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Send the play_media command to the media player."""
-        if media_type == MEDIA_TYPE_PLAYLIST:
+        if media_type == MediaType.PLAYLIST:
             response = self.client.play_playlist(media_id)
             self.update_state(response)
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn the media player off."""
         response = self.client.stop()
         self.update_state(response)
@@ -416,6 +397,13 @@ class ItunesDevice(MediaPlayerEntity):
 
 class AirPlayDevice(MediaPlayerEntity):
     """Representation an AirPlay device via an iTunes API instance."""
+
+    _attr_media_content_type = MediaType.MUSIC
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+    )
 
     def __init__(self, device_id, client):
         """Initialize the AirPlay device."""
@@ -471,14 +459,14 @@ class AirPlayDevice(MediaPlayerEntity):
         return "mdi:volume-off"
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self.selected is True:
-            return STATE_ON
+            return MediaPlayerState.ON
 
-        return STATE_OFF
+        return MediaPlayerState.OFF
 
-    def update(self):
+    def update(self) -> None:
         """Retrieve latest state."""
 
     @property
@@ -486,30 +474,20 @@ class AirPlayDevice(MediaPlayerEntity):
         """Return the volume."""
         return float(self.volume) / 100.0
 
-    @property
-    def media_content_type(self):
-        """Flag of media content that is supported."""
-        return MEDIA_TYPE_MUSIC
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_AIRPLAY
-
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         volume = int(volume * 100)
         response = self.client.set_volume_airplay_device(self._id, volume)
         self.update_state(response)
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Select AirPlay."""
         self.update_state({"selected": True})
         self.schedule_update_ha_state()
         response = self.client.toggle_airplay_device(self._id, True)
         self.update_state(response)
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Deselect AirPlay."""
         self.update_state({"selected": False})
         self.schedule_update_ha_state()

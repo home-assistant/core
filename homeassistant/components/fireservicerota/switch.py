@@ -1,24 +1,32 @@
 """Switch platform for FireServiceRota integration."""
+
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN as FIRESERVICEROTA_DOMAIN
+from .const import DOMAIN
+from .coordinator import (
+    FireServiceConfigEntry,
+    FireServiceRotaClient,
+    FireServiceUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FireServiceConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up FireServiceRota switch based on a config entry."""
-    client = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id][DATA_CLIENT]
-
-    coordinator = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id][DATA_COORDINATOR]
+    coordinator = entry.runtime_data
+    client = coordinator.client
 
     async_add_entities([ResponseSwitch(coordinator, client, entry)])
 
@@ -26,21 +34,25 @@ async def async_setup_entry(
 class ResponseSwitch(SwitchEntity):
     """Representation of an FireServiceRota switch."""
 
-    def __init__(self, coordinator, client, entry):
+    _attr_should_poll = False
+    _attr_has_entity_name = True
+    _attr_translation_key = "incident_response"
+
+    def __init__(
+        self,
+        coordinator: FireServiceUpdateCoordinator,
+        client: FireServiceRotaClient,
+        entry: ConfigEntry,
+    ) -> None:
         """Initialize."""
         self._coordinator = coordinator
         self._client = client
-        self._unique_id = f"{entry.unique_id}_Response"
+        self._attr_unique_id = f"{entry.unique_id}_Response"
         self._entry_id = entry.entry_id
 
-        self._state = None
-        self._state_attributes = {}
+        self._state: bool | None = None
+        self._state_attributes: dict[str, Any] = {}
         self._state_icon = None
-
-    @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return "Incident Response"
 
     @property
     def icon(self) -> str:
@@ -53,34 +65,24 @@ class ResponseSwitch(SwitchEntity):
         return "mdi:forum"
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Get the assumed state of the switch."""
         return self._state
 
     @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this switch."""
-        return self._unique_id
-
-    @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    @property
-    def available(self):
+    def available(self) -> bool:
         """Return if switch is available."""
         return self._client.on_duty
 
     @property
-    def extra_state_attributes(self) -> object:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return available attributes for switch."""
-        attr = {}
+        attr: dict[str, Any] = {}
         if not self._state_attributes:
             return attr
 
         data = self._state_attributes
-        attr = {
+        return {
             key: data[key]
             for key in (
                 "user_name",
@@ -96,13 +98,11 @@ class ResponseSwitch(SwitchEntity):
             if key in data
         }
 
-        return attr
-
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Send Acknowledge response status."""
         await self.async_set_response(True)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Send Reject response status."""
         await self.async_set_response(False)
 
@@ -122,7 +122,7 @@ class ResponseSwitch(SwitchEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{FIRESERVICEROTA_DOMAIN}_{self._entry_id}_update",
+                f"{DOMAIN}_{self._entry_id}_update",
                 self.client_update,
             )
         )
@@ -135,7 +135,7 @@ class ResponseSwitch(SwitchEntity):
         """Handle updated incident data from the client."""
         self.async_schedule_update_ha_state(True)
 
-    async def async_update(self) -> bool:
+    async def async_update(self) -> None:
         """Update FireServiceRota response data."""
         data = await self._client.async_response_update()
 

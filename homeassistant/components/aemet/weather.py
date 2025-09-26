@@ -1,101 +1,120 @@
 """Support for the AEMET OpenData service."""
-from homeassistant.components.weather import WeatherEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_API_CONDITION,
-    ATTR_API_HUMIDITY,
-    ATTR_API_PRESSURE,
-    ATTR_API_TEMPERATURE,
-    ATTR_API_WIND_BEARING,
-    ATTR_API_WIND_SPEED,
-    ATTRIBUTION,
-    DOMAIN,
-    ENTRY_NAME,
-    ENTRY_WEATHER_COORDINATOR,
-    FORECAST_MODE_ATTR_API,
-    FORECAST_MODE_DAILY,
-    FORECAST_MODES,
+from aemet_opendata.const import (
+    AOD_CONDITION,
+    AOD_FORECAST_DAILY,
+    AOD_FORECAST_HOURLY,
+    AOD_HUMIDITY,
+    AOD_PRESSURE,
+    AOD_TEMP,
+    AOD_WEATHER,
+    AOD_WIND_DIRECTION,
+    AOD_WIND_SPEED,
+    AOD_WIND_SPEED_MAX,
 )
-from .weather_update_coordinator import WeatherUpdateCoordinator
+
+from homeassistant.components.weather import (
+    Forecast,
+    SingleCoordinatorWeatherEntity,
+    WeatherEntityFeature,
+)
+from homeassistant.const import (
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .const import CONDITIONS_MAP
+from .coordinator import AemetConfigEntry, WeatherUpdateCoordinator
+from .entity import AemetEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: AemetConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AEMET OpenData weather entity based on a config entry."""
-    domain_data = hass.data[DOMAIN][config_entry.entry_id]
-    weather_coordinator = domain_data[ENTRY_WEATHER_COORDINATOR]
+    domain_data = config_entry.runtime_data
+    name = domain_data.name
+    weather_coordinator = domain_data.coordinator
 
-    entities = []
-    for mode in FORECAST_MODES:
-        name = f"{domain_data[ENTRY_NAME]} {mode}"
-        unique_id = f"{config_entry.unique_id} {mode}"
-        entities.append(AemetWeather(name, unique_id, weather_coordinator, mode))
+    unique_id = config_entry.unique_id
+    assert unique_id is not None
 
-    if entities:
-        async_add_entities(entities, False)
+    async_add_entities([AemetWeather(name, unique_id, weather_coordinator)])
 
 
-class AemetWeather(CoordinatorEntity, WeatherEntity):
-    """Implementation of an AEMET OpenData sensor."""
+class AemetWeather(
+    AemetEntity,
+    SingleCoordinatorWeatherEntity[WeatherUpdateCoordinator],
+):
+    """Implementation of an AEMET OpenData weather."""
 
-    _attr_attribution = ATTRIBUTION
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
+    _attr_native_pressure_unit = UnitOfPressure.HPA
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
+    _attr_supported_features = (
+        WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
+    )
+    _attr_name = None
 
     def __init__(
         self,
-        name,
-        unique_id,
+        name: str,
+        unique_id: str,
         coordinator: WeatherUpdateCoordinator,
-        forecast_mode,
-    ):
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._forecast_mode = forecast_mode
-        self._attr_entity_registry_enabled_default = (
-            self._forecast_mode == FORECAST_MODE_DAILY
-        )
-        self._attr_name = name
+        super().__init__(coordinator, name, unique_id)
         self._attr_unique_id = unique_id
 
     @property
     def condition(self):
         """Return the current condition."""
-        return self.coordinator.data[ATTR_API_CONDITION]
+        cond = self.get_aemet_value([AOD_WEATHER, AOD_CONDITION])
+        return CONDITIONS_MAP.get(cond)
 
-    @property
-    def forecast(self):
-        """Return the forecast array."""
-        return self.coordinator.data[FORECAST_MODE_ATTR_API[self._forecast_mode]]
+    @callback
+    def _async_forecast_daily(self) -> list[Forecast]:
+        """Return the daily forecast in native units."""
+        return self.get_aemet_forecast(AOD_FORECAST_DAILY)
+
+    @callback
+    def _async_forecast_hourly(self) -> list[Forecast]:
+        """Return the hourly forecast in native units."""
+        return self.get_aemet_forecast(AOD_FORECAST_HOURLY)
 
     @property
     def humidity(self):
         """Return the humidity."""
-        return self.coordinator.data[ATTR_API_HUMIDITY]
+        return self.get_aemet_value([AOD_WEATHER, AOD_HUMIDITY])
 
     @property
-    def pressure(self):
+    def native_pressure(self):
         """Return the pressure."""
-        return self.coordinator.data[ATTR_API_PRESSURE]
+        return self.get_aemet_value([AOD_WEATHER, AOD_PRESSURE])
 
     @property
-    def temperature(self):
+    def native_temperature(self):
         """Return the temperature."""
-        return self.coordinator.data[ATTR_API_TEMPERATURE]
+        return self.get_aemet_value([AOD_WEATHER, AOD_TEMP])
 
     @property
     def wind_bearing(self):
-        """Return the temperature."""
-        return self.coordinator.data[ATTR_API_WIND_BEARING]
+        """Return the wind bearing."""
+        return self.get_aemet_value([AOD_WEATHER, AOD_WIND_DIRECTION])
 
     @property
-    def wind_speed(self):
-        """Return the temperature."""
-        return self.coordinator.data[ATTR_API_WIND_SPEED]
+    def native_wind_gust_speed(self):
+        """Return the wind gust speed in native units."""
+        return self.get_aemet_value([AOD_WEATHER, AOD_WIND_SPEED_MAX])
+
+    @property
+    def native_wind_speed(self):
+        """Return the wind speed."""
+        return self.get_aemet_value([AOD_WEATHER, AOD_WIND_SPEED])

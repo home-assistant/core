@@ -1,32 +1,22 @@
 """Support for Pioneer Network Receivers."""
+
 from __future__ import annotations
 
 import logging
-import telnetlib
+from typing import Final
 
+import telnetlib  # pylint: disable=deprecated-module
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TIMEOUT,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -36,24 +26,14 @@ CONF_SOURCES = "sources"
 
 DEFAULT_NAME = "Pioneer AVR"
 DEFAULT_PORT = 23  # telnet default. Some Pioneer AVRs use 8102
-DEFAULT_TIMEOUT = None
+DEFAULT_TIMEOUT: Final = None
 DEFAULT_SOURCES: dict[str, str] = {}
 
-SUPPORT_PIONEER = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_PLAY
-)
 
 MAX_VOLUME = 185
 MAX_SOURCE_NUMBERS = 60
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -79,12 +59,23 @@ def setup_platform(
         config[CONF_SOURCES],
     )
 
-    if pioneer.update():
+    if pioneer.update_device():
         add_entities([pioneer])
 
 
 class PioneerDevice(MediaPlayerEntity):
     """Representation of a Pioneer device."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.PLAY
+    )
 
     def __init__(self, name, host, port, timeout, sources):
         """Initialize the Pioneer device."""
@@ -131,7 +122,11 @@ class PioneerDevice(MediaPlayerEntity):
         except telnetlib.socket.timeout:
             _LOGGER.debug("Pioneer %s command %s timed out", self._name, command)
 
-    def update(self):
+    def update(self) -> None:
+        """Update the entity."""
+        self.update_device()
+
+    def update_device(self) -> bool:
         """Get the latest details from the device."""
         try:
             telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
@@ -179,14 +174,14 @@ class PioneerDevice(MediaPlayerEntity):
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         if self._pwstate == "PWR2":
-            return STATE_OFF
+            return MediaPlayerState.OFF
         if self._pwstate == "PWR1":
-            return STATE_OFF
+            return MediaPlayerState.OFF
         if self._pwstate == "PWR0":
-            return STATE_ON
+            return MediaPlayerState.ON
 
         return None
 
@@ -199,11 +194,6 @@ class PioneerDevice(MediaPlayerEntity):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._muted
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_PIONEER
 
     @property
     def source(self):
@@ -220,31 +210,31 @@ class PioneerDevice(MediaPlayerEntity):
         """Title of current playing media."""
         return self._selected_source
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn off media player."""
         self.telnet_command("PF")
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Volume up media player."""
         self.telnet_command("VU")
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Volume down media player."""
         self.telnet_command("VD")
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         # 60dB max
         self.telnet_command(f"{round(volume * MAX_VOLUME):03}VL")
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         self.telnet_command("MO" if mute else "MF")
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn the media player on."""
         self.telnet_command("PO")
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select input source."""
         self.telnet_command(f"{self._source_name_to_number.get(source)}FN")

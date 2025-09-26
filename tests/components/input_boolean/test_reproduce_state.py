@@ -1,9 +1,11 @@
 """Test reproduce state for input boolean."""
-from homeassistant.core import State
+
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.state import async_reproduce_state
 from homeassistant.setup import async_setup_component
 
 
-async def test_reproducing_states(hass):
+async def test_reproducing_states(hass: HomeAssistant) -> None:
     """Test reproducing input_boolean states."""
     assert await async_setup_component(
         hass,
@@ -15,7 +17,8 @@ async def test_reproducing_states(hass):
             }
         },
     )
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State("input_boolean.initial_on", "off"),
             State("input_boolean.initial_off", "on"),
@@ -26,7 +29,8 @@ async def test_reproducing_states(hass):
     assert hass.states.get("input_boolean.initial_off").state == "on"
     assert hass.states.get("input_boolean.initial_on").state == "off"
 
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             # Test invalid state
             State("input_boolean.initial_on", "invalid_state"),

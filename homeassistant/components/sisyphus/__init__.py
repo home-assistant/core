@@ -1,4 +1,5 @@
 """Support for controlling Sisyphus Kinetic Art Tables."""
+
 import asyncio
 import logging
 
@@ -7,8 +8,8 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
@@ -29,19 +30,15 @@ CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Any(AUTODETECT_SCHEMA, TABLES_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
 
+# Silence these loggers by default. Their INFO level is super chatty and we
+# only need error-level logging from the integration itself by default.
+logging.getLogger("socketio.client").setLevel(logging.CRITICAL + 1)
+logging.getLogger("engineio.client").setLevel(logging.CRITICAL + 1)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the sisyphus component."""
 
-    class SocketIONoiseFilter(logging.Filter):
-        """Filters out excessively verbose logs from SocketIO."""
-
-        def filter(self, record):
-            if "waiting for connection" in record.msg:
-                return False
-            return True
-
-    logging.getLogger("socketIO-client").addFilter(SocketIONoiseFilter())
     tables = hass.data.setdefault(DATA_SISYPHUS, {})
     table_configs = config[DOMAIN]
     session = async_get_clientsession(hass)

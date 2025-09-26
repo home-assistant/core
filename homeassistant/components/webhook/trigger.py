@@ -1,58 +1,125 @@
 """Offer webhook triggered automation rules."""
-from functools import partial
 
-from aiohttp import hdrs
+from __future__ import annotations
+
+from dataclasses import dataclass
+import logging
+from typing import Any
+
+from aiohttp import hdrs, web
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM, CONF_WEBHOOK_ID
-from homeassistant.core import HassJob, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.template import Template
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import async_register, async_unregister
+from . import (
+    DEFAULT_METHODS,
+    DOMAIN,
+    SUPPORTED_METHODS,
+    async_register,
+    async_unregister,
+)
 
-# mypy: allow-untyped-defs
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ("webhook",)
+
+CONF_ALLOWED_METHODS = "allowed_methods"
+CONF_LOCAL_ONLY = "local_only"
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "webhook",
-        vol.Required(CONF_WEBHOOK_ID): cv.string,
+        vol.Required(CONF_WEBHOOK_ID): cv.template,
+        vol.Optional(CONF_ALLOWED_METHODS): vol.All(
+            cv.ensure_list,
+            [vol.All(vol.Upper, vol.In(SUPPORTED_METHODS))],
+            vol.Unique(),
+        ),
+        vol.Optional(CONF_LOCAL_ONLY): bool,
     }
 )
 
+WEBHOOK_TRIGGERS = f"{DOMAIN}_triggers"
 
-async def _handle_webhook(job, trigger_data, hass, webhook_id, request):
+
+@dataclass(slots=True)
+class TriggerInstance:
+    """Attached trigger settings."""
+
+    trigger_info: TriggerInfo
+    job: HassJob
+
+
+async def _handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> None:
     """Handle incoming webhook."""
-    result = {"platform": "webhook", "webhook_id": webhook_id}
+    base_result: dict[str, Any] = {"platform": "webhook", "webhook_id": webhook_id}
 
     if "json" in request.headers.get(hdrs.CONTENT_TYPE, ""):
-        result["json"] = await request.json()
+        base_result["json"] = await request.json()
     else:
-        result["data"] = await request.post()
+        base_result["data"] = await request.post()
 
-    result["query"] = request.query
-    result["description"] = "webhook"
-    result.update(**trigger_data)
-    hass.async_run_hass_job(job, {"trigger": result})
+    base_result["query"] = request.query
+    base_result["description"] = "webhook"
+
+    triggers: dict[str, list[TriggerInstance]] = hass.data.setdefault(
+        WEBHOOK_TRIGGERS, {}
+    )
+    for trigger in triggers[webhook_id]:
+        result = {**base_result, **trigger.trigger_info["trigger_data"]}
+        hass.async_run_hass_job(trigger.job, {"trigger": result})
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
     """Trigger based on incoming webhooks."""
-    trigger_data = automation_info["trigger_data"]
-    webhook_id = config.get(CONF_WEBHOOK_ID)
+    variables: TemplateVarsType | None = None
+    if trigger_info:
+        variables = trigger_info.get("variables")
+    webhook_id_template: Template = config[CONF_WEBHOOK_ID]
+    webhook_id: str = webhook_id_template.async_render(
+        variables, limited=True, parse_result=False
+    )
+    local_only = config.get(CONF_LOCAL_ONLY, True)
+    allowed_methods = config.get(CONF_ALLOWED_METHODS, DEFAULT_METHODS)
     job = HassJob(action)
-    async_register(
-        hass,
-        automation_info["domain"],
-        automation_info["name"],
-        webhook_id,
-        partial(_handle_webhook, job, trigger_data),
+
+    triggers: dict[str, list[TriggerInstance]] = hass.data.setdefault(
+        WEBHOOK_TRIGGERS, {}
     )
 
+    if webhook_id not in triggers:
+        async_register(
+            hass,
+            trigger_info["domain"],
+            trigger_info["name"],
+            webhook_id,
+            _handle_webhook,
+            local_only=local_only,
+            allowed_methods=allowed_methods,
+        )
+        triggers[webhook_id] = []
+
+    trigger_instance = TriggerInstance(trigger_info, job)
+    triggers[webhook_id].append(trigger_instance)
+
     @callback
-    def unregister():
+    def unregister() -> None:
         """Unregister webhook."""
-        async_unregister(hass, webhook_id)
+        triggers[webhook_id].remove(trigger_instance)
+        if not triggers[webhook_id]:
+            async_unregister(hass, webhook_id)
+            triggers.pop(webhook_id)
 
     return unregister

@@ -1,62 +1,71 @@
 """Asyncio utilities."""
+
 from __future__ import annotations
 
-from asyncio import Semaphore, coroutines, ensure_future, gather, get_running_loop
-from asyncio.events import AbstractEventLoop
+from asyncio import (
+    AbstractEventLoop,
+    Future,
+    Semaphore,
+    Task,
+    TimerHandle,
+    gather,
+    get_running_loop,
+)
 from collections.abc import Awaitable, Callable, Coroutine
 import concurrent.futures
-import functools
 import logging
 import threading
-from traceback import extract_stack
-from typing import Any, TypeVar
+from typing import Any
 
 _LOGGER = logging.getLogger(__name__)
 
 _SHUTDOWN_RUN_CALLBACK_THREADSAFE = "_shutdown_run_callback_threadsafe"
 
-T = TypeVar("T")
+
+def create_eager_task[_T](
+    coro: Coroutine[Any, Any, _T],
+    *,
+    name: str | None = None,
+    loop: AbstractEventLoop | None = None,
+) -> Task[_T]:
+    """Create a task from a coroutine and schedule it to run immediately."""
+    if not loop:
+        try:
+            loop = get_running_loop()
+        except RuntimeError:
+            # If there is no running loop, create_eager_task is being called from
+            # the wrong thread.
+            # Late import to avoid circular dependencies
+            from homeassistant.helpers import frame  # noqa: PLC0415
+
+            frame.report_usage("attempted to create an asyncio task from a thread")
+            raise
+
+    return Task(coro, loop=loop, name=name, eager_start=True)
 
 
-def fire_coroutine_threadsafe(coro: Coroutine, loop: AbstractEventLoop) -> None:
-    """Submit a coroutine object to a given event loop.
-
-    This method does not provide a way to retrieve the result and
-    is intended for fire-and-forget use. This reduces the
-    work involved to fire the function on the loop.
-    """
-    ident = loop.__dict__.get("_thread_ident")
-    if ident is not None and ident == threading.get_ident():
-        raise RuntimeError("Cannot be called from within the event loop")
-
-    if not coroutines.iscoroutine(coro):
-        raise TypeError(f"A coroutine object is required: {coro}")
-
-    def callback() -> None:
-        """Handle the firing of a coroutine."""
-        ensure_future(coro, loop=loop)
-
-    loop.call_soon_threadsafe(callback)
+def cancelling(task: Future[Any]) -> bool:
+    """Return True if task is cancelling."""
+    return bool((cancelling_ := getattr(task, "cancelling", None)) and cancelling_())
 
 
-def run_callback_threadsafe(
-    loop: AbstractEventLoop, callback: Callable[..., T], *args: Any
-) -> concurrent.futures.Future[T]:
+def run_callback_threadsafe[_T, *_Ts](
+    loop: AbstractEventLoop, callback: Callable[[*_Ts], _T], *args: *_Ts
+) -> concurrent.futures.Future[_T]:
     """Submit a callback object to a given event loop.
 
     Return a concurrent.futures.Future to access the result.
     """
-    ident = loop.__dict__.get("_thread_ident")
-    if ident is not None and ident == threading.get_ident():
+    if (ident := loop.__dict__.get("_thread_id")) and ident == threading.get_ident():
         raise RuntimeError("Cannot be called from within the event loop")
 
-    future: concurrent.futures.Future = concurrent.futures.Future()
+    future: concurrent.futures.Future[_T] = concurrent.futures.Future()
 
     def run_callback() -> None:
         """Run callback and store result."""
         try:
             future.set_result(callback(*args))
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:  # noqa: BLE001
             if future.set_running_or_notify_cancel():
                 future.set_exception(exc)
             else:
@@ -88,89 +97,7 @@ def run_callback_threadsafe(
     return future
 
 
-def check_loop(func: Callable, strict: bool = True) -> None:
-    """Warn if called inside the event loop. Raise if `strict` is True."""
-    try:
-        get_running_loop()
-        in_loop = True
-    except RuntimeError:
-        in_loop = False
-
-    if not in_loop:
-        return
-
-    found_frame = None
-
-    stack = extract_stack()
-
-    if (
-        func.__name__ == "sleep"
-        and len(stack) >= 3
-        and stack[-3].filename.endswith("pydevd.py")
-    ):
-        # Don't report `time.sleep` injected by the debugger (pydevd.py)
-        # stack[-1] is us, stack[-2] is protected_loop_func, stack[-3] is the offender
-        return
-
-    for frame in reversed(stack):
-        for path in ("custom_components/", "homeassistant/components/"):
-            try:
-                index = frame.filename.index(path)
-                found_frame = frame
-                break
-            except ValueError:
-                continue
-
-        if found_frame is not None:
-            break
-
-    # Did not source from integration? Hard error.
-    if found_frame is None:
-        raise RuntimeError(
-            f"Detected blocking call to {func.__name__} inside the event loop. "
-            "This is causing stability issues. Please report issue"
-        )
-
-    start = index + len(path)
-    end = found_frame.filename.index("/", start)
-
-    integration = found_frame.filename[start:end]
-
-    if path == "custom_components/":
-        extra = " to the custom component author"
-    else:
-        extra = ""
-
-    _LOGGER.warning(
-        "Detected blocking call to %s inside the event loop. This is causing stability issues. "
-        "Please report issue%s for %s doing blocking calls at %s, line %s: %s",
-        func.__name__,
-        extra,
-        integration,
-        found_frame.filename[index:],
-        found_frame.lineno,
-        found_frame.line.strip(),
-    )
-    if strict:
-        raise RuntimeError(
-            "Blocking calls must be done in the executor or a separate thread; "
-            "Use `await hass.async_add_executor_job()` "
-            f"at {found_frame.filename[index:]}, line {found_frame.lineno}: {found_frame.line.strip()}"
-        )
-
-
-def protect_loop(func: Callable, strict: bool = True) -> Callable:
-    """Protect function from running in event loop."""
-
-    @functools.wraps(func)
-    def protected_loop_func(*args, **kwargs):  # type: ignore
-        check_loop(func, strict=strict)
-        return func(*args, **kwargs)
-
-    return protected_loop_func
-
-
-async def gather_with_concurrency(
+async def gather_with_limited_concurrency(
     limit: int, *tasks: Any, return_exceptions: bool = False
 ) -> Any:
     """Wrap asyncio.gather to limit the number of concurrent tasks.
@@ -184,7 +111,8 @@ async def gather_with_concurrency(
             return await task
 
     return await gather(
-        *(sem_task(task) for task in tasks), return_exceptions=return_exceptions
+        *(create_eager_task(sem_task(task)) for task in tasks),
+        return_exceptions=return_exceptions,
     )
 
 
@@ -203,3 +131,9 @@ def shutdown_run_callback_threadsafe(loop: AbstractEventLoop) -> None:
     python is going to exit.
     """
     setattr(loop, _SHUTDOWN_RUN_CALLBACK_THREADSAFE, True)
+
+
+def get_scheduled_timer_handles(loop: AbstractEventLoop) -> list[TimerHandle]:
+    """Return a list of scheduled TimerHandles."""
+    handles: list[TimerHandle] = loop._scheduled  # type: ignore[attr-defined] # noqa: SLF001
+    return handles

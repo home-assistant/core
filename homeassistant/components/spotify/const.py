@@ -1,10 +1,12 @@
 """Define constants for the Spotify integration."""
 
+import logging
+
+from homeassistant.components.media_player import MediaType
+
 DOMAIN = "spotify"
 
-DATA_SPOTIFY_CLIENT = "spotify_client"
-DATA_SPOTIFY_ME = "spotify_me"
-DATA_SPOTIFY_SESSION = "spotify_session"
+LOGGER = logging.getLogger(__package__)
 
 SPOTIFY_SCOPES = [
     # Needed to be able to control playback
@@ -24,3 +26,13 @@ SPOTIFY_SCOPES = [
 ]
 
 MEDIA_PLAYER_PREFIX = "spotify://"
+MEDIA_TYPE_SHOW = "show"
+
+PLAYABLE_MEDIA_TYPES = [
+    MediaType.PLAYLIST,
+    MediaType.ALBUM,
+    MediaType.ARTIST,
+    MediaType.EPISODE,
+    MEDIA_TYPE_SHOW,
+    MediaType.TRACK,
+]

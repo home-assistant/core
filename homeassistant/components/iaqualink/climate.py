@@ -1,30 +1,25 @@
 """Support for Aqualink Thermostats."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from iaqualink.const import (
-    AQUALINK_TEMP_CELSIUS_HIGH,
-    AQUALINK_TEMP_CELSIUS_LOW,
-    AQUALINK_TEMP_FAHRENHEIT_HIGH,
-    AQUALINK_TEMP_FAHRENHEIT_LOW,
-)
-from iaqualink.device import AqualinkHeater, AqualinkPump, AqualinkSensor, AqualinkState
+from iaqualink.device import AqualinkThermostat
+from iaqualink.systems.iaqua.device import AqualinkState
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    DOMAIN,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE,
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AqualinkEntity, refresh_system
-from .const import CLIMATE_SUPPORTED_MODES, DOMAIN as AQUALINK_DOMAIN
+from . import AqualinkConfigEntry, refresh_system
+from .entity import AqualinkEntity
 from .utils import await_or_reraise
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,78 +29,64 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: AqualinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up discovered switches."""
-    devs = []
-    for dev in hass.data[AQUALINK_DOMAIN][DOMAIN]:
-        devs.append(HassAqualinkThermostat(dev))
-    async_add_entities(devs, True)
+    async_add_entities(
+        (HassAqualinkThermostat(dev) for dev in config_entry.runtime_data.thermostats),
+        True,
+    )
 
 
-class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
+class HassAqualinkThermostat(AqualinkEntity[AqualinkThermostat], ClimateEntity):
     """Representation of a thermostat."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of the thermostat."""
-        return self.dev.label.split(" ")[0]
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+
+    def __init__(self, dev: AqualinkThermostat) -> None:
+        """Initialize AquaLink thermostat."""
+        super().__init__(dev)
+        self._attr_name = dev.label.split(" ")[0]
+        self._attr_temperature_unit = (
+            UnitOfTemperature.FAHRENHEIT
+            if dev.unit == "F"
+            else UnitOfTemperature.CELSIUS
+        )
+        self._attr_min_temp = dev.min_temperature
+        self._attr_max_temp = dev.max_temperature
 
     @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
-
-    @property
-    def hvac_modes(self) -> list[str]:
-        """Return the list of supported HVAC modes."""
-        return CLIMATE_SUPPORTED_MODES
-
-    @property
-    def pump(self) -> AqualinkPump:
-        """Return the pump device for the current thermostat."""
-        pump = f"{self.name.lower()}_pump"
-        return self.dev.system.devices[pump]
-
-    @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return the current HVAC mode."""
-        state = AqualinkState(self.heater.state)
-        if state == AqualinkState.ON:
-            return HVAC_MODE_HEAT
-        return HVAC_MODE_OFF
+        if self.dev.is_on is True:
+            return HVACMode.HEAT
+        return HVACMode.OFF
 
     @refresh_system
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Turn the underlying heater switch on or off."""
-        if hvac_mode == HVAC_MODE_HEAT:
-            await await_or_reraise(self.heater.turn_on())
-        elif hvac_mode == HVAC_MODE_OFF:
-            await await_or_reraise(self.heater.turn_off())
+        if hvac_mode == HVACMode.HEAT:
+            await await_or_reraise(self.dev.turn_on())
+        elif hvac_mode == HVACMode.OFF:
+            await await_or_reraise(self.dev.turn_off())
         else:
             _LOGGER.warning("Unknown operation mode: %s", hvac_mode)
 
     @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        if self.dev.system.temp_unit == "F":
-            return TEMP_FAHRENHEIT
-        return TEMP_CELSIUS
-
-    @property
-    def min_temp(self) -> int:
-        """Return the minimum temperature supported by the thermostat."""
-        if self.temperature_unit == TEMP_FAHRENHEIT:
-            return AQUALINK_TEMP_FAHRENHEIT_LOW
-        return AQUALINK_TEMP_CELSIUS_LOW
-
-    @property
-    def max_temp(self) -> int:
-        """Return the minimum temperature supported by the thermostat."""
-        if self.temperature_unit == TEMP_FAHRENHEIT:
-            return AQUALINK_TEMP_FAHRENHEIT_HIGH
-        return AQUALINK_TEMP_CELSIUS_HIGH
+    def hvac_action(self) -> HVACAction:
+        """Return the current HVAC action."""
+        state = AqualinkState(self.dev._heater.state)  # noqa: SLF001
+        if state == AqualinkState.ON:
+            return HVACAction.HEATING
+        if state == AqualinkState.ENABLED:
+            return HVACAction.IDLE
+        return HVACAction.OFF
 
     @property
     def target_temperature(self) -> float:
@@ -113,25 +94,13 @@ class HassAqualinkThermostat(AqualinkEntity, ClimateEntity):
         return float(self.dev.state)
 
     @refresh_system
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await await_or_reraise(self.dev.set_temperature(int(kwargs[ATTR_TEMPERATURE])))
 
     @property
-    def sensor(self) -> AqualinkSensor:
-        """Return the sensor device for the current thermostat."""
-        sensor = f"{self.name.lower()}_temp"
-        return self.dev.system.devices[sensor]
-
-    @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self.sensor.state != "":
-            return float(self.sensor.state)
+        if self.dev.current_temperature != "":
+            return float(self.dev.current_temperature)
         return None
-
-    @property
-    def heater(self) -> AqualinkHeater:
-        """Return the heater device for the current thermostat."""
-        heater = f"{self.name.lower()}_heater"
-        return self.dev.system.devices[heater]

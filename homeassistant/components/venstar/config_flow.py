@@ -1,8 +1,11 @@
 """Config flow to configure the Venstar integration."""
+
+from typing import Any
+
 from venstarcolortouch import VenstarColorTouch
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -10,21 +13,13 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import _LOGGER, DOMAIN, VENSTAR_TIMEOUT
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_USERNAME): str,
-        vol.Optional(CONF_PASSWORD): str,
-        vol.Optional(CONF_PIN): str,
-        vol.Optional(CONF_SSL, default=False): bool,
-    }
-)
 
-
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
     """Validate the user input allows us to connect."""
     username = data.get(CONF_USERNAME)
     password = data.get(CONF_PASSWORD)
@@ -48,37 +43,48 @@ async def validate_input(hass: core.HomeAssistant, data):
     if not info_success:
         raise CannotConnect
 
-    return {"title": client.name}
+    return client.name
 
 
-class VenstarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class VenstarConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a venstar config flow."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Create config entry. Show the setup form to the user."""
         errors = {}
-        info = {}
 
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
 
             try:
-                info = await validate_input(self.hass, user_input)
+                title = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): str,
+                    vol.Optional(CONF_USERNAME): str,
+                    vol.Optional(CONF_PASSWORD): str,
+                    vol.Optional(CONF_PIN): str,
+                    vol.Optional(CONF_SSL, default=False): bool,
+                }
+            ),
+            errors=errors,
         )
 
-    async def async_step_import(self, import_data):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import entry from configuration.yaml."""
         self._async_abort_entries_match({CONF_HOST: import_data[CONF_HOST]})
         return await self.async_step_user(
@@ -92,5 +98,5 @@ class VenstarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""

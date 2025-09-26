@@ -1,46 +1,178 @@
 """The tests for the Recorder component."""
-from datetime import datetime
+
+from datetime import datetime, timedelta
+from unittest.mock import PropertyMock
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
 
-from homeassistant.components.recorder.models import (
-    Base,
+from homeassistant import core as ha
+from homeassistant.components.recorder.const import SupportedDialect
+from homeassistant.components.recorder.db_schema import (
+    EventData,
     Events,
-    RecorderRuns,
+    StateAttributes,
     States,
+)
+from homeassistant.components.recorder.models import (
+    LazyState,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
 )
 from homeassistant.const import EVENT_STATE_CHANGED
-import homeassistant.core as ha
 from homeassistant.exceptions import InvalidEntityFormatError
-from homeassistant.util import dt
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
+from homeassistant.util.json import json_loads
 
 
-def test_from_event_to_db_event():
+def test_from_event_to_db_event() -> None:
     """Test converting event to db event."""
-    event = ha.Event("test_event", {"some_data": 15})
-    assert event == Events.from_event(event).to_native()
+    event = ha.Event(
+        "test_event",
+        {"some_data": 15},
+        context=ha.Context(
+            id="01EYQZJXZ5Z1Z1Z1Z1Z1Z1Z1Z1",
+            parent_id="01EYQZJXZ5Z1Z1Z1Z1Z1Z1Z1Z1",
+            user_id="12345678901234567890123456789012",
+        ),
+    )
+    db_event = Events.from_event(event)
+    dialect = SupportedDialect.MYSQL
+    db_event.event_data = EventData.shared_data_bytes_from_event(event, dialect)
+    db_event.event_type = event.event_type
+    assert event.as_dict() == db_event.to_native().as_dict()
 
 
-def test_from_event_to_db_state():
+def test_from_event_to_db_event_with_null() -> None:
+    """Test converting event to EventData with a null with PostgreSQL."""
+    event = ha.Event(
+        "test_event",
+        {"some_data": "withnull\0terminator"},
+    )
+    dialect = SupportedDialect.POSTGRESQL
+    event_data = EventData.shared_data_bytes_from_event(event, dialect)
+    decoded = json_loads(event_data)
+    assert decoded["some_data"] == "withnull"
+
+
+def test_from_event_to_db_state() -> None:
     """Test converting event to db state."""
-    state = ha.State("sensor.temperature", "18")
+    state = ha.State(
+        "sensor.temperature",
+        "18",
+        context=ha.Context(
+            id="01EYQZJXZ5Z1Z1Z1Z1Z1Z1Z1Z1",
+            parent_id="01EYQZJXZ5Z1Z1Z1Z1Z1Z1Z1Z1",
+            user_id="12345678901234567890123456789012",
+        ),
+    )
     event = ha.Event(
         EVENT_STATE_CHANGED,
         {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
         context=state.context,
     )
-    # We don't restore context unless we need it by joining the
-    # events table on the event_id for state_changed events
-    state.context = ha.Context(id=None)
-    assert state == States.from_event(event).to_native()
+    assert state.as_dict() == States.from_event(event).to_native().as_dict()
 
 
-def test_from_event_to_delete_state():
+def test_from_event_to_db_state_attributes() -> None:
+    """Test converting event to db state attributes."""
+    attrs = {"this_attr": True}
+    state = ha.State("sensor.temperature", "18", attrs)
+    event = ha.Event(
+        EVENT_STATE_CHANGED,
+        {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
+        context=state.context,
+    )
+    db_attrs = StateAttributes()
+    dialect = SupportedDialect.MYSQL
+
+    db_attrs.shared_attrs = StateAttributes.shared_attrs_bytes_from_event(
+        event, dialect
+    )
+    assert db_attrs.to_native() == attrs
+
+
+def test_from_event_to_db_state_attributes_with_null() -> None:
+    """Test converting a state to StateAttributes with a null with PostgreSQL."""
+    attrs = {"this_attr": "withnull\0terminator"}
+    state = ha.State("sensor.temperature", "18", attrs)
+    event = ha.Event(
+        EVENT_STATE_CHANGED,
+        {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
+        context=state.context,
+    )
+    dialect = SupportedDialect.POSTGRESQL
+    shared_attrs = StateAttributes.shared_attrs_bytes_from_event(event, dialect)
+    decoded = json_loads(shared_attrs)
+    assert decoded["this_attr"] == "withnull"
+
+
+def test_repr() -> None:
+    """Test converting event to db state repr."""
+    attrs = {"this_attr": True}
+    fixed_time = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt_util.UTC, microsecond=432432)
+    state = ha.State(
+        "sensor.temperature",
+        "18",
+        attrs,
+        last_changed=fixed_time,
+        last_updated=fixed_time,
+    )
+    event = ha.Event(
+        EVENT_STATE_CHANGED,
+        {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
+        context=state.context,
+        time_fired_timestamp=fixed_time.timestamp(),
+    )
+    assert "2016-07-09 11:00:00+00:00" in repr(States.from_event(event))
+    assert "2016-07-09 11:00:00+00:00" in repr(Events.from_event(event))
+
+
+def test_states_repr_without_timestamp() -> None:
+    """Test repr for a state without last_updated_ts."""
+    fixed_time = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt_util.UTC, microsecond=432432)
+    states = States(
+        entity_id="sensor.temp",
+        attributes=None,
+        context_id=None,
+        context_user_id=None,
+        context_parent_id=None,
+        origin_idx=None,
+        last_updated=fixed_time,
+        last_changed=fixed_time,
+        last_updated_ts=None,
+        last_changed_ts=None,
+    )
+    assert "2016-07-09 11:00:00+00:00" in repr(states)
+
+
+def test_events_repr_without_timestamp() -> None:
+    """Test repr for an event without time_fired_ts."""
+    fixed_time = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt_util.UTC, microsecond=432432)
+    events = Events(
+        event_type="any",
+        event_data=None,
+        origin_idx=None,
+        time_fired=fixed_time,
+        time_fired_ts=None,
+        context_id=None,
+        context_user_id=None,
+        context_parent_id=None,
+    )
+    assert "2016-07-09 11:00:00+00:00" in repr(events)
+
+
+def test_handling_broken_json_state_attributes(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test we handle broken json in state attributes."""
+    state_attributes = StateAttributes(
+        attributes_id=444, hash=1234, shared_attrs="{NOT_PARSE}"
+    )
+    assert state_attributes.to_native() == {}
+    assert "Error converting row to state attributes" in caplog.text
+
+
+def test_from_event_to_delete_state() -> None:
     """Test converting deleting state event to db state."""
     event = ha.Event(
         EVENT_STATE_CHANGED,
@@ -53,81 +185,12 @@ def test_from_event_to_delete_state():
     db_state = States.from_event(event)
 
     assert db_state.entity_id == "sensor.temperature"
-    assert db_state.domain == "sensor"
     assert db_state.state == ""
-    assert db_state.last_changed == event.time_fired
-    assert db_state.last_updated == event.time_fired
+    assert db_state.last_changed_ts is None
+    assert db_state.last_updated_ts == pytest.approx(event.time_fired.timestamp())
 
 
-def test_entity_ids():
-    """Test if entity ids helper method works."""
-    engine = create_engine("sqlite://")
-    Base.metadata.create_all(engine)
-    session_factory = sessionmaker(bind=engine)
-
-    session = scoped_session(session_factory)
-    session.query(Events).delete()
-    session.query(States).delete()
-    session.query(RecorderRuns).delete()
-
-    run = RecorderRuns(
-        start=datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC),
-        end=datetime(2016, 7, 9, 23, 0, 0, tzinfo=dt.UTC),
-        closed_incorrect=False,
-        created=datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC),
-    )
-
-    session.add(run)
-    session.commit()
-
-    before_run = datetime(2016, 7, 9, 8, 0, 0, tzinfo=dt.UTC)
-    in_run = datetime(2016, 7, 9, 13, 0, 0, tzinfo=dt.UTC)
-    in_run2 = datetime(2016, 7, 9, 15, 0, 0, tzinfo=dt.UTC)
-    in_run3 = datetime(2016, 7, 9, 18, 0, 0, tzinfo=dt.UTC)
-    after_run = datetime(2016, 7, 9, 23, 30, 0, tzinfo=dt.UTC)
-
-    assert run.to_native() == run
-    assert run.entity_ids() == []
-
-    session.add(
-        States(
-            entity_id="sensor.temperature",
-            state="20",
-            last_changed=before_run,
-            last_updated=before_run,
-        )
-    )
-    session.add(
-        States(
-            entity_id="sensor.sound",
-            state="10",
-            last_changed=after_run,
-            last_updated=after_run,
-        )
-    )
-
-    session.add(
-        States(
-            entity_id="sensor.humidity",
-            state="76",
-            last_changed=in_run,
-            last_updated=in_run,
-        )
-    )
-    session.add(
-        States(
-            entity_id="sensor.lux",
-            state="5",
-            last_changed=in_run3,
-            last_updated=in_run3,
-        )
-    )
-
-    assert sorted(run.entity_ids()) == ["sensor.humidity", "sensor.lux"]
-    assert run.entity_ids(in_run2) == ["sensor.humidity"]
-
-
-def test_states_from_native_invalid_entity_id():
+def test_states_from_native_invalid_entity_id() -> None:
     """Test loading a state from an invalid entity ID."""
     state = States()
     state.entity_id = "test.invalid__id"
@@ -139,9 +202,9 @@ def test_states_from_native_invalid_entity_id():
     assert state.entity_id == "test.invalid__id"
 
 
-async def test_process_timestamp():
+async def test_process_timestamp() -> None:
     """Test processing time stamp to UTC."""
-    datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC)
+    datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt_util.UTC)
     datetime_without_tzinfo = datetime(2016, 7, 9, 11, 0, 0)
     est = dt_util.get_time_zone("US/Eastern")
     datetime_est_timezone = datetime(2016, 7, 9, 11, 0, 0, tzinfo=est)
@@ -151,26 +214,26 @@ async def test_process_timestamp():
     datetime_hst_timezone = datetime(2016, 7, 9, 11, 0, 0, tzinfo=hst)
 
     assert process_timestamp(datetime_with_tzinfo) == datetime(
-        2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC
+        2016, 7, 9, 11, 0, 0, tzinfo=dt_util.UTC
     )
     assert process_timestamp(datetime_without_tzinfo) == datetime(
-        2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC
+        2016, 7, 9, 11, 0, 0, tzinfo=dt_util.UTC
     )
     assert process_timestamp(datetime_est_timezone) == datetime(
-        2016, 7, 9, 15, 0, tzinfo=dt.UTC
+        2016, 7, 9, 15, 0, tzinfo=dt_util.UTC
     )
     assert process_timestamp(datetime_nst_timezone) == datetime(
-        2016, 7, 9, 13, 30, tzinfo=dt.UTC
+        2016, 7, 9, 13, 30, tzinfo=dt_util.UTC
     )
     assert process_timestamp(datetime_hst_timezone) == datetime(
-        2016, 7, 9, 21, 0, tzinfo=dt.UTC
+        2016, 7, 9, 21, 0, tzinfo=dt_util.UTC
     )
     assert process_timestamp(None) is None
 
 
-async def test_process_timestamp_to_utc_isoformat():
+async def test_process_timestamp_to_utc_isoformat() -> None:
     """Test processing time stamp to UTC isoformat."""
-    datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt.UTC)
+    datetime_with_tzinfo = datetime(2016, 7, 9, 11, 0, 0, tzinfo=dt_util.UTC)
     datetime_without_tzinfo = datetime(2016, 7, 9, 11, 0, 0)
     est = dt_util.get_time_zone("US/Eastern")
     datetime_est_timezone = datetime(2016, 7, 9, 11, 0, 0, tzinfo=est)
@@ -204,14 +267,156 @@ async def test_process_timestamp_to_utc_isoformat():
     assert process_timestamp_to_utc_isoformat(None) is None
 
 
-async def test_event_to_db_model():
+async def test_event_to_db_model() -> None:
     """Test we can round trip Event conversion."""
     event = ha.Event(
-        "state_changed", {"some": "attr"}, ha.EventOrigin.local, dt_util.utcnow()
+        "state_changed",
+        {"some": "attr"},
+        ha.EventOrigin.local,
+        dt_util.utcnow().timestamp(),
     )
-    native = Events.from_event(event).to_native()
-    assert native == event
+    db_event = Events.from_event(event)
+    dialect = SupportedDialect.MYSQL
+    db_event.event_data = EventData.shared_data_bytes_from_event(event, dialect)
+    db_event.event_type = event.event_type
+    native = db_event.to_native()
+    assert native.as_dict() == event.as_dict()
 
-    native = Events.from_event(event, event_data="{}").to_native()
-    event.data = {}
-    assert native == event
+    native = Events.from_event(event).to_native()
+    native.data = (
+        event.data
+    )  # data is not set by from_event as its in the event_data table
+    native.event_type = event.event_type
+    assert native.as_dict() == event.as_dict()
+
+
+async def test_lazy_state_handles_include_json(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the LazyState class handles invalid json."""
+    row = PropertyMock(
+        entity_id="sensor.invalid",
+        shared_attrs="{INVALID_JSON}",
+    )
+    assert LazyState(row, {}, None, row.entity_id, "", 1, False).attributes == {}
+    assert "Error converting row to state attributes" in caplog.text
+
+
+async def test_lazy_state_can_decode_attributes(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the LazyState prefers can decode attributes."""
+    row = PropertyMock(
+        entity_id="sensor.invalid",
+        attributes='{"shared":true}',
+    )
+    assert LazyState(row, {}, None, row.entity_id, "", 1, False).attributes == {
+        "shared": True
+    }
+
+
+async def test_lazy_state_handles_different_last_updated_and_last_changed(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the LazyState handles different last_updated and last_changed."""
+    now = datetime(2021, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
+    row = PropertyMock(
+        entity_id="sensor.valid",
+        state="off",
+        attributes='{"shared":true}',
+        last_updated_ts=now.timestamp(),
+        last_reported_ts=now.timestamp(),
+        last_changed_ts=(now - timedelta(seconds=60)).timestamp(),
+    )
+    lstate = LazyState(
+        row, {}, None, row.entity_id, row.state, row.last_updated_ts, False
+    )
+    assert lstate.as_dict() == {
+        "attributes": {"shared": True},
+        "entity_id": "sensor.valid",
+        "last_changed": "2021-06-12T03:03:01.000323+00:00",
+        "last_updated": "2021-06-12T03:04:01.000323+00:00",
+        "state": "off",
+    }
+    assert lstate.last_updated.timestamp() == row.last_updated_ts
+    assert lstate.last_changed.timestamp() == row.last_changed_ts
+    assert lstate.last_reported.timestamp() == row.last_updated_ts
+    assert lstate.as_dict() == {
+        "attributes": {"shared": True},
+        "entity_id": "sensor.valid",
+        "last_changed": "2021-06-12T03:03:01.000323+00:00",
+        "last_updated": "2021-06-12T03:04:01.000323+00:00",
+        "state": "off",
+    }
+    assert lstate.last_changed_timestamp == row.last_changed_ts
+    assert lstate.last_updated_timestamp == row.last_updated_ts
+    assert lstate.last_reported_timestamp == row.last_updated_ts
+
+
+async def test_lazy_state_handles_same_last_updated_and_last_changed(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the LazyState handles same last_updated and last_changed."""
+    now = datetime(2021, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
+    row = PropertyMock(
+        entity_id="sensor.valid",
+        state="off",
+        attributes='{"shared":true}',
+        last_updated_ts=now.timestamp(),
+        last_changed_ts=now.timestamp(),
+        last_reported_ts=None,
+    )
+    lstate = LazyState(
+        row, {}, None, row.entity_id, row.state, row.last_updated_ts, False
+    )
+    assert lstate.as_dict() == {
+        "attributes": {"shared": True},
+        "entity_id": "sensor.valid",
+        "last_changed": "2021-06-12T03:04:01.000323+00:00",
+        "last_updated": "2021-06-12T03:04:01.000323+00:00",
+        "state": "off",
+    }
+    assert lstate.last_updated.timestamp() == row.last_updated_ts
+    assert lstate.last_changed.timestamp() == row.last_changed_ts
+    assert lstate.last_reported.timestamp() == row.last_updated_ts
+    assert lstate.as_dict() == {
+        "attributes": {"shared": True},
+        "entity_id": "sensor.valid",
+        "last_changed": "2021-06-12T03:04:01.000323+00:00",
+        "last_updated": "2021-06-12T03:04:01.000323+00:00",
+        "state": "off",
+    }
+    assert lstate.last_changed_timestamp == row.last_changed_ts
+    assert lstate.last_updated_timestamp == row.last_updated_ts
+    assert lstate.last_reported_timestamp == row.last_updated_ts
+
+
+async def test_lazy_state_handles_different_last_reported(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the LazyState handles last_reported different from last_updated."""
+    now = datetime(2021, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
+    row = PropertyMock(
+        entity_id="sensor.valid",
+        state="off",
+        attributes='{"shared":true}',
+        last_updated_ts=(now - timedelta(seconds=60)).timestamp(),
+        last_reported_ts=now.timestamp(),
+        last_changed_ts=(now - timedelta(seconds=60)).timestamp(),
+    )
+    lstate = LazyState(
+        row, {}, None, row.entity_id, row.state, row.last_updated_ts, False
+    )
+    assert lstate.as_dict() == {
+        "attributes": {"shared": True},
+        "entity_id": "sensor.valid",
+        "last_changed": "2021-06-12T03:03:01.000323+00:00",
+        "last_updated": "2021-06-12T03:03:01.000323+00:00",
+        "state": "off",
+    }
+    assert lstate.last_updated.timestamp() == row.last_updated_ts
+    assert lstate.last_changed.timestamp() == row.last_changed_ts
+    assert lstate.last_reported.timestamp() == row.last_reported_ts
+    assert lstate.last_changed_timestamp == row.last_changed_ts
+    assert lstate.last_updated_timestamp == row.last_updated_ts
+    assert lstate.last_reported_timestamp == row.last_reported_ts

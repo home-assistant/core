@@ -1,25 +1,45 @@
 {
   "domain": "zha",
   "name": "Zigbee Home Automation",
+  "after_dependencies": ["hassio", "onboarding", "usb"],
+  "codeowners": ["@dmulcahey", "@adminiuga", "@puddly", "@TheJulianJES"],
   "config_flow": true,
+  "dependencies": ["file_upload", "homeassistant_hardware"],
   "documentation": "https://www.home-assistant.io/integrations/zha",
-  "requirements": [
-    "bellows==0.29.0",
-    "pyserial==3.5",
-    "pyserial-asyncio==0.6",
-    "zha-quirks==0.0.66",
-    "zigpy-deconz==0.14.0",
-    "zigpy==0.43.0",
-    "zigpy-xbee==0.14.0",
-    "zigpy-zigate==0.7.3",
-    "zigpy-znp==0.7.0"
+  "iot_class": "local_polling",
+  "loggers": [
+    "aiosqlite",
+    "bellows",
+    "crccheck",
+    "pure_pcapy3",
+    "zhaquirks",
+    "zigpy",
+    "zigpy_deconz",
+    "zigpy_xbee",
+    "zigpy_zigate",
+    "zigpy_znp",
+    "zha",
+    "universal_silabs_flasher"
   ],
+  "requirements": ["zha==0.0.73"],
   "usb": [
     {
       "vid": "10C4",
       "pid": "EA60",
       "description": "*2652*",
       "known_devices": ["slae.sh cc2652rb stick"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*slzb-07*",
+      "known_devices": ["smlight slzb-07"]
+    },
+    {
+      "vid": "1A86",
+      "pid": "55D4",
+      "description": "*sonoff*plus*",
+      "known_devices": ["sonoff zigbee dongle plus v2"]
     },
     {
       "vid": "10C4",
@@ -52,26 +72,80 @@
       "known_devices": ["Conbee II"]
     },
     {
+      "vid": "0403",
+      "pid": "6015",
+      "description": "*conbee*",
+      "known_devices": ["Conbee III"]
+    },
+    {
       "vid": "10C4",
       "pid": "8A2A",
       "description": "*zigbee*",
       "known_devices": ["Nortek HUSBZB-1"]
     },
     {
+      "vid": "0403",
+      "pid": "6015",
+      "description": "*zigate*",
+      "known_devices": ["ZiGate+"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*zigate*",
+      "known_devices": ["ZiGate"]
+    },
+    {
       "vid": "10C4",
       "pid": "8B34",
       "description": "*bv 2010/10*",
       "known_devices": ["Bitron Video AV2010/10"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*sonoff*max*",
+      "known_devices": ["SONOFF Dongle Max MG24"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*sonoff*lite*mg21*",
+      "known_devices": ["sonoff zigbee dongle lite mg21"]
     }
   ],
-  "codeowners": ["@dmulcahey", "@adminiuga"],
   "zeroconf": [
     {
       "type": "_esphomelib._tcp.local.",
       "name": "tube*"
+    },
+    {
+      "type": "_zigate-zigbee-gateway._tcp.local.",
+      "name": "*zigate*"
+    },
+    {
+      "type": "_zigstar_gw._tcp.local.",
+      "name": "*zigstar*"
+    },
+    {
+      "type": "_uzg-01._tcp.local.",
+      "name": "uzg-01*"
+    },
+    {
+      "type": "_slzb-06._tcp.local.",
+      "name": "slzb-06*"
+    },
+    {
+      "type": "_xzg._tcp.local.",
+      "name": "xzg*"
+    },
+    {
+      "type": "_czc._tcp.local.",
+      "name": "czc*"
+    },
+    {
+      "type": "_zigbee-coordinator._tcp.local.",
+      "name": "*"
     }
-  ],
-  "after_dependencies": ["usb", "zeroconf"],
-  "iot_class": "local_polling",
-  "loggers": ["aiosqlite", "bellows", "crccheck", "pure_pcapy3", "zhaquirks", "zigpy", "zigpy_deconz", "zigpy_xbee", "zigpy_zigate", "zigpy_znp"]
+  ]
 }

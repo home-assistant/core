@@ -1,9 +1,0 @@
-{
-    "state": {
-        "_": {
-            "off": "Desligado",
-            "on": "Ligado"
-        }
-    },
-    "title": "Entrada booleana"
-}

@@ -1,8 +1,10 @@
 """Support to select a date and/or a time."""
+
 from __future__ import annotations
 
 import datetime as py_datetime
 import logging
+from typing import Any, Self
 
 import voluptuous as vol
 
@@ -16,13 +18,12 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import collection
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,17 +58,10 @@ def validate_set_datetime_attrs(config):
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
-CREATE_FIELDS = {
+STORAGE_FIELDS: VolDictType = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional(CONF_HAS_DATE, default=False): cv.boolean,
     vol.Optional(CONF_HAS_TIME, default=False): cv.boolean,
-    vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(CONF_INITIAL): cv.string,
-}
-UPDATE_FIELDS = {
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_HAS_DATE): cv.boolean,
-    vol.Optional(CONF_HAS_TIME): cv.boolean,
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_INITIAL): cv.string,
 }
@@ -81,23 +75,32 @@ def has_date_or_time(conf):
     raise vol.Invalid("Entity needs at least a date or a time")
 
 
-def valid_initial(conf):
+def valid_initial(conf: dict[str, Any]) -> dict[str, Any]:
     """Check the initial value is valid."""
-    if not (initial := conf.get(CONF_INITIAL)):
+    if not (conf.get(CONF_INITIAL)):
         return conf
 
+    # Ensure we can parse the initial value, raise vol.Invalid on failure
+    parse_initial_datetime(conf)
+    return conf
+
+
+def parse_initial_datetime(conf: dict[str, Any]) -> py_datetime.datetime:
+    """Check the initial value is valid."""
+    initial: str = conf[CONF_INITIAL]
+
     if conf[CONF_HAS_DATE] and conf[CONF_HAS_TIME]:
-        if dt_util.parse_datetime(initial) is not None:
-            return conf
+        if (datetime := dt_util.parse_datetime(initial)) is not None:
+            return datetime
         raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a datetime")
 
     if conf[CONF_HAS_DATE]:
-        if dt_util.parse_date(initial) is not None:
-            return conf
+        if (date := dt_util.parse_date(initial)) is not None:
+            return py_datetime.datetime.combine(date, DEFAULT_TIME)
         raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a date")
 
-    if dt_util.parse_time(initial) is not None:
-        return conf
+    if (time := dt_util.parse_time(initial)) is not None:
+        return py_datetime.datetime.combine(py_datetime.date.today(), time)
     raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a time")
 
 
@@ -124,19 +127,19 @@ RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input datetime."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[InputDatetime](_LOGGER, DOMAIN, hass)
+
     id_manager = collection.IDManager()
 
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, InputDatetime.from_yaml
+        hass, DOMAIN, DOMAIN, component, yaml_collection, InputDatetime
     )
 
     storage_collection = DateTimeStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     collection.sync_entity_lifecycle(
@@ -148,8 +151,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
-        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+    collection.DictStorageCollectionWebsocket(
+        storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
     async def reload_service_handler(service_call: ServiceCall) -> None:
@@ -172,14 +175,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         "set_datetime",
         vol.All(
-            vol.Schema(
+            cv.make_entity_service_schema(
                 {
                     vol.Optional(ATTR_DATE): cv.date,
                     vol.Optional(ATTR_TIME): cv.time,
                     vol.Optional(ATTR_DATETIME): cv.datetime,
                     vol.Optional(ATTR_TIMESTAMP): vol.Coerce(float),
                 },
-                extra=vol.ALLOW_EXTRA,
             ),
             cv.has_at_least_one_key(
                 ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP
@@ -192,65 +194,64 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class DateTimeStorageCollection(collection.StorageCollection):
+class DateTimeStorageCollection(collection.DictStorageCollection):
     """Input storage based collection."""
 
-    CREATE_SCHEMA = vol.Schema(vol.All(CREATE_FIELDS, has_date_or_time))
-    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+    CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, has_date_or_time))
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
-        return self.CREATE_SCHEMA(data)
+        return self.CREATE_UPDATE_SCHEMA(data)
 
     @callback
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
-        update_data = self.UPDATE_SCHEMA(update_data)
-        return has_date_or_time({**data, **update_data})
+        update_data = self.CREATE_UPDATE_SCHEMA(update_data)
+        return {CONF_ID: item[CONF_ID]} | update_data
 
 
-class InputDatetime(RestoreEntity):
+class InputDatetime(collection.CollectionEntity, RestoreEntity):
     """Representation of a datetime input."""
 
-    def __init__(self, config: dict) -> None:
+    _unrecorded_attributes = frozenset({ATTR_EDITABLE, CONF_HAS_DATE, CONF_HAS_TIME})
+
+    _attr_should_poll = False
+    editable: bool
+
+    def __init__(self, config: ConfigType) -> None:
         """Initialize a select input."""
         self._config = config
-        self.editable = True
         self._current_datetime = None
 
-        if not (initial := config.get(CONF_INITIAL)):
+        if not config.get(CONF_INITIAL):
             return
 
-        if self.has_date and self.has_time:
-            current_datetime = dt_util.parse_datetime(initial)
-
-        elif self.has_date:
-            date = dt_util.parse_date(initial)
-            current_datetime = py_datetime.datetime.combine(date, DEFAULT_TIME)
-
-        else:
-            time = dt_util.parse_time(initial)
-            current_datetime = py_datetime.datetime.combine(
-                py_datetime.date.today(), time
-            )
+        current_datetime = parse_initial_datetime(config)
 
         # If the user passed in an initial value with a timezone, convert it to right tz
         if current_datetime.tzinfo is not None:
             self._current_datetime = current_datetime.astimezone(
-                dt_util.DEFAULT_TIME_ZONE
+                dt_util.get_default_time_zone()
             )
         else:
             self._current_datetime = current_datetime.replace(
-                tzinfo=dt_util.DEFAULT_TIME_ZONE
+                tzinfo=dt_util.get_default_time_zone()
             )
 
     @classmethod
-    def from_yaml(cls, config: dict) -> InputDatetime:
-        """Return entity instance initialized from yaml storage."""
+    def from_storage(cls, config: ConfigType) -> Self:
+        """Return entity instance initialized from storage."""
+        input_dt = cls(config)
+        input_dt.editable = True
+        return input_dt
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType) -> Self:
+        """Return entity instance initialized from yaml."""
         input_dt = cls(config)
         input_dt.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_dt.editable = False
@@ -264,7 +265,7 @@ class InputDatetime(RestoreEntity):
         if self.state is not None:
             return
 
-        default_value = py_datetime.datetime.today().strftime("%Y-%m-%d 00:00:00")
+        default_value = py_datetime.datetime.today().strftime(f"{FMT_DATE} 00:00:00")
 
         # Priority 2: Old state
         if (old_state := await self.async_get_last_state()) is None:
@@ -284,22 +285,16 @@ class InputDatetime(RestoreEntity):
             else:
                 current_datetime = py_datetime.datetime.combine(date, DEFAULT_TIME)
 
+        elif (time := dt_util.parse_time(old_state.state)) is None:
+            current_datetime = dt_util.parse_datetime(default_value)
         else:
-            if (time := dt_util.parse_time(old_state.state)) is None:
-                current_datetime = dt_util.parse_datetime(default_value)
-            else:
-                current_datetime = py_datetime.datetime.combine(
-                    py_datetime.date.today(), time
-                )
+            current_datetime = py_datetime.datetime.combine(
+                py_datetime.date.today(), time
+            )
 
         self._current_datetime = current_datetime.replace(
-            tzinfo=dt_util.DEFAULT_TIME_ZONE
+            tzinfo=dt_util.get_default_time_zone()
         )
-
-    @property
-    def should_poll(self):
-        """If entity should be polled."""
-        return False
 
     @property
     def name(self):
@@ -336,7 +331,7 @@ class InputDatetime(RestoreEntity):
         return self._current_datetime.strftime(FMT_TIME)
 
     @property
-    def capability_attributes(self) -> dict:
+    def capability_attributes(self) -> dict[str, Any]:
         """Return the capability attributes."""
         return {
             CONF_HAS_DATE: self.has_date,
@@ -389,7 +384,7 @@ class InputDatetime(RestoreEntity):
     @callback
     def async_set_datetime(self, date=None, time=None, datetime=None, timestamp=None):
         """Set a new date / time."""
-        if timestamp:
+        if timestamp is not None:
             datetime = dt_util.as_local(dt_util.utc_from_timestamp(timestamp))
 
         if datetime:
@@ -412,11 +407,11 @@ class InputDatetime(RestoreEntity):
             time = self._current_datetime.time()
 
         self._current_datetime = py_datetime.datetime.combine(
-            date, time, dt_util.DEFAULT_TIME_ZONE
+            date, time, dt_util.get_default_time_zone()
         )
         self.async_write_ha_state()
 
-    async def async_update_config(self, config: dict) -> None:
+    async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config
         self.async_write_ha_state()

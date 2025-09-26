@@ -1,7 +1,9 @@
 """Constants for waze_travel_time."""
-from homeassistant.const import CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC
+
+from __future__ import annotations
 
 DOMAIN = "waze_travel_time"
+SEMAPHORE = "semaphore"
 
 CONF_DESTINATION = "destination"
 CONF_ORIGIN = "origin"
@@ -20,11 +22,22 @@ DEFAULT_VEHICLE_TYPE = "car"
 DEFAULT_AVOID_TOLL_ROADS = False
 DEFAULT_AVOID_SUBSCRIPTION_ROADS = False
 DEFAULT_AVOID_FERRIES = False
+DEFAULT_FILTER = [""]
 
-UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
+IMPERIAL_UNITS = "imperial"
+METRIC_UNITS = "metric"
+UNITS = [METRIC_UNITS, IMPERIAL_UNITS]
 
-REGIONS = ["US", "NA", "EU", "IL", "AU"]
+REGIONS = ["us", "na", "eu", "il", "au"]
 VEHICLE_TYPES = ["car", "taxi", "motorcycle"]
 
-# Attempt to find entity_id without finding address with period.
-ENTITY_ID_PATTERN = "(?<![a-zA-Z0-9 ])[a-z_]+[.][a-zA-Z0-9_]+"
+DEFAULT_OPTIONS: dict[str, str | bool | list[str]] = {
+    CONF_REALTIME: DEFAULT_REALTIME,
+    CONF_VEHICLE_TYPE: DEFAULT_VEHICLE_TYPE,
+    CONF_UNITS: METRIC_UNITS,
+    CONF_AVOID_FERRIES: DEFAULT_AVOID_FERRIES,
+    CONF_AVOID_SUBSCRIPTION_ROADS: DEFAULT_AVOID_SUBSCRIPTION_ROADS,
+    CONF_AVOID_TOLL_ROADS: DEFAULT_AVOID_TOLL_ROADS,
+    CONF_INCL_FILTER: DEFAULT_FILTER,
+    CONF_EXCL_FILTER: DEFAULT_FILTER,
+}

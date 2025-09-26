@@ -1,13 +1,21 @@
 """Trigger an automation when a LiteJet switch is released."""
-from collections.abc import Callable
 
+from __future__ import annotations
+
+from collections.abc import Callable
+from datetime import datetime
+from typing import cast
+
+from pylitejet import LiteJet
 import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM
-from homeassistant.core import HassJob, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -29,18 +37,23 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
     """Listen for events based on configuration."""
-    trigger_data = automation_info["trigger_data"]
-    number = config.get(CONF_NUMBER)
+    trigger_data = trigger_info["trigger_data"]
+    number = cast(int, config[CONF_NUMBER])
     held_more_than = config.get(CONF_HELD_MORE_THAN)
     held_less_than = config.get(CONF_HELD_LESS_THAN)
     pressed_time = None
-    cancel_pressed_more_than: Callable = None
+    cancel_pressed_more_than: Callable | None = None
     job = HassJob(action)
 
     @callback
-    def call_action():
+    def call_action() -> None:
         """Call action with right context."""
         hass.async_run_hass_job(
             job,
@@ -62,11 +75,11 @@ async def async_attach_trigger(hass, config, action, automation_info):
     # neither: trigger on pressed
 
     @callback
-    def pressed_more_than_satisfied(now):
+    def pressed_more_than_satisfied(now: datetime) -> None:
         """Handle the LiteJet's switch's button pressed >= held_more_than."""
         call_action()
 
-    def pressed():
+    def pressed() -> None:
         """Handle the press of the LiteJet switch's button."""
         nonlocal cancel_pressed_more_than, pressed_time
         nonlocal held_less_than, held_more_than
@@ -78,11 +91,12 @@ async def async_attach_trigger(hass, config, action, automation_info):
                 hass, pressed_more_than_satisfied, dt_util.utcnow() + held_more_than
             )
 
-    def released():
+    def released() -> None:
         """Handle the release of the LiteJet switch's button."""
         nonlocal cancel_pressed_more_than, pressed_time
         nonlocal held_less_than, held_more_than
-        # pylint: disable=not-callable
+        if pressed_time is None:
+            return
         if cancel_pressed_more_than is not None:
             cancel_pressed_more_than()
             cancel_pressed_more_than = None
@@ -95,13 +109,13 @@ async def async_attach_trigger(hass, config, action, automation_info):
         ):
             hass.add_job(call_action)
 
-    system = hass.data[DOMAIN]
+    system: LiteJet = hass.data[DOMAIN]
 
     system.on_switch_pressed(number, pressed)
     system.on_switch_released(number, released)
 
     @callback
-    def async_remove():
+    def async_remove() -> None:
         """Remove all subscriptions used for this trigger."""
         system.unsubscribe(pressed)
         system.unsubscribe(released)

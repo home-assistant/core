@@ -1,7 +1,9 @@
 """Support for HDMI CEC devices as media players."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pycec.commands import CecCommand, KeyPressCommand, KeyReleaseCommand
 from pycec.const import (
@@ -24,35 +26,23 @@ from pycec.const import (
     TYPE_TUNER,
 )
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    DOMAIN,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP,
-)
-from homeassistant.const import (
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
+from homeassistant.components.media_player import (
+    DOMAIN as MP_DOMAIN,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+    MediaType,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ATTR_NEW, CecEntity
+from .const import ATTR_NEW, DOMAIN
+from .entity import CecEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
+ENTITY_ID_FORMAT = MP_DOMAIN + ".{}"
 
 
 def setup_platform(
@@ -77,7 +67,7 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
     def __init__(self, device, logical) -> None:
         """Initialize the HDMI device."""
         CecEntity.__init__(self, device, logical)
-        self.entity_id = f"{DOMAIN}.hdmi_{hex(self._logical_address)[2:]}"
+        self.entity_id = f"{MP_DOMAIN}.hdmi_{hex(self._logical_address)[2:]}"
 
     def send_keypress(self, key):
         """Send keypress to CEC adapter."""
@@ -91,121 +81,118 @@ class CecPlayerEntity(CecEntity, MediaPlayerEntity):
         """Send playback status to CEC adapter."""
         self._device.async_send_command(CecCommand(key, dst=self._logical_address))
 
-    def mute_volume(self, mute):
+    def mute_volume(self, mute: bool) -> None:
         """Mute volume."""
         self.send_keypress(KEY_MUTE_TOGGLE)
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Go to previous track."""
         self.send_keypress(KEY_BACKWARD)
 
-    def turn_on(self):
+    def turn_on(self) -> None:
         """Turn device on."""
         self._device.turn_on()
-        self._state = STATE_ON
+        self._attr_state = MediaPlayerState.ON
 
-    def clear_playlist(self):
+    def clear_playlist(self) -> None:
         """Clear players playlist."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
-    def turn_off(self):
+    def turn_off(self) -> None:
         """Turn device off."""
         self._device.turn_off()
-        self._state = STATE_OFF
+        self._attr_state = MediaPlayerState.OFF
 
-    def media_stop(self):
+    def media_stop(self) -> None:
         """Stop playback."""
         self.send_keypress(KEY_STOP)
-        self._state = STATE_IDLE
+        self._attr_state = MediaPlayerState.IDLE
 
-    def play_media(self, media_type, media_id, **kwargs):
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Not supported."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Skip to next track."""
         self.send_keypress(KEY_FORWARD)
 
-    def media_seek(self, position):
+    def media_seek(self, position: float) -> None:
         """Not supported."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Pause playback."""
         self.send_keypress(KEY_PAUSE)
-        self._state = STATE_PAUSED
+        self._attr_state = MediaPlayerState.PAUSED
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Not supported."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Start playback."""
         self.send_keypress(KEY_PLAY)
-        self._state = STATE_PLAYING
+        self._attr_state = MediaPlayerState.PLAYING
 
-    def volume_up(self):
+    def volume_up(self) -> None:
         """Increase volume."""
         _LOGGER.debug("%s: volume up", self._logical_address)
         self.send_keypress(KEY_VOLUME_UP)
 
-    def volume_down(self):
+    def volume_down(self) -> None:
         """Decrease volume."""
         _LOGGER.debug("%s: volume down", self._logical_address)
         self.send_keypress(KEY_VOLUME_DOWN)
 
-    @property
-    def state(self) -> str | None:
-        """Cache state of device."""
-        return self._state
-
-    def update(self):
+    def update(self) -> None:
         """Update device status."""
         device = self._device
         if device.power_status in [POWER_OFF, 3]:
-            self._state = STATE_OFF
+            self._attr_state = MediaPlayerState.OFF
         elif not self.support_pause:
             if device.power_status in [POWER_ON, 4]:
-                self._state = STATE_ON
+                self._attr_state = MediaPlayerState.ON
         elif device.status == STATUS_PLAY:
-            self._state = STATE_PLAYING
+            self._attr_state = MediaPlayerState.PLAYING
         elif device.status == STATUS_STOP:
-            self._state = STATE_IDLE
+            self._attr_state = MediaPlayerState.IDLE
         elif device.status == STATUS_STILL:
-            self._state = STATE_PAUSED
+            self._attr_state = MediaPlayerState.PAUSED
         else:
             _LOGGER.warning("Unknown state: %s", device.status)
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self.type_id == TYPE_RECORDER or self.type == TYPE_PLAYBACK:
             return (
-                SUPPORT_TURN_ON
-                | SUPPORT_TURN_OFF
-                | SUPPORT_PLAY_MEDIA
-                | SUPPORT_PAUSE
-                | SUPPORT_STOP
-                | SUPPORT_PREVIOUS_TRACK
-                | SUPPORT_NEXT_TRACK
+                MediaPlayerEntityFeature.TURN_ON
+                | MediaPlayerEntityFeature.TURN_OFF
+                | MediaPlayerEntityFeature.PLAY_MEDIA
+                | MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.STOP
+                | MediaPlayerEntityFeature.PREVIOUS_TRACK
+                | MediaPlayerEntityFeature.NEXT_TRACK
             )
         if self.type == TYPE_TUNER:
             return (
-                SUPPORT_TURN_ON
-                | SUPPORT_TURN_OFF
-                | SUPPORT_PLAY_MEDIA
-                | SUPPORT_PAUSE
-                | SUPPORT_STOP
+                MediaPlayerEntityFeature.TURN_ON
+                | MediaPlayerEntityFeature.TURN_OFF
+                | MediaPlayerEntityFeature.PLAY_MEDIA
+                | MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.STOP
             )
         if self.type_id == TYPE_AUDIO:
             return (
-                SUPPORT_TURN_ON
-                | SUPPORT_TURN_OFF
-                | SUPPORT_VOLUME_STEP
-                | SUPPORT_VOLUME_MUTE
+                MediaPlayerEntityFeature.TURN_ON
+                | MediaPlayerEntityFeature.TURN_OFF
+                | MediaPlayerEntityFeature.VOLUME_STEP
+                | MediaPlayerEntityFeature.VOLUME_MUTE
             )
-        return SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+        return MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF

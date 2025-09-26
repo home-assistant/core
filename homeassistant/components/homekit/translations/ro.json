@@ -1,9 +1,0 @@
-{
-    "config": {
-        "step": {
-            "user": {
-                "description": "Integrarea HomeKit v\u0103 va permite s\u0103 accesa\u021bi entit\u0103\u021bile Home Assistant din HomeKit. \u00cen modul bridge, HomeKit Bridges sunt limitate la 150 de accesorii pe instan\u021b\u0103, inclusiv bridge-ul \u00een sine. Dac\u0103 dori\u021bi s\u0103 face\u021bi mai mult dec\u00e2t num\u0103rul maxim de accesorii, este recomandat s\u0103 utiliza\u021bi mai multe poduri HomeKit pentru diferite domenii. Configurarea detaliat\u0103 a entit\u0103\u021bii este disponibil\u0103 numai prin YAML. Pentru cele mai bune performan\u021be \u0219i pentru a preveni indisponibilitatea nea\u0219teptat\u0103, crea\u021bi \u0219i \u00eemperechea\u021bi o instan\u021b\u0103 HomeKit separat\u0103 \u00een modul accesoriu pentru fiecare player media TV \u0219i camer\u0103."
-            }
-        }
-    }
-}

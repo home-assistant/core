@@ -1,91 +1,131 @@
-"""Home Assistant component for accessing the Wallbox Portal API. The sensor component creates multiple sensors regarding wallbox performance."""
+"""Home Assistant component for accessing the Wallbox Portal API.
+
+The number component allows control of charging current.
+"""
+
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Optional, cast
+from typing import cast
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import InvalidAuth, WallboxCoordinator, WallboxEntity
 from .const import (
-    CONF_DATA_KEY,
-    CONF_MAX_AVAILABLE_POWER_KEY,
-    CONF_MAX_CHARGING_CURRENT_KEY,
-    CONF_SERIAL_NUMBER_KEY,
-    DOMAIN,
+    BIDIRECTIONAL_MODEL_PREFIXES,
+    CHARGER_DATA_KEY,
+    CHARGER_ENERGY_PRICE_KEY,
+    CHARGER_MAX_AVAILABLE_POWER_KEY,
+    CHARGER_MAX_CHARGING_CURRENT_KEY,
+    CHARGER_MAX_ICP_CURRENT_KEY,
+    CHARGER_PART_NUMBER_KEY,
+    CHARGER_SERIAL_NUMBER_KEY,
 )
+from .coordinator import WallboxConfigEntry, WallboxCoordinator
+from .entity import WallboxEntity
 
 
-@dataclass
+def min_charging_current_value(coordinator: WallboxCoordinator) -> float:
+    """Return the minimum available value for charging current."""
+    if (
+        coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY][0:2]
+        in BIDIRECTIONAL_MODEL_PREFIXES
+    ):
+        return cast(float, (coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY] * -1))
+    return 6
+
+
+@dataclass(frozen=True, kw_only=True)
 class WallboxNumberEntityDescription(NumberEntityDescription):
-    """Describes Wallbox sensor entity."""
+    """Describes Wallbox number entity."""
+
+    max_value_fn: Callable[[WallboxCoordinator], float]
+    min_value_fn: Callable[[WallboxCoordinator], float]
+    set_value_fn: Callable[[WallboxCoordinator], Callable[[float], Awaitable[None]]]
 
 
 NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
-    CONF_MAX_CHARGING_CURRENT_KEY: WallboxNumberEntityDescription(
-        key=CONF_MAX_CHARGING_CURRENT_KEY,
-        name="Max. Charging Current",
-        min_value=6,
+    CHARGER_MAX_CHARGING_CURRENT_KEY: WallboxNumberEntityDescription(
+        key=CHARGER_MAX_CHARGING_CURRENT_KEY,
+        translation_key="maximum_charging_current",
+        max_value_fn=lambda coordinator: cast(
+            float, coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY]
+        ),
+        min_value_fn=min_charging_current_value,
+        set_value_fn=lambda coordinator: coordinator.async_set_charging_current,
+        native_step=1,
+    ),
+    CHARGER_ENERGY_PRICE_KEY: WallboxNumberEntityDescription(
+        key=CHARGER_ENERGY_PRICE_KEY,
+        translation_key="energy_price",
+        max_value_fn=lambda _: 5,
+        min_value_fn=lambda _: -5,
+        set_value_fn=lambda coordinator: coordinator.async_set_energy_cost,
+        native_step=0.01,
+    ),
+    CHARGER_MAX_ICP_CURRENT_KEY: WallboxNumberEntityDescription(
+        key=CHARGER_MAX_ICP_CURRENT_KEY,
+        translation_key="maximum_icp_current",
+        max_value_fn=lambda _: 255,
+        min_value_fn=lambda _: 6,
+        set_value_fn=lambda coordinator: coordinator.async_set_icp_current,
+        native_step=1,
     ),
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: WallboxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Create wallbox sensor entities in HASS."""
-    coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
-    # Check if the user is authorized to change current, if so, add number component:
-    try:
-        await coordinator.async_set_charging_current(
-            coordinator.data[CONF_MAX_CHARGING_CURRENT_KEY]
-        )
-    except InvalidAuth:
-        return
-
+    """Create wallbox number entities in HASS."""
+    coordinator: WallboxCoordinator = entry.runtime_data
     async_add_entities(
-        [
-            WallboxNumber(coordinator, entry, description)
-            for ent in coordinator.data
-            if (description := NUMBER_TYPES.get(ent))
-        ]
+        WallboxNumber(coordinator, entry, description)
+        for ent in coordinator.data
+        if (description := NUMBER_TYPES.get(ent))
     )
+
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 class WallboxNumber(WallboxEntity, NumberEntity):
     """Representation of the Wallbox portal."""
 
     entity_description: WallboxNumberEntityDescription
-    coordinator: WallboxCoordinator
 
     def __init__(
         self,
         coordinator: WallboxCoordinator,
-        entry: ConfigEntry,
+        entry: WallboxConfigEntry,
         description: WallboxNumberEntityDescription,
     ) -> None:
-        """Initialize a Wallbox sensor."""
+        """Initialize a Wallbox number entity."""
         super().__init__(coordinator)
         self.entity_description = description
         self._coordinator = coordinator
-        self._attr_name = f"{entry.title} {description.name}"
-        self._attr_unique_id = f"{description.key}-{coordinator.data[CONF_DATA_KEY][CONF_SERIAL_NUMBER_KEY]}"
+        self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
 
     @property
-    def max_value(self) -> float:
-        """Return the maximum available current."""
-        return cast(float, self._coordinator.data[CONF_MAX_AVAILABLE_POWER_KEY])
+    def native_max_value(self) -> float:
+        """Return the maximum available value."""
+        return self.entity_description.max_value_fn(self.coordinator)
 
     @property
-    def value(self) -> float | None:
-        """Return the state of the sensor."""
-        return cast(
-            Optional[float], self._coordinator.data[CONF_MAX_CHARGING_CURRENT_KEY]
-        )
+    def native_min_value(self) -> float:
+        """Return the minimum available value."""
+        return self.entity_description.min_value_fn(self.coordinator)
 
-    async def async_set_value(self, value: float) -> None:
+    @property
+    def native_value(self) -> float | None:
+        """Return the value of the entity."""
+        return cast(float | None, self._coordinator.data[self.entity_description.key])
+
+    async def async_set_native_value(self, value: float) -> None:
         """Set the value of the entity."""
-        await self._coordinator.async_set_charging_current(value)
+        await self.entity_description.set_value_fn(self.coordinator)(value)

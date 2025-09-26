@@ -1,25 +1,41 @@
 """Config flow to configure homekit_controller."""
+
 from __future__ import annotations
 
 import logging
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any, Self, cast
 
 import aiohomekit
+from aiohomekit import Controller, const as aiohomekit_const
+from aiohomekit.controller.abstract import (
+    AbstractDiscovery,
+    AbstractPairing,
+    FinishPairing,
+)
 from aiohomekit.exceptions import AuthenticationError
-from aiohomekit.model import Accessories, CharacteristicsTypes, ServicesTypes
+from aiohomekit.model.categories import Categories
+from aiohomekit.model.status_flags import StatusFlags
+from aiohomekit.utils import domain_supported, domain_to_name, serialize_broadcast_key
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    async_get_registry as async_get_device_registry,
+from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
 )
+from homeassistant.helpers.typing import VolDictType
 
 from .const import DOMAIN, KNOWN_DEVICES
+from .storage import async_get_entity_storage
+from .utils import async_get_controller
+
+if TYPE_CHECKING:
+    from homeassistant.components import bluetooth
+
 
 HOMEKIT_DIR = ".homekit"
 HOMEKIT_BRIDGE_DOMAIN = "homekit"
@@ -35,12 +51,12 @@ HOMEKIT_IGNORE = [
 
 PAIRING_FILE = "pairing.json"
 
-MDNS_SUFFIX = "._hap._tcp.local."
-
 PIN_FORMAT = re.compile(r"^(\d{3})-{0,1}(\d{2})-{0,1}(\d{3})$")
 
 _LOGGER = logging.getLogger(__name__)
 
+
+BLE_DEFAULT_NAME = "Bluetooth device"
 
 INSECURE_CODES = {
     "00000000",
@@ -63,20 +79,16 @@ def normalize_hkid(hkid: str) -> str:
     return hkid.lower()
 
 
-@callback
-def find_existing_host(hass, serial: str) -> config_entries.ConfigEntry | None:
-    """Return a set of the configured hosts."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data.get("AccessoryPairingID") == serial:
-            return entry
-    return None
+def formatted_category(category: Categories) -> str:
+    """Return a human readable category name."""
+    return str(category.name).replace("_", " ").title()
 
 
 def ensure_pin_format(pin: str, allow_insecure_setup_codes: Any = None) -> str:
-    """
-    Ensure a pin code is correctly formatted.
+    """Ensure a pin code is correctly formatted.
 
-    Ensures a pin code is in the format 111-11-111. Handles codes with and without dashes.
+    Ensures a pin code is in the format 111-11-111.
+    Handles codes with and without dashes.
 
     If incorrect code is entered, an exception is raised.
     """
@@ -88,36 +100,41 @@ def ensure_pin_format(pin: str, allow_insecure_setup_codes: Any = None) -> str:
     return "-".join(match.groups())
 
 
-class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a HomeKit config flow."""
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the homekit_controller flow."""
-        self.model = None
-        self.hkid = None
-        self.name = None
-        self.devices = {}
-        self.controller = None
-        self.finish_pairing = None
+        self.model: str | None = None
+        self.hkid: str | None = None  # This is always lower case
+        self.name: str | None = None
+        self.category: Categories | None = None
+        self.devices: dict[str, AbstractDiscovery] = {}
+        self.controller: Controller | None = None
+        self.finish_pairing: FinishPairing | None = None
+        self.pairing = False
+        self._device_paired = False
 
-    async def _async_setup_controller(self):
+    async def _async_setup_controller(self) -> None:
         """Create the controller."""
-        async_zeroconf_instance = await zeroconf.async_get_async_instance(self.hass)
-        self.controller = aiohomekit.Controller(
-            async_zeroconf_instance=async_zeroconf_instance
-        )
+        self.controller = await async_get_controller(self.hass)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow start."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             key = user_input["device"]
-            self.hkid = self.devices[key].device_id
-            self.model = self.devices[key].info["md"]
-            self.name = key[: -len(MDNS_SUFFIX)] if key.endswith(MDNS_SUFFIX) else key
+            discovery = self.devices[key]
+            self.category = discovery.description.category
+            self.hkid = discovery.description.id
+            self.model = getattr(discovery.description, "model", BLE_DEFAULT_NAME)
+            self.name = discovery.description.name or BLE_DEFAULT_NAME
+
             await self.async_set_unique_id(
                 normalize_hkid(self.hkid), raise_on_progress=False
             )
@@ -127,15 +144,14 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if self.controller is None:
             await self._async_setup_controller()
 
-        all_hosts = await self.controller.discover_ip()
+        assert self.controller
 
         self.devices = {}
-        for host in all_hosts:
-            status_flags = int(host.info["sf"])
-            paired = not status_flags & 0x01
-            if paired:
+
+        async for discovery in self.controller.async_discover():
+            if discovery.paired:
                 continue
-            self.devices[host.info["name"]] = host
+            self.devices[discovery.description.name] = discovery
 
         if not self.devices:
             return self.async_abort(reason="no_devices")
@@ -144,51 +160,25 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             errors=errors,
             data_schema=vol.Schema(
-                {vol.Required("device"): vol.In(self.devices.keys())}
+                {
+                    vol.Required("device"): vol.In(
+                        {
+                            key: (
+                                f"{key} ({formatted_category(discovery.description.category)})"
+                            )
+                            for key, discovery in self.devices.items()
+                        }
+                    )
+                }
             ),
         )
 
-    async def async_step_unignore(self, user_input):
-        """Rediscover a previously ignored discover."""
-        unique_id = user_input["unique_id"]
-        await self.async_set_unique_id(unique_id)
-
-        if self.controller is None:
-            await self._async_setup_controller()
-
-        devices = await self.controller.discover_ip(max_seconds=5)
-        for device in devices:
-            if normalize_hkid(device.device_id) != unique_id:
-                continue
-            record = device.info
-            return await self.async_step_zeroconf(
-                zeroconf.ZeroconfServiceInfo(
-                    host=record["address"],
-                    port=record["port"],
-                    hostname=record["name"],
-                    type="_hap._tcp.local.",
-                    name=record["name"],
-                    properties={
-                        "md": record["md"],
-                        "pv": record["pv"],
-                        zeroconf.ATTR_PROPERTIES_ID: unique_id,
-                        "c#": record["c#"],
-                        "s#": record["s#"],
-                        "ff": record["ff"],
-                        "ci": record["ci"],
-                        "sf": record["sf"],
-                        "sh": "",
-                    },
-                )
-            )
-
-        return self.async_abort(reason="no_devices")
-
-    async def _hkid_is_homekit(self, hkid):
+    @callback
+    def _hkid_is_homekit(self, hkid: str) -> bool:
         """Determine if the device is a homekit bridge or accessory."""
-        dev_reg = await async_get_device_registry(self.hass)
+        dev_reg = dr.async_get(self.hass)
         device = dev_reg.async_get_device(
-            identifiers=set(), connections={(CONNECTION_NETWORK_MAC, hkid)}
+            connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(hkid))}
         )
 
         if device is None:
@@ -202,8 +192,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return False
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a discovered HomeKit accessory.
 
         This flow is triggered by the discovery component.
@@ -215,35 +205,25 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             key.lower(): value for (key, value) in discovery_info.properties.items()
         }
 
-        if zeroconf.ATTR_PROPERTIES_ID not in properties:
+        if ATTR_PROPERTIES_ID not in properties:
             # This can happen if the TXT record is received after the PTR record
             # we will wait for the next update in this case
             _LOGGER.debug(
-                "HomeKit device %s: id not exposed; TXT record may have not yet been received",
+                (
+                    "HomeKit device %s: id not exposed; TXT record may have not yet"
+                    " been received"
+                ),
                 properties,
             )
             return self.async_abort(reason="invalid_properties")
 
         # The hkid is a unique random number that looks like a pairing code.
         # It changes if a device is factory reset.
-        hkid = properties[zeroconf.ATTR_PROPERTIES_ID]
+        hkid: str = properties[ATTR_PROPERTIES_ID]
         normalized_hkid = normalize_hkid(hkid)
-
-        model = properties["md"]
-        name = discovery_info.name.replace("._hap._tcp.local.", "")
+        upper_case_hkid = hkid.upper()
         status_flags = int(properties["sf"])
         paired = not status_flags & 0x01
-
-        # The configuration number increases every time the characteristic map
-        # needs updating. Some devices use a slightly off-spec name so handle
-        # both cases.
-        try:
-            config_num = int(properties["c#"])
-        except KeyError:
-            _LOGGER.warning(
-                "HomeKit device %s: c# not exposed, in violation of spec", hkid
-            )
-            config_num = None
 
         # Set unique-id and error out if it's already configured
         existing_entry = await self.async_set_unique_id(
@@ -251,61 +231,71 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         updated_ip_port = {
             "AccessoryIP": discovery_info.host,
+            "AccessoryIPs": [
+                str(ip_addr)
+                for ip_addr in discovery_info.ip_addresses
+                if not ip_addr.is_link_local and not ip_addr.is_unspecified
+            ],
             "AccessoryPort": discovery_info.port,
         }
-
         # If the device is already paired and known to us we should monitor c#
         # (config_num) for changes. If it changes, we check for new entities
-        if paired and hkid in self.hass.data.get(KNOWN_DEVICES, {}):
+        if paired and upper_case_hkid in self.hass.data.get(KNOWN_DEVICES, {}):
             if existing_entry:
                 self.hass.config_entries.async_update_entry(
                     existing_entry, data={**existing_entry.data, **updated_ip_port}
                 )
-            conn = self.hass.data[KNOWN_DEVICES][hkid]
-            # When we rediscover the device, let aiohomekit know
-            # that the device is available and we should not wait
-            # to retry connecting any longer. reconnect_soon
-            # will do nothing if the device is already connected
-            await conn.pairing.connection.reconnect_soon()
-            if conn.config_num != config_num:
-                _LOGGER.debug(
-                    "HomeKit info %s: c# incremented, refreshing entities", hkid
-                )
-                self.hass.async_create_task(conn.async_refresh_entity_map(config_num))
             return self.async_abort(reason="already_configured")
 
-        _LOGGER.debug("Discovered device %s (%s - %s)", name, model, hkid)
+        # If this aiohomekit doesn't support this particular device, ignore it.
+        if not domain_supported(discovery_info.name):
+            return self.async_abort(reason="ignored_model")
+
+        model = properties["md"]
+        name = domain_to_name(discovery_info.name)
+        _LOGGER.debug("Discovered device %s (%s - %s)", name, model, upper_case_hkid)
 
         # Device isn't paired with us or anyone else.
         # But we have a 'complete' config entry for it - that is probably
-        # invalid. Remove it automatically.
-        existing = find_existing_host(self.hass, hkid)
-        if not paired and existing:
+        # invalid. Remove it automatically if it has an accessory pairing id
+        # (which means it was paired with us at some point) and was not
+        # ignored by the user.
+        if (
+            not paired
+            and existing_entry
+            and (accessory_pairing_id := existing_entry.data.get("AccessoryPairingID"))
+        ):
             if self.controller is None:
                 await self._async_setup_controller()
 
-            # mypy can't see that self._async_setup_controller() always sets self.controller or throws
+            # mypy can't see that self._async_setup_controller() always
+            # sets self.controller or throws
             assert self.controller
 
             pairing = self.controller.load_pairing(
-                existing.data["AccessoryPairingID"], dict(existing.data)
+                accessory_pairing_id, dict(existing_entry.data)
             )
 
             try:
                 await pairing.list_accessories_and_characteristics()
             except AuthenticationError:
                 _LOGGER.debug(
-                    "%s (%s - %s) is unpaired. Removing invalid pairing for this device",
+                    (
+                        "%s (%s - %s) is unpaired. Removing invalid pairing for this"
+                        " device"
+                    ),
                     name,
                     model,
                     hkid,
                 )
-                await self.hass.config_entries.async_remove(existing.entry_id)
+                await self.hass.config_entries.async_remove(existing_entry.entry_id)
             else:
                 _LOGGER.debug(
-                    "%s (%s - %s) claims to be unpaired but isn't. "
-                    "It's implementation of HomeKit is defective "
-                    "or a zeroconf relay is broadcasting stale data",
+                    (
+                        "%s (%s - %s) claims to be unpaired but isn't. "
+                        "It's implementation of HomeKit is defective "
+                        "or a zeroconf relay is broadcasting stale data"
+                    ),
                     name,
                     model,
                     hkid,
@@ -315,15 +305,10 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Set unique-id and error out if it's already configured
         self._abort_if_unique_id_configured(updates=updated_ip_port)
 
-        for progress in self._async_in_progress(include_uninitialized=True):
-            if progress["context"].get("unique_id") == normalized_hkid:
-                if paired:
-                    # If the device gets paired, we want to dismiss
-                    # an existing discovery since we can no longer
-                    # pair with it
-                    self.hass.config_entries.flow.async_abort(progress["flow_id"])
-                else:
-                    raise AbortFlow("already_in_progress")
+        self.hkid = normalized_hkid
+        self._device_paired = paired
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            raise AbortFlow("already_in_progress")
 
         if paired:
             # Device is paired but not to us - ignore it
@@ -336,20 +321,82 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if model in HOMEKIT_IGNORE:
             return self.async_abort(reason="ignored_model")
 
-        # If this is a HomeKit bridge/accessory exported by *this* HA instance ignore it.
-        if await self._hkid_is_homekit(hkid):
+        # If this is a HomeKit bridge/accessory exported
+        # by *this* HA instance ignore it.
+        if self._hkid_is_homekit(hkid):
             return self.async_abort(reason="ignored_model")
 
         self.name = name
         self.model = model
-        self.hkid = hkid
+        self.category = Categories(int(properties.get("ci", 0)))
 
         # We want to show the pairing form - but don't call async_step_pair
         # directly as it has side effects (will ask the device to show a
         # pairing code)
         return self._async_step_pair_show_form()
 
-    async def async_step_pair(self, pair_info=None):
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        if other_flow.context.get("unique_id") == self.hkid and not other_flow.pairing:
+            if self._device_paired:
+                # If the device gets paired, we want to dismiss
+                # an existing discovery since we can no longer
+                # pair with it
+                self.hass.config_entries.flow.async_abort(other_flow.flow_id)
+            else:
+                return True
+        return False
+
+    async def async_step_bluetooth(
+        self, discovery_info: bluetooth.BluetoothServiceInfoBleak
+    ) -> ConfigFlowResult:
+        """Handle the bluetooth discovery step."""
+        if not aiohomekit_const.BLE_TRANSPORT_SUPPORTED:
+            return self.async_abort(reason="ignored_model")
+
+        # Late imports in case BLE is not available
+        from aiohomekit.controller.ble.discovery import BleDiscovery  # noqa: PLC0415
+        from aiohomekit.controller.ble.manufacturer_data import (  # noqa: PLC0415
+            HomeKitAdvertisement,
+        )
+
+        mfr_data = discovery_info.manufacturer_data
+
+        try:
+            device = HomeKitAdvertisement.from_manufacturer_data(
+                discovery_info.name, discovery_info.address, mfr_data
+            )
+        except ValueError:
+            return self.async_abort(reason="ignored_model")
+
+        await self.async_set_unique_id(normalize_hkid(device.id))
+        self._abort_if_unique_id_configured()
+
+        if not (device.status_flags & StatusFlags.UNPAIRED):
+            return self.async_abort(reason="already_paired")
+
+        if self.controller is None:
+            await self._async_setup_controller()
+            assert self.controller is not None
+
+        try:
+            discovery = await self.controller.async_find(device.id)
+        except aiohomekit.AccessoryNotFoundError:
+            return self.async_abort(reason="accessory_not_found_error")
+
+        if TYPE_CHECKING:
+            discovery = cast(BleDiscovery, discovery)
+
+        self.name = discovery.description.name
+        self.model = BLE_DEFAULT_NAME
+        self.category = discovery.description.category
+        self.hkid = discovery.description.id
+
+        return self._async_step_pair_show_form()
+
+    async def async_step_pair(
+        self, pair_info: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Pair with a new HomeKit accessory."""
         # If async_step_pair is called with no pairing code then we do the M1
         # phase of pairing. If this is successful the device enters pairing
@@ -358,21 +405,28 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # If it doesn't have a screen then the pin is static.
 
         # If it has a display it will display a pin on that display. In
-        # this case the code is random. So we have to call the start_pairing
+        # this case the code is random. So we have to call the async_start_pairing
         # API before the user can enter a pin. But equally we don't want to
-        # call start_pairing when the device is discovered, only when they
+        # call async_start_pairing when the device is discovered, only when they
         # click on 'Configure' in the UI.
 
-        # start_pairing will make the device show its pin and return a
+        # async_start_pairing will make the device show its pin and return a
         # callable. We call the callable with the pin that the user has typed
         # in.
+
+        # Should never call this step without setting self.hkid
+        assert self.hkid
+        description_placeholders = {}
 
         errors = {}
 
         if self.controller is None:
             await self._async_setup_controller()
 
+        assert self.controller
+
         if pair_info and self.finish_pairing:
+            self.pairing = True
             code = pair_info["pairing_code"]
             try:
                 code = ensure_pin_format(
@@ -408,18 +462,19 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="accessory_not_found_error")
             except InsecureSetupCode:
                 errors["pairing_code"] = "insecure_setup_code"
-            except Exception:  # pylint: disable=broad-except
+            except Exception as err:
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 self.finish_pairing = None
                 errors["pairing_code"] = "pairing_failed"
+                description_placeholders["error"] = str(err)
 
         if not self.finish_pairing:
             # Its possible that the first try may have been busy so
             # we always check to see if self.finish_paring has been
             # set.
             try:
-                discovery = await self.controller.find_ip_by_device_id(self.hkid)
-                self.finish_pairing = await discovery.start_pairing(self.hkid)
+                discovery = await self.controller.async_find(self.hkid)
+                self.finish_pairing = await discovery.async_start_pairing(self.hkid)
 
             except aiohomekit.BusyError:
                 # Already performing a pair setup operation with a different
@@ -439,27 +494,34 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # TLV error, usually not in pairing mode
                 _LOGGER.exception("Pairing communication failed")
                 return await self.async_step_protocol_error()
-            except Exception:  # pylint: disable=broad-except
+            except Exception as err:
                 _LOGGER.exception("Pairing attempt failed with an unhandled exception")
                 errors["pairing_code"] = "pairing_failed"
+                description_placeholders["error"] = str(err)
 
-        return self._async_step_pair_show_form(errors)
+        return self._async_step_pair_show_form(errors, description_placeholders)
 
-    async def async_step_busy_error(self, user_input=None):
+    async def async_step_busy_error(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Retry pairing after the accessory is busy."""
         if user_input is not None:
             return await self.async_step_pair()
 
         return self.async_show_form(step_id="busy_error")
 
-    async def async_step_max_tries_error(self, user_input=None):
+    async def async_step_max_tries_error(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Retry pairing after the accessory has reached max tries."""
         if user_input is not None:
             return await self.async_step_pair()
 
         return self.async_show_form(step_id="max_tries_error")
 
-    async def async_step_protocol_error(self, user_input=None):
+    async def async_step_protocol_error(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Retry pairing after the accessory has a protocol error."""
         if user_input is not None:
             return await self.async_step_pair()
@@ -467,41 +529,58 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="protocol_error")
 
     @callback
-    def _async_step_pair_show_form(self, errors=None):
-        placeholders = {"name": self.name}
-        self.context["title_placeholders"] = {"name": self.name}
+    def _async_step_pair_show_form(
+        self,
+        errors: dict[str, str] | None = None,
+        description_placeholders: dict[str, str] | None = None,
+    ) -> ConfigFlowResult:
+        assert self.category
 
-        schema = {vol.Required("pairing_code"): vol.All(str, vol.Strip)}
+        placeholders = self.context["title_placeholders"] = {
+            "name": self.name or "Homekit Device",
+            "category": formatted_category(self.category),
+        }
+
+        schema: VolDictType = {vol.Required("pairing_code"): vol.All(str, vol.Strip)}
         if errors and errors.get("pairing_code") == "insecure_setup_code":
             schema[vol.Optional("allow_insecure_setup_codes")] = bool
 
         return self.async_show_form(
             step_id="pair",
             errors=errors or {},
-            description_placeholders=placeholders,
+            description_placeholders=placeholders | (description_placeholders or {}),
             data_schema=vol.Schema(schema),
         )
 
-    async def _entry_from_accessory(self, pairing):
+    async def _entry_from_accessory(self, pairing: AbstractPairing) -> ConfigFlowResult:
         """Return a config entry from an initialized bridge."""
         # The bulk of the pairing record is stored on the config entry.
         # A specific exception is the 'accessories' key. This is more
         # volatile. We do cache it, but not against the config entry.
         # So copy the pairing data and mutate the copy.
-        pairing_data = pairing.pairing_data.copy()
+        pairing_data = pairing.pairing_data.copy()  # type: ignore[attr-defined]
 
         # Use the accessories data from the pairing operation if it is
         # available. Otherwise request a fresh copy from the API.
         # This removes the 'accessories' key from pairing_data at
         # the same time.
-        if not (accessories := pairing_data.pop("accessories", None)):
-            accessories = await pairing.list_accessories_and_characteristics()
+        name = await pairing.get_primary_name()
 
-        parsed = Accessories.from_list(accessories)
-        accessory_info = parsed.aid(1).services.first(
-            service_type=ServicesTypes.ACCESSORY_INFORMATION
+        await pairing.close()
+
+        # Save the state of the accessories so we do not
+        # have to request them again when we setup the
+        # config entry.
+        accessories_state = pairing.accessories_state
+        entity_storage = await async_get_entity_storage(self.hass)
+        assert self.unique_id is not None
+        entity_storage.async_create_or_update_map(
+            pairing.id,
+            accessories_state.config_num,
+            accessories_state.accessories.serialize(),
+            serialize_broadcast_key(accessories_state.broadcast_key),
+            accessories_state.state_num,
         )
-        name = accessory_info.value(CharacteristicsTypes.NAME, "")
 
         return self.async_create_entry(title=name, data=pairing_data)
 

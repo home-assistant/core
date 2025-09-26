@@ -1,4 +1,5 @@
 """Diagnostics support for Tailscale."""
+
 from __future__ import annotations
 
 import json
@@ -23,7 +24,6 @@ TO_REDACT = {
     "name",
     "node_key",
     "user",
-    "user",
 }
 
 
@@ -33,5 +33,5 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator: TailscaleDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     # Round-trip via JSON to trigger serialization
-    devices = [json.loads(device.json()) for device in coordinator.data.values()]
+    devices = [json.loads(device.to_json()) for device in coordinator.data.values()]
     return async_redact_data({"devices": devices}, TO_REDACT)

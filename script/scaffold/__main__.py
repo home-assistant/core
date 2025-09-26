@@ -1,25 +1,18 @@
 """Validate manifests."""
+
 import argparse
 from pathlib import Path
 import subprocess
 import sys
 
+from script.util import valid_integration
+
 from . import docs, error, gather_info, generate
-from .const import COMPONENT_DIR
+from .model import Info
 
 TEMPLATES = [
     p.name for p in (Path(__file__).parent / "templates").glob("*") if p.is_dir()
 ]
-
-
-def valid_integration(integration):
-    """Test if it's a valid integration."""
-    if not (COMPONENT_DIR / integration).exists():
-        raise argparse.ArgumentTypeError(
-            f"The integration {integration} does not exist."
-        )
-
-    return integration
 
 
 def get_arguments() -> argparse.Namespace:
@@ -33,12 +26,44 @@ def get_arguments() -> argparse.Namespace:
         "--integration", type=valid_integration, help="Integration to target."
     )
 
-    arguments = parser.parse_args()
-
-    return arguments
+    return parser.parse_args()
 
 
-def main():
+def run_process(name: str, cmd: list[str], info: Info) -> None:
+    """Run a sub process and handle the result.
+
+    :param name: The name of the sub process used in reporting.
+    :param cmd: The sub process arguments.
+    :param info: The Info object.
+    :raises subprocess.CalledProcessError: If the subprocess failed.
+
+    If the sub process was successful print a success message, otherwise
+    print an error message and raise a subprocess.CalledProcessError.
+    """
+    print(f"Command: {' '.join(cmd)}")
+    print()
+    result: subprocess.CompletedProcess = subprocess.run(cmd, check=False)
+    if result.returncode == 0:
+        print()
+        print(f"Completed {name} successfully.")
+        print()
+        return
+
+    print()
+    print(f"Fatal Error: {name} failed with exit code {result.returncode}")
+    print()
+    if info.is_new:
+        print("This is a bug, please report an issue!")
+    else:
+        print(
+            "This may be an existing issue with your integration,",
+            "if so fix and run `script.scaffold` again,",
+            "otherwise please report an issue.",
+        )
+    result.check_returncode()
+
+
+def main() -> int:
     """Scaffold an integration."""
     if not Path("requirements_all.txt").is_file():
         print("Run from project root")
@@ -59,7 +84,9 @@ def main():
         # If it's a new integration and it's not a config flow,
         # create a config flow too.
         if not args.template.startswith("config_flow"):
-            if info.oauth2:
+            if info.helper:
+                template = "config_flow_helper"
+            elif info.oauth2:
                 template = "config_flow_oauth2"
             elif info.authentication or not info.discoverable:
                 template = "config_flow"
@@ -72,18 +99,32 @@ def main():
     if args.template != "integration":
         generate.generate(args.template, info)
 
-    pipe_null = {} if args.develop else {"stdout": subprocess.DEVNULL}
-
+    # Always output sub commands as the output will contain useful information if a command fails.
     print("Running hassfest to pick up new information.")
-    subprocess.run(["python", "-m", "script.hassfest"], **pipe_null)
-    print()
+    run_process(
+        "hassfest",
+        [
+            "python",
+            "-m",
+            "script.hassfest",
+            "--integration-path",
+            str(info.integration_dir),
+            "--skip-plugins",
+            "quality_scale",  # Skip quality scale as it will fail for newly generated integrations.
+        ],
+        info,
+    )
 
     print("Running gen_requirements_all to pick up new information.")
-    subprocess.run(["python", "-m", "script.gen_requirements_all"], **pipe_null)
-    print()
+    run_process(
+        "gen_requirements_all",
+        ["python", "-m", "script.gen_requirements_all"],
+        info,
+    )
 
-    print("Running script/translations_develop to pick up new translation strings.")
-    subprocess.run(
+    print("Running translations to pick up new translation strings.")
+    run_process(
+        "translations",
         [
             "python",
             "-m",
@@ -92,15 +133,23 @@ def main():
             "--integration",
             info.domain,
         ],
-        **pipe_null,
+        info,
     )
-    print()
 
     if args.develop:
         print("Running tests")
-        print(f"$ pytest -vvv tests/components/{info.domain}")
-        subprocess.run(["pytest", "-vvv", f"tests/components/{info.domain}"])
-        print()
+        run_process(
+            "pytest",
+            [
+                "python3",
+                "-b",
+                "-m",
+                "pytest",
+                "-vvv",
+                f"tests/components/{info.domain}",
+            ],
+            info,
+        )
 
     docs.print_relevant_docs(args.template, info)
 
@@ -110,6 +159,8 @@ def main():
 if __name__ == "__main__":
     try:
         sys.exit(main())
+    except subprocess.CalledProcessError as err:
+        sys.exit(err.returncode)
     except error.ExitApp as err:
         print()
         print(f"Fatal Error: {err.reason}")

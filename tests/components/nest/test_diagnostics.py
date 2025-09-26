@@ -2,94 +2,143 @@
 
 from unittest.mock import patch
 
-from google_nest_sdm.device import Device
 from google_nest_sdm.exceptions import SubscriberException
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.nest import DOMAIN
+from homeassistant.components.nest.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.setup import async_setup_component
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
-from .common import CONFIG, async_setup_sdm_platform, create_config_entry
+from .conftest import CreateDevice, PlatformSetup
 
-from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.common import MockConfigEntry
+from tests.components.diagnostics import (
+    get_diagnostics_for_config_entry,
+    get_diagnostics_for_device,
+)
+from tests.typing import ClientSessionGenerator
 
-THERMOSTAT_TYPE = "sdm.devices.types.THERMOSTAT"
+NEST_DEVICE_ID = "enterprises/project-id/devices/device-id"
+
+DEVICE_API_DATA = {
+    "name": NEST_DEVICE_ID,
+    "type": "sdm.devices.types.THERMOSTAT",
+    "assignee": "enterprises/project-id/structures/structure-id/rooms/room-id",
+    "traits": {
+        "sdm.devices.traits.Info": {
+            "customName": "My Sensor",
+        },
+        "sdm.devices.traits.Temperature": {
+            "ambientTemperatureCelsius": 25.1,
+        },
+        "sdm.devices.traits.Humidity": {
+            "ambientHumidityPercent": 35.0,
+        },
+    },
+    "parentRelations": [
+        {
+            "parent": "enterprises/project-id/structures/structure-id/rooms/room-id",
+            "displayName": "Lobby",
+        }
+    ],
+}
+
+CAMERA_API_DATA = {
+    "name": NEST_DEVICE_ID,
+    "type": "sdm.devices.types.CAMERA",
+    "traits": {
+        "sdm.devices.traits.CameraLiveStream": {
+            "videoCodecs": ["H264"],
+            "supportedProtocols": ["RTSP"],
+        },
+    },
+}
 
 
-async def test_entry_diagnostics(hass, hass_client):
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return ["sensor", "camera"]
+
+
+async def test_entry_diagnostics(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    create_device: CreateDevice,
+    setup_platform: PlatformSetup,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test config entry diagnostics."""
-    devices = {
-        "some-device-id": Device.MakeDevice(
-            {
-                "name": "enterprises/project-id/devices/device-id",
-                "type": "sdm.devices.types.THERMOSTAT",
-                "assignee": "enterprises/project-id/structures/structure-id/rooms/room-id",
-                "traits": {
-                    "sdm.devices.traits.Info": {
-                        "customName": "My Sensor",
-                    },
-                    "sdm.devices.traits.Temperature": {
-                        "ambientTemperatureCelsius": 25.1,
-                    },
-                    "sdm.devices.traits.Humidity": {
-                        "ambientHumidityPercent": 35.0,
-                    },
-                },
-                "parentRelations": [
-                    {
-                        "parent": "enterprises/project-id/structures/structure-id/rooms/room-id",
-                        "displayName": "Lobby",
-                    }
-                ],
-            },
-            auth=None,
-        )
-    }
-    assert await async_setup_sdm_platform(hass, platform=None, devices=devices)
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    config_entry = entries[0]
+    create_device.create(raw_data=DEVICE_API_DATA)
+    await setup_platform()
     assert config_entry.state is ConfigEntryState.LOADED
 
     # Test that only non identifiable device information is returned
-    assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
-        "devices": [
-            {
-                "data": {
-                    "assignee": "**REDACTED**",
-                    "name": "**REDACTED**",
-                    "parentRelations": [
-                        {"displayName": "**REDACTED**", "parent": "**REDACTED**"}
-                    ],
-                    "traits": {
-                        "sdm.devices.traits.Info": {"customName": "**REDACTED**"},
-                        "sdm.devices.traits.Humidity": {"ambientHumidityPercent": 35.0},
-                        "sdm.devices.traits.Temperature": {
-                            "ambientTemperatureCelsius": 25.1
-                        },
-                    },
-                    "type": "sdm.devices.types.THERMOSTAT",
-                }
-            }
-        ],
-    }
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+        == snapshot
+    )
 
 
-async def test_setup_susbcriber_failure(hass, hass_client):
+async def test_device_diagnostics(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+    create_device: CreateDevice,
+    setup_platform: PlatformSetup,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test config entry diagnostics."""
+    create_device.create(raw_data=DEVICE_API_DATA)
+    await setup_platform()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, NEST_DEVICE_ID)})
+    assert device is not None
+
+    assert (
+        await get_diagnostics_for_device(hass, hass_client, config_entry, device)
+        == snapshot
+    )
+
+
+async def test_setup_susbcriber_failure(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    setup_base_platform: PlatformSetup,
+) -> None:
     """Test configuration error."""
-    config_entry = create_config_entry()
-    config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
-    ), patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber.start_async",
         side_effect=SubscriberException(),
     ):
-        assert await async_setup_component(hass, DOMAIN, CONFIG)
+        await setup_base_platform()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
-    assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
-        "error": "No subscriber configured"
-    }
+    assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {}
+
+
+async def test_camera_diagnostics(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    create_device: CreateDevice,
+    setup_platform: PlatformSetup,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test config entry diagnostics."""
+    create_device.create(raw_data=CAMERA_API_DATA)
+    await setup_platform()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Test that only non identifiable device information is returned
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+        == snapshot
+    )

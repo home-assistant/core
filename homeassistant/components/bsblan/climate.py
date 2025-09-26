@@ -1,43 +1,37 @@
 """BSBLAN platform to control a compatible Climate Device."""
+
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
 from typing import Any
 
-from bsblan import BSBLan, BSBLanError, Info, State
+from bsblan import BSBLANError
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
-from .const import ATTR_TARGET_TEMPERATURE, DATA_BSBLAN_CLIENT, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from . import BSBLanConfigEntry, BSBLanData
+from .const import ATTR_TARGET_TEMPERATURE, DOMAIN
+from .entity import BSBLanEntity
 
 PARALLEL_UPDATES = 1
-SCAN_INTERVAL = timedelta(seconds=20)
-
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
 HVAC_MODES = [
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
+    HVACMode.AUTO,
+    HVACMode.HEAT,
+    HVACMode.OFF,
 ]
 
 PRESET_MODES = [
@@ -45,128 +39,114 @@ PRESET_MODES = [
     PRESET_NONE,
 ]
 
-HA_STATE_TO_BSBLAN = {
-    HVAC_MODE_AUTO: "1",
-    HVAC_MODE_HEAT: "3",
-    HVAC_MODE_OFF: "0",
-}
-
-BSBLAN_TO_HA_STATE = {value: key for key, value in HA_STATE_TO_BSBLAN.items()}
-
-HA_PRESET_TO_BSBLAN = {
-    PRESET_ECO: "2",
-}
-
-BSBLAN_TO_HA_PRESET = {
-    2: PRESET_ECO,
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: BSBLanConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up BSBLan device based on a config entry."""
-    bsblan: BSBLan = hass.data[DOMAIN][entry.entry_id][DATA_BSBLAN_CLIENT]
-    info = await bsblan.info()
-    async_add_entities([BSBLanClimate(entry.entry_id, bsblan, info)], True)
+    """Set up BSBLAN device based on a config entry."""
+    data = entry.runtime_data
+    async_add_entities([BSBLANClimate(data)])
 
 
-class BSBLanClimate(ClimateEntity):
-    """Defines a BSBLan climate device."""
+class BSBLANClimate(BSBLanEntity, ClimateEntity):
+    """Defines a BSBLAN climate device."""
 
-    _attr_supported_features = SUPPORT_FLAGS
-    _attr_hvac_modes = HVAC_MODES
+    _attr_has_entity_name = True
+    _attr_name = None
+    # Determine preset modes
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+
     _attr_preset_modes = PRESET_MODES
+    _attr_hvac_modes = HVAC_MODES
 
     def __init__(
         self,
-        entry_id: str,
-        bsblan: BSBLan,
-        info: Info,
+        data: BSBLanData,
     ) -> None:
-        """Initialize BSBLan climate device."""
-        self._attr_available = True
-        self._store_hvac_mode = None
-        self.bsblan = bsblan
-        self._attr_name = self._attr_unique_id = info.device_identification
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, info.device_identification)},
-            manufacturer="BSBLan",
-            model=info.controller_variant,
-            name="BSBLan Device",
-        )
+        """Initialize BSBLAN climate device."""
+        super().__init__(data.coordinator, data)
+        self._attr_unique_id = f"{format_mac(data.device.MAC)}-climate"
 
-    async def async_set_preset_mode(self, preset_mode):
-        """Set preset mode."""
-        _LOGGER.debug("Setting preset mode to: %s", preset_mode)
-        if preset_mode == PRESET_NONE:
-            # restore previous hvac mode
-            self._attr_hvac_mode = self._store_hvac_mode
-        else:
-            # Store hvac mode.
-            self._store_hvac_mode = self._attr_hvac_mode
-            await self.async_set_data(preset_mode=preset_mode)
+        self._attr_min_temp = data.static.min_temp.value
+        self._attr_max_temp = data.static.max_temp.value
+        self._attr_temperature_unit = data.coordinator.client.get_temperature_unit
 
-    async def async_set_hvac_mode(self, hvac_mode):
-        """Set HVAC mode."""
-        _LOGGER.debug("Setting HVAC mode to: %s", hvac_mode)
-        # preset should be none when hvac mode is set
-        self._attr_preset_mode = PRESET_NONE
+    @property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        if self.coordinator.data.state.current_temperature is None:
+            return None
+        return self.coordinator.data.state.current_temperature.value
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Return the temperature we try to reach."""
+        if self.coordinator.data.state.target_temperature is None:
+            return None
+        return self.coordinator.data.state.target_temperature.value
+
+    @property
+    def hvac_mode(self) -> HVACMode | None:
+        """Return hvac operation ie. heat, cool mode."""
+        if self.coordinator.data.state.hvac_mode.value == PRESET_ECO:
+            return HVACMode.AUTO
+        return try_parse_enum(HVACMode, self.coordinator.data.state.hvac_mode.value)
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode."""
+        if (
+            self.hvac_mode == HVACMode.AUTO
+            and self.coordinator.data.state.hvac_mode.value == PRESET_ECO
+        ):
+            return PRESET_ECO
+        return PRESET_NONE
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set hvac mode."""
         await self.async_set_data(hvac_mode=hvac_mode)
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set preset mode."""
+        if self.hvac_mode != HVACMode.AUTO and preset_mode != PRESET_NONE:
+            raise ServiceValidationError(
+                "Preset mode can only be set when HVAC mode is set to 'auto'",
+                translation_domain=DOMAIN,
+                translation_key="set_preset_mode_error",
+                translation_placeholders={"preset_mode": preset_mode},
+            )
+        await self.async_set_data(preset_mode=preset_mode)
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         await self.async_set_data(**kwargs)
 
     async def async_set_data(self, **kwargs: Any) -> None:
-        """Set device settings using BSBLan."""
+        """Set device settings using BSBLAN."""
         data = {}
-
         if ATTR_TEMPERATURE in kwargs:
             data[ATTR_TARGET_TEMPERATURE] = kwargs[ATTR_TEMPERATURE]
-            _LOGGER.debug("Set temperature data = %s", data)
-
         if ATTR_HVAC_MODE in kwargs:
-            data[ATTR_HVAC_MODE] = HA_STATE_TO_BSBLAN[kwargs[ATTR_HVAC_MODE]]
-            _LOGGER.debug("Set hvac mode data = %s", data)
-
+            data[ATTR_HVAC_MODE] = kwargs[ATTR_HVAC_MODE]
         if ATTR_PRESET_MODE in kwargs:
-            # for now we set the preset as hvac_mode as the api expect this
-            data[ATTR_HVAC_MODE] = HA_PRESET_TO_BSBLAN[kwargs[ATTR_PRESET_MODE]]
+            if kwargs[ATTR_PRESET_MODE] == PRESET_ECO:
+                data[ATTR_HVAC_MODE] = PRESET_ECO
+            elif kwargs[ATTR_PRESET_MODE] == PRESET_NONE:
+                data[ATTR_HVAC_MODE] = PRESET_NONE
 
         try:
-            await self.bsblan.thermostat(**data)
-        except BSBLanError:
-            _LOGGER.error("An error occurred while updating the BSBLan device")
-            self._attr_available = False
-
-    async def async_update(self) -> None:
-        """Update BSBlan entity."""
-        try:
-            state: State = await self.bsblan.state()
-        except BSBLanError:
-            if self.available:
-                _LOGGER.error("An error occurred while updating the BSBLan device")
-            self._attr_available = False
-            return
-
-        self._attr_available = True
-
-        self._attr_current_temperature = float(state.current_temperature.value)
-        self._attr_target_temperature = float(state.target_temperature.value)
-
-        # check if preset is active else get hvac mode
-        _LOGGER.debug("state hvac/preset mode: %s", state.hvac_mode.value)
-        if state.hvac_mode.value == "2":
-            self._attr_preset_mode = PRESET_ECO
-        else:
-            self._attr_hvac_mode = BSBLAN_TO_HA_STATE[state.hvac_mode.value]
-            self._attr_preset_mode = PRESET_NONE
-
-        self._attr_temperature_unit = (
-            TEMP_CELSIUS
-            if state.current_temperature.unit == "&deg;C"
-            else TEMP_FAHRENHEIT
-        )
+            await self.coordinator.client.thermostat(**data)
+        except BSBLANError as err:
+            raise HomeAssistantError(
+                "An error occurred while updating the BSBLAN device",
+                translation_domain=DOMAIN,
+                translation_key="set_data_error",
+            ) from err
+        await self.coordinator.async_request_refresh()

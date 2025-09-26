@@ -1,65 +1,67 @@
-"""Tests for 1-Wire devices connected on OWServer."""
-import logging
+"""Tests for 1-Wire binary sensors."""
+
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.onewire.onewirehub import _DEVICE_SCAN_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import ensure_list
+from homeassistant.helpers import entity_registry as er
 
-from . import (
-    check_and_enable_disabled_entities,
-    check_device_registry,
-    check_entities,
-    setup_owproxy_mock_devices,
-)
-from .const import ATTR_DEVICE_INFO, ATTR_UNKNOWN_DEVICE, MOCK_OWPROXY_DEVICES
+from . import setup_owproxy_mock_devices
+from .const import MOCK_OWPROXY_DEVICES
 
-from tests.common import mock_device_registry, mock_registry
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
-def override_platforms():
+def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
-    with patch("homeassistant.components.onewire.PLATFORMS", [Platform.BINARY_SENSOR]):
+    with patch("homeassistant.components.onewire._PLATFORMS", [Platform.BINARY_SENSOR]):
         yield
 
 
-async def test_owserver_binary_sensor(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_binary_sensors(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for 1-Wire binary sensor entities."""
+    setup_owproxy_mock_devices(owproxy, MOCK_OWPROXY_DEVICES.keys())
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+@pytest.mark.parametrize("device_id", ["29.111111111111"])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_binary_sensors_delayed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     owproxy: MagicMock,
     device_id: str,
-    caplog: pytest.LogCaptureFixture,
-):
-    """Test for 1-Wire binary sensor.
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test for delayed 1-Wire binary sensor entities."""
+    setup_owproxy_mock_devices(owproxy, [])
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
-    This test forces all entities to be enabled.
-    """
-    device_registry = mock_device_registry(hass)
-    entity_registry = mock_registry(hass)
+    assert not er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
 
-    mock_device = MOCK_OWPROXY_DEVICES[device_id]
-    expected_entities = mock_device.get(Platform.BINARY_SENSOR, [])
-    expected_devices = ensure_list(mock_device.get(ATTR_DEVICE_INFO))
+    setup_owproxy_mock_devices(owproxy, [device_id])
+    freezer.tick(_DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    setup_owproxy_mock_devices(owproxy, Platform.BINARY_SENSOR, [device_id])
-    with caplog.at_level(logging.WARNING, logger="homeassistant.components.onewire"):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        if mock_device.get(ATTR_UNKNOWN_DEVICE):
-            assert "Ignoring unknown device family/type" in caplog.text
-        else:
-            assert "Ignoring unknown device family/type" not in caplog.text
-
-    check_device_registry(device_registry, expected_devices)
-    assert len(entity_registry.entities) == len(expected_entities)
-    check_and_enable_disabled_entities(entity_registry, expected_entities)
-
-    setup_owproxy_mock_devices(owproxy, Platform.BINARY_SENSOR, [device_id])
-    await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    check_entities(hass, entity_registry, expected_entities)
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
+        == 8
+    )

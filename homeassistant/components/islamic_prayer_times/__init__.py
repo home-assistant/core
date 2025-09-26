@@ -1,208 +1,99 @@
 """The islamic_prayer_times component."""
-from datetime import timedelta
+
+from __future__ import annotations
+
 import logging
 
-from prayer_times_calculator import PrayerTimesCalculator, exceptions
-from requests.exceptions import ConnectionError as ConnError
-import voluptuous as vol
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_call_later, async_track_point_in_time
-from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
-
-from .const import (
-    CALC_METHODS,
-    CONF_CALC_METHOD,
-    DATA_UPDATED,
-    DEFAULT_CALC_METHOD,
-    DOMAIN,
+from .coordinator import (
+    IslamicPrayerDataUpdateCoordinator,
+    IslamicPrayerTimesConfigEntry,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: {
-                vol.Optional(CONF_CALC_METHOD, default=DEFAULT_CALC_METHOD): vol.In(
-                    CALC_METHODS
-                ),
-            }
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
+
+_LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Import the Islamic Prayer component from config."""
-    if DOMAIN in config:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
-            )
-        )
-
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: IslamicPrayerTimesConfigEntry
+) -> bool:
     """Set up the Islamic Prayer Component."""
-    client = IslamicPrayerClient(hass, config_entry)
 
-    if not await client.async_setup():
-        return False
+    @callback
+    def update_unique_id(
+        entity_entry: er.RegistryEntry,
+    ) -> dict[str, str] | None:
+        """Update unique ID of entity entry."""
+        if not entity_entry.unique_id.startswith(f"{config_entry.entry_id}-"):
+            new_unique_id = f"{config_entry.entry_id}-{entity_entry.unique_id}"
+            return {"new_unique_id": new_unique_id}
+        return None
 
-    hass.data.setdefault(DOMAIN, client)
+    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+
+    coordinator = IslamicPrayerDataUpdateCoordinator(hass, config_entry)
+    await coordinator.async_config_entry_first_refresh()
+
+    config_entry.runtime_data = coordinator
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(async_options_updated)
+    )
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: IslamicPrayerTimesConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+    if config_entry.version == 1:
+        new = {**config_entry.data}
+        if config_entry.minor_version < 2:
+            lat = hass.config.latitude
+            lon = hass.config.longitude
+            new = {
+                CONF_LATITUDE: lat,
+                CONF_LONGITUDE: lon,
+            }
+            unique_id = f"{lat}-{lon}"
+        hass.config_entries.async_update_entry(
+            config_entry, data=new, unique_id=unique_id, version=1, minor_version=2
+        )
+
+    _LOGGER.debug("Migration to version %s successful", config_entry.version)
+
+    return True
+
+
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: IslamicPrayerTimesConfigEntry
+) -> bool:
     """Unload Islamic Prayer entry from config_entry."""
-    if hass.data[DOMAIN].event_unsub:
-        hass.data[DOMAIN].event_unsub()
-    hass.data.pop(DOMAIN)
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    ):
+        coordinator = config_entry.runtime_data
+        if coordinator.event_unsub:
+            coordinator.event_unsub()
+    return unload_ok
 
 
-class IslamicPrayerClient:
-    """Islamic Prayer Client Object."""
-
-    def __init__(self, hass, config_entry):
-        """Initialize the Islamic Prayer client."""
-        self.hass = hass
-        self.config_entry = config_entry
-        self.prayer_times_info = {}
-        self.available = True
-        self.event_unsub = None
-
-    @property
-    def calc_method(self):
-        """Return the calculation method."""
-        return self.config_entry.options[CONF_CALC_METHOD]
-
-    def get_new_prayer_times(self):
-        """Fetch prayer times for today."""
-        calc = PrayerTimesCalculator(
-            latitude=self.hass.config.latitude,
-            longitude=self.hass.config.longitude,
-            calculation_method=self.calc_method,
-            date=str(dt_util.now().date()),
-        )
-        return calc.fetch_prayer_times()
-
-    async def async_schedule_future_update(self):
-        """Schedule future update for sensors.
-
-        Midnight is a calculated time.  The specifics of the calculation
-        depends on the method of the prayer time calculation.  This calculated
-        midnight is the time at which the time to pray the Isha prayers have
-        expired.
-
-        Calculated Midnight: The Islamic midnight.
-        Traditional Midnight: 12:00AM
-
-        Update logic for prayer times:
-
-        If the Calculated Midnight is before the traditional midnight then wait
-        until the traditional midnight to run the update.  This way the day
-        will have changed over and we don't need to do any fancy calculations.
-
-        If the Calculated Midnight is after the traditional midnight, then wait
-        until after the calculated Midnight.  We don't want to update the prayer
-        times too early or else the timings might be incorrect.
-
-        Example:
-        calculated midnight = 11:23PM (before traditional midnight)
-        Update time: 12:00AM
-
-        calculated midnight = 1:35AM (after traditional midnight)
-        update time: 1:36AM.
-
-        """
-        _LOGGER.debug("Scheduling next update for Islamic prayer times")
-
-        now = dt_util.utcnow()
-
-        midnight_dt = self.prayer_times_info["Midnight"]
-
-        if now > dt_util.as_utc(midnight_dt):
-            next_update_at = midnight_dt + timedelta(days=1, minutes=1)
-            _LOGGER.debug(
-                "Midnight is after day the changes so schedule update for after Midnight the next day"
-            )
-        else:
-            _LOGGER.debug(
-                "Midnight is before the day changes so schedule update for the next start of day"
-            )
-            next_update_at = dt_util.start_of_local_day(now + timedelta(days=1))
-
-        _LOGGER.info("Next update scheduled for: %s", next_update_at)
-
-        self.event_unsub = async_track_point_in_time(
-            self.hass, self.async_update, next_update_at
-        )
-
-    async def async_update(self, *_):
-        """Update sensors with new prayer times."""
-        try:
-            prayer_times = await self.hass.async_add_executor_job(
-                self.get_new_prayer_times
-            )
-            self.available = True
-        except (exceptions.InvalidResponseError, ConnError):
-            self.available = False
-            _LOGGER.debug("Error retrieving prayer times")
-            async_call_later(self.hass, 60, self.async_update)
-            return
-
-        for prayer, time in prayer_times.items():
-            self.prayer_times_info[prayer] = dt_util.parse_datetime(
-                f"{dt_util.now().date()} {time}"
-            )
-        await self.async_schedule_future_update()
-
-        _LOGGER.debug("New prayer times retrieved. Updating sensors")
-        async_dispatcher_send(self.hass, DATA_UPDATED)
-
-    async def async_setup(self):
-        """Set up the Islamic prayer client."""
-        await self.async_add_options()
-
-        try:
-            await self.hass.async_add_executor_job(self.get_new_prayer_times)
-        except (exceptions.InvalidResponseError, ConnError) as err:
-            raise ConfigEntryNotReady from err
-
-        await self.async_update()
-        self.config_entry.add_update_listener(self.async_options_updated)
-
-        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
-
-        return True
-
-    async def async_add_options(self):
-        """Add options for entry."""
-        if not self.config_entry.options:
-            data = dict(self.config_entry.data)
-            calc_method = data.pop(CONF_CALC_METHOD, DEFAULT_CALC_METHOD)
-
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, data=data, options={CONF_CALC_METHOD: calc_method}
-            )
-
-    @staticmethod
-    async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Triggered by config entry options updates."""
-        if hass.data[DOMAIN].event_unsub:
-            hass.data[DOMAIN].event_unsub()
-        await hass.data[DOMAIN].async_update()
+async def async_options_updated(
+    hass: HomeAssistant, entry: IslamicPrayerTimesConfigEntry
+) -> None:
+    """Triggered by config entry options updates."""
+    coordinator = entry.runtime_data
+    if coordinator.event_unsub:
+        coordinator.event_unsub()
+    await coordinator.async_request_refresh()

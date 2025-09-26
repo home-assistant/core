@@ -1,4 +1,5 @@
 """Provide the device conditions for Z-Wave JS."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -7,15 +8,14 @@ import voluptuous as vol
 from zwave_js_server.const import CommandClass
 from zwave_js_server.model.value import ConfigurationValue
 
-from homeassistant.components.device_automation.exceptions import (
-    InvalidDeviceAutomationConfig,
-)
+from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.const import CONF_CONDITION, CONF_DEVICE_ID, CONF_DOMAIN, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
+from .config_validation import VALUE_SCHEMA
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_ENDPOINT,
@@ -23,18 +23,18 @@ from .const import (
     ATTR_PROPERTY_KEY,
     ATTR_VALUE,
     DOMAIN,
-    VALUE_SCHEMA,
 )
 from .device_automation_helpers import (
     CONF_SUBTYPE,
     CONF_VALUE_ID,
     NODE_STATUSES,
-    get_config_parameter_value_schema,
+    async_bypass_dynamic_config_validation,
+    generate_config_parameter_subtype,
 )
 from .helpers import (
     async_get_node_from_device_id,
-    async_is_device_config_entry_not_loaded,
     check_type_schema_map,
+    get_value_state_schema,
     get_zwave_value_from_config,
     remove_keys_with_empty_values,
 )
@@ -100,7 +100,7 @@ async def async_validate_condition_config(
     # We return early if the config entry for this device is not ready because we can't
     # validate the value without knowing the state of the device
     try:
-        device_config_entry_not_loaded = async_is_device_config_entry_not_loaded(
+        bypass_dynamic_config_validation = async_bypass_dynamic_config_validation(
             hass, config[CONF_DEVICE_ID]
         )
     except ValueError as err:
@@ -108,7 +108,7 @@ async def async_validate_condition_config(
             f"Device {config[CONF_DEVICE_ID]} not found"
         ) from err
 
-    if device_config_entry_not_loaded:
+    if bypass_dynamic_config_validation:
         return config
 
     if config[CONF_TYPE] == VALUE_TYPE:
@@ -125,13 +125,16 @@ async def async_get_conditions(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device conditions for Z-Wave JS devices."""
-    conditions = []
+    conditions: list[dict] = []
     base_condition = {
         CONF_CONDITION: "device",
         CONF_DEVICE_ID: device_id,
         CONF_DOMAIN: DOMAIN,
     }
     node = async_get_node_from_device_id(hass, device_id)
+
+    if node.client.driver and node.client.driver.controller.own_node == node:
+        return conditions
 
     # Any value's value condition
     conditions.append({**base_condition, CONF_TYPE: VALUE_TYPE})
@@ -146,7 +149,7 @@ async def async_get_conditions(
                 **base_condition,
                 CONF_VALUE_ID: config_value.value_id,
                 CONF_TYPE: CONFIG_PARAMETER_TYPE,
-                CONF_SUBTYPE: f"{config_value.value_id} ({config_value.property_name})",
+                CONF_SUBTYPE: generate_config_parameter_subtype(config_value),
             }
             for config_value in node.get_configuration_values().values()
         ]
@@ -195,7 +198,6 @@ def async_condition_from_config(
     raise HomeAssistantError(f"Unhandled condition type {condition_type}")
 
 
-@callback
 async def async_get_condition_capabilities(
     hass: HomeAssistant, config: ConfigType
 ) -> dict[str, vol.Schema]:
@@ -206,7 +208,7 @@ async def async_get_condition_capabilities(
     # Add additional fields to the automation trigger UI
     if config[CONF_TYPE] == CONFIG_PARAMETER_TYPE:
         value_id = config[CONF_VALUE_ID]
-        value_schema = get_config_parameter_value_schema(node, value_id)
+        value_schema = get_value_state_schema(node.values[value_id])
         if value_schema is None:
             return {}
         return {"extra_fields": vol.Schema({vol.Required(ATTR_VALUE): value_schema})}
@@ -220,7 +222,9 @@ async def async_get_condition_capabilities(
                     vol.Required(ATTR_COMMAND_CLASS): vol.In(
                         {
                             CommandClass(cc.id).value: cc.name
-                            for cc in sorted(node.command_classes, key=lambda cc: cc.name)  # type: ignore[no-any-return]
+                            for cc in sorted(
+                                node.command_classes, key=lambda cc: cc.name
+                            )
                             if cc.id != CommandClass.CONFIGURATION
                         }
                     ),

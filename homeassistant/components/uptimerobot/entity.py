@@ -1,26 +1,27 @@
 """Base UptimeRobot entity."""
+
 from __future__ import annotations
 
 from pyuptimerobot import UptimeRobotMonitor
 
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo, EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import UptimeRobotDataUpdateCoordinator
 from .const import ATTR_TARGET, ATTRIBUTION, DOMAIN
 
 
-class UptimeRobotEntity(CoordinatorEntity):
+class UptimeRobotEntity(CoordinatorEntity[UptimeRobotDataUpdateCoordinator]):
     """Base UptimeRobot entity."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: UptimeRobotDataUpdateCoordinator,
         description: EntityDescription,
         monitor: UptimeRobotMonitor,
     ) -> None:
@@ -40,6 +41,7 @@ class UptimeRobotEntity(CoordinatorEntity):
             ATTR_TARGET: self.monitor.url,
         }
         self._attr_unique_id = str(self.monitor.id)
+        self.api = coordinator.api
 
     @property
     def _monitors(self) -> list[UptimeRobotMonitor]:
@@ -57,8 +59,3 @@ class UptimeRobotEntity(CoordinatorEntity):
             ),
             self._monitor,
         )
-
-    @property
-    def monitor_available(self) -> bool:
-        """Returtn if the monitor is available."""
-        return bool(self.monitor.status == 2)

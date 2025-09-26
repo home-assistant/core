@@ -1,4 +1,5 @@
 """Support for Envisalink sensors (shows panel info)."""
+
 from __future__ import annotations
 
 import logging
@@ -15,8 +16,8 @@ from . import (
     PARTITION_SCHEMA,
     SIGNAL_KEYPAD_UPDATE,
     SIGNAL_PARTITION_UPDATE,
-    EnvisalinkDevice,
 )
+from .entity import EnvisalinkEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +49,7 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class EnvisalinkSensor(EnvisalinkDevice, SensorEntity):
+class EnvisalinkSensor(EnvisalinkEntity, SensorEntity):
     """Representation of an Envisalink keypad."""
 
     def __init__(self, hass, partition_name, partition_number, info, controller):
@@ -59,7 +60,7 @@ class EnvisalinkSensor(EnvisalinkDevice, SensorEntity):
         _LOGGER.debug("Setting up sensor for partition: %s", partition_name)
         super().__init__(f"{partition_name} Keypad", info, controller)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(

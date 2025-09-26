@@ -1,9 +1,11 @@
 {
   "domain": "twitch",
   "name": "Twitch",
+  "codeowners": ["@joostlek"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/twitch",
-  "requirements": ["python-twitch-client==0.6.0"],
-  "codeowners": [],
   "iot_class": "cloud_polling",
-  "loggers": ["twitch"]
+  "loggers": ["twitch"],
+  "requirements": ["twitchAPI==4.2.1"]
 }

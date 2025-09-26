@@ -1,0 +1,18 @@
+# serializer version: 1
+# name: test_device_tracker
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'band': '5 GHz',
+      'friendly_name': 'AA:BB:CC:DD:EE:FF',
+      'mac': 'AA:BB:CC:DD:EE:FF',
+      'source_type': <SourceType.ROUTER: 'router'>,
+      'wifi': 'Main',
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.aa_bb_cc_dd_ee_ff',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---

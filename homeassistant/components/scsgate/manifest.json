@@ -1,9 +1,10 @@
 {
   "domain": "scsgate",
   "name": "SCSGate",
-  "documentation": "https://www.home-assistant.io/integrations/scsgate",
-  "requirements": ["scsgate==0.1.0"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/scsgate",
   "iot_class": "local_polling",
-  "loggers": ["scsgate"]
+  "loggers": ["scsgate"],
+  "quality_scale": "legacy",
+  "requirements": ["scsgate==0.1.0"]
 }

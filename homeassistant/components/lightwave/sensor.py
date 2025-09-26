@@ -1,4 +1,5 @@
 """Support for LightwaveRF TRV - Associated Battery."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
@@ -50,9 +51,9 @@ class LightwaveBattery(SensorEntity):
         self._serial = serial
         self._attr_unique_id = f"{serial}-trv-battery"
 
-    def update(self):
+    def update(self) -> None:
         """Communicate with a Lightwave RTF Proxy to get state."""
-        (dummy_temp, dummy_targ, battery, dummy_output) = self._lwlink.read_trv_status(
-            self._serial
+        (_dummy_temp, _dummy_targ, battery, _dummy_output) = (
+            self._lwlink.read_trv_status(self._serial)
         )
         self._attr_native_value = battery

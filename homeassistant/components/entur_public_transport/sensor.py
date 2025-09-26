@@ -1,31 +1,32 @@
 """Real-time information about public transport departures in Norway."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from random import randint
 
 from enturclient import EnturPublicTransportData
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_SHOW_ON_MAP,
-    TIME_MINUTES,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
-import homeassistant.util.dt as dt_util
+from homeassistant.util import Throttle, dt as dt_util
 
-API_CLIENT_NAME = "homeassistant-homeassistant"
-
-ATTRIBUTION = "Data provided by entur.org under NLOD"
+API_CLIENT_NAME = "homeassistant-{}"
 
 CONF_STOP_IDS = "stop_ids"
 CONF_EXPAND_PLATFORMS = "expand_platforms"
@@ -47,7 +48,7 @@ ICONS = {
 
 SCAN_INTERVAL = timedelta(seconds=45)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STOP_IDS): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_EXPAND_PLATFORMS, default=True): cv.boolean,
@@ -108,7 +109,7 @@ async def async_setup_platform(
     quays = [s for s in stop_ids if "Quay" in s]
 
     data = EnturPublicTransportData(
-        API_CLIENT_NAME,
+        API_CLIENT_NAME.format(str(randint(100000, 999999))),
         stops=stops,
         quays=quays,
         line_whitelist=line_whitelist,
@@ -160,6 +161,8 @@ class EnturProxy:
 class EnturPublicTransportSensor(SensorEntity):
     """Implementation of a Entur public transport sensor."""
 
+    _attr_attribution = "Data provided by entur.org under NLOD"
+
     def __init__(
         self, api: EnturProxy, name: str, stop: str, show_on_map: bool
     ) -> None:
@@ -183,16 +186,15 @@ class EnturPublicTransportSensor(SensorEntity):
         return self._state
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
-        self._attributes[ATTR_ATTRIBUTION] = ATTRIBUTION
         self._attributes[ATTR_STOP_ID] = self._stop
         return self._attributes
 
     @property
     def native_unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
-        return TIME_MINUTES
+        return UnitOfTime.MINUTES
 
     @property
     def icon(self) -> str:
@@ -238,9 +240,9 @@ class EnturPublicTransportSensor(SensorEntity):
         self._attributes[ATTR_NEXT_UP_AT] = calls[1].expected_departure_time.strftime(
             "%H:%M"
         )
-        self._attributes[
-            ATTR_NEXT_UP_IN
-        ] = f"{due_in_minutes(calls[1].expected_departure_time)} min"
+        self._attributes[ATTR_NEXT_UP_IN] = (
+            f"{due_in_minutes(calls[1].expected_departure_time)} min"
+        )
         self._attributes[ATTR_NEXT_UP_REALTIME] = calls[1].is_realtime
         self._attributes[ATTR_NEXT_UP_DELAY] = calls[1].delay_in_min
 

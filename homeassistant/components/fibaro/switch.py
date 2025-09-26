@@ -1,68 +1,52 @@
 """Support for Fibaro switches."""
+
 from __future__ import annotations
 
-from homeassistant.components.switch import DOMAIN, SwitchEntity
+from typing import Any
+
+from pyfibaro.fibaro_device import DeviceModel
+
+from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import convert
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FIBARO_DEVICES, FibaroDevice
+from . import FibaroConfigEntry
+from .entity import FibaroEntity
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: FibaroConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Fibaro switches."""
-    if discovery_info is None:
-        return
-
-    add_entities(
-        [FibaroSwitch(device) for device in hass.data[FIBARO_DEVICES]["switch"]], True
+    controller = entry.runtime_data
+    async_add_entities(
+        [FibaroSwitch(device) for device in controller.fibaro_devices[Platform.SWITCH]],
+        True,
     )
 
 
-class FibaroSwitch(FibaroDevice, SwitchEntity):
+class FibaroSwitch(FibaroEntity, SwitchEntity):
     """Representation of a Fibaro Switch."""
 
-    def __init__(self, fibaro_device):
+    def __init__(self, fibaro_device: DeviceModel) -> None:
         """Initialize the Fibaro device."""
-        self._state = False
         super().__init__(fibaro_device)
-        self.entity_id = f"{DOMAIN}.{self.ha_id}"
+        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         self.call_turn_on()
-        self._state = True
+        self._attr_is_on = True
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         self.call_turn_off()
-        self._state = False
+        self._attr_is_on = False
 
-    @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        if "power" in self.fibaro_device.interfaces:
-            return convert(self.fibaro_device.properties.power, float, 0.0)
-        return None
-
-    @property
-    def today_energy_kwh(self):
-        """Return the today total energy usage in kWh."""
-        if "energy" in self.fibaro_device.interfaces:
-            return convert(self.fibaro_device.properties.energy, float, 0.0)
-        return None
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
-
-    def update(self):
+    def update(self) -> None:
         """Update device state."""
-        self._state = self.current_binary_state
+        super().update()
+        self._attr_is_on = self.current_binary_state

@@ -1,174 +1,115 @@
 """Support for monitoring pyLoad."""
+
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
+from collections.abc import Callable
+from dataclasses import dataclass
+from enum import StrEnum
 
-from aiohttp.hdrs import CONTENT_TYPE
-import requests
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MONITORED_VARIABLES,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
-    CONTENT_TYPE_JSON,
-    DATA_RATE_MEGABYTES_PER_SECOND,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
 )
+from homeassistant.const import UnitOfDataRate, UnitOfInformation
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import UNIT_DOWNLOADS
+from .coordinator import PyLoadConfigEntry, PyLoadData
+from .entity import BasePyLoadEntity
 
-DEFAULT_HOST = "localhost"
-DEFAULT_NAME = "pyLoad"
-DEFAULT_PORT = 8000
+PARALLEL_UPDATES = 0
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
-SENSOR_TYPES = {"speed": ["speed", "Speed", DATA_RATE_MEGABYTES_PER_SECOND]}
+class PyLoadSensorEntity(StrEnum):
+    """pyLoad Sensor Entities."""
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        vol.Optional(CONF_MONITORED_VARIABLES, default=["speed"]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=False): cv.boolean,
-        vol.Optional(CONF_USERNAME): cv.string,
-    }
+    ACTIVE = "active"
+    FREE_SPACE = "free_space"
+    QUEUE = "queue"
+    SPEED = "speed"
+    TOTAL = "total"
+
+
+@dataclass(kw_only=True, frozen=True)
+class PyLoadSensorEntityDescription(SensorEntityDescription):
+    """Describes pyLoad switch entity."""
+
+    value_fn: Callable[[PyLoadData], StateType]
+
+
+SENSOR_DESCRIPTIONS: tuple[PyLoadSensorEntityDescription, ...] = (
+    PyLoadSensorEntityDescription(
+        key=PyLoadSensorEntity.SPEED,
+        translation_key=PyLoadSensorEntity.SPEED,
+        device_class=SensorDeviceClass.DATA_RATE,
+        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.speed,
+    ),
+    PyLoadSensorEntityDescription(
+        key=PyLoadSensorEntity.ACTIVE,
+        translation_key=PyLoadSensorEntity.ACTIVE,
+        native_unit_of_measurement=UNIT_DOWNLOADS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.active,
+    ),
+    PyLoadSensorEntityDescription(
+        key=PyLoadSensorEntity.QUEUE,
+        translation_key=PyLoadSensorEntity.QUEUE,
+        native_unit_of_measurement=UNIT_DOWNLOADS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.queue,
+    ),
+    PyLoadSensorEntityDescription(
+        key=PyLoadSensorEntity.TOTAL,
+        translation_key=PyLoadSensorEntity.TOTAL,
+        native_unit_of_measurement=UNIT_DOWNLOADS,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.total,
+    ),
+    PyLoadSensorEntityDescription(
+        key=PyLoadSensorEntity.FREE_SPACE,
+        translation_key=PyLoadSensorEntity.FREE_SPACE,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.free_space,
+    ),
 )
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: PyLoadConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the pyLoad sensors."""
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
-    protocol = "https" if config[CONF_SSL] else "http"
-    name = config[CONF_NAME]
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    monitored_types = config[CONF_MONITORED_VARIABLES]
-    url = f"{protocol}://{host}:{port}/api/"
 
-    try:
-        pyloadapi = PyLoadAPI(api_url=url, username=username, password=password)
-    except (
-        requests.exceptions.ConnectionError,
-        requests.exceptions.HTTPError,
-    ) as conn_err:
-        _LOGGER.error("Error setting up pyLoad API: %s", conn_err)
-        return
+    coordinator = entry.runtime_data
 
-    devices = []
-    for ng_type in monitored_types:
-        new_sensor = PyLoadSensor(
-            api=pyloadapi, sensor_type=SENSOR_TYPES.get(ng_type), client_name=name
-        )
-        devices.append(new_sensor)
-
-    add_entities(devices, True)
+    async_add_entities(
+        (
+            PyLoadSensor(
+                coordinator=coordinator,
+                entity_description=description,
+            )
+            for description in SENSOR_DESCRIPTIONS
+        ),
+    )
 
 
-class PyLoadSensor(SensorEntity):
+class PyLoadSensor(BasePyLoadEntity, SensorEntity):
     """Representation of a pyLoad sensor."""
 
-    def __init__(self, api, sensor_type, client_name):
-        """Initialize a new pyLoad sensor."""
-        self._name = f"{client_name} {sensor_type[1]}"
-        self.type = sensor_type[0]
-        self.api = api
-        self._state = None
-        self._unit_of_measurement = sensor_type[2]
+    entity_description: PyLoadSensorEntityDescription
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
-    def update(self):
-        """Update state of sensor."""
-        try:
-            self.api.update()
-        except requests.exceptions.ConnectionError:
-            # Error calling the API, already logged in api.update()
-            return
-
-        if self.api.status is None:
-            _LOGGER.debug(
-                "Update of %s requested, but no status is available", self._name
-            )
-            return
-
-        if (value := self.api.status.get(self.type)) is None:
-            _LOGGER.warning("Unable to locate value for %s", self.type)
-            return
-
-        if "speed" in self.type and value > 0:
-            # Convert download rate from Bytes/s to MBytes/s
-            self._state = round(value / 2**20, 2)
-        else:
-            self._state = value
-
-
-class PyLoadAPI:
-    """Simple wrapper for pyLoad's API."""
-
-    def __init__(self, api_url, username=None, password=None):
-        """Initialize pyLoad API and set headers needed later."""
-        self.api_url = api_url
-        self.status = None
-        self.headers = {CONTENT_TYPE: CONTENT_TYPE_JSON}
-
-        if username is not None and password is not None:
-            self.payload = {"username": username, "password": password}
-            self.login = requests.post(f"{api_url}login", data=self.payload, timeout=5)
-        self.update()
-
-    def post(self):
-        """Send a POST request and return the response as a dict."""
-        try:
-            response = requests.post(
-                f"{self.api_url}statusServer",
-                cookies=self.login.cookies,
-                headers=self.headers,
-                timeout=5,
-            )
-            response.raise_for_status()
-            _LOGGER.debug("JSON Response: %s", response.json())
-            return response.json()
-
-        except requests.exceptions.ConnectionError as conn_exc:
-            _LOGGER.error("Failed to update pyLoad status. Error: %s", conn_exc)
-            raise
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Update cached response."""
-        self.status = self.post()
+        return self.entity_description.value_fn(self.coordinator.data)

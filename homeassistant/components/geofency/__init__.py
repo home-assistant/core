@@ -1,4 +1,5 @@
 """Support for Geofency."""
+
 from http import HTTPStatus
 
 from aiohttp import web
@@ -15,13 +16,15 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_flow
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
+
+type GeofencyConfigEntry = ConfigEntry[set[str]]
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
 
@@ -75,20 +78,19 @@ WEBHOOK_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+_DATA_GEOFENCY: HassKey[list[str]] = HassKey(DOMAIN)
+
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Geofency component."""
-    config = hass_config.get(DOMAIN, {})
-    mobile_beacons = config.get(CONF_MOBILE_BEACONS, [])
-    hass.data[DOMAIN] = {
-        "beacons": [slugify(beacon) for beacon in mobile_beacons],
-        "devices": set(),
-        "unsub_device_tracker": {},
-    }
+    mobile_beacons = hass_config.get(DOMAIN, {}).get(CONF_MOBILE_BEACONS, [])
+    hass.data[_DATA_GEOFENCY] = [slugify(beacon) for beacon in mobile_beacons]
     return True
 
 
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> web.Response:
     """Handle incoming webhook from Geofency."""
     try:
         data = WEBHOOK_SCHEMA(dict(await request.post()))
@@ -97,7 +99,7 @@ async def handle_webhook(hass, webhook_id, request):
             text=error.error_message, status=HTTPStatus.UNPROCESSABLE_ENTITY
         )
 
-    if _is_mobile_beacon(data, hass.data[DOMAIN]["beacons"]):
+    if _is_mobile_beacon(data, hass.data[_DATA_GEOFENCY]):
         return _set_location(hass, data, None)
     if data["entry"] == LOCATION_ENTRY:
         location_name = data["name"]
@@ -138,20 +140,20 @@ def _set_location(hass, data, location_name):
     return web.Response(text=f"Setting location for {device}")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GeofencyConfigEntry) -> bool:
     """Configure based on config entry."""
+    entry.runtime_data = set()
     webhook.async_register(
         hass, DOMAIN, "Geofency", entry.data[CONF_WEBHOOK_ID], handle_webhook
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GeofencyConfigEntry) -> bool:
     """Unload a config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-    hass.data[DOMAIN]["unsub_device_tracker"].pop(entry.entry_id)()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

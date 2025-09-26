@@ -1,108 +1,162 @@
 """Adds config flow for Brother Printer."""
+
 from __future__ import annotations
 
-import ipaddress
-import re
 from typing import Any
 
-from brother import Brother, SnmpError, UnsupportedModel
+from brother import Brother, SnmpError, UnsupportedModelError
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
-from homeassistant.components import zeroconf
-from homeassistant.const import CONF_HOST, CONF_TYPE
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.components.snmp import async_get_snmp_engine
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import section
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.util.network import is_host_valid
 
-from .const import DOMAIN, PRINTER_TYPES
-from .utils import get_snmp_engine
+from .const import (
+    CONF_COMMUNITY,
+    DEFAULT_COMMUNITY,
+    DEFAULT_PORT,
+    DOMAIN,
+    PRINTER_TYPES,
+    SECTION_ADVANCED_SETTINGS,
+)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST, default=""): str,
+        vol.Required(CONF_HOST): str,
         vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES),
+        vol.Required(SECTION_ADVANCED_SETTINGS): section(
+            vol.Schema(
+                {
+                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    vol.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
+                },
+            ),
+            {"collapsed": True},
+        ),
+    }
+)
+ZEROCONF_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES),
+        vol.Required(SECTION_ADVANCED_SETTINGS): section(
+            vol.Schema(
+                {
+                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    vol.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
+                },
+            ),
+            {"collapsed": True},
+        ),
+    }
+)
+RECONFIGURE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(SECTION_ADVANCED_SETTINGS): section(
+            vol.Schema(
+                {
+                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    vol.Required(CONF_COMMUNITY, default=DEFAULT_COMMUNITY): str,
+                },
+            ),
+            {"collapsed": True},
+        ),
     }
 )
 
 
-def host_valid(host: str) -> bool:
-    """Return True if hostname or IP address is valid."""
-    try:
-        if ipaddress.ip_address(host).version in [4, 6]:
-            return True
-    except ValueError:
-        pass
-    disallowed = re.compile(r"[^a-zA-Z\d\-]")
-    return all(x and not disallowed.search(x) for x in host.split("."))
+async def validate_input(
+    hass: HomeAssistant, user_input: dict[str, Any], expected_mac: str | None = None
+) -> tuple[str, str]:
+    """Validate the user input."""
+    if not is_host_valid(user_input[CONF_HOST]):
+        raise InvalidHost
+
+    snmp_engine = await async_get_snmp_engine(hass)
+
+    brother = await Brother.create(
+        user_input[CONF_HOST],
+        user_input[SECTION_ADVANCED_SETTINGS][CONF_PORT],
+        user_input[SECTION_ADVANCED_SETTINGS][CONF_COMMUNITY],
+        snmp_engine=snmp_engine,
+    )
+    await brother.async_update()
+
+    if expected_mac is not None and brother.serial.lower() != expected_mac:
+        raise AnotherDevice
+
+    return (brother.model, brother.serial)
 
 
-class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Brother Printer."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize."""
-        self.brother: Brother = None
+        self.brother: Brother
         self.host: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
         if user_input is not None:
             try:
-                if not host_valid(user_input[CONF_HOST]):
-                    raise InvalidHost()
-
-                snmp_engine = get_snmp_engine(self.hass)
-
-                brother = Brother(user_input[CONF_HOST], snmp_engine=snmp_engine)
-                await brother.async_update()
-
-                await self.async_set_unique_id(brother.serial.lower())
-                self._abort_if_unique_id_configured()
-
-                title = f"{brother.model} {brother.serial}"
-                return self.async_create_entry(title=title, data=user_input)
+                model, serial = await validate_input(self.hass, user_input)
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
-            except ConnectionError:
+            except (ConnectionError, TimeoutError):
                 errors["base"] = "cannot_connect"
             except SnmpError:
                 errors["base"] = "snmp_error"
-            except UnsupportedModel:
+            except UnsupportedModelError:
                 return self.async_abort(reason="unsupported_model")
+            else:
+                await self.async_set_unique_id(serial.lower())
+                self._abort_if_unique_id_configured()
+
+                title = f"{model} {serial}"
+                return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
-        # Hostname is format: brother.local.
-        self.host = discovery_info.hostname.rstrip(".")
+        self.host = discovery_info.host
 
         # Do not probe the device if the host is already configured
         self._async_abort_entries_match({CONF_HOST: self.host})
 
-        snmp_engine = get_snmp_engine(self.hass)
+        snmp_engine = await async_get_snmp_engine(self.hass)
         model = discovery_info.properties.get("product")
 
         try:
-            self.brother = Brother(self.host, snmp_engine=snmp_engine, model=model)
+            self.brother = await Brother.create(
+                self.host, snmp_engine=snmp_engine, model=model
+            )
             await self.brother.async_update()
-        except UnsupportedModel:
+        except UnsupportedModelError:
             return self.async_abort(reason="unsupported_model")
-        except (ConnectionError, SnmpError):
+        except (ConnectionError, SnmpError, TimeoutError):
             return self.async_abort(reason="cannot_connect")
 
         # Check if already configured
         await self.async_set_unique_id(self.brother.serial.lower())
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured({CONF_HOST: self.host})
 
         self.context.update(
             {
@@ -116,25 +170,61 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by zeroconf."""
         if user_input is not None:
             title = f"{self.brother.model} {self.brother.serial}"
             return self.async_create_entry(
                 title=title,
-                data={CONF_HOST: self.host, CONF_TYPE: user_input[CONF_TYPE]},
+                data={CONF_HOST: self.host, **user_input},
             )
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            data_schema=vol.Schema(
-                {vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES)}
-            ),
+            data_schema=ZEROCONF_SCHEMA,
             description_placeholders={
                 "serial_number": self.brother.serial,
                 "model": self.brother.model,
             },
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow initialized by the user."""
+        entry = self._get_reconfigure_entry()
+        errors = {}
 
-class InvalidHost(exceptions.HomeAssistantError):
+        if user_input is not None:
+            try:
+                await validate_input(self.hass, user_input, entry.unique_id)
+            except InvalidHost:
+                errors[CONF_HOST] = "wrong_host"
+            except (ConnectionError, TimeoutError):
+                errors["base"] = "cannot_connect"
+            except SnmpError:
+                errors["base"] = "snmp_error"
+            except AnotherDevice:
+                errors["base"] = "another_device"
+            else:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=RECONFIGURE_SCHEMA,
+                suggested_values=entry.data | (user_input or {}),
+            ),
+            description_placeholders={"printer_name": entry.title},
+            errors=errors,
+        )
+
+
+class InvalidHost(HomeAssistantError):
     """Error to indicate that hostname/IP address is invalid."""
+
+
+class AnotherDevice(HomeAssistantError):
+    """Error to indicate that hostname/IP address belongs to another device."""

@@ -1,7 +1,8 @@
 """Support for Ambient Weather Station sensors."""
+
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -9,29 +10,34 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
-    IRRADIATION_WATTS_PER_SQUARE_METER,
     LIGHT_LUX,
     PERCENTAGE,
-    PRECIPITATION_INCHES,
-    PRECIPITATION_INCHES_PER_HOUR,
-    PRESSURE_INHG,
-    SPEED_MILES_PER_HOUR,
-    TEMP_FAHRENHEIT,
+    UnitOfIrradiance,
+    UnitOfLength,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AmbientStation, AmbientWeatherEntity
-from .const import ATTR_LAST_DATA, DOMAIN, TYPE_SOLARRADIATION, TYPE_SOLARRADIATION_LX
+from . import AmbientStation, AmbientStationConfigEntry
+from .const import ATTR_LAST_DATA, TYPE_SOLARRADIATION, TYPE_SOLARRADIATION_LX
+from .entity import AmbientWeatherEntity
 
 TYPE_24HOURRAININ = "24hourrainin"
+TYPE_AQI_PM25 = "aqi_pm25"
+TYPE_AQI_PM25_24H = "aqi_pm25_24h"
+TYPE_AQI_PM25_IN = "aqi_pm25_in"
+TYPE_AQI_PM25_IN_24H = "aqi_pm25_in_24h"
 TYPE_BAROMABSIN = "baromabsin"
 TYPE_BAROMRELIN = "baromrelin"
 TYPE_CO2 = "co2"
@@ -53,6 +59,10 @@ TYPE_HUMIDITY8 = "humidity8"
 TYPE_HUMIDITY9 = "humidity9"
 TYPE_HUMIDITYIN = "humidityin"
 TYPE_LASTRAIN = "lastRain"
+TYPE_LIGHTNING_PER_DAY = "lightning_day"
+TYPE_LIGHTNING_PER_HOUR = "lightning_hour"
+TYPE_LASTLIGHTNING_DISTANCE = "lightning_distance"
+TYPE_LASTLIGHTNING = "lightning_time"
 TYPE_MAXDAILYGUST = "maxdailygust"
 TYPE_MONTHLYRAININ = "monthlyrainin"
 TYPE_PM25 = "pm25"
@@ -107,507 +117,566 @@ TYPE_YEARLYRAININ = "yearlyrainin"
 SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=TYPE_24HOURRAININ,
-        name="24 Hr Rain",
-        icon="mdi:water",
-        native_unit_of_measurement=PRECIPITATION_INCHES,
+        translation_key="24_hour_rain",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
+        key=TYPE_AQI_PM25,
+        translation_key="pm25_aqi",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_AQI_PM25_24H,
+        translation_key="pm25_aqi_24h_average",
+        device_class=SensorDeviceClass.AQI,
+    ),
+    SensorEntityDescription(
+        key=TYPE_AQI_PM25_IN,
+        translation_key="pm25_indoor_aqi",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key=TYPE_AQI_PM25_IN_24H,
+        translation_key="pm25_indoor_aqi_24h_average",
+        device_class=SensorDeviceClass.AQI,
+    ),
+    SensorEntityDescription(
         key=TYPE_BAROMABSIN,
-        name="Abs Pressure",
-        native_unit_of_measurement=PRESSURE_INHG,
+        translation_key="absolute_pressure",
+        native_unit_of_measurement=UnitOfPressure.INHG,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_BAROMRELIN,
-        name="Rel Pressure",
-        native_unit_of_measurement=PRESSURE_INHG,
+        translation_key="relative_pressure",
+        native_unit_of_measurement=UnitOfPressure.INHG,
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_CO2,
-        name="co2",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_DAILYRAININ,
-        name="Daily Rain",
-        icon="mdi:water",
-        native_unit_of_measurement=PRECIPITATION_INCHES,
+        translation_key="daily_rain",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key=TYPE_DEWPOINT,
-        name="Dew Point",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="dew_point",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_EVENTRAININ,
-        name="Event Rain",
-        icon="mdi:water",
-        native_unit_of_measurement=PRECIPITATION_INCHES,
-        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="event_rain",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
+        device_class=SensorDeviceClass.PRECIPITATION,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key=TYPE_FEELSLIKE,
-        name="Feels Like",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="feels_like",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HOURLYRAININ,
-        name="Hourly Rain Rate",
-        icon="mdi:water",
-        native_unit_of_measurement=PRECIPITATION_INCHES_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumetricFlux.INCHES_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY10,
-        name="Humidity 10",
+        translation_key="humidity_10",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY1,
-        name="Humidity 1",
+        translation_key="humidity_1",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY2,
-        name="Humidity 2",
+        translation_key="humidity_2",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY3,
-        name="Humidity 3",
+        translation_key="humidity_3",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY4,
-        name="Humidity 4",
+        translation_key="humidity_4",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY5,
-        name="Humidity 5",
+        translation_key="humidity_5",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY6,
-        name="Humidity 6",
+        translation_key="humidity_6",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY7,
-        name="Humidity 7",
+        translation_key="humidity_7",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY8,
-        name="Humidity 8",
+        translation_key="humidity_8",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY9,
-        name="Humidity 9",
+        translation_key="humidity_9",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITY,
-        name="Humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_HUMIDITYIN,
-        name="Humidity In",
+        translation_key="humidity_indoor",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_LASTRAIN,
-        name="Last Rain",
-        icon="mdi:water",
+        translation_key="last_rain",
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SensorEntityDescription(
+        key=TYPE_LIGHTNING_PER_DAY,
+        translation_key="lightning_strikes_per_day",
+        native_unit_of_measurement="strikes",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        key=TYPE_LIGHTNING_PER_HOUR,
+        translation_key="lightning_strikes_per_hour",
+        native_unit_of_measurement="strikes",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    SensorEntityDescription(
+        key=TYPE_LASTLIGHTNING,
+        translation_key="last_lightning_strike",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key=TYPE_LASTLIGHTNING_DISTANCE,
+        translation_key="last_lightning_strike_distance",
+        native_unit_of_measurement=UnitOfLength.MILES,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
         key=TYPE_MAXDAILYGUST,
-        name="Max Gust",
-        icon="mdi:weather-windy",
-        native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        translation_key="max_gust",
+        native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_MONTHLYRAININ,
-        name="Monthly Rain",
-        icon="mdi:water",
-        native_unit_of_measurement=PRECIPITATION_INCHES,
-        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="monthly_rain",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
+        device_class=SensorDeviceClass.PRECIPITATION,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key=TYPE_PM25_24H,
-        name="PM25 24h Avg",
+        translation_key="pm25_24h_average",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
     ),
     SensorEntityDescription(
         key=TYPE_PM25_IN,
-        name="PM25 Indoor",
+        translation_key="pm25_indoor",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_PM25_IN_24H,
-        name="PM25 Indoor 24h Avg",
+        translation_key="pm25_indoor_24h_average",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
     ),
     SensorEntityDescription(
         key=TYPE_PM25,
-        name="PM25",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM10,
-        name="Soil Humidity 10",
+        translation_key="soil_humidity_10",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM1,
-        name="Soil Humidity 1",
+        translation_key="soil_humidity_1",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM2,
-        name="Soil Humidity 2",
+        translation_key="soil_humidity_2",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM3,
-        name="Soil Humidity 3",
+        translation_key="soil_humidity_3",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM4,
-        name="Soil Humidity 4",
+        translation_key="soil_humidity_4",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM5,
-        name="Soil Humidity 5",
+        translation_key="soil_humidity_5",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM6,
-        name="Soil Humidity 6",
+        translation_key="soil_humidity_6",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM7,
-        name="Soil Humidity 7",
+        translation_key="soil_humidity_7",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM8,
-        name="Soil Humidity 8",
+        translation_key="soil_humidity_8",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILHUM9,
-        name="Soil Humidity 9",
+        translation_key="soil_humidity_9",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP10F,
-        name="Soil Temp 10",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="soil_temperature_10",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP1F,
-        name="Soil Temp 1",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="soil_temperature_1",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP2F,
-        name="Soil Temp 2",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="soil_temperature_2",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP3F,
-        name="Soil Temp 3",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="soil_temperature_3",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP4F,
-        name="Soil Temp 4",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="soil_temperature_4",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP5F,
-        name="Soil Temp 5",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="soil_temperature_5",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP6F,
-        name="Soil Temp 6",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="soil_temperature_6",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP7F,
-        name="Soil Temp 7",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="soil_temperature_7",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP8F,
-        name="Soil Temp 8",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="soil_temperature_8",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOILTEMP9F,
-        name="Soil Temp 9",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="soil_temperature_9",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOLARRADIATION,
-        name="Solar Rad",
-        native_unit_of_measurement=IRRADIATION_WATTS_PER_SQUARE_METER,
-        device_class=SensorDeviceClass.ILLUMINANCE,
+        native_unit_of_measurement=UnitOfIrradiance.WATTS_PER_SQUARE_METER,
+        device_class=SensorDeviceClass.IRRADIANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_SOLARRADIATION_LX,
-        name="Solar Rad",
         native_unit_of_measurement=LIGHT_LUX,
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP10F,
-        name="Temp 10",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="temperature_10",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP1F,
-        name="Temp 1",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="temperature_1",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP2F,
-        name="Temp 2",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="temperature_2",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP3F,
-        name="Temp 3",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="temperature_3",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP4F,
-        name="Temp 4",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="temperature_4",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP5F,
-        name="Temp 5",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="temperature_5",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP6F,
-        name="Temp 6",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="temperature_6",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP7F,
-        name="Temp 7",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="temperature_7",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP8F,
-        name="Temp 8",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="temperature_8",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMP9F,
-        name="Temp 9",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="temperature_9",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMPF,
-        name="Temp",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TEMPINF,
-        name="Inside Temp",
-        native_unit_of_measurement=TEMP_FAHRENHEIT,
+        translation_key="inside_temperature",
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_TOTALRAININ,
-        name="Lifetime Rain",
-        icon="mdi:water",
-        native_unit_of_measurement=PRECIPITATION_INCHES,
-        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="lifetime_rain",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
+        device_class=SensorDeviceClass.PRECIPITATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key=TYPE_UV,
-        name="UV Index",
+        translation_key="uv_index",
         native_unit_of_measurement="Index",
-        device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_WEEKLYRAININ,
-        name="Weekly Rain",
-        icon="mdi:water",
-        native_unit_of_measurement=PRECIPITATION_INCHES,
-        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="weekly_rain",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
+        device_class=SensorDeviceClass.PRECIPITATION,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key=TYPE_WINDDIR,
-        name="Wind Dir",
-        icon="mdi:weather-windy",
+        translation_key="wind_direction",
         native_unit_of_measurement=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
     ),
     SensorEntityDescription(
         key=TYPE_WINDDIR_AVG10M,
-        name="Wind Dir Avg 10m",
-        icon="mdi:weather-windy",
+        translation_key="wind_direction_average_10m",
         native_unit_of_measurement=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     SensorEntityDescription(
         key=TYPE_WINDDIR_AVG2M,
-        name="Wind Dir Avg 2m",
-        icon="mdi:weather-windy",
+        translation_key="wind_direction_average_2m",
         native_unit_of_measurement=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     SensorEntityDescription(
         key=TYPE_WINDGUSTDIR,
-        name="Gust Dir",
-        icon="mdi:weather-windy",
+        translation_key="wind_gust_direction",
         native_unit_of_measurement=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     SensorEntityDescription(
         key=TYPE_WINDGUSTMPH,
-        name="Wind Gust",
-        icon="mdi:weather-windy",
-        native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        translation_key="wind_gust",
+        native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_WINDSPDMPH_AVG10M,
-        name="Wind Avg 10m",
-        icon="mdi:weather-windy",
-        native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        translation_key="wind_average_10m",
+        native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
     ),
     SensorEntityDescription(
         key=TYPE_WINDSPDMPH_AVG2M,
-        name="Wind Avg 2m",
-        icon="mdi:weather-windy",
-        native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        translation_key="wind_average_2m",
+        native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
     ),
     SensorEntityDescription(
         key=TYPE_WINDSPEEDMPH,
-        name="Wind Speed",
-        icon="mdi:weather-windy",
-        native_unit_of_measurement=SPEED_MILES_PER_HOUR,
+        native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
+        device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=TYPE_YEARLYRAININ,
-        name="Yearly Rain",
-        icon="mdi:water",
-        native_unit_of_measurement=PRECIPITATION_INCHES,
+        translation_key="yearly_rain",
+        native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
+        device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AmbientStationConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ambient PWS sensors based on a config entry."""
-    ambient = hass.data[DOMAIN][entry.entry_id]
+    ambient = entry.runtime_data
 
     async_add_entities(
-        [
-            AmbientWeatherSensor(ambient, mac_address, station[ATTR_NAME], description)
-            for mac_address, station in ambient.stations.items()
-            for description in SENSOR_DESCRIPTIONS
-            if description.key in station[ATTR_LAST_DATA]
-        ]
+        AmbientWeatherSensor(ambient, mac_address, station[ATTR_NAME], description)
+        for mac_address, station in ambient.stations.items()
+        for description in SENSOR_DESCRIPTIONS
+        if description.key in station[ATTR_LAST_DATA]
     )
 
 
@@ -633,11 +702,13 @@ class AmbientWeatherSensor(AmbientWeatherEntity, SensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Fetch new state data for the sensor."""
-        raw = self._ambient.stations[self._mac_address][ATTR_LAST_DATA][
-            self.entity_description.key
-        ]
-
-        if self.entity_description.key == TYPE_LASTRAIN:
+        key = self.entity_description.key
+        raw = self._ambient.stations[self._mac_address][ATTR_LAST_DATA][key]
+        if key == TYPE_LASTRAIN:
             self._attr_native_value = datetime.strptime(raw, "%Y-%m-%dT%H:%M:%S.%f%z")
+        elif key == TYPE_LASTLIGHTNING:
+            self._attr_native_value = datetime.fromtimestamp(
+                raw / 1000, tz=UTC
+            )  # Ambient uses millisecond epoch
         else:
             self._attr_native_value = raw

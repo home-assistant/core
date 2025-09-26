@@ -1,4 +1,5 @@
 """The GeoNet NZ Volcano integration."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -14,18 +15,23 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    LENGTH_MILES,
+    UnitOfLength,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.unit_system import METRIC_SYSTEM
+from homeassistant.util.unit_conversion import DistanceConverter
 
 from .config_flow import configured_instances
-from .const import DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN, FEED, PLATFORMS
+from .const import (
+    DEFAULT_RADIUS,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    IMPERIAL_UNITS,
+    PLATFORMS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +50,8 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+type GeonetnzVolcanoConfigEntry = ConfigEntry[GeonetnzVolcanoFeedEntityManager]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -77,27 +85,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: GeonetnzVolcanoConfigEntry
+) -> bool:
     """Set up the GeoNet NZ Volcano component as config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(FEED, {})
-
     radius = config_entry.data[CONF_RADIUS]
     unit_system = config_entry.data[CONF_UNIT_SYSTEM]
-    if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
-        radius = METRIC_SYSTEM.length(radius, LENGTH_MILES)
+    if unit_system == IMPERIAL_UNITS:
+        radius = DistanceConverter.convert(
+            radius, UnitOfLength.MILES, UnitOfLength.KILOMETERS
+        )
     # Create feed entity manager for all platforms.
     manager = GeonetnzVolcanoFeedEntityManager(hass, config_entry, radius, unit_system)
-    hass.data[DOMAIN][FEED][config_entry.entry_id] = manager
+    config_entry.runtime_data = manager
     _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
     await manager.async_init()
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: GeonetnzVolcanoConfigEntry
+) -> bool:
     """Unload an GeoNet NZ Volcano component config entry."""
-    manager = hass.data[DOMAIN][FEED].pop(entry.entry_id)
-    await manager.async_stop()
+    await entry.runtime_data.async_stop()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
@@ -130,7 +140,9 @@ class GeonetnzVolcanoFeedEntityManager:
     async def async_init(self):
         """Schedule initial and regular updates based on configured time interval."""
 
-        self._hass.config_entries.async_setup_platforms(self._config_entry, PLATFORMS)
+        await self._hass.config_entries.async_forward_entry_setups(
+            self._config_entry, PLATFORMS
+        )
 
         async def update(event_time):
             """Update."""

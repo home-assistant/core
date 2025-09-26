@@ -1,19 +1,23 @@
 """Config flow for MusicCast."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 from urllib.parse import urlparse
 
-from aiohttp import ClientConnectorError
+from aiohttp import ClientConnectorError, DummyCookieJar
 from aiomusiccast import MusicCastConnectionException, MusicCastDevice
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
-from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
 
 from . import get_upnp_desc
 from .const import CONF_SERIAL, CONF_UPNP_DESC, DOMAIN
@@ -32,7 +36,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         # Request user input, unless we are preparing discovery flow
         if user_input is None:
@@ -46,11 +50,11 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             info = await MusicCastDevice.get_device_info(
-                host, async_get_clientsession(self.hass)
+                host, async_create_clientsession(self.hass, cookie_jar=DummyCookieJar())
             )
         except (MusicCastConnectionException, ClientConnectorError):
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -72,9 +76,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self._show_setup_form(errors)
 
-    def _show_setup_form(
-        self, errors: dict | None = None
-    ) -> data_entry_flow.FlowResult:
+    def _show_setup_form(self, errors: dict | None = None) -> ConfigFlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -83,21 +85,20 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
-    ) -> data_entry_flow.FlowResult:
+        self, discovery_info: SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle ssdp discoveries."""
         if not await MusicCastDevice.check_yamaha_ssdp(
-            discovery_info.ssdp_location, async_get_clientsession(self.hass)
+            discovery_info.ssdp_location,
+            async_create_clientsession(self.hass, cookie_jar=DummyCookieJar()),
         ):
             return self.async_abort(reason="yxc_control_url_missing")
 
-        self.serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
+        self.serial_number = discovery_info.upnp[ATTR_UPNP_SERIAL]
         self.upnp_description = discovery_info.ssdp_location
 
         # ssdp_location and hostname have been checked in check_yamaha_ssdp so it is safe to ignore type assignment
-        self.host = urlparse(
-            discovery_info.ssdp_location
-        ).hostname  # type: ignore[assignment]
+        self.host = urlparse(discovery_info.ssdp_location).hostname  # type: ignore[assignment]
 
         await self.async_set_unique_id(self.serial_number)
         self._abort_if_unique_id_configured(
@@ -109,16 +110,14 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    "name": discovery_info.upnp.get(
-                        ssdp.ATTR_UPNP_FRIENDLY_NAME, self.host
-                    )
+                    "name": discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME, self.host)
                 }
             }
         )
 
         return await self.async_step_confirm()
 
-    async def async_step_confirm(self, user_input=None) -> data_entry_flow.FlowResult:
+    async def async_step_confirm(self, user_input=None) -> ConfigFlowResult:
         """Allow the user to confirm adding the device."""
         if user_input is not None:
             return self.async_create_entry(
@@ -131,18 +130,3 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(step_id="confirm")
-
-    async def async_step_import(self, import_data: dict) -> data_entry_flow.FlowResult:
-        """Import data from configuration.yaml into the config flow."""
-        res = await self.async_step_user(import_data)
-        if res["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
-            _LOGGER.info(
-                "Successfully imported %s from configuration.yaml",
-                import_data.get(CONF_HOST),
-            )
-        elif res["type"] == data_entry_flow.RESULT_TYPE_FORM:
-            _LOGGER.error(
-                "Could not import %s from configuration.yaml",
-                import_data.get(CONF_HOST),
-            )
-        return res

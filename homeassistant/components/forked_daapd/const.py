@@ -1,22 +1,26 @@
 """Const for forked-daapd."""
-from homeassistant.components.media_player.const import (
-    SUPPORT_CLEAR_PLAYLIST,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-)
+
+from homeassistant.components.media_player import MediaPlayerEntityFeature, MediaType
 
 CALLBACK_TIMEOUT = 8  # max time between command and callback from forked-daapd server
+CAN_PLAY_TYPE = {
+    "audio/mp4",
+    "audio/aac",
+    "audio/mpeg",
+    "audio/flac",
+    "audio/ogg",
+    "audio/x-ms-wma",
+    "audio/aiff",
+    "audio/wav",
+    MediaType.TRACK,
+    MediaType.PLAYLIST,
+    MediaType.ARTIST,
+    MediaType.ALBUM,
+    MediaType.GENRE,
+    MediaType.MUSIC,
+    MediaType.EPISODE,
+    "show",  # this is a spotify constant
+}
 CONF_LIBRESPOT_JAVA_PORT = "librespot_java_port"
 CONF_MAX_PLAYLISTS = "max_playlists"
 CONF_TTS_PAUSE_TIME = "tts_pause_time"
@@ -26,10 +30,8 @@ DEFAULT_SERVER_NAME = "My Server"
 DEFAULT_TTS_PAUSE_TIME = 1.2
 DEFAULT_TTS_VOLUME = 0.8
 DEFAULT_UNMUTE_VOLUME = 0.6
-DOMAIN = "forked_daapd"  # key for hass.data
-FD_NAME = "forked-daapd"
-HASS_DATA_REMOVE_LISTENERS_KEY = "REMOVE_LISTENERS"
-HASS_DATA_UPDATER_KEY = "UPDATER"
+DOMAIN = "forked_daapd"
+FD_NAME = "OwnTone"
 KNOWN_PIPES = {"librespot-java"}
 PIPE_FUNCTION_MAP = {
     "librespot-java": {
@@ -64,22 +66,29 @@ STARTUP_DATA = {
     "outputs": [],
 }
 SUPPORTED_FEATURES = (
-    SUPPORT_PLAY
-    | SUPPORT_PAUSE
-    | SUPPORT_STOP
-    | SUPPORT_SEEK
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_CLEAR_PLAYLIST
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_SHUFFLE_SET
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_PLAY_MEDIA
+    MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.STOP
+    | MediaPlayerEntityFeature.SEEK
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.CLEAR_PLAYLIST
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.SHUFFLE_SET
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+    | MediaPlayerEntityFeature.MEDIA_ENQUEUE
 )
 SUPPORTED_FEATURES_ZONE = (
-    SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+    MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
 )
 TTS_TIMEOUT = 20  # max time to wait between TTS getting sent and starting to play
+URI_SCHEMA = "owntone"

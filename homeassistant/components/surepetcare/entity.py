@@ -1,4 +1,5 @@
 """Entity for Surepetcare."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -6,14 +7,14 @@ from abc import abstractmethod
 from surepy.entities import SurepyEntity
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SurePetcareDataCoordinator
 from .const import DOMAIN
+from .coordinator import SurePetcareDataCoordinator
 
 
-class SurePetcareEntity(CoordinatorEntity):
+class SurePetcareEntity(CoordinatorEntity[SurePetcareDataCoordinator]):
     """An implementation for Sure Petcare Entities."""
 
     def __init__(
@@ -26,7 +27,7 @@ class SurePetcareEntity(CoordinatorEntity):
 
         self._id = surepetcare_id
 
-        surepy_entity: SurepyEntity = coordinator.data[surepetcare_id]
+        surepy_entity = coordinator.data[surepetcare_id]
 
         if surepy_entity.name:
             self._device_name = surepy_entity.name.capitalize()

@@ -1,14 +1,15 @@
 """Tests for the Risco alarm control panel device."""
-from unittest.mock import MagicMock, PropertyMock, patch
+
+from collections.abc import Callable
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 
-from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_DOMAIN,
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
 from homeassistant.components.risco import CannotConnectError, UnauthorizedError
 from homeassistant.components.risco.const import DOMAIN
@@ -18,46 +19,43 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_DISARM,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
-from .util import TEST_CONFIG, TEST_SITE_UUID, setup_risco
+from .util import TEST_SITE_UUID
 
-from tests.common import MockConfigEntry
+FIRST_CLOUD_ENTITY_ID = "alarm_control_panel.risco_test_site_name_partition_0"
+SECOND_CLOUD_ENTITY_ID = "alarm_control_panel.risco_test_site_name_partition_1"
 
-FIRST_ENTITY_ID = "alarm_control_panel.risco_test_site_name_partition_0"
-SECOND_ENTITY_ID = "alarm_control_panel.risco_test_site_name_partition_1"
+FIRST_LOCAL_ENTITY_ID = "alarm_control_panel.name_0"
+SECOND_LOCAL_ENTITY_ID = "alarm_control_panel.name_1"
 
 CODES_REQUIRED_OPTIONS = {"code_arm_required": True, "code_disarm_required": True}
+CODES_NOT_REQUIRED_OPTIONS = {"code_arm_required": False, "code_disarm_required": False}
 TEST_RISCO_TO_HA = {
-    "arm": STATE_ALARM_ARMED_AWAY,
-    "partial_arm": STATE_ALARM_ARMED_HOME,
-    "A": STATE_ALARM_ARMED_HOME,
-    "B": STATE_ALARM_ARMED_HOME,
-    "C": STATE_ALARM_ARMED_NIGHT,
-    "D": STATE_ALARM_ARMED_NIGHT,
+    "arm": AlarmControlPanelState.ARMED_AWAY,
+    "partial_arm": AlarmControlPanelState.ARMED_HOME,
+    "A": AlarmControlPanelState.ARMED_HOME,
+    "B": AlarmControlPanelState.ARMED_HOME,
+    "C": AlarmControlPanelState.ARMED_NIGHT,
+    "D": AlarmControlPanelState.ARMED_NIGHT,
 }
 TEST_FULL_RISCO_TO_HA = {
     **TEST_RISCO_TO_HA,
-    "D": STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    "D": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
 }
 TEST_HA_TO_RISCO = {
-    STATE_ALARM_ARMED_AWAY: "arm",
-    STATE_ALARM_ARMED_HOME: "partial_arm",
-    STATE_ALARM_ARMED_NIGHT: "C",
+    AlarmControlPanelState.ARMED_AWAY: "arm",
+    AlarmControlPanelState.ARMED_HOME: "partial_arm",
+    AlarmControlPanelState.ARMED_NIGHT: "C",
 }
 TEST_FULL_HA_TO_RISCO = {
     **TEST_HA_TO_RISCO,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS: "D",
+    AlarmControlPanelState.ARMED_CUSTOM_BYPASS: "D",
 }
 CUSTOM_MAPPING_OPTIONS = {
     "risco_states_to_ha": TEST_RISCO_TO_HA,
@@ -70,7 +68,9 @@ FULL_CUSTOM_MAPPING = {
 }
 
 EXPECTED_FEATURES = (
-    SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_NIGHT
+    AlarmControlPanelEntityFeature.ARM_AWAY
+    | AlarmControlPanelEntityFeature.ARM_HOME
+    | AlarmControlPanelEntityFeature.ARM_NIGHT
 )
 
 
@@ -85,162 +85,182 @@ def _partition_mock():
 
 
 @pytest.fixture
-def two_part_alarm():
+def two_part_cloud_alarm():
     """Fixture to mock alarm with two partitions."""
     partition_mocks = {0: _partition_mock(), 1: _partition_mock()}
     alarm_mock = MagicMock()
-    with patch.object(
-        partition_mocks[0], "id", new_callable=PropertyMock(return_value=0)
-    ), patch.object(
-        partition_mocks[1], "id", new_callable=PropertyMock(return_value=1)
-    ), patch.object(
-        alarm_mock,
-        "partitions",
-        new_callable=PropertyMock(return_value=partition_mocks),
-    ), patch(
-        "homeassistant.components.risco.RiscoAPI.get_state",
-        return_value=alarm_mock,
+    with (
+        patch.object(
+            partition_mocks[0], "id", new_callable=PropertyMock(return_value=0)
+        ),
+        patch.object(
+            partition_mocks[1], "id", new_callable=PropertyMock(return_value=1)
+        ),
+        patch.object(
+            alarm_mock,
+            "partitions",
+            new_callable=PropertyMock(return_value=partition_mocks),
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoCloud.get_state",
+            return_value=alarm_mock,
+        ),
     ):
-        yield alarm_mock
+        yield partition_mocks
 
 
-async def test_cannot_connect(hass):
-    """Test connection error."""
-
-    with patch(
-        "homeassistant.components.risco.RiscoAPI.login",
-        side_effect=CannotConnectError,
+@pytest.fixture
+def two_part_local_alarm():
+    """Fixture to mock alarm with two partitions."""
+    partition_mocks = {0: _partition_mock(), 1: _partition_mock()}
+    with (
+        patch.object(
+            partition_mocks[0], "id", new_callable=PropertyMock(return_value=0)
+        ),
+        patch.object(
+            partition_mocks[0], "name", new_callable=PropertyMock(return_value="Name 0")
+        ),
+        patch.object(
+            partition_mocks[1], "id", new_callable=PropertyMock(return_value=1)
+        ),
+        patch.object(
+            partition_mocks[1], "name", new_callable=PropertyMock(return_value="Name 1")
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoLocal.zones",
+            new_callable=PropertyMock(return_value={}),
+        ),
+        patch(
+            "homeassistant.components.risco.RiscoLocal.partitions",
+            new_callable=PropertyMock(return_value=partition_mocks),
+        ),
     ):
-        config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
-        config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        registry = er.async_get(hass)
-        assert not registry.async_is_registered(FIRST_ENTITY_ID)
-        assert not registry.async_is_registered(SECOND_ENTITY_ID)
+        yield partition_mocks
 
 
-async def test_unauthorized(hass):
-    """Test unauthorized error."""
-
-    with patch(
-        "homeassistant.components.risco.RiscoAPI.login",
-        side_effect=UnauthorizedError,
-    ):
-        config_entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG)
-        config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        registry = er.async_get(hass)
-        assert not registry.async_is_registered(FIRST_ENTITY_ID)
-        assert not registry.async_is_registered(SECOND_ENTITY_ID)
+@pytest.mark.parametrize("exception", [CannotConnectError, UnauthorizedError])
+async def test_error_on_login(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    login_with_error,
+    cloud_config_entry,
+) -> None:
+    """Test error on login."""
+    await hass.config_entries.async_setup(cloud_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not entity_registry.async_is_registered(FIRST_CLOUD_ENTITY_ID)
+    assert not entity_registry.async_is_registered(SECOND_CLOUD_ENTITY_ID)
 
 
-async def test_setup(hass, two_part_alarm):
+async def test_cloud_setup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    two_part_cloud_alarm,
+    setup_risco_cloud,
+) -> None:
     """Test entity setup."""
-    registry = er.async_get(hass)
+    assert entity_registry.async_is_registered(FIRST_CLOUD_ENTITY_ID)
+    assert entity_registry.async_is_registered(SECOND_CLOUD_ENTITY_ID)
 
-    assert not registry.async_is_registered(FIRST_ENTITY_ID)
-    assert not registry.async_is_registered(SECOND_ENTITY_ID)
-
-    await setup_risco(hass)
-
-    assert registry.async_is_registered(FIRST_ENTITY_ID)
-    assert registry.async_is_registered(SECOND_ENTITY_ID)
-
-    registry = dr.async_get(hass)
-    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_0")})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, TEST_SITE_UUID + "_0")}
+    )
     assert device is not None
     assert device.manufacturer == "Risco"
 
-    device = registry.async_get_device({(DOMAIN, TEST_SITE_UUID + "_1")})
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, TEST_SITE_UUID + "_1")}
+    )
     assert device is not None
     assert device.manufacturer == "Risco"
 
 
-async def _check_state(hass, alarm, property, state, entity_id, partition_id):
-    with patch.object(alarm.partitions[partition_id], property, return_value=True):
+async def _check_cloud_state(
+    hass: HomeAssistant,
+    partitions: dict[int, Any],
+    property: str,
+    state: str,
+    entity_id: str,
+    partition_id: int,
+) -> None:
+    with patch.object(partitions[partition_id], property, return_value=True):
         await async_update_entity(hass, entity_id)
         await hass.async_block_till_done()
 
         assert hass.states.get(entity_id).state == state
 
 
-async def test_states(hass, two_part_alarm):
+@pytest.mark.parametrize("options", [CUSTOM_MAPPING_OPTIONS])
+async def test_cloud_states(
+    hass: HomeAssistant, two_part_cloud_alarm, setup_risco_cloud
+) -> None:
     """Test the various alarm states."""
-    await setup_risco(hass, [], CUSTOM_MAPPING_OPTIONS)
-
-    assert hass.states.get(FIRST_ENTITY_ID).state == STATE_UNKNOWN
-    for partition_id, entity_id in {0: FIRST_ENTITY_ID, 1: SECOND_ENTITY_ID}.items():
-        await _check_state(
+    assert hass.states.get(FIRST_CLOUD_ENTITY_ID).state == STATE_UNKNOWN
+    for partition_id, entity_id in {
+        0: FIRST_CLOUD_ENTITY_ID,
+        1: SECOND_CLOUD_ENTITY_ID,
+    }.items():
+        await _check_cloud_state(
             hass,
-            two_part_alarm,
+            two_part_cloud_alarm,
             "triggered",
-            STATE_ALARM_TRIGGERED,
+            AlarmControlPanelState.TRIGGERED,
             entity_id,
             partition_id,
         )
-        await _check_state(
-            hass, two_part_alarm, "arming", STATE_ALARM_ARMING, entity_id, partition_id
-        )
-        await _check_state(
+        await _check_cloud_state(
             hass,
-            two_part_alarm,
+            two_part_cloud_alarm,
+            "arming",
+            AlarmControlPanelState.ARMING,
+            entity_id,
+            partition_id,
+        )
+        await _check_cloud_state(
+            hass,
+            two_part_cloud_alarm,
             "armed",
-            STATE_ALARM_ARMED_AWAY,
+            AlarmControlPanelState.ARMED_AWAY,
             entity_id,
             partition_id,
         )
-        await _check_state(
+        await _check_cloud_state(
             hass,
-            two_part_alarm,
+            two_part_cloud_alarm,
             "partially_armed",
-            STATE_ALARM_ARMED_HOME,
+            AlarmControlPanelState.ARMED_HOME,
             entity_id,
             partition_id,
         )
-        await _check_state(
+        await _check_cloud_state(
             hass,
-            two_part_alarm,
+            two_part_cloud_alarm,
             "disarmed",
-            STATE_ALARM_DISARMED,
+            AlarmControlPanelState.DISARMED,
             entity_id,
             partition_id,
         )
 
         groups = {"A": False, "B": False, "C": True, "D": False}
         with patch.object(
-            two_part_alarm.partitions[partition_id],
+            two_part_cloud_alarm[partition_id],
             "groups",
             new_callable=PropertyMock(return_value=groups),
         ):
-            await _check_state(
+            await _check_cloud_state(
                 hass,
-                two_part_alarm,
+                two_part_cloud_alarm,
                 "partially_armed",
-                STATE_ALARM_ARMED_NIGHT,
+                AlarmControlPanelState.ARMED_NIGHT,
                 entity_id,
                 partition_id,
             )
 
 
-async def _test_service_call(
-    hass, service, method, entity_id, partition_id, *args, **kwargs
-):
-    with patch(f"homeassistant.components.risco.RiscoAPI.{method}") as set_mock:
-        await _call_alarm_service(hass, service, entity_id, **kwargs)
-        set_mock.assert_awaited_once_with(partition_id, *args)
-
-
-async def _test_no_service_call(
-    hass, service, method, entity_id, partition_id, **kwargs
-):
-    with patch(f"homeassistant.components.risco.RiscoAPI.{method}") as set_mock:
-        await _call_alarm_service(hass, service, entity_id, **kwargs)
-        set_mock.assert_not_awaited()
-
-
-async def _call_alarm_service(hass, service, entity_id, **kwargs):
+async def _call_alarm_service(
+    hass: HomeAssistant, service: str, entity_id: str, **kwargs: Any
+) -> None:
     data = {"entity_id": entity_id, **kwargs}
 
     await hass.services.async_call(
@@ -248,145 +268,894 @@ async def _call_alarm_service(hass, service, entity_id, **kwargs):
     )
 
 
-async def test_sets_custom_mapping(hass, two_part_alarm):
-    """Test settings the various modes when mapping some states."""
-    await setup_risco(hass, [], CUSTOM_MAPPING_OPTIONS)
+async def _test_cloud_service_call(
+    hass: HomeAssistant,
+    service: str,
+    method: str,
+    entity_id: str,
+    partition_id: int,
+    *args: Any,
+    **kwargs: Any,
+) -> None:
+    with patch(f"homeassistant.components.risco.RiscoCloud.{method}") as set_mock:
+        await _call_alarm_service(hass, service, entity_id, **kwargs)
+        set_mock.assert_awaited_once_with(partition_id, *args)
 
-    registry = er.async_get(hass)
-    entity = registry.async_get(FIRST_ENTITY_ID)
+
+async def _test_cloud_no_service_call(
+    hass: HomeAssistant,
+    service: str,
+    method: str,
+    entity_id: str,
+    partition_id: int,
+    **kwargs: Any,
+) -> None:
+    with patch(f"homeassistant.components.risco.RiscoCloud.{method}") as set_mock:
+        await _call_alarm_service(hass, service, entity_id, **kwargs)
+        set_mock.assert_not_awaited()
+
+
+@pytest.mark.parametrize("options", [CUSTOM_MAPPING_OPTIONS])
+async def test_cloud_sets_custom_mapping(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    two_part_cloud_alarm,
+    setup_risco_cloud,
+) -> None:
+    """Test settings the various modes when mapping some states."""
+    entity = entity_registry.async_get(FIRST_CLOUD_ENTITY_ID)
     assert entity.supported_features == EXPECTED_FEATURES
 
-    await _test_service_call(hass, SERVICE_ALARM_DISARM, "disarm", FIRST_ENTITY_ID, 0)
-    await _test_service_call(hass, SERVICE_ALARM_DISARM, "disarm", SECOND_ENTITY_ID, 1)
-    await _test_service_call(hass, SERVICE_ALARM_ARM_AWAY, "arm", FIRST_ENTITY_ID, 0)
-    await _test_service_call(hass, SERVICE_ALARM_ARM_AWAY, "arm", SECOND_ENTITY_ID, 1)
-    await _test_service_call(
-        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", FIRST_ENTITY_ID, 0
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_DISARM, "disarm", FIRST_CLOUD_ENTITY_ID, 0
     )
-    await _test_service_call(
-        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", SECOND_ENTITY_ID, 1
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_DISARM, "disarm", SECOND_CLOUD_ENTITY_ID, 1
     )
-    await _test_service_call(
-        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", FIRST_ENTITY_ID, 0, "C"
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_AWAY, "arm", FIRST_CLOUD_ENTITY_ID, 0
     )
-    await _test_service_call(
-        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", SECOND_ENTITY_ID, 1, "C"
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_AWAY, "arm", SECOND_CLOUD_ENTITY_ID, 1
+    )
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", FIRST_CLOUD_ENTITY_ID, 0
+    )
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", SECOND_CLOUD_ENTITY_ID, 1
+    )
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", FIRST_CLOUD_ENTITY_ID, 0, "C"
+    )
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", SECOND_CLOUD_ENTITY_ID, 1, "C"
     )
 
 
-async def test_sets_full_custom_mapping(hass, two_part_alarm):
+@pytest.mark.parametrize("options", [FULL_CUSTOM_MAPPING])
+async def test_cloud_sets_full_custom_mapping(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    two_part_cloud_alarm,
+    setup_risco_cloud,
+) -> None:
     """Test settings the various modes when mapping all states."""
-    await setup_risco(hass, [], FULL_CUSTOM_MAPPING)
-
-    registry = er.async_get(hass)
-    entity = registry.async_get(FIRST_ENTITY_ID)
+    entity = entity_registry.async_get(FIRST_CLOUD_ENTITY_ID)
     assert (
-        entity.supported_features == EXPECTED_FEATURES | SUPPORT_ALARM_ARM_CUSTOM_BYPASS
+        entity.supported_features
+        == EXPECTED_FEATURES | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
     )
 
-    await _test_service_call(hass, SERVICE_ALARM_DISARM, "disarm", FIRST_ENTITY_ID, 0)
-    await _test_service_call(hass, SERVICE_ALARM_DISARM, "disarm", SECOND_ENTITY_ID, 1)
-    await _test_service_call(hass, SERVICE_ALARM_ARM_AWAY, "arm", FIRST_ENTITY_ID, 0)
-    await _test_service_call(hass, SERVICE_ALARM_ARM_AWAY, "arm", SECOND_ENTITY_ID, 1)
-    await _test_service_call(
-        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", FIRST_ENTITY_ID, 0
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_DISARM, "disarm", FIRST_CLOUD_ENTITY_ID, 0
     )
-    await _test_service_call(
-        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", SECOND_ENTITY_ID, 1
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_DISARM, "disarm", SECOND_CLOUD_ENTITY_ID, 1
     )
-    await _test_service_call(
-        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", FIRST_ENTITY_ID, 0, "C"
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_AWAY, "arm", FIRST_CLOUD_ENTITY_ID, 0
     )
-    await _test_service_call(
-        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", SECOND_ENTITY_ID, 1, "C"
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_AWAY, "arm", SECOND_CLOUD_ENTITY_ID, 1
     )
-    await _test_service_call(
-        hass, SERVICE_ALARM_ARM_CUSTOM_BYPASS, "group_arm", FIRST_ENTITY_ID, 0, "D"
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", FIRST_CLOUD_ENTITY_ID, 0
     )
-    await _test_service_call(
-        hass, SERVICE_ALARM_ARM_CUSTOM_BYPASS, "group_arm", SECOND_ENTITY_ID, 1, "D"
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", SECOND_CLOUD_ENTITY_ID, 1
+    )
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", FIRST_CLOUD_ENTITY_ID, 0, "C"
+    )
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", SECOND_CLOUD_ENTITY_ID, 1, "C"
+    )
+    await _test_cloud_service_call(
+        hass,
+        SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+        "group_arm",
+        FIRST_CLOUD_ENTITY_ID,
+        0,
+        "D",
+    )
+    await _test_cloud_service_call(
+        hass,
+        SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+        "group_arm",
+        SECOND_CLOUD_ENTITY_ID,
+        1,
+        "D",
     )
 
 
-async def test_sets_with_correct_code(hass, two_part_alarm):
+@pytest.mark.parametrize(
+    "options",
+    [{**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS}],
+)
+async def test_cloud_sets_with_correct_code(
+    hass: HomeAssistant, two_part_cloud_alarm, setup_risco_cloud
+) -> None:
     """Test settings the various modes when code is required."""
-    await setup_risco(hass, [], {**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS})
-
     code = {"code": 1234}
-    await _test_service_call(
-        hass, SERVICE_ALARM_DISARM, "disarm", FIRST_ENTITY_ID, 0, **code
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_DISARM, "disarm", FIRST_CLOUD_ENTITY_ID, 0, **code
     )
-    await _test_service_call(
-        hass, SERVICE_ALARM_DISARM, "disarm", SECOND_ENTITY_ID, 1, **code
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_DISARM, "disarm", SECOND_CLOUD_ENTITY_ID, 1, **code
     )
-    await _test_service_call(
-        hass, SERVICE_ALARM_ARM_AWAY, "arm", FIRST_ENTITY_ID, 0, **code
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_AWAY, "arm", FIRST_CLOUD_ENTITY_ID, 0, **code
     )
-    await _test_service_call(
-        hass, SERVICE_ALARM_ARM_AWAY, "arm", SECOND_ENTITY_ID, 1, **code
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_AWAY, "arm", SECOND_CLOUD_ENTITY_ID, 1, **code
     )
-    await _test_service_call(
-        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", FIRST_ENTITY_ID, 0, **code
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", FIRST_CLOUD_ENTITY_ID, 0, **code
     )
-    await _test_service_call(
-        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", SECOND_ENTITY_ID, 1, **code
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", SECOND_CLOUD_ENTITY_ID, 1, **code
     )
-    await _test_service_call(
-        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", FIRST_ENTITY_ID, 0, "C", **code
-    )
-    await _test_service_call(
-        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", SECOND_ENTITY_ID, 1, "C", **code
-    )
-    await _test_no_service_call(
-        hass, SERVICE_ALARM_ARM_CUSTOM_BYPASS, "partial_arm", FIRST_ENTITY_ID, 0, **code
-    )
-    await _test_no_service_call(
+    await _test_cloud_service_call(
         hass,
-        SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-        "partial_arm",
-        SECOND_ENTITY_ID,
-        1,
+        SERVICE_ALARM_ARM_NIGHT,
+        "group_arm",
+        FIRST_CLOUD_ENTITY_ID,
+        0,
+        "C",
         **code,
     )
+    await _test_cloud_service_call(
+        hass,
+        SERVICE_ALARM_ARM_NIGHT,
+        "group_arm",
+        SECOND_CLOUD_ENTITY_ID,
+        1,
+        "C",
+        **code,
+    )
+    with pytest.raises(HomeAssistantError):
+        await _test_cloud_no_service_call(
+            hass,
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            "partial_arm",
+            FIRST_CLOUD_ENTITY_ID,
+            0,
+            **code,
+        )
+    with pytest.raises(HomeAssistantError):
+        await _test_cloud_no_service_call(
+            hass,
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            "partial_arm",
+            SECOND_CLOUD_ENTITY_ID,
+            1,
+            **code,
+        )
 
 
-async def test_sets_with_incorrect_code(hass, two_part_alarm):
+@pytest.mark.parametrize(
+    "options",
+    [{**CUSTOM_MAPPING_OPTIONS, **CODES_NOT_REQUIRED_OPTIONS}],
+)
+async def test_cloud_sets_without_code(
+    hass: HomeAssistant, two_part_cloud_alarm, setup_risco_cloud
+) -> None:
+    """Test settings the various modes when code is not required."""
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_DISARM, "disarm", FIRST_CLOUD_ENTITY_ID, 0
+    )
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_DISARM, "disarm", SECOND_CLOUD_ENTITY_ID, 1
+    )
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_AWAY, "arm", FIRST_CLOUD_ENTITY_ID, 0
+    )
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_AWAY, "arm", SECOND_CLOUD_ENTITY_ID, 1
+    )
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", FIRST_CLOUD_ENTITY_ID, 0
+    )
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", SECOND_CLOUD_ENTITY_ID, 1
+    )
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", FIRST_CLOUD_ENTITY_ID, 0, "C"
+    )
+    await _test_cloud_service_call(
+        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", SECOND_CLOUD_ENTITY_ID, 1, "C"
+    )
+    with pytest.raises(HomeAssistantError):
+        await _test_cloud_no_service_call(
+            hass,
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            "partial_arm",
+            FIRST_CLOUD_ENTITY_ID,
+            0,
+        )
+    with pytest.raises(HomeAssistantError):
+        await _test_cloud_no_service_call(
+            hass,
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            "partial_arm",
+            SECOND_CLOUD_ENTITY_ID,
+            1,
+        )
+
+
+@pytest.mark.parametrize(
+    "options",
+    [{**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS}],
+)
+async def test_cloud_sets_with_incorrect_code(
+    hass: HomeAssistant, two_part_cloud_alarm, setup_risco_cloud
+) -> None:
     """Test settings the various modes when code is required and incorrect."""
-    await setup_risco(hass, [], {**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS})
-
     code = {"code": 4321}
-    await _test_no_service_call(
-        hass, SERVICE_ALARM_DISARM, "disarm", FIRST_ENTITY_ID, 0, **code
+    await _test_cloud_no_service_call(
+        hass, SERVICE_ALARM_DISARM, "disarm", FIRST_CLOUD_ENTITY_ID, 0, **code
     )
-    await _test_no_service_call(
-        hass, SERVICE_ALARM_DISARM, "disarm", SECOND_ENTITY_ID, 1, **code
+    await _test_cloud_no_service_call(
+        hass, SERVICE_ALARM_DISARM, "disarm", SECOND_CLOUD_ENTITY_ID, 1, **code
     )
-    await _test_no_service_call(
-        hass, SERVICE_ALARM_ARM_AWAY, "arm", FIRST_ENTITY_ID, 0, **code
+    await _test_cloud_no_service_call(
+        hass, SERVICE_ALARM_ARM_AWAY, "arm", FIRST_CLOUD_ENTITY_ID, 0, **code
     )
-    await _test_no_service_call(
-        hass, SERVICE_ALARM_ARM_AWAY, "arm", SECOND_ENTITY_ID, 1, **code
+    await _test_cloud_no_service_call(
+        hass, SERVICE_ALARM_ARM_AWAY, "arm", SECOND_CLOUD_ENTITY_ID, 1, **code
     )
-    await _test_no_service_call(
-        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", FIRST_ENTITY_ID, 0, **code
+    await _test_cloud_no_service_call(
+        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", FIRST_CLOUD_ENTITY_ID, 0, **code
     )
-    await _test_no_service_call(
-        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", SECOND_ENTITY_ID, 1, **code
+    await _test_cloud_no_service_call(
+        hass, SERVICE_ALARM_ARM_HOME, "partial_arm", SECOND_CLOUD_ENTITY_ID, 1, **code
     )
-    await _test_no_service_call(
-        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", FIRST_ENTITY_ID, 0, **code
+    await _test_cloud_no_service_call(
+        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", FIRST_CLOUD_ENTITY_ID, 0, **code
     )
-    await _test_no_service_call(
-        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", SECOND_ENTITY_ID, 1, **code
+    await _test_cloud_no_service_call(
+        hass, SERVICE_ALARM_ARM_NIGHT, "group_arm", SECOND_CLOUD_ENTITY_ID, 1, **code
     )
-    await _test_no_service_call(
-        hass, SERVICE_ALARM_ARM_CUSTOM_BYPASS, "partial_arm", FIRST_ENTITY_ID, 0, **code
+    with pytest.raises(HomeAssistantError):
+        await _test_cloud_no_service_call(
+            hass,
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            "partial_arm",
+            FIRST_CLOUD_ENTITY_ID,
+            0,
+            **code,
+        )
+    with pytest.raises(HomeAssistantError):
+        await _test_cloud_no_service_call(
+            hass,
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            "partial_arm",
+            SECOND_CLOUD_ENTITY_ID,
+            1,
+            **code,
+        )
+
+
+@pytest.mark.parametrize("exception", [CannotConnectError, UnauthorizedError])
+async def test_error_on_connect(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    connect_with_error,
+    local_config_entry,
+) -> None:
+    """Test error on connect."""
+    await hass.config_entries.async_setup(local_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not entity_registry.async_is_registered(FIRST_LOCAL_ENTITY_ID)
+    assert not entity_registry.async_is_registered(SECOND_LOCAL_ENTITY_ID)
+
+
+async def test_local_setup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    two_part_local_alarm,
+    setup_risco_local,
+) -> None:
+    """Test entity setup."""
+    assert entity_registry.async_is_registered(FIRST_LOCAL_ENTITY_ID)
+    assert entity_registry.async_is_registered(SECOND_LOCAL_ENTITY_ID)
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, TEST_SITE_UUID + "_0_local")}
     )
-    await _test_no_service_call(
+    assert device is not None
+    assert device.manufacturer == "Risco"
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, TEST_SITE_UUID + "_1_local")}
+    )
+    assert device is not None
+    assert device.manufacturer == "Risco"
+    with patch("homeassistant.components.risco.RiscoLocal.disconnect") as mock_close:
+        await hass.config_entries.async_unload(setup_risco_local.entry_id)
+        mock_close.assert_awaited_once()
+
+
+async def _check_local_state(
+    hass: HomeAssistant,
+    partitions: dict[int, Any],
+    property: str,
+    state: str,
+    entity_id: str,
+    partition_id: int,
+    callback: Callable,
+) -> None:
+    with patch.object(partitions[partition_id], property, return_value=True):
+        await callback(partition_id, partitions[partition_id])
+
+    assert hass.states.get(entity_id).state == state
+
+
+@pytest.fixture
+def mock_partition_handler():
+    """Create a mock for add_partition_handler."""
+    with patch(
+        "homeassistant.components.risco.RiscoLocal.add_partition_handler"
+    ) as mock:
+        yield mock
+
+
+@pytest.mark.parametrize("options", [CUSTOM_MAPPING_OPTIONS])
+async def test_local_states(
+    hass: HomeAssistant,
+    two_part_local_alarm,
+    mock_partition_handler,
+    setup_risco_local,
+) -> None:
+    """Test the various alarm states."""
+    callback = mock_partition_handler.call_args.args[0]
+
+    assert callback is not None
+
+    assert hass.states.get(FIRST_LOCAL_ENTITY_ID).state == STATE_UNKNOWN
+    for partition_id, entity_id in {
+        0: FIRST_LOCAL_ENTITY_ID,
+        1: SECOND_LOCAL_ENTITY_ID,
+    }.items():
+        await _check_local_state(
+            hass,
+            two_part_local_alarm,
+            "triggered",
+            AlarmControlPanelState.TRIGGERED,
+            entity_id,
+            partition_id,
+            callback,
+        )
+        await _check_local_state(
+            hass,
+            two_part_local_alarm,
+            "arming",
+            AlarmControlPanelState.ARMING,
+            entity_id,
+            partition_id,
+            callback,
+        )
+        await _check_local_state(
+            hass,
+            two_part_local_alarm,
+            "armed",
+            AlarmControlPanelState.ARMED_AWAY,
+            entity_id,
+            partition_id,
+            callback,
+        )
+        await _check_local_state(
+            hass,
+            two_part_local_alarm,
+            "partially_armed",
+            AlarmControlPanelState.ARMED_HOME,
+            entity_id,
+            partition_id,
+            callback,
+        )
+        await _check_local_state(
+            hass,
+            two_part_local_alarm,
+            "disarmed",
+            AlarmControlPanelState.DISARMED,
+            entity_id,
+            partition_id,
+            callback,
+        )
+
+        groups = {"A": False, "B": False, "C": True, "D": False}
+        with patch.object(
+            two_part_local_alarm[partition_id],
+            "groups",
+            new_callable=PropertyMock(return_value=groups),
+        ):
+            await _check_local_state(
+                hass,
+                two_part_local_alarm,
+                "partially_armed",
+                AlarmControlPanelState.ARMED_NIGHT,
+                entity_id,
+                partition_id,
+                callback,
+            )
+
+
+async def _test_local_service_call(
+    hass: HomeAssistant,
+    service: str,
+    method: str,
+    entity_id: str,
+    partition: int,
+    *args: Any,
+    **kwargs: Any,
+) -> None:
+    with patch.object(partition, method, AsyncMock()) as set_mock:
+        await _call_alarm_service(hass, service, entity_id, **kwargs)
+        set_mock.assert_awaited_once_with(*args)
+
+
+async def _test_local_no_service_call(
+    hass: HomeAssistant,
+    service: str,
+    method: str,
+    entity_id: str,
+    partition: int,
+    **kwargs: Any,
+) -> None:
+    with patch.object(partition, method, AsyncMock()) as set_mock:
+        await _call_alarm_service(hass, service, entity_id, **kwargs)
+        set_mock.assert_not_awaited()
+
+
+@pytest.mark.parametrize("options", [CUSTOM_MAPPING_OPTIONS])
+async def test_local_sets_custom_mapping(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    two_part_local_alarm,
+    setup_risco_local,
+) -> None:
+    """Test settings the various modes when mapping some states."""
+    entity = entity_registry.async_get(FIRST_LOCAL_ENTITY_ID)
+    assert entity.supported_features == EXPECTED_FEATURES
+
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_DISARM,
+        "disarm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_DISARM,
+        "disarm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_AWAY,
+        "arm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_AWAY,
+        "arm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_HOME,
+        "partial_arm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_HOME,
+        "partial_arm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_NIGHT,
+        "group_arm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+        "C",
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_NIGHT,
+        "group_arm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+        "C",
+    )
+
+
+@pytest.mark.parametrize("options", [FULL_CUSTOM_MAPPING])
+async def test_local_sets_full_custom_mapping(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    two_part_local_alarm,
+    setup_risco_local,
+) -> None:
+    """Test settings the various modes when mapping all states."""
+    entity = entity_registry.async_get(FIRST_LOCAL_ENTITY_ID)
+    assert (
+        entity.supported_features
+        == EXPECTED_FEATURES | AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+    )
+
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_DISARM,
+        "disarm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_DISARM,
+        "disarm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_AWAY,
+        "arm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_AWAY,
+        "arm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_HOME,
+        "partial_arm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_HOME,
+        "partial_arm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_NIGHT,
+        "group_arm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+        "C",
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_NIGHT,
+        "group_arm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+        "C",
+    )
+    await _test_local_service_call(
         hass,
         SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-        "partial_arm",
-        SECOND_ENTITY_ID,
-        1,
+        "group_arm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+        "D",
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+        "group_arm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+        "D",
+    )
+
+
+@pytest.mark.parametrize(
+    "options",
+    [{**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS}],
+)
+async def test_local_sets_with_correct_code(
+    hass: HomeAssistant, two_part_local_alarm, setup_risco_local
+) -> None:
+    """Test settings the various modes when code is required."""
+    code = {"code": 1234}
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_DISARM,
+        "disarm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
         **code,
     )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_DISARM,
+        "disarm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+        **code,
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_AWAY,
+        "arm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+        **code,
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_AWAY,
+        "arm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+        **code,
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_HOME,
+        "partial_arm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+        **code,
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_HOME,
+        "partial_arm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+        **code,
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_NIGHT,
+        "group_arm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+        "C",
+        **code,
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_NIGHT,
+        "group_arm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+        "C",
+        **code,
+    )
+    with pytest.raises(HomeAssistantError):
+        await _test_local_no_service_call(
+            hass,
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            "partial_arm",
+            FIRST_LOCAL_ENTITY_ID,
+            two_part_local_alarm[0],
+            **code,
+        )
+    with pytest.raises(HomeAssistantError):
+        await _test_local_no_service_call(
+            hass,
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            "partial_arm",
+            SECOND_LOCAL_ENTITY_ID,
+            two_part_local_alarm[1],
+            **code,
+        )
+
+
+@pytest.mark.parametrize(
+    "options",
+    [{**CUSTOM_MAPPING_OPTIONS, **CODES_REQUIRED_OPTIONS}],
+)
+async def test_local_sets_with_incorrect_code(
+    hass: HomeAssistant, two_part_local_alarm, setup_risco_local
+) -> None:
+    """Test settings the various modes when code is required and incorrect."""
+    code = {"code": 4321}
+    await _test_local_no_service_call(
+        hass,
+        SERVICE_ALARM_DISARM,
+        "disarm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+        **code,
+    )
+    await _test_local_no_service_call(
+        hass,
+        SERVICE_ALARM_DISARM,
+        "disarm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+        **code,
+    )
+    await _test_local_no_service_call(
+        hass,
+        SERVICE_ALARM_ARM_AWAY,
+        "arm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+        **code,
+    )
+    await _test_local_no_service_call(
+        hass,
+        SERVICE_ALARM_ARM_AWAY,
+        "arm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+        **code,
+    )
+    await _test_local_no_service_call(
+        hass,
+        SERVICE_ALARM_ARM_HOME,
+        "partial_arm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+        **code,
+    )
+    await _test_local_no_service_call(
+        hass,
+        SERVICE_ALARM_ARM_HOME,
+        "partial_arm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+        **code,
+    )
+    await _test_local_no_service_call(
+        hass,
+        SERVICE_ALARM_ARM_NIGHT,
+        "group_arm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+        **code,
+    )
+    await _test_local_no_service_call(
+        hass,
+        SERVICE_ALARM_ARM_NIGHT,
+        "group_arm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+        **code,
+    )
+    with pytest.raises(HomeAssistantError):
+        await _test_local_no_service_call(
+            hass,
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            "partial_arm",
+            FIRST_LOCAL_ENTITY_ID,
+            two_part_local_alarm[0],
+            **code,
+        )
+    with pytest.raises(HomeAssistantError):
+        await _test_local_no_service_call(
+            hass,
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            "partial_arm",
+            SECOND_LOCAL_ENTITY_ID,
+            two_part_local_alarm[1],
+            **code,
+        )
+
+
+@pytest.mark.parametrize(
+    "options",
+    [{**CUSTOM_MAPPING_OPTIONS, **CODES_NOT_REQUIRED_OPTIONS}],
+)
+async def test_local_sets_without_code(
+    hass: HomeAssistant, two_part_local_alarm, setup_risco_local
+) -> None:
+    """Test settings the various modes when code is not required."""
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_DISARM,
+        "disarm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_DISARM,
+        "disarm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_AWAY,
+        "arm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_AWAY,
+        "arm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_HOME,
+        "partial_arm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_HOME,
+        "partial_arm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_NIGHT,
+        "group_arm",
+        FIRST_LOCAL_ENTITY_ID,
+        two_part_local_alarm[0],
+        "C",
+    )
+    await _test_local_service_call(
+        hass,
+        SERVICE_ALARM_ARM_NIGHT,
+        "group_arm",
+        SECOND_LOCAL_ENTITY_ID,
+        two_part_local_alarm[1],
+        "C",
+    )
+    with pytest.raises(HomeAssistantError):
+        await _test_local_no_service_call(
+            hass,
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            "partial_arm",
+            FIRST_LOCAL_ENTITY_ID,
+            two_part_local_alarm[0],
+        )
+    with pytest.raises(HomeAssistantError):
+        await _test_local_no_service_call(
+            hass,
+            SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+            "partial_arm",
+            SECOND_LOCAL_ENTITY_ID,
+            two_part_local_alarm[1],
+        )

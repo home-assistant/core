@@ -1,17 +1,17 @@
 """Support for Genius Hub water_heater devices."""
+
 from __future__ import annotations
 
 from homeassistant.components.water_heater import (
-    SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     WaterHeaterEntity,
+    WaterHeaterEntityFeature,
 )
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, GeniusHeatingZone
+from . import GeniusHubConfigEntry
+from .entity import GeniusHeatingZone
 
 STATE_AUTO = "auto"
 STATE_MANUAL = "manual"
@@ -33,29 +33,29 @@ GH_STATE_TO_HA = {
 GH_HEATERS = ["hot water temperature"]
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: GeniusHubConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Genius Hub water_heater entities."""
-    if discovery_info is None:
-        return
+    """Set up the Genius Hub water heater entities."""
 
-    broker = hass.data[DOMAIN]["broker"]
+    broker = entry.runtime_data
 
     async_add_entities(
-        [
-            GeniusWaterHeater(broker, z)
-            for z in broker.client.zone_objs
-            if z.data["type"] in GH_HEATERS
-        ]
+        GeniusWaterHeater(broker, z)
+        for z in broker.client.zone_objs
+        if z.data.get("type") in GH_HEATERS
     )
 
 
 class GeniusWaterHeater(GeniusHeatingZone, WaterHeaterEntity):
     """Representation of a Genius Hub water_heater device."""
+
+    _attr_supported_features = (
+        WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        | WaterHeaterEntityFeature.OPERATION_MODE
+    )
 
     def __init__(self, broker, zone) -> None:
         """Initialize the water_heater device."""
@@ -63,7 +63,6 @@ class GeniusWaterHeater(GeniusHeatingZone, WaterHeaterEntity):
 
         self._max_temp = 80.0
         self._min_temp = 30.0
-        self._supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
     @property
     def operation_list(self) -> list[str]:
@@ -71,10 +70,10 @@ class GeniusWaterHeater(GeniusHeatingZone, WaterHeaterEntity):
         return list(HA_OPMODE_TO_GH)
 
     @property
-    def current_operation(self) -> str:
+    def current_operation(self) -> str | None:
         """Return the current operation mode."""
         return GH_STATE_TO_HA[self._zone.data["mode"]]
 
-    async def async_set_operation_mode(self, operation_mode) -> None:
+    async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set a new operation mode for this boiler."""
         await self._zone.set_mode(HA_OPMODE_TO_GH[operation_mode])

@@ -1,28 +1,36 @@
 """Definition and setup of the Omnilogic Sensors for Home Assistant."""
+
+from typing import Any
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
-    ELECTRIC_POTENTIAL_MILLIVOLT,
-    MASS_GRAMS,
     PERCENTAGE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    VOLUME_LITERS,
+    UnitOfElectricPotential,
+    UnitOfMass,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import OmniLogicEntity, OmniLogicUpdateCoordinator, check_guard
+from .common import check_guard
 from .const import COORDINATOR, DEFAULT_PH_OFFSET, DOMAIN, PUMP_TYPES
+from .coordinator import OmniLogicUpdateCoordinator
+from .entity import OmniLogicEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
 
-    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
+    coordinator: OmniLogicUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        COORDINATOR
+    ]
     entities = []
 
     for item_id, item in coordinator.data.items():
@@ -34,7 +42,8 @@ async def async_setup_entry(
             continue
 
         for entity_setting in entity_settings:
-            for state_key, entity_class in entity_setting["entity_classes"].items():
+            entity_classes: dict[str, type] = entity_setting["entity_classes"]
+            for state_key, entity_class in entity_classes.items():
                 if check_guard(state_key, item, entity_setting):
                     continue
 
@@ -62,7 +71,7 @@ class OmnilogicSensor(OmniLogicEntity, SensorEntity):
         coordinator: OmniLogicUpdateCoordinator,
         kind: str,
         name: str,
-        device_class: str,
+        device_class: SensorDeviceClass | None,
         icon: str,
         unit: str,
         item_id: tuple,
@@ -81,19 +90,9 @@ class OmnilogicSensor(OmniLogicEntity, SensorEntity):
         unit_type = coordinator.data[backyard_id].get("Unit-of-Measurement")
 
         self._unit_type = unit_type
-        self._device_class = device_class
-        self._unit = unit
+        self._attr_device_class = device_class
+        self._attr_native_unit_of_measurement = unit
         self._state_key = state_key
-
-    @property
-    def device_class(self):
-        """Return the device class of the entity."""
-        return self._device_class
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the right unit of measure."""
-        return self._unit
 
 
 class OmniLogicTemperatureSensor(OmnilogicSensor):
@@ -105,12 +104,12 @@ class OmniLogicTemperatureSensor(OmnilogicSensor):
         sensor_data = self.coordinator.data[self._item_id][self._state_key]
 
         hayward_state = sensor_data
-        hayward_unit_of_measure = TEMP_FAHRENHEIT
+        hayward_unit_of_measure = UnitOfTemperature.FAHRENHEIT
         state = sensor_data
 
         if self._unit_type == "Metric":
             hayward_state = round((int(hayward_state) - 32) * 5 / 9, 1)
-            hayward_unit_of_measure = TEMP_CELSIUS
+            hayward_unit_of_measure = UnitOfTemperature.CELSIUS
 
         if int(sensor_data) == -1:
             hayward_state = None
@@ -119,7 +118,7 @@ class OmniLogicTemperatureSensor(OmnilogicSensor):
         self._attrs["hayward_temperature"] = hayward_state
         self._attrs["hayward_unit_of_measure"] = hayward_unit_of_measure
 
-        self._unit = TEMP_FAHRENHEIT
+        self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
 
         return state
 
@@ -139,10 +138,10 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
         pump_speed = self.coordinator.data[self._item_id][self._state_key]
 
         if pump_type == "VARIABLE":
-            self._unit = PERCENTAGE
+            self._attr_native_unit_of_measurement = PERCENTAGE
             state = pump_speed
         elif pump_type == "DUAL":
-            self._unit = None
+            self._attr_native_unit_of_measurement = None
             if pump_speed == 0:
                 state = "off"
             elif pump_speed == self.coordinator.data[self._item_id].get(
@@ -167,13 +166,12 @@ class OmniLogicSaltLevelSensor(OmnilogicSensor):
         """Return the state for the salt level sensor."""
 
         salt_return = self.coordinator.data[self._item_id][self._state_key]
-        unit_of_measurement = self._unit
 
         if self._unit_type == "Metric":
             salt_return = round(int(salt_return) / 1000, 2)
-            unit_of_measurement = f"{MASS_GRAMS}/{VOLUME_LITERS}"
-
-        self._unit = unit_of_measurement
+            self._attr_native_unit_of_measurement = (
+                f"{UnitOfMass.GRAMS}/{UnitOfVolume.LITERS}"
+            )
 
         return salt_return
 
@@ -184,9 +182,7 @@ class OmniLogicChlorinatorSensor(OmnilogicSensor):
     @property
     def native_value(self):
         """Return the state for the chlorinator sensor."""
-        state = self.coordinator.data[self._item_id][self._state_key]
-
-        return state
+        return self.coordinator.data[self._item_id][self._state_key]
 
 
 class OmniLogicPHSensor(OmnilogicSensor):
@@ -220,7 +216,7 @@ class OmniLogicORPSensor(OmnilogicSensor):
         name: str,
         kind: str,
         item_id: tuple,
-        device_class: str,
+        device_class: SensorDeviceClass | None,
         icon: str,
         unit: str,
     ) -> None:
@@ -248,7 +244,7 @@ class OmniLogicORPSensor(OmnilogicSensor):
         return orp_state
 
 
-SENSOR_TYPES = {
+SENSOR_TYPES: dict[tuple[int, str], list[dict[str, Any]]] = {
     (2, "Backyard"): [
         {
             "entity_classes": {"airTemp": OmniLogicTemperatureSensor},
@@ -256,7 +252,7 @@ SENSOR_TYPES = {
             "kind": "air_temperature",
             "device_class": SensorDeviceClass.TEMPERATURE,
             "icon": None,
-            "unit": TEMP_FAHRENHEIT,
+            "unit": UnitOfTemperature.FAHRENHEIT,
             "guard_condition": [{}],
         },
     ],
@@ -267,7 +263,7 @@ SENSOR_TYPES = {
             "kind": "water_temperature",
             "device_class": SensorDeviceClass.TEMPERATURE,
             "icon": None,
-            "unit": TEMP_FAHRENHEIT,
+            "unit": UnitOfTemperature.FAHRENHEIT,
             "guard_condition": [{}],
         },
     ],
@@ -348,7 +344,7 @@ SENSOR_TYPES = {
             "kind": "csad_orp",
             "device_class": None,
             "icon": "mdi:gauge",
-            "unit": ELECTRIC_POTENTIAL_MILLIVOLT,
+            "unit": UnitOfElectricPotential.MILLIVOLT,
             "guard_condition": [
                 {"orp": ""},
             ],

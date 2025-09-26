@@ -33,6 +33,7 @@
 - [ ] Bugfix (non-breaking change which fixes an issue)
 - [ ] New integration (thank you!)
 - [ ] New feature (which adds functionality to an existing integration)
+- [ ] Deprecation (breaking change to happen in the future)
 - [ ] Breaking change (fix/feature causing existing functionality to break)
 - [ ] Code quality improvements to existing code or addition of tests
 
@@ -45,6 +46,8 @@
 - This PR fixes or closes issue: fixes #
 - This PR is related to issue: 
 - Link to documentation pull request: 
+- Link to developer documentation pull request: 
+- Link to frontend pull request: 
 
 ## Checklist
 <!--
@@ -52,14 +55,20 @@
   creating the PR. If you're unsure about any of them, don't hesitate to ask.
   We're here to help! This is simply a reminder of what we are going to look
   for before merging your code.
+
+  AI tools are welcome, but contributors are responsible for *fully*
+  understanding the code before submitting a PR.
 -->
 
+- [ ] I understand the code I am submitting and can explain how it works.
 - [ ] The code change is tested and works locally.
 - [ ] Local tests pass. **Your PR cannot be merged unless tests pass**
 - [ ] There is no commented out code in this PR.
 - [ ] I have followed the [development checklist][dev-checklist]
-- [ ] The code has been formatted using Black (`black --fast homeassistant tests`)
+- [ ] I have followed the [perfect PR recommendations][perfect-pr]
+- [ ] The code has been formatted using Ruff (`ruff format homeassistant tests`)
 - [ ] Tests have been added to verify that the new code works.
+- [ ] Any generated code has been carefully reviewed for correctness and compliance with project standards.
 
 If user exposed functionality or configuration variables are added/changed:
 
@@ -72,19 +81,6 @@ If the code communicates with devices, web services, or third-party tools:
 - [ ] New or updated dependencies have been added to `requirements_all.txt`.  
       Updated by running `python3 -m script.gen_requirements_all`.
 - [ ] For the updated dependencies - a link to the changelog, or at minimum a diff between library versions is added to the PR description.
-- [ ] Untested files have been added to `.coveragerc`.
-
-The integration reached or maintains the following [Integration Quality Scale][quality-scale]:
-<!--
-  The Integration Quality Scale scores an integration on the code quality
-  and user experience. Each level of the quality scale consists of a list
-  of requirements. We highly recommend getting your integration scored!
--->
-
-- [ ] No score or internal
-- [ ] 🥈 Silver
-- [ ] 🥇 Gold
-- [ ] 🏆 Platinum
 
 <!--
   This project is very active and we have a high turnover of pull requests.
@@ -114,7 +110,8 @@ To help with the load of incoming pull requests:
 
   Below, some useful links you could explore:
 -->
-[dev-checklist]: https://developers.home-assistant.io/docs/en/development_checklist.html
-[manifest-docs]: https://developers.home-assistant.io/docs/en/creating_integration_manifest.html
-[quality-scale]: https://developers.home-assistant.io/docs/en/next/integration_quality_scale_index.html
+[dev-checklist]: https://developers.home-assistant.io/docs/development_checklist/
+[manifest-docs]: https://developers.home-assistant.io/docs/creating_integration_manifest/
+[quality-scale]: https://developers.home-assistant.io/docs/integration_quality_scale_index/
 [docs-repository]: https://github.com/home-assistant/home-assistant.io
+[perfect-pr]: https://developers.home-assistant.io/docs/review-process/#creating-the-perfect-pr

@@ -1,7 +1,9 @@
 """Support for Envisalink zone bypass switches."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant, callback
@@ -9,13 +11,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    CONF_ZONENAME,
-    DATA_EVL,
-    SIGNAL_ZONE_BYPASS_UPDATE,
-    ZONE_SCHEMA,
-    EnvisalinkDevice,
-)
+from . import CONF_ZONENAME, DATA_EVL, SIGNAL_ZONE_BYPASS_UPDATE, ZONE_SCHEMA
+from .entity import EnvisalinkEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +46,7 @@ async def async_setup_platform(
     async_add_entities(entities)
 
 
-class EnvisalinkSwitch(EnvisalinkDevice, SwitchEntity):
+class EnvisalinkSwitch(EnvisalinkEntity, SwitchEntity):
     """Representation of an Envisalink switch."""
 
     def __init__(self, hass, zone_number, zone_name, info, controller):
@@ -58,7 +55,7 @@ class EnvisalinkSwitch(EnvisalinkDevice, SwitchEntity):
 
         super().__init__(zone_name, info, controller)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -71,11 +68,11 @@ class EnvisalinkSwitch(EnvisalinkDevice, SwitchEntity):
         """Return the boolean response if the zone is bypassed."""
         return self._info["bypassed"]
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Send the bypass keypress sequence to toggle the zone bypass."""
         self._controller.toggle_zone_bypass(self._zone_number)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the bypass keypress sequence to toggle the zone bypass."""
         self._controller.toggle_zone_bypass(self._zone_number)
 

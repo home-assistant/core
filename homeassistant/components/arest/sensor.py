@@ -1,4 +1,5 @@
 """Support for an exposed aREST RESTful API of a device."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,7 +9,10 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_MONITORED_VARIABLES,
     CONF_NAME,
@@ -18,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -40,7 +44,7 @@ PIN_VARIABLE_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_RESOURCE): cv.url,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -82,8 +86,6 @@ def setup_platform(
         """Create a renderer based on variable_template value."""
         if value_template is None:
             return lambda value: value
-
-        value_template.hass = hass
 
         def _render(value):
             try:
@@ -159,7 +161,7 @@ class ArestSensor(SensorEntity):
             if request.status_code != HTTPStatus.OK:
                 _LOGGER.error("Can't set mode of %s", resource)
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from aREST API."""
         self.arest.update()
         self._attr_available = self.arest.available
@@ -180,7 +182,7 @@ class ArestData:
         self._resource = resource
         self._pin = pin
         self.data = {}
-        self._attr_available = True
+        self.available = True
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -201,7 +203,7 @@ class ArestData:
                         f"{self._resource}/digital/{self._pin}", timeout=10
                     )
                     self.data = {"value": response.json()["return_value"]}
-            self._attr_available = True
+            self.available = True
         except requests.exceptions.ConnectionError:
             _LOGGER.error("No route to device %s", self._resource)
-            self._attr_available = False
+            self.available = False

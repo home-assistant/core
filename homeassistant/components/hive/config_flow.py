@@ -1,5 +1,10 @@
 """Config Flow for Hive."""
 
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any
+
 from apyhiveapi import Auth
 from apyhiveapi.helper.hive_exceptions import (
     HiveApiError,
@@ -9,28 +14,37 @@ from apyhiveapi.helper.hive_exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import callback
 
-from .const import CONF_CODE, CONFIG_ENTRY_VERSION, DOMAIN
+from . import HiveConfigEntry
+from .const import CONF_CODE, CONF_DEVICE_NAME, CONFIG_ENTRY_VERSION, DOMAIN
 
 
-class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Hive config flow."""
 
     VERSION = CONFIG_ENTRY_VERSION
+    hive_auth: Auth
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the config flow."""
-        self.hive_auth = None
-        self.data = {}
-        self.tokens = {}
-        self.entry = None
+        self.data: dict[str, Any] = {}
+        self.tokens: dict[str, str] = {}
+        self.device_registration: bool = False
+        self.device_name = "Home Assistant"
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Prompt user input. Create or edit entry."""
-        errors = {}
+        errors: dict[str, str] = {}
         # Login to Hive with user data.
         if user_input is not None:
             self.data.update(user_input)
@@ -39,8 +53,8 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             # Get user from existing entry and abort if already setup
-            self.entry = await self.async_set_unique_id(self.data[CONF_USERNAME])
-            if self.context["source"] != config_entries.SOURCE_REAUTH:
+            await self.async_set_unique_id(self.data[CONF_USERNAME])
+            if self.context["source"] != SOURCE_REAUTH:
                 self._abort_if_unique_id_configured()
 
             # Login to the Hive.
@@ -58,7 +72,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_2fa()
 
             if not errors:
-                # Complete the entry setup.
+                # Complete the entry.
                 try:
                     return await self.async_setup_hive_entry()
                 except UnknownHiveError:
@@ -70,7 +84,9 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_2fa(self, user_input=None):
+    async def async_step_2fa(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle 2fa step."""
         errors = {}
 
@@ -87,15 +103,39 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_internet_available"
 
             if not errors:
-                try:
+                if self.source == SOURCE_REAUTH:
                     return await self.async_setup_hive_entry()
-                except UnknownHiveError:
-                    errors["base"] = "unknown"
+                self.device_registration = True
+                return await self.async_step_configuration()
 
         schema = vol.Schema({vol.Required(CONF_CODE): str})
         return self.async_show_form(step_id="2fa", data_schema=schema, errors=errors)
 
-    async def async_setup_hive_entry(self):
+    async def async_step_configuration(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle hive configuration step."""
+        errors = {}
+
+        if user_input:
+            if self.device_registration:
+                self.device_name = user_input["device_name"]
+                await self.hive_auth.device_registration(user_input["device_name"])
+                self.data["device_data"] = await self.hive_auth.get_device_data()
+
+            try:
+                return await self.async_setup_hive_entry()
+            except UnknownHiveError:
+                errors["base"] = "unknown"
+
+        schema = vol.Schema(
+            {vol.Optional(CONF_DEVICE_NAME, default=self.device_name): str}
+        )
+        return self.async_show_form(
+            step_id="configuration", data_schema=schema, errors=errors
+        )
+
+    async def async_setup_hive_entry(self) -> ConfigFlowResult:
         """Finish setup and create the config entry."""
 
         if "AuthenticationResult" not in self.tokens:
@@ -103,52 +143,59 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Setup the config entry
         self.data["tokens"] = self.tokens
-        if self.context["source"] == config_entries.SOURCE_REAUTH:
-            self.hass.config_entries.async_update_entry(
-                self.entry, title=self.data["username"], data=self.data
+        if self.source == SOURCE_REAUTH:
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
+                title=self.data["username"],
+                data=self.data,
+                reason="reauth_successful",
             )
-            await self.hass.config_entries.async_reload(self.entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
         return self.async_create_entry(title=self.data["username"], data=self.data)
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Re Authenticate a user."""
         data = {
-            CONF_USERNAME: user_input[CONF_USERNAME],
-            CONF_PASSWORD: user_input[CONF_PASSWORD],
+            CONF_USERNAME: entry_data[CONF_USERNAME],
+            CONF_PASSWORD: entry_data[CONF_PASSWORD],
         }
         return await self.async_step_user(data)
 
-    async def async_step_import(self, user_input=None):
-        """Import user."""
-        return await self.async_step_user(user_input)
-
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: HiveConfigEntry,
+    ) -> HiveOptionsFlowHandler:
         """Hive options callback."""
         return HiveOptionsFlowHandler(config_entry)
 
 
-class HiveOptionsFlowHandler(config_entries.OptionsFlow):
+class HiveOptionsFlowHandler(OptionsFlow):
     """Config flow options for Hive."""
 
-    def __init__(self, config_entry):
+    config_entry: HiveConfigEntry
+
+    def __init__(self, config_entry: HiveConfigEntry) -> None:
         """Initialize Hive options flow."""
         self.hive = None
-        self.config_entry = config_entry
         self.interval = config_entry.options.get(CONF_SCAN_INTERVAL, 120)
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the options."""
         return await self.async_step_user()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        self.hive = self.hass.data["hive"][self.config_entry.entry_id]
-        errors = {}
+        self.hive = self.config_entry.runtime_data
+        errors: dict[str, str] = {}
         if user_input is not None:
             new_interval = user_input.get(CONF_SCAN_INTERVAL)
+            assert self.hive
             await self.hive.updateInterval(new_interval)
             return self.async_create_entry(title="", data=user_input)
 

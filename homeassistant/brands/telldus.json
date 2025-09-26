@@ -1,0 +1,5 @@
+{
+  "domain": "telldus",
+  "name": "Telldus",
+  "integrations": ["tellduslive", "tellstick"]
+}

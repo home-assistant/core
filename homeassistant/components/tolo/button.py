@@ -1,21 +1,22 @@
 """TOLO Sauna Button controls."""
 
-from tololib.const import LampMode
+from tololib import LampMode
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import ToloSaunaUpdateCoordinator
+from .entity import ToloSaunaCoordinatorEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up buttons for TOLO Sauna."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -30,8 +31,7 @@ class ToloLampNextColorButton(ToloSaunaCoordinatorEntity, ButtonEntity):
     """Button for switching to the next lamp color."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:palette"
-    _attr_name = "Next Color"
+    _attr_translation_key = "next_color"
 
     def __init__(
         self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry

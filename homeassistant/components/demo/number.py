@@ -1,31 +1,30 @@
 """Demo platform that offers a fake Number entity."""
+
 from __future__ import annotations
 
-from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the demo Number entity."""
+    """Set up the demo number platform."""
     async_add_entities(
         [
             DemoNumber(
                 "volume1",
                 "volume",
                 42.0,
-                "mdi:volume-high",
+                "volume",
                 False,
                 mode=NumberMode.SLIDER,
             ),
@@ -33,90 +32,97 @@ async def async_setup_platform(
                 "pwm1",
                 "PWM 1",
                 0.42,
-                "mdi:square-wave",
+                "pwm",
                 False,
-                0.0,
-                1.0,
-                0.01,
-                NumberMode.BOX,
+                native_min_value=0.0,
+                native_max_value=1.0,
+                native_step=0.01,
+                mode=NumberMode.BOX,
             ),
             DemoNumber(
                 "large_range",
                 "Large Range",
                 500,
-                "mdi:square-wave",
+                "range",
                 False,
-                1,
-                1000,
-                1,
+                native_min_value=1,
+                native_max_value=1000,
+                native_step=1,
             ),
             DemoNumber(
                 "small_range",
                 "Small Range",
                 128,
-                "mdi:square-wave",
+                "range",
                 False,
-                1,
-                255,
-                1,
+                native_min_value=1,
+                native_max_value=255,
+                native_step=1,
+            ),
+            DemoNumber(
+                "temp1",
+                "Temperature setting",
+                22,
+                None,
+                False,
+                device_class=NumberDeviceClass.TEMPERATURE,
+                native_min_value=15.0,
+                native_max_value=35.0,
+                native_step=1,
+                mode=NumberMode.BOX,
+                unit_of_measurement=UnitOfTemperature.CELSIUS,
             ),
         ]
     )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Demo config entry."""
-    await async_setup_platform(hass, {}, async_add_entities)
-
-
 class DemoNumber(NumberEntity):
     """Representation of a demo Number entity."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
 
     def __init__(
         self,
         unique_id: str,
-        name: str,
+        device_name: str,
         state: float,
-        icon: str,
-        assumed: bool,
-        min_value: float | None = None,
-        max_value: float | None = None,
-        step: float | None = None,
+        translation_key: str | None,
+        assumed_state: bool,
+        *,
+        device_class: NumberDeviceClass | None = None,
         mode: NumberMode = NumberMode.AUTO,
+        native_min_value: float | None = None,
+        native_max_value: float | None = None,
+        native_step: float | None = None,
+        unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize the Demo Number entity."""
-        self._attr_assumed_state = assumed
-        self._attr_icon = icon
-        self._attr_name = name or DEVICE_DEFAULT_NAME
-        self._attr_unique_id = unique_id
-        self._attr_value = state
+        self._attr_assumed_state = assumed_state
+        self._attr_device_class = device_class
+        self._attr_translation_key = translation_key
         self._attr_mode = mode
+        self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_native_value = state
+        self._attr_unique_id = unique_id
 
-        if min_value is not None:
-            self._attr_min_value = min_value
-        if max_value is not None:
-            self._attr_max_value = max_value
-        if step is not None:
-            self._attr_step = step
+        if native_min_value is not None:
+            self._attr_native_min_value = native_min_value
+        if native_max_value is not None:
+            self._attr_native_max_value = native_max_value
+        if native_step is not None:
+            self._attr_native_step = native_step
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.unique_id)
+                (DOMAIN, unique_id)
             },
-            name=self.name,
+            name=device_name,
         )
 
-    async def async_set_value(self, value):
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        self._attr_value = value
+        self._attr_native_value = value
         self.async_write_ha_state()

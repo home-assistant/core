@@ -1,4 +1,5 @@
 """Support for Toon thermostat."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -10,31 +11,31 @@ from toonapi import (
     ACTIVE_STATE_SLEEP,
 )
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    HVAC_MODE_HEAT,
+from homeassistant.components.climate import (
     PRESET_AWAY,
     PRESET_COMFORT,
     PRESET_HOME,
     PRESET_SLEEP,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ToonDataUpdateCoordinator
 from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN
+from .entity import ToonDisplayDeviceEntity
 from .helpers import toon_exception_handler
-from .models import ToonDisplayDeviceEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Toon binary sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -44,13 +45,15 @@ async def async_setup_entry(
 class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
     """Representation of a Toon climate device."""
 
-    _attr_hvac_mode = HVAC_MODE_HEAT
+    _attr_hvac_mode = HVACMode.HEAT
     _attr_icon = "mdi:thermostat"
     _attr_max_temp = DEFAULT_MAX_TEMP
     _attr_min_temp = DEFAULT_MIN_TEMP
     _attr_name = "Thermostat"
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,
@@ -58,7 +61,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
     ) -> None:
         """Initialize Toon climate entity."""
         super().__init__(coordinator)
-        self._attr_hvac_modes = [HVAC_MODE_HEAT]
+        self._attr_hvac_modes = [HVACMode.HEAT]
         self._attr_preset_modes = [
             PRESET_AWAY,
             PRESET_COMFORT,
@@ -70,11 +73,11 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         )
 
     @property
-    def hvac_action(self) -> str | None:
+    def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation."""
         if self.coordinator.data.thermostat.heating:
-            return CURRENT_HVAC_HEAT
-        return CURRENT_HVAC_IDLE
+            return HVACAction.HEATING
+        return HVACAction.IDLE
 
     @property
     def preset_mode(self) -> str | None:
@@ -103,7 +106,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         return {"heating_type": self.coordinator.data.agreement.heating_type}
 
     @toon_exception_handler
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Change the setpoint of the thermostat."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         await self.coordinator.toon.set_current_setpoint(temperature)
@@ -120,7 +123,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         if preset_mode in mapping:
             await self.coordinator.toon.set_active_state(mapping[preset_mode])
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         # Intentionally left empty
         # The HAVC mode is always HEAT

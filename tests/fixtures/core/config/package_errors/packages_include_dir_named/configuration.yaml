@@ -1,0 +1,7 @@
+# adr007_1 should be a dict, this will cause a package error
+adr_0007_1:
+  - host: blah.com
+
+homeassistant:
+  # Load packages
+  packages: !include_dir_named integrations

@@ -1,4 +1,5 @@
 """Configuration for GeoNet NZ Quakes tests."""
+
 import pytest
 
 from homeassistant.components.geonetnz_quakes import (

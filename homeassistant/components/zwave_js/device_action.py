@@ -1,4 +1,5 @@
 """Provides device actions for Z-Wave JS."""
+
 from __future__ import annotations
 
 from collections import defaultdict
@@ -9,9 +10,10 @@ import voluptuous as vol
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import ATTR_CODE_SLOT, ATTR_USERCODE
 from zwave_js_server.const.command_class.meter import CC_SPECIFIC_METER_TYPE
-from zwave_js_server.model.value import get_value_id
+from zwave_js_server.model.value import get_value_id_str
 from zwave_js_server.util.command_class.meter import get_meter_type
 
+from homeassistant.components.device_automation import async_validate_entity_schema
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
@@ -25,10 +27,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
+from .config_validation import VALUE_SCHEMA
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_CONFIG_PARAMETER,
@@ -48,14 +50,13 @@ from .const import (
     SERVICE_SET_CONFIG_PARAMETER,
     SERVICE_SET_LOCK_USERCODE,
     SERVICE_SET_VALUE,
-    VALUE_SCHEMA,
 )
 from .device_automation_helpers import (
     CONF_SUBTYPE,
     VALUE_ID_REGEX,
-    get_config_parameter_value_schema,
+    generate_config_parameter_subtype,
 )
-from .helpers import async_get_node_from_device_id
+from .helpers import async_get_node_from_device_id, get_value_state_schema
 
 ACTION_TYPES = {
     SERVICE_CLEAR_LOCK_USERCODE,
@@ -70,7 +71,7 @@ ACTION_TYPES = {
 CLEAR_LOCK_USERCODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): SERVICE_CLEAR_LOCK_USERCODE,
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain(LOCK_DOMAIN),
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
     }
 )
@@ -84,7 +85,7 @@ PING_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 REFRESH_VALUE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): SERVICE_REFRESH_VALUE,
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Optional(ATTR_REFRESH_ALL_VALUES, default=False): cv.boolean,
     }
 )
@@ -92,7 +93,7 @@ REFRESH_VALUE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 RESET_METER_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): SERVICE_RESET_METER,
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain(SENSOR_DOMAIN),
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Optional(ATTR_METER_TYPE): vol.Coerce(int),
         vol.Optional(ATTR_VALUE): vol.Coerce(int),
     }
@@ -101,6 +102,7 @@ RESET_METER_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 SET_CONFIG_PARAMETER_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): SERVICE_SET_CONFIG_PARAMETER,
+        vol.Required(ATTR_ENDPOINT, default=0): vol.Coerce(int),
         vol.Required(ATTR_CONFIG_PARAMETER): vol.Any(int, str),
         vol.Required(ATTR_CONFIG_PARAMETER_BITMASK): vol.Any(None, int, str),
         vol.Required(ATTR_VALUE): vol.Coerce(int),
@@ -111,7 +113,7 @@ SET_CONFIG_PARAMETER_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
 SET_LOCK_USERCODE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_TYPE): SERVICE_SET_LOCK_USERCODE,
-        vol.Required(CONF_ENTITY_ID): cv.entity_domain(LOCK_DOMAIN),
+        vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
         vol.Required(ATTR_USERCODE): cv.string,
     }
@@ -129,7 +131,7 @@ SET_VALUE_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     }
 )
 
-ACTION_SCHEMA = vol.Any(
+_ACTION_SCHEMA = vol.Any(
     CLEAR_LOCK_USERCODE_SCHEMA,
     PING_SCHEMA,
     REFRESH_VALUE_SCHEMA,
@@ -140,12 +142,24 @@ ACTION_SCHEMA = vol.Any(
 )
 
 
-async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
+async def async_validate_action_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
+    """Validate config."""
+    return async_validate_entity_schema(hass, config, _ACTION_SCHEMA)
+
+
+async def async_get_actions(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, Any]]:
     """List device actions for Z-Wave JS devices."""
-    registry = entity_registry.async_get(hass)
-    actions = []
+    registry = er.async_get(hass)
+    actions: list[dict] = []
 
     node = async_get_node_from_device_id(hass, device_id)
+
+    if node.client.driver and node.client.driver.controller.own_node == node:
+        return actions
 
     base_action = {
         CONF_DEVICE_ID: device_id,
@@ -163,9 +177,10 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
             {
                 **base_action,
                 CONF_TYPE: SERVICE_SET_CONFIG_PARAMETER,
+                ATTR_ENDPOINT: config_value.endpoint,
                 ATTR_CONFIG_PARAMETER: config_value.property_,
                 ATTR_CONFIG_PARAMETER_BITMASK: config_value.property_key,
-                CONF_SUBTYPE: f"{config_value.value_id} ({config_value.property_name})",
+                CONF_SUBTYPE: generate_config_parameter_subtype(config_value),
             }
             for config_value in node.get_configuration_values().values()
         ]
@@ -173,7 +188,7 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
 
     meter_endpoints: dict[int, dict[str, Any]] = defaultdict(dict)
 
-    for entry in entity_registry.async_entries_for_device(
+    for entry in er.async_entries_for_device(
         registry, device_id, include_disabled_entities=False
     ):
         # If an entry is unavailable, it is possible that the underlying value
@@ -181,10 +196,11 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
         # underlying value is not being monitored by HA so we shouldn't allow
         # actions against it.
         if (
-            state := hass.states.get(entry.entity_id)
-        ) and state.state == STATE_UNAVAILABLE:
+            not (state := hass.states.get(entry.entity_id))
+            or state.state == STATE_UNAVAILABLE
+        ):
             continue
-        entity_action = {**base_action, CONF_ENTITY_ID: entry.entity_id}
+        entity_action = {**base_action, CONF_ENTITY_ID: entry.id}
         actions.append({**entity_action, CONF_TYPE: SERVICE_REFRESH_VALUE})
         if entry.domain == LOCK_DOMAIN:
             actions.extend(
@@ -204,10 +220,9 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
             # If the value has the meterType CC specific value, we can add a reset_meter
             # action for it
             if CC_SPECIFIC_METER_TYPE in value.metadata.cc_specific:
-                meter_endpoints[value.endpoint].setdefault(
-                    CONF_ENTITY_ID, entry.entity_id
-                )
-                meter_endpoints[value.endpoint].setdefault(ATTR_METER_TYPE, set()).add(
+                endpoint_idx = value.endpoint or 0
+                meter_endpoints[endpoint_idx].setdefault(CONF_ENTITY_ID, entry.id)
+                meter_endpoints[endpoint_idx].setdefault(ATTR_METER_TYPE, set()).add(
                     get_meter_type(value)
                 )
 
@@ -223,24 +238,27 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> list[dict]:
                 CONF_SUBTYPE: f"Endpoint {endpoint} (All)",
             }
         )
-        for meter_type in endpoint_data[ATTR_METER_TYPE]:
-            actions.append(
-                {
-                    **base_action,
-                    CONF_TYPE: SERVICE_RESET_METER,
-                    ATTR_METER_TYPE: meter_type,
-                    CONF_SUBTYPE: f"Endpoint {endpoint} ({meter_type.name})",
-                }
-            )
+        actions.extend(
+            {
+                **base_action,
+                CONF_TYPE: SERVICE_RESET_METER,
+                ATTR_METER_TYPE: meter_type,
+                CONF_SUBTYPE: f"Endpoint {endpoint} ({meter_type.name})",
+            }
+            for meter_type in endpoint_data[ATTR_METER_TYPE]
+        )
 
     return actions
 
 
 async def async_call_action_from_config(
-    hass: HomeAssistant, config: dict, variables: dict, context: Context | None
+    hass: HomeAssistant,
+    config: ConfigType,
+    variables: TemplateVarsType,
+    context: Context | None,
 ) -> None:
     """Execute a device action."""
-    action_type = service = config.pop(CONF_TYPE)
+    action_type = service = config[CONF_TYPE]
     if action_type not in ACTION_TYPES:
         raise HomeAssistantError(f"Unhandled action type {action_type}")
 
@@ -248,10 +266,10 @@ async def async_call_action_from_config(
     service_data = {
         k: v
         for k, v in config.items()
-        if k not in (ATTR_DOMAIN, CONF_SUBTYPE) and v not in (None, "")
+        if k not in (ATTR_DOMAIN, CONF_TYPE, CONF_SUBTYPE) and v not in (None, "")
     }
 
-    # Entity services (including refresh value which is a fake entity service) expects
+    # Entity services (including refresh value which is a fake entity service) expect
     # just an entity ID
     if action_type in (
         SERVICE_REFRESH_VALUE,
@@ -317,7 +335,9 @@ async def async_get_action_capabilities(
                     vol.Required(ATTR_COMMAND_CLASS): vol.In(
                         {
                             CommandClass(cc.id).value: cc.name
-                            for cc in sorted(node.command_classes, key=lambda cc: cc.name)  # type: ignore[no-any-return]
+                            for cc in sorted(
+                                node.command_classes, key=lambda cc: cc.name
+                            )
                         }
                     ),
                     vol.Required(ATTR_PROPERTY): cv.string,
@@ -330,13 +350,14 @@ async def async_get_action_capabilities(
         }
 
     if action_type == SERVICE_SET_CONFIG_PARAMETER:
-        value_id = get_value_id(
+        value_id = get_value_id_str(
             node,
             CommandClass.CONFIGURATION,
             config[ATTR_CONFIG_PARAMETER],
             property_key=config[ATTR_CONFIG_PARAMETER_BITMASK],
+            endpoint=config[ATTR_ENDPOINT],
         )
-        value_schema = get_config_parameter_value_schema(node, value_id)
+        value_schema = get_value_state_schema(node.values[value_id])
         if value_schema is None:
             return {}
         return {"extra_fields": vol.Schema({vol.Required(ATTR_VALUE): value_schema})}

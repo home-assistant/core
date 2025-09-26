@@ -1,8 +1,10 @@
 {
   "domain": "sun",
   "name": "Sun",
+  "codeowners": ["@home-assistant/core"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sun",
-  "codeowners": ["@Swamp-Ig"],
+  "iot_class": "calculated",
   "quality_scale": "internal",
-  "iot_class": "calculated"
+  "single_config_entry": true
 }

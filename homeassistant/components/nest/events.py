@@ -25,7 +25,8 @@ NEST_EVENT = "nest_event"
 #       "device_id": "my-device-id",
 #       "type": "camera_motion",
 #       "timestamp": "2021-10-24T19:42:43.304000+00:00",
-#       "nest_event_id": "KcO1HIR9sPKQ2bqby_vTcCcEov..."
+#       "nest_event_id": "KcO1HIR9sPKQ2bqby_vTcCcEov...",
+#       "zones": ["Zone 1"],
 #   },
 #   ...
 # }
@@ -43,25 +44,26 @@ EVENT_CAMERA_SOUND = "camera_sound"
 # that support these traits will generate Pub/Sub event messages in
 # the EVENT_NAME_MAP
 DEVICE_TRAIT_TRIGGER_MAP = {
-    DoorbellChimeTrait.NAME: EVENT_DOORBELL_CHIME,
-    CameraMotionTrait.NAME: EVENT_CAMERA_MOTION,
-    CameraPersonTrait.NAME: EVENT_CAMERA_PERSON,
-    CameraSoundTrait.NAME: EVENT_CAMERA_SOUND,
+    DoorbellChimeTrait.NAME.value: EVENT_DOORBELL_CHIME,
+    CameraMotionTrait.NAME.value: EVENT_CAMERA_MOTION,
+    CameraPersonTrait.NAME.value: EVENT_CAMERA_PERSON,
+    CameraSoundTrait.NAME.value: EVENT_CAMERA_SOUND,
 }
+
 
 # Mapping of incoming SDM Pub/Sub event message types to the home assistant
 # event type to fire.
 EVENT_NAME_MAP = {
-    DoorbellChimeEvent.NAME: EVENT_DOORBELL_CHIME,
-    CameraMotionEvent.NAME: EVENT_CAMERA_MOTION,
-    CameraPersonEvent.NAME: EVENT_CAMERA_PERSON,
-    CameraSoundEvent.NAME: EVENT_CAMERA_SOUND,
+    DoorbellChimeEvent.NAME.value: EVENT_DOORBELL_CHIME,
+    CameraMotionEvent.NAME.value: EVENT_CAMERA_MOTION,
+    CameraPersonEvent.NAME.value: EVENT_CAMERA_PERSON,
+    CameraSoundEvent.NAME.value: EVENT_CAMERA_SOUND,
 }
 
 # Names for event types shown in the media source
 MEDIA_SOURCE_EVENT_TITLE_MAP = {
-    DoorbellChimeEvent.NAME: "Doorbell",
-    CameraMotionEvent.NAME: "Motion",
-    CameraPersonEvent.NAME: "Person",
-    CameraSoundEvent.NAME: "Sound",
+    DoorbellChimeEvent.NAME.value: "Doorbell",
+    CameraMotionEvent.NAME.value: "Motion",
+    CameraPersonEvent.NAME.value: "Person",
+    CameraSoundEvent.NAME.value: "Sound",
 }

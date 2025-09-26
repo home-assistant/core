@@ -1,129 +1,119 @@
-"""Creates Homewizard Energy switch entities."""
+"""Creates HomeWizard Energy switch entities."""
+
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homewizard_energy import HomeWizardEnergy
+from homewizard_energy.models import CombinedModels as DeviceResponseEntry
 
-from .const import DOMAIN
-from .coordinator import HWEnergyDeviceUpdateCoordinator
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
+from .entity import HomeWizardEntity
+from .helpers import homewizard_exception_handler
+
+PARALLEL_UPDATES = 1
+
+
+@dataclass(frozen=True, kw_only=True)
+class HomeWizardSwitchEntityDescription(SwitchEntityDescription):
+    """Class describing HomeWizard switch entities."""
+
+    available_fn: Callable[[DeviceResponseEntry], bool]
+    create_fn: Callable[[DeviceResponseEntry], bool]
+    is_on_fn: Callable[[DeviceResponseEntry], bool | None]
+    set_fn: Callable[[HomeWizardEnergy, bool], Awaitable[Any]]
+
+
+SWITCHES = [
+    HomeWizardSwitchEntityDescription(
+        key="power_on",
+        name=None,
+        device_class=SwitchDeviceClass.OUTLET,
+        create_fn=lambda x: x.device.supports_state(),
+        available_fn=lambda x: x.state is not None and not x.state.switch_lock,
+        is_on_fn=lambda x: x.state.power_on if x.state else None,
+        set_fn=lambda api, active: api.state(power_on=active),
+    ),
+    HomeWizardSwitchEntityDescription(
+        key="switch_lock",
+        translation_key="switch_lock",
+        entity_category=EntityCategory.CONFIG,
+        create_fn=lambda x: x.device.supports_state(),
+        available_fn=lambda x: x.state is not None,
+        is_on_fn=lambda x: x.state.switch_lock if x.state else None,
+        set_fn=lambda api, active: api.state(switch_lock=active),
+    ),
+    HomeWizardSwitchEntityDescription(
+        key="cloud_connection",
+        translation_key="cloud_connection",
+        entity_category=EntityCategory.CONFIG,
+        create_fn=lambda x: x.device.supports_cloud_enable(),
+        available_fn=lambda x: x.system is not None,
+        is_on_fn=lambda x: x.system.cloud_enabled if x.system else None,
+        set_fn=lambda api, active: api.system(cloud_enabled=active),
+    ),
+]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: HomeWizardConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches."""
-    coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-
-    if coordinator.api.state:
-        async_add_entities(
-            [
-                HWEnergyMainSwitchEntity(coordinator, entry),
-                HWEnergySwitchLockEntity(coordinator, entry),
-            ]
-        )
+    async_add_entities(
+        HomeWizardSwitchEntity(entry.runtime_data, description)
+        for description in SWITCHES
+        if description.create_fn(entry.runtime_data.data)
+    )
 
 
-class HWEnergySwitchEntity(CoordinatorEntity, SwitchEntity):
-    """Representation switchable entity."""
+class HomeWizardSwitchEntity(HomeWizardEntity, SwitchEntity):
+    """Representation of a HomeWizard switch."""
 
-    coordinator: HWEnergyDeviceUpdateCoordinator
+    entity_description: HomeWizardSwitchEntityDescription
 
     def __init__(
         self,
         coordinator: HWEnergyDeviceUpdateCoordinator,
-        entry: ConfigEntry,
-        key: str,
+        description: HomeWizardSwitchEntityDescription,
     ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.unique_id}_{key}"
-        self._attr_device_info = {
-            "name": entry.title,
-            "manufacturer": "HomeWizard",
-            "sw_version": coordinator.data["device"].firmware_version,
-            "model": coordinator.data["device"].product_type,
-            "identifiers": {(DOMAIN, coordinator.data["device"].serial)},
-        }
-
-
-class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
-    """Representation of the main power switch."""
-
-    _attr_device_class = SwitchDeviceClass.OUTLET
-
-    def __init__(
-        self, coordinator: HWEnergyDeviceUpdateCoordinator, entry: ConfigEntry
-    ) -> None:
-        """Initialize the switch."""
-        super().__init__(coordinator, entry, "power_on")
-
-        # Config attributes
-        self._attr_name = f"{entry.title} Switch"
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the switch on."""
-        await self.coordinator.api.state.set(power_on=True)
-        await self.coordinator.async_refresh()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the switch off."""
-        await self.coordinator.api.state.set(power_on=False)
-        await self.coordinator.async_refresh()
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
     @property
     def available(self) -> bool:
-        """
-        Return availability of power_on.
-
-        This switch becomes unavailable when switch_lock is enabled.
-        """
-        return super().available and not self.coordinator.api.state.switch_lock
+        """Return if entity is available."""
+        return super().available and self.entity_description.available_fn(
+            self.coordinator.data
+        )
 
     @property
-    def is_on(self) -> bool:
-        """Return true if switch is on."""
-        return bool(self.coordinator.api.state.power_on)
+    def is_on(self) -> bool | None:
+        """Return state of the switch."""
+        return self.entity_description.is_on_fn(self.coordinator.data)
 
-
-class HWEnergySwitchLockEntity(HWEnergySwitchEntity):
-    """
-    Representation of the switch-lock configuration.
-
-    Switch-lock is a feature that forces the relay in 'on' state.
-    It disables any method that can turn of the relay.
-    """
-
-    _attr_device_class = SwitchDeviceClass.SWITCH
-    _attr_entity_category = EntityCategory.CONFIG
-
-    def __init__(
-        self, coordinator: HWEnergyDeviceUpdateCoordinator, entry: ConfigEntry
-    ) -> None:
-        """Initialize the switch."""
-        super().__init__(coordinator, entry, "switch_lock")
-
-        # Config attributes
-        self._attr_name = f"{entry.title} Switch Lock"
-
+    @homewizard_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn switch-lock on."""
-        await self.coordinator.api.state.set(switch_lock=True)
+        """Turn the switch on."""
+        await self.entity_description.set_fn(self.coordinator.api, True)
         await self.coordinator.async_refresh()
 
+    @homewizard_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn switch-lock off."""
-        await self.coordinator.api.state.set(switch_lock=False)
+        """Turn the switch off."""
+        await self.entity_description.set_fn(self.coordinator.api, False)
         await self.coordinator.async_refresh()
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if switch is on."""
-        return bool(self.coordinator.api.state.switch_lock)

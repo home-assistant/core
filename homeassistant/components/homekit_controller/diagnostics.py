@@ -1,4 +1,5 @@
 """Diagnostics support for HomeKit Controller."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -107,6 +108,7 @@ def _async_get_diagnostics(
     # It is roughly equivalent to what is in .storage/homekit_controller-entity-map
     # But it also has the latest values seen by the polling or events
     data["entity-map"] = accessories = connection.entity_map.serialize()
+    data["config-num"] = connection.config_num
 
     # It contains serial numbers, which we should strip out
     for accessory in accessories:
@@ -122,8 +124,7 @@ def _async_get_diagnostics(
 
         devices = data["devices"] = []
         for device_id in connection.devices.values():
-            device = device_registry.async_get(device_id)
-            if not device:
+            if not (device := device_registry.async_get(device_id)):
                 continue
             devices.append(_async_get_diagnostics_for_device(hass, device))
 

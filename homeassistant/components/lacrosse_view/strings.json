@@ -1,0 +1,51 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "no_locations": "No locations found"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "heat_index": {
+        "name": "Heat index"
+      },
+      "wind_heading": {
+        "name": "Wind heading"
+      },
+      "wet_dry": {
+        "name": "Wet/Dry"
+      },
+      "flex": {
+        "name": "Flex"
+      },
+      "barometric_pressure": {
+        "name": "Barometric pressure"
+      },
+      "feels_like": {
+        "name": "Feels like"
+      },
+      "wind_chill": {
+        "name": "Wind chill"
+      }
+    }
+  },
+  "exceptions": {
+    "update_error": {
+      "message": "Error updating data"
+    }
+  }
+}

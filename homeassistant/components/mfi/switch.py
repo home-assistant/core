@@ -1,13 +1,18 @@
 """Support for Ubiquiti mFi switches."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from mficlient.client import FailedToLogin, MFiClient
 import requests
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -17,7 +22,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -28,7 +33,7 @@ DEFAULT_VERIFY_SSL = True
 
 SWITCH_MODELS = ["Outlet", "Output 5v", "Output 12v", "Output 24v", "Dimmer Switch"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
@@ -94,32 +99,19 @@ class MfiSwitch(SwitchEntity):
         """Return true if the device is on."""
         return self._port.output
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest state and update the state."""
         self._port.refresh()
         if self._target_state is not None:
             self._port.data["output"] = float(self._target_state)
             self._target_state = None
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._port.control(True)
         self._target_state = True
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._port.control(False)
         self._target_state = False
-
-    @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        return int(self._port.data.get("active_pwr", 0))
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes for the device."""
-        return {
-            "volts": round(self._port.data.get("v_rms", 0), 1),
-            "amps": round(self._port.data.get("i_rms", 0), 1),
-        }

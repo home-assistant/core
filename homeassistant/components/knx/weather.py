@@ -1,4 +1,5 @@
-"""Support for KNX/IP weather station."""
+"""Support for KNX weather entities."""
+
 from __future__ import annotations
 
 from xknx import XKNX
@@ -6,26 +7,36 @@ from xknx.devices import Weather as XknxWeather
 
 from homeassistant import config_entries
 from homeassistant.components.weather import WeatherEntity
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, TEMP_CELSIUS, Platform
+from homeassistant.const import (
+    CONF_ENTITY_CATEGORY,
+    CONF_NAME,
+    Platform,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_KNX_CONFIG, DOMAIN
-from .knx_entity import KnxEntity
+from .const import KNX_MODULE_KEY
+from .entity import KnxYamlEntity
+from .knx_module import KNXModule
 from .schema import WeatherSchema
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch(es) for KNX platform."""
-    xknx: XKNX = hass.data[DOMAIN].xknx
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.WEATHER]
+    knx_module = hass.data[KNX_MODULE_KEY]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.WEATHER]
 
-    async_add_entities(KNXWeather(xknx, entity_config) for entity_config in config)
+    async_add_entities(
+        KNXWeather(knx_module, entity_config) for entity_config in config
+    )
 
 
 def _create_weather(xknx: XKNX, config: ConfigType) -> XknxWeather:
@@ -64,32 +75,32 @@ def _create_weather(xknx: XKNX, config: ConfigType) -> XknxWeather:
     )
 
 
-class KNXWeather(KnxEntity, WeatherEntity):
+class KNXWeather(KnxYamlEntity, WeatherEntity):
     """Representation of a KNX weather device."""
 
     _device: XknxWeather
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_native_pressure_unit = UnitOfPressure.PA
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
 
-    def __init__(self, xknx: XKNX, config: ConfigType) -> None:
+    def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of a KNX sensor."""
-        super().__init__(_create_weather(xknx, config))
-        self._attr_unique_id = str(self._device._temperature.group_address_state)
+        super().__init__(
+            knx_module=knx_module,
+            device=_create_weather(knx_module.xknx, config),
+        )
+        self._attr_unique_id = str(self._device._temperature.group_address_state)  # noqa: SLF001
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
 
     @property
-    def temperature(self) -> float | None:
-        """Return current temperature."""
+    def native_temperature(self) -> float | None:
+        """Return current temperature in C."""
         return self._device.temperature
 
     @property
-    def pressure(self) -> float | None:
-        """Return current air pressure."""
-        # KNX returns pA - HA requires hPa
-        return (
-            self._device.air_pressure / 100
-            if self._device.air_pressure is not None
-            else None
-        )
+    def native_pressure(self) -> float | None:
+        """Return current air pressure in Pa."""
+        return self._device.air_pressure
 
     @property
     def condition(self) -> str:
@@ -107,11 +118,6 @@ class KNXWeather(KnxEntity, WeatherEntity):
         return self._device.wind_bearing
 
     @property
-    def wind_speed(self) -> float | None:
-        """Return current wind speed in km/h."""
-        # KNX only supports wind speed in m/s
-        return (
-            self._device.wind_speed * 3.6
-            if self._device.wind_speed is not None
-            else None
-        )
+    def native_wind_speed(self) -> float | None:
+        """Return current wind speed in m/s."""
+        return self._device.wind_speed

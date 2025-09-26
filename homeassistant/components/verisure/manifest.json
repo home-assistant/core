@@ -1,15 +1,16 @@
 {
   "domain": "verisure",
   "name": "Verisure",
-  "documentation": "https://www.home-assistant.io/integrations/verisure",
-  "requirements": ["vsure==1.7.3"],
-  "codeowners": ["@frenck"],
+  "codeowners": [],
   "config_flow": true,
   "dhcp": [
     {
       "macaddress": "0023C1*"
     }
   ],
+  "documentation": "https://www.home-assistant.io/integrations/verisure",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "loggers": ["verisure"]
+  "loggers": ["verisure"],
+  "requirements": ["vsure==2.6.7"]
 }

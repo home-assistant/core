@@ -1,10 +1,13 @@
 """deCONZ cover platform tests."""
 
+from collections.abc import Callable
 from unittest.mock import patch
+
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
@@ -16,94 +19,61 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT,
+    CoverState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_CLOSED,
-    STATE_OPEN,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .test_gateway import (
-    DECONZ_WEB_REQUEST,
-    mock_deconz_put_request,
-    setup_deconz_integration,
-)
+from .conftest import ConfigEntryFactoryType, WebsocketDataType
+
+from tests.common import snapshot_platform
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_no_covers(hass, aioclient_mock):
-    """Test that no cover entities are created."""
-    await setup_deconz_integration(hass, aioclient_mock)
-    assert len(hass.states.async_all()) == 0
-
-
-async def test_cover(hass, aioclient_mock, mock_deconz_websocket):
-    """Test that all supported cover entities are created."""
-    data = {
-        "lights": {
-            "1": {
-                "name": "Level controllable cover",
-                "type": "Level controllable output",
-                "state": {"bri": 254, "on": False, "reachable": True},
-                "modelid": "Not zigbee spec",
-                "uniqueid": "00:00:00:00:00:00:00:00-00",
-            },
-            "2": {
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
+            "0": {
                 "name": "Window covering device",
                 "type": "Window covering device",
                 "state": {"lift": 100, "open": False, "reachable": True},
                 "modelid": "lumi.curtain",
                 "uniqueid": "00:00:00:00:00:00:00:01-00",
             },
-            "3": {
+            "1": {
                 "name": "Unsupported cover",
                 "type": "Not a cover",
                 "state": {"reachable": True},
                 "uniqueid": "00:00:00:00:00:00:00:02-00",
             },
-            "4": {
-                "name": "deconz old brightness cover",
-                "type": "Level controllable output",
-                "state": {"bri": 255, "on": False, "reachable": True},
-                "modelid": "Not zigbee spec",
-                "uniqueid": "00:00:00:00:00:00:00:03-00",
-            },
-            "5": {
-                "name": "Window covering controller",
-                "type": "Window covering controller",
-                "state": {"bri": 253, "on": True, "reachable": True},
-                "modelid": "Motor controller",
-                "uniqueid": "00:00:00:00:00:00:00:04-00",
-            },
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
+    ],
+)
+async def test_cover(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+    light_ws_data: WebsocketDataType,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that all supported cover entities are created."""
+    with patch("homeassistant.components.deconz.PLATFORMS", [Platform.COVER]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
-    assert len(hass.states.async_all()) == 5
-    assert hass.states.get("cover.level_controllable_cover").state == STATE_OPEN
-    assert hass.states.get("cover.window_covering_device").state == STATE_CLOSED
-    assert not hass.states.get("cover.unsupported_cover")
-    assert hass.states.get("cover.deconz_old_brightness_cover").state == STATE_OPEN
-    assert hass.states.get("cover.window_covering_controller").state == STATE_CLOSED
+    # Event signals cover is open
 
-    # Event signals cover is closed
-
-    event_changed_light = {
-        "t": "event",
-        "e": "changed",
-        "r": "lights",
-        "id": "1",
-        "state": {"on": True},
-    }
-    await mock_deconz_websocket(data=event_changed_light)
-    await hass.async_block_till_done()
-
-    assert hass.states.get("cover.level_controllable_cover").state == STATE_CLOSED
+    await light_ws_data({"state": {"lift": 0, "open": True}})
+    cover = hass.states.get("cover.window_covering_device")
+    assert cover.state == CoverState.OPEN
+    assert cover.attributes[ATTR_CURRENT_POSITION] == 100
 
     # Verify service calls for cover
 
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/2/state")
+    aioclient_mock = mock_put_request("/lights/0/state")
 
     # Service open cover
 
@@ -145,115 +115,46 @@ async def test_cover(hass, aioclient_mock, mock_deconz_websocket):
     )
     assert aioclient_mock.mock_calls[4][2] == {"stop": True}
 
-    # Verify service calls for legacy cover
 
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/1/state")
-
-    # Service open cover
-
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.level_controllable_cover"},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[5][2] == {"on": False}
-
-    # Service close cover
-
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.level_controllable_cover"},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[6][2] == {"on": True}
-
-    # Service set cover position
-
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: "cover.level_controllable_cover", ATTR_POSITION: 40},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[7][2] == {"bri": 152}
-
-    # Service stop cover movement
-
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: "cover.level_controllable_cover"},
-        blocking=True,
-    )
-    assert aioclient_mock.mock_calls[8][2] == {"bri_inc": 0}
-
-    # Test that a reported cover position of 255 (deconz-rest-api < 2.05.73) is interpreted correctly.
-    assert hass.states.get("cover.deconz_old_brightness_cover").state == STATE_OPEN
-
-    event_changed_light = {
-        "t": "event",
-        "e": "changed",
-        "r": "lights",
-        "id": "4",
-        "state": {"on": True},
-    }
-    await mock_deconz_websocket(data=event_changed_light)
-    await hass.async_block_till_done()
-
-    deconz_old_brightness_cover = hass.states.get("cover.deconz_old_brightness_cover")
-    assert deconz_old_brightness_cover.state == STATE_CLOSED
-    assert deconz_old_brightness_cover.attributes[ATTR_CURRENT_POSITION] == 0
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-
-    states = hass.states.async_all()
-    assert len(states) == 5
-    for state in states:
-        assert state.state == STATE_UNAVAILABLE
-
-    await hass.config_entries.async_remove(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-
-
-async def test_tilt_cover(hass, aioclient_mock):
-    """Test that tilting a cover works."""
-    data = {
-        "lights": {
-            "0": {
-                "etag": "87269755b9b3a046485fdae8d96b252c",
-                "lastannounced": None,
-                "lastseen": "2020-08-01T16:22:05Z",
-                "manufacturername": "AXIS",
-                "modelid": "Gear",
-                "name": "Covering device",
-                "state": {
-                    "bri": 0,
-                    "lift": 0,
-                    "on": False,
-                    "open": True,
-                    "reachable": True,
-                    "tilt": 0,
-                },
-                "swversion": "100-5.3.5.1122",
-                "type": "Window covering device",
-                "uniqueid": "00:24:46:00:00:12:34:56-01",
-            }
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
+            "etag": "87269755b9b3a046485fdae8d96b252c",
+            "lastannounced": None,
+            "lastseen": "2020-08-01T16:22:05Z",
+            "manufacturername": "AXIS",
+            "modelid": "Gear",
+            "name": "Covering device",
+            "state": {
+                "bri": 0,
+                "lift": 0,
+                "on": False,
+                "open": True,
+                "reachable": True,
+                "tilt": 0,
+            },
+            "swversion": "100-5.3.5.1122",
+            "type": "Window covering device",
+            "uniqueid": "00:24:46:00:00:12:34:56-01",
         }
-    }
-    with patch.dict(DECONZ_WEB_REQUEST, data):
-        config_entry = await setup_deconz_integration(hass, aioclient_mock)
-
-    assert len(hass.states.async_all()) == 1
-    covering_device = hass.states.get("cover.covering_device")
-    assert covering_device.state == STATE_OPEN
-    assert covering_device.attributes[ATTR_CURRENT_TILT_POSITION] == 100
+    ],
+)
+async def test_tilt_cover(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that tilting a cover works."""
+    with patch("homeassistant.components.deconz.PLATFORMS", [Platform.COVER]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Verify service calls for tilting cover
 
-    mock_deconz_put_request(aioclient_mock, config_entry.data, "/lights/0/state")
+    aioclient_mock = mock_put_request("/lights/0/state")
 
     # Service set tilt cover
 
@@ -294,3 +195,114 @@ async def test_tilt_cover(hass, aioclient_mock):
         blocking=True,
     )
     assert aioclient_mock.mock_calls[4][2] == {"stop": True}
+
+
+@pytest.mark.parametrize(
+    "light_payload",
+    [
+        {
+            "etag": "4cefc909134c8e99086b55273c2bde67",
+            "hascolor": False,
+            "lastannounced": "2022-08-08T12:06:18Z",
+            "lastseen": "2022-08-14T14:22Z",
+            "manufacturername": "Keen Home Inc",
+            "modelid": "SV01-410-MP-1.0",
+            "name": "Vent",
+            "state": {
+                "alert": "none",
+                "bri": 242,
+                "on": False,
+                "reachable": True,
+                "sat": 10,
+            },
+            "swversion": "0x00000012",
+            "type": "Level controllable output",
+            "uniqueid": "00:22:a3:00:00:00:00:00-01",
+        }
+    ],
+)
+async def test_level_controllable_output_cover(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    mock_put_request: Callable[[str, str], AiohttpClientMocker],
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that tilting a cover works."""
+    with patch("homeassistant.components.deconz.PLATFORMS", [Platform.COVER]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+    # Verify service calls for tilting cover
+
+    aioclient_mock = mock_put_request("/lights/0/state")
+
+    # Service open cover
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: "cover.vent"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[1][2] == {"on": False}
+
+    # Service close cover
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: "cover.vent"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[2][2] == {"on": True}
+
+    # Service set cover position
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: "cover.vent", ATTR_POSITION: 40},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[3][2] == {"bri": 152}
+
+    # Service set tilt cover
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: "cover.vent", ATTR_TILT_POSITION: 40},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[4][2] == {"sat": 152}
+
+    # Service open tilt cover
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.vent"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[5][2] == {"sat": 0}
+
+    # Service close tilt cover
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.vent"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[6][2] == {"sat": 254}
+
+    # Service stop cover movement
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.vent"},
+        blocking=True,
+    )
+    assert aioclient_mock.mock_calls[7][2] == {"bri_inc": 0}

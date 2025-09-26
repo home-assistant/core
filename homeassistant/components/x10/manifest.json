@@ -1,7 +1,8 @@
 {
   "domain": "x10",
   "name": "Heyu X10",
-  "documentation": "https://www.home-assistant.io/integrations/x10",
   "codeowners": [],
-  "iot_class": "local_polling"
+  "documentation": "https://www.home-assistant.io/integrations/x10",
+  "iot_class": "local_polling",
+  "quality_scale": "legacy"
 }

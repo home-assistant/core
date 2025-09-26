@@ -1,21 +1,22 @@
 """Support for collecting data from the ARWN project."""
+
 from __future__ import annotations
 
-import json
 import logging
+from typing import Any
 
 from homeassistant.components import mqtt
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.const import (
-    DEGREE,
-    PRECIPITATION_INCHES,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
 )
+from homeassistant.const import DEGREE, UnitOfPrecipitationDepth, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
+from homeassistant.util.json import json_loads_object
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ DATA_ARWN = "arwn"
 TOPIC = "arwn/#"
 
 
-def discover_sensors(topic, payload):
+def discover_sensors(topic: str, payload: dict[str, Any]) -> list[ArwnSensor] | None:
     """Given a topic, dynamically create the right sensor type.
 
     Async friendly.
@@ -36,43 +37,78 @@ def discover_sensors(topic, payload):
     if domain == "temperature":
         name = parts[2]
         if unit == "F":
-            unit = TEMP_FAHRENHEIT
+            unit = UnitOfTemperature.FAHRENHEIT
         else:
-            unit = TEMP_CELSIUS
-        return ArwnSensor(
-            topic, name, "temp", unit, device_class=SensorDeviceClass.TEMPERATURE
-        )
+            unit = UnitOfTemperature.CELSIUS
+        return [
+            ArwnSensor(
+                topic, name, "temp", unit, device_class=SensorDeviceClass.TEMPERATURE
+            )
+        ]
     if domain == "moisture":
         name = f"{parts[2]} Moisture"
-        return ArwnSensor(topic, name, "moisture", unit, "mdi:water-percent")
+        return [ArwnSensor(topic, name, "moisture", unit, "mdi:water-percent")]
     if domain == "rain":
         if len(parts) >= 3 and parts[2] == "today":
-            return ArwnSensor(
-                topic,
-                "Rain Since Midnight",
-                "since_midnight",
-                PRECIPITATION_INCHES,
-                "mdi:water",
-            )
-        return (
-            ArwnSensor(topic + "/total", "Total Rainfall", "total", unit, "mdi:water"),
-            ArwnSensor(topic + "/rate", "Rainfall Rate", "rate", unit, "mdi:water"),
-        )
+            return [
+                ArwnSensor(
+                    topic,
+                    "Rain Since Midnight",
+                    "since_midnight",
+                    UnitOfPrecipitationDepth.INCHES,
+                    device_class=SensorDeviceClass.PRECIPITATION,
+                )
+            ]
+        return [
+            ArwnSensor(
+                topic + "/total",
+                "Total Rainfall",
+                "total",
+                unit,
+                device_class=SensorDeviceClass.PRECIPITATION,
+            ),
+            ArwnSensor(
+                topic + "/rate",
+                "Rainfall Rate",
+                "rate",
+                unit,
+                device_class=SensorDeviceClass.PRECIPITATION,
+            ),
+        ]
     if domain == "barometer":
-        return ArwnSensor(topic, "Barometer", "pressure", unit, "mdi:thermometer-lines")
+        return [
+            ArwnSensor(topic, "Barometer", "pressure", unit, "mdi:thermometer-lines")
+        ]
     if domain == "wind":
-        return (
+        return [
             ArwnSensor(
-                topic + "/speed", "Wind Speed", "speed", unit, "mdi:speedometer"
+                topic + "/speed",
+                "Wind Speed",
+                "speed",
+                unit,
+                device_class=SensorDeviceClass.WIND_SPEED,
             ),
-            ArwnSensor(topic + "/gust", "Wind Gust", "gust", unit, "mdi:speedometer"),
             ArwnSensor(
-                topic + "/dir", "Wind Direction", "direction", DEGREE, "mdi:compass"
+                topic + "/gust",
+                "Wind Gust",
+                "gust",
+                unit,
+                device_class=SensorDeviceClass.WIND_SPEED,
             ),
-        )
+            ArwnSensor(
+                topic + "/dir",
+                "Wind Direction",
+                "direction",
+                DEGREE,
+                "mdi:compass",
+                device_class=SensorDeviceClass.WIND_DIRECTION,
+                state_class=SensorStateClass.MEASUREMENT_ANGLE,
+            ),
+        ]
+    return None
 
 
-def _slug(name):
+def _slug(name: str) -> str:
     return f"sensor.arwn_{slugify(name)}"
 
 
@@ -84,8 +120,13 @@ async def async_setup_platform(
 ) -> None:
     """Set up the ARWN platform."""
 
+    # Make sure MQTT integration is enabled and the client is available
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        _LOGGER.error("MQTT integration is not available")
+        return
+
     @callback
-    def async_sensor_event_received(msg):
+    def async_sensor_event_received(msg: mqtt.ReceiveMessage) -> None:
         """Process events as sensors.
 
         When a new event on our topic (arwn/#) is received we map it
@@ -98,16 +139,13 @@ async def async_setup_platform(
         This lets us dynamically incorporate sensors without any
         configuration on our side.
         """
-        event = json.loads(msg.payload)
+        event = json_loads_object(msg.payload)
         sensors = discover_sensors(msg.topic, event)
         if not sensors:
             return
 
         if (store := hass.data.get(DATA_ARWN)) is None:
             store = hass.data[DATA_ARWN] = {}
-
-        if isinstance(sensors, ArwnSensor):
-            sensors = (sensors,)
 
         if "timestamp" in event:
             del event["timestamp"]
@@ -137,7 +175,16 @@ class ArwnSensor(SensorEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, topic, name, state_key, units, icon=None, device_class=None):
+    def __init__(
+        self,
+        topic: str,
+        name: str,
+        state_key: str,
+        units: str,
+        icon: str | None = None,
+        device_class: SensorDeviceClass | None = None,
+        state_class: SensorStateClass | None = None,
+    ) -> None:
         """Initialize the sensor."""
         self.entity_id = _slug(name)
         self._attr_name = name
@@ -147,10 +194,11 @@ class ArwnSensor(SensorEntity):
         self._attr_native_unit_of_measurement = units
         self._attr_icon = icon
         self._attr_device_class = device_class
+        self._attr_state_class = state_class
 
-    def set_event(self, event):
+    def set_event(self, event: dict[str, Any]) -> None:
         """Update the sensor with the most recent event."""
-        ev = {}
+        ev: dict[str, Any] = {}
         ev.update(event)
         self._attr_extra_state_attributes = ev
         self._attr_native_value = ev.get(self._state_key, None)

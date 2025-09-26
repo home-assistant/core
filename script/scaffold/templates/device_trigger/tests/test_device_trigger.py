@@ -1,50 +1,33 @@
 """The tests for NEW_NAME device triggers."""
-import pytest
+
+from pytest_unordered import unordered
 
 from homeassistant.components import automation
-from homeassistant.components.NEW_DOMAIN import DOMAIN
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.NEW_DOMAIN import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.helpers import device_registry
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    assert_lists_same,
-    async_get_device_automations,
-    async_mock_service,
-    mock_device_registry,
-    mock_registry,
-)
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
-@pytest.fixture
-def device_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def entity_reg(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
-
-
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
-
-
-async def test_get_triggers(hass, device_reg, entity_reg):
+async def test_get_triggers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we get the expected triggers from a NEW_DOMAIN."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
-    device_entry = device_reg.async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
-    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    entity_registry.async_get_or_create(
+        DOMAIN, "test", "5678", device_id=device_entry.id
+    )
     expected_triggers = [
         {
             "platform": "device",
@@ -64,10 +47,12 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_entry.id
     )
-    assert_lists_same(triggers, expected_triggers)
+    assert triggers == unordered(expected_triggers)
 
 
-async def test_if_fires_on_state_change(hass, calls):
+async def test_if_fires_on_state_change(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
     """Test for turn_on and turn_off triggers firing."""
     hass.states.async_set("NEW_DOMAIN.entity", STATE_OFF)
 
@@ -123,15 +108,17 @@ async def test_if_fires_on_state_change(hass, calls):
     # Fake that the entity is turning on.
     hass.states.async_set("NEW_DOMAIN.entity", STATE_ON)
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data[
-        "some"
-    ] == "turn_on - device - {} - off - on - None - 0".format("NEW_DOMAIN.entity")
+    assert len(service_calls) == 1
+    assert (
+        service_calls[0].data["some"]
+        == "turn_on - device - NEW_DOMAIN.entity - off - on - None - 0"
+    )
 
     # Fake that the entity is turning off.
     hass.states.async_set("NEW_DOMAIN.entity", STATE_OFF)
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data[
-        "some"
-    ] == "turn_off - device - {} - on - off - None - 0".format("NEW_DOMAIN.entity")
+    assert len(service_calls) == 2
+    assert (
+        service_calls[1].data["some"]
+        == "turn_off - device - NEW_DOMAIN.entity - on - off - None - 0"
+    )

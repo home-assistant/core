@@ -1,6 +1,10 @@
 """Code to handle a Firmata board."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
 import logging
-from typing import Union
+from typing import Literal
 
 from pymata_express.pymata_express import PymataExpress
 from pymata_express.pymata_express_serial import serial
@@ -26,24 +30,24 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-FirmataPinType = Union[int, str]
+type FirmataPinType = int | str
 
 
 class FirmataBoard:
     """Manages a single Firmata board."""
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config: Mapping) -> None:
         """Initialize the board."""
         self.config = config
-        self.api = None
-        self.firmware_version = None
+        self.api: PymataExpress = None
+        self.firmware_version: str | None = None
         self.protocol_version = None
         self.name = self.config[CONF_NAME]
         self.switches = []
         self.lights = []
         self.binary_sensors = []
         self.sensors = []
-        self.used_pins = []
+        self.used_pins: list[FirmataPinType] = []
 
         if CONF_SWITCHES in self.config:
             self.switches = self.config[CONF_SWITCHES]
@@ -62,12 +66,12 @@ class FirmataBoard:
         except RuntimeError as err:
             _LOGGER.error("Error connecting to PyMata board %s: %s", self.name, err)
             return False
-        except serial.serialutil.SerialTimeoutException as err:
+        except serial.SerialTimeoutException as err:
             _LOGGER.error(
                 "Timeout writing to serial port for PyMata board %s: %s", self.name, err
             )
             return False
-        except serial.serialutil.SerialException as err:
+        except serial.SerialException as err:
             _LOGGER.error(
                 "Error connecting to serial port for PyMata board %s: %s",
                 self.name,
@@ -89,8 +93,7 @@ class FirmataBoard:
                 )
             except RuntimeError as err:
                 _LOGGER.error(
-                    "Error setting sampling interval for PyMata \
-board %s: %s",
+                    "Error setting sampling interval for PyMata board %s: %s",
                     self.name,
                     err,
                 )
@@ -118,8 +121,10 @@ board %s: %s",
         self.used_pins.append(pin)
         return True
 
-    def get_pin_type(self, pin: FirmataPinType) -> tuple:
+    def get_pin_type(self, pin: FirmataPinType) -> tuple[Literal[0, 1], int]:
         """Return the type and Firmata location of a pin on the board."""
+        pin_type: Literal[0, 1]
+        firmata_pin: int
         if isinstance(pin, str):
             pin_type = PIN_TYPE_ANALOG
             firmata_pin = int(pin[1:])
@@ -130,7 +135,7 @@ board %s: %s",
         return (pin_type, firmata_pin)
 
 
-async def get_board(data: dict) -> PymataExpress:
+async def get_board(data: Mapping) -> PymataExpress:
     """Create a Pymata board object."""
     board_data = {}
 

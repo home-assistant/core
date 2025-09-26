@@ -1,45 +1,58 @@
 """The IntelliFire integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 
-from aiohttp import ClientConnectionError
-from async_timeout import timeout
-from intellifire4py import IntellifireAsync, IntellifirePollData
+from intellifire4py import UnifiedFireplace
+from intellifire4py.control import IntelliFireController
+from intellifire4py.model import IntelliFirePollData
+from intellifire4py.read import IntelliFireDataProvider
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, LOGGER
 
+type IntellifireConfigEntry = ConfigEntry[IntellifireDataUpdateCoordinator]
 
-class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData]):
+
+class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntelliFirePollData]):
     """Class to manage the polling of the fireplace API."""
 
-    def __init__(self, hass: HomeAssistant, api: IntellifireAsync) -> None:
+    config_entry: IntellifireConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: IntellifireConfigEntry,
+        fireplace: UnifiedFireplace,
+    ) -> None:
         """Initialize the Coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=15),
         )
-        self._api = api
 
-    async def _async_update_data(self) -> IntellifirePollData:
-        LOGGER.debug("Calling update loop on IntelliFire")
-        async with timeout(100):
-            try:
-                await self._api.poll()
-            except (ConnectionError, ClientConnectionError) as exception:
-                raise UpdateFailed from exception
-        return self._api.data
+        self.fireplace = fireplace
 
     @property
-    def api(self) -> IntellifireAsync:
-        """Return the API pointer."""
-        return self._api
+    def read_api(self) -> IntelliFireDataProvider:
+        """Return the Status API pointer."""
+        return self.fireplace.read_api
+
+    @property
+    def control_api(self) -> IntelliFireController:
+        """Return the control API."""
+        return self.fireplace.control_api
+
+    async def _async_update_data(self) -> IntelliFirePollData:
+        return self.fireplace.data
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -47,7 +60,7 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
         return DeviceInfo(
             manufacturer="Hearth and Home",
             model="IFT-WFM",
-            name="IntelliFire Fireplace",
-            identifiers={("IntelliFire", f"{self.api.data.serial}]")},
-            sw_version=self.api.data.fw_ver_str,
+            name="IntelliFire",
+            identifiers={("IntelliFire", str(self.fireplace.serial))},
+            configuration_url=f"http://{self.fireplace.ip_address}/poll",
         )

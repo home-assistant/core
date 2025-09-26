@@ -1,24 +1,22 @@
 """Support for Samsung Printers with SyncThru web interface."""
+
 from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
 
 from pysyncthru import SyncThru, SyncthruState
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import device_identifiers
-from .const import DOMAIN
+from .coordinator import SyncThruConfigEntry
+from .entity import SyncthruEntity
 
 SYNCTHRU_STATE_PROBLEM = {
     SyncthruState.INVALID: True,
@@ -31,82 +29,47 @@ SYNCTHRU_STATE_PROBLEM = {
 }
 
 
+@dataclass(frozen=True, kw_only=True)
+class SyncThruBinarySensorDescription(BinarySensorEntityDescription):
+    """Describes Syncthru binary sensor entities."""
+
+    value_fn: Callable[[SyncThru], bool | None]
+
+
+BINARY_SENSORS: tuple[SyncThruBinarySensorDescription, ...] = (
+    SyncThruBinarySensorDescription(
+        key="online",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        value_fn=lambda printer: printer.is_online(),
+    ),
+    SyncThruBinarySensorDescription(
+        key="problem",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_fn=lambda printer: SYNCTHRU_STATE_PROBLEM[printer.device_status()],
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: SyncThruConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
 
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
-    name = config_entry.data[CONF_NAME]
-    entities = [
-        SyncThruOnlineSensor(coordinator, name),
-        SyncThruProblemSensor(coordinator, name),
-    ]
-
-    async_add_entities(entities)
+    async_add_entities(
+        SyncThruBinarySensor(coordinator, description) for description in BINARY_SENSORS
+    )
 
 
-class SyncThruBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class SyncThruBinarySensor(SyncthruEntity, BinarySensorEntity):
     """Implementation of an abstract Samsung Printer binary sensor platform."""
 
-    def __init__(self, coordinator, name):
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.syncthru: SyncThru = coordinator.data
-        self._name = name
-        self._id_suffix = ""
+    entity_description: SyncThruBinarySensorDescription
 
     @property
-    def unique_id(self):
-        """Return unique ID for the sensor."""
-        serial = self.syncthru.serial_number()
-        return f"{serial}{self._id_suffix}" if serial else None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device information."""
-        if (identifiers := device_identifiers(self.syncthru)) is None:
-            return None
-        return DeviceInfo(
-            identifiers=identifiers,
-        )
-
-
-class SyncThruOnlineSensor(SyncThruBinarySensor):
-    """Implementation of a sensor that checks whether is turned on/online."""
-
-    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
-
-    def __init__(self, syncthru, name):
-        """Initialize the sensor."""
-        super().__init__(syncthru, name)
-        self._id_suffix = "_online"
-
-    @property
-    def is_on(self):
-        """Set the state to whether the printer is online."""
-        return self.syncthru.is_online()
-
-
-class SyncThruProblemSensor(SyncThruBinarySensor):
-    """Implementation of a sensor that checks whether the printer works correctly."""
-
-    _attr_device_class = BinarySensorDeviceClass.PROBLEM
-
-    def __init__(self, syncthru, name):
-        """Initialize the sensor."""
-        super().__init__(syncthru, name)
-        self._id_suffix = "_problem"
-
-    @property
-    def is_on(self):
-        """Set the state to whether there is a problem with the printer."""
-        return SYNCTHRU_STATE_PROBLEM[self.syncthru.device_status()]
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        return self.entity_description.value_fn(self.coordinator.data)

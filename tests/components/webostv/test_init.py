@@ -1,141 +1,78 @@
-"""The tests for the WebOS TV platform."""
-
-from unittest.mock import Mock, mock_open, patch
+"""The tests for the LG webOS TV platform."""
 
 from aiowebostv import WebOsTvPairError
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.components.webostv import DOMAIN
+from homeassistant.components.media_player import ATTR_INPUT_SOURCE_LIST
+from homeassistant.components.webostv.const import CONF_SOURCES, DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import CONF_CLIENT_SECRET, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 
-from . import (
-    create_memory_sqlite_engine,
-    is_entity_unique_id_updated,
-    setup_legacy_component,
-)
-from .const import MOCK_JSON
-
-
-async def test_missing_keys_file_abort(hass, client, caplog):
-    """Test abort import when no pairing keys file."""
-    with patch(
-        "homeassistant.components.webostv.os.path.isfile", Mock(return_value=False)
-    ):
-        await setup_legacy_component(hass)
-
-    assert "No pairing keys, Not importing" in caplog.text
-    assert not is_entity_unique_id_updated(hass)
+from . import setup_webostv
+from .const import ENTITY_ID
 
 
-async def test_empty_json_abort(hass, client, caplog):
-    """Test abort import when keys file is empty."""
-    m_open = mock_open(read_data="[]")
+async def test_reauth_setup_entry(hass: HomeAssistant, client) -> None:
+    """Test reauth flow triggered by setup entry."""
+    client.is_connected.return_value = False
+    client.connect.side_effect = WebOsTvPairError
+    entry = await setup_webostv(hass)
 
-    with patch(
-        "homeassistant.components.webostv.os.path.isfile", Mock(return_value=True)
-    ), patch("homeassistant.components.webostv.open", m_open, create=True):
-        await setup_legacy_component(hass)
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
-    assert "No pairing keys, Not importing" in caplog.text
-    assert not is_entity_unique_id_updated(hass)
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
 
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
 
-async def test_valid_json_migrate_not_needed(hass, client, caplog):
-    """Test import from valid json entity already migrated or removed."""
-    m_open = mock_open(read_data=MOCK_JSON)
-
-    with patch(
-        "homeassistant.components.webostv.os.path.isfile", Mock(return_value=True)
-    ), patch("homeassistant.components.webostv.open", m_open, create=True):
-        await setup_legacy_component(hass, False)
-
-    assert "Migrating webOS Smart TV entity" not in caplog.text
-    assert not is_entity_unique_id_updated(hass)
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == entry.entry_id
 
 
-async def test_valid_json_missing_host_key(hass, client, caplog):
-    """Test import from valid json missing host key."""
-    m_open = mock_open(read_data='{"1.2.3.5": "other-key"}')
+async def test_key_update_setup_entry(hass: HomeAssistant, client) -> None:
+    """Test key update from setup entry."""
+    client.client_key = "new_key"
+    entry = await setup_webostv(hass)
 
-    with patch(
-        "homeassistant.components.webostv.os.path.isfile", Mock(return_value=True)
-    ), patch("homeassistant.components.webostv.open", m_open, create=True):
-        await setup_legacy_component(hass)
-
-    assert "Not importing webOS Smart TV host" in caplog.text
-    assert not is_entity_unique_id_updated(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data[CONF_CLIENT_SECRET] == "new_key"
 
 
-async def test_not_connected_import(hass, client, caplog, monkeypatch):
-    """Test import while device is not connected."""
-    m_open = mock_open(read_data=MOCK_JSON)
-    monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
-    monkeypatch.setattr(client, "connect", Mock(side_effect=OSError))
+async def test_update_options(hass: HomeAssistant, client) -> None:
+    """Test update options triggers reload."""
+    config_entry = await setup_webostv(hass)
 
-    with patch(
-        "homeassistant.components.webostv.os.path.isfile", Mock(return_value=True)
-    ), patch("homeassistant.components.webostv.open", m_open, create=True):
-        await setup_legacy_component(hass)
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.update_listeners is not None
+    sources = hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
+    assert sources == ["Input01", "Input02", "Live TV"]
 
-    assert f"Please make sure webOS TV {MP_DOMAIN}.{DOMAIN}" in caplog.text
-    assert not is_entity_unique_id_updated(hass)
+    # remove Input01 and reload
+    new_options = config_entry.options.copy()
+    new_options[CONF_SOURCES] = ["Input02", "Live TV"]
+    hass.config_entries.async_update_entry(config_entry, options=new_options)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-
-async def test_pair_error_import_abort(hass, client, caplog, monkeypatch):
-    """Test abort import if device is not paired."""
-    m_open = mock_open(read_data=MOCK_JSON)
-    monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
-    monkeypatch.setattr(client, "connect", Mock(side_effect=WebOsTvPairError))
-
-    with patch(
-        "homeassistant.components.webostv.os.path.isfile", Mock(return_value=True)
-    ), patch("homeassistant.components.webostv.open", m_open, create=True):
-        await setup_legacy_component(hass)
-
-    assert f"Please make sure webOS TV {MP_DOMAIN}.{DOMAIN}" not in caplog.text
-    assert not is_entity_unique_id_updated(hass)
+    assert config_entry.state is ConfigEntryState.LOADED
+    sources = hass.states.get(ENTITY_ID).attributes[ATTR_INPUT_SOURCE_LIST]
+    assert sources == ["Input02", "Live TV"]
 
 
-async def test_entity_removed_import_abort(hass, client_entity_removed, caplog):
-    """Test abort import if entity removed by user during import."""
-    m_open = mock_open(read_data=MOCK_JSON)
+async def test_disconnect_on_stop(hass: HomeAssistant, client) -> None:
+    """Test we disconnect the client and clear callbacks when Home Assistants stops."""
+    config_entry = await setup_webostv(hass)
 
-    with patch(
-        "homeassistant.components.webostv.os.path.isfile", Mock(return_value=True)
-    ), patch("homeassistant.components.webostv.open", m_open, create=True):
-        await setup_legacy_component(hass)
+    assert client.disconnect.call_count == 0
+    assert client.clear_state_update_callbacks.call_count == 0
+    assert config_entry.state is ConfigEntryState.LOADED
 
-    assert "Not updating webOSTV Smart TV entity" in caplog.text
-    assert not is_entity_unique_id_updated(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
 
-
-async def test_json_import(hass, client, caplog, monkeypatch):
-    """Test import from json keys file."""
-    m_open = mock_open(read_data=MOCK_JSON)
-    monkeypatch.setattr(client, "is_connected", Mock(return_value=True))
-    monkeypatch.setattr(client, "connect", Mock(return_value=True))
-
-    with patch(
-        "homeassistant.components.webostv.os.path.isfile", Mock(return_value=True)
-    ), patch("homeassistant.components.webostv.open", m_open, create=True):
-        await setup_legacy_component(hass)
-
-    assert "imported from YAML config" in caplog.text
-    assert is_entity_unique_id_updated(hass)
-
-
-async def test_sqlite_import(hass, client, caplog, monkeypatch):
-    """Test import from sqlite keys file."""
-    m_open = mock_open(read_data="will raise JSONDecodeError")
-    monkeypatch.setattr(client, "is_connected", Mock(return_value=True))
-    monkeypatch.setattr(client, "connect", Mock(return_value=True))
-
-    with patch(
-        "homeassistant.components.webostv.os.path.isfile", Mock(return_value=True)
-    ), patch("homeassistant.components.webostv.open", m_open, create=True), patch(
-        "homeassistant.components.webostv.db.create_engine",
-        side_effect=create_memory_sqlite_engine,
-    ):
-        await setup_legacy_component(hass)
-
-    assert "imported from YAML config" in caplog.text
-    assert is_entity_unique_id_updated(hass)
+    assert client.disconnect.call_count == 1
+    assert client.clear_state_update_callbacks.call_count == 1
+    assert config_entry.state is ConfigEntryState.LOADED

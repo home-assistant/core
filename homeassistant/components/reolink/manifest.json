@@ -1,0 +1,23 @@
+{
+  "domain": "reolink",
+  "name": "Reolink",
+  "codeowners": ["@starkillerOG"],
+  "config_flow": true,
+  "dependencies": ["http", "webhook"],
+  "dhcp": [
+    {
+      "hostname": "reolink*"
+    },
+    {
+      "macaddress": "EC71DB*"
+    },
+    {
+      "registered_devices": true
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/reolink",
+  "iot_class": "local_push",
+  "loggers": ["reolink_aio"],
+  "quality_scale": "platinum",
+  "requirements": ["reolink-aio==0.15.2"]
+}

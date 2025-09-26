@@ -1,14 +1,16 @@
-image: homeassistant/{arch}-homeassistant
-shadow_repository: ghcr.io/home-assistant
+image: ghcr.io/home-assistant/{arch}-homeassistant
 build_from:
-  aarch64: ghcr.io/home-assistant/aarch64-homeassistant-base:2021.09.0
-  armhf: ghcr.io/home-assistant/armhf-homeassistant-base:2021.09.0
-  armv7: ghcr.io/home-assistant/armv7-homeassistant-base:2021.09.0
-  amd64: ghcr.io/home-assistant/amd64-homeassistant-base:2021.09.0
-  i386: ghcr.io/home-assistant/i386-homeassistant-base:2021.09.0
+  aarch64: ghcr.io/home-assistant/aarch64-homeassistant-base:2025.09.2
+  armhf: ghcr.io/home-assistant/armhf-homeassistant-base:2025.09.2
+  armv7: ghcr.io/home-assistant/armv7-homeassistant-base:2025.09.2
+  amd64: ghcr.io/home-assistant/amd64-homeassistant-base:2025.09.2
+  i386: ghcr.io/home-assistant/i386-homeassistant-base:2025.09.2
 codenotary:
   signer: notary@home-assistant.io
   base_image: notary@home-assistant.io
+cosign:
+  base_identity: https://github.com/home-assistant/docker/.*
+  identity: https://github.com/home-assistant/core/.*
 labels:
   io.hass.type: core
   org.opencontainers.image.title: Home Assistant
@@ -17,4 +19,4 @@ labels:
   org.opencontainers.image.authors: The Home Assistant Authors
   org.opencontainers.image.url: https://www.home-assistant.io/
   org.opencontainers.image.documentation: https://www.home-assistant.io/docs/
-  org.opencontainers.image.licenses: Apache License 2.0
+  org.opencontainers.image.licenses: Apache-2.0

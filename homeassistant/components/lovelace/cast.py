@@ -2,25 +2,30 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from pychromecast import Chromecast
 from pychromecast.const import CAST_TYPE_CHROMECAST
 
-from homeassistant.components.cast.const import DOMAIN as CAST_DOMAIN
+from homeassistant.components.cast import DOMAIN as CAST_DOMAIN
 from homeassistant.components.cast.home_assistant_cast import (
     ATTR_URL_PATH,
     ATTR_VIEW_PATH,
     NO_URL_AVAILABLE_ERROR,
     SERVICE_SHOW_VIEW,
 )
-from homeassistant.components.media_player import BrowseError, BrowseMedia
-from homeassistant.components.media_player.const import MEDIA_CLASS_APP
+from homeassistant.components.media_player import (
+    BrowseError,
+    BrowseMedia,
+    MediaClass,
+    MediaType,
+)
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
-from .const import DOMAIN, ConfigNotFound
-from .dashboard import LovelaceConfig
+from .const import DOMAIN, LOVELACE_DATA, ConfigNotFound
 
 DEFAULT_DASHBOARD = "_default_"
 
@@ -33,8 +38,8 @@ async def async_get_media_browser_root_object(
         return []
     return [
         BrowseMedia(
-            title="Lovelace",
-            media_class=MEDIA_CLASS_APP,
+            title="Dashboards",
+            media_class=MediaClass.APP,
             media_content_id="",
             media_content_type=DOMAIN,
             thumbnail="https://brands.home-assistant.io/_/lovelace/logo.png",
@@ -46,7 +51,7 @@ async def async_get_media_browser_root_object(
 
 async def async_browse_media(
     hass: HomeAssistant,
-    media_content_type: str,
+    media_content_type: MediaType | str,
     media_content_id: str,
     cast_type: str,
 ) -> BrowseMedia | None:
@@ -64,7 +69,7 @@ async def async_browse_media(
         children = [
             BrowseMedia(
                 title="Default",
-                media_class=MEDIA_CLASS_APP,
+                media_class=MediaClass.APP,
                 media_content_id=DEFAULT_DASHBOARD,
                 media_content_type=DOMAIN,
                 thumbnail="https://brands.home-assistant.io/_/lovelace/logo.png",
@@ -72,7 +77,7 @@ async def async_browse_media(
                 can_expand=False,
             )
         ]
-        for url_path in hass.data[DOMAIN]["dashboards"]:
+        for url_path in hass.data[LOVELACE_DATA].dashboards:
             if url_path is None:
                 continue
 
@@ -96,8 +101,8 @@ async def async_browse_media(
         children.append(
             BrowseMedia(
                 title=view["title"],
-                media_class=MEDIA_CLASS_APP,
-                media_content_id=f'{info["url_path"]}/{view["path"]}',
+                media_class=MediaClass.APP,
+                media_content_id=f"{info['url_path']}/{view['path']}",
                 media_content_type=DOMAIN,
                 thumbnail="https://brands.home-assistant.io/_/lovelace/logo.png",
                 can_play=True,
@@ -114,7 +119,7 @@ async def async_play_media(
     hass: HomeAssistant,
     cast_entity_id: str,
     chromecast: Chromecast,
-    media_type: str,
+    media_type: MediaType | str,
     media_id: str,
 ) -> bool:
     """Play media."""
@@ -147,11 +152,13 @@ async def async_play_media(
     return True
 
 
-async def _get_dashboard_info(hass, url_path):
+async def _get_dashboard_info(
+    hass: HomeAssistant, url_path: str | None
+) -> dict[str, Any]:
     """Load a dashboard and return info on views."""
     if url_path == DEFAULT_DASHBOARD:
         url_path = None
-    dashboard: LovelaceConfig | None = hass.data[DOMAIN]["dashboards"].get(url_path)
+    dashboard = hass.data[LOVELACE_DATA].dashboards.get(url_path)
 
     if dashboard is None:
         raise ValueError("Invalid dashboard specified")
@@ -168,14 +175,14 @@ async def _get_dashboard_info(hass, url_path):
         url_path = dashboard.url_path
         title = config.get("title", url_path) if config else url_path
 
-    views = []
+    views: list[dict[str, Any]] = []
     data = {
         "title": title,
         "url_path": url_path,
         "views": views,
     }
 
-    if config is None:
+    if config is None or "views" not in config:
         return data
 
     for idx, view in enumerate(config["views"]):
@@ -195,7 +202,7 @@ def _item_from_info(info: dict) -> BrowseMedia:
     """Convert dashboard info to browse item."""
     return BrowseMedia(
         title=info["title"],
-        media_class=MEDIA_CLASS_APP,
+        media_class=MediaClass.APP,
         media_content_id=info["url_path"],
         media_content_type=DOMAIN,
         thumbnail="https://brands.home-assistant.io/_/lovelace/logo.png",

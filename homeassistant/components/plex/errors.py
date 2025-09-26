@@ -1,4 +1,5 @@
 """Errors for the Plex component."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 
@@ -16,3 +17,7 @@ class ServerNotSpecified(PlexException):
 
 class ShouldUpdateConfigEntry(PlexException):
     """Config entry data is out of date and should be updated."""
+
+
+class MediaNotFound(PlexException):
+    """Requested media was not found."""

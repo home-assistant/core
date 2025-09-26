@@ -1,0 +1,1721 @@
+{
+  "data": {
+    "id": "stop__9639579",
+    "name": "7-й автобусный парк",
+    "coordinates": [37.565280044, 55.851959656],
+    "currentTime": 1583421546364,
+    "tzOffset": 10800,
+    "type": "urban",
+    "region": {
+      "id": 213,
+      "type": 6,
+      "parent_id": 1,
+      "capital_id": 0,
+      "geo_parent_id": 0,
+      "city_id": 213,
+      "name": "Москва",
+      "native_name": "",
+      "iso_name": "RU MOW",
+      "is_main": true,
+      "en_name": "Moscow",
+      "short_en_name": "MSK",
+      "phone_code": "495 499",
+      "phone_code_old": "095",
+      "zip_code": "",
+      "population": 12506468,
+      "synonyms": "Moskau, Moskva",
+      "latitude": 55.753215,
+      "longitude": 37.622504,
+      "latitude_size": 0.878654,
+      "longitude_size": 1.164423,
+      "zoom": 10,
+      "tzname": "Europe/Moscow",
+      "official_languages": "ru",
+      "widespread_languages": "ru",
+      "suggest_list": [],
+      "is_eu": false,
+      "services_names": [
+        "bs",
+        "yaca",
+        "weather",
+        "afisha",
+        "maps",
+        "tv",
+        "ad",
+        "etrain",
+        "subway",
+        "delivery",
+        "route"
+      ],
+      "seoname": "moscow",
+      "bounds": [
+        [37.0402925, 55.31141404514547],
+        [38.2047155, 56.190068045145466]
+      ],
+      "names": {
+        "ablative": "",
+        "accusative": "Москву",
+        "dative": "Москве",
+        "directional": "",
+        "genitive": "Москвы",
+        "instrumental": "Москвой",
+        "locative": "",
+        "nominative": "Москва",
+        "preposition": "в",
+        "prepositional": "Москве"
+      },
+      "parent": {
+        "id": 1,
+        "type": 5,
+        "parent_id": 3,
+        "capital_id": 213,
+        "geo_parent_id": 0,
+        "city_id": 213,
+        "name": "Москва и Московская область",
+        "native_name": "",
+        "iso_name": "RU-MOS",
+        "is_main": true,
+        "en_name": "Moscow and Moscow Oblast",
+        "short_en_name": "RU-MOS",
+        "phone_code": "495 496 498 499",
+        "phone_code_old": "",
+        "zip_code": "",
+        "population": 7503385,
+        "synonyms": "Московская область, Подмосковье, Podmoskovye",
+        "latitude": 55.815792,
+        "longitude": 37.380031,
+        "latitude_size": 2.705659,
+        "longitude_size": 5.060749,
+        "zoom": 8,
+        "tzname": "Europe/Moscow",
+        "official_languages": "ru",
+        "widespread_languages": "ru",
+        "suggest_list": [
+          213, 10716, 10747, 10758, 20728, 10740, 10738, 20523, 10735, 10734,
+          10743, 21622
+        ],
+        "is_eu": false,
+        "services_names": ["bs", "yaca", "ad"],
+        "seoname": "moscow-and-moscow-oblast",
+        "bounds": [
+          [34.8496565, 54.439456064325434],
+          [39.9104055, 57.14511506432543]
+        ],
+        "names": {
+          "ablative": "",
+          "accusative": "Москву и Московскую область",
+          "dative": "Москве и Московской области",
+          "directional": "",
+          "genitive": "Москвы и Московской области",
+          "instrumental": "Москвой и Московской областью",
+          "locative": "",
+          "nominative": "Москва и Московская область",
+          "preposition": "в",
+          "prepositional": "Москве и Московской области"
+        },
+        "parent": {
+          "id": 225,
+          "type": 3,
+          "parent_id": 10001,
+          "capital_id": 213,
+          "geo_parent_id": 0,
+          "city_id": 213,
+          "name": "Россия",
+          "native_name": "",
+          "iso_name": "RU",
+          "is_main": false,
+          "en_name": "Russia",
+          "short_en_name": "RU",
+          "phone_code": "7",
+          "phone_code_old": "",
+          "zip_code": "",
+          "population": 146880432,
+          "synonyms": "Russian Federation,Российская Федерация",
+          "latitude": 61.698653,
+          "longitude": 99.505405,
+          "latitude_size": 40.700127,
+          "longitude_size": 171.643239,
+          "zoom": 3,
+          "tzname": "",
+          "official_languages": "ru",
+          "widespread_languages": "ru",
+          "suggest_list": [213, 2, 65, 54, 47, 43, 66, 51, 56, 172, 39, 62],
+          "is_eu": false,
+          "services_names": ["bs", "yaca", "ad"],
+          "seoname": "russia",
+          "bounds": [
+            [13.683785499999999, 35.290400699917846],
+            [-174.6729755, 75.99052769991785]
+          ],
+          "names": {
+            "ablative": "",
+            "accusative": "Россию",
+            "dative": "России",
+            "directional": "",
+            "genitive": "России",
+            "instrumental": "Россией",
+            "locative": "",
+            "nominative": "Россия",
+            "preposition": "в",
+            "prepositional": "России"
+          }
+        }
+      }
+    },
+    "transports": [
+      {
+        "lineId": "2036924633",
+        "name": "215",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "213B_215_bus_mosgortrans",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "stop__9711780",
+                "name": "Метро Петровско-Разумовская"
+              },
+              {
+                "id": "stop__9711744",
+                "name": "Станция Ховрино"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [],
+              "Frequency": {
+                "text": "27 мин",
+                "value": 1620,
+                "begin": {
+                  "value": "1583375676",
+                  "tzOffset": 10800,
+                  "text": "5:34"
+                },
+                "end": {
+                  "value": "1583445876",
+                  "tzOffset": 10800,
+                  "text": "1:04"
+                }
+              }
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=2036924633&ll=37.543816%2C55.854638&name=215&r=2766&type=bus",
+        "seoname": "215"
+      },
+      {
+        "lineId": "2036924720",
+        "name": "692",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "2036928706",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "3163417967",
+                "name": "Станция Дегунино"
+              },
+              {
+                "id": "3163417967",
+                "name": "Станция Дегунино"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Scheduled": {
+                    "value": "1583421600",
+                    "tzOffset": 10800,
+                    "text": "18:20"
+                  },
+                  "Estimated": {
+                    "value": "1583422070",
+                    "tzOffset": 10800,
+                    "text": "18:27"
+                  },
+                  "vehicleId": "codd%5Fnew|144020%5F31402"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583424060",
+                    "tzOffset": 10800,
+                    "text": "19:01"
+                  },
+                  "Estimated": {
+                    "value": "1583423194",
+                    "tzOffset": 10800,
+                    "text": "18:46"
+                  },
+                  "vehicleId": "codd%5Fnew|1115930%5F31497"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583425380",
+                    "tzOffset": 10800,
+                    "text": "19:23"
+                  }
+                }
+              ],
+              "departureTime": "18:20"
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=2036924720&ll=37.577436%2C55.828981&name=692&r=4037&type=bus",
+        "seoname": "692"
+      },
+      {
+        "lineId": "2036924957",
+        "name": "т29",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "2036925191",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "stop__9642124",
+                "name": "Метро Тимирязевская"
+              },
+              {
+                "id": "stop__10007273",
+                "name": "Метро Тимирязевская"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Scheduled": {
+                    "value": "1583422260",
+                    "tzOffset": 10800,
+                    "text": "18:31"
+                  },
+                  "Estimated": {
+                    "value": "1583421899",
+                    "tzOffset": 10800,
+                    "text": "18:24"
+                  },
+                  "vehicleId": "codd%5Fnew|57882%5F31270"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583423160",
+                    "tzOffset": 10800,
+                    "text": "18:46"
+                  },
+                  "Estimated": {
+                    "value": "1583422201",
+                    "tzOffset": 10800,
+                    "text": "18:30"
+                  },
+                  "vehicleId": "codd%5Fnew|58538%5F31266"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583424060",
+                    "tzOffset": 10800,
+                    "text": "19:01"
+                  },
+                  "Estimated": {
+                    "value": "1583422779",
+                    "tzOffset": 10800,
+                    "text": "18:39"
+                  },
+                  "vehicleId": "codd%5Fnew|58626%5F31209"
+                },
+                {
+                  "Estimated": {
+                    "value": "1583423238",
+                    "tzOffset": 10800,
+                    "text": "18:47"
+                  },
+                  "vehicleId": "codd%5Fnew|58577%5F31224"
+                }
+              ],
+              "departureTime": "18:31"
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=2036924957&ll=37.566536%2C55.821320&name=%D1%8229&r=3614&type=bus",
+        "seoname": "t29"
+      },
+      {
+        "lineId": "2036924959",
+        "name": "т3",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "2036928125",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "stop__9644805",
+                "name": "7-й автобусный парк"
+              },
+              {
+                "id": "2310890052",
+                "name": "Метро Верхние Лихоборы"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Scheduled": {
+                    "value": "1583421780",
+                    "tzOffset": 10800,
+                    "text": "18:23"
+                  },
+                  "Estimated": {
+                    "value": "1583422190",
+                    "tzOffset": 10800,
+                    "text": "18:29"
+                  },
+                  "vehicleId": "codd%5Fnew|58308%5F31268"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583422380",
+                    "tzOffset": 10800,
+                    "text": "18:33"
+                  },
+                  "Estimated": {
+                    "value": "1583422522",
+                    "tzOffset": 10800,
+                    "text": "18:35"
+                  },
+                  "vehicleId": "codd%5Fnew|60817%5F31226"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583423040",
+                    "tzOffset": 10800,
+                    "text": "18:44"
+                  },
+                  "Estimated": {
+                    "value": "1583423156",
+                    "tzOffset": 10800,
+                    "text": "18:45"
+                  },
+                  "vehicleId": "codd%5Fnew|146304%5F31207"
+                }
+              ],
+              "departureTime": "18:23"
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=2036924959&ll=37.582485%2C55.812619&name=%D1%823&r=4734&type=bus",
+        "seoname": "t3"
+      },
+      {
+        "lineId": "2036924968",
+        "name": "82",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "2036925244",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "stop__9712356",
+                "name": "Станция Дегунино"
+              },
+              {
+                "id": "3163417967",
+                "name": "Станция Дегунино"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Scheduled": {
+                    "value": "1583423340",
+                    "tzOffset": 10800,
+                    "text": "18:49"
+                  },
+                  "Estimated": {
+                    "value": "1583421564",
+                    "tzOffset": 10800,
+                    "text": "18:19"
+                  },
+                  "vehicleId": "codd%5Fnew|58855%5F31459"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583425380",
+                    "tzOffset": 10800,
+                    "text": "19:23"
+                  }
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583427060",
+                    "tzOffset": 10800,
+                    "text": "19:51"
+                  }
+                }
+              ],
+              "departureTime": "18:49"
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=2036924968&ll=37.576010%2C55.822319&name=82&r=4771&type=bus",
+        "seoname": "82"
+      },
+      {
+        "lineId": "2036925396",
+        "name": "м10",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "2036926048",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "stop__9640554",
+                "name": "Лобненская улица"
+              },
+              {
+                "id": "stop__9640553",
+                "name": "Лобненская улица"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Scheduled": {
+                    "value": "1583421720",
+                    "tzOffset": 10800,
+                    "text": "18:22"
+                  },
+                  "Estimated": {
+                    "value": "1583421638",
+                    "tzOffset": 10800,
+                    "text": "18:20"
+                  },
+                  "vehicleId": "codd%5Fnew|58857%5F31208"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583422320",
+                    "tzOffset": 10800,
+                    "text": "18:32"
+                  },
+                  "Estimated": {
+                    "value": "1583422060",
+                    "tzOffset": 10800,
+                    "text": "18:27"
+                  },
+                  "vehicleId": "codd%5Fnew|146255%5F31230"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583422800",
+                    "tzOffset": 10800,
+                    "text": "18:40"
+                  },
+                  "Estimated": {
+                    "value": "1583422172",
+                    "tzOffset": 10800,
+                    "text": "18:29"
+                  },
+                  "vehicleId": "codd%5Fnew|62727%5F31251"
+                },
+                {
+                  "Estimated": {
+                    "value": "1583422871",
+                    "tzOffset": 10800,
+                    "text": "18:41"
+                  },
+                  "vehicleId": "codd%5Fnew|58861%5F31225"
+                },
+                {
+                  "Estimated": {
+                    "value": "1583423033",
+                    "tzOffset": 10800,
+                    "text": "18:43"
+                  },
+                  "vehicleId": "codd%5Fnew|58892%5F31202"
+                }
+              ],
+              "departureTime": "18:22"
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=2036925396&ll=37.579221%2C55.823763&name=%D0%BC10&r=8474&type=bus",
+        "seoname": "m10"
+      },
+      {
+        "lineId": "2036925416",
+        "name": "194",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "2036927196",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "stop__9711780",
+                "name": "Метро Петровско-Разумовская"
+              },
+              {
+                "id": "stop__9648742",
+                "name": "Коровино"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Scheduled": {
+                    "value": "1583422500",
+                    "tzOffset": 10800,
+                    "text": "18:35"
+                  },
+                  "Estimated": {
+                    "value": "1583421540",
+                    "tzOffset": 10800,
+                    "text": "18:19"
+                  },
+                  "vehicleId": "codd%5Fnew|1101580%5F191636"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583423460",
+                    "tzOffset": 10800,
+                    "text": "18:51"
+                  }
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583424360",
+                    "tzOffset": 10800,
+                    "text": "19:06"
+                  }
+                }
+              ],
+              "departureTime": "18:35"
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=2036925416&ll=37.545611%2C55.865605&name=194&r=3662&type=bus",
+        "seoname": "194"
+      },
+      {
+        "lineId": "2036925728",
+        "name": "282",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "213A_282_bus_mosgortrans",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "stop__9641102",
+                "name": "Улица Корнейчука"
+              },
+              {
+                "id": "2532226085",
+                "name": "Метро Войковская"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Estimated": {
+                    "value": "1583421540",
+                    "tzOffset": 10800,
+                    "text": "18:19"
+                  },
+                  "vehicleId": "codd%5Fnew|37916%5F9225416"
+                },
+                {
+                  "Estimated": {
+                    "value": "1583422093",
+                    "tzOffset": 10800,
+                    "text": "18:28"
+                  },
+                  "vehicleId": "codd%5Fnew|34861%5F9345407"
+                },
+                {
+                  "Estimated": {
+                    "value": "1583422486",
+                    "tzOffset": 10800,
+                    "text": "18:34"
+                  },
+                  "vehicleId": "codd%5Fnew|34847%5F9545405"
+                },
+                {
+                  "Estimated": {
+                    "value": "1583423061",
+                    "tzOffset": 10800,
+                    "text": "18:44"
+                  },
+                  "vehicleId": "codd%5Fnew|34857%5F9345402"
+                }
+              ],
+              "Frequency": {
+                "text": "15 мин",
+                "value": 900,
+                "begin": {
+                  "value": "1583376863",
+                  "tzOffset": 10800,
+                  "text": "5:54"
+                },
+                "end": {
+                  "value": "1583448143",
+                  "tzOffset": 10800,
+                  "text": "1:42"
+                }
+              }
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=2036925728&ll=37.553526%2C55.860385&name=282&r=5779&type=bus",
+        "seoname": "282"
+      },
+      {
+        "lineId": "2036926781",
+        "name": "154",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "213B_154_bus_mosgortrans",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "stop__9642548",
+                "name": "ВДНХ (южная)"
+              },
+              {
+                "id": "stop__9711744",
+                "name": "Станция Ховрино"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Scheduled": {
+                    "value": "1583422260",
+                    "tzOffset": 10800,
+                    "text": "18:31"
+                  },
+                  "Estimated": {
+                    "value": "1583422184",
+                    "tzOffset": 10800,
+                    "text": "18:29"
+                  },
+                  "vehicleId": "codd%5Fnew|1092234%5F191522"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583423520",
+                    "tzOffset": 10800,
+                    "text": "18:52"
+                  },
+                  "Estimated": {
+                    "value": "1583422778",
+                    "tzOffset": 10800,
+                    "text": "18:39"
+                  },
+                  "vehicleId": "codd%5Fnew|62451%5F190582"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583424660",
+                    "tzOffset": 10800,
+                    "text": "19:11"
+                  }
+                }
+              ],
+              "departureTime": "18:31"
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=2036926781&ll=37.576273%2C55.846412&name=154&r=4918&type=bus",
+        "seoname": "154"
+      },
+      {
+        "lineId": "2036926818",
+        "name": "994",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "2036925175",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "stop__9640756",
+                "name": "Метро Петровско-Разумовская"
+              },
+              {
+                "id": "stop__9640351",
+                "name": "Метро Петровско-Разумовская"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Estimated": {
+                    "value": "1583421928",
+                    "tzOffset": 10800,
+                    "text": "18:25"
+                  },
+                  "vehicleId": "codd%5Fnew|45432%5F9745639"
+                }
+              ],
+              "Frequency": {
+                "text": "30 мин",
+                "value": 1800,
+                "begin": {
+                  "value": "1583375749",
+                  "tzOffset": 10800,
+                  "text": "5:35"
+                },
+                "end": {
+                  "value": "1583445949",
+                  "tzOffset": 10800,
+                  "text": "1:05"
+                }
+              }
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=2036926818&ll=37.563627%2C55.871273&name=994&r=3902&type=bus",
+        "seoname": "994"
+      },
+      {
+        "lineId": "2036926890",
+        "name": "466",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "466B_bus_default",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "stop__9640546",
+                "name": "Станция Бескудниково"
+              },
+              {
+                "id": "stop__9640545",
+                "name": "Станция Бескудниково"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Estimated": {
+                    "value": "1583421843",
+                    "tzOffset": 10800,
+                    "text": "18:24"
+                  },
+                  "vehicleId": "codd%5Fnew|41011%5F1018030"
+                },
+                {
+                  "Estimated": {
+                    "value": "1583422338",
+                    "tzOffset": 10800,
+                    "text": "18:32"
+                  },
+                  "vehicleId": "codd%5Fnew|41008%5F9715027"
+                },
+                {
+                  "Estimated": {
+                    "value": "1583423283",
+                    "tzOffset": 10800,
+                    "text": "18:48"
+                  },
+                  "vehicleId": "codd%5Fnew|41857%5F9705058"
+                }
+              ],
+              "Frequency": {
+                "text": "22 мин",
+                "value": 1320,
+                "begin": {
+                  "value": "1583379047",
+                  "tzOffset": 10800,
+                  "text": "6:30"
+                },
+                "end": {
+                  "value": "1583449847",
+                  "tzOffset": 10800,
+                  "text": "2:10"
+                }
+              }
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=2036926890&ll=37.564238%2C55.845050&name=466&r=4163&type=bus",
+        "seoname": "466"
+      },
+      {
+        "lineId": "213_114_bus_mosgortrans",
+        "name": "114",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "213B_114_bus_mosgortrans",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "stop__9647199",
+                "name": "Метро Войковская"
+              },
+              {
+                "id": "stop__9639588",
+                "name": "Коровинское шоссе"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Scheduled": {
+                    "value": "1583422200",
+                    "tzOffset": 10800,
+                    "text": "18:30"
+                  },
+                  "Estimated": {
+                    "value": "1583422179",
+                    "tzOffset": 10800,
+                    "text": "18:29"
+                  },
+                  "vehicleId": "codd%5Fnew|1092236%5F191423"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583423340",
+                    "tzOffset": 10800,
+                    "text": "18:49"
+                  },
+                  "Estimated": {
+                    "value": "1583423191",
+                    "tzOffset": 10800,
+                    "text": "18:46"
+                  },
+                  "vehicleId": "codd%5Fnew|1054181%5F191402"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583424420",
+                    "tzOffset": 10800,
+                    "text": "19:07"
+                  }
+                }
+              ],
+              "departureTime": "18:30"
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=213_114_bus_mosgortrans&ll=37.508504%2C55.852139&name=114&r=3544&type=bus",
+        "seoname": "114"
+      },
+      {
+        "lineId": "213_179_bus_mosgortrans",
+        "name": "179",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "213B_179_bus_mosgortrans",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "stop__9647199",
+                "name": "Метро Войковская"
+              },
+              {
+                "id": "stop__9639480",
+                "name": "Станция Лианозово"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Scheduled": {
+                    "value": "1583422020",
+                    "tzOffset": 10800,
+                    "text": "18:27"
+                  },
+                  "Estimated": {
+                    "value": "1583421975",
+                    "tzOffset": 10800,
+                    "text": "18:26"
+                  },
+                  "vehicleId": "codd%5Fnew|58590%5F31348"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583422680",
+                    "tzOffset": 10800,
+                    "text": "18:38"
+                  },
+                  "Estimated": {
+                    "value": "1583422480",
+                    "tzOffset": 10800,
+                    "text": "18:34"
+                  },
+                  "vehicleId": "codd%5Fnew|60470%5F31355"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583423340",
+                    "tzOffset": 10800,
+                    "text": "18:49"
+                  },
+                  "Estimated": {
+                    "value": "1583423264",
+                    "tzOffset": 10800,
+                    "text": "18:47"
+                  },
+                  "vehicleId": "codd%5Fnew|1115928%5F31333"
+                }
+              ],
+              "departureTime": "18:27"
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=213_179_bus_mosgortrans&ll=37.526151%2C55.858031&name=179&r=4634&type=bus",
+        "seoname": "179"
+      },
+      {
+        "lineId": "213_191m_minibus_default",
+        "name": "591",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "213A_191m_minibus_default",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "stop__9647199",
+                "name": "Метро Войковская"
+              },
+              {
+                "id": "stop__9711744",
+                "name": "Станция Ховрино"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Estimated": {
+                    "value": "1583421660",
+                    "tzOffset": 10800,
+                    "text": "18:21"
+                  },
+                  "vehicleId": "codd%5Fnew|35615%5F9345304"
+                },
+                {
+                  "Estimated": {
+                    "value": "1583422323",
+                    "tzOffset": 10800,
+                    "text": "18:32"
+                  },
+                  "vehicleId": "codd%5Fnew|35641%5F9345301"
+                },
+                {
+                  "Estimated": {
+                    "value": "1583422926",
+                    "tzOffset": 10800,
+                    "text": "18:42"
+                  },
+                  "vehicleId": "codd%5Fnew|38273%5F9345310"
+                }
+              ],
+              "Frequency": {
+                "text": "22 мин",
+                "value": 1320,
+                "begin": {
+                  "value": "1583376433",
+                  "tzOffset": 10800,
+                  "text": "5:47"
+                },
+                "end": {
+                  "value": "1583446633",
+                  "tzOffset": 10800,
+                  "text": "1:17"
+                }
+              }
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=213_191m_minibus_default&ll=37.510906%2C55.848214&name=591&r=3384&type=bus",
+        "seoname": "591"
+      },
+      {
+        "lineId": "213_36_trolleybus_mosgortrans",
+        "name": "т36",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "213A_36_trolleybus_mosgortrans",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "stop__9642550",
+                "name": "ВДНХ (южная)"
+              },
+              {
+                "id": "stop__9640641",
+                "name": "Дмитровское шоссе, 155"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Scheduled": {
+                    "value": "1583421600",
+                    "tzOffset": 10800,
+                    "text": "18:20"
+                  },
+                  "Estimated": {
+                    "value": "1583421929",
+                    "tzOffset": 10800,
+                    "text": "18:25"
+                  },
+                  "vehicleId": "codd%5Fnew|1105873%5F430273"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583422080",
+                    "tzOffset": 10800,
+                    "text": "18:28"
+                  },
+                  "Estimated": {
+                    "value": "1583422942",
+                    "tzOffset": 10800,
+                    "text": "18:42"
+                  },
+                  "vehicleId": "codd%5Fnew|1084831%5F430257"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583422560",
+                    "tzOffset": 10800,
+                    "text": "18:36"
+                  },
+                  "Estimated": {
+                    "value": "1583423178",
+                    "tzOffset": 10800,
+                    "text": "18:46"
+                  },
+                  "vehicleId": "codd%5Fnew|1042449%5F430223"
+                }
+              ],
+              "departureTime": "18:20"
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=213_36_trolleybus_mosgortrans&ll=37.588569%2C55.859718&name=%D1%8236&r=5106&type=bus",
+        "seoname": "t36"
+      },
+      {
+        "lineId": "213_47_trolleybus_mosgortrans",
+        "name": "т47",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "213B_47_trolleybus_mosgortrans",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "stop__9639568",
+                "name": "Бескудниковский переулок"
+              },
+              {
+                "id": "stop__9641903",
+                "name": "Бескудниковский переулок"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Scheduled": {
+                    "value": "1583421840",
+                    "tzOffset": 10800,
+                    "text": "18:24"
+                  },
+                  "Estimated": {
+                    "value": "1583422502",
+                    "tzOffset": 10800,
+                    "text": "18:35"
+                  },
+                  "vehicleId": "codd%5Fnew|1119832%5F430355"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583422200",
+                    "tzOffset": 10800,
+                    "text": "18:30"
+                  },
+                  "Estimated": {
+                    "value": "1583422636",
+                    "tzOffset": 10800,
+                    "text": "18:37"
+                  },
+                  "vehicleId": "codd%5Fnew|1080551%5F430301"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583422560",
+                    "tzOffset": 10800,
+                    "text": "18:36"
+                  },
+                  "Estimated": {
+                    "value": "1583422845",
+                    "tzOffset": 10800,
+                    "text": "18:40"
+                  },
+                  "vehicleId": "codd%5Fnew|1139254%5F430378"
+                },
+                {
+                  "Estimated": {
+                    "value": "1583422950",
+                    "tzOffset": 10800,
+                    "text": "18:42"
+                  },
+                  "vehicleId": "codd%5Fnew|1091992%5F430316"
+                }
+              ],
+              "departureTime": "18:24"
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=213_47_trolleybus_mosgortrans&ll=37.588308%2C55.818685&name=%D1%8247&r=5359&type=bus",
+        "seoname": "t47"
+      },
+      {
+        "lineId": "213_56_trolleybus_mosgortrans",
+        "name": "т56",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "213A_56_trolleybus_mosgortrans",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "stop__9639561",
+                "name": "Коровинское шоссе"
+              },
+              {
+                "id": "stop__9639588",
+                "name": "Коровинское шоссе"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Scheduled": {
+                    "value": "1583421900",
+                    "tzOffset": 10800,
+                    "text": "18:25"
+                  },
+                  "Estimated": {
+                    "value": "1583421746",
+                    "tzOffset": 10800,
+                    "text": "18:22"
+                  },
+                  "vehicleId": "codd%5Fnew|1117148%5F430351"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583422320",
+                    "tzOffset": 10800,
+                    "text": "18:32"
+                  },
+                  "Estimated": {
+                    "value": "1583422183",
+                    "tzOffset": 10800,
+                    "text": "18:29"
+                  },
+                  "vehicleId": "codd%5Fnew|1139619%5F430381"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583422680",
+                    "tzOffset": 10800,
+                    "text": "18:38"
+                  },
+                  "Estimated": {
+                    "value": "1583422496",
+                    "tzOffset": 10800,
+                    "text": "18:34"
+                  },
+                  "vehicleId": "codd%5Fnew|1119829%5F430352"
+                },
+                {
+                  "Estimated": {
+                    "value": "1583423315",
+                    "tzOffset": 10800,
+                    "text": "18:48"
+                  },
+                  "vehicleId": "codd%5Fnew|1139256%5F430373"
+                }
+              ],
+              "departureTime": "18:25"
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=213_56_trolleybus_mosgortrans&ll=37.551454%2C55.830147&name=%D1%8256&r=6304&type=bus",
+        "seoname": "t56"
+      },
+      {
+        "lineId": "213_677_bus_mosgortrans",
+        "name": "677",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "213B_677_bus_mosgortrans",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "stop__9639495",
+                "name": "Метро Петровско-Разумовская"
+              },
+              {
+                "id": "stop__9639480",
+                "name": "Станция Лианозово"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Scheduled": {
+                    "value": "1583421660",
+                    "tzOffset": 10800,
+                    "text": "18:21"
+                  },
+                  "Estimated": {
+                    "value": "1583421557",
+                    "tzOffset": 10800,
+                    "text": "18:19"
+                  },
+                  "vehicleId": "codd%5Fnew|1082793%5F31390"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583421840",
+                    "tzOffset": 10800,
+                    "text": "18:24"
+                  },
+                  "Estimated": {
+                    "value": "1583421675",
+                    "tzOffset": 10800,
+                    "text": "18:21"
+                  },
+                  "vehicleId": "codd%5Fnew|58601%5F31323"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583422020",
+                    "tzOffset": 10800,
+                    "text": "18:27"
+                  }
+                }
+              ],
+              "departureTime": "18:21"
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=213_677_bus_mosgortrans&ll=37.564191%2C55.866620&name=677&r=3386&type=bus",
+        "seoname": "677"
+      },
+      {
+        "lineId": "213_78_trolleybus_mosgortrans",
+        "name": "т78",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "213A_78_trolleybus_mosgortrans",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "stop__9887464",
+                "name": "9-я Северная линия"
+              },
+              {
+                "id": "stop__9887464",
+                "name": "9-я Северная линия"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Scheduled": {
+                    "value": "1583421780",
+                    "tzOffset": 10800,
+                    "text": "18:23"
+                  },
+                  "Estimated": {
+                    "value": "1583421764",
+                    "tzOffset": 10800,
+                    "text": "18:22"
+                  },
+                  "vehicleId": "codd%5Fnew|58868%5F31131"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583422200",
+                    "tzOffset": 10800,
+                    "text": "18:30"
+                  },
+                  "Estimated": {
+                    "value": "1583422361",
+                    "tzOffset": 10800,
+                    "text": "18:32"
+                  },
+                  "vehicleId": "codd%5Fnew|58373%5F31158"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583422620",
+                    "tzOffset": 10800,
+                    "text": "18:37"
+                  },
+                  "Estimated": {
+                    "value": "1583422440",
+                    "tzOffset": 10800,
+                    "text": "18:34"
+                  },
+                  "vehicleId": "codd%5Fnew|55687%5F31120"
+                },
+                {
+                  "Estimated": {
+                    "value": "1583423316",
+                    "tzOffset": 10800,
+                    "text": "18:48"
+                  },
+                  "vehicleId": "codd%5Fnew|58107%5F31147"
+                }
+              ],
+              "departureTime": "18:23"
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=213_78_trolleybus_mosgortrans&ll=37.569472%2C55.856380&name=%D1%8278&r=8918&type=bus",
+        "seoname": "t78"
+      },
+      {
+        "lineId": "677k_bus_default",
+        "name": "677к",
+        "Types": ["bus"],
+        "type": "bus",
+        "threads": [
+          {
+            "threadId": "677kA_bus_default",
+            "noBoarding": false,
+            "EssentialStops": [
+              {
+                "id": "stop__9640244",
+                "name": "Станция Лианозово"
+              },
+              {
+                "id": "stop__9639480",
+                "name": "Станция Лианозово"
+              }
+            ],
+            "BriefSchedule": {
+              "Events": [
+                {
+                  "Scheduled": {
+                    "value": "1583422500",
+                    "tzOffset": 10800,
+                    "text": "18:35"
+                  },
+                  "Estimated": {
+                    "value": "1583421857",
+                    "tzOffset": 10800,
+                    "text": "18:24"
+                  },
+                  "vehicleId": "codd%5Fnew|59576%5F31317"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583422860",
+                    "tzOffset": 10800,
+                    "text": "18:41"
+                  },
+                  "Estimated": {
+                    "value": "1583422383",
+                    "tzOffset": 10800,
+                    "text": "18:33"
+                  },
+                  "vehicleId": "codd%5Fnew|58524%5F31321"
+                },
+                {
+                  "Scheduled": {
+                    "value": "1583423220",
+                    "tzOffset": 10800,
+                    "text": "18:47"
+                  },
+                  "Estimated": {
+                    "value": "1583422574",
+                    "tzOffset": 10800,
+                    "text": "18:36"
+                  },
+                  "vehicleId": "codd%5Fnew|125096%5F31369"
+                },
+                {
+                  "Estimated": {
+                    "value": "1583423150",
+                    "tzOffset": 10800,
+                    "text": "18:45"
+                  },
+                  "vehicleId": "codd%5Fnew|1038096%5F31398"
+                }
+              ],
+              "departureTime": "18:35"
+            }
+          }
+        ],
+        "uri": "ymapsbm1://transit/line?id=677k_bus_default&ll=37.565257%2C55.870397&name=677%D0%BA&r=2987&type=bus",
+        "seoname": "677k"
+      }
+    ],
+    "breadcrumbs": [
+      {
+        "name": "Карты",
+        "type": "root",
+        "url": "https://yandex.ru/maps/"
+      },
+      {
+        "name": "Москва",
+        "type": "region",
+        "url": "https://yandex.ru/maps/213/moscow/",
+        "region": {
+          "center": [37.622504, 55.753215],
+          "zoom": 10
+        }
+      },
+      {
+        "name": "Общественный транспорт",
+        "type": "masstransit-home",
+        "url": "https://yandex.ru/maps/213/moscow/transport/"
+      },
+      {
+        "name": "7-й автобусный парк",
+        "type": "search",
+        "url": "https://yandex.ru/maps/213/moscow/stops/stop__9639579/",
+        "currentPage": true
+      }
+    ],
+    "searchResult": {
+      "type": "business",
+      "requestId": "1583421546337462-875775042-sas1-6586-sas-addrs-nmeta-new-8031",
+      "analyticsId": "1",
+      "title": "7-й автобусный парк",
+      "description": "Россия, Москва, Дмитровское шоссе",
+      "address": "Россия, Москва, Дмитровское шоссе",
+      "coordinates": [37.56528, 55.85196],
+      "displayCoordinates": [37.56528, 55.85196],
+      "bounds": [
+        [37.543123, 55.77889866],
+        [37.587437, 55.92488366]
+      ],
+      "logId": "dHlwZT1iaXpmaW5kZXI7aWQ9MjM5MzY2OTUwNjU4",
+      "uri": "ymapsbm1://transit/stop?id=stop__9639579",
+      "id": "239366950658",
+      "metro": [
+        {
+          "id": "2244536395",
+          "name": "Верхние Лихоборы",
+          "distance": "510 м",
+          "distanceValue": 509.184,
+          "coordinates": [37.56121218, 55.854501501],
+          "type": "metro",
+          "color": "#99cc33"
+        },
+        {
+          "id": "1727539211",
+          "name": "Окружная",
+          "distance": "640 м",
+          "distanceValue": 641.333,
+          "coordinates": [37.572849014, 55.848814359],
+          "type": "metro",
+          "color": "#ffa8af"
+        },
+        {
+          "id": "2244535785",
+          "name": "Окружная",
+          "distance": "1,3 км",
+          "distanceValue": 1263.44,
+          "coordinates": [37.575977155, 55.844377845],
+          "type": "metro",
+          "color": "#99cc33"
+        }
+      ],
+      "stops": [
+        {
+          "id": "stop__9639579",
+          "name": "7-й автобусный парк",
+          "distance": "0 м",
+          "distanceValue": 0.0383997,
+          "coordinates": [37.565280044, 55.851959656],
+          "type": "common"
+        },
+        {
+          "id": "2310890052",
+          "name": "Метро Верхние Лихоборы",
+          "distance": "420 м",
+          "distanceValue": 424.302,
+          "coordinates": [37.563047501, 55.853727589],
+          "type": "common"
+        },
+        {
+          "id": "stop__9639678",
+          "name": "Метро Верхние Лихоборы (северный вестибюль)",
+          "distance": "630 м",
+          "distanceValue": 629.689,
+          "coordinates": [37.562346735, 55.857147019],
+          "type": "common"
+        },
+        {
+          "id": "station__lh_9601830",
+          "name": "Окружная",
+          "distance": "860 м",
+          "distanceValue": 857.487,
+          "coordinates": [37.574303, 55.847684],
+          "type": "common"
+        },
+        {
+          "id": "stop__9639906",
+          "name": "Станция Окружная",
+          "distance": "930 м",
+          "distanceValue": 926.144,
+          "coordinates": [37.576123886, 55.847913668],
+          "type": "common"
+        }
+      ],
+      "panorama": {
+        "id": "1297826777_672185801_23_1574243990",
+        "direction": [32, 10],
+        "point": {
+          "type": "Point",
+          "coordinates": [37.565167718, 55.8518591059]
+        },
+        "preview": "https://avatars.mds.yandex.net/get-altay/1908863/2a00000169e52b1c1475fd4b51bae1f09966/%s",
+        "staticPreview": "https://static-pano.maps.yandex.ru/v1/?panoid=1297826777_672185801_23_1574243990&size=500,240&azimuth=32&tilt=10&signature=fiN27DzM02pZ3x3eVIodfiQQ8tFX2_KGNZocjzsdfnA="
+      },
+      "shortTitle": "7-й автобусный парк",
+      "fullAddress": "Россия, Москва, Дмитровское шоссе",
+      "status": "open",
+      "businessLinks": [],
+      "ratingData": {
+        "ratingCount": 0,
+        "ratingValue": 0,
+        "reviewCount": 0
+      },
+      "sources": [
+        {
+          "id": "yandex",
+          "name": "Яндекс",
+          "href": "https://www.yandex.ru"
+        }
+      ],
+      "categories": [
+        {
+          "name": "Остановка общественного транспорта",
+          "class": "bus stop",
+          "seoname": "public_transport_stop",
+          "pluralName": "Остановки общественного транспорта"
+        }
+      ],
+      "businessProperties": {
+        "has_verified_owner": false,
+        "geoproduct_poi_color": "#ABAEB3",
+        "snippet_show_photo": "single_photo",
+        "snippet_show_subline": ["no_subline"],
+        "unusual_hours": ["2020-03-08"]
+      },
+      "seoname": "7_y_avtobusny_park",
+      "geoId": 117015,
+      "references": [
+        {
+          "id": "2036929560",
+          "scope": "nyak"
+        }
+      ],
+      "region": {
+        "id": 213,
+        "hierarchy": [225, 1, 213],
+        "seoname": "moscow",
+        "bounds": [
+          [37.0402925, 55.31141404514547],
+          [38.2047155, 56.190068045145466]
+        ],
+        "names": {
+          "ablative": "",
+          "accusative": "Москву",
+          "dative": "Москве",
+          "directional": "",
+          "genitive": "Москвы",
+          "instrumental": "Москвой",
+          "locative": "",
+          "nominative": "Москва",
+          "preposition": "в",
+          "prepositional": "Москве"
+        },
+        "longitude": 37.622504,
+        "latitude": 55.753215,
+        "zoom": 10
+      },
+      "breadcrumbs": [
+        {
+          "name": "Карты",
+          "type": "root",
+          "url": "https://yandex.ru/maps/"
+        },
+        {
+          "name": "Москва",
+          "type": "region",
+          "url": "https://yandex.ru/maps/213/moscow/",
+          "region": {
+            "center": [37.622504, 55.753215],
+            "zoom": 10
+          }
+        },
+        {
+          "category": {
+            "name": "Остановка общественного транспорта",
+            "class": "bus stop",
+            "seoname": "public_transport_stop",
+            "pluralName": "Остановки общественного транспорта"
+          },
+          "name": "Остановки общественного транспорта",
+          "type": "category",
+          "url": "https://yandex.ru/maps/213/moscow/category/public_transport_stop/"
+        },
+        {
+          "name": "7-й автобусный парк",
+          "type": "search",
+          "url": "https://yandex.ru/maps/org/7_y_avtobusny_park/239366950658/",
+          "currentPage": true
+        }
+      ],
+      "geoWhere": {
+        "id": "10049405",
+        "seoname": "dmitrovskoye_shosse",
+        "kind": "street",
+        "coordinates": [37.547719, 55.87593],
+        "encodedCoordinates": "Z04YcwNnTkQOQFtvfXR2dHVgZA=="
+      }
+    }
+  }
+}

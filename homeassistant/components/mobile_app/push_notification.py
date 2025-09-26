@@ -1,4 +1,5 @@
 """Push notification handling."""
+
 from __future__ import annotations
 
 import asyncio
@@ -28,7 +29,7 @@ class PushChannel:
         self.support_confirm = support_confirm
         self._send_message = send_message
         self.on_teardown = on_teardown
-        self.pending_confirms = {}
+        self.pending_confirms: dict[str, dict] = {}
 
     @callback
     def async_send_notification(self, data, fallback_send):

@@ -1,84 +1,68 @@
 """Support for SwitchBot curtains."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from switchbot import SwitchbotCurtain  # pylint: disable=import-error
+import switchbot
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
+    ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
+    ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_RETRY_COUNT, DATA_COORDINATOR, DOMAIN
-from .coordinator import SwitchbotDataUpdateCoordinator
-from .entity import SwitchbotEntity
+from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
+from .entity import SwitchbotEntity, exception_handler
 
 # Initialize the logger
 _LOGGER = logging.getLogger(__name__)
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SwitchbotConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switchbot curtain based on a config entry."""
-    coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
-
-    async_add_entities(
-        [
-            SwitchBotCurtainEntity(
-                coordinator,
-                entry.unique_id,
-                entry.data[CONF_MAC],
-                entry.data[CONF_NAME],
-                coordinator.switchbot_api.SwitchbotCurtain(
-                    mac=entry.data[CONF_MAC],
-                    password=entry.data.get(CONF_PASSWORD),
-                    retry_count=entry.options[CONF_RETRY_COUNT],
-                ),
-            )
-        ]
-    )
+    coordinator = entry.runtime_data
+    if isinstance(coordinator.device, switchbot.SwitchbotGarageDoorOpener):
+        async_add_entities([SwitchbotGarageDoorOpenerEntity(coordinator)])
+    elif isinstance(coordinator.device, switchbot.SwitchbotBlindTilt):
+        async_add_entities([SwitchBotBlindTiltEntity(coordinator)])
+    elif isinstance(coordinator.device, switchbot.SwitchbotRollerShade):
+        async_add_entities([SwitchBotRollerShadeEntity(coordinator)])
+    else:
+        async_add_entities([SwitchBotCurtainEntity(coordinator)])
 
 
 class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
     """Representation of a Switchbot."""
 
-    coordinator: SwitchbotDataUpdateCoordinator
+    _device: switchbot.SwitchbotCurtain
     _attr_device_class = CoverDeviceClass.CURTAIN
     _attr_supported_features = (
-        SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
     )
-    _attr_assumed_state = True
+    _attr_translation_key = "cover"
+    _attr_name = None
 
-    def __init__(
-        self,
-        coordinator: SwitchbotDataUpdateCoordinator,
-        idx: str | None,
-        mac: str,
-        name: str,
-        device: SwitchbotCurtain,
-    ) -> None:
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the Switchbot."""
-        super().__init__(coordinator, idx, mac, name)
-        self._attr_unique_id = idx
+        super().__init__(coordinator)
         self._attr_is_closed = None
-        self._device = device
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
@@ -87,56 +71,256 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         if not last_state or ATTR_CURRENT_POSITION not in last_state.attributes:
             return
 
-        self._attr_current_cover_position = last_state.attributes[ATTR_CURRENT_POSITION]
-        self._last_run_success = last_state.attributes["last_run_success"]
-        self._attr_is_closed = last_state.attributes[ATTR_CURRENT_POSITION] <= 20
+        self._attr_current_cover_position = last_state.attributes.get(
+            ATTR_CURRENT_POSITION
+        )
+        self._last_run_success = last_state.attributes.get("last_run_success")
+        if self._attr_current_cover_position is not None:
+            self._attr_is_closed = self._attr_current_cover_position <= 20
 
+    @exception_handler
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the curtain."""
 
-        _LOGGER.debug("Switchbot to open curtain %s", self._mac)
+        _LOGGER.debug("Switchbot to open curtain %s", self._address)
+        self._last_run_success = bool(await self._device.open())
+        self._attr_is_opening = self._device.is_opening()
+        self._attr_is_closing = self._device.is_closing()
+        self.async_write_ha_state()
 
-        async with self.coordinator.api_lock:
-            self._last_run_success = bool(
-                await self.hass.async_add_executor_job(self._device.open)
-            )
-
+    @exception_handler
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the curtain."""
 
-        _LOGGER.debug("Switchbot to close the curtain %s", self._mac)
+        _LOGGER.debug("Switchbot to close the curtain %s", self._address)
+        self._last_run_success = bool(await self._device.close())
+        self._attr_is_opening = self._device.is_opening()
+        self._attr_is_closing = self._device.is_closing()
+        self.async_write_ha_state()
 
-        async with self.coordinator.api_lock:
-            self._last_run_success = bool(
-                await self.hass.async_add_executor_job(self._device.close)
-            )
-
+    @exception_handler
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the moving of this device."""
 
-        _LOGGER.debug("Switchbot to stop %s", self._mac)
+        _LOGGER.debug("Switchbot to stop %s", self._address)
+        self._last_run_success = bool(await self._device.stop())
+        self._attr_is_opening = self._device.is_opening()
+        self._attr_is_closing = self._device.is_closing()
+        self.async_write_ha_state()
 
-        async with self.coordinator.api_lock:
-            self._last_run_success = bool(
-                await self.hass.async_add_executor_job(self._device.stop)
-            )
-
+    @exception_handler
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover shutter to a specific position."""
         position = kwargs.get(ATTR_POSITION)
 
-        _LOGGER.debug("Switchbot to move at %d %s", position, self._mac)
-
-        async with self.coordinator.api_lock:
-            self._last_run_success = bool(
-                await self.hass.async_add_executor_job(
-                    self._device.set_position, position
-                )
-            )
+        _LOGGER.debug("Switchbot to move at %d %s", position, self._address)
+        self._last_run_success = bool(await self._device.set_position(position))
+        self._attr_is_opening = self._device.is_opening()
+        self._attr_is_closing = self._device.is_closing()
+        self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_current_cover_position = self.data["data"]["position"]
-        self._attr_is_closed = self.data["data"]["position"] <= 20
+        self._attr_is_closing = self._device.is_closing()
+        self._attr_is_opening = self._device.is_opening()
+        self._attr_current_cover_position = self.parsed_data["position"]
+        self._attr_is_closed = self.parsed_data["position"] <= 20
+
+        self.async_write_ha_state()
+
+
+class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
+    """Representation of a Switchbot."""
+
+    _device: switchbot.SwitchbotBlindTilt
+    _attr_device_class = CoverDeviceClass.BLIND
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.STOP_TILT
+        | CoverEntityFeature.SET_TILT_POSITION
+    )
+    _attr_name = None
+    _attr_translation_key = "cover"
+    CLOSED_UP_THRESHOLD = 80
+    CLOSED_DOWN_THRESHOLD = 20
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the Switchbot."""
+        super().__init__(coordinator)
+        self._attr_is_closed = None
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added."""
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if not last_state or ATTR_CURRENT_TILT_POSITION not in last_state.attributes:
+            return
+
+        self._attr_current_cover_tilt_position = last_state.attributes.get(
+            ATTR_CURRENT_TILT_POSITION
+        )
+        self._last_run_success = last_state.attributes.get("last_run_success")
+        if (_tilt := self._attr_current_cover_tilt_position) is not None:
+            self._attr_is_closed = (_tilt < self.CLOSED_DOWN_THRESHOLD) or (
+                _tilt > self.CLOSED_UP_THRESHOLD
+            )
+
+    @exception_handler
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
+        """Open the tilt."""
+
+        _LOGGER.debug("Switchbot to open blind tilt %s", self._address)
+        self._last_run_success = bool(await self._device.open())
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
+        """Close the tilt."""
+
+        _LOGGER.debug("Switchbot to close the blind tilt %s", self._address)
+        self._last_run_success = bool(await self._device.close())
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+        """Stop the moving of this device."""
+
+        _LOGGER.debug("Switchbot to stop %s", self._address)
+        self._last_run_success = bool(await self._device.stop())
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
+        """Move the cover tilt to a specific position."""
+        position = kwargs.get(ATTR_TILT_POSITION)
+
+        _LOGGER.debug("Switchbot to move at %d %s", position, self._address)
+        self._last_run_success = bool(await self._device.set_position(position))
+        self.async_write_ha_state()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        _tilt = self.parsed_data["tilt"]
+        self._attr_current_cover_tilt_position = _tilt
+        self._attr_is_closed = (_tilt < self.CLOSED_DOWN_THRESHOLD) or (
+            _tilt > self.CLOSED_UP_THRESHOLD
+        )
+        self._attr_is_opening = self.parsed_data["motionDirection"]["opening"]
+        self._attr_is_closing = self.parsed_data["motionDirection"]["closing"]
+        self.async_write_ha_state()
+
+
+class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
+    """Representation of a Switchbot."""
+
+    _device: switchbot.SwitchbotRollerShade
+    _attr_device_class = CoverDeviceClass.SHADE
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
+    )
+
+    _attr_translation_key = "cover"
+    _attr_name = None
+
+    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
+        """Initialize the switchbot."""
+        super().__init__(coordinator)
+        self._attr_is_closed = None
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added."""
+        await super().async_added_to_hass()
+        last_state = await self.async_get_last_state()
+        if not last_state or ATTR_CURRENT_POSITION not in last_state.attributes:
+            return
+
+        self._attr_current_cover_position = last_state.attributes.get(
+            ATTR_CURRENT_POSITION
+        )
+        self._last_run_success = last_state.attributes.get("last_run_success")
+        if self._attr_current_cover_position is not None:
+            self._attr_is_closed = self._attr_current_cover_position <= 20
+
+    @exception_handler
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the roller shade."""
+
+        _LOGGER.debug("Switchbot to open roller shade %s", self._address)
+        self._last_run_success = bool(await self._device.open())
+        self._attr_is_opening = self._device.is_opening()
+        self._attr_is_closing = self._device.is_closing()
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the roller shade."""
+
+        _LOGGER.debug("Switchbot to close roller shade %s", self._address)
+        self._last_run_success = bool(await self._device.close())
+        self._attr_is_opening = self._device.is_opening()
+        self._attr_is_closing = self._device.is_closing()
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_stop_cover(self, **kwargs: Any) -> None:
+        """Stop the moving of roller shade."""
+
+        _LOGGER.debug("Switchbot to stop roller shade %s", self._address)
+        self._last_run_success = bool(await self._device.stop())
+        self._attr_is_opening = self._device.is_opening()
+        self._attr_is_closing = self._device.is_closing()
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Move the cover to a specific position."""
+
+        position = kwargs.get(ATTR_POSITION)
+        _LOGGER.debug("Switchbot to move at %d %s", position, self._address)
+        self._last_run_success = bool(await self._device.set_position(position))
+        self._attr_is_opening = self._device.is_opening()
+        self._attr_is_closing = self._device.is_closing()
+        self.async_write_ha_state()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_is_closing = self._device.is_closing()
+        self._attr_is_opening = self._device.is_opening()
+        self._attr_current_cover_position = self.parsed_data["position"]
+        self._attr_is_closed = self.parsed_data["position"] <= 20
+
+        self.async_write_ha_state()
+
+
+class SwitchbotGarageDoorOpenerEntity(SwitchbotEntity, CoverEntity):
+    """Representation of a Switchbot garage door."""
+
+    _device: switchbot.SwitchbotGarageDoorOpener
+    _attr_device_class = CoverDeviceClass.GARAGE
+    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+    _attr_translation_key = "garage_door"
+    _attr_name = None
+
+    @property
+    def is_closed(self) -> bool | None:
+        """Return true if cover is closed, else False."""
+        return not self._device.door_open()
+
+    @exception_handler
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the garage door."""
+        await self._device.open()
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the garage door."""
+        await self._device.close()
         self.async_write_ha_state()

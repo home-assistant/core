@@ -1,76 +1,153 @@
 """Models for manifest validator."""
+
 from __future__ import annotations
 
-import importlib
+from dataclasses import dataclass, field
+from enum import IntEnum
 import json
 import pathlib
-from typing import Any
-
-import attr
+from typing import Any, Literal
 
 
-@attr.s
+@dataclass
 class Error:
     """Error validating an integration."""
 
-    plugin: str = attr.ib()
-    error: str = attr.ib()
-    fixable: bool = attr.ib(default=False)
+    plugin: str
+    error: str
+    fixable: bool = False
 
     def __str__(self) -> str:
         """Represent error as string."""
         return f"[{self.plugin.upper()}] {self.error}"
 
 
-@attr.s
+@dataclass
 class Config:
     """Config for the run."""
 
-    specific_integrations: pathlib.Path | None = attr.ib()
-    root: pathlib.Path = attr.ib()
-    action: str = attr.ib()
-    requirements: bool = attr.ib()
-    errors: list[Error] = attr.ib(factory=list)
-    cache: dict[str, Any] = attr.ib(factory=dict)
-    plugins: set[str] = attr.ib(factory=set)
+    specific_integrations: list[pathlib.Path] | None
+    root: pathlib.Path
+    action: Literal["validate", "generate"]
+    requirements: bool
+    core_integrations_path: pathlib.Path = field(init=False)
+    errors: list[Error] = field(default_factory=list)
+    cache: dict[str, Any] = field(default_factory=dict)
+    plugins: set[str] = field(default_factory=set)
+
+    def __post_init__(self) -> None:
+        """Post init."""
+        self.core_integrations_path = self.root / "homeassistant/components"
 
     def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""
         self.errors.append(Error(*args, **kwargs))
 
 
-@attr.s
+@dataclass
+class Brand:
+    """Represent a brand in our validator."""
+
+    @classmethod
+    def load_dir(cls, path: pathlib.Path, config: Config) -> dict[str, Brand]:
+        """Load all brands in a directory."""
+        assert path.is_dir()
+        brands: dict[str, Brand] = {}
+        for fil in path.iterdir():
+            brand = cls(fil)
+            brand.load_brand(config)
+            brands[brand.domain] = brand
+
+        return brands
+
+    path: pathlib.Path
+    _brand: dict[str, Any] | None = None
+
+    @property
+    def brand(self) -> dict[str, Any]:
+        """Guarded access to brand."""
+        assert self._brand is not None, "brand has not been loaded"
+        return self._brand
+
+    @property
+    def domain(self) -> str:
+        """Integration domain."""
+        return self.path.stem
+
+    @property
+    def name(self) -> str | None:
+        """Return name of the integration."""
+        return self.brand.get("name")
+
+    @property
+    def integrations(self) -> list[str]:
+        """Return the sub integrations of this brand."""
+        return self.brand.get("integrations", [])
+
+    @property
+    def iot_standards(self) -> list[str]:
+        """Return list of supported IoT standards."""
+        return self.brand.get("iot_standards", [])
+
+    def load_brand(self, config: Config) -> None:
+        """Load brand file."""
+        if not self.path.is_file():
+            config.add_error("model", f"Brand file {self.path} not found")
+            return
+
+        try:
+            brand: dict[str, Any] = json.loads(self.path.read_text())
+        except ValueError as err:
+            config.add_error(
+                "model", f"Brand file {self.path.name} contains invalid JSON: {err}"
+            )
+            return
+
+        self._brand = brand
+
+
+@dataclass
 class Integration:
     """Represent an integration in our validator."""
 
     @classmethod
-    def load_dir(cls, path: pathlib.Path):
+    def load_dir(cls, path: pathlib.Path, config: Config) -> dict[str, Integration]:
         """Load all integrations in a directory."""
         assert path.is_dir()
-        integrations = {}
+        integrations: dict[str, Integration] = {}
         for fil in path.iterdir():
             if fil.is_file() or fil.name == "__pycache__":
                 continue
 
             init = fil / "__init__.py"
-            if not init.exists():
+            manifest = fil / "manifest.json"
+            if not init.exists() and not manifest.exists():
                 print(
-                    f"Warning: {init} missing, skipping directory. "
-                    "If this is your development environment, "
-                    "you can safely delete this folder."
+                    f"Warning: {init} and manifest.json missing, "
+                    "skipping directory. If this is your development "
+                    "environment, you can safely delete this folder."
                 )
                 continue
 
-            integration = cls(fil)
+            integration = cls(fil, config)
             integration.load_manifest()
             integrations[integration.domain] = integration
 
         return integrations
 
-    path: pathlib.Path = attr.ib()
-    manifest: dict[str, Any] | None = attr.ib(default=None)
-    errors: list[Error] = attr.ib(factory=list)
-    warnings: list[Error] = attr.ib(factory=list)
+    path: pathlib.Path
+    _config: Config
+    _manifest: dict[str, Any] | None = None
+    manifest_path: pathlib.Path | None = None
+    errors: list[Error] = field(default_factory=list)
+    warnings: list[Error] = field(default_factory=list)
+    translated_name: bool = False
+
+    @property
+    def manifest(self) -> dict[str, Any]:
+        """Guarded access to manifest."""
+        assert self._manifest is not None, "manifest has not been loaded"
+        return self._manifest
 
     @property
     def domain(self) -> str:
@@ -80,7 +157,11 @@ class Integration:
     @property
     def core(self) -> bool:
         """Core integration."""
-        return self.path.as_posix().startswith("homeassistant/components")
+        return (
+            self.path.absolute()
+            .as_posix()
+            .startswith(self._config.core_integrations_path.as_posix())
+        )
 
     @property
     def disabled(self) -> str | None:
@@ -90,17 +171,18 @@ class Integration:
     @property
     def name(self) -> str:
         """Return name of the integration."""
-        return self.manifest["name"]
+        name: str = self.manifest["name"]
+        return name
 
     @property
-    def quality_scale(self) -> str:
+    def quality_scale(self) -> str | None:
         """Return quality scale of the integration."""
         return self.manifest.get("quality_scale")
 
     @property
-    def config_flow(self) -> str:
+    def config_flow(self) -> bool:
         """Return if the integration has a config flow."""
-        return self.manifest.get("config_flow")
+        return self.manifest.get("config_flow", False)
 
     @property
     def requirements(self) -> list[str]:
@@ -112,13 +194,42 @@ class Integration:
         """List of dependencies."""
         return self.manifest.get("dependencies", [])
 
+    @property
+    def supported_by(self) -> str:
+        """Return the integration supported by this virtual integration."""
+        return self.manifest.get("supported_by", {})
+
+    @property
+    def integration_type(self) -> str:
+        """Get integration_type."""
+        return self.manifest.get("integration_type", "hub")
+
+    @property
+    def iot_class(self) -> str | None:
+        """Return the integration IoT Class."""
+        return self.manifest.get("iot_class")
+
+    @property
+    def iot_standards(self) -> list[str]:
+        """Return the IoT standard supported by this virtual integration."""
+        return self.manifest.get("iot_standards", [])
+
     def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""
         self.errors.append(Error(*args, **kwargs))
 
     def add_warning(self, *args: Any, **kwargs: Any) -> None:
-        """Add an warning."""
+        """Add a warning."""
         self.warnings.append(Error(*args, **kwargs))
+
+    def add_warning_or_error(
+        self, warning_only: bool, *args: Any, **kwargs: Any
+    ) -> None:
+        """Add an error or a warning."""
+        if warning_only:
+            self.add_warning(*args, **kwargs)
+        else:
+            self.add_error(*args, **kwargs)
 
     def load_manifest(self) -> None:
         """Load manifest."""
@@ -128,16 +239,19 @@ class Integration:
             return
 
         try:
-            manifest = json.loads(manifest_path.read_text())
+            manifest: dict[str, Any] = json.loads(manifest_path.read_text())
         except ValueError as err:
             self.add_error("model", f"Manifest contains invalid JSON: {err}")
             return
 
-        self.manifest = manifest
+        self._manifest = manifest
+        self.manifest_path = manifest_path
 
-    def import_pkg(self, platform=None):
-        """Import the Python file."""
-        pkg = f"homeassistant.components.{self.domain}"
-        if platform is not None:
-            pkg += f".{platform}"
-        return importlib.import_module(pkg)
+
+class ScaledQualityScaleTiers(IntEnum):
+    """Supported manifest quality scales."""
+
+    BRONZE = 1
+    SILVER = 2
+    GOLD = 3
+    PLATINUM = 4

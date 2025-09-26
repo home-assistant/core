@@ -1,4 +1,5 @@
 """Binary Sensor for MeteoAlarm.eu."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,16 +9,16 @@ from meteoalertapi import Meteoalert
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,9 +30,9 @@ CONF_PROVINCE = "province"
 
 DEFAULT_NAME = "meteoalarm"
 
-SCAN_INTERVAL = timedelta(minutes=30)
+SCAN_INTERVAL = timedelta(minutes=5)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_COUNTRY): cv.string,
         vol.Required(CONF_PROVINCE): cv.string,
@@ -74,15 +75,14 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
         self._attr_name = name
         self._api = api
 
-    def update(self):
+    def update(self) -> None:
         """Update device state."""
-        self._attr_extra_state_attributes = None
+        self._attr_extra_state_attributes = {}
         self._attr_is_on = False
 
         if alert := self._api.get_alert():
             expiration_date = dt_util.parse_datetime(alert["expires"])
-            now = dt_util.utcnow()
 
-            if expiration_date > now:
+            if expiration_date is not None and expiration_date > dt_util.utcnow():
                 self._attr_extra_state_attributes = alert
                 self._attr_is_on = True

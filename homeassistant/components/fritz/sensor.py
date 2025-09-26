@@ -1,13 +1,12 @@
 """AVM FRITZ!Box binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Literal
 
-from fritzconnection.core.exceptions import FritzConnectionException
 from fritzconnection.lib.fritzstatus import FritzStatus
 
 from homeassistant.components.sensor import (
@@ -16,22 +15,27 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    DATA_GIGABYTES,
-    DATA_RATE_KILOBITS_PER_SECOND,
-    DATA_RATE_KILOBYTES_PER_SECOND,
     SIGNAL_STRENGTH_DECIBELS,
+    EntityCategory,
+    UnitOfDataRate,
+    UnitOfInformation,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .common import AvmWrapper, FritzBoxBaseEntity
-from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION, MeshRoles
+from .const import DSL_CONNECTION, UPTIME_DEVIATION
+from .coordinator import FritzConfigEntry
+from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
+from .models import ConnectionInfo
 
 _LOGGER = logging.getLogger(__name__)
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 def _uptime_calculation(seconds_uptime: float, last_value: datetime | None) -> datetime:
@@ -64,6 +68,11 @@ def _retrieve_connection_uptime_state(
 def _retrieve_external_ip_state(status: FritzStatus, last_value: str) -> str:
     """Return external ip from device."""
     return status.external_ip  # type: ignore[no-any-return]
+
+
+def _retrieve_external_ipv6_state(status: FritzStatus, last_value: str) -> str:
+    """Return external ipv6 from device."""
+    return str(status.external_ipv6)
 
 
 def _retrieve_kb_s_sent_state(status: FritzStatus, last_value: str) -> float:
@@ -134,195 +143,184 @@ def _retrieve_link_attenuation_received_state(
     return status.attenuation[1] / 10  # type: ignore[no-any-return]
 
 
-@dataclass
-class FritzRequireKeysMixin:
-    """Fritz sensor data class."""
+def _retrieve_cpu_temperature_state(
+    status: FritzStatus, last_value: float | None
+) -> float:
+    """Return the first CPU temperature value."""
+    return status.get_cpu_temperatures()[0]  # type: ignore[no-any-return]
 
-    value_fn: Callable[[FritzStatus, Any], Any]
 
-
-@dataclass
-class FritzSensorEntityDescription(SensorEntityDescription, FritzRequireKeysMixin):
+@dataclass(frozen=True, kw_only=True)
+class FritzSensorEntityDescription(SensorEntityDescription, FritzEntityDescription):
     """Describes Fritz sensor entity."""
 
-    connection_type: Literal["dsl"] | None = None
-    exclude_mesh_role: MeshRoles = MeshRoles.SLAVE
+    is_suitable: Callable[[ConnectionInfo], bool] = lambda info: info.wan_enabled
 
 
 SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
     FritzSensorEntityDescription(
         key="external_ip",
-        name="External IP",
-        icon="mdi:earth",
+        translation_key="external_ip",
         value_fn=_retrieve_external_ip_state,
     ),
     FritzSensorEntityDescription(
+        key="external_ipv6",
+        translation_key="external_ipv6",
+        value_fn=_retrieve_external_ipv6_state,
+        is_suitable=lambda info: info.ipv6_active,
+    ),
+    FritzSensorEntityDescription(
         key="device_uptime",
-        name="Device Uptime",
+        translation_key="device_uptime",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_device_uptime_state,
-        exclude_mesh_role=MeshRoles.NONE,
+        is_suitable=lambda info: True,
     ),
     FritzSensorEntityDescription(
         key="connection_uptime",
-        name="Connection Uptime",
+        translation_key="connection_uptime",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_connection_uptime_state,
     ),
     FritzSensorEntityDescription(
         key="kb_s_sent",
-        name="Upload Throughput",
+        translation_key="kb_s_sent",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
-        icon="mdi:upload",
+        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         value_fn=_retrieve_kb_s_sent_state,
     ),
     FritzSensorEntityDescription(
         key="kb_s_received",
-        name="Download Throughput",
+        translation_key="kb_s_received",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
-        icon="mdi:download",
+        native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         value_fn=_retrieve_kb_s_received_state,
     ),
     FritzSensorEntityDescription(
         key="max_kb_s_sent",
-        name="Max Connection Upload Throughput",
-        native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
-        icon="mdi:upload",
-        entity_category=EntityCategory.DIAGNOSTIC,
+        translation_key="max_kb_s_sent",
+        native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         value_fn=_retrieve_max_kb_s_sent_state,
     ),
     FritzSensorEntityDescription(
         key="max_kb_s_received",
-        name="Max Connection Download Throughput",
-        native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
-        icon="mdi:download",
-        entity_category=EntityCategory.DIAGNOSTIC,
+        translation_key="max_kb_s_received",
+        native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
         value_fn=_retrieve_max_kb_s_received_state,
     ),
     FritzSensorEntityDescription(
         key="gb_sent",
-        name="GB sent",
+        translation_key="gb_sent",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=DATA_GIGABYTES,
-        icon="mdi:upload",
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         value_fn=_retrieve_gb_sent_state,
     ),
     FritzSensorEntityDescription(
         key="gb_received",
-        name="GB received",
+        translation_key="gb_received",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=DATA_GIGABYTES,
-        icon="mdi:download",
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         value_fn=_retrieve_gb_received_state,
     ),
     FritzSensorEntityDescription(
         key="link_kb_s_sent",
-        name="Link Upload Throughput",
-        native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
-        icon="mdi:upload",
+        translation_key="link_kb_s_sent",
+        native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_link_kb_s_sent_state,
-        connection_type=DSL_CONNECTION,
     ),
     FritzSensorEntityDescription(
         key="link_kb_s_received",
-        name="Link Download Throughput",
-        native_unit_of_measurement=DATA_RATE_KILOBITS_PER_SECOND,
-        icon="mdi:download",
+        translation_key="link_kb_s_received",
+        native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        device_class=SensorDeviceClass.DATA_RATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=_retrieve_link_kb_s_received_state,
-        connection_type=DSL_CONNECTION,
     ),
     FritzSensorEntityDescription(
         key="link_noise_margin_sent",
-        name="Link Upload Noise Margin",
+        translation_key="link_noise_margin_sent",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        icon="mdi:upload",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=_retrieve_link_noise_margin_sent_state,
-        connection_type=DSL_CONNECTION,
+        is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
     FritzSensorEntityDescription(
         key="link_noise_margin_received",
-        name="Link Download Noise Margin",
+        translation_key="link_noise_margin_received",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        icon="mdi:download",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=_retrieve_link_noise_margin_received_state,
-        connection_type=DSL_CONNECTION,
+        is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
     FritzSensorEntityDescription(
         key="link_attenuation_sent",
-        name="Link Upload Power Attenuation",
+        translation_key="link_attenuation_sent",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        icon="mdi:upload",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=_retrieve_link_attenuation_sent_state,
-        connection_type=DSL_CONNECTION,
+        is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
     ),
     FritzSensorEntityDescription(
         key="link_attenuation_received",
-        name="Link Download Power Attenuation",
+        translation_key="link_attenuation_received",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        icon="mdi:download",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value_fn=_retrieve_link_attenuation_received_state,
-        connection_type=DSL_CONNECTION,
+        is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
+    ),
+    FritzSensorEntityDescription(
+        key="cpu_temperature",
+        translation_key="cpu_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_retrieve_cpu_temperature_state,
+        is_suitable=lambda info: True,
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FritzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up FRITZ!Box sensors")
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper = entry.runtime_data
 
-    dsl: bool = False
-    dslinterface = await avm_wrapper.async_get_wan_dsl_interface_config()
-    if dslinterface:
-        dsl = dslinterface["NewEnable"]
+    connection_info = await avm_wrapper.async_get_connection_info()
 
     entities = [
         FritzBoxSensor(avm_wrapper, entry.title, description)
         for description in SENSOR_TYPES
-        if (dsl or description.connection_type != DSL_CONNECTION)
-        and description.exclude_mesh_role != avm_wrapper.mesh_role
+        if description.is_suitable(connection_info)
     ]
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
-class FritzBoxSensor(FritzBoxBaseEntity, SensorEntity):
+class FritzBoxSensor(FritzBoxBaseCoordinatorEntity, SensorEntity):
     """Define FRITZ!Box connectivity class."""
 
     entity_description: FritzSensorEntityDescription
 
-    def __init__(
-        self,
-        avm_wrapper: AvmWrapper,
-        device_friendly_name: str,
-        description: FritzSensorEntityDescription,
-    ) -> None:
-        """Init FRITZ!Box connectivity class."""
-        self.entity_description = description
-        self._last_device_value: str | None = None
-        self._attr_available = True
-        self._attr_name = f"{device_friendly_name} {description.name}"
-        self._attr_unique_id = f"{avm_wrapper.unique_id}-{description.key}"
-        super().__init__(avm_wrapper, device_friendly_name)
-
-    def update(self) -> None:
-        """Update data."""
-        _LOGGER.debug("Updating FRITZ!Box sensors")
-
-        try:
-            status: FritzStatus = self._avm_wrapper.fritz_status
-            self._attr_available = True
-        except FritzConnectionException:
-            _LOGGER.error("Error getting the state from the FRITZ!Box", exc_info=True)
-            self._attr_available = False
-            return
-
-        self._attr_native_value = (
-            self._last_device_value
-        ) = self.entity_description.value_fn(status, self._last_device_value)
+    @property
+    def native_value(self) -> StateType:
+        """Return the value reported by the sensor."""
+        return self.coordinator.data["entity_states"].get(self.entity_description.key)

@@ -1,150 +1,206 @@
-"""Support for power & energy sensors for VeSync outlets."""
+"""Support for voltage, power & energy sensors for VeSync outlets."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
+
+from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
+from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-from .common import VeSyncBaseEntity
-from .const import DOMAIN, VS_DISCOVERY, VS_SENSORS
-from .switch import DEV_TYPE_TO_HA
+from .common import is_humidifier, is_outlet, rgetattr
+from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY, VS_MANAGER
+from .coordinator import VeSyncDataCoordinator
+from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, kw_only=True)
+class VeSyncSensorEntityDescription(SensorEntityDescription):
+    """Describe VeSync sensor entity."""
+
+    value_fn: Callable[[VeSyncBaseDevice], StateType]
+
+    exists_fn: Callable[[VeSyncBaseDevice], bool]
+
+
+SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
+    VeSyncSensorEntityDescription(
+        key="filter-life",
+        translation_key="filter_life",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: device.state.filter_life,
+        exists_fn=lambda device: rgetattr(device, "state.filter_life") is not None,
+    ),
+    VeSyncSensorEntityDescription(
+        key="air-quality",
+        translation_key="air_quality",
+        value_fn=lambda device: device.state.air_quality_string,
+        exists_fn=(
+            lambda device: rgetattr(device, "state.air_quality_string") is not None
+        ),
+    ),
+    VeSyncSensorEntityDescription(
+        key="pm25",
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.state.pm25,
+        exists_fn=lambda device: rgetattr(device, "state.pm25") is not None,
+    ),
+    VeSyncSensorEntityDescription(
+        key="power",
+        translation_key="current_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.state.power,
+        exists_fn=is_outlet,
+    ),
+    VeSyncSensorEntityDescription(
+        key="energy",
+        translation_key="energy_today",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda device: device.state.energy,
+        exists_fn=is_outlet,
+    ),
+    VeSyncSensorEntityDescription(
+        key="energy-weekly",
+        translation_key="energy_week",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda device: getattr(
+            device.state.weekly_history, "totalEnergy", None
+        ),
+        exists_fn=is_outlet,
+    ),
+    VeSyncSensorEntityDescription(
+        key="energy-monthly",
+        translation_key="energy_month",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda device: getattr(
+            device.state.monthly_history, "totalEnergy", None
+        ),
+        exists_fn=is_outlet,
+    ),
+    VeSyncSensorEntityDescription(
+        key="energy-yearly",
+        translation_key="energy_year",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda device: getattr(
+            device.state.yearly_history, "totalEnergy", None
+        ),
+        exists_fn=is_outlet,
+    ),
+    VeSyncSensorEntityDescription(
+        key="voltage",
+        translation_key="current_voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.state.voltage,
+        exists_fn=is_outlet,
+    ),
+    VeSyncSensorEntityDescription(
+        key="humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.state.humidity,
+        exists_fn=is_humidifier,
+    ),
+)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches."""
+
+    coordinator = hass.data[DOMAIN][VS_COORDINATOR]
 
     @callback
     def discover(devices):
         """Add new devices to platform."""
-        _setup_entities(devices, async_add_entities)
+        _setup_entities(devices, async_add_entities, coordinator)
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_SENSORS), discover)
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_SENSORS], async_add_entities)
+    _setup_entities(
+        hass.data[DOMAIN][VS_MANAGER].devices, async_add_entities, coordinator
+    )
 
 
 @callback
-def _setup_entities(devices, async_add_entities):
+def _setup_entities(
+    devices: list[VeSyncBaseDevice],
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    coordinator: VeSyncDataCoordinator,
+):
     """Check if device is online and add entity."""
-    entities = []
-    for dev in devices:
-        if DEV_TYPE_TO_HA.get(dev.device_type) != "outlet":
-            # Not an outlet that supports energy/power, so do not create sensor entities
-            continue
-        entities.append(VeSyncPowerSensor(dev))
-        entities.append(VeSyncEnergySensor(dev))
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(
+        (
+            VeSyncSensorEntity(dev, description, coordinator)
+            for dev in devices
+            for description in SENSORS
+            if description.exists_fn(dev)
+        ),
+        update_before_add=True,
+    )
 
 
 class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
-    """Representation of a sensor describing diagnostics of a VeSync outlet."""
+    """Representation of a sensor describing a VeSync device."""
 
-    def __init__(self, plug):
+    entity_description: VeSyncSensorEntityDescription
+
+    def __init__(
+        self,
+        device: VeSyncBaseDevice,
+        description: VeSyncSensorEntityDescription,
+        coordinator: VeSyncDataCoordinator,
+    ) -> None:
         """Initialize the VeSync outlet device."""
-        super().__init__(plug)
-        self.smartplug = plug
+        super().__init__(device, coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{super().unique_id}-{description.key}"
 
     @property
-    def entity_category(self):
-        """Return the diagnostic entity category."""
-        return EntityCategory.DIAGNOSTIC
-
-
-class VeSyncPowerSensor(VeSyncSensorEntity):
-    """Representation of current power use for a VeSync outlet."""
-
-    @property
-    def unique_id(self):
-        """Return unique ID for power sensor on device."""
-        return f"{super().unique_id}-power"
-
-    @property
-    def name(self):
-        """Return sensor name."""
-        return f"{super().name} current power"
-
-    @property
-    def device_class(self):
-        """Return the power device class."""
-        return SensorDeviceClass.POWER
-
-    @property
-    def native_value(self):
-        """Return the current power usage in W."""
-        return self.smartplug.power
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the Watt unit of measurement."""
-        return POWER_WATT
-
-    @property
-    def state_class(self):
-        """Return the measurement state class."""
-        return SensorStateClass.MEASUREMENT
-
-    def update(self):
-        """Update outlet details and energy usage."""
-        self.smartplug.update()
-        self.smartplug.update_energy()
-
-
-class VeSyncEnergySensor(VeSyncSensorEntity):
-    """Representation of current day's energy use for a VeSync outlet."""
-
-    def __init__(self, plug):
-        """Initialize the VeSync outlet device."""
-        super().__init__(plug)
-        self.smartplug = plug
-
-    @property
-    def unique_id(self):
-        """Return unique ID for power sensor on device."""
-        return f"{super().unique_id}-energy"
-
-    @property
-    def name(self):
-        """Return sensor name."""
-        return f"{super().name} energy use today"
-
-    @property
-    def device_class(self):
-        """Return the energy device class."""
-        return SensorDeviceClass.ENERGY
-
-    @property
-    def native_value(self):
-        """Return the today total energy usage in kWh."""
-        return self.smartplug.energy_today
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the kWh unit of measurement."""
-        return ENERGY_KILO_WATT_HOUR
-
-    @property
-    def state_class(self):
-        """Return the total_increasing state class."""
-        return SensorStateClass.TOTAL_INCREASING
-
-    def update(self):
-        """Update outlet details and energy usage."""
-        self.smartplug.update()
-        self.smartplug.update_energy()
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.device)

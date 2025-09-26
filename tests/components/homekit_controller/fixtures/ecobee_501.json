@@ -1,0 +1,475 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "ecobee Inc.",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "ECB501",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "My ecobee",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "123456789016",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "4.7.340214",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "34AB8811-AC7F-4340-BAC3-FD6A85F9943B",
+            "iid": 11,
+            "perms": ["pr", "hd"],
+            "format": "string",
+            "value": "4.1;3fac0fb4",
+            "maxLen": 64
+          },
+          {
+            "type": "00000220-0000-1000-8000-0026BB765291",
+            "iid": 10,
+            "perms": ["pr", "hd"],
+            "format": "data",
+            "value": "u4qz9c7m80Y="
+          },
+          {
+            "type": "000000A6-0000-1000-8000-0026BB765291",
+            "iid": 9,
+            "perms": ["pr", "ev"],
+            "format": "uint32",
+            "value": 0,
+            "description": "Accessory Flags"
+          }
+        ]
+      },
+      {
+        "iid": 30,
+        "type": "000000A2-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "iid": 31,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.1.0",
+            "description": "Version",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 16,
+        "type": "0000004A-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000000F-0000-1000-8000-0026BB765291",
+            "iid": 17,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Current Heating Cooling State",
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1,
+            "valid-values": [0, 1, 2]
+          },
+          {
+            "type": "00000033-0000-1000-8000-0026BB765291",
+            "iid": 18,
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "value": 3,
+            "description": "Target Heating Cooling State",
+            "minValue": 0,
+            "maxValue": 3,
+            "minStep": 1,
+            "valid-values": [0, 1, 2, 3]
+          },
+          {
+            "type": "00000011-0000-1000-8000-0026BB765291",
+            "iid": 19,
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "value": 21.3,
+            "description": "Current Temperature",
+            "unit": "celsius",
+            "minValue": 0,
+            "maxValue": 40.0,
+            "minStep": 0.1
+          },
+          {
+            "type": "00000035-0000-1000-8000-0026BB765291",
+            "iid": 20,
+            "perms": ["pr", "pw", "ev"],
+            "format": "float",
+            "value": 25.6,
+            "description": "Target Temperature",
+            "unit": "celsius",
+            "minValue": 7.2,
+            "maxValue": 33.3,
+            "minStep": 0.1
+          },
+          {
+            "type": "00000036-0000-1000-8000-0026BB765291",
+            "iid": 21,
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "value": 1,
+            "description": "Temperature Display Units",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1,
+            "valid-values": [0, 1]
+          },
+          {
+            "type": "0000000D-0000-1000-8000-0026BB765291",
+            "iid": 22,
+            "perms": ["pr", "pw", "ev"],
+            "format": "float",
+            "value": 25.6,
+            "description": "Cooling Threshold Temperature",
+            "unit": "celsius",
+            "minValue": 18.3,
+            "maxValue": 33.3,
+            "minStep": 0.1
+          },
+          {
+            "type": "00000012-0000-1000-8000-0026BB765291",
+            "iid": 23,
+            "perms": ["pr", "pw", "ev"],
+            "format": "float",
+            "value": 7.2,
+            "description": "Heating Threshold Temperature",
+            "unit": "celsius",
+            "minValue": 7.2,
+            "maxValue": 26.1,
+            "minStep": 0.1
+          },
+          {
+            "type": "00000010-0000-1000-8000-0026BB765291",
+            "iid": 24,
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "value": 55.0,
+            "description": "Current Relative Humidity",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100.0,
+            "minStep": 1.0
+          },
+          {
+            "type": "00000034-0000-1000-8000-0026BB765291",
+            "iid": 25,
+            "perms": ["pr", "pw", "ev"],
+            "format": "float",
+            "value": 36.0,
+            "description": "Target Relative Humidity",
+            "unit": "percentage",
+            "minValue": 20.0,
+            "maxValue": 50.0,
+            "minStep": 1.0
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 27,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "My ecobee",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "000000BF-0000-1000-8000-0026BB765291",
+            "iid": 75,
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "value": 1,
+            "description": "Target Fan State",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "000000AF-0000-1000-8000-0026BB765291",
+            "iid": 76,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Current Fan State",
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "type": "B7DDB9A3-54BB-4572-91D2-F1F5B0510F8C",
+            "iid": 33,
+            "perms": ["pr"],
+            "format": "uint8",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 3,
+            "minStep": 1
+          },
+          {
+            "type": "E4489BBC-5227-4569-93E5-B345E3E5508F",
+            "iid": 34,
+            "perms": ["pr", "pw"],
+            "format": "float",
+            "value": 20.6,
+            "unit": "celsius",
+            "minValue": 7.2,
+            "maxValue": 26.1,
+            "minStep": 0.1
+          },
+          {
+            "type": "7D381BAA-20F9-40E5-9BE9-AEB92D4BECEF",
+            "iid": 35,
+            "perms": ["pr", "pw"],
+            "format": "float",
+            "value": 25.6,
+            "unit": "celsius",
+            "minValue": 18.3,
+            "maxValue": 33.3,
+            "minStep": 0.1
+          },
+          {
+            "type": "73AAB542-892A-4439-879A-D2A883724B69",
+            "iid": 36,
+            "perms": ["pr", "pw"],
+            "format": "float",
+            "value": 17.8,
+            "unit": "celsius",
+            "minValue": 7.2,
+            "maxValue": 26.1,
+            "minStep": 0.1
+          },
+          {
+            "type": "5DA985F0-898A-4850-B987-B76C6C78D670",
+            "iid": 37,
+            "perms": ["pr", "pw"],
+            "format": "float",
+            "value": 27.8,
+            "unit": "celsius",
+            "minValue": 18.3,
+            "maxValue": 33.3,
+            "minStep": 0.1
+          },
+          {
+            "type": "05B97374-6DC0-439B-A0FA-CA33F612D425",
+            "iid": 38,
+            "perms": ["pr", "pw"],
+            "format": "float",
+            "value": 18.3,
+            "unit": "celsius",
+            "minValue": 7.2,
+            "maxValue": 26.1,
+            "minStep": 0.1
+          },
+          {
+            "type": "A251F6E7-AC46-4190-9C5D-3D06277BDF9F",
+            "iid": 39,
+            "perms": ["pr", "pw"],
+            "format": "float",
+            "value": 27.8,
+            "unit": "celsius",
+            "minValue": 18.3,
+            "maxValue": 33.3,
+            "minStep": 0.1
+          },
+          {
+            "type": "1B300BC2-CFFC-47FF-89F9-BD6CCF5F2853",
+            "iid": 40,
+            "perms": ["pw"],
+            "format": "uint8",
+            "minValue": 0,
+            "maxValue": 3,
+            "minStep": 1
+          },
+          {
+            "type": "1621F556-1367-443C-AF19-82AF018E99DE",
+            "iid": 41,
+            "perms": ["pr", "pw"],
+            "format": "string",
+            "value": "2014-01-03T00:00:00-04:00Q",
+            "maxLen": 64
+          },
+          {
+            "type": "FA128DE6-9D7D-49A4-B6D8-4E4E234DEE38",
+            "iid": 48,
+            "perms": ["pw"],
+            "format": "bool"
+          },
+          {
+            "type": "4A6AE4F6-036C-495D-87CC-B3702B437741",
+            "iid": 49,
+            "perms": ["pr"],
+            "format": "uint8",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 4,
+            "minStep": 1
+          },
+          {
+            "type": "DB7BF261-7042-4194-8BD1-3AA22830AEDD",
+            "iid": 50,
+            "perms": ["pr"],
+            "format": "uint8",
+            "value": 2,
+            "minValue": 0,
+            "maxValue": 3,
+            "minStep": 1
+          },
+          {
+            "type": "41935E3E-B54D-42E9-B8B9-D33C6319F0AF",
+            "iid": 51,
+            "perms": ["pr"],
+            "format": "bool",
+            "value": false
+          },
+          {
+            "type": "C35DA3C0-E004-40E3-B153-46655CDD9214",
+            "iid": 52,
+            "perms": ["pr", "pw"],
+            "format": "uint8",
+            "value": 0,
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "48F62AEC-4171-4B4A-8F0E-1EEB6708B3FB",
+            "iid": 53,
+            "perms": ["pr"],
+            "format": "uint8",
+            "value": 0,
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "1B1515F2-CC45-409F-991F-C480987F92C3",
+            "iid": 54,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "The Hive is humming along. You have no pending alerts or reminders.",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 56,
+        "type": "00000085-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 28,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "My ecobee Motion",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000022-0000-1000-8000-0026BB765291",
+            "iid": 66,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Motion Detected"
+          },
+          {
+            "type": "BFE61C70-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 67,
+            "perms": ["pr", "ev"],
+            "format": "int",
+            "value": 14,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 57,
+        "type": "00000086-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 29,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "My ecobee Occupancy",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000071-0000-1000-8000-0026BB765291",
+            "iid": 65,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 1,
+            "description": "Occupancy Detected",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "A8F798E0-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 68,
+            "perms": ["pr", "ev"],
+            "format": "int",
+            "value": 44,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      }
+    ]
+  }
+]

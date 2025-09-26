@@ -1,12 +1,11 @@
 """Support for Proxmox VE."""
+
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
+from typing import Any
 
-from proxmoxer import ProxmoxAPI
-from proxmoxer.backends.https import AuthenticationError
-from proxmoxer.core import ResourceException
+from proxmoxer import AuthenticationError, ProxmoxAPI
 import requests.exceptions
 from requests.exceptions import ConnectTimeout, SSLError
 import voluptuous as vol
@@ -20,33 +19,31 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .common import ProxmoxClient, call_api_container_vm, parse_api_container_vm
+from .const import (
+    _LOGGER,
+    CONF_CONTAINERS,
+    CONF_NODE,
+    CONF_NODES,
+    CONF_REALM,
+    CONF_VMS,
+    COORDINATORS,
+    DEFAULT_PORT,
+    DEFAULT_REALM,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+    PROXMOX_CLIENTS,
+    TYPE_CONTAINER,
+    TYPE_VM,
+    UPDATE_INTERVAL,
 )
 
 PLATFORMS = [Platform.BINARY_SENSOR]
-DOMAIN = "proxmoxve"
-PROXMOX_CLIENTS = "proxmox_clients"
-CONF_REALM = "realm"
-CONF_NODE = "node"
-CONF_NODES = "nodes"
-CONF_VMS = "vms"
-CONF_CONTAINERS = "containers"
-
-COORDINATORS = "coordinators"
-API_DATA = "api_data"
-
-DEFAULT_PORT = 8006
-DEFAULT_REALM = "pam"
-DEFAULT_VERIFY_SSL = True
-TYPE_VM = 0
-TYPE_CONTAINER = 1
-UPDATE_INTERVAL = 60
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -119,8 +116,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 continue
             except SSLError:
                 _LOGGER.error(
-                    "Unable to verify proxmox server SSL. "
-                    'Try using "verify_ssl: false" for proxmox instance %s:%d',
+                    (
+                        "Unable to verify proxmox server SSL. "
+                        'Try using "verify_ssl: false" for proxmox instance %s:%d'
+                    ),
                     host,
                     port,
                 )
@@ -136,7 +135,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await hass.async_add_executor_job(build_client)
 
-    coordinators: dict[str, dict[str, dict[int, DataUpdateCoordinator]]] = {}
+    coordinators: dict[
+        str, dict[str, dict[int, DataUpdateCoordinator[dict[str, Any] | None]]]
+    ] = {}
     hass.data[DOMAIN][COORDINATORS] = coordinators
 
     # Create a coordinator for each vm/container
@@ -178,26 +179,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     for component in PLATFORMS:
         await hass.async_create_task(
-            hass.helpers.discovery.async_load_platform(
-                component, DOMAIN, {"config": config}, config
-            )
+            async_load_platform(hass, component, DOMAIN, {"config": config}, config)
         )
 
     return True
 
 
 def create_coordinator_container_vm(
-    hass, proxmox, host_name, node_name, vm_id, vm_type
-):
+    hass: HomeAssistant,
+    proxmox: ProxmoxAPI,
+    host_name: str,
+    node_name: str,
+    vm_id: int,
+    vm_type: int,
+) -> DataUpdateCoordinator[dict[str, Any] | None]:
     """Create and return a DataUpdateCoordinator for a vm/container."""
 
-    async def async_update_data():
+    async def async_update_data() -> dict[str, Any] | None:
         """Call the api and handle the response."""
 
-        def poll_api():
+        def poll_api() -> dict[str, Any] | None:
             """Call the api."""
-            vm_status = call_api_container_vm(proxmox, node_name, vm_id, vm_type)
-            return vm_status
+            return call_api_container_vm(proxmox, node_name, vm_id, vm_type)
 
         vm_status = await hass.async_add_executor_job(poll_api)
 
@@ -216,113 +219,3 @@ def create_coordinator_container_vm(
         update_method=async_update_data,
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
-
-
-def parse_api_container_vm(status):
-    """Get the container or vm api data and return it formatted in a dictionary.
-
-    It is implemented in this way to allow for more data to be added for sensors
-    in the future.
-    """
-
-    return {"status": status["status"], "name": status["name"]}
-
-
-def call_api_container_vm(proxmox, node_name, vm_id, machine_type):
-    """Make proper api calls."""
-    status = None
-
-    try:
-        if machine_type == TYPE_VM:
-            status = proxmox.nodes(node_name).qemu(vm_id).status.current.get()
-        elif machine_type == TYPE_CONTAINER:
-            status = proxmox.nodes(node_name).lxc(vm_id).status.current.get()
-    except (ResourceException, requests.exceptions.ConnectionError):
-        return None
-
-    return status
-
-
-class ProxmoxEntity(CoordinatorEntity):
-    """Represents any entity created for the Proxmox VE platform."""
-
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator,
-        unique_id,
-        name,
-        icon,
-        host_name,
-        node_name,
-        vm_id=None,
-    ):
-        """Initialize the Proxmox entity."""
-        super().__init__(coordinator)
-
-        self.coordinator = coordinator
-        self._unique_id = unique_id
-        self._name = name
-        self._host_name = host_name
-        self._icon = icon
-        self._available = True
-        self._node_name = node_name
-        self._vm_id = vm_id
-
-        self._state = None
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return self._unique_id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def icon(self) -> str:
-        """Return the mdi icon of the entity."""
-        return self._icon
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.last_update_success and self._available
-
-
-class ProxmoxClient:
-    """A wrapper for the proxmoxer ProxmoxAPI client."""
-
-    def __init__(self, host, port, user, realm, password, verify_ssl):
-        """Initialize the ProxmoxClient."""
-
-        self._host = host
-        self._port = port
-        self._user = user
-        self._realm = realm
-        self._password = password
-        self._verify_ssl = verify_ssl
-
-        self._proxmox = None
-        self._connection_start_time = None
-
-    def build_client(self):
-        """Construct the ProxmoxAPI client. Allows inserting the realm within the `user` value."""
-
-        if "@" in self._user:
-            user_id = self._user
-        else:
-            user_id = f"{self._user}@{self._realm}"
-
-        self._proxmox = ProxmoxAPI(
-            self._host,
-            port=self._port,
-            user=user_id,
-            password=self._password,
-            verify_ssl=self._verify_ssl,
-        )
-
-    def get_api_client(self):
-        """Return the ProxmoxAPI client."""
-        return self._proxmox

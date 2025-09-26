@@ -1,4 +1,5 @@
 """Support for Tasmota lights."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -17,29 +18,25 @@ from hatasmota.models import DiscoveryHashType
 from homeassistant.components import light
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_WHITE,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_WHITE,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
     brightness_supported,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
-from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate, TasmotaOnOffEntity
+from .entity import TasmotaAvailability, TasmotaDiscoveryUpdate, TasmotaOnOffEntity
 
 DEFAULT_BRIGHTNESS_MAX = 255
 TASMOTA_BRIGHTNESS_MAX = 100
@@ -48,7 +45,7 @@ TASMOTA_BRIGHTNESS_MAX = 100
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tasmota light dynamically through discovery."""
 
@@ -61,12 +58,12 @@ async def async_setup_entry(
             [TasmotaLight(tasmota_entity=tasmota_entity, discovery_hash=discovery_hash)]
         )
 
-    hass.data[
-        DATA_REMOVE_DISCOVER_COMPONENT.format(light.DOMAIN)
-    ] = async_dispatcher_connect(
-        hass,
-        TASMOTA_DISCOVERY_ENTITY_NEW.format(light.DOMAIN),
-        async_discover,
+    hass.data[DATA_REMOVE_DISCOVER_COMPONENT.format(light.DOMAIN)] = (
+        async_dispatcher_connect(
+            hass,
+            TASMOTA_DISCOVERY_ENTITY_NEW.format(light.DOMAIN),
+            async_discover,
+        )
     )
 
 
@@ -99,7 +96,6 @@ class TasmotaLight(
     def __init__(self, **kwds: Any) -> None:
         """Initialize Tasmota light."""
         self._supported_color_modes: set[str] | None = None
-        self._supported_features = 0
 
         self._brightness: int | None = None
         self._color_mode: str | None = None
@@ -126,37 +122,38 @@ class TasmotaLight(
     def _setup_from_entity(self) -> None:
         """(Re)Setup the entity."""
         self._supported_color_modes = set()
-        supported_features = 0
+        supported_features = LightEntityFeature(0)
         light_type = self._tasmota_entity.light_type
 
         if light_type in [LIGHT_TYPE_RGB, LIGHT_TYPE_RGBW, LIGHT_TYPE_RGBCW]:
-            # Mark HS support for RGBW light because we don't have direct control over the
-            # white channel, so the base component's RGB->RGBW translation does not work
-            self._supported_color_modes.add(COLOR_MODE_HS)
-            self._color_mode = COLOR_MODE_HS
+            # Mark HS support for RGBW light because we don't have direct
+            # control over the white channel, so the base component's RGB->RGBW
+            # translation does not work
+            self._supported_color_modes.add(ColorMode.HS)
+            self._color_mode = ColorMode.HS
 
         if light_type == LIGHT_TYPE_RGBW:
-            self._supported_color_modes.add(COLOR_MODE_WHITE)
+            self._supported_color_modes.add(ColorMode.WHITE)
 
         if light_type in [LIGHT_TYPE_COLDWARM, LIGHT_TYPE_RGBCW]:
-            self._supported_color_modes.add(COLOR_MODE_COLOR_TEMP)
-            self._color_mode = COLOR_MODE_COLOR_TEMP
+            self._supported_color_modes.add(ColorMode.COLOR_TEMP)
+            self._color_mode = ColorMode.COLOR_TEMP
 
         if light_type != LIGHT_TYPE_NONE and not self._supported_color_modes:
-            self._supported_color_modes.add(COLOR_MODE_BRIGHTNESS)
-            self._color_mode = COLOR_MODE_BRIGHTNESS
+            self._supported_color_modes.add(ColorMode.BRIGHTNESS)
+            self._color_mode = ColorMode.BRIGHTNESS
 
         if not self._supported_color_modes:
-            self._supported_color_modes.add(COLOR_MODE_ONOFF)
-            self._color_mode = COLOR_MODE_ONOFF
+            self._supported_color_modes.add(ColorMode.ONOFF)
+            self._color_mode = ColorMode.ONOFF
 
         if light_type in [LIGHT_TYPE_RGB, LIGHT_TYPE_RGBW, LIGHT_TYPE_RGBCW]:
-            supported_features |= SUPPORT_EFFECT
+            supported_features |= LightEntityFeature.EFFECT
 
         if self._tasmota_entity.supports_transition:
-            supported_features |= SUPPORT_TRANSITION
+            supported_features |= LightEntityFeature.TRANSITION
 
-        self._supported_features = supported_features
+        self._attr_supported_features = supported_features
 
     @callback
     def state_updated(self, state: bool, **kwargs: Any) -> None:
@@ -180,15 +177,15 @@ class TasmotaLight(
             if self._tasmota_entity.light_type == LIGHT_TYPE_RGBW:
                 # Tasmota does not support RGBW mode, set mode to white or hs
                 if self._white_value == 0:
-                    self._color_mode = COLOR_MODE_HS
+                    self._color_mode = ColorMode.HS
                 else:
-                    self._color_mode = COLOR_MODE_WHITE
+                    self._color_mode = ColorMode.WHITE
             elif self._tasmota_entity.light_type == LIGHT_TYPE_RGBCW:
                 # Tasmota does not support RGBWW mode, set mode to ct or hs
                 if self._white_value == 0:
-                    self._color_mode = COLOR_MODE_HS
+                    self._color_mode = ColorMode.HS
                 else:
-                    self._color_mode = COLOR_MODE_COLOR_TEMP
+                    self._color_mode = ColorMode.COLOR_TEMP
 
         self.async_write_ha_state()
 
@@ -203,19 +200,27 @@ class TasmotaLight(
         return self._color_mode
 
     @property
-    def color_temp(self) -> int | None:
-        """Return the color temperature in mired."""
-        return self._color_temp
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
+        return (
+            color_util.color_temperature_mired_to_kelvin(self._color_temp)
+            if self._color_temp
+            else None
+        )
 
     @property
-    def min_mireds(self) -> int:
-        """Return the coldest color_temp that this light supports."""
-        return self._tasmota_entity.min_mireds
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest color_temp_kelvin that this light supports."""
+        return color_util.color_temperature_mired_to_kelvin(
+            self._tasmota_entity.min_mireds
+        )
 
     @property
-    def max_mireds(self) -> int:
-        """Return the warmest color_temp that this light supports."""
-        return self._tasmota_entity.max_mireds
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest color_temp_kelvin that this light supports."""
+        return color_util.color_temperature_mired_to_kelvin(
+            self._tasmota_entity.max_mireds
+        )
 
     @property
     def effect(self) -> str | None:
@@ -236,19 +241,9 @@ class TasmotaLight(
         return (hs_color[0], hs_color[1])
 
     @property
-    def force_update(self) -> bool:
-        """Force update."""
-        return False
-
-    @property
     def supported_color_modes(self) -> set[str] | None:
         """Flag supported color modes."""
         return self._supported_color_modes
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
@@ -256,11 +251,11 @@ class TasmotaLight(
 
         attributes: dict[str, Any] = {}
 
-        if ATTR_HS_COLOR in kwargs and COLOR_MODE_HS in supported_color_modes:
+        if ATTR_HS_COLOR in kwargs and ColorMode.HS in supported_color_modes:
             hs_color = kwargs[ATTR_HS_COLOR]
             attributes["color_hs"] = [hs_color[0], hs_color[1]]
 
-        if ATTR_WHITE in kwargs and COLOR_MODE_WHITE in supported_color_modes:
+        if ATTR_WHITE in kwargs and ColorMode.WHITE in supported_color_modes:
             attributes["white_value"] = scale_brightness(kwargs[ATTR_WHITE])
 
         if ATTR_TRANSITION in kwargs:
@@ -269,8 +264,13 @@ class TasmotaLight(
         if ATTR_BRIGHTNESS in kwargs and brightness_supported(supported_color_modes):
             attributes["brightness"] = scale_brightness(kwargs[ATTR_BRIGHTNESS])
 
-        if ATTR_COLOR_TEMP in kwargs and COLOR_MODE_COLOR_TEMP in supported_color_modes:
-            attributes["color_temp"] = int(kwargs[ATTR_COLOR_TEMP])
+        if (
+            ATTR_COLOR_TEMP_KELVIN in kwargs
+            and ColorMode.COLOR_TEMP in supported_color_modes
+        ):
+            attributes["color_temp"] = color_util.color_temperature_kelvin_to_mired(
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
+            )
 
         if ATTR_EFFECT in kwargs:
             attributes["effect"] = kwargs[ATTR_EFFECT]

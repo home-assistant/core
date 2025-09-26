@@ -1,49 +1,50 @@
 """Test the NEW_NAME config flow."""
-from unittest.mock import patch
+
+from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.NEW_DOMAIN.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.NEW_DOMAIN.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["errors"] is None
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.NEW_DOMAIN.config_flow.PlaceholderHub.authenticate",
         return_value=True,
-    ), patch(
-        "homeassistant.components.NEW_DOMAIN.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
+    ):
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "Name of the device"
-    assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Name of the device"
+    assert result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
+async def test_form_invalid_auth(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -53,20 +54,48 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         "homeassistant.components.NEW_DOMAIN.config_flow.PlaceholderHub.authenticate",
         side_effect=InvalidAuth,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    # Make sure the config flow tests finish with either an
+    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
+    # we can show the config flow is able to recover from an error.
+    with patch(
+        "homeassistant.components.NEW_DOMAIN.config_flow.PlaceholderHub.authenticate",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Name of the device"
+    assert result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_cannot_connect(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -76,14 +105,41 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         "homeassistant.components.NEW_DOMAIN.config_flow.PlaceholderHub.authenticate",
         side_effect=CannotConnect,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    # Make sure the config flow tests finish with either an
+    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
+    # we can show the config flow is able to recover from an error.
+
+    with patch(
+        "homeassistant.components.NEW_DOMAIN.config_flow.PlaceholderHub.authenticate",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Name of the device"
+    assert result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1

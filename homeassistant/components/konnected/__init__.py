@@ -1,4 +1,5 @@
 """Support for Konnected devices."""
+
 import copy
 import hmac
 from http import HTTPStatus
@@ -11,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -57,7 +58,6 @@ from .const import (
     PIN_TO_ZONE,
     STATE_HIGH,
     STATE_LOW,
-    UNDO_UPDATE_LISTENER,
     UPDATE_ENDPOINT,
     ZONE_TO_PIN,
     ZONES,
@@ -84,7 +84,7 @@ def ensure_zone(value):
     if value is None:
         raise vol.Invalid("zone value is None")
 
-    if str(value) not in ZONES is None:
+    if str(value) not in ZONES:
         raise vol.Invalid("zone not valid")
 
     return str(value)
@@ -197,7 +197,6 @@ DEVICE_SCHEMA_YAML = vol.All(
     import_device_validator,
 )
 
-# pylint: disable=no-value-for-parameter
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
@@ -259,12 +258,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # async_connect will handle retries until it establishes a connection
     await client.async_connect()
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # config entry specific data to enable unload
-    hass.data[DOMAIN][entry.entry_id] = {
-        UNDO_UPDATE_LISTENER: entry.add_update_listener(async_entry_updated)
-    }
+    entry.async_on_unload(entry.add_update_listener(async_entry_updated))
     return True
 
 
@@ -272,11 +268,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
-
     if unload_ok:
         hass.data[DOMAIN][CONF_DEVICES].pop(entry.data[CONF_ID])
-        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
@@ -293,7 +286,7 @@ class KonnectedView(HomeAssistantView):
     name = "api:konnected"
     requires_auth = False  # Uses access token from configuration
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the view."""
 
     @staticmethod
@@ -305,7 +298,7 @@ class KonnectedView(HomeAssistantView):
 
     async def update_sensor(self, request: Request, device_id) -> Response:
         """Process a put or post."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         data = hass.data[DOMAIN]
 
         auth = request.headers.get(AUTHORIZATION)
@@ -377,7 +370,7 @@ class KonnectedView(HomeAssistantView):
 
     async def get(self, request: Request, device_id) -> Response:
         """Return the current binary state of a switch."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         data = hass.data[DOMAIN]
 
         if not (device := data[CONF_DEVICES].get(device_id)):
@@ -419,13 +412,14 @@ class KonnectedView(HomeAssistantView):
         resp = {}
         if request.query.get(CONF_ZONE):
             resp[CONF_ZONE] = zone_num
-        else:
+        elif zone_num:
             resp[CONF_PIN] = ZONE_TO_PIN[zone_num]
 
         # Make sure entity is setup
         if zone_entity_id := zone.get(ATTR_ENTITY_ID):
             resp["state"] = self.binary_value(
-                hass.states.get(zone_entity_id).state, zone[CONF_ACTIVATION]
+                hass.states.get(zone_entity_id).state,  # type: ignore[union-attr]
+                zone[CONF_ACTIVATION],
             )
             return self.json(resp)
 

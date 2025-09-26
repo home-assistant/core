@@ -1,34 +1,33 @@
 """Tracking for bluetooth devices."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 import logging
 from typing import Final
 
-import bluetooth  # pylint: disable=import-error
+import bluetooth
 from bt_proximity import BluetoothRSSI
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-)
-from homeassistant.components.device_tracker.const import (
     CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
     DEFAULT_TRACK_NEW,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     SCAN_INTERVAL,
-    SOURCE_TYPE_BLUETOOTH,
+    SourceType,
 )
 from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
+    AsyncSeeCallback,
     Device,
     async_load_config,
 )
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -42,7 +41,7 @@ from .const import (
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA: Final = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA: Final = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_TRACK_NEW): cv.boolean,
         vol.Optional(CONF_REQUEST_RSSI): cv.boolean,
@@ -78,7 +77,7 @@ def discover_devices(device_id: int) -> list[tuple[str, str]]:
 
 async def see_device(
     hass: HomeAssistant,
-    async_see: Callable[..., Awaitable[None]],
+    async_see: AsyncSeeCallback,
     mac: str,
     device_name: str,
     rssi: tuple[int] | None = None,
@@ -92,13 +91,12 @@ async def see_device(
         mac=f"{BT_PREFIX}{mac}",
         host_name=device_name,
         attributes=attributes,
-        source_type=SOURCE_TYPE_BLUETOOTH,
+        source_type=SourceType.BLUETOOTH,
     )
 
 
 async def get_tracking_devices(hass: HomeAssistant) -> tuple[set[str], set[str]]:
-    """
-    Load all known devices.
+    """Load all known devices.
 
     We just need the devices so set consider_home and home range to 0
     """
@@ -130,7 +128,7 @@ def lookup_name(mac: str) -> str | None:
 async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
-    async_see: Callable[..., Awaitable[None]],
+    async_see: AsyncSeeCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the Bluetooth Scanner."""
@@ -154,7 +152,7 @@ async def async_setup_scanner(
     async def perform_bluetooth_update() -> None:
         """Discover Bluetooth devices and update status."""
         _LOGGER.debug("Performing Bluetooth devices discovery and update")
-        tasks: list[Awaitable[None]] = []
+        tasks: list[asyncio.Task[None]] = []
 
         try:
             if track_new:
@@ -175,7 +173,11 @@ async def async_setup_scanner(
                     rssi = await hass.async_add_executor_job(client.request_rssi)
                     client.close()
 
-                tasks.append(see_device(hass, async_see, mac, friendly_name, rssi))
+                tasks.append(
+                    asyncio.create_task(
+                        see_device(hass, async_see, mac, friendly_name, rssi)
+                    )
+                )
 
             if tasks:
                 await asyncio.wait(tasks)
@@ -188,7 +190,10 @@ async def async_setup_scanner(
         # If an update is in progress, we don't do anything
         if update_bluetooth_lock.locked():
             _LOGGER.debug(
-                "Previous execution of update_bluetooth is taking longer than the scheduled update of interval %s",
+                (
+                    "Previous execution of update_bluetooth is taking longer than the"
+                    " scheduled update of interval %s"
+                ),
                 interval,
             )
             return

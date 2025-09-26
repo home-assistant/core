@@ -1,5 +1,7 @@
 """Support for wired switches attached to a Konnected device."""
+
 import logging
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -12,15 +14,15 @@ from homeassistant.const import (
     CONF_ZONE,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_ACTIVATION,
     CONF_MOMENTARY,
     CONF_PAUSE,
-    DOMAIN as KONNECTED_DOMAIN,
+    DOMAIN,
     STATE_HIGH,
     STATE_LOW,
 )
@@ -31,10 +33,10 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches attached to a Konnected device from a config entry."""
-    data = hass.data[KONNECTED_DOMAIN]
+    data = hass.data[DOMAIN]
     device_id = config_entry.data["id"]
     switches = [
         KonnectedSwitch(device_id, zone_data.get(CONF_ZONE), zone_data)
@@ -55,45 +57,26 @@ class KonnectedSwitch(SwitchEntity):
         self._momentary = self._data.get(CONF_MOMENTARY)
         self._pause = self._data.get(CONF_PAUSE)
         self._repeat = self._data.get(CONF_REPEAT)
-        self._state = self._boolean_state(self._data.get(ATTR_STATE))
-        self._name = self._data.get(CONF_NAME)
-        self._unique_id = (
+        self._attr_is_on = self._boolean_state(self._data.get(ATTR_STATE))
+        self._attr_name = self._data.get(CONF_NAME)
+        self._attr_unique_id = (
             f"{device_id}-{self._zone_num}-{self._momentary}-"
             f"{self._pause}-{self._repeat}"
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id."""
-        return self._unique_id
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return the status of the sensor."""
-        return self._state
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_id)})
 
     @property
     def panel(self):
         """Return the Konnected HTTP client."""
-        device_data = self.hass.data[KONNECTED_DOMAIN][CONF_DEVICES][self._device_id]
+        device_data = self.hass.data[DOMAIN][CONF_DEVICES][self._device_id]
         return device_data.get("panel")
 
     @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(identifiers={(KONNECTED_DOMAIN, self._device_id)})
-
-    @property
-    def available(self):
+    def available(self) -> bool:
         """Return whether the panel is available."""
         return self.panel.available
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Send a command to turn on the switch."""
         resp = await self.panel.update_switch(
             self._zone_num,
@@ -110,7 +93,7 @@ class KonnectedSwitch(SwitchEntity):
                 # Immediately set the state back off for momentary switches
                 self._set_state(False)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Send a command to turn off the switch."""
         resp = await self.panel.update_switch(
             self._zone_num, int(self._activation == STATE_LOW)
@@ -119,16 +102,15 @@ class KonnectedSwitch(SwitchEntity):
         if resp.get(ATTR_STATE) is not None:
             self._set_state(self._boolean_state(resp.get(ATTR_STATE)))
 
-    def _boolean_state(self, int_state):
-        if int_state is None:
-            return False
+    def _boolean_state(self, int_state: int | None) -> bool | None:
         if int_state == 0:
             return self._activation == STATE_LOW
         if int_state == 1:
             return self._activation == STATE_HIGH
+        return None
 
     def _set_state(self, state):
-        self._state = state
+        self._attr_is_on = state
         self.async_write_ha_state()
         _LOGGER.debug(
             "Setting status of %s actuator zone %s to %s",
@@ -142,7 +124,7 @@ class KonnectedSwitch(SwitchEntity):
         """Update the switch state."""
         self._set_state(state)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Store entity_id and register state change callback."""
         self._data["entity_id"] = self.entity_id
         self.async_on_remove(

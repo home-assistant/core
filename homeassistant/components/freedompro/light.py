@@ -1,33 +1,37 @@
 """Support for Freedompro light."""
+
+from __future__ import annotations
+
 import json
+from typing import Any
 
 from pyfreedompro import put_state
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_HS,
-    COLOR_MODE_ONOFF,
+    ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import FreedomproConfigEntry, FreedomproDataUpdateCoordinator
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FreedomproConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Freedompro light."""
-    api_key = entry.data[CONF_API_KEY]
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    api_key: str = entry.data[CONF_API_KEY]
+    coordinator = entry.runtime_data
     async_add_entities(
         Device(hass, api_key, device, coordinator)
         for device in coordinator.data
@@ -35,31 +39,37 @@ async def async_setup_entry(
     )
 
 
-class Device(CoordinatorEntity, LightEntity):
-    """Representation of an Freedompro light."""
+class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], LightEntity):
+    """Representation of a Freedompro light."""
 
-    def __init__(self, hass, api_key, device, coordinator):
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_is_on = False
+    _attr_brightness = 0
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        api_key: str,
+        device: dict[str, Any],
+        coordinator: FreedomproDataUpdateCoordinator,
+    ) -> None:
         """Initialize the Freedompro light."""
         super().__init__(coordinator)
         self._session = aiohttp_client.async_get_clientsession(hass)
         self._api_key = api_key
-        self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
         self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, self.unique_id),
-            },
+            identifiers={(DOMAIN, device["uid"])},
             manufacturer="Freedompro",
             model=device["type"],
-            name=self.name,
+            name=device["name"],
         )
-        self._attr_is_on = False
-        self._attr_brightness = 0
-        color_mode = COLOR_MODE_ONOFF
+        color_mode = ColorMode.ONOFF
         if "hue" in device["characteristics"]:
-            color_mode = COLOR_MODE_HS
+            color_mode = ColorMode.HS
         elif "brightness" in device["characteristics"]:
-            color_mode = COLOR_MODE_BRIGHTNESS
+            color_mode = ColorMode.BRIGHTNESS
         self._attr_color_mode = color_mode
         self._attr_supported_color_modes = {color_mode}
 
@@ -89,31 +99,29 @@ class Device(CoordinatorEntity, LightEntity):
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Async function to set on to light."""
-        payload = {"on": True}
+        payload: dict[str, Any] = {"on": True}
         if ATTR_BRIGHTNESS in kwargs:
             payload["brightness"] = round(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
         if ATTR_HS_COLOR in kwargs:
             payload["saturation"] = round(kwargs[ATTR_HS_COLOR][1])
             payload["hue"] = round(kwargs[ATTR_HS_COLOR][0])
-        payload = json.dumps(payload)
         await put_state(
             self._session,
             self._api_key,
             self._attr_unique_id,
-            payload,
+            json.dumps(payload),
         )
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Async function to set off to light."""
         payload = {"on": False}
-        payload = json.dumps(payload)
         await put_state(
             self._session,
             self._api_key,
             self._attr_unique_id,
-            payload,
+            json.dumps(payload),
         )
         await self.coordinator.async_request_refresh()

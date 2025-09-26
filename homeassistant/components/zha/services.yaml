@@ -1,12 +1,8 @@
 # Describes the format for available zha services
 
 permit:
-  name: Permit
-  description: Allow nodes to join the Zigbee network.
   fields:
     duration:
-      name: Duration
-      description: Time to permit joins, in seconds
       default: 60
       selector:
         number:
@@ -14,73 +10,46 @@ permit:
           max: 254
           unit_of_measurement: seconds
     ieee:
-      name: IEEE
-      description: IEEE address of the node permitting new joins
       example: "00:0d:6f:00:05:7d:2d:34"
       selector:
         text:
     source_ieee:
-      name: Source IEEE
-      description: IEEE address of the joining device (must be used with install code)
       example: "00:0a:bf:00:01:10:23:35"
       selector:
         text:
     install_code:
-      name: Install Code
-      description: Install code of the joining device (must be used with source_ieee)
       example: "1234-5678-1234-5678-AABB-CCDD-AABB-CCDD-EEFF"
       selector:
         text:
     qr_code:
-      name: QR Code
-      description: value of the QR install code (different between vendors)
       example: "Z:000D6FFFFED4163B$I:52797BF4A5084DAA8E1712B61741CA024051"
       selector:
         text:
 
 remove:
-  name: Remove
-  description: Remove a node from the Zigbee network.
   fields:
     ieee:
-      name: IEEE
-      description: IEEE address of the node to remove
       required: true
       example: "00:0d:6f:00:05:7d:2d:34"
       selector:
         text:
 
 reconfigure_device:
-  name: Reconfigure device
-  description: >-
-    Reconfigure ZHA device (heal device). Use this if you are having issues
-    with the device. If the device in question is a battery powered device
-    please ensure it is awake and accepting commands when you use this
-    service.
   fields:
     ieee:
-      name: IEEE
-      description: IEEE address of the device to reconfigure
       required: true
       example: "00:0d:6f:00:05:7d:2d:34"
       selector:
         text:
 
 set_zigbee_cluster_attribute:
-  name: Set zigbee cluster attribute
-  description: >-
-    Set attribute value for the specified cluster on the specified entity.
   fields:
     ieee:
-      name: IEEE
-      description: IEEE address for the device
       required: true
       example: "00:0d:6f:00:05:7d:2d:34"
       selector:
         text:
     endpoint_id:
-      name: Endpoint ID
-      description: Endpoint id for the cluster
       required: true
       selector:
         number:
@@ -88,16 +57,12 @@ set_zigbee_cluster_attribute:
           max: 65535
           mode: box
     cluster_id:
-      name: Cluster ID
-      description: ZCL cluster to retrieve attributes for
       required: true
       selector:
         number:
           min: 1
           max: 65535
     cluster_type:
-      name: Cluster Type
-      description: type of the cluster
       default: "in"
       selector:
         select:
@@ -105,8 +70,6 @@ set_zigbee_cluster_attribute:
             - "in"
             - "out"
     attribute:
-      name: Attribute
-      description: id of the attribute to set
       required: true
       example: 0
       selector:
@@ -114,50 +77,35 @@ set_zigbee_cluster_attribute:
           min: 1
           max: 65535
     value:
-      name: Value
-      description: value to write to the attribute
       required: true
       example: 0x0001
       selector:
         text:
     manufacturer:
-      name: Manufacturer
-      description: manufacturer code
       example: 0x00FC
       selector:
         text:
 
 issue_zigbee_cluster_command:
-  name: Issue zigbee cluster command
-  description: >-
-    Issue command on the specified cluster on the specified entity.
   fields:
     ieee:
-      name: IEEE
-      description: IEEE address for the device
       required: true
       example: "00:0d:6f:00:05:7d:2d:34"
       selector:
         text:
     endpoint_id:
-      name: Endpoint ID
-      description: Endpoint id for the cluster
       required: true
       selector:
         number:
           min: 1
           max: 65535
     cluster_id:
-      name: Cluster ID
-      description: ZCL cluster to retrieve attributes for
       required: true
       selector:
         number:
           min: 1
           max: 65535
     cluster_type:
-      name: Cluster Type
-      description: type of the cluster
       default: "in"
       selector:
         select:
@@ -165,16 +113,12 @@ issue_zigbee_cluster_command:
             - "in"
             - "out"
     command:
-      name: Command
-      description: id of the command to execute
       required: true
       selector:
         number:
           min: 1
           max: 65535
     command_type:
-      name: Command Type
-      description: type of the command to execute
       required: true
       selector:
         select:
@@ -182,41 +126,31 @@ issue_zigbee_cluster_command:
             - "client"
             - "server"
     args:
-      name: Args
-      description: args to pass to the command
       example: "[arg1, arg2, argN]"
       selector:
         object:
+    params:
+      selector:
+        object:
     manufacturer:
-      name: Manufacturer
-      description: manufacturer code
       example: 0x00FC
       selector:
         text:
 
 issue_zigbee_group_command:
-  name: Issue zigbee group command
-  description: >-
-    Issue command on the specified cluster on the specified group.
   fields:
     group:
-      name: Group
-      description: Hexadecimal address of the group
       required: true
       example: 0x0222
       selector:
         text:
     cluster_id:
-      name: Cluster ID
-      description: ZCL cluster to send command to
       required: true
       selector:
         number:
           min: 1
           max: 65535
     cluster_type:
-      name: Cluster Type
-      description: type of the cluster
       default: "in"
       selector:
         select:
@@ -224,42 +158,28 @@ issue_zigbee_group_command:
             - "in"
             - "out"
     command:
-      name: Command
-      description: id of the command to execute
       required: true
       selector:
         number:
           min: 1
           max: 65535
     args:
-      name: Args
-      description: args to pass to the command
       example: "[arg1, arg2, argN]"
       selector:
         object:
     manufacturer:
-      name: Manufacturer
-      description: manufacturer code
       example: 0x00FC
       selector:
         text:
 
 warning_device_squawk:
-  name: Warning device squawk
-  description: >-
-    This service uses the WD capabilities to emit a quick audible/visible pulse called a "squawk". The squawk command has no effect if the WD is currently active (warning in progress).
   fields:
     ieee:
-      name: IEEE
-      description: IEEE address for the device
       required: true
       example: "00:0d:6f:00:05:7d:2d:34"
       selector:
         text:
     mode:
-      name: Mode
-      description: >-
-        The Squawk Mode field is used as a 4-bit enumeration, and can have one of the values shown in Table 8-24 of the ZCL spec - Squawk Mode Field. The exact operation of each mode (how the WD “squawks”) is implementation specific.
       default: 0
       selector:
         number:
@@ -267,9 +187,6 @@ warning_device_squawk:
           max: 1
           mode: box
     strobe:
-      name: Strobe
-      description: >-
-        The strobe field is used as a Boolean, and determines if the visual indication is also required in addition to the audible squawk, as shown in Table 8-25 of the ZCL spec - Strobe Bit.
       default: 1
       selector:
         number:
@@ -277,9 +194,6 @@ warning_device_squawk:
           max: 1
           mode: box
     level:
-      name: Level
-      description: >-
-        The squawk level field is used as a 2-bit enumeration, and determines the intensity of audible squawk sound as shown in Table 8-26 of the ZCL spec - Squawk Level Field Values.
       default: 2
       selector:
         number:
@@ -288,21 +202,13 @@ warning_device_squawk:
           mode: box
 
 warning_device_warn:
-  name: Warning device warn
-  description: >-
-    This service starts the WD operation. The WD alerts the surrounding area by audible (siren) and visual (strobe) signals.
   fields:
     ieee:
-      name: IEEE
-      description: IEEE address for the device
       required: true
       example: "00:0d:6f:00:05:7d:2d:34"
       selector:
         text:
     mode:
-      name: Mode
-      description: >-
-        The Warning Mode field is used as an 4-bit enumeration, can have one of the values 0-6 defined below in table 8-20 of the ZCL spec. The exact behavior of the WD device in each mode is according to the relevant security standards.
       default: 3
       selector:
         number:
@@ -310,9 +216,6 @@ warning_device_warn:
           max: 6
           mode: box
     strobe:
-      name: Strobe
-      description: >-
-        The Strobe field is used as a 2-bit enumeration, and determines if the visual indication is required in addition to the audible siren, as indicated in Table 8-21 of the ZCL spec. "0" means no strobe, "1" means strobe. If the strobe field is “1” and the Warning Mode is “0” (“Stop”) then only the strobe is activated.
       default: 1
       selector:
         number:
@@ -320,9 +223,6 @@ warning_device_warn:
           max: 1
           mode: box
     level:
-      name: Level
-      description: >-
-        The Siren Level field is used as a 2-bit enumeration, and indicates the intensity of audible squawk sound as shown in Table 8-22 of the ZCL spec.
       default: 2
       selector:
         number:
@@ -330,9 +230,6 @@ warning_device_warn:
           max: 3
           mode: box
     duration:
-      name: Duration
-      description: >-
-        Requested duration of warning, in seconds (16 bit). If both Strobe and Warning Mode are "0" this field SHALL be ignored.
       default: 5
       selector:
         number:
@@ -340,9 +237,6 @@ warning_device_warn:
           max: 65535
           unit_of_measurement: seconds
     duty_cycle:
-      name: Duty cycle
-      description: >-
-        Indicates the length of the flash cycle. This provides a means of varying the flash duration for different alarm types (e.g., fire, police, burglar). Valid range is 0-100 in increments of 10. All other values SHALL be rounded to the nearest valid value. Strobe SHALL calculate duty cycle over a duration of one second. The ON state SHALL precede the OFF state. For example, if Strobe Duty Cycle Field specifies “40,” then the strobe SHALL flash ON for 4/10ths of a second and then turn OFF for 6/10ths of a second.
       default: 0
       selector:
         number:
@@ -350,9 +244,6 @@ warning_device_warn:
           max: 100
           step: 10
     intensity:
-      name: Intensity
-      description: >-
-        Indicates the intensity of the strobe as shown in Table 8-23 of the ZCL spec. This attribute is designed to vary the output of the strobe (i.e., brightness) and not its frequency, which is detailed in section 8.4.2.3.1.6 of the ZCL spec.
       default: 2
       selector:
         number:
@@ -361,71 +252,53 @@ warning_device_warn:
           mode: box
 
 clear_lock_user_code:
-  name: Clear lock user
-  description: Clear a user code from a lock
   target:
     entity:
       domain: lock
       integration: zha
   fields:
     code_slot:
-      name: Code slot
-      description: Code slot to clear code from
       required: true
       example: 1
       selector:
         text:
 
 enable_lock_user_code:
-  name: Enable lock user
-  description: Enable a user code on a lock
   target:
     entity:
       domain: lock
       integration: zha
   fields:
     code_slot:
-      name: Code slot
-      description: Code slot to enable
       required: true
       example: 1
       selector:
         text:
 
 disable_lock_user_code:
-  name: Disable lock user
-  description: Disable a user code on a lock
   target:
     entity:
       domain: lock
       integration: zha
   fields:
     code_slot:
-      name: Code slot
-      description: Code slot to disable
       required: true
       example: 1
       selector:
         text:
 
 set_lock_user_code:
-  name: Set lock user code
-  description: Set a user code on a lock
   target:
     entity:
       domain: lock
       integration: zha
   fields:
     code_slot:
-      name: Code slot
-      description: Code slot to set the code in
       required: true
       example: 1
       selector:
         text:
     user_code:
-      name: Code
-      description: Code to set
       required: true
       example: 1234
       selector:

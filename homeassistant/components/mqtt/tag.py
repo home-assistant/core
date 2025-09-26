@@ -1,46 +1,51 @@
 """Provides tag scanning for MQTT."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
 import functools
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE, CONF_PLATFORM, CONF_VALUE_TEMPLATE
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.components import tag
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_DEVICE, CONF_VALUE_TEMPLATE
+from homeassistant.core import HassJobType, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import MqttValueTemplate, subscription
-from .. import mqtt
-from .const import (
-    ATTR_DISCOVERY_HASH,
-    ATTR_DISCOVERY_TOPIC,
-    CONF_QOS,
-    CONF_TOPIC,
-    DOMAIN,
+from . import subscription
+from .config import MQTT_BASE_SCHEMA
+from .const import ATTR_DISCOVERY_HASH, CONF_QOS, CONF_TOPIC
+from .discovery import MQTTDiscoveryPayload
+from .entity import (
+    MqttDiscoveryDeviceUpdateMixin,
+    async_handle_schema_error,
+    async_setup_non_entity_entry_helper,
+    send_discovery_done,
+    update_device,
 )
-from .discovery import MQTT_DISCOVERY_DONE, MQTT_DISCOVERY_UPDATED, clear_discovery_hash
-from .mixins import (
-    CONF_CONNECTIONS,
-    CONF_IDENTIFIERS,
-    MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-    async_setup_entry_helper,
-    cleanup_device_registry,
-    device_info_from_config,
+from .models import (
+    DATA_MQTT,
+    MqttValueTemplate,
+    MqttValueTemplateException,
+    ReceiveMessage,
 )
+from .schemas import MQTT_ENTITY_DEVICE_INFO_SCHEMA
+from .subscription import EntitySubscription
 from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
-TAG = "tag"
-TAGS = "mqtt_tags"
+LOG_NAME = "Tag"
 
-PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+TAG = "tag"
+
+DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE): MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-        vol.Optional(CONF_PLATFORM): "mqtt",
         vol.Required(CONF_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     },
@@ -48,35 +53,28 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_entry(hass, config_entry):
-    """Set up MQTT tag scan dynamically through MQTT discovery."""
-    setup = functools.partial(async_setup_tag, hass, config_entry=config_entry)
-    await async_setup_entry_helper(hass, "tag", setup, PLATFORM_SCHEMA)
+async def async_setup_mqtt_tag_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Set up MQTT tag scanner dynamically through MQTT discovery."""
+
+    setup = functools.partial(_async_setup_tag, hass, config_entry=config_entry)
+    async_setup_non_entity_entry_helper(hass, TAG, setup, DISCOVERY_SCHEMA)
 
 
-async def async_setup_tag(hass, config, config_entry, discovery_data):
+async def _async_setup_tag(
+    hass: HomeAssistant,
+    config: ConfigType,
+    config_entry: ConfigEntry,
+    discovery_data: DiscoveryInfoType,
+) -> None:
     """Set up the MQTT tag scanner."""
     discovery_hash = discovery_data[ATTR_DISCOVERY_HASH]
     discovery_id = discovery_hash[1]
 
-    device_id = None
-    if CONF_DEVICE in config:
-        await _update_device(hass, config_entry, config)
-
-        device_registry = await hass.helpers.device_registry.async_get_registry()
-        device = device_registry.async_get_device(
-            {(DOMAIN, id_) for id_ in config[CONF_DEVICE][CONF_IDENTIFIERS]},
-            {tuple(x) for x in config[CONF_DEVICE][CONF_CONNECTIONS]},
-        )
-
-        if device is None:
-            return
-        device_id = device.id
-
-        if TAGS not in hass.data:
-            hass.data[TAGS] = {}
-        if device_id not in hass.data[TAGS]:
-            hass.data[TAGS][device_id] = {}
+    device_id = update_device(hass, config_entry, config)
+    if device_id is not None and device_id not in (tags := hass.data[DATA_MQTT].tags):
+        tags[device_id] = {}
 
     tag_scanner = MQTTTagScanner(
         hass,
@@ -86,141 +84,102 @@ async def async_setup_tag(hass, config, config_entry, discovery_data):
         config_entry,
     )
 
-    await tag_scanner.setup()
+    await tag_scanner.subscribe_topics()
 
     if device_id:
-        hass.data[TAGS][device_id][discovery_id] = tag_scanner
+        tags[device_id][discovery_id] = tag_scanner
+
+    send_discovery_done(hass, discovery_data)
 
 
-def async_has_tags(hass, device_id):
+def async_has_tags(hass: HomeAssistant, device_id: str) -> bool:
     """Device has tag scanners."""
-    if TAGS not in hass.data or device_id not in hass.data[TAGS]:
+    if device_id not in (tags := hass.data[DATA_MQTT].tags):
         return False
-    return hass.data[TAGS][device_id] != {}
+    return tags[device_id] != {}
 
 
-class MQTTTagScanner:
+class MQTTTagScanner(MqttDiscoveryDeviceUpdateMixin):
     """MQTT Tag scanner."""
 
-    def __init__(self, hass, config, device_id, discovery_data, config_entry):
+    _value_template: Callable[[ReceivePayloadType, str], ReceivePayloadType]
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        device_id: str | None,
+        discovery_data: DiscoveryInfoType,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize."""
         self._config = config
         self._config_entry = config_entry
         self.device_id = device_id
         self.discovery_data = discovery_data
         self.hass = hass
-        self._remove_discovery = None
-        self._remove_device_updated = None
-        self._sub_state = None
-        self._value_template = None
-
-        self._setup_from_config(config)
-
-    async def discovery_update(self, payload):
-        """Handle discovery update."""
-        discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
-        _LOGGER.info(
-            "Got update for tag scanner with hash: %s '%s'", discovery_hash, payload
-        )
-        if not payload:
-            # Empty payload: Remove tag scanner
-            _LOGGER.info("Removing tag scanner: %s", discovery_hash)
-            await self.tear_down()
-            if self.device_id:
-                await cleanup_device_registry(self.hass, self.device_id)
-        else:
-            # Non-empty payload: Update tag scanner
-            _LOGGER.info("Updating tag scanner: %s", discovery_hash)
-            config = PLATFORM_SCHEMA(payload)
-            self._config = config
-            if self.device_id:
-                await _update_device(self.hass, self._config_entry, config)
-            self._setup_from_config(config)
-            await self.subscribe_topics()
-
-        async_dispatcher_send(
-            self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
-        )
-
-    def _setup_from_config(self, config):
+        self._sub_state: dict[str, EntitySubscription] | None = None
         self._value_template = MqttValueTemplate(
-            config.get(CONF_VALUE_TEMPLATE),
-            hass=self.hass,
+            config.get(CONF_VALUE_TEMPLATE)
         ).async_render_with_possible_json_value
 
-    async def setup(self):
-        """Set up the MQTT tag scanner."""
-        discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
+        MqttDiscoveryDeviceUpdateMixin.__init__(
+            self, hass, discovery_data, device_id, config_entry, LOG_NAME
+        )
+
+    async def async_update(self, discovery_data: MQTTDiscoveryPayload) -> None:
+        """Handle MQTT tag discovery updates."""
+        # Update tag scanner
+        try:
+            config: DiscoveryInfoType = DISCOVERY_SCHEMA(discovery_data)
+        except vol.Invalid as err:
+            async_handle_schema_error(discovery_data, err)
+            return
+        self._config = config
+        self._value_template = MqttValueTemplate(
+            config.get(CONF_VALUE_TEMPLATE)
+        ).async_render_with_possible_json_value
+        update_device(self.hass, self._config_entry, config)
         await self.subscribe_topics()
-        if self.device_id:
-            self._remove_device_updated = self.hass.bus.async_listen(
-                EVENT_DEVICE_REGISTRY_UPDATED, self.device_removed
-            )
-        self._remove_discovery = async_dispatcher_connect(
-            self.hass,
-            MQTT_DISCOVERY_UPDATED.format(discovery_hash),
-            self.discovery_update,
-        )
-        async_dispatcher_send(
-            self.hass, MQTT_DISCOVERY_DONE.format(discovery_hash), None
+
+    @callback
+    def _async_tag_scanned(self, msg: ReceiveMessage) -> None:
+        """Handle new tag scanned."""
+        try:
+            tag_id = str(self._value_template(msg.payload, "")).strip()
+        except MqttValueTemplateException as exc:
+            _LOGGER.warning(exc)
+            return
+        if not tag_id:  # No output from template, ignore
+            return
+
+        self.hass.async_create_task(
+            tag.async_scan_tag(self.hass, tag_id, self.device_id)
         )
 
-    async def subscribe_topics(self):
+    async def subscribe_topics(self) -> None:
         """Subscribe to MQTT topics."""
-
-        async def tag_scanned(msg):
-            tag_id = self._value_template(msg.payload, "").strip()
-            if not tag_id:  # No output from template, ignore
-                return
-
-            await self.hass.components.tag.async_scan_tag(tag_id, self.device_id)
-
         self._sub_state = subscription.async_prepare_subscribe_topics(
             self.hass,
             self._sub_state,
             {
                 "state_topic": {
                     "topic": self._config[CONF_TOPIC],
-                    "msg_callback": tag_scanned,
+                    "msg_callback": self._async_tag_scanned,
                     "qos": self._config[CONF_QOS],
+                    "job_type": HassJobType.Callback,
                 }
             },
         )
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
-    async def device_removed(self, event):
-        """Handle the removal of a device."""
-        device_id = event.data["device_id"]
-        if event.data["action"] != "remove" or device_id != self.device_id:
-            return
-
-        await self.tear_down()
-
-    async def tear_down(self):
+    async def async_tear_down(self) -> None:
         """Cleanup tag scanner."""
         discovery_hash = self.discovery_data[ATTR_DISCOVERY_HASH]
         discovery_id = discovery_hash[1]
-        discovery_topic = self.discovery_data[ATTR_DISCOVERY_TOPIC]
-
-        clear_discovery_hash(self.hass, discovery_hash)
-        if self.device_id:
-            self._remove_device_updated()
-        self._remove_discovery()
-
-        mqtt.publish(self.hass, discovery_topic, "", retain=True)
         self._sub_state = subscription.async_unsubscribe_topics(
             self.hass, self._sub_state
         )
-        if self.device_id:
-            self.hass.data[TAGS][self.device_id].pop(discovery_id)
-
-
-async def _update_device(hass, config_entry, config):
-    """Update device registry."""
-    device_registry = await hass.helpers.device_registry.async_get_registry()
-    config_entry_id = config_entry.entry_id
-    device_info = device_info_from_config(config[CONF_DEVICE])
-
-    if config_entry_id is not None and device_info is not None:
-        device_info["config_entry_id"] = config_entry_id
-        device_registry.async_get_or_create(**device_info)
+        tags = self.hass.data[DATA_MQTT].tags
+        if self.device_id in tags and discovery_id in tags[self.device_id]:
+            del tags[self.device_id][discovery_id]

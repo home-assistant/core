@@ -1,29 +1,28 @@
 """Support for sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from fjaraskupan import Device, State
+from fjaraskupan import Device
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DeviceState, async_setup_entry_platform
+from . import async_setup_entry_platform
+from .coordinator import FjaraskupanConfigEntry, FjaraskupanCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class EntityDescription(BinarySensorEntityDescription):
     """Entity description."""
 
@@ -33,13 +32,13 @@ class EntityDescription(BinarySensorEntityDescription):
 SENSORS = (
     EntityDescription(
         key="grease-filter",
-        name="Grease Filter",
+        translation_key="grease_filter",
         device_class=BinarySensorDeviceClass.PROBLEM,
         is_on=lambda state: state.grease_filter_full,
     ),
     EntityDescription(
         key="carbon-filter",
-        name="Carbon Filter",
+        translation_key="carbon_filter",
         device_class=BinarySensorDeviceClass.PROBLEM,
         is_on=lambda state: state.carbon_filter_full,
     ),
@@ -48,17 +47,17 @@ SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FjaraskupanConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors dynamically through discovery."""
 
-    def _constructor(device_state: DeviceState) -> list[Entity]:
+    def _constructor(coordinator: FjaraskupanCoordinator) -> list[Entity]:
         return [
             BinarySensor(
-                device_state.coordinator,
-                device_state.device,
-                device_state.device_info,
+                coordinator,
+                coordinator.device,
+                coordinator.device_info,
                 entity_description,
             )
             for entity_description in SENSORS
@@ -67,14 +66,15 @@ async def async_setup_entry(
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class BinarySensor(CoordinatorEntity[State], BinarySensorEntity):
+class BinarySensor(CoordinatorEntity[FjaraskupanCoordinator], BinarySensorEntity):
     """Grease filter sensor."""
 
     entity_description: EntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[State],
+        coordinator: FjaraskupanCoordinator,
         device: Device,
         device_info: DeviceInfo,
         entity_description: EntityDescription,
@@ -85,7 +85,6 @@ class BinarySensor(CoordinatorEntity[State], BinarySensorEntity):
 
         self._attr_unique_id = f"{device.address}-{entity_description.key}"
         self._attr_device_info = device_info
-        self._attr_name = f"{device_info['name']} {entity_description.name}"
 
     @property
     def is_on(self) -> bool | None:

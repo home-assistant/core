@@ -1,56 +1,96 @@
 #!/usr/bin/env python3
-"""Generate an updated requirements_all.txt."""
-import configparser
+"""Generate updated constraint and requirements files."""
+
+from __future__ import annotations
+
 import difflib
 import importlib
-import os
+from operator import itemgetter
 from pathlib import Path
 import pkgutil
 import re
 import sys
+import tomllib
+from typing import Any
 
 from homeassistant.util.yaml.loader import load_yaml
-from script.hassfest.model import Integration
+from script.hassfest.model import Config, Integration
 
-COMMENT_REQUIREMENTS = (
-    "Adafruit_BBIO",
+# Requirements which can't be installed on all systems because they rely on additional
+# system packages. Requirements listed in EXCLUDED_REQUIREMENTS_ALL will be commented-out
+# in requirements_all.txt and requirements_test_all.txt.
+EXCLUDED_REQUIREMENTS_ALL = {
+    "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avea",  # depends on bluepy
     "avion",
     "beacontools",
-    "beewi_smartclim",  # depends on bluepy
-    "blinkt",
+    "beewi-smartclim",  # depends on bluepy
     "bluepy",
-    "bme280spi",
-    "bme680",
     "decora",
-    "decora_wifi",
-    "envirophat",
     "evdev",
-    "face_recognition",
-    "i2csense",
-    "opencv-python-headless",
+    "face-recognition",
     "pybluez",
+    "pycocotools",
     "pycups",
-    "PySwitchbot",
-    "pySwitchmate",
-    "python-eq3bt",
     "python-gammu",
     "python-lirc",
     "pyuserinput",
-    "raspihats",
-    "rpi-rf",
-    "RPi.GPIO",
-    "smbus-cffi",
     "tensorflow",
     "tf-models-official",
-    "VL53L1X2",
-)
-
-COMMENT_REQUIREMENTS_NORMALIZED = {
-    commented.lower().replace("_", "-") for commented in COMMENT_REQUIREMENTS
 }
 
-IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
+# Requirements excluded by EXCLUDED_REQUIREMENTS_ALL which should be included when
+# building integration wheels for all architectures.
+INCLUDED_REQUIREMENTS_WHEELS = {
+    "evdev",
+    "pycups",
+    "python-gammu",
+    "pyuserinput",
+}
+
+
+# Requirements to exclude or include when running github actions.
+# Requirements listed in "exclude" will be commented-out in
+# requirements_all_{action}.txt
+# Requirements listed in "include" must be listed in EXCLUDED_REQUIREMENTS_CI, and
+# will be included in requirements_all_{action}.txt
+
+OVERRIDDEN_REQUIREMENTS_ACTIONS = {
+    "pytest": {
+        "exclude": set(),
+        "include": {"python-gammu"},
+        "markers": {},
+    },
+    "wheels_aarch64": {
+        "exclude": set(),
+        "include": INCLUDED_REQUIREMENTS_WHEELS,
+        "markers": {},
+    },
+    # Pandas has issues building on armhf, it is expected they
+    # will drop the platform in the near future (they consider it
+    # "flimsy" on 386). The following packages depend on pandas,
+    # so we comment them out.
+    "wheels_armhf": {
+        "exclude": {"env-canada", "noaa-coops", "pyezviz", "pykrakenapi"},
+        "include": INCLUDED_REQUIREMENTS_WHEELS,
+        "markers": {},
+    },
+    "wheels_armv7": {
+        "exclude": set(),
+        "include": INCLUDED_REQUIREMENTS_WHEELS,
+        "markers": {},
+    },
+    "wheels_amd64": {
+        "exclude": set(),
+        "include": INCLUDED_REQUIREMENTS_WHEELS,
+        "markers": {},
+    },
+    "wheels_i386": {
+        "exclude": set(),
+        "include": INCLUDED_REQUIREMENTS_WHEELS,
+        "markers": {},
+    },
+}
 
 URL_PIN = (
     "https://developers.home-assistant.io/docs/"
@@ -58,16 +98,13 @@ URL_PIN = (
 )
 
 
-CONSTRAINT_PATH = os.path.join(
-    os.path.dirname(__file__), "../homeassistant/package_constraints.txt"
+CONSTRAINT_PATH = (
+    Path(__file__).parent.parent / "homeassistant" / "package_constraints.txt"
 )
 CONSTRAINT_BASE = """
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
 pycryptodome>=3.6.6
-
-# Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
-urllib3>=1.26.5
 
 # Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
 # https://github.com/advisories/GHSA-93xj-8mrv-444m
@@ -76,15 +113,15 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.43.0
-
-# libcst >=0.4.0 requires a newer Rust than we currently have available,
-# thus our wheels builds fail. This pins it to the last working version,
-# which at this point satisfies our needs.
-libcst==0.3.23
+grpcio==1.72.1
+grpcio-status==1.72.1
+grpcio-reflection==1.72.1
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
+
+# This is a old unmaintained library and is replaced with faust-cchardet
+cchardet==1000000000.0.0
 
 # To remove reliance on typing
 btlewrap>=0.0.10
@@ -94,36 +131,136 @@ enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
 
-# Temporary constraint on pandas, to unblock 2021.7 releases
-# until we have fixed the wheels builds for newer versions.
-pandas==1.3.0
-
-# regex causes segfault with version 2021.8.27
-# https://bitbucket.org/mrabarnett/mrab-regex/issues/421/2021827-results-in-fatal-python-error
-# This is fixed in 2021.8.28
-regex==2021.8.28
-
 # httpx requires httpcore, and httpcore requires anyio and h11, but the version constraints on
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==3.5.0
-h11==0.12.0
-httpcore==0.14.5
+anyio==4.10.0
+h11==0.16.0
+httpcore==1.0.9
 
-# pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
-pytest_asyncio==1000000000.0.0
+# Ensure we have a hyperframe version that works in Python 3.10
+# 5.2.0 fixed a collections abc deprecation
+hyperframe>=5.2.0
 
-# Prevent dependency conflicts between sisyphus-control and aioambient
-# until upper bounds for sisyphus-control have been updated
-# https://github.com/jkeljo/sisyphus-control/issues/6
-python-engineio>=3.13.1,<4.0
-python-socketio>=4.6.0,<5.0
+# Ensure we run compatible with musllinux build env
+numpy==2.3.2
+pandas==2.3.0
 
 # Constrain multidict to avoid typing issues
-# https://github.com/home-assistant/core/pull/64792
-multidict<6.0.0
+# https://github.com/home-assistant/core/pull/67046
+multidict>=6.0.2
+
+# Version 2.0 added typing, prevent accidental fallbacks
+backoff>=2.0
+
+# ensure pydantic version does not float since it might have breaking changes
+pydantic==2.11.9
+
+# Required for Python 3.12.4 compatibility (#119223).
+mashumaro>=3.13.1
+
+# Breaks asyncio
+# https://github.com/pubnub/python/issues/130
+pubnub!=6.4.0
+
+# Package's __init__.pyi stub has invalid syntax and breaks mypy
+# https://github.com/dahlia/iso4217/issues/16
+iso4217!=1.10.20220401
+
+# protobuf must be in package constraints for the wheel
+# builder to build binary wheels
+protobuf==6.32.0
+
+# faust-cchardet: Ensure we have a version we can build wheels
+# 2.1.18 is the first version that works with our wheel builder
+faust-cchardet>=2.1.18
+
+# Prevent accidental fallbacks
+websockets>=15.0.1
+
+# pysnmplib is no longer maintained and does not work with newer
+# python
+pysnmplib==1000000000.0.0
+
+# The get-mac package has been replaced with getmac. Installing get-mac alongside getmac
+# breaks getmac due to them both sharing the same python package name inside 'getmac'.
+get-mac==1000000000.0.0
+
+# Poetry is a build dependency. Installing it as a runtime dependency almost
+# always indicates an issue with library requirements.
+poetry==1000000000.0.0
+
+# We want to skip the binary wheels for the 'charset-normalizer' packages.
+# They are build with mypyc, but causes issues with our wheel builder.
+# In order to do so, we need to constrain the version.
+charset-normalizer==3.4.3
+
+# dacite: Ensure we have a version that is able to handle type unions for
+# NAM, Brother, and GIOS.
+dacite>=1.7.0
+
+# chacha20poly1305-reuseable==0.12.x is incompatible with cryptography==43.0.x
+chacha20poly1305-reuseable>=0.13.0
+
+# pycountry<23.12.11 imports setuptools at run time
+# https://github.com/pycountry/pycountry/blob/ea69bab36f00df58624a0e490fdad4ccdc14268b/HISTORY.txt#L39
+pycountry>=23.12.11
+
+# scapy==2.6.0 causes CI failures due to a race condition
+scapy>=2.6.1
+
+# tuf isn't updated to deal with breaking changes in securesystemslib==1.0.
+# Only tuf>=4 includes a constraint to <1.0.
+# https://github.com/theupdateframework/python-tuf/releases/tag/v4.0.0
+tuf>=4.0.0
+
+# https://github.com/jd/tenacity/issues/471
+tenacity!=8.4.0
+
+# 5.0.0 breaks Timeout as a context manager
+# TypeError: 'Timeout' object does not support the context manager protocol
+async-timeout==4.0.3
+
+# aiofiles keeps getting downgraded by custom components
+# causing newer methods to not be available and breaking
+# some integrations at startup
+# https://github.com/home-assistant/core/issues/127529
+# https://github.com/home-assistant/core/issues/122508
+# https://github.com/home-assistant/core/issues/118004
+aiofiles>=24.1.0
+
+# multidict < 6.4.0 has memory leaks
+# https://github.com/aio-libs/multidict/issues/1134
+# https://github.com/aio-libs/multidict/issues/1131
+multidict>=6.4.2
+
+# rpds-py frequently updates cargo causing build failures
+# No wheels upstream available for armhf & armv7
+rpds-py==0.26.0
+
+# Constraint num2words to 0.5.14 as 0.5.15 and 0.5.16 were removed from PyPI
+num2words==0.5.14
+
+# pymodbus does not follow SemVer, and it keeps getting
+# downgraded or upgraded by custom components
+# This ensures all use the same version
+pymodbus==3.11.2
+
+# Some packages don't support gql 4.0.0 yet
+gql<4.0.0
+
+# Pin pytest-rerunfailures to prevent accidental breaks
+pytest-rerunfailures==16.0.1
 """
+
+GENERATED_MESSAGE = (
+    f"# Automatically generated by {Path(__file__).name}, do not edit\n\n"
+)
+
+MAP_HOOK_ID_TO_PACKAGE = {
+    "ruff-check": "ruff",
+}
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
     "check-executables-have-shebangs",
@@ -131,28 +268,30 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
     "no-commit-to-branch",
     "prettier",
     "python-typing-update",
+    "ruff-format",  # it's just ruff
 )
 
 PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")
 
 
-def has_tests(module: str):
+def has_tests(module: str) -> bool:
     """Test if a module has tests.
 
     Module format: homeassistant.components.hue
     Test if exists: tests/components/hue/__init__.py
     """
     path = (
-        Path(module.replace(".", "/").replace("homeassistant", "tests")) / "__init__.py"
+        Path(module.replace(".", "/").replace("homeassistant", "tests", 1))
+        / "__init__.py"
     )
     return path.exists()
 
 
-def explore_module(package, explore_children):
+def explore_module(package: str, explore_children: bool) -> list[str]:
     """Explore the modules."""
     module = importlib.import_module(package)
 
-    found = []
+    found: list[str] = []
 
     if not hasattr(module, "__path__"):
         return found
@@ -166,25 +305,35 @@ def explore_module(package, explore_children):
     return found
 
 
-def core_requirements():
-    """Gather core requirements out of setup.py."""
-    parser = configparser.ConfigParser()
-    parser.read("setup.cfg")
-    return parser["options"]["install_requires"].strip().split("\n")
+def core_requirements() -> list[str]:
+    """Gather core requirements out of pyproject.toml."""
+    data = tomllib.loads(Path("pyproject.toml").read_text())
+    dependencies: list[str] = data["project"]["dependencies"]
+    return dependencies
 
 
-def gather_recursive_requirements(domain, seen=None):
+def gather_recursive_requirements(
+    domain: str, seen: set[str] | None = None
+) -> set[str]:
     """Recursively gather requirements from a module."""
     if seen is None:
         seen = set()
 
     seen.add(domain)
-    integration = Integration(Path(f"homeassistant/components/{domain}"))
+    integration = Integration(
+        Path(f"homeassistant/components/{domain}"), _get_hassfest_config()
+    )
     integration.load_manifest()
     reqs = {x for x in integration.requirements if x not in CONSTRAINT_BASE}
     for dep_domain in integration.dependencies:
         reqs.update(gather_recursive_requirements(dep_domain, seen))
     return reqs
+
+
+def _normalize_package_name(package_name: str) -> str:
+    """Normalize a package name."""
+    # pipdeptree needs lowercase and dash instead of underscore or period as separator
+    return package_name.lower().replace("_", "-").replace(".", "-")
 
 
 def normalize_package_name(requirement: str) -> str:
@@ -194,30 +343,42 @@ def normalize_package_name(requirement: str) -> str:
     if not match:
         return ""
 
-    # pipdeptree needs lowercase and dash instead of underscore as separator
-    package = match.group(1).lower().replace("_", "-")
-
-    return package
+    # pipdeptree needs lowercase and dash instead of underscore or period as separator
+    return _normalize_package_name(match.group(1))
 
 
-def comment_requirement(req):
+def comment_requirement(req: str) -> bool:
     """Comment out requirement. Some don't install on all systems."""
-    return any(
-        normalize_package_name(req) == ign for ign in COMMENT_REQUIREMENTS_NORMALIZED
-    )
+    return normalize_package_name(req) in EXCLUDED_REQUIREMENTS_ALL
 
 
-def gather_modules():
+def process_action_requirement(req: str, action: str) -> str:
+    """Process requirement for a specific github action."""
+    normalized_package_name = normalize_package_name(req)
+    if normalized_package_name in OVERRIDDEN_REQUIREMENTS_ACTIONS[action]["exclude"]:
+        return f"# {req}"
+    if normalized_package_name in OVERRIDDEN_REQUIREMENTS_ACTIONS[action]["include"]:
+        return req
+    if normalized_package_name in EXCLUDED_REQUIREMENTS_ALL:
+        return f"# {req}"
+    if markers := OVERRIDDEN_REQUIREMENTS_ACTIONS[action]["markers"].get(
+        normalized_package_name, None
+    ):
+        return f"{req};{markers}"
+    return req
+
+
+def gather_modules() -> dict[str, list[str]] | None:
     """Collect the information."""
-    reqs = {}
+    reqs: dict[str, list[str]] = {}
 
-    errors = []
+    errors: list[str] = []
 
     gather_requirements_from_manifests(errors, reqs)
     gather_requirements_from_modules(errors, reqs)
 
-    for key in reqs:
-        reqs[key] = sorted(reqs[key], key=lambda name: (len(name.split(".")), name))
+    for value in reqs.values():
+        value = sorted(value, key=lambda name: (len(name.split(".")), name))
 
     if errors:
         print("******* ERROR")
@@ -227,15 +388,14 @@ def gather_modules():
     return reqs
 
 
-def gather_requirements_from_manifests(errors, reqs):
+def gather_requirements_from_manifests(
+    errors: list[str], reqs: dict[str, list[str]]
+) -> None:
     """Gather all of the requirements from manifests."""
-    integrations = Integration.load_dir(Path("homeassistant/components"))
+    config = _get_hassfest_config()
+    integrations = Integration.load_dir(config.core_integrations_path, config)
     for domain in sorted(integrations):
         integration = integrations[domain]
-
-        if not integration.manifest:
-            errors.append(f"The manifest for integration {domain} is invalid.")
-            continue
 
         if integration.disabled:
             continue
@@ -245,7 +405,9 @@ def gather_requirements_from_manifests(errors, reqs):
         )
 
 
-def gather_requirements_from_modules(errors, reqs):
+def gather_requirements_from_modules(
+    errors: list[str], reqs: dict[str, list[str]]
+) -> None:
     """Collect the requirements from the modules directly."""
     for package in sorted(
         explore_module("homeassistant.scripts", True)
@@ -262,22 +424,26 @@ def gather_requirements_from_modules(errors, reqs):
             process_requirements(errors, module.REQUIREMENTS, package, reqs)
 
 
-def process_requirements(errors, module_requirements, package, reqs):
+def process_requirements(
+    errors: list[str],
+    module_requirements: list[str],
+    package: str,
+    reqs: dict[str, list[str]],
+) -> None:
     """Process all of the requirements."""
     for req in module_requirements:
         if "://" in req:
             errors.append(f"{package}[Only pypi dependencies are allowed: {req}]")
-        if req.partition("==")[1] == "" and req not in IGNORE_PIN:
+        if req.partition("==")[1] == "":
             errors.append(f"{package}[Please pin requirement {req}, see {URL_PIN}]")
         reqs.setdefault(req, []).append(package)
 
 
-def generate_requirements_list(reqs):
+def generate_requirements_list(reqs: dict[str, list[str]]) -> str:
     """Generate a pip file based on requirements."""
     output = []
-    for pkg, requirements in sorted(reqs.items(), key=lambda item: item[0]):
-        for req in sorted(requirements):
-            output.append(f"\n# {req}")
+    for pkg, requirements in sorted(reqs.items(), key=itemgetter(0)):
+        output.extend(f"\n# {req}" for req in sorted(requirements))
 
         if comment_requirement(pkg):
             output.append(f"\n# {pkg}\n")
@@ -286,9 +452,20 @@ def generate_requirements_list(reqs):
     return "".join(output)
 
 
-def requirements_output(reqs):
+def generate_action_requirements_list(reqs: dict[str, list[str]], action: str) -> str:
+    """Generate a pip file based on requirements."""
+    output = []
+    for pkg, requirements in sorted(reqs.items(), key=itemgetter(0)):
+        output.extend(f"\n# {req}" for req in sorted(requirements))
+        processed_pkg = process_action_requirement(pkg, action)
+        output.append(f"\n{processed_pkg}\n")
+    return "".join(output)
+
+
+def requirements_output() -> str:
     """Generate output for requirements."""
     output = [
+        GENERATED_MESSAGE,
         "-c homeassistant/package_constraints.txt\n",
         "\n",
         "# Home Assistant Core\n",
@@ -299,10 +476,11 @@ def requirements_output(reqs):
     return "".join(output)
 
 
-def requirements_all_output(reqs):
+def requirements_all_output(reqs: dict[str, list[str]]) -> str:
     """Generate output for requirements_all."""
     output = [
         "# Home Assistant Core, full dependency set\n",
+        GENERATED_MESSAGE,
         "-r requirements.txt\n",
     ]
     output.append(generate_requirements_list(reqs))
@@ -310,12 +488,23 @@ def requirements_all_output(reqs):
     return "".join(output)
 
 
-def requirements_test_all_output(reqs):
+def requirements_all_action_output(reqs: dict[str, list[str]], action: str) -> str:
+    """Generate output for requirements_all_{action}."""
+    output = [
+        f"# Home Assistant Core, full dependency set for {action}\n",
+        GENERATED_MESSAGE,
+        "-r requirements.txt\n",
+    ]
+    output.append(generate_action_requirements_list(reqs, action))
+
+    return "".join(output)
+
+
+def requirements_test_all_output(reqs: dict[str, list[str]]) -> str:
     """Generate output for test_requirements."""
     output = [
         "# Home Assistant tests, full dependency set\n",
-        f"# Automatically generated by {Path(__file__).name}, do not edit\n",
-        "\n",
+        GENERATED_MESSAGE,
         "-r requirements_test.txt\n",
     ]
 
@@ -324,7 +513,8 @@ def requirements_test_all_output(reqs):
         for requirement, modules in reqs.items()
         if any(
             # Always install requirements that are not part of integrations
-            not mdl.startswith("homeassistant.components.") or
+            not mdl.startswith("homeassistant.components.")
+            or
             # Install tests for integrations that have tests
             has_tests(mdl)
             for mdl in modules
@@ -335,15 +525,19 @@ def requirements_test_all_output(reqs):
     return "".join(output)
 
 
-def requirements_pre_commit_output():
+def requirements_pre_commit_output() -> str:
     """Generate output for pre-commit dependencies."""
     source = ".pre-commit-config.yaml"
-    pre_commit_conf = load_yaml(source)
-    reqs = []
+    pre_commit_conf: dict[str, list[dict[str, Any]]]
+    pre_commit_conf = load_yaml(source)  # type: ignore[assignment]
+    reqs: list[str] = []
+    hook: dict[str, Any]
     for repo in (x for x in pre_commit_conf["repos"] if x.get("rev")):
+        rev: str = repo["rev"]
         for hook in repo["hooks"]:
             if hook["id"] not in IGNORE_PRE_COMMIT_HOOK_ID:
-                reqs.append(f"{hook['id']}=={repo['rev'].lstrip('v')}")
+                pkg = MAP_HOOK_ID_TO_PACKAGE.get(hook["id"]) or hook["id"]
+                reqs.append(f"{pkg}=={rev.lstrip('v')}")
                 reqs.extend(x for x in hook.get("additional_dependencies", ()))
     output = [
         f"# Automatically generated "
@@ -354,24 +548,28 @@ def requirements_pre_commit_output():
     return "\n".join(output) + "\n"
 
 
-def gather_constraints():
+def gather_constraints() -> str:
     """Construct output for constraint file."""
     return (
-        "\n".join(
-            sorted(
-                {
-                    *core_requirements(),
-                    *gather_recursive_requirements("default_config"),
-                    *gather_recursive_requirements("mqtt"),
-                }
-            )
-            + [""]
+        GENERATED_MESSAGE
+        + "\n".join(
+            [
+                *sorted(
+                    {
+                        *core_requirements(),
+                        *gather_recursive_requirements("default_config"),
+                        *gather_recursive_requirements("mqtt"),
+                    },
+                    key=str.lower,
+                ),
+                "",
+            ]
         )
         + CONSTRAINT_BASE
     )
 
 
-def diff_file(filename, content):
+def diff_file(filename: str, content: str) -> list[str]:
     """Diff a file."""
     return list(
         difflib.context_diff(
@@ -383,9 +581,9 @@ def diff_file(filename, content):
     )
 
 
-def main(validate):
+def main(validate: bool, ci: bool) -> int:
     """Run the script."""
-    if not os.path.isfile("requirements_all.txt"):
+    if not Path("requirements_all.txt").is_file():
         print("Run this from HA root dir")
         return 1
 
@@ -394,19 +592,30 @@ def main(validate):
     if data is None:
         return 1
 
-    reqs_file = requirements_output(data)
+    reqs_file = requirements_output()
     reqs_all_file = requirements_all_output(data)
+    reqs_all_action_files = {
+        action: requirements_all_action_output(data, action)
+        for action in OVERRIDDEN_REQUIREMENTS_ACTIONS
+    }
     reqs_test_all_file = requirements_test_all_output(data)
+    # Always calling requirements_pre_commit_output is intentional to ensure
+    # the code is called by the pre-commit hooks.
     reqs_pre_commit_file = requirements_pre_commit_output()
     constraints = gather_constraints()
 
-    files = (
+    files = [
         ("requirements.txt", reqs_file),
         ("requirements_all.txt", reqs_all_file),
         ("requirements_test_pre_commit.txt", reqs_pre_commit_file),
         ("requirements_test_all.txt", reqs_test_all_file),
         ("homeassistant/package_constraints.txt", constraints),
-    )
+    ]
+    if ci:
+        files.extend(
+            (f"requirements_all_{action}.txt", reqs_all_file)
+            for action, reqs_all_file in reqs_all_action_files.items()
+        )
 
     if validate:
         errors = []
@@ -433,6 +642,17 @@ def main(validate):
     return 0
 
 
+def _get_hassfest_config() -> Config:
+    """Get hassfest config."""
+    return Config(
+        root=Path().absolute(),
+        specific_integrations=None,
+        action="validate",
+        requirements=True,
+    )
+
+
 if __name__ == "__main__":
     _VAL = sys.argv[-1] == "validate"
-    sys.exit(main(_VAL))
+    _CI = sys.argv[-1] == "ci"
+    sys.exit(main(_VAL, _CI))

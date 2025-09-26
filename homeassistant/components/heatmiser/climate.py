@@ -1,29 +1,29 @@
-"""Support for the PRT Heatmiser themostats using the V3 protocol."""
+"""Support for the PRT Heatmiser thermostats using the V3 protocol."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from heatmiserV3 import connection, heatmiser
+from heatmiserv3 import connection, heatmiser
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
-from homeassistant.components.climate.const import SUPPORT_TARGET_TEMPERATURE
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
     CONF_PORT,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -38,7 +38,7 @@ TSTATS_SCHEMA = vol.Schema(
     )
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.string,
@@ -76,6 +76,13 @@ def setup_platform(
 class HeatmiserV3Thermostat(ClimateEntity):
     """Representation of a HeatmiserV3 thermostat."""
 
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+
     def __init__(self, therm, device, uh1):
         """Initialize the thermostat."""
         self.therm = therm(device[CONF_ID], "prt", uh1)
@@ -85,39 +92,12 @@ class HeatmiserV3Thermostat(ClimateEntity):
         self._target_temperature = None
         self._id = device
         self.dcb = None
-        self._hvac_mode = HVAC_MODE_HEAT
-        self._temperature_unit = None
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
+        self._attr_hvac_mode = HVACMode.HEAT
 
     @property
     def name(self):
         """Return the name of the thermostat, if any."""
         return self._name
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement which this thermostat uses."""
-        return self._temperature_unit
-
-    @property
-    def hvac_mode(self) -> str:
-        """Return hvac operation ie. heat, cool mode.
-
-        Need to be one of HVAC_MODE_*.
-        """
-        return self._hvac_mode
-
-    @property
-    def hvac_modes(self) -> list[str]:
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
-        return [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
     @property
     def current_temperature(self):
@@ -129,28 +109,29 @@ class HeatmiserV3Thermostat(ClimateEntity):
         """Return the temperature we try to reach."""
         return self._target_temperature
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
         self._target_temperature = int(temperature)
         self.therm.set_target_temp(self._target_temperature)
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data."""
         self.uh1.reopen()
         if not self.uh1.status:
             _LOGGER.error("Failed to update device %s", self._name)
             return
         self.dcb = self.therm.read_dcb()
-        self._temperature_unit = (
-            TEMP_CELSIUS
+        self._attr_temperature_unit = (
+            UnitOfTemperature.CELSIUS
             if (self.therm.get_temperature_format() == "C")
-            else TEMP_FAHRENHEIT
+            else UnitOfTemperature.FAHRENHEIT
         )
         self._current_temperature = int(self.therm.get_floor_temp())
         self._target_temperature = int(self.therm.get_target_temp())
-        self._hvac_mode = (
-            HVAC_MODE_OFF
+        self._attr_hvac_mode = (
+            HVACMode.OFF
             if (int(self.therm.get_current_state()) == 0)
-            else HVAC_MODE_HEAT
+            else HVACMode.HEAT
         )

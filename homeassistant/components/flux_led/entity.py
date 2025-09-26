@@ -1,4 +1,5 @@
 """Support for Magic Home lights."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -15,15 +16,17 @@ from homeassistant.const import (
     ATTR_MODEL,
     ATTR_NAME,
     ATTR_SW_VERSION,
+    CONF_MODEL,
     CONF_NAME,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_MINOR_VERSION, CONF_MODEL, DOMAIN, SIGNAL_STATE_UPDATED
+from .const import CONF_MINOR_VERSION, DOMAIN, SIGNAL_STATE_UPDATED
 from .coordinator import FluxLedUpdateCoordinator
 
 
@@ -40,7 +43,7 @@ def _async_device_info(
         ATTR_IDENTIFIERS: {(DOMAIN, entry.entry_id)},
         ATTR_MANUFACTURER: "Zengge",
         ATTR_MODEL: device.model,
-        ATTR_NAME: entry.data[CONF_NAME],
+        ATTR_NAME: entry.data.get(CONF_NAME, entry.title),
         ATTR_SW_VERSION: sw_version_str,
     }
     if hw_model := entry.data.get(CONF_MODEL):
@@ -53,6 +56,7 @@ def _async_device_info(
 class FluxBaseEntity(Entity):
     """Representation of a Flux entity without a coordinator."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
@@ -66,28 +70,28 @@ class FluxBaseEntity(Entity):
         self._attr_device_info = _async_device_info(self._device, entry)
 
 
-class FluxEntity(CoordinatorEntity):
+class FluxEntity(CoordinatorEntity[FluxLedUpdateCoordinator]):
     """Representation of a Flux entity with a coordinator."""
 
-    coordinator: FluxLedUpdateCoordinator
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         coordinator: FluxLedUpdateCoordinator,
         base_unique_id: str,
-        name: str,
         key: str | None,
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator)
         self._device: AIOWifiLedBulb = coordinator.device
         self._responding = True
-        self._attr_name = name
         if key:
             self._attr_unique_id = f"{base_unique_id}_{key}"
         else:
             self._attr_unique_id = base_unique_id
-        self._attr_device_info = _async_device_info(self._device, coordinator.entry)
+        self._attr_device_info = _async_device_info(
+            self._device, coordinator.config_entry
+        )
 
     async def _async_ensure_device_on(self) -> None:
         """Turn the device on if it needs to be turned on before a command."""

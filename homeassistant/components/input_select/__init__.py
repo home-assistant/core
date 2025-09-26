@@ -1,28 +1,38 @@
 """Support to select an option from a list."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any, Self, cast
 
 import voluptuous as vol
 
-from homeassistant.components.select import SelectEntity
+from homeassistant.components.select import (
+    ATTR_CYCLE,
+    ATTR_OPTION,
+    ATTR_OPTIONS,
+    SERVICE_SELECT_FIRST,
+    SERVICE_SELECT_LAST,
+    SERVICE_SELECT_NEXT,
+    SERVICE_SELECT_OPTION,
+    SERVICE_SELECT_PREVIOUS,
+    SelectEntity,
+)
 from homeassistant.const import (
     ATTR_EDITABLE,
-    ATTR_OPTION,
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import collection
-import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,30 +41,44 @@ DOMAIN = "input_select"
 CONF_INITIAL = "initial"
 CONF_OPTIONS = "options"
 
-ATTR_OPTIONS = "options"
-ATTR_CYCLE = "cycle"
-
-SERVICE_SELECT_OPTION = "select_option"
-SERVICE_SELECT_NEXT = "select_next"
-SERVICE_SELECT_PREVIOUS = "select_previous"
-SERVICE_SELECT_FIRST = "select_first"
-SERVICE_SELECT_LAST = "select_last"
 SERVICE_SET_OPTIONS = "set_options"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
+STORAGE_VERSION_MINOR = 2
 
-CREATE_FIELDS = {
+
+def _unique(options: Any) -> Any:
+    try:
+        return vol.Unique()(options)
+    except vol.Invalid as exc:
+        raise HomeAssistantError("Duplicate options are not allowed") from exc
+
+
+STORAGE_FIELDS: VolDictType = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Required(CONF_OPTIONS): vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
+    vol.Required(CONF_OPTIONS): vol.All(
+        cv.ensure_list, vol.Length(min=1), _unique, [cv.string]
+    ),
     vol.Optional(CONF_INITIAL): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
 }
-UPDATE_FIELDS = {
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_OPTIONS): vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
-    vol.Optional(CONF_INITIAL): cv.string,
-    vol.Optional(CONF_ICON): cv.icon,
-}
+
+
+def _remove_duplicates(options: list[str], name: str | None) -> list[str]:
+    """Remove duplicated options."""
+    unique_options = list(dict.fromkeys(options))
+    # This check was added in 2022.3
+    # Reject YAML configured input_select with duplicates from 2022.6
+    if len(unique_options) != len(options):
+        _LOGGER.warning(
+            (
+                "Input select '%s' with options %s had duplicated options, the"
+                " duplicates have been removed"
+            ),
+            name or "<unnamed>",
+            options,
+        )
+    return unique_options
 
 
 def _cv_input_select(cfg: dict[str, Any]) -> dict[str, Any]:
@@ -65,6 +89,7 @@ def _cv_input_select(cfg: dict[str, Any]) -> dict[str, Any]:
         raise vol.Invalid(
             f"initial state {initial} is not part of the options: {','.join(options)}"
         )
+    cfg[CONF_OPTIONS] = _remove_duplicates(options, cfg.get(CONF_NAME))
     return cfg
 
 
@@ -89,21 +114,40 @@ CONFIG_SCHEMA = vol.Schema(
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
+class InputSelectStore(Store):
+    """Store entity registry data."""
+
+    async def _async_migrate_func(
+        self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Migrate to the new version."""
+        if old_major_version == 1:
+            if old_minor_version < 2:
+                for item in old_data["items"]:
+                    options = item[ATTR_OPTIONS]
+                    item[ATTR_OPTIONS] = _remove_duplicates(
+                        options, item.get(CONF_NAME)
+                    )
+        return old_data
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input select."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent[InputSelect](_LOGGER, DOMAIN, hass)
+
     id_manager = collection.IDManager()
 
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, InputSelect.from_yaml
+        hass, DOMAIN, DOMAIN, component, yaml_collection, InputSelect
     )
 
     storage_collection = InputSelectStorageCollection(
-        Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
+        InputSelectStore(
+            hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
+        ),
         id_manager,
     )
     collection.sync_entity_lifecycle(
@@ -115,8 +159,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
-        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+    collection.DictStorageCollectionWebsocket(
+        storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
     async def reload_service_handler(service_call: ServiceCall) -> None:
@@ -137,33 +181,33 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_OPTION,
-        {vol.Required(ATTR_OPTION): cv.string},
-        "async_select_option",
+        SERVICE_SELECT_FIRST,
+        None,
+        InputSelect.async_first.__name__,
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SELECT_LAST,
+        None,
+        InputSelect.async_last.__name__,
     )
 
     component.async_register_entity_service(
         SERVICE_SELECT_NEXT,
         {vol.Optional(ATTR_CYCLE, default=True): bool},
-        "async_next",
+        InputSelect.async_next.__name__,
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SELECT_OPTION,
+        {vol.Required(ATTR_OPTION): cv.string},
+        InputSelect.async_select_option.__name__,
     )
 
     component.async_register_entity_service(
         SERVICE_SELECT_PREVIOUS,
         {vol.Optional(ATTR_CYCLE, default=True): bool},
-        "async_previous",
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SELECT_FIRST,
-        {},
-        callback(lambda entity, call: entity.async_select_index(0)),
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SELECT_LAST,
-        {},
-        callback(lambda entity, call: entity.async_select_index(-1)),
+        InputSelect.async_previous.__name__,
     )
 
     component.async_register_entity_service(
@@ -179,15 +223,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class InputSelectStorageCollection(collection.StorageCollection):
+class InputSelectStorageCollection(collection.DictStorageCollection):
     """Input storage based collection."""
 
-    CREATE_SCHEMA = vol.Schema(vol.All(CREATE_FIELDS, _cv_input_select))
-    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+    CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_select))
 
     async def _process_create_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Validate the config is valid."""
-        return cast(dict[str, Any], self.CREATE_SCHEMA(data))
+        return cast(dict[str, Any], self.CREATE_UPDATE_SCHEMA(data))
 
     @callback
     def _get_suggested_id(self, info: dict[str, Any]) -> str:
@@ -195,18 +238,24 @@ class InputSelectStorageCollection(collection.StorageCollection):
         return cast(str, info[CONF_NAME])
 
     async def _update_data(
-        self, data: dict[str, Any], update_data: dict[str, Any]
+        self, item: dict[str, Any], update_data: dict[str, Any]
     ) -> dict[str, Any]:
         """Return a new updated data object."""
-        update_data = self.UPDATE_SCHEMA(update_data)
-        return _cv_input_select({**data, **update_data})
+        update_data = self.CREATE_UPDATE_SCHEMA(update_data)
+        return {CONF_ID: item[CONF_ID]} | update_data
 
 
-class InputSelect(SelectEntity, RestoreEntity):
+# pylint: disable-next=hass-enforce-class-module
+class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     """Representation of a select input."""
 
+    _entity_component_unrecorded_attributes = (
+        SelectEntity._entity_component_unrecorded_attributes - {ATTR_OPTIONS}  # noqa: SLF001
+    )
+    _unrecorded_attributes = frozenset({ATTR_EDITABLE})
+
     _attr_should_poll = False
-    editable = True
+    editable: bool
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize a select input."""
@@ -217,8 +266,15 @@ class InputSelect(SelectEntity, RestoreEntity):
         self._attr_unique_id = config[CONF_ID]
 
     @classmethod
-    def from_yaml(cls, config: ConfigType) -> InputSelect:
-        """Return entity instance initialized from yaml storage."""
+    def from_storage(cls, config: ConfigType) -> Self:
+        """Return entity instance initialized from storage."""
+        input_select = cls(config)
+        input_select.editable = True
+        return input_select
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType) -> Self:
+        """Return entity instance initialized from yaml."""
         input_select = cls(config)
         input_select.entity_id = f"{DOMAIN}.{config[CONF_ID]}"
         input_select.editable = False
@@ -244,63 +300,18 @@ class InputSelect(SelectEntity, RestoreEntity):
     async def async_select_option(self, option: str) -> None:
         """Select new option."""
         if option not in self.options:
-            _LOGGER.warning(
-                "Invalid option: %s (possible options: %s)",
-                option,
-                ", ".join(self.options),
+            raise HomeAssistantError(
+                f"Invalid option: {option} (possible options: {', '.join(self.options)})"
             )
-            return
         self._attr_current_option = option
         self.async_write_ha_state()
 
-    @callback
-    def async_select_index(self, idx: int) -> None:
-        """Select new option by index."""
-        new_index = idx % len(self.options)
-        self._attr_current_option = self.options[new_index]
-        self.async_write_ha_state()
-
-    @callback
-    def async_offset_index(self, offset: int, cycle: bool) -> None:
-        """Offset current index."""
-
-        current_index = (
-            self.options.index(self.current_option)
-            if self.current_option is not None
-            else 0
-        )
-
-        new_index = current_index + offset
-        if cycle:
-            new_index = new_index % len(self.options)
-        elif new_index < 0:
-            new_index = 0
-        elif new_index >= len(self.options):
-            new_index = len(self.options) - 1
-
-        self._attr_current_option = self.options[new_index]
-        self.async_write_ha_state()
-
-    @callback
-    def async_next(self, cycle: bool) -> None:
-        """Select next option."""
-        # If there is no current option, first item is the next
-        if self.current_option is None:
-            self.async_select_index(0)
-            return
-        self.async_offset_index(1, cycle)
-
-    @callback
-    def async_previous(self, cycle: bool) -> None:
-        """Select previous option."""
-        # If there is no current option, last item is the previous
-        if self.current_option is None:
-            self.async_select_index(-1)
-            return
-        self.async_offset_index(-1, cycle)
-
     async def async_set_options(self, options: list[str]) -> None:
         """Set options."""
+        unique_options = list(dict.fromkeys(options))
+        if len(unique_options) != len(options):
+            raise HomeAssistantError(f"Duplicated options: {options}")
+
         self._attr_options = options
 
         if self.current_option not in self.options:

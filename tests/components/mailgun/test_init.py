@@ -1,28 +1,35 @@
 """Test the init file of Mailgun."""
+
 import hashlib
 import hmac
 
+from aiohttp.test_utils import TestClient
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import mailgun, webhook
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_API_KEY, CONF_DOMAIN
-from homeassistant.core import callback
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
+
+from tests.typing import ClientSessionGenerator
 
 API_KEY = "abc123"
 
 
 @pytest.fixture
-async def http_client(hass, hass_client_no_auth):
+async def http_client(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> TestClient:
     """Initialize a Home Assistant Server for testing this module."""
     await async_setup_component(hass, webhook.DOMAIN, {})
     return await hass_client_no_auth()
 
 
 @pytest.fixture
-async def webhook_id_with_api_key(hass):
+async def webhook_id_with_api_key(hass: HomeAssistant) -> str:
     """Initialize the Mailgun component and get the webhook_id."""
     await async_setup_component(
         hass,
@@ -37,16 +44,16 @@ async def webhook_id_with_api_key(hass):
     result = await hass.config_entries.flow.async_init(
         "mailgun", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM, result
+    assert result["type"] is FlowResultType.FORM, result
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     return result["result"].data["webhook_id"]
 
 
 @pytest.fixture
-async def webhook_id_without_api_key(hass):
+async def webhook_id_without_api_key(hass: HomeAssistant) -> str:
     """Initialize the Mailgun component and get the webhook_id w/o API key."""
     await async_setup_component(hass, mailgun.DOMAIN, {})
 
@@ -57,16 +64,16 @@ async def webhook_id_without_api_key(hass):
     result = await hass.config_entries.flow.async_init(
         "mailgun", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM, result
+    assert result["type"] is FlowResultType.FORM, result
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     return result["result"].data["webhook_id"]
 
 
 @pytest.fixture
-async def mailgun_events(hass):
+async def mailgun_events(hass: HomeAssistant) -> list[Event]:
     """Return a list of mailgun_events triggered."""
     events = []
 
@@ -82,7 +89,7 @@ async def mailgun_events(hass):
 
 async def test_mailgun_webhook_with_missing_signature(
     http_client, webhook_id_with_api_key, mailgun_events
-):
+) -> None:
     """Test that webhook doesn't trigger an event without a signature."""
     event_count = len(mailgun_events)
 
@@ -102,7 +109,7 @@ async def test_mailgun_webhook_with_missing_signature(
 
 async def test_mailgun_webhook_with_different_api_key(
     http_client, webhook_id_with_api_key, mailgun_events
-):
+) -> None:
     """Test that webhook doesn't trigger an event with a wrong signature."""
     timestamp = "1529006854"
     token = "a8ce0edb2dd8301dee6c2405235584e45aa91d1e9f979f3de0"
@@ -130,7 +137,7 @@ async def test_mailgun_webhook_with_different_api_key(
 
 async def test_mailgun_webhook_event_with_correct_api_key(
     http_client, webhook_id_with_api_key, mailgun_events
-):
+) -> None:
     """Test that webhook triggers an event after validating a signature."""
     timestamp = "1529006854"
     token = "a8ce0edb2dd8301dee6c2405235584e45aa91d1e9f979f3de0"
@@ -160,7 +167,7 @@ async def test_mailgun_webhook_event_with_correct_api_key(
 
 async def test_mailgun_webhook_with_missing_signature_without_api_key(
     http_client, webhook_id_without_api_key, mailgun_events
-):
+) -> None:
     """Test that webhook triggers an event without a signature w/o API key."""
     event_count = len(mailgun_events)
 
@@ -184,7 +191,7 @@ async def test_mailgun_webhook_with_missing_signature_without_api_key(
 
 async def test_mailgun_webhook_event_without_an_api_key(
     http_client, webhook_id_without_api_key, mailgun_events
-):
+) -> None:
     """Test that webhook triggers an event if there is no api key."""
     timestamp = "1529006854"
     token = "a8ce0edb2dd8301dee6c2405235584e45aa91d1e9f979f3de0"

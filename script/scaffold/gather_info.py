@@ -1,4 +1,5 @@
 """Gather info for scaffolding."""
+
 import json
 
 from homeassistant.util import slugify
@@ -92,7 +93,7 @@ def gather_new_integration(determine_auth: bool) -> Info:
             "prompt": (
                 f"""How will your integration gather data?
 
-Valid values are {', '.join(SUPPORTED_IOT_CLASSES)}
+Valid values are {", ".join(SUPPORTED_IOT_CLASSES)}
 
 More info @ https://developers.home-assistant.io/docs/creating_integration_manifest#iot-class
 """
@@ -116,6 +117,11 @@ More info @ https://developers.home-assistant.io/docs/creating_integration_manif
                 },
                 "discoverable": {
                     "prompt": "Is the device/service discoverable on the local network? (yes/no)",
+                    "default": "no",
+                    **YES_NO,
+                },
+                "helper": {
+                    "prompt": "Is this a helper integration? (yes/no)",
                     "default": "no",
                     **YES_NO,
                 },
@@ -157,8 +163,8 @@ def _gather_info(fields) -> dict:
                 if "default" in info:
                     msg += f" [{info['default']}]"
                 value = input(f"{msg}\n> ")
-            except (KeyboardInterrupt, EOFError):
-                raise ExitApp("Interrupted!", 1)
+            except (KeyboardInterrupt, EOFError) as err:
+                raise ExitApp("Interrupted!", 1) from err
 
             value = value.strip()
 

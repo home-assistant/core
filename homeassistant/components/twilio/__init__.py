@@ -1,14 +1,14 @@
 """Support for Twilio."""
+
+from aiohttp import web
 from twilio.rest import Client
-from twilio.twiml import TwiML
 import voluptuous as vol
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_flow
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -45,13 +45,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> web.Response:
     """Handle incoming webhook from Twilio for inbound messages and calls."""
     data = dict(await request.post())
     data["webhook_id"] = webhook_id
     hass.bus.async_fire(RECEIVED_DATA, dict(data))
 
-    return TwiML().to_xml()
+    return web.Response(text="")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

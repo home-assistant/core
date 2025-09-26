@@ -1,4 +1,5 @@
 """Handle auto setup of IHC products from the ihc project file."""
+
 import logging
 import os.path
 
@@ -6,10 +7,9 @@ from defusedxml import ElementTree
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import CONF_TYPE, CONF_UNIT_OF_MEASUREMENT, TEMP_CELSIUS
+from homeassistant.const import CONF_TYPE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, discovery
 
 from .const import (
     AUTO_SETUP_YAML,
@@ -63,7 +63,7 @@ AUTO_SETUP_SCHEMA = vol.Schema(
                         vol.Required(CONF_NODE): cv.string,
                         vol.Required(CONF_XPATH): cv.string,
                         vol.Optional(
-                            CONF_UNIT_OF_MEASUREMENT, default=TEMP_CELSIUS
+                            CONF_UNIT_OF_MEASUREMENT, default=UnitOfTemperature.CELSIUS
                         ): cv.string,
                     }
                 )
@@ -120,19 +120,25 @@ def get_discovery_info(platform_setup, groups, controller_id):
         for product_cfg in platform_setup:
             products = group.findall(product_cfg[CONF_XPATH])
             for product in products:
+                product_id = int(product.attrib["id"].strip("_"), 0)
                 nodes = product.findall(product_cfg[CONF_NODE])
                 for node in nodes:
                     if "setting" in node.attrib and node.attrib["setting"] == "yes":
                         continue
                     ihc_id = int(node.attrib["id"].strip("_"), 0)
                     name = f"{groupname}_{ihc_id}"
+                    # make the model number look a bit nicer - strip leading _
+                    model = product.get("product_identifier", "").lstrip("_")
                     device = {
                         "ihc_id": ihc_id,
                         "ctrl_id": controller_id,
                         "product": {
+                            "id": product_id,
                             "name": product.get("name") or "",
                             "note": product.get("note") or "",
                             "position": product.get("position") or "",
+                            "model": model,
+                            "group": groupname,
                         },
                         "product_cfg": product_cfg,
                     }

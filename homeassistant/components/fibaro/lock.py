@@ -1,53 +1,52 @@
 """Support for Fibaro locks."""
+
 from __future__ import annotations
 
-from homeassistant.components.lock import DOMAIN, LockEntity
+from typing import Any
+
+from pyfibaro.fibaro_device import DeviceModel
+
+from homeassistant.components.lock import ENTITY_ID_FORMAT, LockEntity
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FIBARO_DEVICES, FibaroDevice
+from . import FibaroConfigEntry
+from .entity import FibaroEntity
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: FibaroConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Fibaro locks."""
-    if discovery_info is None:
-        return
-
-    add_entities(
-        [FibaroLock(device) for device in hass.data[FIBARO_DEVICES]["lock"]], True
+    controller = entry.runtime_data
+    async_add_entities(
+        [FibaroLock(device) for device in controller.fibaro_devices[Platform.LOCK]],
+        True,
     )
 
 
-class FibaroLock(FibaroDevice, LockEntity):
+class FibaroLock(FibaroEntity, LockEntity):
     """Representation of a Fibaro Lock."""
 
-    def __init__(self, fibaro_device):
+    def __init__(self, fibaro_device: DeviceModel) -> None:
         """Initialize the Fibaro device."""
-        self._state = False
         super().__init__(fibaro_device)
-        self.entity_id = f"{DOMAIN}.{self.ha_id}"
+        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
-    def lock(self, **kwargs):
+    def lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         self.action("secure")
-        self._state = True
+        self._attr_is_locked = True
 
-    def unlock(self, **kwargs):
+    def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
-        self.action("unsecure")
-        self._state = False
+        self.action("unsecure")  # codespell:ignore unsecure
+        self._attr_is_locked = False
 
-    @property
-    def is_locked(self):
-        """Return true if device is locked."""
-        return self._state
-
-    def update(self):
+    def update(self) -> None:
         """Update device state."""
-        self._state = self.current_binary_state
+        super().update()
+        self._attr_is_locked = self.current_binary_state

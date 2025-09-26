@@ -1,4 +1,5 @@
 """Constants for amcrest component."""
+
 DOMAIN = "amcrest"
 DATA_AMCREST = DOMAIN
 CAMERAS = "cameras"
@@ -13,3 +14,6 @@ SNAPSHOT_TIMEOUT = 20
 
 SERVICE_EVENT = "event"
 SERVICE_UPDATE = "update"
+
+RESOLUTION_LIST = {"high": 0, "low": 1}
+RESOLUTION_TO_STREAM = {0: "Main", 1: "Extra"}

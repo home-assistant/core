@@ -1,11 +1,10 @@
 """The Tesla Wall Connector integration."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
 
 from tesla_wall_connector import WallConnector
 from tesla_wall_connector.exceptions import (
@@ -19,19 +18,13 @@ from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     WALLCONNECTOR_DATA_LIFETIME,
     WALLCONNECTOR_DATA_VITALS,
-    WALLCONNECTOR_DEVICE_NAME,
 )
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -62,7 +55,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ) from ex
         except WallConnectorConnectionError as ex:
             raise UpdateFailed(
-                f"Could not fetch data from Tesla WallConnector at {hostname}: Cannot connect"
+                f"Could not fetch data from Tesla WallConnector at {hostname}: Cannot"
+                " connect"
             ) from ex
         except WallConnectorError as ex:
             raise UpdateFailed(
@@ -77,6 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name="tesla-wallconnector",
         update_interval=get_poll_interval(entry),
         update_method=async_update_data,
@@ -93,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_coordinator=coordinator,
     )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
@@ -119,46 +114,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-def prefix_entity_name(name: str) -> str:
-    """Prefixes entity name."""
-    return f"{WALLCONNECTOR_DEVICE_NAME} {name}"
-
-
-def get_unique_id(serial_number: str, key: str) -> str:
-    """Get a unique entity name."""
-    return f"{serial_number}-{key}"
-
-
-class WallConnectorEntity(CoordinatorEntity):
-    """Base class for Wall Connector entities."""
-
-    def __init__(self, wall_connector_data: WallConnectorData) -> None:
-        """Initialize WallConnector Entity."""
-        self.wall_connector_data = wall_connector_data
-        self._attr_unique_id = get_unique_id(
-            wall_connector_data.serial_number, self.entity_description.key
-        )
-        super().__init__(wall_connector_data.update_coordinator)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return information about the device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.wall_connector_data.serial_number)},
-            default_name=WALLCONNECTOR_DEVICE_NAME,
-            model=self.wall_connector_data.part_number,
-            sw_version=self.wall_connector_data.firmware_version,
-            default_manufacturer="Tesla",
-        )
-
-
-@dataclass()
-class WallConnectorLambdaValueGetterMixin:
-    """Mixin with a function pointer for getting sensor value."""
-
-    value_fn: Callable[[dict], Any]
 
 
 @dataclass

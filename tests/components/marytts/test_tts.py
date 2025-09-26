@@ -1,31 +1,44 @@
 """The tests for the MaryTTS speech platform."""
-import os
-import shutil
+
+from http import HTTPStatus
+import io
+from pathlib import Path
 from unittest.mock import patch
+import wave
 
 import pytest
 
-from homeassistant.components.media_player.const import (
+from homeassistant.components import tts
+from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
-import homeassistant.components.tts as tts
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_mock_service
+from tests.components.tts.common import retrieve_media
+from tests.typing import ClientSessionGenerator
+
+
+def get_empty_wav() -> bytes:
+    """Get bytes for empty WAV file."""
+    with io.BytesIO() as wav_io:
+        with wave.open(wav_io, "wb") as wav_file:
+            wav_file.setframerate(22050)
+            wav_file.setsampwidth(2)
+            wav_file.setnchannels(1)
+
+        return wav_io.getvalue()
 
 
 @pytest.fixture(autouse=True)
-def cleanup_cache(hass):
-    """Prevent TTS writing."""
-    yield
-    default_tts = hass.config.path(tts.DEFAULT_CACHE_DIR)
-    if os.path.isdir(default_tts):
-        shutil.rmtree(default_tts)
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> None:
+    """Mock the TTS cache dir with empty dir."""
 
 
-async def test_setup_component(hass):
+async def test_setup_component(hass: HomeAssistant) -> None:
     """Test setup component."""
     config = {tts.DOMAIN: {"platform": "marytts"}}
 
@@ -34,7 +47,9 @@ async def test_setup_component(hass):
         await hass.async_block_till_done()
 
 
-async def test_service_say(hass):
+async def test_service_say(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test service call say."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -46,7 +61,7 @@ async def test_service_say(hass):
 
     with patch(
         "homeassistant.components.marytts.tts.MaryTTS.speak",
-        return_value=b"audio",
+        return_value=get_empty_wav(),
     ) as mock_speak:
         await hass.services.async_call(
             tts.DOMAIN,
@@ -58,14 +73,22 @@ async def test_service_say(hass):
             blocking=True,
         )
 
+        assert (
+            await retrieve_media(
+                hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+            )
+            == HTTPStatus.OK
+        )
+
     mock_speak.assert_called_once()
     mock_speak.assert_called_with("HomeAssistant", {})
 
     assert len(calls) == 1
-    assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".wav") != -1
 
 
-async def test_service_say_with_effect(hass):
+async def test_service_say_with_effect(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test service call say with effects."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -77,7 +100,7 @@ async def test_service_say_with_effect(hass):
 
     with patch(
         "homeassistant.components.marytts.tts.MaryTTS.speak",
-        return_value=b"audio",
+        return_value=get_empty_wav(),
     ) as mock_speak:
         await hass.services.async_call(
             tts.DOMAIN,
@@ -89,14 +112,22 @@ async def test_service_say_with_effect(hass):
             blocking=True,
         )
 
+        assert (
+            await retrieve_media(
+                hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+            )
+            == HTTPStatus.OK
+        )
+
     mock_speak.assert_called_once()
     mock_speak.assert_called_with("HomeAssistant", {"Volume": "amount:2.0;"})
 
     assert len(calls) == 1
-    assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(".wav") != -1
 
 
-async def test_service_say_http_error(hass):
+async def test_service_say_http_error(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test service call say."""
     calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
@@ -120,5 +151,11 @@ async def test_service_say_http_error(hass):
         )
         await hass.async_block_till_done()
 
+        assert (
+            await retrieve_media(
+                hass, hass_client, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+            )
+            == HTTPStatus.INTERNAL_SERVER_ERROR
+        )
+
     mock_speak.assert_called_once()
-    assert len(calls) == 0

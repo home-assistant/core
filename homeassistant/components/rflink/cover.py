@@ -1,19 +1,25 @@
 """Support for Rflink Cover devices."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.cover import PLATFORM_SCHEMA, CoverEntity
-from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE, STATE_OPEN
+from homeassistant.components.cover import (
+    PLATFORM_SCHEMA as COVER_PLATFORM_SCHEMA,
+    CoverEntity,
+    CoverState,
+)
+from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from .const import (
     CONF_ALIASES,
     CONF_DEVICE_DEFAULTS,
     CONF_FIRE_EVENT,
@@ -22,8 +28,8 @@ from . import (
     CONF_NOGROUP_ALIASES,
     CONF_SIGNAL_REPETITIONS,
     DEVICE_DEFAULTS_SCHEMA,
-    RflinkCommand,
 )
+from .entity import RflinkCommand
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +38,7 @@ PARALLEL_UPDATES = 0
 TYPE_STANDARD = "standard"
 TYPE_INVERTED = "inverted"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(
             CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
@@ -124,11 +130,11 @@ async def async_setup_platform(
 class RflinkCover(RflinkCommand, CoverEntity, RestoreEntity):
     """Rflink entity which can switch on/stop/off (eg: cover)."""
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore RFLink cover state (OPEN/CLOSE)."""
         await super().async_added_to_hass()
         if (old_state := await self.async_get_last_state()) is not None:
-            self._state = old_state.state == STATE_OPEN
+            self._state = old_state.state == CoverState.OPEN
 
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
@@ -141,29 +147,24 @@ class RflinkCover(RflinkCommand, CoverEntity, RestoreEntity):
             self._state = False
 
     @property
-    def should_poll(self):
-        """No polling available in RFlink cover."""
-        return False
-
-    @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         return not self._state
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return True because covers can be stopped midway."""
         return True
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Turn the device close."""
         await self._async_handle_command("close_cover")
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Turn the device open."""
         await self._async_handle_command("open_cover")
 
-    async def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Turn the device stop."""
         await self._async_handle_command("stop_cover")
 

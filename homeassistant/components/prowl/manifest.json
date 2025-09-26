@@ -1,7 +1,11 @@
 {
   "domain": "prowl",
   "name": "Prowl",
-  "documentation": "https://www.home-assistant.io/integrations/prowl",
   "codeowners": [],
-  "iot_class": "cloud_push"
+  "documentation": "https://www.home-assistant.io/integrations/prowl",
+  "integration_type": "service",
+  "iot_class": "cloud_push",
+  "loggers": ["prowl"],
+  "quality_scale": "legacy",
+  "requirements": ["prowlpy==1.0.2"]
 }

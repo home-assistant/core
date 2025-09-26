@@ -1,14 +1,19 @@
 """Support for interacting with Vultr subscriptions."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -33,7 +38,7 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Vultr {}"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SUBSCRIPTION): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -108,17 +113,17 @@ class VultrSwitch(SwitchEntity):
             ATTR_VCPUS: self.data.get("vcpu_count"),
         }
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Boot-up the subscription."""
         if self.data["power_status"] != "running":
             self._vultr.start(self.subscription)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Halt the subscription."""
         if self.data["power_status"] == "running":
             self._vultr.halt(self.subscription)
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the device and update the data."""
         self._vultr.update()
         self.data = self._vultr.data[self.subscription]

@@ -1,14 +1,21 @@
 """The lookin integration entity."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
 import logging
-from typing import cast
 
-from aiolookin import POWER_CMD, POWER_OFF_CMD, POWER_ON_CMD, Climate, Remote
+from aiolookin import (
+    POWER_CMD,
+    POWER_OFF_CMD,
+    POWER_ON_CMD,
+    Climate,
+    MeteoSensor,
+    Remote,
+)
 from aiolookin.models import Device, UDPCommandType, UDPEvent
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODEL_NAMES
@@ -18,7 +25,7 @@ from .models import LookinData
 LOGGER = logging.getLogger(__name__)
 
 
-def _lookin_device_to_device_info(lookin_device: Device) -> DeviceInfo:
+def _lookin_device_to_device_info(lookin_device: Device, host: str) -> DeviceInfo:
     """Convert a lookin device into DeviceInfo."""
     return DeviceInfo(
         identifiers={(DOMAIN, lookin_device.id)},
@@ -26,17 +33,19 @@ def _lookin_device_to_device_info(lookin_device: Device) -> DeviceInfo:
         manufacturer="LOOKin",
         model=MODEL_NAMES[lookin_device.model],
         sw_version=lookin_device.firmware,
+        configuration_url=f"http://{host}/device",
     )
 
 
 def _lookin_controlled_device_to_device_info(
-    lookin_device: Device, uuid: str, device: Climate | Remote
+    lookin_device: Device, uuid: str, device: Climate | Remote, host: str
 ) -> DeviceInfo:
     return DeviceInfo(
         identifiers={(DOMAIN, uuid)},
         name=device.name,
         model=device.device_type,
         via_device=(DOMAIN, lookin_device.id),
+        configuration_url=f"http://{host}/data/{uuid}",
     )
 
 
@@ -50,19 +59,20 @@ class LookinDeviceMixIn:
         self._lookin_udp_subs = lookin_data.lookin_udp_subs
 
 
-class LookinDeviceCoordinatorEntity(LookinDeviceMixIn, CoordinatorEntity):
+class LookinDeviceCoordinatorEntity(
+    LookinDeviceMixIn, CoordinatorEntity[LookinDataUpdateCoordinator[MeteoSensor]]
+):
     """A lookin device entity on the device itself that uses the coordinator."""
-
-    coordinator: LookinDataUpdateCoordinator
 
     _attr_should_poll = False
 
     def __init__(self, lookin_data: LookinData) -> None:
         """Init the lookin device entity."""
+        assert lookin_data.meteo_coordinator is not None
         super().__init__(lookin_data.meteo_coordinator)
         self._set_lookin_device_attrs(lookin_data)
         self._attr_device_info = _lookin_device_to_device_info(
-            lookin_data.lookin_device
+            lookin_data.lookin_device, lookin_data.host
         )
 
 
@@ -82,17 +92,19 @@ class LookinEntityMixIn:
         self._function_names = {function.name for function in self._device.functions}
 
 
-class LookinCoordinatorEntity(LookinDeviceMixIn, LookinEntityMixIn, CoordinatorEntity):
+class LookinCoordinatorEntity(
+    LookinDeviceMixIn,
+    LookinEntityMixIn,
+    CoordinatorEntity[LookinDataUpdateCoordinator[Remote]],
+):
     """A lookin device entity for an external device that uses the coordinator."""
-
-    coordinator: LookinDataUpdateCoordinator
 
     _attr_should_poll = False
     _attr_assumed_state = True
 
     def __init__(
         self,
-        coordinator: LookinDataUpdateCoordinator,
+        coordinator: LookinDataUpdateCoordinator[Remote],
         uuid: str,
         device: Remote | Climate,
         lookin_data: LookinData,
@@ -102,15 +114,15 @@ class LookinCoordinatorEntity(LookinDeviceMixIn, LookinEntityMixIn, CoordinatorE
         self._set_lookin_device_attrs(lookin_data)
         self._set_lookin_entity_attrs(uuid, device, lookin_data)
         self._attr_device_info = _lookin_controlled_device_to_device_info(
-            self._lookin_device, uuid, device
+            self._lookin_device, uuid, device, lookin_data.host
         )
         self._attr_unique_id = uuid
         self._attr_name = device.name
 
-    async def _async_send_command(self, command: str) -> None:
+    async def _async_send_command(self, command: str, signal: str = "FF") -> None:
         """Send command from saved IR device."""
         await self._lookin_protocol.send_command(
-            uuid=self._uuid, command=command, signal="FF"
+            uuid=self._uuid, command=command, signal=signal
         )
 
 
@@ -119,7 +131,7 @@ class LookinPowerEntity(LookinCoordinatorEntity):
 
     def __init__(
         self,
-        coordinator: LookinDataUpdateCoordinator,
+        coordinator: LookinDataUpdateCoordinator[Remote],
         uuid: str,
         device: Remote | Climate,
         lookin_data: LookinData,
@@ -139,7 +151,7 @@ class LookinPowerPushRemoteEntity(LookinPowerEntity):
 
     def __init__(
         self,
-        coordinator: LookinDataUpdateCoordinator,
+        coordinator: LookinDataUpdateCoordinator[Remote],
         uuid: str,
         device: Remote,
         lookin_data: LookinData,
@@ -151,7 +163,7 @@ class LookinPowerPushRemoteEntity(LookinPowerEntity):
 
     @property
     def _remote(self) -> Remote:
-        return cast(Remote, self.coordinator.data)
+        return self.coordinator.data
 
     @abstractmethod
     def _update_from_status(self, status: str) -> None:
@@ -171,6 +183,7 @@ class LookinPowerPushRemoteEntity(LookinPowerEntity):
 
     async def async_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
+        await super().async_added_to_hass()
         self.async_on_remove(
             self._lookin_udp_subs.subscribe_event(
                 self._lookin_device.id,

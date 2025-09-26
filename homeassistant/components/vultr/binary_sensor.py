@@ -1,14 +1,19 @@
 """Support for monitoring the state of Vultr subscriptions (VPS)."""
+
 from __future__ import annotations
 
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -32,9 +37,8 @@ from . import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_DEVICE_CLASS = "power"
 DEFAULT_NAME = "Vultr {}"
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SUBSCRIPTION): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -64,7 +68,7 @@ def setup_platform(
 class VultrBinarySensor(BinarySensorEntity):
     """Representation of a Vultr subscription sensor."""
 
-    _attr_device_class = DEFAULT_DEVICE_CLASS
+    _attr_device_class = BinarySensorDeviceClass.POWER
 
     def __init__(self, vultr, subscription, name):
         """Initialize a new Vultr binary sensor."""
@@ -111,7 +115,7 @@ class VultrBinarySensor(BinarySensorEntity):
             ATTR_VCPUS: self.data.get("vcpu_count"),
         }
 
-    def update(self):
+    def update(self) -> None:
         """Update state of sensor."""
         self._vultr.update()
         self.data = self._vultr.data[self.subscription]

@@ -1,15 +1,28 @@
 """Class for helpers and communication with the OverKiz API."""
+
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlparse
 
-from pyoverkiz.enums.command import OverkizCommand
-from pyoverkiz.models import Command, Device
+from pyoverkiz.enums import OverkizCommand, Protocol
+from pyoverkiz.exceptions import BaseOverkizException
+from pyoverkiz.models import Command, Device, StateDefinition
 from pyoverkiz.types import StateType as OverkizStateType
 
-from .const import LOGGER
+from homeassistant.exceptions import HomeAssistantError
+
 from .coordinator import OverkizDataUpdateCoordinator
+
+# Commands that don't support setting
+# the delay to another value
+COMMANDS_WITHOUT_DELAY = [
+    OverkizCommand.IDENTIFY,
+    OverkizCommand.OFF,
+    OverkizCommand.ON,
+    OverkizCommand.ON_WITH_TIMER,
+    OverkizCommand.TEST,
+]
 
 
 class OverkizExecutor:
@@ -28,6 +41,10 @@ class OverkizExecutor:
         """Return Overkiz device linked to this entity."""
         return self.coordinator.data[self.device_url]
 
+    def linked_device(self, index: int) -> Device | None:
+        """Return Overkiz device sharing the same base url."""
+        return self.coordinator.data.get(f"{self.base_device_url}#{index}")
+
     def select_command(self, *commands: str) -> str | None:
         """Select first existing command in a list of commands."""
         existing_commands = self.device.definition.commands
@@ -36,6 +53,13 @@ class OverkizExecutor:
     def has_command(self, *commands: str) -> bool:
         """Return True if a command exists in a list of commands."""
         return self.select_command(*commands) is not None
+
+    def select_definition_state(self, *states: str) -> StateDefinition | None:
+        """Select first existing definition state in a list of states."""
+        for existing_state in self.device.definition.states:
+            if existing_state.qualified_name in states:
+                return existing_state
+        return None
 
     def select_state(self, *states: str) -> OverkizStateType:
         """Select first existing active state in a list of states."""
@@ -57,25 +81,40 @@ class OverkizExecutor:
 
         return None
 
-    async def async_execute_command(self, command_name: str, *args: Any) -> None:
-        """Execute device command in async context."""
+    async def async_execute_command(
+        self, command_name: str, *args: Any, refresh_afterwards: bool = True
+    ) -> None:
+        """Execute device command in async context.
+
+        :param refresh_afterwards: Whether to refresh the device state after the command is executed.
+        If several commands are executed, it will be refreshed only once.
+        """
+        parameters = [arg for arg in args if arg is not None]
+        # Set the execution duration to 0 seconds for RTS devices on supported commands
+        # Default execution duration is 30 seconds and will block consecutive commands
+        if (
+            self.device.protocol == Protocol.RTS
+            and command_name not in COMMANDS_WITHOUT_DELAY
+        ):
+            parameters.append(0)
+
         try:
             exec_id = await self.coordinator.client.execute_command(
                 self.device.device_url,
-                Command(command_name, list(args)),
+                Command(command_name, parameters),
                 "Home Assistant",
             )
-        except Exception as exception:  # pylint: disable=broad-except
-            LOGGER.error(exception)
-            return
+        # Catch Overkiz exceptions to support `continue_on_error` functionality
+        except BaseOverkizException as exception:
+            raise HomeAssistantError(exception) from exception
 
         # ExecutionRegisteredEvent doesn't contain the device_url, thus we need to register it here
         self.coordinator.executions[exec_id] = {
             "device_url": self.device.device_url,
             "command_name": command_name,
         }
-
-        await self.coordinator.async_refresh()
+        if refresh_afterwards:
+            await self.coordinator.async_refresh()
 
     async def async_cancel_command(
         self, commands_to_cancel: list[OverkizCommand]
@@ -100,7 +139,9 @@ class OverkizExecutor:
             return True
 
         # Retrieve executions initiated outside Home Assistant via API
-        executions = await self.coordinator.client.get_current_executions()
+        executions = cast(Any, await self.coordinator.client.get_current_executions())
+        # executions.action_group is typed incorrectly in the upstream library
+        # or the below code is incorrect.
         exec_id = next(
             (
                 execution.id
@@ -125,8 +166,7 @@ class OverkizExecutor:
         await self.coordinator.client.cancel_command(exec_id)
 
     def get_gateway_id(self) -> str:
-        """
-        Retrieve gateway id from device url.
+        """Retrieve gateway id from device url.
 
         device URL (<protocol>://<gatewayId>/<deviceAddress>[#<subsystemId>])
         """

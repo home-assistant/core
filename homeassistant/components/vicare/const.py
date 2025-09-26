@@ -1,40 +1,44 @@
 """Constants for the ViCare integration."""
+
 import enum
 
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, VOLUME_CUBIC_METERS, Platform
+from homeassistant.const import Platform
 
 DOMAIN = "vicare"
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.FAN,
+    Platform.NUMBER,
     Platform.SENSOR,
-    Platform.BINARY_SENSOR,
     Platform.WATER_HEATER,
 ]
 
-VICARE_DEVICE_CONFIG = "device_conf"
-VICARE_API = "api"
+UNSUPPORTED_DEVICES = [
+    "Heatbox1",
+    "Heatbox2_SRC",
+    "E3_TCU41_x04",
+    "E3_FloorHeatingCircuitChannel",
+    "E3_FloorHeatingCircuitDistributorBox",
+    "E3_RoomControl_One_522",
+]
+
 VICARE_NAME = "ViCare"
+VICARE_TOKEN_FILENAME = "vicare_token.save"
 
 CONF_CIRCUIT = "circuit"
 CONF_HEATING_TYPE = "heating_type"
 
-DEFAULT_SCAN_INTERVAL = 60
+DEFAULT_CACHE_DURATION = 60
 
-VICARE_CUBIC_METER = "cubicMeter"
+VICARE_PERCENT = "percent"
+VICARE_W = "watt"
+VICARE_KW = "kilowatt"
+VICARE_WH = "wattHour"
 VICARE_KWH = "kilowattHour"
-
-VICARE_UNIT_TO_DEVICE_CLASS = {
-    VICARE_KWH: SensorDeviceClass.ENERGY,
-    VICARE_CUBIC_METER: SensorDeviceClass.GAS,
-}
-
-VICARE_UNIT_TO_UNIT_OF_MEASUREMENT = {
-    VICARE_KWH: ENERGY_KILO_WATT_HOUR,
-    VICARE_CUBIC_METER: VOLUME_CUBIC_METERS,
-}
+VICARE_CUBIC_METER = "cubicMeter"
 
 
 class HeatingType(enum.Enum):

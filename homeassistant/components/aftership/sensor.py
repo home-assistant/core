@@ -1,25 +1,23 @@
 """Support for non-delivered packages recorded in AfterShip."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any, Final
 
 from pyaftership import AfterShip, AfterShipException
-import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
-    SensorEntity,
-)
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import Throttle
 
+from . import AfterShipConfigEntry
 from .const import (
     ADD_TRACKING_SERVICE_SCHEMA,
     ATTR_TRACKINGS,
@@ -28,9 +26,7 @@ from .const import (
     CONF_SLUG,
     CONF_TITLE,
     CONF_TRACKING_NUMBER,
-    DEFAULT_NAME,
     DOMAIN,
-    ICON,
     MIN_TIME_BETWEEN_UPDATES,
     REMOVE_TRACKING_SERVICE_SCHEMA,
     SERVICE_ADD_TRACKING,
@@ -40,34 +36,18 @@ from .const import (
 
 _LOGGER: Final = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+PLATFORM_SCHEMA: Final = cv.removed(DOMAIN, raise_if_present=False)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: AfterShipConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the AfterShip sensor platform."""
-    apikey = config[CONF_API_KEY]
-    name = config[CONF_NAME]
+    """Set up AfterShip sensor entities based on a config entry."""
+    aftership = config_entry.runtime_data
 
-    session = async_get_clientsession(hass)
-    aftership = AfterShip(api_key=apikey, session=session)
-
-    try:
-        await aftership.trackings.list()
-    except AfterShipException as err:
-        _LOGGER.error("No tracking data found. Check API key is correct: %s", err)
-        return
-
-    async_add_entities([AfterShipSensor(aftership, name)], True)
+    async_add_entities([AfterShipSensor(aftership, config_entry.title)], True)
 
     async def handle_add_tracking(call: ServiceCall) -> None:
         """Call when a user adds a new Aftership tracking from Home Assistant."""
@@ -106,7 +86,7 @@ class AfterShipSensor(SensorEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_native_unit_of_measurement: str = "packages"
-    _attr_icon: str = ICON
+    _attr_translation_key = "packages"
 
     def __init__(self, aftership: AfterShip, name: str) -> None:
         """Initialize the sensor."""
@@ -128,9 +108,7 @@ class AfterShipSensor(SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                UPDATE_TOPIC, self._force_update
-            )
+            async_dispatcher_connect(self.hass, UPDATE_TOPIC, self._force_update)
         )
 
     async def _force_update(self) -> None:
@@ -149,10 +127,10 @@ class AfterShipSensor(SensorEntity):
 
         status_to_ignore = {"delivered"}
         status_counts: dict[str, int] = {}
-        trackings = []
+        parsed_trackings = []
         not_delivered_count = 0
 
-        for track in trackings:
+        for track in trackings["trackings"]:
             status = track["tag"].lower()
             name = (
                 track["tracking_number"] if track["title"] is None else track["title"]
@@ -163,7 +141,7 @@ class AfterShipSensor(SensorEntity):
                 else track["checkpoints"][-1]
             )
             status_counts[status] = status_counts.get(status, 0) + 1
-            trackings.append(
+            parsed_trackings.append(
                 {
                     "name": name,
                     "tracking_number": track["tracking_number"],
@@ -183,7 +161,7 @@ class AfterShipSensor(SensorEntity):
 
         self._attributes = {
             **status_counts,
-            ATTR_TRACKINGS: trackings,
+            ATTR_TRACKINGS: parsed_trackings,
         }
 
         self._state = not_delivered_count

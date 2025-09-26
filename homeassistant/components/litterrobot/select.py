@@ -1,53 +1,151 @@
 """Support for Litter-Robot selects."""
+
 from __future__ import annotations
 
-from pylitterbot.robot import VALID_WAIT_TIMES
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
+from typing import Any, Generic, TypeVar
 
-from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
+from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, Robot
+from pylitterbot.robot.litterrobot4 import BrightnessLevel, NightLightMode
+
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .entity import LitterRobotConfigEntity
-from .hub import LitterRobotHub
+from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinator
+from .entity import LitterRobotEntity, _WhiskerEntityT
 
-TYPE_CLEAN_CYCLE_WAIT_TIME_MINUTES = "Clean Cycle Wait Time Minutes"
+_CastTypeT = TypeVar("_CastTypeT", int, float, str)
+
+
+@dataclass(frozen=True, kw_only=True)
+class RobotSelectEntityDescription(
+    SelectEntityDescription, Generic[_WhiskerEntityT, _CastTypeT]
+):
+    """A class that describes robot select entities."""
+
+    entity_category: EntityCategory = EntityCategory.CONFIG
+    current_fn: Callable[[_WhiskerEntityT], _CastTypeT | None]
+    options_fn: Callable[[_WhiskerEntityT], list[_CastTypeT]]
+    select_fn: Callable[[_WhiskerEntityT, str], Coroutine[Any, Any, bool]]
+
+
+ROBOT_SELECT_MAP: dict[type[Robot], tuple[RobotSelectEntityDescription, ...]] = {
+    LitterRobot: (
+        RobotSelectEntityDescription[LitterRobot, int](  # type: ignore[type-abstract]  # only used for isinstance check
+            key="cycle_delay",
+            translation_key="cycle_delay",
+            unit_of_measurement=UnitOfTime.MINUTES,
+            current_fn=lambda robot: robot.clean_cycle_wait_time_minutes,
+            options_fn=lambda robot: robot.VALID_WAIT_TIMES,
+            select_fn=lambda robot, opt: robot.set_wait_time(int(opt)),
+        ),
+    ),
+    LitterRobot4: (
+        RobotSelectEntityDescription[LitterRobot4, str](
+            key="globe_brightness",
+            translation_key="globe_brightness",
+            current_fn=(
+                lambda robot: bri.name.lower()
+                if (bri := robot.night_light_level) is not None
+                else None
+            ),
+            options_fn=lambda _: [level.name.lower() for level in BrightnessLevel],
+            select_fn=(
+                lambda robot, opt: robot.set_night_light_brightness(
+                    BrightnessLevel[opt.upper()]
+                )
+            ),
+        ),
+        RobotSelectEntityDescription[LitterRobot4, str](
+            key="globe_light",
+            translation_key="globe_light",
+            current_fn=(
+                lambda robot: mode.name.lower()
+                if (mode := robot.night_light_mode) is not None
+                else None
+            ),
+            options_fn=lambda _: [mode.name.lower() for mode in NightLightMode],
+            select_fn=(
+                lambda robot, opt: robot.set_night_light_mode(
+                    NightLightMode[opt.upper()]
+                )
+            ),
+        ),
+        RobotSelectEntityDescription[LitterRobot4, str](
+            key="panel_brightness",
+            translation_key="brightness_level",
+            current_fn=(
+                lambda robot: bri.name.lower()
+                if (bri := robot.panel_brightness) is not None
+                else None
+            ),
+            options_fn=lambda _: [level.name.lower() for level in BrightnessLevel],
+            select_fn=(
+                lambda robot, opt: robot.set_panel_brightness(
+                    BrightnessLevel[opt.upper()]
+                )
+            ),
+        ),
+    ),
+    FeederRobot: (
+        RobotSelectEntityDescription[FeederRobot, float](
+            key="meal_insert_size",
+            translation_key="meal_insert_size",
+            unit_of_measurement="cups",
+            current_fn=lambda robot: robot.meal_insert_size,
+            options_fn=lambda robot: robot.VALID_MEAL_INSERT_SIZES,
+            select_fn=lambda robot, opt: robot.set_meal_insert_size(float(opt)),
+        ),
+    ),
+}
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: LitterRobotConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot selects using config entry."""
-    hub: LitterRobotHub = hass.data[DOMAIN][config_entry.entry_id]
-
+    coordinator = entry.runtime_data
     async_add_entities(
-        [
-            LitterRobotSelect(
-                robot=robot, entity_type=TYPE_CLEAN_CYCLE_WAIT_TIME_MINUTES, hub=hub
-            )
-            for robot in hub.account.robots
-        ]
+        LitterRobotSelectEntity(
+            robot=robot, coordinator=coordinator, description=description
+        )
+        for robot in coordinator.account.robots
+        for robot_type, descriptions in ROBOT_SELECT_MAP.items()
+        if isinstance(robot, robot_type)
+        for description in descriptions
     )
 
 
-class LitterRobotSelect(LitterRobotConfigEntity, SelectEntity):
+class LitterRobotSelectEntity(
+    LitterRobotEntity[_WhiskerEntityT],
+    SelectEntity,
+    Generic[_WhiskerEntityT, _CastTypeT],
+):
     """Litter-Robot Select."""
 
-    _attr_icon = "mdi:timer-outline"
+    entity_description: RobotSelectEntityDescription[_WhiskerEntityT, _CastTypeT]
+
+    def __init__(
+        self,
+        robot: _WhiskerEntityT,
+        coordinator: LitterRobotDataUpdateCoordinator,
+        description: RobotSelectEntityDescription[_WhiskerEntityT, _CastTypeT],
+    ) -> None:
+        """Initialize a Litter-Robot select entity."""
+        super().__init__(robot, coordinator, description)
+        options = self.entity_description.options_fn(self.robot)
+        self._attr_options = list(map(str, options))
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return str(self.robot.clean_cycle_wait_time_minutes)
-
-    @property
-    def options(self) -> list[str]:
-        """Return a set of selectable options."""
-        return [str(minute) for minute in VALID_WAIT_TIMES]
+        return str(self.entity_description.current_fn(self.robot))
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self.perform_action_and_refresh(self.robot.set_wait_time, int(option))
+        await self.entity_description.select_fn(self.robot, option)

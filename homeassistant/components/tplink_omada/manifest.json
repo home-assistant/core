@@ -1,0 +1,10 @@
+{
+  "domain": "tplink_omada",
+  "name": "TP-Link Omada",
+  "codeowners": ["@MarkGodwin"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/tplink_omada",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "requirements": ["tplink-omada-client==1.4.4"]
+}

@@ -1,11 +1,14 @@
 """Register a custom front end panel."""
+
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components import frontend
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
@@ -70,27 +73,29 @@ CONFIG_SCHEMA = vol.Schema(
 
 @bind_hass
 async def async_register_panel(
-    hass,
+    hass: HomeAssistant,
     # The url to serve the panel
-    frontend_url_path,
+    frontend_url_path: str,
     # The webcomponent name that loads your panel
-    webcomponent_name,
+    webcomponent_name: str,
     # Title/icon for sidebar
-    sidebar_title=None,
-    sidebar_icon=None,
+    sidebar_title: str | None = None,
+    sidebar_icon: str | None = None,
     # JS source of your panel
-    js_url=None,
+    js_url: str | None = None,
     # JS module of your panel
-    module_url=None,
+    module_url: str | None = None,
     # If your panel should be run inside an iframe
-    embed_iframe=DEFAULT_EMBED_IFRAME,
+    embed_iframe: bool = DEFAULT_EMBED_IFRAME,
     # Should user be asked for confirmation when loading external source
-    trust_external=DEFAULT_TRUST_EXTERNAL,
+    trust_external: bool = DEFAULT_TRUST_EXTERNAL,
     # Configuration to be passed to the panel
-    config=None,
+    config: ConfigType | None = None,
     # If your panel should only be shown to admin users
-    require_admin=False,
-):
+    require_admin: bool = False,
+    # If your panel is used to configure an integration, needs the domain of the integration
+    config_panel_domain: str | None = None,
+) -> None:
     """Register a new custom panel."""
     if js_url is None and module_url is None:
         raise ValueError("Either js_url, module_url or html_url is required.")
@@ -125,6 +130,7 @@ async def async_register_panel(
         frontend_url_path=frontend_url_path,
         config=config,
         require_admin=require_admin,
+        config_panel_domain=config_panel_domain,
     )
 
 

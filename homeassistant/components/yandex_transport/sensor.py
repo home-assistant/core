@@ -1,40 +1,41 @@
 """Service for obtaining information about closer bus from Transport Yandex Service."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
-from aioymaps import CaptchaError, YandexMapsRequester
+from aioymaps import CaptchaError, NoSessionError, YandexMapsRequester
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
 STOP_NAME = "stop_name"
 USER_AGENT = "Home Assistant"
-ATTRIBUTION = "Data provided by maps.yandex.ru"
 
 CONF_STOP_ID = "stop_id"
 CONF_ROUTE = "routes"
 
 DEFAULT_NAME = "Yandex Transport"
-ICON = "mdi:bus"
+
 
 SCAN_INTERVAL = timedelta(minutes=1)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STOP_ID): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -70,22 +71,28 @@ async def async_setup_platform(
 class DiscoverYandexTransport(SensorEntity):
     """Implementation of yandex_transport sensor."""
 
-    def __init__(self, requester: YandexMapsRequester, stop_id, routes, name):
+    _attr_attribution = "Data provided by maps.yandex.ru"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_icon = "mdi:bus"
+
+    def __init__(self, requester: YandexMapsRequester, stop_id, routes, name) -> None:
         """Initialize sensor."""
         self.requester = requester
         self._stop_id = stop_id
         self._routes = routes
-        self._state = None
-        self._name = name
-        self._attrs = None
+        self._attr_name = name
 
-    async def async_update(self, *, tries=0):
+    async def async_update(self) -> None:
         """Get the latest data from maps.yandex.ru and update the states."""
-        attrs = {}
+        await self._try_update(tries=0)
+
+    async def _try_update(self, *, tries: int) -> None:
+        """Get the latest data from maps.yandex.ru and update the states."""
+        attrs: dict[str, Any] = {}
         closer_time = None
         try:
             yandex_reply = await self.requester.get_stop_info(self._stop_id)
-        except CaptchaError as ex:
+        except (CaptchaError, NoSessionError) as ex:
             _LOGGER.error(
                 "%s. You may need to disable the integration for some time",
                 ex,
@@ -95,14 +102,17 @@ class DiscoverYandexTransport(SensorEntity):
             data = yandex_reply["data"]
         except KeyError as key_error:
             _LOGGER.warning(
-                "Exception KeyError was captured, missing key is %s. Yandex returned: %s",
+                (
+                    "Exception KeyError was captured, missing key is %s. Yandex"
+                    " returned: %s"
+                ),
                 key_error,
                 yandex_reply,
             )
             if tries > 0:
                 return
             await self.requester.set_new_session()
-            await self.async_update(tries=tries + 1)
+            await self._try_update(tries=tries + 1)
             return
 
         stop_name = data["name"]
@@ -138,34 +148,11 @@ class DiscoverYandexTransport(SensorEntity):
                         attrs[route] = []
                     attrs[route].append(departure["text"])
         attrs[STOP_NAME] = stop_name
-        attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
+
         if closer_time is None:
-            self._state = None
+            self._attr_native_value = None
         else:
-            self._state = dt_util.utc_from_timestamp(closer_time).replace(microsecond=0)
-        self._attrs = attrs
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return SensorDeviceClass.TIMESTAMP
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attrs
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
+            self._attr_native_value = dt_util.utc_from_timestamp(closer_time).replace(
+                microsecond=0
+            )
+        self._attr_extra_state_attributes = attrs

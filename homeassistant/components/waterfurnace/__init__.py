@@ -1,4 +1,5 @@
 """Support for Waterfurnaces."""
+
 from datetime import timedelta
 import logging
 import threading
@@ -16,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,8 +97,10 @@ class WaterFurnaceData(threading.Thread):
             _LOGGER.error("Failed to refresh login credentials. Thread stopped")
             persistent_notification.create(
                 self.hass,
-                "Error:<br/>Connection to waterfurnace website failed "
-                "the maximum number of times. Thread has stopped",
+                (
+                    "Error:<br/>Connection to waterfurnace website failed "
+                    "the maximum number of times. Thread has stopped"
+                ),
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID,
             )
@@ -156,5 +160,5 @@ class WaterFurnaceData(threading.Thread):
                 self._reconnect()
 
             else:
-                self.hass.helpers.dispatcher.dispatcher_send(UPDATE_TOPIC)
+                dispatcher_send(self.hass, UPDATE_TOPIC)
                 time.sleep(SCAN_INTERVAL.total_seconds())

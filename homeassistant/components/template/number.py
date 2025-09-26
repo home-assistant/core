@@ -1,35 +1,45 @@
 """Support for numbers which integrates with other components."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from homeassistant.components.number import NumberEntity
-from homeassistant.components.number.const import (
-    ATTR_MAX,
-    ATTR_MIN,
-    ATTR_STEP,
+from homeassistant.components.number import (
     ATTR_VALUE,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
+    DEFAULT_STEP,
     DOMAIN as NUMBER_DOMAIN,
+    ENTITY_ID_FORMAT,
+    NumberEntity,
 )
-from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.script import Script
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME, CONF_STATE, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
-from .const import DOMAIN
-from .template_entity import (
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA,
-    TEMPLATE_ENTITY_ICON_SCHEMA,
-    TemplateEntity,
+from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
+from .entity import AbstractTemplateEntity
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
 )
+from .schemas import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
+    make_template_entity_common_modern_schema,
+)
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,35 +49,24 @@ CONF_SET_VALUE = "set_value"
 DEFAULT_NAME = "Template Number"
 DEFAULT_OPTIMISTIC = False
 
-NUMBER_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
-            vol.Required(CONF_STATE): cv.template,
-            vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
-            vol.Required(ATTR_STEP): cv.template,
-            vol.Optional(ATTR_MIN, default=DEFAULT_MIN_VALUE): cv.template,
-            vol.Optional(ATTR_MAX, default=DEFAULT_MAX_VALUE): cv.template,
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-        }
-    )
-    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_ICON_SCHEMA.schema)
+NUMBER_COMMON_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_MAX, default=DEFAULT_MAX_VALUE): cv.template,
+        vol.Optional(CONF_MIN, default=DEFAULT_MIN_VALUE): cv.template,
+        vol.Required(CONF_SET_VALUE): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_STATE): cv.template,
+        vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.template,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    }
 )
 
+NUMBER_YAML_SCHEMA = NUMBER_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
+).extend(make_template_entity_common_modern_schema(NUMBER_DOMAIN, DEFAULT_NAME).schema)
 
-async def _async_create_entities(
-    hass: HomeAssistant, definitions: list[dict[str, Any]], unique_id_prefix: str | None
-) -> list[TemplateNumber]:
-    """Create the Template number."""
-    entities = []
-    for definition in definitions:
-        unique_id = definition.get(CONF_UNIQUE_ID)
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-        entities.append(TemplateNumber(hass, definition, unique_id))
-    return entities
+NUMBER_CONFIG_ENTRY_SCHEMA = NUMBER_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
+)
 
 
 async def async_setup_platform(
@@ -77,100 +76,133 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template number."""
-    if discovery_info is None:
-        _LOGGER.warning(
-            "Template number entities can only be configured under template:"
-        )
-        return
-
-    if "coordinator" in discovery_info:
-        async_add_entities(
-            TriggerNumberEntity(hass, discovery_info["coordinator"], config)
-            for config in discovery_info["entities"]
-        )
-        return
-
-    async_add_entities(
-        await _async_create_entities(
-            hass, discovery_info["entities"], discovery_info["unique_id"]
-        )
+    await async_setup_template_platform(
+        hass,
+        NUMBER_DOMAIN,
+        config,
+        StateNumberEntity,
+        TriggerNumberEntity,
+        async_add_entities,
+        discovery_info,
     )
 
 
-class TemplateNumber(TemplateEntity, NumberEntity):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateNumberEntity,
+        NUMBER_CONFIG_ENTRY_SCHEMA,
+    )
+
+
+@callback
+def async_create_preview_number(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> StateNumberEntity:
+    """Create a preview number."""
+    return async_setup_template_preview(
+        hass, name, config, StateNumberEntity, NUMBER_CONFIG_ENTRY_SCHEMA
+    )
+
+
+class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
+    """Representation of a template number features."""
+
+    _entity_id_format = ENTITY_ID_FORMAT
+    _optimistic_entity = True
+
+    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
+    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
+        """Initialize the features."""
+        self._step_template = config[CONF_STEP]
+        self._min_template = config[CONF_MIN]
+        self._max_template = config[CONF_MAX]
+
+        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_native_step = DEFAULT_STEP
+        self._attr_native_min_value = DEFAULT_MIN_VALUE
+        self._attr_native_max_value = DEFAULT_MAX_VALUE
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set value of the number."""
+        if self._attr_assumed_state:
+            self._attr_native_value = value
+            self.async_write_ha_state()
+        if set_value := self._action_scripts.get(CONF_SET_VALUE):
+            await self.async_run_script(
+                set_value,
+                run_variables={ATTR_VALUE: value},
+                context=self._context,
+            )
+
+
+class StateNumberEntity(TemplateEntity, AbstractTemplateNumber):
     """Representation of a template number."""
+
+    _attr_should_poll = False
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config,
+        config: ConfigType,
         unique_id: str | None,
     ) -> None:
         """Initialize the number."""
-        super().__init__(hass, config=config, unique_id=unique_id)
-        self._value_template = config[CONF_STATE]
-        self._command_set_value = Script(
-            hass, config[CONF_SET_VALUE], self._attr_name, DOMAIN
-        )
-        self._step_template = config[ATTR_STEP]
-        self._min_value_template = config[ATTR_MIN]
-        self._max_value_template = config[ATTR_MAX]
-        self._attr_assumed_state = self._optimistic = config[CONF_OPTIMISTIC]
-        self._attr_value = None
-        self._attr_step = None
-        self._attr_min_value = None
-        self._attr_max_value = None
+        TemplateEntity.__init__(self, hass, config, unique_id)
+        AbstractTemplateNumber.__init__(self, config)
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self.add_template_attribute(
-            "_attr_value",
-            self._value_template,
-            validator=vol.Coerce(float),
-            none_on_template_error=True,
-        )
-        self.add_template_attribute(
-            "_attr_step",
-            self._step_template,
-            validator=vol.Coerce(float),
-            none_on_template_error=True,
-        )
-        if self._min_value_template is not None:
+        name = self._attr_name
+        if TYPE_CHECKING:
+            assert name is not None
+
+        self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], name, DOMAIN)
+
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
+        if self._template is not None:
             self.add_template_attribute(
-                "_attr_min_value",
-                self._min_value_template,
+                "_attr_native_value",
+                self._template,
+                vol.Coerce(float),
+                none_on_template_error=True,
+            )
+        if self._step_template is not None:
+            self.add_template_attribute(
+                "_attr_native_step",
+                self._step_template,
+                vol.Coerce(float),
+                none_on_template_error=True,
+            )
+        if self._min_template is not None:
+            self.add_template_attribute(
+                "_attr_native_min_value",
+                self._min_template,
                 validator=vol.Coerce(float),
                 none_on_template_error=True,
             )
-        if self._max_value_template is not None:
+        if self._max_template is not None:
             self.add_template_attribute(
-                "_attr_max_value",
-                self._max_value_template,
+                "_attr_native_max_value",
+                self._max_template,
                 validator=vol.Coerce(float),
                 none_on_template_error=True,
             )
-        await super().async_added_to_hass()
-
-    async def async_set_value(self, value: float) -> None:
-        """Set value of the number."""
-        if self._optimistic:
-            self._attr_value = value
-            self.async_write_ha_state()
-        await self._command_set_value.async_run(
-            {ATTR_VALUE: value}, context=self._context
-        )
+        super()._async_setup_templates()
 
 
-class TriggerNumberEntity(TriggerEntity, NumberEntity):
+class TriggerNumberEntity(TriggerEntity, AbstractTemplateNumber):
     """Number entity based on trigger data."""
 
     domain = NUMBER_DOMAIN
-    extra_template_keys = (
-        CONF_STATE,
-        ATTR_STEP,
-        ATTR_MIN,
-        ATTR_MAX,
-    )
 
     def __init__(
         self,
@@ -179,45 +211,49 @@ class TriggerNumberEntity(TriggerEntity, NumberEntity):
         config: dict,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(hass, coordinator, config)
-        self._command_set_value = Script(
-            hass,
+        TriggerEntity.__init__(self, hass, coordinator, config)
+        AbstractTemplateNumber.__init__(self, config)
+
+        for key in (
+            CONF_STATE,
+            CONF_STEP,
+            CONF_MIN,
+            CONF_MAX,
+        ):
+            if isinstance(config.get(key), template.Template):
+                self._to_render_simple.append(key)
+                self._parse_result.add(key)
+
+        self.add_script(
+            CONF_SET_VALUE,
             config[CONF_SET_VALUE],
             self._rendered.get(CONF_NAME, DEFAULT_NAME),
             DOMAIN,
         )
 
-    @property
-    def value(self) -> float | None:
-        """Return the currently selected option."""
-        return vol.Any(vol.Coerce(float), None)(self._rendered.get(CONF_STATE))
+    def _handle_coordinator_update(self):
+        """Handle updated data from the coordinator."""
+        self._process_data()
 
-    @property
-    def min_value(self) -> int:
-        """Return the minimum value."""
-        return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(ATTR_MIN, super().min_value)
-        )
-
-    @property
-    def max_value(self) -> int:
-        """Return the maximum value."""
-        return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(ATTR_MAX, super().max_value)
-        )
-
-    @property
-    def step(self) -> int:
-        """Return the increment/decrement step."""
-        return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(ATTR_STEP, super().step)
-        )
-
-    async def async_set_value(self, value: float) -> None:
-        """Set value of the number."""
-        if self._config[CONF_OPTIMISTIC]:
-            self._attr_value = value
+        if not self.available:
             self.async_write_ha_state()
-        await self._command_set_value.async_run(
-            {ATTR_VALUE: value}, context=self._context
-        )
+            return
+
+        write_ha_state = False
+        for key, attr in (
+            (CONF_STATE, "_attr_native_value"),
+            (CONF_STEP, "_attr_native_step"),
+            (CONF_MIN, "_attr_native_min_value"),
+            (CONF_MAX, "_attr_native_max_value"),
+        ):
+            if (rendered := self._rendered.get(key)) is not None:
+                setattr(self, attr, vol.Any(vol.Coerce(float), None)(rendered))
+                write_ha_state = True
+
+        if len(self._rendered) > 0:
+            # In case any non optimistic template
+            write_ha_state = True
+
+        if write_ha_state:
+            self.async_set_context(self.coordinator.data["context"])
+            self.async_write_ha_state()

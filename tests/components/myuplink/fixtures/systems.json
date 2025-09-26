@@ -1,0 +1,25 @@
+{
+  "page": 1,
+  "itemsPerPage": 10,
+  "numItems": 1,
+  "systems": [
+    {
+      "systemId": "123456-7890-1234",
+      "name": "Batcave",
+      "securityLevel": "admin",
+      "hasAlarm": false,
+      "country": "Sweden",
+      "devices": [
+        {
+          "id": "batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",
+          "connectionState": "Connected",
+          "currentFwVersion": "9682R7",
+          "product": {
+            "serialNumber": "123456",
+            "name": "F730 CU 3x400V"
+          }
+        }
+      ]
+    }
+  ]
+}

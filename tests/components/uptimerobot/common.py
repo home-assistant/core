@@ -1,4 +1,5 @@
 """Common constants and functions for UptimeRobot tests."""
+
 from __future__ import annotations
 
 from enum import Enum
@@ -15,12 +16,14 @@ from pyuptimerobot import (
 
 from homeassistant import config_entries
 from homeassistant.components.uptimerobot.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-MOCK_UPTIMEROBOT_API_KEY = "0242ac120003"
+MOCK_UPTIMEROBOT_API_KEY = "u0242ac120003"
+MOCK_UPTIMEROBOT_API_KEY_READ_ONLY = "ur0242ac120003"
 MOCK_UPTIMEROBOT_EMAIL = "test@test.test"
 MOCK_UPTIMEROBOT_UNIQUE_ID = "1234567890"
 
@@ -37,6 +40,14 @@ MOCK_UPTIMEROBOT_MONITOR = {
     "type": 1,
     "url": "http://example.com",
 }
+MOCK_UPTIMEROBOT_MONITOR_PAUSED = {
+    "id": 1234,
+    "friendly_name": "Test monitor",
+    "status": 0,
+    "type": 1,
+    "url": "http://example.com",
+}
+
 
 MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA = {
     "domain": DOMAIN,
@@ -45,11 +56,19 @@ MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA = {
     "unique_id": MOCK_UPTIMEROBOT_UNIQUE_ID,
     "source": config_entries.SOURCE_USER,
 }
+MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA_KEY_READ_ONLY = {
+    "domain": DOMAIN,
+    "title": MOCK_UPTIMEROBOT_EMAIL,
+    "data": {"platform": DOMAIN, "api_key": MOCK_UPTIMEROBOT_API_KEY_READ_ONLY},
+    "unique_id": MOCK_UPTIMEROBOT_UNIQUE_ID,
+    "source": config_entries.SOURCE_USER,
+}
 
 STATE_UP = "up"
 
 UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY = "binary_sensor.test_monitor"
 UPTIMEROBOT_SENSOR_TEST_ENTITY = "sensor.test_monitor"
+UPTIMEROBOT_SWITCH_TEST_ENTITY = "switch.test_monitor"
 
 
 class MockApiResponseKey(str, Enum):
@@ -61,11 +80,11 @@ class MockApiResponseKey(str, Enum):
 
 
 def mock_uptimerobot_api_response(
-    data: dict[str, Any]
-    | None
+    data: list[dict[str, Any]]
     | list[UptimeRobotMonitor]
     | UptimeRobotAccount
-    | UptimeRobotApiError = None,
+    | UptimeRobotApiError
+    | None = None,
     status: APIStatus = APIStatus.OK,
     key: MockApiResponseKey = MockApiResponseKey.MONITORS,
 ) -> UptimeRobotApiResponse:
@@ -93,12 +112,13 @@ async def setup_uptimerobot_integration(hass: HomeAssistant) -> MockConfigEntry:
         "pyuptimerobot.UptimeRobot.async_get_monitors",
         return_value=mock_uptimerobot_api_response(data=[MOCK_UPTIMEROBOT_MONITOR]),
     ):
-
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY).state == STATE_ON
-    assert hass.states.get(UPTIMEROBOT_SENSOR_TEST_ENTITY).state == STATE_UP
-    assert mock_entry.state == config_entries.ConfigEntryState.LOADED
+    assert (entity := hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY))
+    assert entity.state == STATE_ON
+    assert (entity := hass.states.get(UPTIMEROBOT_SENSOR_TEST_ENTITY))
+    assert entity.state == STATE_UP
+    assert mock_entry.state is ConfigEntryState.LOADED
 
     return mock_entry

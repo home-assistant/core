@@ -1,22 +1,31 @@
 """The tests for the MQTT eventstream component."""
+
 import json
 from unittest.mock import ANY, patch
 
-import homeassistant.components.mqtt_eventstream as eventstream
+import pytest
+
+from homeassistant.components import mqtt_eventstream as eventstream
 from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
-from homeassistant.core import State, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
     async_fire_mqtt_message,
     async_fire_time_changed,
     mock_state_change_event,
 )
+from tests.typing import MqttMockHAClient
 
 
-async def add_eventstream(hass, sub_topic=None, pub_topic=None, ignore_event=None):
+async def add_eventstream(
+    hass: HomeAssistant,
+    sub_topic: str | None = None,
+    pub_topic: str | None = None,
+    ignore_event: list[str] | None = None,
+) -> bool:
     """Add a mqtt_eventstream component."""
     config = {}
     if sub_topic:
@@ -30,15 +39,23 @@ async def add_eventstream(hass, sub_topic=None, pub_topic=None, ignore_event=Non
     )
 
 
-async def test_setup_succeeds(hass, mqtt_mock):
+async def test_setup_succeeds(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
     """Test the success of the setup."""
     assert await add_eventstream(hass)
 
 
-async def test_setup_with_pub(hass, mqtt_mock):
+async def test_setup_no_mqtt(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the failure of the setup if mqtt is not set up."""
+    assert not await add_eventstream(hass)
+    assert "MQTT integration is not available" in caplog.text
+
+
+async def test_setup_with_pub(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
     """Test the setup with subscription."""
     # Should start off with no listeners for all events
-    assert hass.bus.async_listeners().get("*") is None
+    assert not hass.bus.async_listeners().get("*")
 
     assert await add_eventstream(hass, pub_topic="bar")
     await hass.async_block_till_done()
@@ -47,17 +64,19 @@ async def test_setup_with_pub(hass, mqtt_mock):
     assert hass.bus.async_listeners().get("*") == 1
 
 
-async def test_subscribe(hass, mqtt_mock):
+async def test_subscribe(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
     """Test the subscription."""
     sub_topic = "foo"
     assert await add_eventstream(hass, sub_topic=sub_topic)
     await hass.async_block_till_done()
 
     # Verify that the this entity was subscribed to the topic
-    mqtt_mock.async_subscribe.assert_called_with(sub_topic, ANY, 0, ANY)
+    mqtt_mock.async_subscribe.assert_called_with(sub_topic, ANY, 0, ANY, ANY)
 
 
-async def test_state_changed_event_sends_message(hass, mqtt_mock):
+async def test_state_changed_event_sends_message(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test the sending of a new message if event changed."""
     now = dt_util.as_utc(dt_util.now())
     e_id = "fake.entity"
@@ -90,13 +109,14 @@ async def test_state_changed_event_sends_message(hass, mqtt_mock):
     event = {}
     event["event_type"] = EVENT_STATE_CHANGED
     new_state = {
+        "attributes": {},
+        "entity_id": e_id,
+        "last_changed": now.isoformat(),
+        "last_reported": now.isoformat(),
         "last_updated": now.isoformat(),
         "state": "on",
-        "entity_id": e_id,
-        "attributes": {},
-        "last_changed": now.isoformat(),
     }
-    event["event_data"] = {"new_state": new_state, "entity_id": e_id}
+    event["event_data"] = {"new_state": new_state, "entity_id": e_id, "old_state": None}
 
     # Verify that the message received was that expected
     result = json.loads(msg)
@@ -104,7 +124,9 @@ async def test_state_changed_event_sends_message(hass, mqtt_mock):
     assert result == event
 
 
-async def test_time_event_does_not_send_message(hass, mqtt_mock):
+async def test_time_event_does_not_send_message(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test the sending of a new message if time event."""
     assert await add_eventstream(hass, pub_topic="bar")
     await hass.async_block_till_done()
@@ -118,7 +140,9 @@ async def test_time_event_does_not_send_message(hass, mqtt_mock):
     assert not mqtt_mock.async_publish.called
 
 
-async def test_receiving_remote_event_fires_hass_event(hass, mqtt_mock):
+async def test_receiving_remote_event_fires_hass_event(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test the receiving of the remotely fired event."""
     sub_topic = "foo"
     assert await add_eventstream(hass, sub_topic=sub_topic)
@@ -144,7 +168,9 @@ async def test_receiving_remote_event_fires_hass_event(hass, mqtt_mock):
     await hass.async_block_till_done()
 
 
-async def test_receiving_blocked_event_fires_hass_event(hass, mqtt_mock):
+async def test_receiving_blocked_event_fires_hass_event(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test the receiving of blocked event does not fire."""
     sub_topic = "foo"
     assert await add_eventstream(hass, sub_topic=sub_topic)
@@ -169,7 +195,9 @@ async def test_receiving_blocked_event_fires_hass_event(hass, mqtt_mock):
     await hass.async_block_till_done()
 
 
-async def test_ignored_event_doesnt_send_over_stream(hass, mqtt_mock):
+async def test_ignored_event_doesnt_send_over_stream(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test the ignoring of sending events if defined."""
     assert await add_eventstream(hass, pub_topic="bar", ignore_event=["state_changed"])
     await hass.async_block_till_done()
@@ -192,7 +220,9 @@ async def test_ignored_event_doesnt_send_over_stream(hass, mqtt_mock):
     assert not mqtt_mock.async_publish.called
 
 
-async def test_wrong_ignored_event_sends_over_stream(hass, mqtt_mock):
+async def test_wrong_ignored_event_sends_over_stream(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
     """Test the ignoring of sending events if defined."""
     assert await add_eventstream(hass, pub_topic="bar", ignore_event=["statee_changed"])
     await hass.async_block_till_done()

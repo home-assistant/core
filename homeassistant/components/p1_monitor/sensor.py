@@ -1,272 +1,318 @@
 """Support for P1 Monitor sensors."""
+
 from __future__ import annotations
 
 from typing import Literal
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CURRENCY_EURO,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
-    VOLUME_CUBIC_METERS,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import P1MonitorDataUpdateCoordinator
 from .const import (
     DOMAIN,
     SERVICE_PHASES,
     SERVICE_SETTINGS,
     SERVICE_SMARTMETER,
-    SERVICES,
+    SERVICE_WATERMETER,
+)
+from .coordinator import P1MonitorConfigEntry, P1MonitorDataUpdateCoordinator
+
+SENSORS_SMARTMETER: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="gas_consumption",
+        translation_key="gas_consumption",
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.GAS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="power_consumption",
+        translation_key="power_consumption",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="energy_consumption_high",
+        translation_key="energy_consumption_high",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="energy_consumption_low",
+        translation_key="energy_consumption_low",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="power_production",
+        translation_key="power_production",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="energy_production_high",
+        translation_key="energy_production_high",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="energy_production_low",
+        translation_key="energy_production_low",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="energy_tariff_period",
+        translation_key="energy_tariff_period",
+    ),
 )
 
-SENSORS: dict[
-    Literal["smartmeter", "phases", "settings"], tuple[SensorEntityDescription, ...]
-] = {
-    SERVICE_SMARTMETER: (
-        SensorEntityDescription(
-            key="gas_consumption",
-            name="Gas Consumption",
-            entity_registry_enabled_default=False,
-            native_unit_of_measurement=VOLUME_CUBIC_METERS,
-            device_class=SensorDeviceClass.GAS,
-            state_class=SensorStateClass.TOTAL_INCREASING,
-        ),
-        SensorEntityDescription(
-            key="power_consumption",
-            name="Power Consumption",
-            native_unit_of_measurement=POWER_WATT,
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
-            key="energy_consumption_high",
-            name="Energy Consumption - High Tariff",
-            native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-            device_class=SensorDeviceClass.ENERGY,
-            state_class=SensorStateClass.TOTAL_INCREASING,
-        ),
-        SensorEntityDescription(
-            key="energy_consumption_low",
-            name="Energy Consumption - Low Tariff",
-            native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-            device_class=SensorDeviceClass.ENERGY,
-            state_class=SensorStateClass.TOTAL_INCREASING,
-        ),
-        SensorEntityDescription(
-            key="power_production",
-            name="Power Production",
-            native_unit_of_measurement=POWER_WATT,
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
-            key="energy_production_high",
-            name="Energy Production - High Tariff",
-            native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-            device_class=SensorDeviceClass.ENERGY,
-            state_class=SensorStateClass.TOTAL_INCREASING,
-        ),
-        SensorEntityDescription(
-            key="energy_production_low",
-            name="Energy Production - Low Tariff",
-            native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-            device_class=SensorDeviceClass.ENERGY,
-            state_class=SensorStateClass.TOTAL_INCREASING,
-        ),
-        SensorEntityDescription(
-            key="energy_tariff_period",
-            name="Energy Tariff Period",
-            icon="mdi:calendar-clock",
-        ),
+SENSORS_PHASES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="voltage_phase_l1",
+        translation_key="voltage_phase_l1",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    SERVICE_PHASES: (
-        SensorEntityDescription(
-            key="voltage_phase_l1",
-            name="Voltage Phase L1",
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-            device_class=SensorDeviceClass.VOLTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
-            key="voltage_phase_l2",
-            name="Voltage Phase L2",
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-            device_class=SensorDeviceClass.VOLTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
-            key="voltage_phase_l3",
-            name="Voltage Phase L3",
-            native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-            device_class=SensorDeviceClass.VOLTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
-            key="current_phase_l1",
-            name="Current Phase L1",
-            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-            device_class=SensorDeviceClass.CURRENT,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
-            key="current_phase_l2",
-            name="Current Phase L2",
-            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-            device_class=SensorDeviceClass.CURRENT,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
-            key="current_phase_l3",
-            name="Current Phase L3",
-            native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-            device_class=SensorDeviceClass.CURRENT,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
-            key="power_consumed_phase_l1",
-            name="Power Consumed Phase L1",
-            native_unit_of_measurement=POWER_WATT,
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
-            key="power_consumed_phase_l2",
-            name="Power Consumed Phase L2",
-            native_unit_of_measurement=POWER_WATT,
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
-            key="power_consumed_phase_l3",
-            name="Power Consumed Phase L3",
-            native_unit_of_measurement=POWER_WATT,
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
-            key="power_produced_phase_l1",
-            name="Power Produced Phase L1",
-            native_unit_of_measurement=POWER_WATT,
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
-            key="power_produced_phase_l2",
-            name="Power Produced Phase L2",
-            native_unit_of_measurement=POWER_WATT,
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
-            key="power_produced_phase_l3",
-            name="Power Produced Phase L3",
-            native_unit_of_measurement=POWER_WATT,
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
+    SensorEntityDescription(
+        key="voltage_phase_l2",
+        translation_key="voltage_phase_l2",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    SERVICE_SETTINGS: (
-        SensorEntityDescription(
-            key="gas_consumption_price",
-            name="Gas Consumption Price",
-            entity_registry_enabled_default=False,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
-        ),
-        SensorEntityDescription(
-            key="energy_consumption_price_low",
-            name="Energy Consumption Price - Low",
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
-        ),
-        SensorEntityDescription(
-            key="energy_consumption_price_high",
-            name="Energy Consumption Price - High",
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
-        ),
-        SensorEntityDescription(
-            key="energy_production_price_low",
-            name="Energy Production Price - Low",
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
-        ),
-        SensorEntityDescription(
-            key="energy_production_price_high",
-            name="Energy Production Price - High",
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
-        ),
+    SensorEntityDescription(
+        key="voltage_phase_l3",
+        translation_key="voltage_phase_l3",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-}
+    SensorEntityDescription(
+        key="current_phase_l1",
+        translation_key="current_phase_l1",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="current_phase_l2",
+        translation_key="current_phase_l2",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="current_phase_l3",
+        translation_key="current_phase_l3",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="power_consumed_phase_l1",
+        translation_key="power_consumed_phase_l1",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="power_consumed_phase_l2",
+        translation_key="power_consumed_phase_l2",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="power_consumed_phase_l3",
+        translation_key="power_consumed_phase_l3",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="power_produced_phase_l1",
+        translation_key="power_produced_phase_l1",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="power_produced_phase_l2",
+        translation_key="power_produced_phase_l2",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="power_produced_phase_l3",
+        translation_key="power_produced_phase_l3",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
+
+SENSORS_SETTINGS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="gas_consumption_price",
+        translation_key="gas_consumption_price",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
+    ),
+    SensorEntityDescription(
+        key="energy_consumption_price_low",
+        translation_key="energy_consumption_price_low",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+    ),
+    SensorEntityDescription(
+        key="energy_consumption_price_high",
+        translation_key="energy_consumption_price_high",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+    ),
+    SensorEntityDescription(
+        key="energy_production_price_low",
+        translation_key="energy_production_price_low",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+    ),
+    SensorEntityDescription(
+        key="energy_production_price_high",
+        translation_key="energy_production_price_high",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+    ),
+)
+
+SENSORS_WATERMETER: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="consumption_day",
+        translation_key="consumption_day",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        device_class=SensorDeviceClass.WATER,
+    ),
+    SensorEntityDescription(
+        key="consumption_total",
+        translation_key="consumption_total",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.WATER,
+    ),
+    SensorEntityDescription(
+        key="pulse_count",
+        translation_key="pulse_count",
+    ),
+)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: P1MonitorConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up P1 Monitor Sensors based on a config entry."""
-    async_add_entities(
+    entities: list[P1MonitorSensorEntity] = []
+    entities.extend(
         P1MonitorSensorEntity(
-            coordinator=hass.data[DOMAIN][entry.entry_id],
+            entry=entry,
             description=description,
-            service_key=service_key,
-            name=entry.title,
-            service=SERVICES[service_key],
+            name="SmartMeter",
+            service=SERVICE_SMARTMETER,
         )
-        for service_key, service_sensors in SENSORS.items()
-        for description in service_sensors
+        for description in SENSORS_SMARTMETER
     )
+    entities.extend(
+        P1MonitorSensorEntity(
+            entry=entry,
+            description=description,
+            name="Phases",
+            service=SERVICE_PHASES,
+        )
+        for description in SENSORS_PHASES
+    )
+    entities.extend(
+        P1MonitorSensorEntity(
+            entry=entry,
+            description=description,
+            name="Settings",
+            service=SERVICE_SETTINGS,
+        )
+        for description in SENSORS_SETTINGS
+    )
+    if entry.runtime_data.has_water_meter:
+        entities.extend(
+            P1MonitorSensorEntity(
+                entry=entry,
+                description=description,
+                name="WaterMeter",
+                service=SERVICE_WATERMETER,
+            )
+            for description in SENSORS_WATERMETER
+        )
+    async_add_entities(entities)
 
 
-class P1MonitorSensorEntity(CoordinatorEntity, SensorEntity):
+class P1MonitorSensorEntity(
+    CoordinatorEntity[P1MonitorDataUpdateCoordinator], SensorEntity
+):
     """Defines an P1 Monitor sensor."""
 
-    coordinator: P1MonitorDataUpdateCoordinator
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         *,
-        coordinator: P1MonitorDataUpdateCoordinator,
+        entry: P1MonitorConfigEntry,
         description: SensorEntityDescription,
-        service_key: Literal["smartmeter", "phases", "settings"],
         name: str,
-        service: str,
+        service: Literal["smartmeter", "watermeter", "phases", "settings"],
     ) -> None:
         """Initialize P1 Monitor sensor."""
-        super().__init__(coordinator=coordinator)
-        self._service_key = service_key
+        super().__init__(coordinator=entry.runtime_data)
+        self._service_key = service
 
-        self.entity_id = f"{SENSOR_DOMAIN}.{name}_{description.key}"
         self.entity_description = description
         self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}_{service_key}_{description.key}"
+            f"{entry.runtime_data.config_entry.entry_id}_{service}_{description.key}"
         )
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={
-                (DOMAIN, f"{coordinator.config_entry.entry_id}_{service_key}")
+                (DOMAIN, f"{entry.runtime_data.config_entry.entry_id}_{service}")
             },
-            configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
+            configuration_url=f"http://{entry.runtime_data.config_entry.data[CONF_HOST]}",
             manufacturer="P1 Monitor",
-            name=service,
+            name=name,
         )
 
     @property
@@ -277,4 +323,4 @@ class P1MonitorSensorEntity(CoordinatorEntity, SensorEntity):
         )
         if isinstance(value, str):
             return value.lower()
-        return value
+        return value  # type: ignore[no-any-return]

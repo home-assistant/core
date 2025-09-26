@@ -1,15 +1,16 @@
 {
   "domain": "tensorflow",
   "name": "TensorFlow",
+  "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/tensorflow",
+  "iot_class": "local_polling",
+  "loggers": ["tensorflow"],
+  "quality_scale": "legacy",
   "requirements": [
     "tensorflow==2.5.0",
     "tf-models-official==2.5.0",
-    "pycocotools==2.0.1",
-    "numpy==1.21.4",
-    "pillow==9.0.1"
-  ],
-  "codeowners": [],
-  "iot_class": "local_polling",
-  "loggers": ["tensorflow"]
+    "pycocotools==2.0.6",
+    "numpy==2.3.2",
+    "Pillow==11.3.0"
+  ]
 }

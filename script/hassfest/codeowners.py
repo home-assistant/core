@@ -1,4 +1,5 @@
 """Generate CODEOWNERS."""
+
 from __future__ import annotations
 
 from .model import Config, Integration
@@ -8,39 +9,63 @@ BASE = """
 # People marked here will be automatically requested for a review
 # when the code that they own is touched.
 # https://github.com/blog/2392-introducing-code-owners
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
 # Home Assistant Core
-setup.py @home-assistant/core
-homeassistant/*.py @home-assistant/core
-homeassistant/helpers/* @home-assistant/core
-homeassistant/util/* @home-assistant/core
+.core_files.yaml @home-assistant/core
+.git-blame-ignore-revs @home-assistant/core
+.gitattributes @home-assistant/core
+.gitignore @home-assistant/core
+.hadolint.yaml @home-assistant/core
+.pre-commit-config.yaml @home-assistant/core
+.prettierignore @home-assistant/core
+.yamllint @home-assistant/core
+pyproject.toml @home-assistant/core
+requirements_test.txt @home-assistant/core
+/.devcontainer/ @home-assistant/core
+/.github/ @home-assistant/core
+/.vscode/ @home-assistant/core
+/homeassistant/*.py @home-assistant/core
+/homeassistant/auth/ @home-assistant/core
+/homeassistant/backports/ @home-assistant/core
+/homeassistant/helpers/ @home-assistant/core
+/homeassistant/scripts/ @home-assistant/core
+/homeassistant/util/ @home-assistant/core
+/pylint/ @home-assistant/core
+/script/ @home-assistant/core
 
 # Home Assistant Supervisor
+.dockerignore @home-assistant/supervisor
 build.json @home-assistant/supervisor
-machine/* @home-assistant/supervisor
-rootfs/* @home-assistant/supervisor
-Dockerfile @home-assistant/supervisor
+/machine/ @home-assistant/supervisor
+/rootfs/ @home-assistant/supervisor
+/Dockerfile @home-assistant/supervisor
 
 # Other code
-homeassistant/scripts/check_config.py @kellerza
+/homeassistant/scripts/check_config.py @kellerza
 
 # Integrations
 """.strip()
 
 INDIVIDUAL_FILES = """
 # Individual files
-homeassistant/components/demo/weather @fabaff
+/homeassistant/components/demo/weather.py @fabaff
+"""
+
+REMOVE_CODEOWNERS = """
+# Remove codeowners from files
+/homeassistant/components/*/translations/
 """
 
 
-def generate_and_validate(integrations: dict[str, Integration], config: Config):
+def generate_and_validate(integrations: dict[str, Integration], config: Config) -> str:
     """Generate CODEOWNERS."""
     parts = [BASE]
 
     for domain in sorted(integrations):
         integration = integrations[domain]
 
-        if not integration.manifest:
+        if integration.integration_type == "virtual":
             continue
 
         codeowners = integration.manifest["codeowners"]
@@ -54,17 +79,18 @@ def generate_and_validate(integrations: dict[str, Integration], config: Config):
                     "codeowners", "Code owners need to be valid GitHub handles."
                 )
 
-        parts.append(f"homeassistant/components/{domain}/* {' '.join(codeowners)}")
+        parts.append(f"/homeassistant/components/{domain}/ {' '.join(codeowners)}")
 
-        if (config.root / "tests/components" / domain).exists():
-            parts.append(f"tests/components/{domain}/* {' '.join(codeowners)}")
+        if (config.root / "tests/components" / domain / "__init__.py").exists():
+            parts.append(f"/tests/components/{domain}/ {' '.join(codeowners)}")
 
     parts.append(f"\n{INDIVIDUAL_FILES.strip()}")
+    parts.append(f"\n{REMOVE_CODEOWNERS.strip()}")
 
     return "\n".join(parts)
 
 
-def validate(integrations: dict[str, Integration], config: Config):
+def validate(integrations: dict[str, Integration], config: Config) -> None:
     """Validate CODEOWNERS."""
     codeowners_path = config.root / "CODEOWNERS"
     config.cache["codeowners"] = content = generate_and_validate(integrations, config)
@@ -72,18 +98,15 @@ def validate(integrations: dict[str, Integration], config: Config):
     if config.specific_integrations:
         return
 
-    with open(str(codeowners_path)) as fp:
-        if fp.read().strip() != content:
-            config.add_error(
-                "codeowners",
-                "File CODEOWNERS is not up to date. Run python3 -m script.hassfest",
-                fixable=True,
-            )
-        return
+    if codeowners_path.read_text() != content + "\n":
+        config.add_error(
+            "codeowners",
+            "File CODEOWNERS is not up to date. Run python3 -m script.hassfest",
+            fixable=True,
+        )
 
 
-def generate(integrations: dict[str, Integration], config: Config):
+def generate(integrations: dict[str, Integration], config: Config) -> None:
     """Generate CODEOWNERS."""
     codeowners_path = config.root / "CODEOWNERS"
-    with open(str(codeowners_path), "w") as fp:
-        fp.write(f"{config.cache['codeowners']}\n")
+    codeowners_path.write_text(f"{config.cache['codeowners']}\n")

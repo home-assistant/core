@@ -1,68 +1,55 @@
 """Support for getting data from websites with scraping."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any, cast
 
-from bs4 import BeautifulSoup
-import httpx
 import voluptuous as vol
 
-from homeassistant.components.rest.data import RestData
-from homeassistant.components.sensor import (
-    CONF_STATE_CLASS,
-    DEVICE_CLASSES_SCHEMA,
-    PLATFORM_SCHEMA,
-    STATE_CLASSES_SCHEMA,
-    SensorEntity,
-)
+from homeassistant.components.sensor import CONF_STATE_CLASS
 from homeassistant.const import (
-    CONF_AUTHENTICATION,
+    CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
-    CONF_HEADERS,
+    CONF_ICON,
     CONF_NAME,
-    CONF_PASSWORD,
-    CONF_RESOURCE,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
-    CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
-    CONF_VERIFY_SSL,
-    HTTP_BASIC_AUTHENTICATION,
-    HTTP_DIGEST_AUTHENTICATION,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.template import _SENTINEL, Template
+from homeassistant.helpers.trigger_template_entity import (
+    CONF_AVAILABILITY,
+    CONF_PICTURE,
+    TEMPLATE_SENSOR_BASE_SCHEMA,
+    ManualTriggerEntity,
+    ManualTriggerSensorEntity,
+    ValueTemplate,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from . import ScrapeConfigEntry
+from .const import CONF_INDEX, CONF_SELECT, DOMAIN
+from .coordinator import ScrapeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTR = "attribute"
-CONF_SELECT = "select"
-CONF_INDEX = "index"
-
-DEFAULT_NAME = "Web scrape"
-DEFAULT_VERIFY_SSL = True
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_RESOURCE): cv.string,
-        vol.Required(CONF_SELECT): cv.string,
-        vol.Optional(CONF_ATTR): cv.string,
-        vol.Optional(CONF_INDEX, default=0): cv.positive_int,
-        vol.Optional(CONF_AUTHENTICATION): vol.In(
-            [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
-        ),
-        vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    }
+TRIGGER_ENTITY_OPTIONS = (
+    CONF_AVAILABILITY,
+    CONF_DEVICE_CLASS,
+    CONF_ICON,
+    CONF_PICTURE,
+    CONF_UNIQUE_ID,
+    CONF_STATE_CLASS,
+    CONF_UNIT_OF_MEASUREMENT,
 )
 
 
@@ -73,93 +60,121 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Web scrape sensor."""
-    name = config.get(CONF_NAME)
-    resource = config.get(CONF_RESOURCE)
-    method = "GET"
-    payload = None
-    headers = config.get(CONF_HEADERS)
-    verify_ssl = config.get(CONF_VERIFY_SSL)
-    select = config.get(CONF_SELECT)
-    attr = config.get(CONF_ATTR)
-    index = config.get(CONF_INDEX)
-    unit = config.get(CONF_UNIT_OF_MEASUREMENT)
-    device_class = config.get(CONF_DEVICE_CLASS)
-    state_class = config.get(CONF_STATE_CLASS)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
+    discovery_info = cast(DiscoveryInfoType, discovery_info)
+    coordinator: ScrapeCoordinator = discovery_info["coordinator"]
+    sensors_config: list[ConfigType] = discovery_info["configs"]
 
-    if (value_template := config.get(CONF_VALUE_TEMPLATE)) is not None:
-        value_template.hass = hass
-
-    auth: httpx.DigestAuth | tuple[str, str] | None
-    if username and password:
-        if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-            auth = httpx.DigestAuth(username, password)
-        else:
-            auth = (username, password)
-    else:
-        auth = None
-    rest = RestData(hass, method, resource, auth, headers, None, payload, verify_ssl)
-    await rest.async_update()
-
-    if rest.data is None:
+    await coordinator.async_refresh()
+    if coordinator.data is None:
         raise PlatformNotReady
 
-    async_add_entities(
-        [
+    entities: list[ScrapeSensor] = []
+    for sensor_config in sensors_config:
+        trigger_entity_config = {CONF_NAME: sensor_config[CONF_NAME]}
+        for key in TRIGGER_ENTITY_OPTIONS:
+            if key not in sensor_config:
+                continue
+            trigger_entity_config[key] = sensor_config[key]
+
+        entities.append(
             ScrapeSensor(
-                rest,
-                name,
-                select,
-                attr,
-                index,
-                value_template,
-                unit,
-                device_class,
-                state_class,
+                hass,
+                coordinator,
+                trigger_entity_config,
+                sensor_config[CONF_SELECT],
+                sensor_config.get(CONF_ATTRIBUTE),
+                sensor_config[CONF_INDEX],
+                sensor_config.get(CONF_VALUE_TEMPLATE),
+                True,
             )
-        ],
-        True,
-    )
+        )
+
+    async_add_entities(entities)
 
 
-class ScrapeSensor(SensorEntity):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ScrapeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Scrape sensor entry."""
+    entities: list = []
+
+    coordinator = entry.runtime_data
+    config = dict(entry.options)
+    for sensor in config["sensor"]:
+        sensor_config: ConfigType = vol.Schema(
+            TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.ALLOW_EXTRA
+        )(sensor)
+
+        name: str = sensor_config[CONF_NAME]
+        value_string: str | None = sensor_config.get(CONF_VALUE_TEMPLATE)
+
+        value_template: ValueTemplate | None = (
+            ValueTemplate(value_string, hass) if value_string is not None else None
+        )
+
+        trigger_entity_config: dict[str, str | Template | None] = {CONF_NAME: name}
+        for key in TRIGGER_ENTITY_OPTIONS:
+            if key not in sensor_config:
+                continue
+            if key == CONF_AVAILABILITY:
+                trigger_entity_config[key] = Template(sensor_config[key], hass)
+                continue
+            trigger_entity_config[key] = sensor_config[key]
+
+        entities.append(
+            ScrapeSensor(
+                hass,
+                coordinator,
+                trigger_entity_config,
+                sensor_config[CONF_SELECT],
+                sensor_config.get(CONF_ATTRIBUTE),
+                sensor_config[CONF_INDEX],
+                value_template,
+                False,
+            )
+        )
+
+    async_add_entities(entities)
+
+
+class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEntity):
     """Representation of a web scrape sensor."""
 
     def __init__(
         self,
-        rest,
-        name,
-        select,
-        attr,
-        index,
-        value_template,
-        unit,
-        device_class,
-        state_class,
-    ):
+        hass: HomeAssistant,
+        coordinator: ScrapeCoordinator,
+        trigger_entity_config: ConfigType,
+        select: str,
+        attr: str | None,
+        index: int,
+        value_template: ValueTemplate | None,
+        yaml: bool,
+    ) -> None:
         """Initialize a web scrape sensor."""
-        self.rest = rest
-        self._state = None
+        CoordinatorEntity.__init__(self, coordinator)
+        ManualTriggerSensorEntity.__init__(self, hass, trigger_entity_config)
         self._select = select
         self._attr = attr
         self._index = index
         self._value_template = value_template
-        self._attr_name = name
-        self._attr_native_unit_of_measurement = unit
-        self._attr_device_class = device_class
-        self._attr_state_class = state_class
+        self._attr_native_value = None
+        if not yaml and (unique_id := trigger_entity_config.get(CONF_UNIQUE_ID)):
+            self._attr_name = None
+            self._attr_has_entity_name = True
+            self._attr_device_info = DeviceInfo(
+                entry_type=DeviceEntryType.SERVICE,
+                identifiers={(DOMAIN, unique_id)},
+                manufacturer="Scrape",
+                name=self.name,
+            )
 
-    @property
-    def native_value(self):
-        """Return the state of the device."""
-        return self._state
-
-    def _extract_value(self):
+    def _extract_value(self) -> Any:
         """Parse the html extraction in the executor."""
-        raw_data = BeautifulSoup(self.rest.data, "html.parser")
-        _LOGGER.debug(raw_data)
-
+        raw_data = self.coordinator.data
+        value: str | list[str] | None
         try:
             if self._attr is not None:
                 value = raw_data.select(self._select)[self._index][self._attr]
@@ -170,40 +185,50 @@ class ScrapeSensor(SensorEntity):
                 else:
                     value = tag.text
         except IndexError:
-            _LOGGER.warning("Index '%s' not found in %s", self._attr, self.entity_id)
-            value = None
+            _LOGGER.warning("Index '%s' not found in %s", self._index, self.entity_id)
+            return _SENTINEL
         except KeyError:
             _LOGGER.warning(
                 "Attribute '%s' not found in %s", self._attr, self.entity_id
             )
-            value = None
-        _LOGGER.debug(value)
+            return _SENTINEL
+        _LOGGER.debug("Parsed value: %s", value)
         return value
 
-    async def async_update(self):
-        """Get the latest data from the source and updates the state."""
-        await self.rest.async_update()
-        await self._async_update_from_rest_data()
-
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Ensure the data from the initial update is reflected in the state."""
-        await self._async_update_from_rest_data()
+        await super().async_added_to_hass()
+        self._async_update_from_rest_data()
+        self.async_write_ha_state()
 
-    async def _async_update_from_rest_data(self):
+    def _async_update_from_rest_data(self) -> None:
         """Update state from the rest data."""
-        if self.rest.data is None:
-            _LOGGER.error("Unable to retrieve data for %s", self.name)
+        self._attr_available = True
+        if (value := self._extract_value()) is _SENTINEL:
+            self._attr_available = False
             return
 
-        try:
-            value = await self.hass.async_add_executor_job(self._extract_value)
-        except IndexError:
-            _LOGGER.error("Unable to extract data from HTML for %s", self.name)
+        variables = self._template_variables_with_value(value)
+        if not self._render_availability_template(variables):
             return
 
-        if self._value_template is not None:
-            self._state = self._value_template.async_render_with_possible_json_value(
-                value, None
+        if (template := self._value_template) is not None:
+            value = template.async_render_as_value_template(
+                self.entity_id, variables, None
             )
-        else:
-            self._state = value
+
+        self._set_native_value_with_possible_timestamp(value)
+        self._process_manual_data(variables)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        available1 = CoordinatorEntity.available.fget(self)  # type: ignore[attr-defined]
+        available2 = ManualTriggerEntity.available.fget(self)  # type: ignore[attr-defined]
+        return bool(available1 and available2 and self._attr_available)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_from_rest_data()
+        super()._handle_coordinator_update()

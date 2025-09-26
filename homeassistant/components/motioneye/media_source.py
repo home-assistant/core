@@ -1,25 +1,21 @@
 """motionEye Media Source Implementation."""
+
 from __future__ import annotations
 
 import logging
 from pathlib import PurePath
-from typing import Optional, cast
+from typing import cast
 
 from motioneye_client.const import KEY_MEDIA_LIST, KEY_MIME_TYPE, KEY_PATH
 
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_IMAGE,
-    MEDIA_CLASS_VIDEO,
-    MEDIA_TYPE_IMAGE,
-    MEDIA_TYPE_VIDEO,
-)
-from homeassistant.components.media_source.error import MediaSourceError, Unresolvable
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_player import MediaClass, MediaType
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
+    MediaSourceError,
     MediaSourceItem,
     PlayMedia,
+    Unresolvable,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -34,8 +30,8 @@ MIME_TYPE_MAP = {
 }
 
 MEDIA_CLASS_MAP = {
-    "movies": MEDIA_CLASS_VIDEO,
-    "images": MEDIA_CLASS_IMAGE,
+    "movies": MediaClass.VIDEO,
+    "images": MediaClass.IMAGE,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,7 +92,7 @@ class MotionEyeMediaSource(MediaSource):
         base = [None] * 4
         data = identifier.split("#", 3)
         return cast(
-            tuple[Optional[str], Optional[str], Optional[str], Optional[str]],
+            tuple[str | None, str | None, str | None, str | None],
             tuple(data + base)[:4],  # type: ignore[operator]
         )
 
@@ -134,8 +130,7 @@ class MotionEyeMediaSource(MediaSource):
     def _get_device_or_raise(self, device_id: str) -> dr.DeviceEntry:
         """Get a config entry from a URL."""
         device_registry = dr.async_get(self.hass)
-        device = device_registry.async_get(device_id)
-        if not device:
+        if not (device := device_registry.async_get(device_id)):
             raise MediaSourceError(f"Unable to find device with id: {device_id}")
         return device
 
@@ -173,12 +168,12 @@ class MotionEyeMediaSource(MediaSource):
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=config.entry_id,
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type="",
             title=config.title,
             can_play=False,
             can_expand=True,
-            children_media_class=MEDIA_CLASS_DIRECTORY,
+            children_media_class=MediaClass.DIRECTORY,
         )
 
     def _build_media_configs(self) -> BrowseMediaSource:
@@ -186,7 +181,7 @@ class MotionEyeMediaSource(MediaSource):
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier="",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type="",
             title="motionEye Media",
             can_play=False,
@@ -195,7 +190,7 @@ class MotionEyeMediaSource(MediaSource):
                 self._build_media_config(entry)
                 for entry in self.hass.config_entries.async_entries(DOMAIN)
             ],
-            children_media_class=MEDIA_CLASS_DIRECTORY,
+            children_media_class=MediaClass.DIRECTORY,
         )
 
     @classmethod
@@ -208,12 +203,12 @@ class MotionEyeMediaSource(MediaSource):
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{config.entry_id}#{device.id}",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type="",
             title=f"{config.title} {device.name}" if full_title else device.name,
             can_play=False,
             can_expand=True,
-            children_media_class=MEDIA_CLASS_DIRECTORY,
+            children_media_class=MediaClass.DIRECTORY,
         )
 
     def _build_media_devices(self, config: ConfigEntry) -> BrowseMediaSource:
@@ -239,9 +234,9 @@ class MotionEyeMediaSource(MediaSource):
         return BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{config.entry_id}#{device.id}#{kind}",
-            media_class=MEDIA_CLASS_DIRECTORY,
+            media_class=MediaClass.DIRECTORY,
             media_content_type=(
-                MEDIA_TYPE_VIDEO if kind == "movies" else MEDIA_TYPE_IMAGE
+                MediaType.VIDEO if kind == "movies" else MediaType.IMAGE
             ),
             title=(
                 f"{config.title} {device.name} {kind.title()}"
@@ -251,7 +246,7 @@ class MotionEyeMediaSource(MediaSource):
             can_play=False,
             can_expand=True,
             children_media_class=(
-                MEDIA_CLASS_VIDEO if kind == "movies" else MEDIA_CLASS_IMAGE
+                MediaClass.VIDEO if kind == "movies" else MediaClass.IMAGE
             ),
         )
 
@@ -291,7 +286,13 @@ class MotionEyeMediaSource(MediaSource):
 
         sub_dirs: set[str] = set()
         parts = parsed_path.parts
-        for media in resp.get(KEY_MEDIA_LIST, []):
+        media_list = resp.get(KEY_MEDIA_LIST, [])
+
+        def get_media_sort_key(media: dict) -> str:
+            """Get media sort key."""
+            return media.get(KEY_PATH, "")
+
+        for media in sorted(media_list, key=get_media_sort_key):
             if (
                 KEY_PATH not in media
                 or KEY_MIME_TYPE not in media
@@ -341,16 +342,16 @@ class MotionEyeMediaSource(MediaSource):
                                     f"{config.entry_id}#{device.id}"
                                     f"#{kind}#{full_child_path}"
                                 ),
-                                media_class=MEDIA_CLASS_DIRECTORY,
+                                media_class=MediaClass.DIRECTORY,
                                 media_content_type=(
-                                    MEDIA_TYPE_VIDEO
+                                    MediaType.VIDEO
                                     if kind == "movies"
-                                    else MEDIA_TYPE_IMAGE
+                                    else MediaType.IMAGE
                                 ),
                                 title=display_child_path,
                                 can_play=False,
                                 can_expand=True,
-                                children_media_class=MEDIA_CLASS_DIRECTORY,
+                                children_media_class=MediaClass.DIRECTORY,
                             )
                         )
         return base

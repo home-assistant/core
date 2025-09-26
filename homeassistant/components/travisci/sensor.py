@@ -1,4 +1,5 @@
-"""This component provides HA sensor support for Travis CI framework."""
+"""Component providing HA sensor support for Travis CI framework."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -10,25 +11,22 @@ import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     CONF_API_KEY,
     CONF_MONITORED_CONDITIONS,
     CONF_SCAN_INTERVAL,
-    TIME_SECONDS,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = "Information provided by https://travis-ci.org/"
 
 CONF_BRANCH = "branch"
 CONF_REPOSITORY = "repository"
@@ -46,7 +44,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="last_build_duration",
         name="Last Build Duration",
-        native_unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         icon="mdi:timelapse",
     ),
     SensorEntityDescription(
@@ -76,7 +74,7 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 NOTIFICATION_ID = "travisci"
 NOTIFICATION_TITLE = "Travis CI Sensor Setup"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(
@@ -109,9 +107,7 @@ def setup_platform(
         _LOGGER.error("Unable to connect to Travis CI service: %s", str(ex))
         persistent_notification.create(
             hass,
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
+            f"Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )
@@ -142,9 +138,11 @@ def setup_platform(
 class TravisCISensor(SensorEntity):
     """Representation of a Travis CI sensor."""
 
+    _attr_attribution = "Information provided by https://travis-ci.org/"
+
     def __init__(
         self, data, repo_name, user, branch, description: SensorEntityDescription
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._build = None
@@ -159,7 +157,6 @@ class TravisCISensor(SensorEntity):
     def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
-        attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
 
         if self._build and self._attr_native_value is not None:
             if self._user and self.entity_description.key == "state":
@@ -174,7 +171,7 @@ class TravisCISensor(SensorEntity):
 
         return attrs
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and updates the states."""
         _LOGGER.debug("Updating sensor %s", self.name)
 

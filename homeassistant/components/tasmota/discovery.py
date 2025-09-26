@@ -1,9 +1,12 @@
 """Support for Tasmota device discovery."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 import logging
+from typing import TypedDict, cast
 
+from hatasmota import const as tasmota_const
 from hatasmota.discovery import (
     TasmotaDiscovery,
     get_device_config as tasmota_get_device_config,
@@ -17,11 +20,16 @@ from hatasmota.entity import TasmotaEntityConfig
 from hatasmota.models import DiscoveryHashType, TasmotaDeviceConfig
 from hatasmota.mqtt import TasmotaMQTTClient
 from hatasmota.sensor import TasmotaBaseSensorConfig
+from hatasmota.utils import get_topic_command, get_topic_stat
 
 from homeassistant.components import sensor
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dev_reg
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
@@ -30,11 +38,14 @@ from .const import DOMAIN, PLATFORMS
 _LOGGER = logging.getLogger(__name__)
 
 ALREADY_DISCOVERED = "tasmota_discovered_components"
+DISCOVERY_DATA = "tasmota_discovery_data"
 TASMOTA_DISCOVERY_ENTITY_NEW = "tasmota_discovery_entity_new_{}"
 TASMOTA_DISCOVERY_ENTITY_UPDATED = "tasmota_discovery_entity_updated_{}_{}_{}_{}"
 TASMOTA_DISCOVERY_INSTANCE = "tasmota_discovery_instance"
 
-SetupDeviceCallback = Callable[[TasmotaDeviceConfig, str], Awaitable[None]]
+MQTT_TOPIC_URL = "https://tasmota.github.io/docs/Home-Assistant/#tasmota-integration"
+
+type SetupDeviceCallback = Callable[[TasmotaDeviceConfig, str], Awaitable[None]]
 
 
 def clear_discovery_hash(
@@ -52,7 +63,67 @@ def set_discovery_hash(hass: HomeAssistant, discovery_hash: DiscoveryHashType) -
     hass.data[ALREADY_DISCOVERED][discovery_hash] = {}
 
 
-async def async_start(
+def warn_if_topic_duplicated(
+    hass: HomeAssistant,
+    command_topic: str,
+    own_mac: str | None,
+    own_device_config: TasmotaDeviceConfig,
+) -> bool:
+    """Log and create repairs issue if several devices share the same topic."""
+    duplicated = False
+    offenders = []
+    for other_mac, other_config in hass.data[DISCOVERY_DATA].items():
+        if own_mac and other_mac == own_mac:
+            continue
+        if command_topic == get_topic_command(other_config):
+            offenders.append((other_mac, tasmota_get_device_config(other_config)))
+    issue_id = f"topic_duplicated_{command_topic}"
+    if offenders:
+        if own_mac:
+            offenders.append((own_mac, own_device_config))
+        offender_strings = [
+            f"'{cfg[tasmota_const.CONF_NAME]}' ({cfg[tasmota_const.CONF_IP]})"
+            for _, cfg in offenders
+        ]
+        _LOGGER.warning(
+            (
+                "Multiple Tasmota devices are sharing the same topic '%s'. Offending"
+                " devices: %s"
+            ),
+            command_topic,
+            ", ".join(offender_strings),
+        )
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            data={
+                "key": "topic_duplicated",
+                "mac": " ".join([mac for mac, _ in offenders]),
+                "topic": command_topic,
+            },
+            is_fixable=False,
+            learn_more_url=MQTT_TOPIC_URL,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="topic_duplicated",
+            translation_placeholders={
+                "topic": command_topic,
+                "offenders": "\n\n* " + "\n\n* ".join(offender_strings),
+            },
+        )
+        duplicated = True
+    return duplicated
+
+
+class DuplicatedTopicIssueData(TypedDict):
+    """Typed result dict."""
+
+    key: str
+    mac: str
+    topic: str
+
+
+async def async_start(  # noqa: C901
     hass: HomeAssistant,
     discovery_topic: str,
     config_entry: ConfigEntry,
@@ -61,7 +132,7 @@ async def async_start(
 ) -> None:
     """Start Tasmota device discovery."""
 
-    async def _discover_entity(
+    def _discover_entity(
         tasmota_entity_config: TasmotaEntityConfig | None,
         discovery_hash: DiscoveryHashType,
         platform: str,
@@ -69,7 +140,7 @@ async def async_start(
         """Handle adding or updating a discovered entity."""
         if not tasmota_entity_config:
             # Entity disabled, clean up entity registry
-            entity_registry = await hass.helpers.entity_registry.async_get_registry()
+            entity_registry = er.async_get(hass)
             unique_id = unique_id_from_hash(discovery_hash)
             entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, unique_id)
             if entity_id:
@@ -121,7 +192,71 @@ async def async_start(
         tasmota_device_config = tasmota_get_device_config(payload)
         await setup_device(tasmota_device_config, mac)
 
+        hass.data[DISCOVERY_DATA][mac] = payload
+
+        add_entities = True
+
+        command_topic = get_topic_command(payload) if payload else None
+        state_topic = get_topic_stat(payload) if payload else None
+
+        # Create or clear issue if topic is missing prefix
+        issue_id = f"topic_no_prefix_{mac}"
+        if payload and command_topic == state_topic:
+            _LOGGER.warning(
+                "Tasmota device '%s' with IP %s doesn't set %%prefix%% in its topic",
+                tasmota_device_config[tasmota_const.CONF_NAME],
+                tasmota_device_config[tasmota_const.CONF_IP],
+            )
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                issue_id,
+                data={"key": "topic_no_prefix"},
+                is_fixable=False,
+                learn_more_url=MQTT_TOPIC_URL,
+                severity=ir.IssueSeverity.ERROR,
+                translation_key="topic_no_prefix",
+                translation_placeholders={
+                    "name": tasmota_device_config[tasmota_const.CONF_NAME],
+                    "ip": tasmota_device_config[tasmota_const.CONF_IP],
+                },
+            )
+            add_entities = False
+        else:
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+        # Clear previous issues caused by duplicated topic
+        issue_reg = ir.async_get(hass)
+        tasmota_issues = [
+            issue for key, issue in issue_reg.issues.items() if key[0] == DOMAIN
+        ]
+        for issue in tasmota_issues:
+            if issue.data and issue.data["key"] == "topic_duplicated":
+                issue_data: DuplicatedTopicIssueData = cast(
+                    DuplicatedTopicIssueData, issue.data
+                )
+                macs = issue_data["mac"].split()
+                if mac not in macs:
+                    continue
+                if payload and command_topic == issue_data["topic"]:
+                    continue
+                if len(macs) > 2:
+                    # This device is no longer duplicated, update the issue
+                    warn_if_topic_duplicated(hass, issue_data["topic"], None, {})
+                    continue
+                ir.async_delete_issue(hass, DOMAIN, issue.issue_id)
+
         if not payload:
+            return
+        assert isinstance(command_topic, str)
+
+        # Warn and add issues if there are duplicated topics
+        if warn_if_topic_duplicated(hass, command_topic, mac, tasmota_device_config):
+            add_entities = False
+
+        if not add_entities:
+            # Add the device entry so the user can identify the device, but do not add
+            # entities or triggers
             return
 
         tasmota_triggers = tasmota_get_triggers(payload)
@@ -157,8 +292,8 @@ async def async_start(
 
         for platform in PLATFORMS:
             tasmota_entities = tasmota_get_entities_for_platform(payload, platform)
-            for (tasmota_entity_config, discovery_hash) in tasmota_entities:
-                await _discover_entity(tasmota_entity_config, discovery_hash, platform)
+            for tasmota_entity_config, discovery_hash in tasmota_entities:
+                _discover_entity(tasmota_entity_config, discovery_hash, platform)
 
     async def async_sensors_discovered(
         sensors: list[tuple[TasmotaBaseSensorConfig, DiscoveryHashType]], mac: str
@@ -166,10 +301,10 @@ async def async_start(
         """Handle discovery of (additional) sensors."""
         platform = sensor.DOMAIN
 
-        device_registry = await hass.helpers.device_registry.async_get_registry()
-        entity_registry = await hass.helpers.entity_registry.async_get_registry()
+        device_registry = dr.async_get(hass)
+        entity_registry = er.async_get(hass)
         device = device_registry.async_get_device(
-            set(), {(dev_reg.CONNECTION_NETWORK_MAC, mac)}
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)}
         )
 
         if device is None:
@@ -183,10 +318,10 @@ async def async_start(
             )
             if entry.domain == sensor.DOMAIN and entry.platform == DOMAIN
         }
-        for (tasmota_sensor_config, discovery_hash) in sensors:
+        for tasmota_sensor_config, discovery_hash in sensors:
             if tasmota_sensor_config:
                 orphaned_entities.discard(tasmota_sensor_config.unique_id)
-            await _discover_entity(tasmota_sensor_config, discovery_hash, platform)
+            _discover_entity(tasmota_sensor_config, discovery_hash, platform)
         for unique_id in orphaned_entities:
             entity_id = entity_registry.async_get_entity_id(platform, DOMAIN, unique_id)
             if entity_id:
@@ -194,6 +329,7 @@ async def async_start(
                 entity_registry.async_remove(entity_id)
 
     hass.data[ALREADY_DISCOVERED] = {}
+    hass.data[DISCOVERY_DATA] = {}
 
     tasmota_discovery = TasmotaDiscovery(discovery_topic, tasmota_mqtt)
     await tasmota_discovery.start_discovery(

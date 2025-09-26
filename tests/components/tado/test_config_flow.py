@@ -1,149 +1,252 @@
 """Test the Tado config flow."""
-from http import HTTPStatus
-from unittest.mock import MagicMock, patch
 
-import requests
+from ipaddress import ip_address
+import threading
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant import config_entries
-from homeassistant.components import zeroconf
-from homeassistant.components.tado.const import DOMAIN
+from PyTado.http import DeviceActivationStatus
+import pytest
+
+from homeassistant.components.tado.config_flow import TadoException
+from homeassistant.components.tado.const import (
+    CONF_FALLBACK,
+    CONF_REFRESH_TOKEN,
+    CONST_OVERLAY_TADO_DEFAULT,
+    DOMAIN,
+)
+from homeassistant.config_entries import SOURCE_HOMEKIT, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 
 from tests.common import MockConfigEntry
 
 
-def _get_mock_tado_api(getMe=None):
-    mock_tado = MagicMock()
-    if isinstance(getMe, Exception):
-        type(mock_tado).getMe = MagicMock(side_effect=getMe)
-    else:
-        type(mock_tado).getMe = MagicMock(return_value=getMe)
-    return mock_tado
+async def test_full_flow(
+    hass: HomeAssistant,
+    mock_tado_api: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test the full flow of the config flow."""
 
+    event = threading.Event()
 
-async def test_form(hass):
-    """Test we can setup though the user path."""
+    def mock_tado_api_device_activation() -> None:
+        # Simulate the device activation process
+        event.wait(timeout=5)
+
+    mock_tado_api.device_activation = mock_tado_api_device_activation
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "user"
 
-    mock_tado_api = _get_mock_tado_api(getMe={"homes": [{"id": 1, "name": "myhome"}]})
+    event.set()
+    await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.tado.config_flow.Tado",
-        return_value=mock_tado_api,
-    ), patch(
-        "homeassistant.components.tado.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "myhome"
-    assert result2["data"] == {
-        "username": "test-username",
-        "password": "test-password",
-    }
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "home name"
+    assert result["data"] == {CONF_REFRESH_TOKEN: "refresh"}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+async def test_full_flow_reauth(
+    hass: HomeAssistant,
+    mock_tado_api: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test the full flow of the config when reauthticating."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="ABC-123-DEF-456",
+        data={CONF_REFRESH_TOKEN: "totally_refresh_for_reauth"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    # The no user input
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
     )
 
-    response_mock = MagicMock()
-    type(response_mock).status_code = HTTPStatus.UNAUTHORIZED
-    mock_tado_api = _get_mock_tado_api(getMe=requests.HTTPError(response=response_mock))
+    event = threading.Event()
+
+    def mock_tado_api_device_activation() -> None:
+        # Simulate the device activation process
+        event.wait(timeout=5)
+
+    mock_tado_api.device_activation = mock_tado_api_device_activation
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "user"
+
+    event.set()
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "home name"
+    assert result["data"] == {CONF_REFRESH_TOKEN: "refresh"}
+
+
+async def test_auth_timeout(
+    hass: HomeAssistant,
+    mock_tado_api: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test the auth timeout."""
+    mock_tado_api.device_activation_status.return_value = DeviceActivationStatus.PENDING
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == "timeout"
+
+    mock_tado_api.device_activation_status.return_value = (
+        DeviceActivationStatus.COMPLETED
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "timeout"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "home name"
+    assert result["data"] == {CONF_REFRESH_TOKEN: "refresh"}
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_no_homes(hass: HomeAssistant, mock_tado_api: MagicMock) -> None:
+    """Test the full flow of the config flow."""
+    mock_tado_api.get_me.return_value["homes"] = []
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == "finish_login"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_homes"
+
+
+async def test_tado_creation(hass: HomeAssistant) -> None:
+    """Test we handle Form Exceptions."""
 
     with patch(
         "homeassistant.components.tado.config_flow.Tado",
-        return_value=mock_tado_api,
+        side_effect=TadoException("Test exception"),
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
         )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
 
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (Exception, "timeout"),
+        (TadoException, "timeout"),
+    ],
+)
+async def test_wait_for_login_exception(
+    hass: HomeAssistant,
+    mock_tado_api: MagicMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test that an exception in wait for login is handled properly."""
+    mock_tado_api.device_activation.side_effect = exception
 
-async def test_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    # @joostlek: I think the timeout step is not rightfully named, but heck, it works
+    assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
+    assert result["step_id"] == error
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_tado_api: MagicMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test config flow options."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {CONF_FALLBACK: CONST_OVERLAY_TADO_DEFAULT},
     )
 
-    response_mock = MagicMock()
-    type(response_mock).status_code = HTTPStatus.INTERNAL_SERVER_ERROR
-    mock_tado_api = _get_mock_tado_api(getMe=requests.HTTPError(response=response_mock))
-
-    with patch(
-        "homeassistant.components.tado.config_flow.Tado",
-        return_value=mock_tado_api,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_FALLBACK: CONST_OVERLAY_TADO_DEFAULT}
 
 
-async def test_no_homes(hass):
-    """Test we handle no homes error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    mock_tado_api = _get_mock_tado_api(getMe={"homes": []})
-
-    with patch(
-        "homeassistant.components.tado.config_flow.Tado",
-        return_value=mock_tado_api,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "no_homes"}
-
-
-async def test_form_homekit(hass):
+async def test_homekit(hass: HomeAssistant, mock_tado_api: MagicMock) -> None:
     """Test that we abort from homekit if tado is already setup."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
-            host="mock_host",
+        context={"source": SOURCE_HOMEKIT},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "AA:BB:CC:DD:EE:FF"},
+            properties={ATTR_PROPERTIES_ID: "AA:BB:CC:DD:EE:FF"},
             type="mock_type",
         ),
     )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
-    flow = next(
-        flow
-        for flow in hass.config_entries.flow.async_progress()
-        if flow["flow_id"] == result["flow_id"]
-    )
-    assert flow["context"]["unique_id"] == "AA:BB:CC:DD:EE:FF"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "homekit_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "1"
+
+
+async def test_homekit_already_setup(
+    hass: HomeAssistant, mock_tado_api: MagicMock
+) -> None:
+    """Test that we abort from homekit if tado is already setup."""
 
     entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"}
@@ -152,14 +255,16 @@ async def test_form_homekit(hass):
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
-            host="mock_host",
+        context={"source": SOURCE_HOMEKIT},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "AA:BB:CC:DD:EE:FF"},
+            properties={ATTR_PROPERTIES_ID: "AA:BB:CC:DD:EE:FF"},
             type="mock_type",
         ),
     )
-    assert result["type"] == "abort"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

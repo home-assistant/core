@@ -1,4 +1,5 @@
 """Sensor platform for the GitHub integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -10,136 +11,126 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import (
-    CoordinatorKeyType,
-    DataUpdateCoordinators,
-    GitHubBaseDataUpdateCoordinator,
-)
+from .coordinator import GithubConfigEntry, GitHubDataUpdateCoordinator
 
 
-@dataclass
-class BaseEntityDescriptionMixin:
-    """Mixin for required GitHub base description keys."""
-
-    coordinator_key: CoordinatorKeyType
-    value_fn: Callable[[Any], StateType]
-
-
-@dataclass
-class BaseEntityDescription(SensorEntityDescription):
-    """Describes GitHub sensor entity default overrides."""
-
-    icon: str = "mdi:github"
-    entity_registry_enabled_default: bool = False
-    attr_fn: Callable[[Any], Mapping[str, Any] | None] = lambda data: None
-    avabl_fn: Callable[[Any], bool] = lambda data: True
-
-
-@dataclass
-class GitHubSensorEntityDescription(BaseEntityDescription, BaseEntityDescriptionMixin):
+@dataclass(frozen=True, kw_only=True)
+class GitHubSensorEntityDescription(SensorEntityDescription):
     """Describes GitHub issue sensor entity."""
+
+    value_fn: Callable[[dict[str, Any]], StateType]
+
+    attr_fn: Callable[[dict[str, Any]], Mapping[str, Any] | None] = lambda data: None
+    avabl_fn: Callable[[dict[str, Any]], bool] = lambda data: True
 
 
 SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     GitHubSensorEntityDescription(
-        key="stargazers_count",
-        name="Stars",
-        icon="mdi:star",
-        native_unit_of_measurement="Stars",
+        key="discussions_count",
+        translation_key="discussions_count",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.stargazers_count,
-        coordinator_key="information",
+        value_fn=lambda data: data["discussion"]["total"],
+    ),
+    GitHubSensorEntityDescription(
+        key="stargazers_count",
+        translation_key="stargazers_count",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data["stargazers_count"],
     ),
     GitHubSensorEntityDescription(
         key="subscribers_count",
-        name="Watchers",
-        icon="mdi:glasses",
-        native_unit_of_measurement="Watchers",
+        translation_key="subscribers_count",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        # The API returns a watcher_count, but subscribers_count is more accurate
-        value_fn=lambda data: data.subscribers_count,
-        coordinator_key="information",
+        value_fn=lambda data: data["watchers"]["total"],
     ),
     GitHubSensorEntityDescription(
         key="forks_count",
-        name="Forks",
-        icon="mdi:source-fork",
-        native_unit_of_measurement="Forks",
+        translation_key="forks_count",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.forks_count,
-        coordinator_key="information",
+        value_fn=lambda data: data["forks_count"],
     ),
     GitHubSensorEntityDescription(
         key="issues_count",
-        name="Issues",
-        native_unit_of_measurement="Issues",
+        translation_key="issues_count",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.issues_count,
-        coordinator_key="issue",
+        value_fn=lambda data: data["issue"]["total"],
     ),
     GitHubSensorEntityDescription(
         key="pulls_count",
-        name="Pull Requests",
-        native_unit_of_measurement="Pull Requests",
+        translation_key="pulls_count",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.pulls_count,
-        coordinator_key="issue",
+        value_fn=lambda data: data["pull_request"]["total"],
     ),
     GitHubSensorEntityDescription(
-        coordinator_key="commit",
         key="latest_commit",
-        name="Latest Commit",
-        value_fn=lambda data: data.commit.message.splitlines()[0][:255],
+        translation_key="latest_commit",
+        value_fn=lambda data: data["default_branch_ref"]["commit"]["message"][:255],
         attr_fn=lambda data: {
-            "sha": data.sha,
-            "url": data.html_url,
+            "sha": data["default_branch_ref"]["commit"]["sha"],
+            "url": data["default_branch_ref"]["commit"]["url"],
         },
     ),
     GitHubSensorEntityDescription(
-        coordinator_key="release",
+        key="latest_discussion",
+        translation_key="latest_discussion",
+        avabl_fn=lambda data: data["discussion"]["discussions"],
+        value_fn=lambda data: data["discussion"]["discussions"][0]["title"][:255],
+        attr_fn=lambda data: {
+            "url": data["discussion"]["discussions"][0]["url"],
+            "number": data["discussion"]["discussions"][0]["number"],
+        },
+    ),
+    GitHubSensorEntityDescription(
         key="latest_release",
-        name="Latest Release",
-        entity_registry_enabled_default=True,
-        value_fn=lambda data: data.name[:255],
+        translation_key="latest_release",
+        avabl_fn=lambda data: data["release"] is not None,
+        value_fn=lambda data: data["release"]["name"][:255],
         attr_fn=lambda data: {
-            "url": data.html_url,
-            "tag": data.tag_name,
+            "url": data["release"]["url"],
+            "tag": data["release"]["tag"],
         },
     ),
     GitHubSensorEntityDescription(
-        coordinator_key="issue",
         key="latest_issue",
-        name="Latest Issue",
-        value_fn=lambda data: data.issue_last.title[:255],
-        avabl_fn=lambda data: data.issue_last is not None,
+        translation_key="latest_issue",
+        avabl_fn=lambda data: data["issue"]["issues"],
+        value_fn=lambda data: data["issue"]["issues"][0]["title"][:255],
         attr_fn=lambda data: {
-            "url": data.issue_last.html_url,
-            "number": data.issue_last.number,
+            "url": data["issue"]["issues"][0]["url"],
+            "number": data["issue"]["issues"][0]["number"],
         },
     ),
     GitHubSensorEntityDescription(
-        coordinator_key="issue",
         key="latest_pull_request",
-        name="Latest Pull Request",
-        value_fn=lambda data: data.pull_last.title[:255],
-        avabl_fn=lambda data: data.pull_last is not None,
+        translation_key="latest_pull_request",
+        avabl_fn=lambda data: data["pull_request"]["pull_requests"],
+        value_fn=lambda data: data["pull_request"]["pull_requests"][0]["title"][:255],
         attr_fn=lambda data: {
-            "url": data.pull_last.html_url,
-            "number": data.pull_last.number,
+            "url": data["pull_request"]["pull_requests"][0]["url"],
+            "number": data["pull_request"]["pull_requests"][0]["number"],
+        },
+    ),
+    GitHubSensorEntityDescription(
+        key="latest_tag",
+        translation_key="latest_tag",
+        avabl_fn=lambda data: data["refs"]["tags"],
+        value_fn=lambda data: data["refs"]["tags"][0]["name"][:255],
+        attr_fn=lambda data: {
+            "url": data["refs"]["tags"][0]["target"]["url"],
         },
     ),
 )
@@ -147,47 +138,42 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: GithubConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up GitHub sensor based on a config entry."""
-    repositories: dict[str, DataUpdateCoordinators] = hass.data[DOMAIN]
+    repositories = entry.runtime_data
     async_add_entities(
         (
-            GitHubSensorEntity(coordinators, description)
+            GitHubSensorEntity(coordinator, description)
             for description in SENSOR_DESCRIPTIONS
-            for coordinators in repositories.values()
+            for coordinator in repositories.values()
         ),
-        update_before_add=True,
     )
 
 
-class GitHubSensorEntity(CoordinatorEntity, SensorEntity):
+class GitHubSensorEntity(CoordinatorEntity[GitHubDataUpdateCoordinator], SensorEntity):
     """Defines a GitHub sensor entity."""
 
     _attr_attribution = "Data provided by the GitHub API"
+    _attr_has_entity_name = True
 
-    coordinator: GitHubBaseDataUpdateCoordinator
     entity_description: GitHubSensorEntityDescription
 
     def __init__(
         self,
-        coordinators: DataUpdateCoordinators,
+        coordinator: GitHubDataUpdateCoordinator,
         entity_description: GitHubSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        coordinator = coordinators[entity_description.coordinator_key]
-        _information = coordinators["information"].data
-
         super().__init__(coordinator=coordinator)
 
         self.entity_description = entity_description
-        self._attr_name = f"{_information.full_name} {entity_description.name}"
-        self._attr_unique_id = f"{_information.id}_{entity_description.key}"
+        self._attr_unique_id = f"{coordinator.data.get('id')}_{entity_description.key}"
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.repository)},
-            name=_information.full_name,
+            name=coordinator.data.get("full_name"),
             manufacturer="GitHub",
             configuration_url=f"https://github.com/{coordinator.repository}",
             entry_type=DeviceEntryType.SERVICE,

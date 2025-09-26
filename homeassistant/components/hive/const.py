@@ -1,10 +1,12 @@
 """Constants for Hive."""
+
 from homeassistant.const import Platform
 
 ATTR_MODE = "mode"
 ATTR_TIME_PERIOD = "time_period"
 ATTR_ONOFF = "on_off"
 CONF_CODE = "2fa"
+CONF_DEVICE_NAME = "device_name"
 CONFIG_ENTRY_VERSION = 1
 DEFAULT_NAME = "Hive"
 DOMAIN = "hive"

@@ -1,28 +1,33 @@
 """The Fjäråskupan integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
-from datetime import timedelta
 import logging
 
-from bleak import BleakScanner
-from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData
-from fjaraskupan import UUID_SERVICE, Device, State, device_filter
+from fjaraskupan import Device
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.bluetooth import (
+    BluetoothCallbackMatcher,
+    BluetoothChange,
+    BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
+    async_rediscover_address,
+    async_register_callback,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DISPATCH_DETECTION, DOMAIN
+from .coordinator import FjaraskupanConfigEntry, FjaraskupanCoordinator
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -35,104 +40,75 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class DeviceState:
-    """Store state of a device."""
-
-    device: Device
-    coordinator: DataUpdateCoordinator[State]
-    device_info: DeviceInfo
-
-
-@dataclass
-class EntryState:
-    """Store state of config entry."""
-
-    scanner: BleakScanner
-    devices: dict[str, DeviceState]
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FjaraskupanConfigEntry) -> bool:
     """Set up Fjäråskupan from a config entry."""
 
-    scanner = BleakScanner(filters={"UUIDs": [str(UUID_SERVICE)]})
+    entry.runtime_data = {}
 
-    state = EntryState(scanner, {})
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = state
-
-    async def detection_callback(
-        ble_device: BLEDevice, advertisement_data: AdvertisementData
+    def detection_callback(
+        service_info: BluetoothServiceInfoBleak, change: BluetoothChange
     ) -> None:
-        if data := state.devices.get(ble_device.address):
-            _LOGGER.debug(
-                "Update: %s %s - %s", ble_device.name, ble_device, advertisement_data
-            )
-
-            data.device.detection_callback(ble_device, advertisement_data)
-            data.coordinator.async_set_updated_data(data.device.state)
+        if change != BluetoothChange.ADVERTISEMENT:
+            return
+        if data := entry.runtime_data.get(service_info.address):
+            _LOGGER.debug("Update: %s", service_info)
+            data.detection_callback(service_info)
         else:
-            if not device_filter(ble_device, advertisement_data):
-                return
+            _LOGGER.debug("Detected: %s", service_info)
 
-            _LOGGER.debug(
-                "Detected: %s %s - %s", ble_device.name, ble_device, advertisement_data
-            )
-
-            device = Device(ble_device)
-            device.detection_callback(ble_device, advertisement_data)
-
-            async def async_update_data():
-                """Handle an explicit update request."""
-                await device.update()
-                return device.state
-
-            coordinator: DataUpdateCoordinator[State] = DataUpdateCoordinator(
-                hass,
-                logger=_LOGGER,
-                name="Fjaraskupan Updater",
-                update_interval=timedelta(seconds=120),
-                update_method=async_update_data,
-            )
-            coordinator.async_set_updated_data(device.state)
-
+            device = Device(service_info.device.address)
             device_info = DeviceInfo(
-                identifiers={(DOMAIN, ble_device.address)},
+                connections={(dr.CONNECTION_BLUETOOTH, service_info.address)},
+                identifiers={(DOMAIN, service_info.address)},
                 manufacturer="Fjäråskupan",
                 name="Fjäråskupan",
             )
-            device_state = DeviceState(device, coordinator, device_info)
-            state.devices[ble_device.address] = device_state
+
+            coordinator: FjaraskupanCoordinator = FjaraskupanCoordinator(
+                hass, entry, device, device_info
+            )
+            coordinator.detection_callback(service_info)
+
+            entry.runtime_data[service_info.address] = coordinator
             async_dispatcher_send(
-                hass, f"{DISPATCH_DETECTION}.{entry.entry_id}", device_state
+                hass, f"{DISPATCH_DETECTION}.{entry.entry_id}", coordinator
             )
 
-    scanner.register_detection_callback(detection_callback)
-    await scanner.start()
+    entry.async_on_unload(
+        async_register_callback(
+            hass,
+            detection_callback,
+            BluetoothCallbackMatcher(
+                manufacturer_id=20296,
+                manufacturer_data_start=[79, 68, 70, 74, 65, 82],
+                connectable=False,
+            ),
+            BluetoothScanningMode.ACTIVE,
+        )
+    )
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 @callback
 def async_setup_entry_platform(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: FjaraskupanConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    constructor: Callable[[DeviceState], list[Entity]],
+    constructor: Callable[[FjaraskupanCoordinator], list[Entity]],
 ) -> None:
     """Set up a platform with added entities."""
 
-    entry_state: EntryState = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         entity
-        for device_state in entry_state.devices.values()
-        for entity in constructor(device_state)
+        for coordinator in entry.runtime_data.values()
+        for entity in constructor(coordinator)
     )
 
     @callback
-    def _detection(device_state: DeviceState) -> None:
-        async_add_entities(constructor(device_state))
+    def _detection(coordinator: FjaraskupanCoordinator) -> None:
+        async_add_entities(constructor(coordinator))
 
     entry.async_on_unload(
         async_dispatcher_connect(
@@ -141,11 +117,17 @@ def async_setup_entry_platform(
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: FjaraskupanConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        entry_state: EntryState = hass.data[DOMAIN].pop(entry.entry_id)
-        await entry_state.scanner.stop()
+        for device_entry in dr.async_entries_for_config_entry(
+            dr.async_get(hass), entry.entry_id
+        ):
+            for conn in device_entry.connections:
+                if conn[0] == dr.CONNECTION_BLUETOOTH:
+                    async_rediscover_address(hass, conn[1])
 
     return unload_ok

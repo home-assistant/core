@@ -1,74 +1,64 @@
 """Support for lights."""
+
 from __future__ import annotations
 
-from fjaraskupan import COMMAND_LIGHT_ON_OFF, Device, State
+from typing import Any
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    COLOR_MODE_BRIGHTNESS,
-    LightEntity,
-)
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DeviceState, async_setup_entry_platform
+from . import async_setup_entry_platform
+from .coordinator import FjaraskupanConfigEntry, FjaraskupanCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FjaraskupanConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up tuya sensors dynamically through tuya discovery."""
 
-    def _constructor(device_state: DeviceState) -> list[Entity]:
-        return [
-            Light(
-                device_state.coordinator, device_state.device, device_state.device_info
-            )
-        ]
+    def _constructor(coordinator: FjaraskupanCoordinator) -> list[Entity]:
+        return [Light(coordinator, coordinator.device_info)]
 
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class Light(CoordinatorEntity[State], LightEntity):
+class Light(CoordinatorEntity[FjaraskupanCoordinator], LightEntity):
     """Light device."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[State],
-        device: Device,
+        coordinator: FjaraskupanCoordinator,
         device_info: DeviceInfo,
     ) -> None:
         """Init light entity."""
         super().__init__(coordinator)
-        self._device = device
-        self._attr_color_mode = COLOR_MODE_BRIGHTNESS
-        self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
-        self._attr_unique_id = device.address
+        self._attr_color_mode = ColorMode.BRIGHTNESS
+        self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+        self._attr_unique_id = coordinator.device.address
         self._attr_device_info = device_info
-        self._attr_name = device_info["name"]
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        if ATTR_BRIGHTNESS in kwargs:
-            await self._device.send_dim(int(kwargs[ATTR_BRIGHTNESS] * (100.0 / 255.0)))
-        else:
-            if not self.is_on:
-                await self._device.send_command(COMMAND_LIGHT_ON_OFF)
-        self.coordinator.async_set_updated_data(self._device.state)
+        async with self.coordinator.async_connect_and_update() as device:
+            if ATTR_BRIGHTNESS in kwargs:
+                await device.send_dim(int(kwargs[ATTR_BRIGHTNESS] * (100.0 / 255.0)))
+            else:
+                await device.send_dim(100)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if self.is_on:
-            await self._device.send_command(COMMAND_LIGHT_ON_OFF)
-        self.coordinator.async_set_updated_data(self._device.state)
+            async with self.coordinator.async_connect_and_update() as device:
+                await device.send_dim(0)
 
     @property
     def is_on(self) -> bool:

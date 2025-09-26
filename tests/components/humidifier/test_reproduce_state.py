@@ -19,7 +19,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Context, State
+from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
@@ -27,7 +28,9 @@ ENTITY_1 = "humidifier.test1"
 ENTITY_2 = "humidifier.test2"
 
 
-async def test_reproducing_on_off_states(hass, caplog):
+async def test_reproducing_on_off_states(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test reproducing humidifier states."""
     hass.states.async_set(ENTITY_1, "off", {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45})
     hass.states.async_set(ENTITY_2, "on", {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45})
@@ -38,7 +41,8 @@ async def test_reproducing_on_off_states(hass, caplog):
     humidity_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
 
     # These calls should do nothing as entities already in desired state
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State(ENTITY_1, "off", {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45}),
             State(ENTITY_2, "on", {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45}),
@@ -51,7 +55,7 @@ async def test_reproducing_on_off_states(hass, caplog):
     assert len(humidity_calls) == 0
 
     # Test invalid state is handled
-    await hass.helpers.state.async_reproduce_state([State(ENTITY_1, "not_supported")])
+    await async_reproduce_state(hass, [State(ENTITY_1, "not_supported")])
 
     assert "not_supported" in caplog.text
     assert len(turn_on_calls) == 0
@@ -60,13 +64,14 @@ async def test_reproducing_on_off_states(hass, caplog):
     assert len(humidity_calls) == 0
 
     # Make sure correct services are called
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State(ENTITY_2, "off"),
             State(ENTITY_1, "on", {}),
             # Should not raise
             State("humidifier.non_existing", "on"),
-        ]
+        ],
     )
 
     assert len(turn_on_calls) == 1
@@ -82,7 +87,7 @@ async def test_reproducing_on_off_states(hass, caplog):
     assert len(humidity_calls) == 0
 
 
-async def test_multiple_attrs(hass):
+async def test_multiple_attrs(hass: HomeAssistant) -> None:
     """Test turn on with multiple attributes."""
     hass.states.async_set(ENTITY_1, STATE_OFF, {})
 
@@ -106,7 +111,7 @@ async def test_multiple_attrs(hass):
     assert humidity_calls[0].data == {"entity_id": ENTITY_1, "humidity": 45}
 
 
-async def test_turn_off_multiple_attrs(hass):
+async def test_turn_off_multiple_attrs(hass: HomeAssistant) -> None:
     """Test set mode and humidity for off state."""
     hass.states.async_set(ENTITY_1, STATE_ON, {})
 
@@ -128,7 +133,7 @@ async def test_turn_off_multiple_attrs(hass):
     assert len(humidity_calls) == 0
 
 
-async def test_multiple_modes(hass):
+async def test_multiple_modes(hass: HomeAssistant) -> None:
     """Test that multiple states gets calls."""
     hass.states.async_set(ENTITY_1, STATE_OFF, {})
     hass.states.async_set(ENTITY_2, STATE_OFF, {})
@@ -168,7 +173,7 @@ async def test_multiple_modes(hass):
     )
 
 
-async def test_state_with_none(hass):
+async def test_state_with_none(hass: HomeAssistant) -> None:
     """Test that none is not a humidifier state."""
     hass.states.async_set(ENTITY_1, STATE_OFF, {})
 
@@ -187,7 +192,7 @@ async def test_state_with_none(hass):
     assert len(humidity_calls) == 0
 
 
-async def test_state_with_context(hass):
+async def test_state_with_context(hass: HomeAssistant) -> None:
     """Test that context is forwarded."""
     hass.states.async_set(ENTITY_1, STATE_OFF, {})
 
@@ -219,10 +224,10 @@ async def test_state_with_context(hass):
 
 
 @pytest.mark.parametrize(
-    "service,attribute",
+    ("service", "attribute"),
     [(SERVICE_SET_MODE, ATTR_MODE), (SERVICE_SET_HUMIDITY, ATTR_HUMIDITY)],
 )
-async def test_attribute(hass, service, attribute):
+async def test_attribute(hass: HomeAssistant, service, attribute) -> None:
     """Test that service call is made for each attribute."""
     hass.states.async_set(ENTITY_1, STATE_ON, {})
 

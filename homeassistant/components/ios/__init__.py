@@ -1,21 +1,34 @@
 """Native Home Assistant iOS app component."""
+
 import datetime
 from http import HTTPStatus
-from typing import TYPE_CHECKING
+from typing import Any
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.json import load_json, save_json
+from homeassistant.util.json import load_json_object
 
 from .const import (
+    ATTR_BATTERY,
+    ATTR_BATTERY_LEVEL,
+    ATTR_BATTERY_STATE,
+    ATTR_DEVICE,
+    ATTR_DEVICE_ID,
+    ATTR_DEVICE_NAME,
+    ATTR_DEVICE_PERMANENT_ID,
+    ATTR_DEVICE_SYSTEM_VERSION,
+    ATTR_DEVICE_TYPE,
+    BATTERY_STATES,
     CONF_ACTION_BACKGROUND_COLOR,
     CONF_ACTION_ICON,
     CONF_ACTION_ICON_COLOR,
@@ -24,6 +37,9 @@ from .const import (
     CONF_ACTION_LABEL_COLOR,
     CONF_ACTION_LABEL_TEXT,
     CONF_ACTION_NAME,
+    CONF_ACTION_SHOW_IN_CARPLAY,
+    CONF_ACTION_SHOW_IN_WATCH,
+    CONF_ACTION_USE_CUSTOM_COLORS,
     CONF_ACTIONS,
     DOMAIN,
 )
@@ -58,21 +74,14 @@ BEHAVIORS = [ATTR_DEFAULT_BEHAVIOR, ATTR_TEXT_INPUT_BEHAVIOR]
 
 ATTR_LAST_SEEN_AT = "lastSeenAt"
 
-ATTR_DEVICE = "device"
 ATTR_PUSH_TOKEN = "pushToken"
 ATTR_APP = "app"
 ATTR_PERMISSIONS = "permissions"
 ATTR_PUSH_ID = "pushId"
-ATTR_DEVICE_ID = "deviceId"
 ATTR_PUSH_SOUNDS = "pushSounds"
-ATTR_BATTERY = "battery"
 
-ATTR_DEVICE_NAME = "name"
 ATTR_DEVICE_LOCALIZED_MODEL = "localizedModel"
 ATTR_DEVICE_MODEL = "model"
-ATTR_DEVICE_PERMANENT_ID = "permanentID"
-ATTR_DEVICE_SYSTEM_VERSION = "systemVersion"
-ATTR_DEVICE_TYPE = "type"
 ATTR_DEVICE_SYSTEM_NAME = "systemName"
 
 ATTR_APP_BUNDLE_IDENTIFIER = "bundleIdentifier"
@@ -84,20 +93,6 @@ ATTR_NOTIFICATIONS_PERMISSION = "notifications"
 
 PERMISSIONS = [ATTR_LOCATION_PERMISSION, ATTR_NOTIFICATIONS_PERMISSION]
 
-ATTR_BATTERY_STATE = "state"
-ATTR_BATTERY_LEVEL = "level"
-
-ATTR_BATTERY_STATE_UNPLUGGED = "Not Charging"
-ATTR_BATTERY_STATE_CHARGING = "Charging"
-ATTR_BATTERY_STATE_FULL = "Full"
-ATTR_BATTERY_STATE_UNKNOWN = "Unknown"
-
-BATTERY_STATES = [
-    ATTR_BATTERY_STATE_UNPLUGGED,
-    ATTR_BATTERY_STATE_CHARGING,
-    ATTR_BATTERY_STATE_FULL,
-    ATTR_BATTERY_STATE_UNKNOWN,
-]
 
 ATTR_DEVICES = "devices"
 
@@ -145,6 +140,9 @@ ACTION_SCHEMA = vol.Schema(
             vol.Optional(CONF_ACTION_ICON_ICON): cv.string,
             vol.Optional(CONF_ACTION_ICON_COLOR): cv.string,
         },
+        vol.Optional(CONF_ACTION_SHOW_IN_CARPLAY): cv.boolean,
+        vol.Optional(CONF_ACTION_SHOW_IN_WATCH): cv.boolean,
+        vol.Optional(CONF_ACTION_USE_CUSTOM_COLORS): cv.boolean,
     },
 )
 
@@ -218,7 +216,7 @@ CONFIGURATION_FILE = ".ios.conf"
 PLATFORMS = [Platform.SENSOR]
 
 
-def devices_with_push(hass):
+def devices_with_push(hass: HomeAssistant) -> dict[str, str]:
     """Return a dictionary of push enabled targets."""
     return {
         device_name: device.get(ATTR_PUSH_ID)
@@ -227,7 +225,7 @@ def devices_with_push(hass):
     }
 
 
-def enabled_push_ids(hass):
+def enabled_push_ids(hass: HomeAssistant) -> list[str]:
     """Return a list of push enabled target push IDs."""
     return [
         device.get(ATTR_PUSH_ID)
@@ -236,37 +234,34 @@ def enabled_push_ids(hass):
     ]
 
 
-def devices(hass):
+def devices(hass: HomeAssistant) -> dict[str, dict[str, Any]]:
     """Return a dictionary of all identified devices."""
-    return hass.data[DOMAIN][ATTR_DEVICES]
+    return hass.data[DOMAIN][ATTR_DEVICES]  # type: ignore[no-any-return]
 
 
-def device_name_for_push_id(hass, push_id):
+def device_name_for_push_id(hass: HomeAssistant, push_id: str) -> str | None:
     """Return the device name for the push ID."""
     for device_name, device in hass.data[DOMAIN][ATTR_DEVICES].items():
         if device.get(ATTR_PUSH_ID) is push_id:
-            return device_name
+            return device_name  # type: ignore[no-any-return]
     return None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the iOS component."""
-    conf = config.get(DOMAIN)
+    conf: ConfigType | None = config.get(DOMAIN)
 
     ios_config = await hass.async_add_executor_job(
-        load_json, hass.config.path(CONFIGURATION_FILE)
+        load_json_object, hass.config.path(CONFIGURATION_FILE)
     )
-
-    if TYPE_CHECKING:
-        assert isinstance(ios_config, dict)
 
     if ios_config == {}:
         ios_config[ATTR_DEVICES] = {}
 
-    ios_config[CONF_USER] = conf or {}
+    if CONF_PUSH not in (conf_user := conf or {}):
+        conf_user[CONF_PUSH] = {}
 
-    if CONF_PUSH not in ios_config[CONF_USER]:
-        ios_config[CONF_USER][CONF_PUSH] = {}
+    ios_config[CONF_USER] = conf_user
 
     hass.data[DOMAIN] = ios_config
 
@@ -287,7 +282,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Set up an iOS entry."""
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     hass.http.register_view(iOSIdentifyDeviceView(hass.config.path(CONFIGURATION_FILE)))
     hass.http.register_view(iOSPushConfigView(hass.data[DOMAIN][CONF_USER][CONF_PUSH]))
@@ -296,19 +291,18 @@ async def async_setup_entry(
     return True
 
 
-# pylint: disable=invalid-name
 class iOSPushConfigView(HomeAssistantView):
     """A view that provides the push categories configuration."""
 
     url = "/api/ios/push"
     name = "api:ios:push"
 
-    def __init__(self, push_config):
+    def __init__(self, push_config: dict[str, Any]) -> None:
         """Init the view."""
         self.push_config = push_config
 
     @callback
-    def get(self, request):
+    def get(self, request: web.Request) -> web.Response:
         """Handle the GET request for the push configuration."""
         return self.json(self.push_config)
 
@@ -319,12 +313,12 @@ class iOSConfigView(HomeAssistantView):
     url = "/api/ios/config"
     name = "api:ios:config"
 
-    def __init__(self, config):
+    def __init__(self, config: dict[str, Any]) -> None:
         """Init the view."""
         self.config = config
 
     @callback
-    def get(self, request):
+    def get(self, request: web.Request) -> web.Response:
         """Handle the GET request for the user-defined configuration."""
         return self.json(self.config)
 
@@ -335,18 +329,18 @@ class iOSIdentifyDeviceView(HomeAssistantView):
     url = "/api/ios/identify"
     name = "api:ios:identify"
 
-    def __init__(self, config_path):
+    def __init__(self, config_path: str) -> None:
         """Initialize the view."""
         self._config_path = config_path
 
-    async def post(self, request):
+    async def post(self, request: web.Request) -> web.Response:
         """Handle the POST request for device identification."""
         try:
             data = await request.json()
         except ValueError:
             return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         data[ATTR_LAST_SEEN_AT] = datetime.datetime.now().isoformat()
 

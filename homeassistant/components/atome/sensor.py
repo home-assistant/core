@@ -1,4 +1,5 @@
 """Linky Atome."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,7 +9,7 @@ from pyatome.client import AtomeClient, PyAtomeError
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -17,11 +18,11 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
-    ENERGY_KILO_WATT_HOUR,
-    POWER_WATT,
+    UnitOfEnergy,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -48,7 +49,7 @@ WEEKLY_TYPE = "week"
 MONTHLY_TYPE = "month"
 YEARLY_TYPE = "year"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
@@ -262,14 +263,14 @@ class AtomeSensor(SensorEntity):
 
         if sensor_type == LIVE_TYPE:
             self._attr_device_class = SensorDeviceClass.POWER
-            self._attr_native_unit_of_measurement = POWER_WATT
+            self._attr_native_unit_of_measurement = UnitOfPower.WATT
             self._attr_state_class = SensorStateClass.MEASUREMENT
         else:
             self._attr_device_class = SensorDeviceClass.ENERGY
-            self._attr_native_unit_of_measurement = ENERGY_KILO_WATT_HOUR
+            self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
-    def update(self):
+    def update(self) -> None:
         """Update device state."""
         update_function = getattr(self._data, f"update_{self._sensor_type}_usage")
         update_function()

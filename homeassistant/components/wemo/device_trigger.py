@@ -1,23 +1,19 @@
 """Triggers for WeMo devices."""
-from __future__ import annotations
 
-from typing import Any
+from __future__ import annotations
 
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 import voluptuous as vol
 
-from homeassistant.components.automation import (
-    AutomationActionType,
-    AutomationTriggerInfo,
-)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN as WEMO_DOMAIN, WEMO_SUBSCRIPTION_EVENT
-from .wemo_device import async_get_coordinator
+from .const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
+from .coordinator import async_get_coordinator
 
 TRIGGER_TYPES = {EVENT_TYPE_LONG_PRESS}
 
@@ -30,13 +26,13 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """Return a list of triggers."""
 
     wemo_trigger = {
         # Required fields of TRIGGER_BASE_SCHEMA
         CONF_PLATFORM: "device",
-        CONF_DOMAIN: WEMO_DOMAIN,
+        CONF_DOMAIN: DOMAIN,
         CONF_DEVICE_ID: device_id,
     }
 
@@ -59,8 +55,8 @@ async def async_get_triggers(
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
-    action: AutomationActionType,
-    automation_info: AutomationTriggerInfo,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     event_config = event_trigger.TRIGGER_SCHEMA(
@@ -74,5 +70,5 @@ async def async_attach_trigger(
         }
     )
     return await event_trigger.async_attach_trigger(
-        hass, event_config, action, automation_info, platform_type="device"
+        hass, event_config, action, trigger_info, platform_type="device"
     )

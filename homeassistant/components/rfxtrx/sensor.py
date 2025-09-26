@@ -1,11 +1,15 @@
 """Support for RFXtrx sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import date, datetime
+from decimal import Decimal
 import logging
+from typing import Any, cast
 
-from RFXtrx import ControlEvent, RFXtrxEvent, SensorEvent
+from RFXtrx import ControlEvent, RFXtrxDevice, RFXtrxEvent, SensorEvent
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,48 +20,53 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
-    ELECTRIC_CURRENT_AMPERE,
-    ELECTRIC_POTENTIAL_VOLT,
-    ENERGY_KILO_WATT_HOUR,
-    LENGTH_MILLIMETERS,
     PERCENTAGE,
-    POWER_WATT,
-    PRECIPITATION_MILLIMETERS_PER_HOUR,
-    PRESSURE_HPA,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    SPEED_METERS_PER_SECOND,
-    TEMP_CELSIUS,
     UV_INDEX,
+    EntityCategory,
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfPrecipitationDepth,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
-from . import DeviceTuple, RfxtrxEntity, async_setup_platform_entry, get_rfx_object
+from . import DeviceTuple, async_setup_platform_entry, get_rfx_object
 from .const import ATTR_EVENT
+from .entity import RfxtrxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _battery_convert(value):
+def _battery_convert(value: int | None) -> int | None:
     """Battery is given as a value between 0 and 9."""
     if value is None:
         return None
     return (value + 1) * 10
 
 
-def _rssi_convert(value):
+def _rssi_convert(value: int | None) -> str | None:
     """Rssi is given as dBm value."""
     if value is None:
         return None
-    return f"{value*8-120}"
+    return f"{value * 8 - 120}"
 
 
-@dataclass
+@dataclass(frozen=True)
 class RfxtrxSensorEntityDescription(SensorEntityDescription):
     """Description of sensor entities."""
 
-    convert: Callable = lambda x: x
+    convert: Callable[[Any], StateType | date | datetime | Decimal] = lambda x: cast(
+        StateType, x
+    )
 
 
 SENSOR_TYPES = (
@@ -65,7 +74,7 @@ SENSOR_TYPES = (
         key="Barometer",
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PRESSURE_HPA,
+        native_unit_of_measurement=UnitOfPressure.HPA,
     ),
     RfxtrxSensorEntityDescription(
         key="Battery numeric",
@@ -79,31 +88,35 @@ SENSOR_TYPES = (
         key="Current",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     RfxtrxSensorEntityDescription(
         key="Current Ch. 1",
+        translation_key="current_ch_1",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     RfxtrxSensorEntityDescription(
         key="Current Ch. 2",
+        translation_key="current_ch_2",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     RfxtrxSensorEntityDescription(
         key="Current Ch. 3",
+        translation_key="current_ch_3",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     RfxtrxSensorEntityDescription(
         key="Energy usage",
+        translation_key="instantaneous_power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=POWER_WATT,
+        native_unit_of_measurement=UnitOfPower.WATT,
     ),
     RfxtrxSensorEntityDescription(
         key="Humidity",
@@ -123,84 +136,101 @@ SENSOR_TYPES = (
         key="Temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     RfxtrxSensorEntityDescription(
         key="Temperature2",
+        translation_key="temperature_2",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     RfxtrxSensorEntityDescription(
         key="Total usage",
+        translation_key="total_energy_usage",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
     ),
     RfxtrxSensorEntityDescription(
         key="Voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
     ),
     RfxtrxSensorEntityDescription(
         key="Wind direction",
-        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="wind_direction",
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
         native_unit_of_measurement=DEGREE,
     ),
     RfxtrxSensorEntityDescription(
         key="Rain rate",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
     ),
     RfxtrxSensorEntityDescription(
         key="Sound",
+        translation_key="sound",
     ),
     RfxtrxSensorEntityDescription(
         key="Sensor Status",
+        translation_key="sensor_status",
     ),
     RfxtrxSensorEntityDescription(
         key="Count",
+        translation_key="count",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement="count",
     ),
     RfxtrxSensorEntityDescription(
         key="Counter value",
+        translation_key="counter_value",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement="count",
     ),
     RfxtrxSensorEntityDescription(
         key="Chill",
+        translation_key="chill",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     RfxtrxSensorEntityDescription(
         key="Wind average speed",
+        translation_key="wind_average_speed",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=SPEED_METERS_PER_SECOND,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        device_class=SensorDeviceClass.WIND_SPEED,
     ),
     RfxtrxSensorEntityDescription(
         key="Wind gust",
+        translation_key="wind_gust",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=SPEED_METERS_PER_SECOND,
+        native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
+        device_class=SensorDeviceClass.WIND_SPEED,
     ),
     RfxtrxSensorEntityDescription(
         key="Rain total",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
+        native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+        device_class=SensorDeviceClass.PRECIPITATION,
     ),
     RfxtrxSensorEntityDescription(
         key="Forecast",
+        translation_key="forecast_status",
     ),
     RfxtrxSensorEntityDescription(
         key="Forecast numeric",
+        translation_key="forecast",
     ),
     RfxtrxSensorEntityDescription(
         key="Humidity status",
+        translation_key="humidity_status",
     ),
     RfxtrxSensorEntityDescription(
         key="UV",
+        translation_key="uv_index",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UV_INDEX,
     ),
@@ -212,52 +242,58 @@ SENSOR_TYPES_DICT = {desc.key: desc for desc in SENSOR_TYPES}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up config entry."""
 
-    def _supported(event):
+    def _supported(event: RFXtrxEvent) -> bool:
         return isinstance(event, (ControlEvent, SensorEvent))
 
     def _constructor(
         event: RFXtrxEvent,
         auto: RFXtrxEvent | None,
         device_id: DeviceTuple,
-        entity_info: dict,
-    ):
-        entities: list[RfxtrxSensor] = []
-        for data_type in set(event.values) & set(SENSOR_TYPES_DICT):
-            entities.append(
-                RfxtrxSensor(
-                    event.device,
-                    device_id,
-                    SENSOR_TYPES_DICT[data_type],
-                    event=event if auto else None,
-                )
+        entity_info: dict[str, Any],
+    ) -> list[Entity]:
+        return [
+            RfxtrxSensor(
+                event.device,
+                device_id,
+                SENSOR_TYPES_DICT[data_type],
+                event=event if auto else None,
             )
-
-        return entities
+            for data_type in set(event.values) & set(SENSOR_TYPES_DICT)
+        ]
 
     await async_setup_platform_entry(
         hass, config_entry, async_add_entities, _supported, _constructor
     )
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class RfxtrxSensor(RfxtrxEntity, SensorEntity):
-    """Representation of a RFXtrx sensor."""
+    """Representation of a RFXtrx sensor.
 
+    Since all repeated events have meaning, these types of sensors
+    need to have force update enabled.
+    """
+
+    _attr_force_update = True
     entity_description: RfxtrxSensorEntityDescription
 
-    def __init__(self, device, device_id, entity_description, event=None):
+    def __init__(
+        self,
+        device: RFXtrxDevice,
+        device_id: DeviceTuple,
+        entity_description: RfxtrxSensorEntityDescription,
+        event: RFXtrxEvent | None = None,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(device, device_id, event=event)
         self.entity_description = entity_description
-        self._name = f"{device.type_string} {device.id_string} {entity_description.key}"
-        self._unique_id = "_".join(
-            x for x in (*self._device_id, entity_description.key)
-        )
+        self._attr_unique_id = "_".join(x for x in (*device_id, entity_description.key))
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore device state."""
         await super().async_added_to_hass()
 
@@ -269,25 +305,15 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
             self._apply_event(get_rfx_object(event))
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the state of the sensor."""
         if not self._event:
             return None
         value = self._event.values.get(self.entity_description.key)
         return self.entity_description.convert(value)
 
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def force_update(self) -> bool:
-        """We should force updates. Repeated states have meaning."""
-        return True
-
     @callback
-    def _handle_event(self, event, device_id):
+    def _handle_event(self, event: RFXtrxEvent, device_id: DeviceTuple) -> None:
         """Check if event applies to me and update."""
         if device_id != self._device_id:
             return

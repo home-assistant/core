@@ -1,93 +1,96 @@
 """Reads vehicle status from StarLine API."""
-from __future__ import annotations
 
-from dataclasses import dataclass
+from __future__ import annotations
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ELECTRIC_POTENTIAL_VOLT,
-    LENGTH_KILOMETERS,
     PERCENTAGE,
-    TEMP_CELSIUS,
-    VOLUME_LITERS,
+    EntityCategory,
+    UnitOfElectricPotential,
+    UnitOfLength,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level, icon_for_signal_level
 
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
 from .entity import StarlineEntity
 
-
-@dataclass
-class StarlineRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    name_: str
-
-
-@dataclass
-class StarlineSensorEntityDescription(
-    SensorEntityDescription, StarlineRequiredKeysMixin
-):
-    """Describes Starline binary_sensor entity."""
-
-
-SENSOR_TYPES: tuple[StarlineSensorEntityDescription, ...] = (
-    StarlineSensorEntityDescription(
+SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
         key="battery",
-        name_="Battery",
-        native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
+        translation_key="battery",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    StarlineSensorEntityDescription(
+    SensorEntityDescription(
         key="balance",
-        name_="Balance",
-        icon="mdi:cash-multiple",
+        translation_key="balance",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    StarlineSensorEntityDescription(
+    SensorEntityDescription(
         key="ctemp",
-        name_="Interior Temperature",
+        translation_key="interior_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    StarlineSensorEntityDescription(
+    SensorEntityDescription(
         key="etemp",
-        name_="Engine Temperature",
+        translation_key="engine_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    StarlineSensorEntityDescription(
+    SensorEntityDescription(
         key="gsm_lvl",
-        name_="GSM Signal",
+        translation_key="gsm_signal",
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    StarlineSensorEntityDescription(
+    SensorEntityDescription(
         key="fuel",
-        name_="Fuel Volume",
-        icon="mdi:fuel",
+        translation_key="fuel",
+        device_class=SensorDeviceClass.VOLUME,
+        state_class=SensorStateClass.TOTAL,
     ),
-    StarlineSensorEntityDescription(
+    SensorEntityDescription(
         key="errors",
-        name_="OBD Errors",
-        icon="mdi:alert-octagon",
+        translation_key="errors",
+        native_unit_of_measurement="errors",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    StarlineSensorEntityDescription(
+    SensorEntityDescription(
         key="mileage",
-        name_="Mileage",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
-        icon="mdi:counter",
+        translation_key="mileage",
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        device_class=SensorDeviceClass.DISTANCE,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="gps_count",
+        translation_key="gps_count",
+        native_unit_of_measurement="satellites",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the StarLine sensors."""
     account: StarlineAccount = hass.data[DOMAIN][entry.entry_id]
@@ -104,16 +107,14 @@ async def async_setup_entry(
 class StarlineSensor(StarlineEntity, SensorEntity):
     """Representation of a StarLine sensor."""
 
-    entity_description: StarlineSensorEntityDescription
-
     def __init__(
         self,
         account: StarlineAccount,
         device: StarlineDevice,
-        description: StarlineSensorEntityDescription,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize StarLine sensor."""
-        super().__init__(account, device, description.key, description.name_)
+        super().__init__(account, device, description.key)
         self.entity_description = description
 
     @property
@@ -147,6 +148,8 @@ class StarlineSensor(StarlineEntity, SensorEntity):
             return self._device.errors.get("val")
         if self._key == "mileage" and self._device.mileage:
             return self._device.mileage.get("val")
+        if self._key == "gps_count" and self._device.position:
+            return self._device.position.get("sat_qty")
         return None
 
     @property
@@ -159,7 +162,7 @@ class StarlineSensor(StarlineEntity, SensorEntity):
             if type_value == "percents":
                 return PERCENTAGE
             if type_value == "litres":
-                return VOLUME_LITERS
+                return UnitOfVolume.LITERS
         return self.entity_description.native_unit_of_measurement
 
     @property

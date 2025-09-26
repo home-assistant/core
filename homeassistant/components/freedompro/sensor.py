@@ -1,17 +1,20 @@
 """Support for Freedompro sensor."""
+
+from typing import Any
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import LIGHT_LUX, PERCENTAGE, TEMP_CELSIUS
+from homeassistant.const import LIGHT_LUX, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import FreedomproConfigEntry, FreedomproDataUpdateCoordinator
 
 DEVICE_CLASS_MAP = {
     "temperatureSensor": SensorDeviceClass.TEMPERATURE,
@@ -24,7 +27,7 @@ STATE_CLASS_MAP = {
     "lightSensor": None,
 }
 UNIT_MAP = {
-    "temperatureSensor": TEMP_CELSIUS,
+    "temperatureSensor": UnitOfTemperature.CELSIUS,
     "humiditySensor": PERCENTAGE,
     "lightSensor": LIGHT_LUX,
 }
@@ -37,10 +40,12 @@ SUPPORTED_SENSORS = {"temperatureSensor", "humiditySensor", "lightSensor"}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FreedomproConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Freedompro sensor."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         Device(device, coordinator)
         for device in coordinator.data
@@ -48,22 +53,26 @@ async def async_setup_entry(
     )
 
 
-class Device(CoordinatorEntity, SensorEntity):
-    """Representation of an Freedompro sensor."""
+class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], SensorEntity):
+    """Representation of a Freedompro sensor."""
 
-    def __init__(self, device, coordinator):
+    _attr_has_entity_name = True
+    _attr_name = None
+
+    def __init__(
+        self, device: dict[str, Any], coordinator: FreedomproDataUpdateCoordinator
+    ) -> None:
         """Initialize the Freedompro sensor."""
         super().__init__(coordinator)
-        self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
         self._type = device["type"]
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, self.unique_id),
+                (DOMAIN, device["uid"]),
             },
             manufacturer="Freedompro",
             model=device["type"],
-            name=self.name,
+            name=device["name"],
         )
         self._attr_device_class = DEVICE_CLASS_MAP[device["type"]]
         self._attr_state_class = STATE_CLASS_MAP[device["type"]]

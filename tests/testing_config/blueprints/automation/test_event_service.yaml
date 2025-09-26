@@ -3,10 +3,18 @@ blueprint:
   domain: automation
   input:
     trigger_event:
+      selector:
+        text:
+          multiline: false
+          multiple: false
     service_to_call:
-trigger:
-  platform: event
+    a_number:
+      selector:
+        number:
+          mode: "box"
+triggers:
+  trigger: event
   event_type: !input trigger_event
-action:
+actions:
   service: !input service_to_call
   entity_id: light.kitchen

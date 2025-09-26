@@ -1,9 +1,11 @@
 {
   "domain": "systemmonitor",
   "name": "System Monitor",
+  "codeowners": ["@gjohansson-ST"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/systemmonitor",
-  "requirements": ["psutil==5.8.0"],
-  "codeowners": [],
   "iot_class": "local_push",
-  "loggers": ["psutil"]
+  "loggers": ["psutil"],
+  "requirements": ["psutil-home-assistant==0.0.1", "psutil==7.0.0"],
+  "single_config_entry": true
 }

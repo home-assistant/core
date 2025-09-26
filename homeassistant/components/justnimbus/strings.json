@@ -1,0 +1,46 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "client_id": "Client ID",
+          "zip_code": "ZIP code"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "pump_pressure": {
+        "name": "Pump pressure"
+      },
+      "pump_type": {
+        "name": "Pump type"
+      },
+      "reservoir_capacity": {
+        "name": "Reservoir capacity"
+      },
+      "reservoir_content": {
+        "name": "Reservoir content"
+      },
+      "reservoir_temperature": {
+        "name": "Reservoir temperature"
+      },
+      "water_used": {
+        "name": "Total use"
+      },
+      "water_saved": {
+        "name": "Total saved"
+      }
+    }
+  }
+}

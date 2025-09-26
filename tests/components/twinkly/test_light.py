@@ -1,223 +1,333 @@
 """Tests for the integration of a twinly device."""
+
 from __future__ import annotations
 
-from unittest.mock import patch
+from datetime import timedelta
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.components.twinkly.const import (
-    CONF_HOST,
-    CONF_ID,
-    CONF_MODEL,
-    CONF_NAME,
-    DOMAIN as TWINKLY_DOMAIN,
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from syrupy.assertion import SnapshotAssertion
+from ttls.client import TwinklyError
+
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_EFFECT,
+    ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
+    DOMAIN as LIGHT_DOMAIN,
+    LightEntityFeature,
+)
+from homeassistant.components.twinkly import DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.entity_registry import RegistryEntry
 
-from tests.common import MockConfigEntry
-from tests.components.twinkly import TEST_MODEL, TEST_NAME_ORIGINAL, ClientMock
+from . import setup_integration
+from .const import TEST_MAC
 
-
-async def test_initial_state(hass: HomeAssistant):
-    """Validate that entity and device states are updated on startup."""
-    entity, device, _, _ = await _create_entries(hass)
-
-    state = hass.states.get(entity.entity_id)
-
-    # Basic state properties
-    assert state.name == entity.unique_id
-    assert state.state == "on"
-    assert state.attributes[ATTR_BRIGHTNESS] == 26
-    assert state.attributes["friendly_name"] == entity.unique_id
-    assert state.attributes["icon"] == "mdi:string-lights"
-
-    # Validates that custom properties of the API device_info are propagated through attributes
-    assert state.attributes["uuid"] == entity.unique_id
-
-    assert entity.original_name == entity.unique_id
-    assert entity.original_icon == "mdi:string-lights"
-
-    assert device.name == entity.unique_id
-    assert device.model == TEST_MODEL
-    assert device.manufacturer == "LEDWORKS"
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-async def test_turn_on_off(hass: HomeAssistant):
+@pytest.mark.usefixtures("mock_twinkly_client")
+async def test_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the created entities."""
+    with patch("homeassistant.components.twinkly.PLATFORMS", [Platform.LIGHT]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_turn_on_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+) -> None:
     """Test support of the light.turn_on service."""
-    client = ClientMock()
-    client.state = False
-    client.brightness = {"mode": "enabled", "value": 20}
-    entity, _, _, _ = await _create_entries(hass, client)
+    mock_twinkly_client.is_on.return_value = False
 
-    assert hass.states.get(entity.entity_id).state == "off"
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("light.tree_1").state == STATE_OFF
 
     await hass.services.async_call(
-        "light", "turn_on", service_data={"entity_id": entity.entity_id}
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={ATTR_ENTITY_ID: "light.tree_1"},
+        blocking=True,
     )
-    await hass.async_block_till_done()
 
-    state = hass.states.get(entity.entity_id)
-
-    assert state.state == "on"
-    assert state.attributes[ATTR_BRIGHTNESS] == 51
+    mock_twinkly_client.turn_on.assert_called_once_with()
 
 
-async def test_turn_on_with_brightness(hass: HomeAssistant):
+async def test_turn_on_with_brightness(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+) -> None:
     """Test support of the light.turn_on service with a brightness parameter."""
-    client = ClientMock()
-    client.state = False
-    client.brightness = {"mode": "enabled", "value": 20}
-    entity, _, _, _ = await _create_entries(hass, client)
+    mock_twinkly_client.is_on.return_value = False
 
-    assert hass.states.get(entity.entity_id).state == "off"
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        "light",
-        "turn_on",
-        service_data={"entity_id": entity.entity_id, "brightness": 255},
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_BRIGHTNESS: 255},
+        blocking=True,
     )
-    await hass.async_block_till_done()
 
-    state = hass.states.get(entity.entity_id)
-
-    assert state.state == "on"
-    assert state.attributes[ATTR_BRIGHTNESS] == 255
-
-    await hass.services.async_call(
-        "light",
-        "turn_on",
-        service_data={"entity_id": entity.entity_id, "brightness": 1},
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity.entity_id)
-
-    assert state.state == "off"
+    mock_twinkly_client.set_brightness.assert_called_once_with(100)
+    mock_twinkly_client.turn_on.assert_called_once_with()
 
 
-async def test_turn_on_with_color_rgbw(hass: HomeAssistant):
+async def test_brightness_to_zero(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+) -> None:
     """Test support of the light.turn_on service with a brightness parameter."""
-    client = ClientMock()
-    client.state = False
-    client.device_info["led_profile"] = "RGBW"
-    client.brightness = {"mode": "enabled", "value": 255}
-    entity, _, _, _ = await _create_entries(hass, client)
-
-    assert hass.states.get(entity.entity_id).state == "off"
+    await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
-        "light",
-        "turn_on",
-        service_data={"entity_id": entity.entity_id, "rgbw_color": (128, 64, 32, 0)},
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_BRIGHTNESS: 1},
+        blocking=True,
     )
-    await hass.async_block_till_done()
 
-    state = hass.states.get(entity.entity_id)
-
-    assert state.state == "on"
-    assert client.color == (0, 128, 64, 32)
+    mock_twinkly_client.set_brightness.assert_not_called()
+    mock_twinkly_client.turn_off.assert_called_once_with()
 
 
-async def test_turn_on_with_color_rgb(hass: HomeAssistant):
-    """Test support of the light.turn_on service with a brightness parameter."""
-    client = ClientMock()
-    client.state = False
-    client.device_info["led_profile"] = "RGB"
-    client.brightness = {"mode": "enabled", "value": 255}
-    entity, _, _, _ = await _create_entries(hass, client)
+async def test_turn_on_with_color_rgbw(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+) -> None:
+    """Test support of the light.turn_on service with a rgbw parameter."""
+    mock_twinkly_client.is_on.return_value = False
+    mock_twinkly_client.get_details.return_value["led_profile"] = "RGBW"
 
-    assert hass.states.get(entity.entity_id).state == "off"
+    await setup_integration(hass, mock_config_entry)
+    assert (
+        LightEntityFeature.EFFECT
+        & hass.states.get("light.tree_1").attributes[ATTR_SUPPORTED_FEATURES]
+    )
 
     await hass.services.async_call(
-        "light",
-        "turn_on",
-        service_data={"entity_id": entity.entity_id, "rgb_color": (128, 64, 32)},
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={
+            ATTR_ENTITY_ID: "light.tree_1",
+            ATTR_RGBW_COLOR: (128, 64, 32, 0),
+        },
+        blocking=True,
     )
-    await hass.async_block_till_done()
 
-    state = hass.states.get(entity.entity_id)
+    mock_twinkly_client.interview.assert_called_once_with()
+    mock_twinkly_client.set_static_colour.assert_called_once_with((0, 128, 64, 32))
+    mock_twinkly_client.set_mode.assert_called_once_with("color")
+    assert mock_twinkly_client.default_mode == "color"
 
-    assert state.state == "on"
-    assert client.color == (128, 64, 32)
+
+async def test_turn_on_with_color_rgb(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+) -> None:
+    """Test support of the light.turn_on service with a rgb parameter."""
+    mock_twinkly_client.is_on.return_value = False
+    mock_twinkly_client.get_details.return_value["led_profile"] = "RGB"
+
+    await setup_integration(hass, mock_config_entry)
+    assert (
+        LightEntityFeature.EFFECT
+        & hass.states.get("light.tree_1").attributes[ATTR_SUPPORTED_FEATURES]
+    )
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_RGB_COLOR: (128, 64, 32)},
+        blocking=True,
+    )
+
+    mock_twinkly_client.interview.assert_called_once_with()
+    mock_twinkly_client.set_static_colour.assert_called_once_with((128, 64, 32))
+    mock_twinkly_client.set_mode.assert_called_once_with("color")
+    assert mock_twinkly_client.default_mode == "color"
 
 
-async def test_turn_off(hass: HomeAssistant):
+async def test_turn_on_with_effect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+) -> None:
+    """Test support of the light.turn_on service with effects."""
+    mock_twinkly_client.is_on.return_value = False
+    mock_twinkly_client.get_details.return_value["led_profile"] = "RGB"
+
+    await setup_integration(hass, mock_config_entry)
+    assert (
+        LightEntityFeature.EFFECT
+        & hass.states.get("light.tree_1").attributes[ATTR_SUPPORTED_FEATURES]
+    )
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_EFFECT: "2 Rainbow"},
+        blocking=True,
+    )
+
+    mock_twinkly_client.interview.assert_called_once_with()
+    mock_twinkly_client.set_current_movie.assert_called_once_with(2)
+    mock_twinkly_client.set_mode.assert_called_once_with("movie")
+    assert mock_twinkly_client.default_mode == "movie"
+
+
+@pytest.mark.parametrize(
+    ("data"),
+    [
+        {ATTR_RGBW_COLOR: (128, 64, 32, 0)},
+        {ATTR_RGB_COLOR: (128, 64, 32)},
+    ],
+)
+async def test_turn_on_with_missing_effect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+    data: dict[str, Any],
+) -> None:
+    """Test support of the light.turn_on service with rgbw color and missing effect support."""
+    mock_twinkly_client.is_on.return_value = False
+    mock_twinkly_client.get_firmware_version.return_value["version"] = "2.7.0"
+
+    await setup_integration(hass, mock_config_entry)
+    assert (
+        LightEntityFeature.EFFECT
+        ^ hass.states.get("light.tree_1").attributes[ATTR_SUPPORTED_FEATURES]
+    )
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={ATTR_ENTITY_ID: "light.tree_1"} | data,
+        blocking=True,
+    )
+
+    mock_twinkly_client.interview.assert_called_once_with()
+    mock_twinkly_client.set_cycle_colours.assert_called_once_with((128, 64, 32))
+    mock_twinkly_client.set_mode.assert_called_once_with("movie")
+    assert mock_twinkly_client.default_mode == "movie"
+    mock_twinkly_client.set_current_movie.assert_not_called()
+
+
+async def test_turn_on_with_color_rgbw_and_missing_effect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+) -> None:
+    """Test support of the light.turn_on service with missing effect support."""
+    mock_twinkly_client.is_on.return_value = False
+    mock_twinkly_client.get_firmware_version.return_value["version"] = "2.7.0"
+
+    await setup_integration(hass, mock_config_entry)
+    assert (
+        LightEntityFeature.EFFECT
+        ^ hass.states.get("light.tree_1").attributes[ATTR_SUPPORTED_FEATURES]
+    )
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        service_data={ATTR_ENTITY_ID: "light.tree_1", ATTR_EFFECT: "2 Rainbow"},
+        blocking=True,
+    )
+
+    mock_twinkly_client.set_current_movie.assert_not_called()
+
+
+async def test_turn_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+) -> None:
     """Test support of the light.turn_off service."""
-    entity, _, _, _ = await _create_entries(hass)
 
-    assert hass.states.get(entity.entity_id).state == "on"
-
+    await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
-        "light", "turn_off", service_data={"entity_id": entity.entity_id}
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        service_data={ATTR_ENTITY_ID: "light.tree_1"},
+        blocking=True,
     )
+    mock_twinkly_client.turn_off.assert_called_once_with()
+
+
+async def test_no_current_movie(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test handling of missing current movie data."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("light.tree_1").attributes[ATTR_EFFECT] == "1 Rainbow"
+
+    mock_twinkly_client.get_current_movie.side_effect = TwinklyError
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity.entity_id)
+    assert hass.states.get("light.tree_1").state != STATE_UNAVAILABLE
+    assert hass.states.get("light.tree_1").attributes[ATTR_EFFECT] is None
 
-    assert state.state == "off"
 
-
-async def test_update_name(hass: HomeAssistant):
-    """
-    Validate device's name update behavior.
+async def test_update_name(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+) -> None:
+    """Validate device's name update behavior.
 
     Validate that if device name is changed from the Twinkly app,
     then the name of the entity is updated and it's also persisted,
     so it can be restored when starting HA while Twinkly is offline.
     """
-    entity, _, client, config_entry = await _create_entries(hass)
 
-    client.change_name("new_device_name")
-    await hass.services.async_call(
-        "light", "turn_off", service_data={"entity_id": entity.entity_id}
-    )  # We call turn_off which will automatically cause an async_update
+    await setup_integration(hass, mock_config_entry)
+
+    dev_entry = device_registry.async_get_device({(DOMAIN, TEST_MAC)})
+
+    assert dev_entry.name == "Tree 1"
+
+    mock_twinkly_client.get_details.return_value["device_name"] = "new_device_name"
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity.entity_id)
+    dev_entry = device_registry.async_get_device({(DOMAIN, TEST_MAC)})
 
-    assert config_entry.data[CONF_NAME] == "new_device_name"
-    assert state.attributes["friendly_name"] == "new_device_name"
-
-
-async def test_unload(hass: HomeAssistant):
-    """Validate that entities can be unloaded from the UI."""
-
-    _, _, client, _ = await _create_entries(hass)
-    entry_id = client.id
-
-    assert await hass.config_entries.async_unload(entry_id)
-
-
-async def _create_entries(
-    hass: HomeAssistant, client=None
-) -> tuple[RegistryEntry, DeviceEntry, ClientMock]:
-    client = ClientMock() if client is None else client
-
-    with patch("homeassistant.components.twinkly.Twinkly", return_value=client):
-        config_entry = MockConfigEntry(
-            domain=TWINKLY_DOMAIN,
-            data={
-                CONF_HOST: client,
-                CONF_ID: client.id,
-                CONF_NAME: TEST_NAME_ORIGINAL,
-                CONF_MODEL: TEST_MODEL,
-            },
-            entry_id=client.id,
-        )
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(client.id)
-        await hass.async_block_till_done()
-
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
-    entity_id = entity_registry.async_get_entity_id("light", TWINKLY_DOMAIN, client.id)
-    entity_entry = entity_registry.async_get(entity_id)
-    device = device_registry.async_get_device({(TWINKLY_DOMAIN, client.id)})
-
-    assert entity_entry is not None
-    assert device is not None
-
-    return entity_entry, device, client, config_entry
+    assert dev_entry.name == "new_device_name"

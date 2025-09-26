@@ -8,6 +8,19 @@
           "password": "[%key:common::config_flow::data::password%]",
           "timeout": "Timeout"
         }
+      },
+      "validation": {
+        "title": "Sense multi-factor authentication",
+        "data": {
+          "code": "Verification code"
+        }
+      },
+      "reauth_validate": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Sense integration needs to re-authenticate your account {email}.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
@@ -16,7 +29,27 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "daily_energy": {
+        "name": "Daily energy"
+      },
+      "weekly_energy": {
+        "name": "Weekly energy"
+      },
+      "monthly_energy": {
+        "name": "Monthly energy"
+      },
+      "yearly_energy": {
+        "name": "Yearly energy"
+      },
+      "bill_energy": {
+        "name": "Bill energy"
+      }
     }
   }
 }

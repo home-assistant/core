@@ -1,98 +1,75 @@
-"""Demo platform that has two fake binary sensors."""
+"""Demo platform that has two fake calendars."""
+
 from __future__ import annotations
 
-import copy
+import datetime
 
-from homeassistant.components.calendar import CalendarEventDevice, get_date
+from homeassistant.components.calendar import CalendarEntity, CalendarEvent
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Demo Calendar platform."""
-    calendar_data_future = DemoGoogleCalendarDataFuture()
-    calendar_data_current = DemoGoogleCalendarDataCurrent()
-    add_entities(
+    """Set up the Demo Calendar config entry."""
+    async_add_entities(
         [
-            DemoGoogleCalendar(hass, calendar_data_future, "Calendar 1"),
-            DemoGoogleCalendar(hass, calendar_data_current, "Calendar 2"),
+            DemoCalendar(calendar_data_future(), "Calendar 1"),
+            DemoCalendar(calendar_data_current(), "Calendar 2"),
         ]
     )
 
 
-class DemoGoogleCalendarData:
-    """Representation of a Demo Calendar element."""
-
-    event = None
-
-    async def async_get_events(self, hass, start_date, end_date):
-        """Get all events in a specific time frame."""
-        event = copy.copy(self.event)
-        event["title"] = event["summary"]
-        event["start"] = get_date(event["start"]).isoformat()
-        event["end"] = get_date(event["end"]).isoformat()
-        return [event]
-
-
-class DemoGoogleCalendarDataFuture(DemoGoogleCalendarData):
+def calendar_data_future() -> CalendarEvent:
     """Representation of a Demo Calendar for a future event."""
-
-    def __init__(self):
-        """Set the event to a future event."""
-        one_hour_from_now = dt_util.now() + dt_util.dt.timedelta(minutes=30)
-        self.event = {
-            "start": {"dateTime": one_hour_from_now.isoformat()},
-            "end": {
-                "dateTime": (
-                    one_hour_from_now + dt_util.dt.timedelta(minutes=60)
-                ).isoformat()
-            },
-            "summary": "Future Event",
-        }
+    half_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
+    return CalendarEvent(
+        start=half_hour_from_now,
+        end=half_hour_from_now + datetime.timedelta(minutes=60),
+        summary="Future Event",
+        description="Future Description",
+        location="Future Location",
+    )
 
 
-class DemoGoogleCalendarDataCurrent(DemoGoogleCalendarData):
+def calendar_data_current() -> CalendarEvent:
     """Representation of a Demo Calendar for a current event."""
-
-    def __init__(self):
-        """Set the event data."""
-        middle_of_event = dt_util.now() - dt_util.dt.timedelta(minutes=30)
-        self.event = {
-            "start": {"dateTime": middle_of_event.isoformat()},
-            "end": {
-                "dateTime": (
-                    middle_of_event + dt_util.dt.timedelta(minutes=60)
-                ).isoformat()
-            },
-            "summary": "Current Event",
-        }
+    middle_of_event = dt_util.now() - datetime.timedelta(minutes=30)
+    return CalendarEvent(
+        start=middle_of_event,
+        end=middle_of_event + datetime.timedelta(minutes=60),
+        summary="Current Event",
+    )
 
 
-class DemoGoogleCalendar(CalendarEventDevice):
+class DemoCalendar(CalendarEntity):
     """Representation of a Demo Calendar element."""
 
-    def __init__(self, hass, calendar_data, name):
+    def __init__(self, event: CalendarEvent, name: str) -> None:
         """Initialize demo calendar."""
-        self.data = calendar_data
-        self._name = name
+        self._event = event
+        self._attr_name = name
 
     @property
-    def event(self):
+    def event(self) -> CalendarEvent:
         """Return the next upcoming event."""
-        return self.data.event
+        return self._event
 
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
-
-    async def async_get_events(self, hass, start_date, end_date):
+    async def async_get_events(
+        self,
+        hass: HomeAssistant,
+        start_date: datetime.datetime,
+        end_date: datetime.datetime,
+    ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
-        return await self.data.async_get_events(hass, start_date, end_date)
+        assert start_date < end_date
+        if self._event.start_datetime_local >= end_date:
+            return []
+        if self._event.end_datetime_local < start_date:
+            return []
+        return [self._event]

@@ -1,31 +1,25 @@
 """Feed Entity Manager Sensor support for GeoNet NZ Volcano Feeds."""
+
 from __future__ import annotations
 
 import logging
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    LENGTH_KILOMETERS,
-)
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import DistanceConverter
 
+from . import GeonetnzVolcanoConfigEntry
 from .const import (
     ATTR_ACTIVITY,
     ATTR_DISTANCE,
     ATTR_EXTERNAL_ID,
     ATTR_HAZARDS,
     DEFAULT_ICON,
-    DOMAIN,
-    FEED,
+    IMPERIAL_UNITS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,10 +29,12 @@ ATTR_LAST_UPDATE_SUCCESSFUL = "feed_last_update_successful"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GeonetnzVolcanoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the GeoNet NZ Volcano Feed platform."""
-    manager = hass.data[DOMAIN][FEED][entry.entry_id]
+    manager = entry.runtime_data
 
     @callback
     def async_add_sensor(feed_manager, external_id, unit_system):
@@ -59,13 +55,16 @@ async def async_setup_entry(
 
 
 class GeonetnzVolcanoSensor(SensorEntity):
-    """This represents an external event with GeoNet NZ Volcano feed data."""
+    """Represents an external event with GeoNet NZ Volcano feed data."""
+
+    _attr_should_poll = False
 
     def __init__(self, config_entry_id, feed_manager, external_id, unit_system):
         """Initialize entity with data from feed entry."""
         self._config_entry_id = config_entry_id
         self._feed_manager = feed_manager
         self._external_id = external_id
+        self._attr_unique_id = f"{config_entry_id}_{external_id}"
         self._unit_system = unit_system
         self._title = None
         self._distance = None
@@ -79,7 +78,7 @@ class GeonetnzVolcanoSensor(SensorEntity):
         self._feed_last_update_successful = None
         self._remove_signal_update = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self._remove_signal_update = async_dispatcher_connect(
             self.hass,
@@ -97,12 +96,7 @@ class GeonetnzVolcanoSensor(SensorEntity):
         """Call update method."""
         self.async_schedule_update_ha_state(True)
 
-    @property
-    def should_poll(self):
-        """No polling needed for GeoNet NZ Volcano feed location events."""
-        return False
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update this entity from the data held in the feed manager."""
         _LOGGER.debug("Updating %s", self._external_id)
         feed_entry = self._feed_manager.get_entry(self._external_id)
@@ -115,22 +109,26 @@ class GeonetnzVolcanoSensor(SensorEntity):
         """Update the internal state from the provided feed entry."""
         self._title = feed_entry.title
         # Convert distance if not metric system.
-        if self._unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+        if self._unit_system == IMPERIAL_UNITS:
             self._distance = round(
-                IMPERIAL_SYSTEM.length(feed_entry.distance_to_home, LENGTH_KILOMETERS),
+                DistanceConverter.convert(
+                    feed_entry.distance_to_home,
+                    UnitOfLength.KILOMETERS,
+                    UnitOfLength.MILES,
+                ),
                 1,
             )
         else:
             self._distance = round(feed_entry.distance_to_home, 1)
         self._latitude = round(feed_entry.coordinates[0], 5)
         self._longitude = round(feed_entry.coordinates[1], 5)
-        self._attribution = feed_entry.attribution
+        self._attr_attribution = feed_entry.attribution
         self._alert_level = feed_entry.alert_level
         self._activity = feed_entry.activity
         self._hazards = feed_entry.hazards
-        self._feed_last_update = dt.as_utc(last_update) if last_update else None
+        self._feed_last_update = dt_util.as_utc(last_update) if last_update else None
         self._feed_last_update_successful = (
-            dt.as_utc(last_update_successful) if last_update_successful else None
+            dt_util.as_utc(last_update_successful) if last_update_successful else None
         )
 
     @property
@@ -156,18 +154,17 @@ class GeonetnzVolcanoSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the device state attributes."""
-        attributes = {}
-        for key, value in (
-            (ATTR_EXTERNAL_ID, self._external_id),
-            (ATTR_ATTRIBUTION, self._attribution),
-            (ATTR_ACTIVITY, self._activity),
-            (ATTR_HAZARDS, self._hazards),
-            (ATTR_LONGITUDE, self._longitude),
-            (ATTR_LATITUDE, self._latitude),
-            (ATTR_DISTANCE, self._distance),
-            (ATTR_LAST_UPDATE, self._feed_last_update),
-            (ATTR_LAST_UPDATE_SUCCESSFUL, self._feed_last_update_successful),
-        ):
-            if value or isinstance(value, bool):
-                attributes[key] = value
-        return attributes
+        return {
+            key: value
+            for key, value in (
+                (ATTR_EXTERNAL_ID, self._external_id),
+                (ATTR_ACTIVITY, self._activity),
+                (ATTR_HAZARDS, self._hazards),
+                (ATTR_LONGITUDE, self._longitude),
+                (ATTR_LATITUDE, self._latitude),
+                (ATTR_DISTANCE, self._distance),
+                (ATTR_LAST_UPDATE, self._feed_last_update),
+                (ATTR_LAST_UPDATE_SUCCESSFUL, self._feed_last_update_successful),
+            )
+            if value or isinstance(value, bool)
+        }

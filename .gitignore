@@ -8,6 +8,9 @@ tests/testing_config/home-assistant.log*
 data/
 .token
 
+# Translations
+homeassistant/components/*/translations
+
 # Hide sublime text stuff
 *.sublime-project
 *.sublime-workspace
@@ -31,6 +34,7 @@ Icon
 
 # GITHUB Proposed Python stuff:
 *.py[cod]
+__pycache__
 
 # C extensions
 *.so
@@ -58,13 +62,14 @@ pip-log.txt
 
 # Unit test / coverage reports
 .coverage
-.tox
 coverage.xml
 nosetests.xml
 htmlcov/
 test-reports/
 test-results.xml
 test-output.xml
+pytest-*.txt
+junit.xml
 
 # Translations
 *.mo
@@ -75,6 +80,7 @@ test-output.xml
 .pydevproject
 
 .python-version
+.tool-versions
 
 # emacs auto backups
 *~
@@ -108,9 +114,6 @@ virtualization/vagrant/config
 !.vscode/tasks.json
 .env
 
-# Built docs
-docs/build
-
 # Windows Explorer
 desktop.ini
 /home-assistant.pyproj
@@ -132,3 +135,10 @@ tmp_cache
 
 # python-language-server / Rope
 .ropeproject
+
+# Will be created from script/split_tests.py
+pytest_buckets.txt
+
+# AI tooling
+.claude/settings.local.json
+

@@ -1,15 +1,17 @@
 """Support for Avion dimmers."""
+
 from __future__ import annotations
 
 import importlib
 import time
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import (
@@ -21,11 +23,9 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-SUPPORT_AVION_LED = SUPPORT_BRIGHTNESS
 
 DEVICE_SCHEMA = vol.Schema(
     {
@@ -35,7 +35,7 @@ DEVICE_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
         vol.Optional(CONF_USERNAME): cv.string,
@@ -53,21 +53,25 @@ def setup_platform(
     """Set up an Avion switch."""
     avion = importlib.import_module("avion")
 
-    lights = []
-    if CONF_USERNAME in config and CONF_PASSWORD in config:
-        devices = avion.get_devices(config[CONF_USERNAME], config[CONF_PASSWORD])
-        for device in devices:
-            lights.append(AvionLight(device))
-
-    for address, device_config in config[CONF_DEVICES].items():
-        device = avion.Avion(
-            mac=address,
-            passphrase=device_config[CONF_API_KEY],
-            name=device_config.get(CONF_NAME),
-            object_id=device_config.get(CONF_ID),
-            connect=False,
+    lights = [
+        AvionLight(
+            avion.Avion(
+                mac=address,
+                passphrase=device_config[CONF_API_KEY],
+                name=device_config.get(CONF_NAME),
+                object_id=device_config.get(CONF_ID),
+                connect=False,
+            )
         )
-        lights.append(AvionLight(device))
+        for address, device_config in config[CONF_DEVICES].items()
+    ]
+    if CONF_USERNAME in config and CONF_PASSWORD in config:
+        lights.extend(
+            AvionLight(device)
+            for device in avion.get_devices(
+                config[CONF_USERNAME], config[CONF_PASSWORD]
+            )
+        )
 
     add_entities(lights)
 
@@ -75,7 +79,8 @@ def setup_platform(
 class AvionLight(LightEntity):
     """Representation of an Avion light."""
 
-    _attr_supported_features = SUPPORT_AVION_LED
+    _attr_support_color_mode = ColorMode.BRIGHTNESS
+    _attr_support_color_modes = {ColorMode.BRIGHTNESS}
     _attr_should_poll = False
     _attr_assumed_state = True
     _attr_is_on = True
@@ -104,7 +109,7 @@ class AvionLight(LightEntity):
                 self._switch.connect()
         return True
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the specified or all lights on."""
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             self._attr_brightness = brightness
@@ -112,7 +117,7 @@ class AvionLight(LightEntity):
         self.set_state(self.brightness)
         self._attr_is_on = True
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the specified or all lights off."""
         self.set_state(0)
         self._attr_is_on = False

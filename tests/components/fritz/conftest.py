@@ -1,115 +1,123 @@
-"""Common stuff for AVM Fritz!Box tests."""
-from unittest import mock
-from unittest.mock import patch
+"""Common stuff for Fritz!Tools tests."""
 
+import logging
+from unittest.mock import MagicMock, patch
+
+from fritzconnection.core.processor import Service
+from fritzconnection.lib.fritzhosts import FritzHosts
 import pytest
 
+from .const import (
+    MOCK_FB_SERVICES,
+    MOCK_HOST_ATTRIBUTES_DATA,
+    MOCK_MESH_DATA,
+    MOCK_MODELNAME,
+)
 
-@pytest.fixture()
-def fc_class_mock():
+LOGGER = logging.getLogger(__name__)
+
+
+class FritzServiceMock(Service):
+    """Service mocking."""
+
+    def __init__(self, serviceId: str, actions: dict) -> None:
+        """Init Service mock."""
+        super().__init__()
+        self._actions = actions
+        self.serviceId = serviceId
+
+
+class FritzResponseMock:
+    """Response mocking."""
+
+    def json(self):
+        """Mock json method."""
+        return {"CPUTEMP": "69,68,67"}
+
+
+class FritzHttpMock:
+    """FritzHttp mocking."""
+
+    def __init__(self) -> None:
+        """Init Mocking class."""
+        self.router_url = "http://fritz.box"
+
+    def call_url(self, *args, **kwargs):
+        """Mock call_url method."""
+        return FritzResponseMock()
+
+
+class FritzConnectionMock:
+    """FritzConnection mocking."""
+
+    def __init__(self, services) -> None:
+        """Init Mocking class."""
+        self.modelname = MOCK_MODELNAME
+        self.call_action = self._call_action
+        self._services = services
+        self.services = {
+            srv: FritzServiceMock(serviceId=srv, actions=actions)
+            for srv, actions in services.items()
+        }
+        self.http_interface = FritzHttpMock()
+        LOGGER.debug("-" * 80)
+        LOGGER.debug("FritzConnectionMock - services: %s", self.services)
+
+    def call_action_side_effect(self, side_effect=None) -> None:
+        """Set or unset a side_effect for call_action."""
+        if side_effect is not None:
+            self.call_action = MagicMock(side_effect=side_effect)
+        else:
+            self.call_action = self._call_action
+
+    def override_services(self, services) -> None:
+        """Overrire services data."""
+        self._services = services
+
+    def _call_action(self, service: str, action: str, **kwargs):
+        LOGGER.debug(
+            "_call_action service: %s, action: %s, **kwargs: %s",
+            service,
+            action,
+            {**kwargs},
+        )
+        if ":" in service:
+            service, number = service.split(":", 1)
+            service = service + number
+        elif not service[-1].isnumeric():
+            service = service + "1"
+
+        if kwargs:
+            if (index := kwargs.get("NewIndex")) is None:
+                index = next(iter(kwargs.values()))
+
+            return self._services[service][action][index]
+        return self._services[service][action]
+
+
+@pytest.fixture(name="fc_data")
+def fc_data_mock():
+    """Fixture for default fc_data."""
+    return MOCK_FB_SERVICES
+
+
+@pytest.fixture
+def fc_class_mock(fc_data):
     """Fixture that sets up a mocked FritzConnection class."""
-    with patch("fritzconnection.FritzConnection", autospec=True) as result:
-        result.return_value = FritzConnectionMock()
+    with patch(
+        "homeassistant.components.fritz.coordinator.FritzConnection", autospec=True
+    ) as result:
+        result.return_value = FritzConnectionMock(fc_data)
         yield result
 
 
-class FritzConnectionMock:  # pylint: disable=too-few-public-methods
-    """FritzConnection mocking."""
-
-    FRITZBOX_DATA = {
-        ("WANIPConn:1", "GetStatusInfo"): {
-            "NewConnectionStatus": "Connected",
-            "NewUptime": 35307,
-        },
-        ("WANIPConnection:1", "GetStatusInfo"): {},
-        ("WANCommonIFC:1", "GetCommonLinkProperties"): {
-            "NewLayer1DownstreamMaxBitRate": 10087000,
-            "NewLayer1UpstreamMaxBitRate": 2105000,
-            "NewPhysicalLinkStatus": "Up",
-        },
-        ("WANCommonIFC:1", "GetAddonInfos"): {
-            "NewByteSendRate": 3438,
-            "NewByteReceiveRate": 67649,
-            "NewTotalBytesSent": 1712232562,
-            "NewTotalBytesReceived": 5221019883,
-        },
-        ("LANEthernetInterfaceConfig:1", "GetStatistics"): {
-            "NewBytesSent": 23004321,
-            "NewBytesReceived": 12045,
-        },
-        ("DeviceInfo:1", "GetInfo"): {
-            "NewSerialNumber": "abcdefgh",
-            "NewName": "TheName",
-            "NewModelName": "FRITZ!Box 7490",
-        },
-    }
-
-    FRITZBOX_DATA_INDEXED = {
-        ("X_AVM-DE_Homeauto:1", "GetGenericDeviceInfos"): [
-            {
-                "NewSwitchIsValid": "VALID",
-                "NewMultimeterIsValid": "VALID",
-                "NewTemperatureIsValid": "VALID",
-                "NewDeviceId": 16,
-                "NewAIN": "08761 0114116",
-                "NewDeviceName": "FRITZ!DECT 200 #1",
-                "NewTemperatureOffset": "0",
-                "NewSwitchLock": "0",
-                "NewProductName": "FRITZ!DECT 200",
-                "NewPresent": "CONNECTED",
-                "NewMultimeterPower": 1673,
-                "NewHkrComfortTemperature": "0",
-                "NewSwitchMode": "AUTO",
-                "NewManufacturer": "AVM",
-                "NewMultimeterIsEnabled": "ENABLED",
-                "NewHkrIsTemperature": "0",
-                "NewFunctionBitMask": 2944,
-                "NewTemperatureIsEnabled": "ENABLED",
-                "NewSwitchState": "ON",
-                "NewSwitchIsEnabled": "ENABLED",
-                "NewFirmwareVersion": "03.87",
-                "NewHkrSetVentilStatus": "CLOSED",
-                "NewMultimeterEnergy": 5182,
-                "NewHkrComfortVentilStatus": "CLOSED",
-                "NewHkrReduceTemperature": "0",
-                "NewHkrReduceVentilStatus": "CLOSED",
-                "NewHkrIsEnabled": "DISABLED",
-                "NewHkrSetTemperature": "0",
-                "NewTemperatureCelsius": "225",
-                "NewHkrIsValid": "INVALID",
-            },
-            {},
-        ],
-        ("Hosts1", "GetGenericHostEntry"): [
-            {
-                "NewSerialNumber": 1234,
-                "NewName": "TheName",
-                "NewModelName": "FRITZ!Box 7490",
-            },
-            {},
-        ],
-    }
-
-    MODELNAME = "FRITZ!Box 7490"
-
-    def __init__(self):
-        """Inint Mocking class."""
-        self.modelname = self.MODELNAME
-        self.call_action = mock.Mock(side_effect=self._side_effect_call_action)
-        type(self).action_names = mock.PropertyMock(
-            side_effect=self._side_effect_action_names
-        )
-        self.services = {
-            srv: None
-            for srv, _ in list(self.FRITZBOX_DATA) + list(self.FRITZBOX_DATA_INDEXED)
-        }
-
-    def _side_effect_call_action(self, service, action, **kwargs):
-        if kwargs:
-            index = next(iter(kwargs.values()))
-            return self.FRITZBOX_DATA_INDEXED[(service, action)][index]
-
-        return self.FRITZBOX_DATA[(service, action)]
-
-    def _side_effect_action_names(self):
-        return list(self.FRITZBOX_DATA) + list(self.FRITZBOX_DATA_INDEXED)
+@pytest.fixture
+def fh_class_mock():
+    """Fixture that sets up a mocked FritzHosts class."""
+    with patch(
+        "homeassistant.components.fritz.coordinator.FritzHosts",
+        new=FritzHosts,
+    ) as result:
+        result.get_mesh_topology = MagicMock(return_value=MOCK_MESH_DATA)
+        result.get_hosts_attributes = MagicMock(return_value=MOCK_HOST_ATTRIBUTES_DATA)
+        yield result

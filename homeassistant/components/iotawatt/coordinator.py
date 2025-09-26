@@ -1,4 +1,5 @@
 """IoTaWatt DataUpdateCoordinator."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -10,26 +11,39 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import httpx_client
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONNECTION_ERRORS
 
 _LOGGER = logging.getLogger(__name__)
 
+# Matches iotwatt data log interval
+REQUEST_REFRESH_DEFAULT_COOLDOWN = 5
+
+type IotawattConfigEntry = ConfigEntry[IotawattUpdater]
+
 
 class IotawattUpdater(DataUpdateCoordinator):
     """Class to manage fetching update data from the IoTaWatt Energy Device."""
 
     api: Iotawatt | None = None
+    config_entry: IotawattConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: IotawattConfigEntry) -> None:
         """Initialize IotaWattUpdater object."""
-        self.entry = entry
         super().__init__(
             hass=hass,
             logger=_LOGGER,
+            config_entry=entry,
             name=entry.title,
             update_interval=timedelta(seconds=30),
+            request_refresh_debouncer=Debouncer(
+                hass,
+                _LOGGER,
+                cooldown=REQUEST_REFRESH_DEFAULT_COOLDOWN,
+                immediate=True,
+            ),
         )
 
         self._last_run: datetime | None = None
@@ -46,12 +60,13 @@ class IotawattUpdater(DataUpdateCoordinator):
         """Fetch sensors from IoTaWatt device."""
         if self.api is None:
             api = Iotawatt(
-                self.entry.title,
-                self.entry.data[CONF_HOST],
+                self.config_entry.title,
+                self.config_entry.data[CONF_HOST],
                 httpx_client.get_async_client(self.hass),
-                self.entry.data.get(CONF_USERNAME),
-                self.entry.data.get(CONF_PASSWORD),
+                self.config_entry.data.get(CONF_USERNAME),
+                self.config_entry.data.get(CONF_PASSWORD),
                 integratedInterval="d",
+                includeNonTotalSensors=False,
             )
             try:
                 is_authenticated = await api.connect()

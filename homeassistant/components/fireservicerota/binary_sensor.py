@@ -1,76 +1,68 @@
 """Binary Sensor platform for FireServiceRota integration."""
+
+from __future__ import annotations
+
+from typing import Any
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN as FIRESERVICEROTA_DOMAIN
+from .coordinator import (
+    FireServiceConfigEntry,
+    FireServiceRotaClient,
+    FireServiceUpdateCoordinator,
+)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FireServiceConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up FireServiceRota binary sensor based on a config entry."""
 
-    client = hass.data[FIRESERVICEROTA_DOMAIN][entry.entry_id][DATA_CLIENT]
-
-    coordinator: DataUpdateCoordinator = hass.data[FIRESERVICEROTA_DOMAIN][
-        entry.entry_id
-    ][DATA_COORDINATOR]
+    coordinator = entry.runtime_data
+    client = coordinator.client
 
     async_add_entities([ResponseBinarySensor(coordinator, client, entry)])
 
 
-class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class ResponseBinarySensor(
+    CoordinatorEntity[FireServiceUpdateCoordinator], BinarySensorEntity
+):
     """Representation of an FireServiceRota sensor."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator, client, entry):
+    _attr_has_entity_name = True
+    _attr_translation_key = "duty"
+
+    def __init__(
+        self,
+        coordinator: FireServiceUpdateCoordinator,
+        client: FireServiceRotaClient,
+        entry: ConfigEntry,
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
         self._client = client
-        self._unique_id = f"{entry.unique_id}_Duty"
-
-        self._state = None
+        self._attr_unique_id = f"{entry.unique_id}_Duty"
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return "Duty"
-
-    @property
-    def icon(self) -> str:
-        """Return the icon to use in the frontend."""
-        if self._state:
-            return "mdi:calendar-check"
-
-        return "mdi:calendar-remove"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this binary sensor."""
-        return self._unique_id
-
-    @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
-
-        self._state = self._client.on_duty
-
-        return self._state
+        return self._client.on_duty
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return available attributes for binary sensor."""
-        attr = {}
+        attr: dict[str, Any] = {}
         if not self.coordinator.data:
             return attr
 
         data = self.coordinator.data
-        attr = {
+        return {
             key: data[key]
             for key in (
                 "start_time",
@@ -84,5 +76,3 @@ class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
             )
             if key in data
         }
-
-        return attr

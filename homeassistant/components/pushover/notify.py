@@ -1,68 +1,79 @@
 """Pushover platform for notify component."""
-import logging
 
-from pushover_complete import PushoverAPI
-import voluptuous as vol
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+from pushover_complete import BadAPIRequestError, PushoverAPI
 
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_API_KEY
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import (
+    ATTR_ATTACHMENT,
+    ATTR_CALLBACK_URL,
+    ATTR_EXPIRE,
+    ATTR_HTML,
+    ATTR_PRIORITY,
+    ATTR_RETRY,
+    ATTR_SOUND,
+    ATTR_TIMESTAMP,
+    ATTR_TTL,
+    ATTR_URL,
+    ATTR_URL_TITLE,
+    CONF_USER_KEY,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ATTACHMENT = "attachment"
-ATTR_URL = "url"
-ATTR_URL_TITLE = "url_title"
-ATTR_PRIORITY = "priority"
-ATTR_RETRY = "retry"
-ATTR_SOUND = "sound"
-ATTR_HTML = "html"
-ATTR_CALLBACK_URL = "callback_url"
-ATTR_EXPIRE = "expire"
-ATTR_TIMESTAMP = "timestamp"
 
-CONF_USER_KEY = "user_key"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_USER_KEY): cv.string, vol.Required(CONF_API_KEY): cv.string}
-)
-
-
-def get_service(hass, config, discovery_info=None):
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> PushoverNotificationService | None:
     """Get the Pushover notification service."""
+    if discovery_info is None:
+        return None
+    pushover_api: PushoverAPI = hass.data[DOMAIN][discovery_info["entry_id"]]
     return PushoverNotificationService(
-        hass, config[CONF_USER_KEY], config[CONF_API_KEY]
+        hass, pushover_api, discovery_info[CONF_USER_KEY]
     )
 
 
 class PushoverNotificationService(BaseNotificationService):
     """Implement the notification service for Pushover."""
 
-    def __init__(self, hass, user_key, api_token):
+    def __init__(
+        self, hass: HomeAssistant, pushover: PushoverAPI, user_key: str
+    ) -> None:
         """Initialize the service."""
         self._hass = hass
         self._user_key = user_key
-        self._api_token = api_token
-        self.pushover = PushoverAPI(self._api_token)
+        self.pushover = pushover
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
 
         # Extract params from data dict
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-        data = dict(kwargs.get(ATTR_DATA) or {})
+        data = kwargs.get(ATTR_DATA, {})
         url = data.get(ATTR_URL)
         url_title = data.get(ATTR_URL_TITLE)
         priority = data.get(ATTR_PRIORITY)
         retry = data.get(ATTR_RETRY)
         expire = data.get(ATTR_EXPIRE)
+        ttl = data.get(ATTR_TTL)
         callback_url = data.get(ATTR_CALLBACK_URL)
         timestamp = data.get(ATTR_TIMESTAMP)
         sound = data.get(ATTR_SOUND)
@@ -74,7 +85,7 @@ class PushoverNotificationService(BaseNotificationService):
             if self._hass.config.is_allowed_path(data[ATTR_ATTACHMENT]):
                 # try to open it as a normal file.
                 try:
-                    # pylint: disable=consider-using-with
+                    # pylint: disable-next=consider-using-with
                     file_handle = open(data[ATTR_ATTACHMENT], "rb")
                     # Replace the attachment identifier with file object.
                     image = file_handle
@@ -87,28 +98,23 @@ class PushoverNotificationService(BaseNotificationService):
                 # Remove attachment key to send without attachment.
                 image = None
 
-        targets = kwargs.get(ATTR_TARGET)
-
-        if not isinstance(targets, list):
-            targets = [targets]
-
-        for target in targets:
-            try:
-                self.pushover.send_message(
-                    self._user_key,
-                    message,
-                    target,
-                    title,
-                    url,
-                    url_title,
-                    image,
-                    priority,
-                    retry,
-                    expire,
-                    callback_url,
-                    timestamp,
-                    sound,
-                    html,
-                )
-            except ValueError as val_err:
-                _LOGGER.error(val_err)
+        try:
+            self.pushover.send_message(
+                user=self._user_key,
+                message=message,
+                device=",".join(kwargs.get(ATTR_TARGET, [])),
+                title=title,
+                url=url,
+                url_title=url_title,
+                image=image,
+                priority=priority,
+                retry=retry,
+                expire=expire,
+                callback_url=callback_url,
+                timestamp=timestamp,
+                sound=sound,
+                html=html,
+                ttl=ttl,
+            )
+        except BadAPIRequestError as err:
+            raise HomeAssistantError(str(err)) from err

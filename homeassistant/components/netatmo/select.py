@@ -1,176 +1,137 @@
 """Support for the Netatmo climate schedule selector."""
+
 from __future__ import annotations
 
 import logging
 
-import pyatmo
-
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    DATA_HANDLER,
+    CONF_URL_ENERGY,
     DATA_SCHEDULES,
     DOMAIN,
     EVENT_TYPE_SCHEDULE,
     MANUFACTURER,
-    SIGNAL_NAME,
-    TYPE_ENERGY,
+    NETATMO_CREATE_SELECT,
 )
-from .data_handler import (
-    CLIMATE_STATE_CLASS_NAME,
-    CLIMATE_TOPOLOGY_CLASS_NAME,
-    NetatmoDataHandler,
-)
-from .netatmo_entity_base import NetatmoBase
+from .data_handler import HOME, SIGNAL_NAME, NetatmoHome
+from .entity import NetatmoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Netatmo energy platform schedule selector."""
-    data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
 
-    climate_topology = data_handler.data.get(CLIMATE_TOPOLOGY_CLASS_NAME)
+    @callback
+    def _create_entity(netatmo_home: NetatmoHome) -> None:
+        entity = NetatmoScheduleSelect(netatmo_home)
+        async_add_entities([entity])
 
-    if not climate_topology or climate_topology.raw_data == {}:
-        raise PlatformNotReady
-
-    entities = []
-    for home_id in climate_topology.home_ids:
-        signal_name = f"{CLIMATE_STATE_CLASS_NAME}-{home_id}"
-
-        await data_handler.register_data_class(
-            CLIMATE_STATE_CLASS_NAME, signal_name, None, home_id=home_id
-        )
-
-        if (climate_state := data_handler.data[signal_name]) is None:
-            continue
-
-        climate_topology.register_handler(home_id, climate_state.process_topology)
-
-        hass.data[DOMAIN][DATA_SCHEDULES][home_id] = climate_state.homes[
-            home_id
-        ].schedules
-
-    entities = [
-        NetatmoScheduleSelect(
-            data_handler,
-            home_id,
-            [schedule.name for schedule in schedules.values()],
-        )
-        for home_id, schedules in hass.data[DOMAIN][DATA_SCHEDULES].items()
-        if schedules
-    ]
-
-    _LOGGER.debug("Adding climate schedule select entities %s", entities)
-    async_add_entities(entities, True)
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, NETATMO_CREATE_SELECT, _create_entity)
+    )
 
 
-class NetatmoScheduleSelect(NetatmoBase, SelectEntity):
+class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
     """Representation a Netatmo thermostat schedule selector."""
 
-    def __init__(
-        self, data_handler: NetatmoDataHandler, home_id: str, options: list
-    ) -> None:
+    _attr_name = None
+
+    def __init__(self, netatmo_home: NetatmoHome) -> None:
         """Initialize the select entity."""
-        SelectEntity.__init__(self)
-        super().__init__(data_handler)
+        super().__init__(netatmo_home.data_handler)
 
-        self._home_id = home_id
+        self.home = netatmo_home.home
 
-        self._climate_state_class = f"{CLIMATE_STATE_CLASS_NAME}-{self._home_id}"
-        self._climate_state: pyatmo.AsyncClimate = data_handler.data[
-            self._climate_state_class
-        ]
-
-        self._home = self._climate_state.homes[self._home_id]
-
-        self._data_classes.extend(
+        self._publishers.extend(
             [
                 {
-                    "name": CLIMATE_TOPOLOGY_CLASS_NAME,
-                    SIGNAL_NAME: CLIMATE_TOPOLOGY_CLASS_NAME,
-                },
-                {
-                    "name": CLIMATE_STATE_CLASS_NAME,
-                    "home_id": self._home_id,
-                    SIGNAL_NAME: self._climate_state_class,
+                    "name": HOME,
+                    "home_id": self.home.entity_id,
+                    SIGNAL_NAME: netatmo_home.signal_name,
                 },
             ]
         )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.home.entity_id)},
+            name=self.home.name,
+            manufacturer=MANUFACTURER,
+            model="Climate",
+            configuration_url=CONF_URL_ENERGY,
+        )
 
-        self._device_name = self._home.name
-        self._attr_name = f"{MANUFACTURER} {self._device_name}"
+        self._attr_unique_id = f"{self.home.entity_id}-schedule-select"
 
-        self._model: str = "NATherm1"
-        self._netatmo_type = TYPE_ENERGY
-
-        self._attr_unique_id = f"{self._home_id}-schedule-select"
-
-        self._attr_current_option = getattr(self._home.get_selected_schedule(), "name")
-        self._attr_options = options
+        schedule = self.home.get_selected_schedule()
+        assert schedule
+        self._attr_current_option = schedule.name
+        self._attr_options = [
+            schedule.name for schedule in self.home.schedules.values() if schedule.name
+        ]
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
 
-        for event_type in (EVENT_TYPE_SCHEDULE,):
-            self.data_handler.config_entry.async_on_unload(
-                async_dispatcher_connect(
-                    self.hass,
-                    f"signal-{DOMAIN}-webhook-{event_type}",
-                    self.handle_event,
-                )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"signal-{DOMAIN}-webhook-{EVENT_TYPE_SCHEDULE}",
+                self.handle_event,
             )
+        )
 
     @callback
     def handle_event(self, event: dict) -> None:
         """Handle webhook events."""
         data = event["data"]
 
-        if self._home_id != data["home_id"]:
+        if self.home.entity_id != data["home_id"]:
             return
 
         if data["event_type"] == EVENT_TYPE_SCHEDULE and "schedule_id" in data:
-            self._attr_current_option = getattr(
-                self.hass.data[DOMAIN][DATA_SCHEDULES][self._home_id].get(
+            self._attr_current_option = (
+                self.hass.data[DOMAIN][DATA_SCHEDULES][self.home.entity_id].get(
                     data["schedule_id"]
-                ),
-                "name",
-            )
+                )
+            ).name
             self.async_write_ha_state()
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         for sid, schedule in self.hass.data[DOMAIN][DATA_SCHEDULES][
-            self._home_id
+            self.home.entity_id
         ].items():
             if schedule.name != option:
                 continue
             _LOGGER.debug(
                 "Setting %s schedule to %s (%s)",
-                self._home_id,
+                self.home.entity_id,
                 option,
                 sid,
             )
-            await self._climate_state.async_switch_home_schedule(schedule_id=sid)
+            await self.home.async_switch_schedule(schedule_id=sid)
             break
 
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        self._attr_current_option = getattr(self._home.get_selected_schedule(), "name")
-        self.hass.data[DOMAIN][DATA_SCHEDULES][self._home_id] = self._home.schedules
+        schedule = self.home.get_selected_schedule()
+        assert schedule
+        self._attr_current_option = schedule.name
+        self.hass.data[DOMAIN][DATA_SCHEDULES][self.home.entity_id] = (
+            self.home.schedules
+        )
         self._attr_options = [
-            schedule.name
-            for schedule in self.hass.data[DOMAIN][DATA_SCHEDULES][
-                self._home_id
-            ].values()
+            schedule.name for schedule in self.home.schedules.values() if schedule.name
         ]

@@ -1,8 +1,11 @@
 """Code to set up a device tracker platform using a config entry."""
+
 from __future__ import annotations
 
 import asyncio
 from typing import final
+
+from propcache.api import cached_property
 
 from homeassistant.components import zone
 from homeassistant.config_entries import ConfigEntry
@@ -13,75 +16,99 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     STATE_HOME,
     STATE_NOT_HOME,
+    EntityCategory,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
+from homeassistant.helpers.device_registry import (
+    DeviceInfo,
+    EventDeviceRegistryUpdatedData,
+)
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.hass_dict import HassKey
 
-from .const import ATTR_HOST_NAME, ATTR_IP, ATTR_MAC, ATTR_SOURCE_TYPE, DOMAIN, LOGGER
+from .const import (
+    ATTR_HOST_NAME,
+    ATTR_IP,
+    ATTR_MAC,
+    ATTR_SOURCE_TYPE,
+    CONNECTED_DEVICE_REGISTERED,
+    DOMAIN,
+    LOGGER,
+    SourceType,
+)
+
+DATA_COMPONENT: HassKey[EntityComponent[BaseTrackerEntity]] = HassKey(DOMAIN)
+DATA_KEY: HassKey[dict[str, tuple[str, str]]] = HassKey(f"{DOMAIN}_mac")
+
+# mypy: disallow-any-generics
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an entry."""
-    component: EntityComponent | None = hass.data.get(DOMAIN)
+    component: EntityComponent[BaseTrackerEntity] | None = hass.data.get(DOMAIN)
 
     if component is not None:
         return await component.async_setup_entry(entry)
 
-    component = hass.data[DOMAIN] = EntityComponent(LOGGER, DOMAIN, hass)
-
-    # Clean up old devices created by device tracker entities in the past.
-    # Can be removed after 2022.6
-    ent_reg = er.async_get(hass)
-    dev_reg = dr.async_get(hass)
-
-    devices_with_trackers = set()
-    devices_with_non_trackers = set()
-
-    for entity in ent_reg.entities.values():
-        if entity.device_id is None:
-            continue
-
-        if entity.domain == DOMAIN:
-            devices_with_trackers.add(entity.device_id)
-        else:
-            devices_with_non_trackers.add(entity.device_id)
-
-    for device_id in devices_with_trackers - devices_with_non_trackers:
-        for entity in er.async_entries_for_device(ent_reg, device_id, True):
-            ent_reg.async_update_entity(entity.entity_id, device_id=None)
-        dev_reg.async_remove_device(device_id)
+    component = hass.data[DATA_COMPONENT] = EntityComponent[BaseTrackerEntity](
+        LOGGER, DOMAIN, hass
+    )
+    component.register_shutdown()
 
     return await component.async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload an entry."""
-    component: EntityComponent = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
+
+
+@callback
+def _async_connected_device_registered(
+    hass: HomeAssistant, mac: str, ip_address: str | None, hostname: str | None
+) -> None:
+    """Register a newly seen connected device.
+
+    This is currently used by the dhcp integration
+    to listen for newly registered connected devices
+    for discovery.
+    """
+    async_dispatcher_send(
+        hass,
+        CONNECTED_DEVICE_REGISTERED,
+        {
+            ATTR_IP: ip_address,
+            ATTR_MAC: mac,
+            ATTR_HOST_NAME: hostname,
+        },
+    )
 
 
 @callback
 def _async_register_mac(
-    hass: HomeAssistant, domain: str, mac: str, unique_id: str
+    hass: HomeAssistant,
+    domain: str,
+    mac: str,
+    unique_id: str,
 ) -> None:
     """Register a mac address with a unique ID."""
-    data_key = "device_tracker_mac"
     mac = dr.format_mac(mac)
-    if data_key in hass.data:
-        hass.data[data_key][mac] = (domain, unique_id)
+    if DATA_KEY in hass.data:
+        hass.data[DATA_KEY][mac] = (domain, unique_id)
         return
 
     # Setup listening.
 
     # dict mapping mac -> partial unique ID
-    data = hass.data[data_key] = {mac: (domain, unique_id)}
+    data = hass.data[DATA_KEY] = {mac: (domain, unique_id)}
 
     @callback
-    def handle_device_event(ev: Event) -> None:
+    def handle_device_event(ev: Event[EventDeviceRegistryUpdatedData]) -> None:
         """Enable the online status entity for the mac of a newly created device."""
         # Only for new devices
         if ev.data["action"] != "create":
@@ -91,6 +118,7 @@ def _async_register_mac(
         device_entry = dev_reg.async_get(ev.data["device_id"])
 
         if device_entry is None:
+            # This should not happen, since the device was just created.
             return
 
         # Check if device has a mac
@@ -108,20 +136,26 @@ def _async_register_mac(
             return
 
         ent_reg = er.async_get(hass)
-        entity_id = ent_reg.async_get_entity_id(DOMAIN, *unique_id)
 
-        if entity_id is None:
+        if (entity_id := ent_reg.async_get_entity_id(DOMAIN, *unique_id)) is None:
             return
 
-        entity_entry = ent_reg.async_get(entity_id)
-
-        if entity_entry is None:
-            return
+        entity_entry = ent_reg.entities[entity_id]
 
         # Make sure entity has a config entry and was disabled by the
-        # default disable logic in the integration.
+        # default disable logic in the integration and new entities
+        # are allowed to be added.
         if (
             entity_entry.config_entry_id is None
+            or (
+                (
+                    config_entry := hass.config_entries.async_get_entry(
+                        entity_entry.config_entry_id
+                    )
+                )
+                is not None
+                and config_entry.pref_disable_new_entities
+            )
             or entity_entry.disabled_by != er.RegistryEntryDisabler.INTEGRATION
         ):
             return
@@ -137,8 +171,9 @@ class BaseTrackerEntity(Entity):
 
     _attr_device_info: None = None
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_source_type: SourceType
 
-    @property
+    @cached_property
     def battery_level(self) -> int | None:
         """Return the battery level of the device.
 
@@ -147,8 +182,10 @@ class BaseTrackerEntity(Entity):
         return None
 
     @property
-    def source_type(self) -> str:
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
+        if hasattr(self, "_attr_source_type"):
+            return self._attr_source_type
         raise NotImplementedError
 
     @property
@@ -162,10 +199,31 @@ class BaseTrackerEntity(Entity):
         return attr
 
 
-class TrackerEntity(BaseTrackerEntity):
+class TrackerEntityDescription(EntityDescription, frozen_or_thawed=True):
+    """A class that describes tracker entities."""
+
+
+CACHED_TRACKER_PROPERTIES_WITH_ATTR_ = {
+    "latitude",
+    "location_accuracy",
+    "location_name",
+    "longitude",
+}
+
+
+class TrackerEntity(
+    BaseTrackerEntity, cached_properties=CACHED_TRACKER_PROPERTIES_WITH_ATTR_
+):
     """Base class for a tracked device."""
 
-    @property
+    entity_description: TrackerEntityDescription
+    _attr_latitude: float | None = None
+    _attr_location_accuracy: float = 0
+    _attr_location_name: str | None = None
+    _attr_longitude: float | None = None
+    _attr_source_type: SourceType = SourceType.GPS
+
+    @cached_property
     def should_poll(self) -> bool:
         """No polling for entities that have location pushed."""
         return False
@@ -175,28 +233,28 @@ class TrackerEntity(BaseTrackerEntity):
         """All updates need to be written to the state machine if we're not polling."""
         return not self.should_poll
 
-    @property
-    def location_accuracy(self) -> int:
+    @cached_property
+    def location_accuracy(self) -> float:
         """Return the location accuracy of the device.
 
         Value in meters.
         """
-        return 0
+        return self._attr_location_accuracy
 
-    @property
+    @cached_property
     def location_name(self) -> str | None:
         """Return a location name for the current location of the device."""
-        return None
+        return self._attr_location_name
 
-    @property
+    @cached_property
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
-        raise NotImplementedError
+        return self._attr_latitude
 
-    @property
+    @cached_property
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
-        raise NotImplementedError
+        return self._attr_longitude
 
     @property
     def state(self) -> str | None:
@@ -233,23 +291,42 @@ class TrackerEntity(BaseTrackerEntity):
         return attr
 
 
-class ScannerEntity(BaseTrackerEntity):
+class ScannerEntityDescription(EntityDescription, frozen_or_thawed=True):
+    """A class that describes tracker entities."""
+
+
+CACHED_SCANNER_PROPERTIES_WITH_ATTR_ = {
+    "ip_address",
+    "mac_address",
+    "hostname",
+}
+
+
+class ScannerEntity(
+    BaseTrackerEntity, cached_properties=CACHED_SCANNER_PROPERTIES_WITH_ATTR_
+):
     """Base class for a tracked device that is on a scanned network."""
 
-    @property
+    entity_description: ScannerEntityDescription
+    _attr_hostname: str | None = None
+    _attr_ip_address: str | None = None
+    _attr_mac_address: str | None = None
+    _attr_source_type: SourceType = SourceType.ROUTER
+
+    @cached_property
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
-        return None
+        return self._attr_ip_address
 
-    @property
+    @cached_property
     def mac_address(self) -> str | None:
         """Return the mac address of the device."""
-        return None
+        return self._attr_mac_address
 
-    @property
+    @cached_property
     def hostname(self) -> str | None:
         """Return hostname of the device."""
-        return None
+        return self._attr_hostname
 
     @property
     def state(self) -> str:
@@ -297,8 +374,18 @@ class ScannerEntity(BaseTrackerEntity):
         super().add_to_platform_start(hass, platform, parallel_updates)
         if self.mac_address and self.unique_id:
             _async_register_mac(
-                hass, platform.platform_name, self.mac_address, self.unique_id
+                hass,
+                platform.platform_name,
+                self.mac_address,
+                self.unique_id,
             )
+            if self.is_connected and self.ip_address:
+                _async_connected_device_registered(
+                    hass,
+                    self.mac_address,
+                    self.ip_address,
+                    self.hostname,
+                )
 
     @callback
     def find_device_entry(self) -> dr.DeviceEntry | None:
@@ -306,7 +393,7 @@ class ScannerEntity(BaseTrackerEntity):
         assert self.mac_address is not None
 
         return dr.async_get(self.hass).async_get_device(
-            set(), {(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)}
         )
 
     async def async_internal_added_to_hass(self) -> None:
@@ -314,7 +401,6 @@ class ScannerEntity(BaseTrackerEntity):
         # Entities without a unique ID don't have a device
         if (
             not self.registry_entry
-            or not self.platform
             or not self.platform.config_entry
             or not self.mac_address
             or (device_entry := self.find_device_entry()) is None
@@ -347,13 +433,13 @@ class ScannerEntity(BaseTrackerEntity):
     @property
     def state_attributes(self) -> dict[str, StateType]:
         """Return the device state attributes."""
-        attr: dict[str, StateType] = {}
-        attr.update(super().state_attributes)
-        if self.ip_address is not None:
-            attr[ATTR_IP] = self.ip_address
-        if self.mac_address is not None:
-            attr[ATTR_MAC] = self.mac_address
-        if self.hostname is not None:
-            attr[ATTR_HOST_NAME] = self.hostname
+        attr = super().state_attributes
+
+        if ip_address := self.ip_address:
+            attr[ATTR_IP] = ip_address
+        if (mac_address := self.mac_address) is not None:
+            attr[ATTR_MAC] = mac_address
+        if (hostname := self.hostname) is not None:
+            attr[ATTR_HOST_NAME] = hostname
 
         return attr

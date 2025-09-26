@@ -1,46 +1,69 @@
 """Support for AVM FRITZ!SmartHome switch devices."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FritzBoxEntity
-from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
+from .const import DOMAIN
+from .coordinator import FritzboxConfigEntry
+from .entity import FritzBoxDeviceEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FritzboxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the FRITZ!SmartHome switch from ConfigEntry."""
-    coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
+    coordinator = entry.runtime_data
 
-    async_add_entities(
-        [
+    @callback
+    def _add_entities(devices: set[str] | None = None) -> None:
+        """Add devices."""
+        if devices is None:
+            devices = coordinator.new_devices
+        if not devices:
+            return
+        async_add_entities(
             FritzboxSwitch(coordinator, ain)
-            for ain, device in coordinator.data.items()
-            if device.has_switch
-        ]
-    )
+            for ain in devices
+            if coordinator.data.devices[ain].has_switch
+        )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
+
+    _add_entities(set(coordinator.data.devices))
 
 
-class FritzboxSwitch(FritzBoxEntity, SwitchEntity):
+class FritzboxSwitch(FritzBoxDeviceEntity, SwitchEntity):
     """The switch class for FRITZ!SmartHome switches."""
 
     @property
     def is_on(self) -> bool:
         """Return true if the switch is on."""
-        return self.device.switch_state  # type: ignore [no-any-return]
+        return self.data.switch_state  # type: ignore [no-any-return]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.hass.async_add_executor_job(self.device.set_switch_state_on)
+        self.check_lock_state()
+        await self.hass.async_add_executor_job(self.data.set_switch_state_on, True)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.hass.async_add_executor_job(self.device.set_switch_state_off)
+        self.check_lock_state()
+        await self.hass.async_add_executor_job(self.data.set_switch_state_off, True)
         await self.coordinator.async_refresh()
+
+    def check_lock_state(self) -> None:
+        """Raise an Error if manual switching via FRITZ!Box user interface is disabled."""
+        if self.data.lock:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="manual_switching_disabled",
+            )

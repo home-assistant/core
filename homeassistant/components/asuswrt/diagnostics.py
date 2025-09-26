@@ -1,43 +1,47 @@
 """Diagnostics support for Asuswrt."""
+
 from __future__ import annotations
 
 from typing import Any
 
+import attr
+
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_CONNECTIONS,
+    ATTR_IDENTIFIERS,
+    CONF_PASSWORD,
+    CONF_UNIQUE_ID,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DATA_ASUSWRT, DOMAIN
-from .router import AsusWrtRouter
+from . import AsusWrtConfigEntry
 
-TO_REDACT = {CONF_PASSWORD, CONF_USERNAME}
+TO_REDACT = {CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME}
+TO_REDACT_DEV = {ATTR_CONNECTIONS, ATTR_IDENTIFIERS}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: AsusWrtConfigEntry
 ) -> dict[str, dict[str, Any]]:
     """Return diagnostics for a config entry."""
     data = {"entry": async_redact_data(entry.as_dict(), TO_REDACT)}
 
-    router: AsusWrtRouter = hass.data[DOMAIN][entry.entry_id][DATA_ASUSWRT]
+    router = entry.runtime_data
 
     # Gather information how this AsusWrt device is represented in Home Assistant
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
     hass_device = device_registry.async_get_device(
-        identifiers=router.device_info["identifiers"]
+        identifiers=router.device_info[ATTR_IDENTIFIERS]
     )
     if not hass_device:
         return data
 
     data["device"] = {
-        "name": hass_device.name,
-        "name_by_user": hass_device.name_by_user,
-        "disabled": hass_device.disabled,
-        "disabled_by": hass_device.disabled_by,
-        "device_info": async_redact_data(dict(router.device_info), {"identifiers"}),
+        **async_redact_data(attr.asdict(hass_device), TO_REDACT_DEV),
         "entities": {},
         "tracked_devices": [],
     }
@@ -59,16 +63,12 @@ async def async_get_config_entry_diagnostics(
             state_dict.pop("context", None)
 
         data["device"]["entities"][entity_entry.entity_id] = {
-            "name": entity_entry.name,
-            "original_name": entity_entry.original_name,
-            "disabled": entity_entry.disabled,
-            "disabled_by": entity_entry.disabled_by,
-            "entity_category": entity_entry.entity_category,
-            "device_class": entity_entry.device_class,
-            "original_device_class": entity_entry.original_device_class,
-            "icon": entity_entry.icon,
-            "original_icon": entity_entry.original_icon,
-            "unit_of_measurement": entity_entry.unit_of_measurement,
+            **async_redact_data(
+                attr.asdict(
+                    entity_entry, filter=lambda attr, value: attr.name != "entity_id"
+                ),
+                TO_REDACT,
+            ),
             "state": state_dict,
         }
 

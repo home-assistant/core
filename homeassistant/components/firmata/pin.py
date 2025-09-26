@@ -1,8 +1,10 @@
 """Code to handle pins on a Firmata board."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 import logging
+from typing import cast
 
 from .board import FirmataBoard, FirmataPinType
 from .const import PIN_MODE_INPUT, PIN_MODE_PULLUP, PIN_TYPE_ANALOG
@@ -23,11 +25,12 @@ class FirmataBoardPin:
         self._pin = pin
         self._pin_mode = pin_mode
         self._pin_type, self._firmata_pin = self.board.get_pin_type(self._pin)
-        self._state = None
+        self._state: bool | int | None = None
+        self._analog_pin: int | None = None
 
         if self._pin_type == PIN_TYPE_ANALOG:
             # Pymata wants the analog pin formatted as the # from "A#"
-            self._analog_pin = int(self._pin[1:])
+            self._analog_pin = int(cast(str, self._pin)[1:])
 
     def setup(self):
         """Set up a pin and make sure it is valid."""
@@ -37,6 +40,8 @@ class FirmataBoardPin:
 
 class FirmataBinaryDigitalOutput(FirmataBoardPin):
     """Representation of a Firmata Digital Output Pin."""
+
+    _state: bool
 
     def __init__(
         self,
@@ -92,6 +97,8 @@ class FirmataBinaryDigitalOutput(FirmataBoardPin):
 class FirmataPWMOutput(FirmataBoardPin):
     """Representation of a Firmata PWM/analog Output Pin."""
 
+    _state: int
+
     def __init__(
         self,
         board: FirmataBoard,
@@ -139,12 +146,14 @@ class FirmataPWMOutput(FirmataBoardPin):
 class FirmataBinaryDigitalInput(FirmataBoardPin):
     """Representation of a Firmata Digital Input Pin."""
 
+    _state: bool
+
     def __init__(
         self, board: FirmataBoard, pin: FirmataPinType, pin_mode: str, negate: bool
     ) -> None:
         """Initialize the digital input pin."""
         self._negate = negate
-        self._forward_callback = None
+        self._forward_callback: Callable[[], None]
         super().__init__(board, pin, pin_mode)
 
     async def start_pin(self, forward_callback: Callable[[], None]) -> None:
@@ -206,12 +215,15 @@ class FirmataBinaryDigitalInput(FirmataBoardPin):
 class FirmataAnalogInput(FirmataBoardPin):
     """Representation of a Firmata Analog Input Pin."""
 
+    _analog_pin: int
+    _state: int
+
     def __init__(
         self, board: FirmataBoard, pin: FirmataPinType, pin_mode: str, differential: int
     ) -> None:
         """Initialize the analog input pin."""
         self._differential = differential
-        self._forward_callback = None
+        self._forward_callback: Callable[[], None]
         super().__init__(board, pin, pin_mode)
 
     async def start_pin(self, forward_callback: Callable[[], None]) -> None:

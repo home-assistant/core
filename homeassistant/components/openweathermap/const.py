@@ -1,11 +1,7 @@
 """Consts for the OpenWeatherMap."""
+
 from __future__ import annotations
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntityDescription,
-    SensorStateClass,
-)
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLOUDY,
     ATTR_CONDITION_EXCEPTIONAL,
@@ -21,34 +17,15 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     ATTR_CONDITION_WINDY,
     ATTR_CONDITION_WINDY_VARIANT,
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_PRESSURE,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
-    ATTR_FORECAST_TIME,
 )
-from homeassistant.const import (
-    DEGREE,
-    LENGTH_MILLIMETERS,
-    PERCENTAGE,
-    PRESSURE_HPA,
-    SPEED_METERS_PER_SECOND,
-    TEMP_CELSIUS,
-    UV_INDEX,
-    Platform,
-)
+from homeassistant.const import Platform
 
 DOMAIN = "openweathermap"
 DEFAULT_NAME = "OpenWeatherMap"
 DEFAULT_LANGUAGE = "en"
 ATTRIBUTION = "Data provided by OpenWeatherMap"
 MANUFACTURER = "OpenWeather"
-CONF_LANGUAGE = "language"
-CONFIG_FLOW_VERSION = 2
-ENTRY_NAME = "name"
-ENTRY_WEATHER_COORDINATOR = "weather_coordinator"
+CONFIG_FLOW_VERSION = 5
 ATTR_API_PRECIPITATION = "precipitation"
 ATTR_API_PRECIPITATION_KIND = "precipitation_kind"
 ATTR_API_DATETIME = "datetime"
@@ -56,6 +33,7 @@ ATTR_API_DEW_POINT = "dew_point"
 ATTR_API_WEATHER = "weather"
 ATTR_API_TEMPERATURE = "temperature"
 ATTR_API_FEELS_LIKE_TEMPERATURE = "feels_like_temperature"
+ATTR_API_WIND_GUST = "wind_gust"
 ATTR_API_WIND_SPEED = "wind_speed"
 ATTR_API_WIND_BEARING = "wind_bearing"
 ATTR_API_HUMIDITY = "humidity"
@@ -65,23 +43,38 @@ ATTR_API_CLOUDS = "clouds"
 ATTR_API_RAIN = "rain"
 ATTR_API_SNOW = "snow"
 ATTR_API_UV_INDEX = "uv_index"
+ATTR_API_VISIBILITY_DISTANCE = "visibility_distance"
 ATTR_API_WEATHER_CODE = "weather_code"
+ATTR_API_CLOUD_COVERAGE = "cloud_coverage"
 ATTR_API_FORECAST = "forecast"
+ATTR_API_CURRENT = "current"
+ATTR_API_MINUTE_FORECAST = "minute_forecast"
+ATTR_API_HOURLY_FORECAST = "hourly_forecast"
+ATTR_API_DAILY_FORECAST = "daily_forecast"
+ATTR_API_AIRPOLLUTION_AQI = "aqi"
+ATTR_API_AIRPOLLUTION_CO = "co"
+ATTR_API_AIRPOLLUTION_NO = "no"
+ATTR_API_AIRPOLLUTION_NO2 = "no2"
+ATTR_API_AIRPOLLUTION_O3 = "o3"
+ATTR_API_AIRPOLLUTION_SO2 = "so2"
+ATTR_API_AIRPOLLUTION_PM2_5 = "pm2_5"
+ATTR_API_AIRPOLLUTION_PM10 = "pm10"
+ATTR_API_AIRPOLLUTION_NH3 = "nh3"
+
 UPDATE_LISTENER = "update_listener"
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
-FORECAST_MODE_HOURLY = "hourly"
-FORECAST_MODE_DAILY = "daily"
-FORECAST_MODE_FREE_DAILY = "freedaily"
-FORECAST_MODE_ONECALL_HOURLY = "onecall_hourly"
-FORECAST_MODE_ONECALL_DAILY = "onecall_daily"
-FORECAST_MODES = [
-    FORECAST_MODE_HOURLY,
-    FORECAST_MODE_DAILY,
-    FORECAST_MODE_ONECALL_HOURLY,
-    FORECAST_MODE_ONECALL_DAILY,
+OWM_MODE_FREE_CURRENT = "current"
+OWM_MODE_FREE_FORECAST = "forecast"
+OWM_MODE_V30 = "v3.0"
+OWM_MODE_AIRPOLLUTION = "air_pollution"
+OWM_MODES = [
+    OWM_MODE_V30,
+    OWM_MODE_FREE_CURRENT,
+    OWM_MODE_FREE_FORECAST,
+    OWM_MODE_AIRPOLLUTION,
 ]
-DEFAULT_FORECAST_MODE = FORECAST_MODE_ONECALL_DAILY
+DEFAULT_OWM_MODE = OWM_MODE_V30
 
 LANGUAGES = [
     "af",
@@ -163,146 +156,8 @@ CONDITION_CLASSES = {
         904,
     ],
 }
-WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key=ATTR_API_WEATHER,
-        name="Weather",
-    ),
-    SensorEntityDescription(
-        key=ATTR_API_DEW_POINT,
-        name="Dew Point",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=ATTR_API_TEMPERATURE,
-        name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=ATTR_API_FEELS_LIKE_TEMPERATURE,
-        name="Feels like temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=ATTR_API_WIND_SPEED,
-        name="Wind speed",
-        native_unit_of_measurement=SPEED_METERS_PER_SECOND,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=ATTR_API_WIND_BEARING,
-        name="Wind bearing",
-        native_unit_of_measurement=DEGREE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=ATTR_API_HUMIDITY,
-        name="Humidity",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.HUMIDITY,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=ATTR_API_PRESSURE,
-        name="Pressure",
-        native_unit_of_measurement=PRESSURE_HPA,
-        device_class=SensorDeviceClass.PRESSURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=ATTR_API_CLOUDS,
-        name="Cloud coverage",
-        native_unit_of_measurement=PERCENTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=ATTR_API_RAIN,
-        name="Rain",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=ATTR_API_SNOW,
-        name="Snow",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=ATTR_API_PRECIPITATION_KIND,
-        name="Precipitation kind",
-    ),
-    SensorEntityDescription(
-        key=ATTR_API_UV_INDEX,
-        name="UV Index",
-        native_unit_of_measurement=UV_INDEX,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=ATTR_API_CONDITION,
-        name="Condition",
-    ),
-    SensorEntityDescription(
-        key=ATTR_API_WEATHER_CODE,
-        name="Weather Code",
-    ),
-)
-FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key=ATTR_FORECAST_CONDITION,
-        name="Condition",
-    ),
-    SensorEntityDescription(
-        key=ATTR_FORECAST_PRECIPITATION,
-        name="Precipitation",
-        native_unit_of_measurement=LENGTH_MILLIMETERS,
-    ),
-    SensorEntityDescription(
-        key=ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-        name="Precipitation probability",
-        native_unit_of_measurement=PERCENTAGE,
-    ),
-    SensorEntityDescription(
-        key=ATTR_FORECAST_PRESSURE,
-        name="Pressure",
-        native_unit_of_measurement=PRESSURE_HPA,
-        device_class=SensorDeviceClass.PRESSURE,
-    ),
-    SensorEntityDescription(
-        key=ATTR_FORECAST_TEMP,
-        name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-    ),
-    SensorEntityDescription(
-        key=ATTR_FORECAST_TEMP_LOW,
-        name="Temperature Low",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-    ),
-    SensorEntityDescription(
-        key=ATTR_FORECAST_TIME,
-        name="Time",
-        device_class=SensorDeviceClass.TIMESTAMP,
-    ),
-    SensorEntityDescription(
-        key=ATTR_API_WIND_BEARING,
-        name="Wind bearing",
-        native_unit_of_measurement=DEGREE,
-    ),
-    SensorEntityDescription(
-        key=ATTR_API_WIND_SPEED,
-        name="Wind speed",
-        native_unit_of_measurement=SPEED_METERS_PER_SECOND,
-    ),
-    SensorEntityDescription(
-        key=ATTR_API_CLOUDS,
-        name="Cloud coverage",
-        native_unit_of_measurement=PERCENTAGE,
-    ),
-)
+CONDITION_MAP = {
+    cond_code: cond_ha
+    for cond_ha, cond_codes in CONDITION_CLASSES.items()
+    for cond_code in cond_codes
+}

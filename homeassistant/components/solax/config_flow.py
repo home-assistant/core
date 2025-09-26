@@ -1,15 +1,17 @@
 """Config flow for solax integration."""
+
+from __future__ import annotations
+
 import logging
 from typing import Any
 
 from solax import real_time_api
-from solax.inverter import DiscoveryError
+from solax.discovery import DiscoveryError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 
@@ -37,10 +39,12 @@ async def validate_api(data) -> str:
     return response.serial_number
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SolaxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Solax."""
 
-    async def async_step_user(self, user_input: dict[str, Any] = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, Any] = {}
         if user_input is None:
@@ -52,7 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             serial_number = await validate_api(user_input)
         except (ConnectionError, DiscoveryError):
             errors["base"] = "cannot_connect"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
@@ -63,14 +67,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Handle import of solax config from YAML."""
-
-        import_data = {
-            CONF_IP_ADDRESS: config[CONF_IP_ADDRESS],
-            CONF_PORT: config[CONF_PORT],
-            CONF_PASSWORD: DEFAULT_PASSWORD,
-        }
-
-        return await self.async_step_user(user_input=import_data)

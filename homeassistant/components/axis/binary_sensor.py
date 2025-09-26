@@ -1,84 +1,212 @@
 """Support for Axis binary sensors."""
-from datetime import timedelta
 
-from axis.event_stream import (
-    CLASS_INPUT,
-    CLASS_LIGHT,
-    CLASS_MOTION,
-    CLASS_OUTPUT,
-    CLASS_PTZ,
-    CLASS_SOUND,
-    FenceGuard,
-    LoiteringGuard,
-    MotionGuard,
-    ObjectAnalytics,
-    Vmd4,
-)
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+
+from axis.interfaces.applications.fence_guard import FenceGuardHandler
+from axis.interfaces.applications.loitering_guard import LoiteringGuardHandler
+from axis.interfaces.applications.motion_guard import MotionGuardHandler
+from axis.interfaces.applications.vmd4 import Vmd4Handler
+from axis.models.event import Event, EventTopic
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.util.dt import utcnow
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
-from .axis_base import AxisEventBase
-from .const import DOMAIN as AXIS_DOMAIN
+from . import AxisConfigEntry
+from .entity import AxisEventDescription, AxisEventEntity
+from .hub import AxisHub
 
-DEVICE_CLASS = {
-    CLASS_INPUT: BinarySensorDeviceClass.CONNECTIVITY,
-    CLASS_LIGHT: BinarySensorDeviceClass.LIGHT,
-    CLASS_MOTION: BinarySensorDeviceClass.MOTION,
-    CLASS_SOUND: BinarySensorDeviceClass.SOUND,
-}
+
+@dataclass(frozen=True, kw_only=True)
+class AxisBinarySensorDescription(AxisEventDescription, BinarySensorEntityDescription):
+    """Axis binary sensor entity description."""
+
+
+@callback
+def event_id_is_int(event_id: str) -> bool:
+    """Make sure event ID is int."""
+    try:
+        _ = int(event_id)
+    except ValueError:
+        return False
+    return True
+
+
+@callback
+def guard_suite_supported_fn(hub: AxisHub, event: Event) -> bool:
+    """Validate event ID is int."""
+    _, _, profile_id = event.id.partition("Profile")
+    return event_id_is_int(profile_id)
+
+
+@callback
+def object_analytics_supported_fn(hub: AxisHub, event: Event) -> bool:
+    """Validate event ID is int."""
+    _, _, profile_id = event.id.partition("Scenario")
+    return event_id_is_int(profile_id)
+
+
+@callback
+def guard_suite_name_fn(
+    handler: FenceGuardHandler
+    | LoiteringGuardHandler
+    | MotionGuardHandler
+    | Vmd4Handler,
+    event: Event,
+    event_type: str,
+) -> str:
+    """Get guard suite item name."""
+    if handler.initialized and (profiles := handler["0"].profiles):
+        for profile_id, profile in profiles.items():
+            camera_id = profile.camera
+            if event.id == f"Camera{camera_id}Profile{profile_id}":
+                return f"{event_type} {profile.name}"
+    return ""
+
+
+@callback
+def fence_guard_name_fn(hub: AxisHub, event: Event) -> str:
+    """Fence guard name."""
+    return guard_suite_name_fn(hub.api.vapix.fence_guard, event, "Fence Guard")
+
+
+@callback
+def loitering_guard_name_fn(hub: AxisHub, event: Event) -> str:
+    """Loitering guard name."""
+    return guard_suite_name_fn(hub.api.vapix.loitering_guard, event, "Loitering Guard")
+
+
+@callback
+def motion_guard_name_fn(hub: AxisHub, event: Event) -> str:
+    """Motion guard name."""
+    return guard_suite_name_fn(hub.api.vapix.motion_guard, event, "Motion Guard")
+
+
+@callback
+def motion_detection_4_name_fn(hub: AxisHub, event: Event) -> str:
+    """Motion detection 4 name."""
+    return guard_suite_name_fn(hub.api.vapix.vmd4, event, "VMD4")
+
+
+@callback
+def object_analytics_name_fn(hub: AxisHub, event: Event) -> str:
+    """Get object analytics name."""
+    if hub.api.vapix.object_analytics.initialized and (
+        scenarios := hub.api.vapix.object_analytics["0"].scenarios
+    ):
+        for scenario_id, scenario in scenarios.items():
+            device_id = scenario.devices[0]["id"]
+            if event.id == f"Device{device_id}Scenario{scenario_id}":
+                return f"Object Analytics {scenario.name}"
+    return ""
+
+
+ENTITY_DESCRIPTIONS = (
+    AxisBinarySensorDescription(
+        key="Input port state",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        event_topic=(EventTopic.PORT_INPUT, EventTopic.PORT_SUPERVISED_INPUT),
+        name_fn=lambda hub, event: hub.api.vapix.ports[event.id].name,
+        supported_fn=lambda hub, event: event_id_is_int(event.id),
+    ),
+    AxisBinarySensorDescription(
+        key="Day/Night vision state",
+        device_class=BinarySensorDeviceClass.LIGHT,
+        event_topic=EventTopic.DAY_NIGHT_VISION,
+    ),
+    AxisBinarySensorDescription(
+        key="Sound trigger state",
+        device_class=BinarySensorDeviceClass.SOUND,
+        event_topic=EventTopic.SOUND_TRIGGER_LEVEL,
+    ),
+    AxisBinarySensorDescription(
+        key="Motion sensors state",
+        device_class=BinarySensorDeviceClass.MOTION,
+        event_topic=(
+            EventTopic.PIR,
+            EventTopic.MOTION_DETECTION,
+            EventTopic.MOTION_DETECTION_3,
+        ),
+    ),
+    AxisBinarySensorDescription(
+        key="Motion detection 4 state",
+        device_class=BinarySensorDeviceClass.MOTION,
+        event_topic=EventTopic.MOTION_DETECTION_4,
+        name_fn=motion_detection_4_name_fn,
+        supported_fn=guard_suite_supported_fn,
+    ),
+    AxisBinarySensorDescription(
+        key="Fence guard state",
+        device_class=BinarySensorDeviceClass.MOTION,
+        event_topic=EventTopic.FENCE_GUARD,
+        name_fn=fence_guard_name_fn,
+        supported_fn=guard_suite_supported_fn,
+    ),
+    AxisBinarySensorDescription(
+        key="Loitering guard state",
+        device_class=BinarySensorDeviceClass.MOTION,
+        event_topic=EventTopic.LOITERING_GUARD,
+        name_fn=loitering_guard_name_fn,
+        supported_fn=guard_suite_supported_fn,
+    ),
+    AxisBinarySensorDescription(
+        key="Motion guard state",
+        device_class=BinarySensorDeviceClass.MOTION,
+        event_topic=EventTopic.MOTION_GUARD,
+        name_fn=motion_guard_name_fn,
+        supported_fn=guard_suite_supported_fn,
+    ),
+    AxisBinarySensorDescription(
+        key="Object analytics state",
+        device_class=BinarySensorDeviceClass.MOTION,
+        event_topic=EventTopic.OBJECT_ANALYTICS,
+        name_fn=object_analytics_name_fn,
+        supported_fn=object_analytics_supported_fn,
+    ),
+)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: AxisConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Axis binary sensor."""
-    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
-
-    @callback
-    def async_add_sensor(event_id):
-        """Add binary sensor from Axis device."""
-        event = device.api.event[event_id]
-
-        if event.CLASS not in (CLASS_OUTPUT, CLASS_PTZ) and not (
-            event.CLASS == CLASS_LIGHT and event.TYPE == "Light"
-        ):
-            async_add_entities([AxisBinarySensor(event, device)])
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(hass, device.signal_new_event, async_add_sensor)
+    config_entry.runtime_data.entity_loader.register_platform(
+        async_add_entities, AxisBinarySensor, ENTITY_DESCRIPTIONS
     )
 
 
-class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
+class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
     """Representation of a binary Axis event."""
 
-    def __init__(self, event, device):
-        """Initialize the Axis binary sensor."""
-        super().__init__(event, device)
-        self.cancel_scheduled_update = None
+    entity_description: AxisBinarySensorDescription
 
-        self._attr_device_class = DEVICE_CLASS.get(self.event.CLASS)
+    def __init__(
+        self, hub: AxisHub, description: AxisBinarySensorDescription, event: Event
+    ) -> None:
+        """Initialize the Axis binary sensor."""
+        super().__init__(hub, description, event)
+
+        self._attr_is_on = event.is_tripped
+        self.cancel_scheduled_update: Callable[[], None] | None = None
 
     @callback
-    def update_callback(self, no_delay=False):
-        """Update the sensor's state, if needed.
-
-        Parameter no_delay is True when device_event_reachable is sent.
-        """
+    def async_event_callback(self, event: Event) -> None:
+        """Update the sensor's state, if needed."""
+        self._attr_is_on = event.is_tripped
 
         @callback
-        def scheduled_update(now):
+        def scheduled_update(now: datetime) -> None:
             """Timer callback for sensor update."""
             self.cancel_scheduled_update = None
             self.async_write_ha_state()
@@ -87,47 +215,12 @@ class AxisBinarySensor(AxisEventBase, BinarySensorEntity):
             self.cancel_scheduled_update()
             self.cancel_scheduled_update = None
 
-        if self.is_on or self.device.option_trigger_time == 0 or no_delay:
+        if self.is_on or self.hub.config.trigger_time == 0:
             self.async_write_ha_state()
             return
 
-        self.cancel_scheduled_update = async_track_point_in_utc_time(
+        self.cancel_scheduled_update = async_call_later(
             self.hass,
+            timedelta(seconds=self.hub.config.trigger_time),
             scheduled_update,
-            utcnow() + timedelta(seconds=self.device.option_trigger_time),
         )
-
-    @property
-    def is_on(self):
-        """Return true if event is active."""
-        return self.event.is_tripped
-
-    @property
-    def name(self):
-        """Return the name of the event."""
-        if (
-            self.event.CLASS == CLASS_INPUT
-            and self.event.id in self.device.api.vapix.ports
-            and self.device.api.vapix.ports[self.event.id].name
-        ):
-            return (
-                f"{self.device.name} {self.device.api.vapix.ports[self.event.id].name}"
-            )
-
-        if self.event.CLASS == CLASS_MOTION:
-
-            for event_class, event_data in (
-                (FenceGuard, self.device.api.vapix.fence_guard),
-                (LoiteringGuard, self.device.api.vapix.loitering_guard),
-                (MotionGuard, self.device.api.vapix.motion_guard),
-                (ObjectAnalytics, self.device.api.vapix.object_analytics),
-                (Vmd4, self.device.api.vapix.vmd4),
-            ):
-                if (
-                    isinstance(self.event, event_class)
-                    and event_data
-                    and self.event.id in event_data
-                ):
-                    return f"{self.device.name} {self.event.TYPE} {event_data[self.event.id].name}"
-
-        return self._attr_name

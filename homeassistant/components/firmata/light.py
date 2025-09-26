@@ -1,20 +1,19 @@
 """Support for Firmata light output."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAXIMUM, CONF_MINIMUM, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import FirmataConfigEntry
 from .board import FirmataPinType
-from .const import CONF_INITIAL_STATE, CONF_PIN_MODE, DOMAIN
+from .const import CONF_INITIAL_STATE, CONF_PIN_MODE
 from .entity import FirmataPinEntity
 from .pin import FirmataBoardPin, FirmataPinUsedException, FirmataPWMOutput
 
@@ -23,13 +22,13 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FirmataConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Firmata lights."""
     new_entities = []
 
-    board = hass.data[DOMAIN][config_entry.entry_id]
+    board = config_entry.runtime_data
     for light in board.lights:
         pin = light[CONF_PIN]
         pin_mode = light[CONF_PIN_MODE]
@@ -49,16 +48,18 @@ async def async_setup_entry(
         light_entity = FirmataLight(api, config_entry, name, pin)
         new_entities.append(light_entity)
 
-    if new_entities:
-        async_add_entities(new_entities)
+    async_add_entities(new_entities)
 
 
 class FirmataLight(FirmataPinEntity, LightEntity):
     """Representation of a light on a Firmata board."""
 
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
     def __init__(
         self,
-        api: type[FirmataBoardPin],
+        api: FirmataBoardPin,
         config_entry: ConfigEntry,
         name: str,
         pin: FirmataPinType,
@@ -83,19 +84,14 @@ class FirmataLight(FirmataPinEntity, LightEntity):
         """Return the brightness of the light."""
         return self._api.state
 
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
-
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         level = kwargs.get(ATTR_BRIGHTNESS, self._last_on_level)
         await self._api.set_level(level)
         self.async_write_ha_state()
         self._last_on_level = level
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         await self._api.set_level(0)
         self.async_write_ha_state()

@@ -1,38 +1,35 @@
 """Support for FRITZ!Box devices."""
+
 from __future__ import annotations
 
 import datetime
 import logging
 
-from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
-from homeassistant.components.device_tracker.config_entry import ScannerEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import (
-    AvmWrapper,
-    FritzData,
-    FritzDevice,
-    FritzDeviceBase,
-    device_filter_out_from_trackers,
-)
-from .const import DATA_FRITZ, DOMAIN
+from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
+from .entity import FritzDeviceBase
+from .helpers import device_filter_out_from_trackers
+from .models import FritzDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-YAML_DEFAULT_HOST = "169.254.1.1"
-YAML_DEFAULT_USERNAME = "admin"
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FritzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for FRITZ!Box component."""
     _LOGGER.debug("Starting FRITZ!Box device tracker")
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
-    data_fritz: FritzData = hass.data[DATA_FRITZ]
+    avm_wrapper = entry.runtime_data
+    data_fritz = hass.data[FRITZ_DATA_KEY]
 
     @callback
     def update_avm_device() -> None:
@@ -49,7 +46,7 @@ async def async_setup_entry(
 @callback
 def _async_add_entities(
     avm_wrapper: AvmWrapper,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     data_fritz: FritzData,
 ) -> None:
     """Add new tracker entities from the AVM device."""
@@ -65,12 +62,11 @@ def _async_add_entities(
         new_tracked.append(FritzBoxTracker(avm_wrapper, device))
         data_fritz.tracked[avm_wrapper.unique_id].add(mac)
 
-    if new_tracked:
-        async_add_entities(new_tracked)
+    async_add_entities(new_tracked)
 
 
 class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
-    """This class queries a FRITZ!Box device."""
+    """Class which queries a FRITZ!Box device."""
 
     def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:
         """Initialize a FRITZ!Box device."""
@@ -116,8 +112,3 @@ class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
         if device.ssid:
             attrs["ssid"] = device.ssid
         return attrs
-
-    @property
-    def source_type(self) -> str:
-        """Return tracker source type."""
-        return SOURCE_TYPE_ROUTER

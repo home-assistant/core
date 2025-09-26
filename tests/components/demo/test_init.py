@@ -1,34 +1,31 @@
 """The tests for the Demo component."""
-from contextlib import suppress
+
+from collections.abc import Generator
 import json
-import os
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.demo import DOMAIN
-from homeassistant.components.device_tracker.legacy import YAML_DEVICES
-from homeassistant.components.recorder.statistics import list_statistic_ids
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.setup import async_setup_component, setup_component
-
-from tests.components.recorder.common import wait_recording_done
+from homeassistant.setup import async_setup_component
 
 
-@pytest.fixture(autouse=True)
-def mock_history(hass):
+@pytest.fixture
+def mock_history(hass: HomeAssistant) -> None:
     """Mock history component loaded."""
     hass.config.components.add("history")
 
 
 @pytest.fixture(autouse=True)
-def demo_cleanup(hass):
-    """Clean up device tracker demo file."""
-    yield
-    with suppress(FileNotFoundError):
-        os.remove(hass.config.path(YAML_DEVICES))
+def mock_device_tracker_update_config() -> Generator[None]:
+    """Prevent device tracker from creating known devices file."""
+    with patch("homeassistant.components.device_tracker.legacy.update_config"):
+        yield
 
 
-async def test_setting_up_demo(hass):
+async def test_setting_up_demo(mock_history: None, hass: HomeAssistant) -> None:
     """Test if we can set up the demo and dump it to JSON."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -38,32 +35,7 @@ async def test_setting_up_demo(hass):
     # non-JSON-serializable data in the state machine.
     try:
         json.dumps(hass.states.async_all(), cls=JSONEncoder)
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # noqa: BLE001
         pytest.fail(
-            "Unable to convert all demo entities to JSON. "
-            "Wrong data in state machine!"
+            "Unable to convert all demo entities to JSON. Wrong data in state machine!"
         )
-
-
-def test_demo_statistics(hass_recorder):
-    """Test that the demo components makes some statistics available."""
-    hass = hass_recorder()
-
-    assert setup_component(hass, DOMAIN, {DOMAIN: {}})
-    hass.block_till_done()
-    hass.start()
-    wait_recording_done(hass)
-
-    statistic_ids = list_statistic_ids(hass)
-    assert {
-        "name": None,
-        "source": "demo",
-        "statistic_id": "demo:temperature_outdoor",
-        "unit_of_measurement": "°C",
-    } in statistic_ids
-    assert {
-        "name": None,
-        "source": "demo",
-        "statistic_id": "demo:energy_consumption",
-        "unit_of_measurement": "kWh",
-    } in statistic_ids

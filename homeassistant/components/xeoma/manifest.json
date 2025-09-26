@@ -1,9 +1,10 @@
 {
   "domain": "xeoma",
   "name": "Xeoma",
-  "documentation": "https://www.home-assistant.io/integrations/xeoma",
-  "requirements": ["pyxeoma==1.4.1"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/xeoma",
   "iot_class": "local_polling",
-  "loggers": ["pyxeoma"]
+  "loggers": ["pyxeoma"],
+  "quality_scale": "legacy",
+  "requirements": ["pyxeoma==1.4.2"]
 }

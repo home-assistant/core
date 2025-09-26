@@ -1,51 +1,43 @@
 """Support for Renault sensors."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast
 
 from renault_api.kamereon.models import KamereonVehicleBatteryStatusData
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DEVICE_CLASS_CHARGE_MODE, DOMAIN
-from .renault_entities import RenaultDataEntity, RenaultDataEntityDescription
-from .renault_hub import RenaultHub
+from . import RenaultConfigEntry
+from .entity import RenaultDataEntity, RenaultDataEntityDescription
+
+# Coordinator is used to centralize the data updates
+# but renault servers are unreliable and it's safer to queue action calls
+PARALLEL_UPDATES = 1
 
 
-@dataclass
-class RenaultSelectRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    data_key: str
-    icon_lambda: Callable[[RenaultSelectEntity], str]
-    options: list[str]
-
-
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class RenaultSelectEntityDescription(
-    SelectEntityDescription,
-    RenaultDataEntityDescription,
-    RenaultSelectRequiredKeysMixin,
+    SelectEntityDescription, RenaultDataEntityDescription
 ):
     """Class describing Renault select entities."""
+
+    data_key: str
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: RenaultConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
-    proxy: RenaultHub = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[RenaultSelectEntity] = [
         RenaultSelectEntity(vehicle, description)
-        for vehicle in proxy.vehicles.values()
+        for vehicle in config_entry.runtime_data.vehicles.values()
         for description in SENSOR_TYPES
         if description.coordinator in vehicle.coordinators
     ]
@@ -69,26 +61,9 @@ class RenaultSelectEntity(
         """Return the state of this entity."""
         return self._get_data_attr(self.entity_description.data_key)
 
-    @property
-    def icon(self) -> str | None:
-        """Icon handling."""
-        return self.entity_description.icon_lambda(self)
-
-    @property
-    def options(self) -> list[str]:
-        """Return a set of selectable options."""
-        return self.entity_description.options
-
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self.vehicle.vehicle.set_charge_mode(option)
-
-
-def _get_charge_mode_icon(entity: RenaultSelectEntity) -> str:
-    """Return the icon of this entity."""
-    if entity.data == "schedule_mode":
-        return "mdi:calendar-clock"
-    return "mdi:calendar-remove"
+        await self.vehicle.set_charge_mode(option)
 
 
 SENSOR_TYPES: tuple[RenaultSelectEntityDescription, ...] = (
@@ -96,9 +71,7 @@ SENSOR_TYPES: tuple[RenaultSelectEntityDescription, ...] = (
         key="charge_mode",
         coordinator="charge_mode",
         data_key="chargeMode",
-        device_class=DEVICE_CLASS_CHARGE_MODE,
-        icon_lambda=_get_charge_mode_icon,
-        name="Charge Mode",
-        options=["always", "always_charging", "schedule_mode"],
+        translation_key="charge_mode",
+        options=["always", "always_charging", "schedule_mode", "scheduled"],
     ),
 )

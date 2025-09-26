@@ -1,0 +1,18 @@
+{
+  "operating_flags": {
+    "program_lock_on": false,
+    "blink_on_tx_on": true,
+    "relay_on_sense_on": false,
+    "momentary_on": true,
+    "momentary_on_off_trigger": false,
+    "x10_off": true,
+    "sense_sends_off": true,
+    "momentary_follow_sense": false
+  },
+  "properties": {
+    "prescaler": 1,
+    "delay": 50,
+    "x10_house": 32,
+    "x10_unit": 0
+  }
+}

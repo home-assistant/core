@@ -1,0 +1,39 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Do you want to set up iBeacon Tracker?"
+      }
+    },
+    "abort": {
+      "bluetooth_not_available": "At least one Bluetooth adapter or remote must be configured to use iBeacon Tracker."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "iBeacons with an empty device name are ignored by default, unless their UUID is explicitly allowed in the list below.",
+        "data": {
+          "new_uuid": "Enter a new allowed UUID",
+          "allow_nameless_uuids": "Currently allowed UUIDs. Uncheck to remove"
+        }
+      }
+    },
+    "error": {
+      "invalid_uuid_format": "UUIDs should contain 32 hex characters grouped as XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "power": {
+        "name": "Power"
+      },
+      "estimated_distance": {
+        "name": "Estimated distance"
+      },
+      "vendor": {
+        "name": "Vendor"
+      }
+    }
+  }
+}

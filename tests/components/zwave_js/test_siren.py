@@ -1,11 +1,17 @@
 """Test the Z-Wave JS siren platform."""
+
+import pytest
 from zwave_js_server.event import Event
 
-from homeassistant.components.siren import ATTR_TONE, ATTR_VOLUME_LEVEL
-from homeassistant.components.siren.const import ATTR_AVAILABLE_TONES
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.siren import (
+    ATTR_AVAILABLE_TONES,
+    ATTR_TONE,
+    ATTR_VOLUME_LEVEL,
+)
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
+from homeassistant.core import HomeAssistant
 
-SIREN_ENTITY = "siren.indoor_siren_6_2"
+SIREN_ENTITY = "siren.indoor_siren_6_play_tone_2"
 
 TONE_ID_VALUE_ID = {
     "endpoint": 2,
@@ -59,13 +65,21 @@ TONE_ID_VALUE_ID = {
 }
 
 
-async def test_siren(hass, client, aeotec_zw164_siren, integration):
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return [Platform.SIREN]
+
+
+async def test_siren(
+    hass: HomeAssistant, client, aeotec_zw164_siren, integration
+) -> None:
     """Test the siren entity."""
     node = aeotec_zw164_siren
     state = hass.states.get(SIREN_ENTITY)
 
     assert state
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_AVAILABLE_TONES) == {
         0: "off",
         1: "01DING~1 (5 sec)",
@@ -112,10 +126,37 @@ async def test_siren(hass, client, aeotec_zw164_siren, integration):
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
-    assert args["valueId"] == TONE_ID_VALUE_ID
+    assert args["valueId"] == {
+        "endpoint": 2,
+        "commandClass": 121,
+        "property": "toneId",
+    }
     assert args["value"] == 255
 
     client.async_send_command.reset_mock()
+
+    # Test value update from value updated event
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": node.node_id,
+            "args": {
+                "commandClassName": "Sound Switch",
+                "commandClass": 121,
+                "endpoint": 2,
+                "property": "toneId",
+                "newValue": 255,
+                "prevValue": None,
+                "propertyName": "toneId",
+            },
+        },
+    )
+    node.receive_event(event)
+
+    state = hass.states.get(SIREN_ENTITY)
+    assert state.state == STATE_ON
 
     # Test turn on with specific tone name and volume level
     await hass.services.async_call(
@@ -133,7 +174,11 @@ async def test_siren(hass, client, aeotec_zw164_siren, integration):
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
-    assert args["valueId"] == TONE_ID_VALUE_ID
+    assert args["valueId"] == {
+        "endpoint": 2,
+        "commandClass": 121,
+        "property": "toneId",
+    }
     assert args["value"] == 1
     assert args["options"] == {"volume": 50}
 
@@ -155,7 +200,11 @@ async def test_siren(hass, client, aeotec_zw164_siren, integration):
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
-    assert args["valueId"] == TONE_ID_VALUE_ID
+    assert args["valueId"] == {
+        "endpoint": 2,
+        "commandClass": 121,
+        "property": "toneId",
+    }
     assert args["value"] == 1
     assert args["options"] == {"volume": 50}
 
@@ -173,7 +222,11 @@ async def test_siren(hass, client, aeotec_zw164_siren, integration):
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == node.node_id
-    assert args["valueId"] == TONE_ID_VALUE_ID
+    assert args["valueId"] == {
+        "endpoint": 2,
+        "commandClass": 121,
+        "property": "toneId",
+    }
     assert args["value"] == 0
 
     client.async_send_command.reset_mock()
@@ -190,8 +243,8 @@ async def test_siren(hass, client, aeotec_zw164_siren, integration):
                 "commandClass": 121,
                 "endpoint": 2,
                 "property": "toneId",
-                "newValue": 255,
-                "prevValue": 0,
+                "newValue": 0,
+                "prevValue": 255,
                 "propertyName": "toneId",
             },
         },
@@ -199,4 +252,4 @@ async def test_siren(hass, client, aeotec_zw164_siren, integration):
     node.receive_event(event)
 
     state = hass.states.get(SIREN_ENTITY)
-    assert state.state == STATE_ON
+    assert state.state == STATE_OFF

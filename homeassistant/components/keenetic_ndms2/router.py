@@ -1,4 +1,5 @@
 """The Keenetic Client class."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -18,10 +19,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import async_call_later
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_CONSIDER_HOME,
@@ -34,11 +35,13 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type KeeneticConfigEntry = ConfigEntry[KeeneticRouter]
+
 
 class KeeneticRouter:
     """Keenetic client Object."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: KeeneticConfigEntry) -> None:
         """Initialize the Client."""
         self.hass = hass
         self.config_entry = config_entry

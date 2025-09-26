@@ -1,4 +1,5 @@
 """The tests for the Reddit platform."""
+
 import copy
 from unittest.mock import patch
 
@@ -22,6 +23,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 VALID_CONFIG = {
@@ -64,7 +66,7 @@ INVALID_SORT_BY_CONFIG = {
 class ObjectView:
     """Use dict properties as attributes."""
 
-    def __init__(self, d):
+    def __init__(self, d) -> None:
         """Set dict as internal dict."""
         self.__dict__ = d
 
@@ -109,7 +111,7 @@ class MockPraw:
         username: str,
         password: str,
         user_agent: str,
-    ):
+    ) -> None:
         """Add mock data for API return."""
         self._data = MOCK_RESULTS
 
@@ -121,7 +123,7 @@ class MockPraw:
 class MockSubreddit:
     """Mock class for a subreddit instance."""
 
-    def __init__(self, subreddit: str, data):
+    def __init__(self, subreddit: str, data) -> None:
         """Add mock data for API return."""
         self._subreddit = subreddit
         self._data = data
@@ -149,7 +151,7 @@ class MockSubreddit:
 
 
 @patch("praw.Reddit", new=MockPraw)
-async def test_setup_with_valid_config(hass):
+async def test_setup_with_valid_config(hass: HomeAssistant) -> None:
     """Test the platform setup with Reddit configuration."""
     assert await async_setup_component(hass, "sensor", VALID_CONFIG)
     await hass.async_block_till_done()
@@ -176,7 +178,7 @@ async def test_setup_with_valid_config(hass):
 
 
 @patch("praw.Reddit", new=MockPraw)
-async def test_setup_with_invalid_config(hass):
+async def test_setup_with_invalid_config(hass: HomeAssistant) -> None:
     """Test the platform setup with invalid Reddit configuration."""
     assert await async_setup_component(hass, "sensor", INVALID_SORT_BY_CONFIG)
     await hass.async_block_till_done()

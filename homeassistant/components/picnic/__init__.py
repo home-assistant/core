@@ -1,15 +1,27 @@
 """The Picnic integration."""
 
-from python_picnic_api import PicnicAPI
+from python_picnic_api2 import PicnicAPI
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY_CODE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_API, CONF_COORDINATOR, CONF_COUNTRY_CODE, DOMAIN
+from .const import CONF_API, CONF_COORDINATOR, DOMAIN
 from .coordinator import PicnicUpdateCoordinator
+from .services import async_setup_services
 
-PLATFORMS = [Platform.SENSOR]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+PLATFORMS = [Platform.SENSOR, Platform.TODO]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Picnic integration."""
+
+    async_setup_services(hass)
+
+    return True
 
 
 def create_picnic_client(entry: ConfigEntry):
@@ -34,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_COORDINATOR: picnic_coordinator,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

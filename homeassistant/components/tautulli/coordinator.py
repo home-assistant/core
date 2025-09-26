@@ -1,4 +1,5 @@
 """Data update coordinator for the Tautulli integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,30 +10,44 @@ from pytautulli import (
     PyTautulliApiActivity,
     PyTautulliApiHomeStats,
     PyTautulliApiUser,
-    PyTautulliException,
 )
+from pytautulli.exceptions import (
+    PyTautulliAuthenticationException,
+    PyTautulliConnectionException,
+)
+from pytautulli.models.host_configuration import PyTautulliHostConfiguration
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
 
+type TautulliConfigEntry = ConfigEntry[TautulliDataUpdateCoordinator]
 
-class TautulliDataUpdateCoordinator(DataUpdateCoordinator):
+
+class TautulliDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data update coordinator for the Tautulli integration."""
+
+    config_entry: TautulliConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: TautulliConfigEntry,
+        host_configuration: PyTautulliHostConfiguration,
         api_client: PyTautulli,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=10),
         )
+        self.host_configuration = host_configuration
         self.api_client = api_client
         self.activity: PyTautulliApiActivity | None = None
         self.home_stats: list[PyTautulliApiHomeStats] | None = None
@@ -48,5 +63,7 @@ class TautulliDataUpdateCoordinator(DataUpdateCoordinator):
                     self.api_client.async_get_users(),
                 ]
             )
-        except PyTautulliException as exception:
-            raise UpdateFailed(exception) from exception
+        except PyTautulliConnectionException as ex:
+            raise UpdateFailed(ex) from ex
+        except PyTautulliAuthenticationException as ex:
+            raise ConfigEntryAuthFailed(ex) from ex

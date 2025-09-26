@@ -1,14 +1,15 @@
 """The Mullvad VPN integration."""
+
+import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 from mullvad_api import MullvadAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import update_coordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
@@ -19,13 +20,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Mullvad VPN integration."""
 
     async def async_get_mullvad_api_data():
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             api = await hass.async_add_executor_job(MullvadAPI)
             return api.data
 
-    coordinator = update_coordinator.DataUpdateCoordinator(
+    coordinator = DataUpdateCoordinator(
         hass,
         logging.getLogger(__name__),
+        config_entry=entry,
         name=DOMAIN,
         update_method=async_get_mullvad_api_data,
         update_interval=timedelta(minutes=1),
@@ -34,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data[DOMAIN] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

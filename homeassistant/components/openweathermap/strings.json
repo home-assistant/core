@@ -1,35 +1,74 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    },
+    "error": {
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "cannot_connect": "Failed to connect: {error}"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "language": "[%key:common::config_flow::data::language%]",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "mode": "[%key:common::config_flow::data::mode%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "api_key": "API key for the OpenWeatherMap integration",
+          "language": "Language for the OpenWeatherMap content",
+          "latitude": "Latitude of the location",
+          "longitude": "Longitude of the location",
+          "mode": "Mode for the OpenWeatherMap API",
+          "name": "Name for this OpenWeatherMap location"
+        },
+        "description": "To generate an API key, please refer to the [integration documentation]({doc_url})"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "language": "[%key:common::config_flow::data::language%]",
+          "mode": "[%key:common::config_flow::data::mode%]"
+        },
+        "data_description": {
+          "language": "[%key:component::openweathermap::config::step::user::data_description::language%]",
+          "mode": "[%key:component::openweathermap::config::step::user::data_description::mode%]"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_v25": {
+      "title": "OpenWeatherMap API V2.5 deprecated",
+      "fix_flow": {
+        "step": {
+          "migrate": {
+            "title": "OpenWeatherMap API V2.5 deprecated",
+            "description": "OWM API v2.5 will be closed in June 2024.\nYou need to migrate all your OpenWeatherMap integrations to v3.0.\n\nBefore the migration, you must have an active subscription (be aware that subscription activation can take up to 2h). After your subscription is activated, select **Submit** to migrate the integration to API V3.0. Read the documentation for more information."
+          }
         },
         "error": {
-            "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
-            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "api_key": "[%key:common::config_flow::data::api_key%]",
-                    "language": "Language",
-                    "latitude": "[%key:common::config_flow::data::latitude%]",
-                    "longitude": "[%key:common::config_flow::data::longitude%]",
-                    "mode": "[%key:common::config_flow::data::mode%]",
-                    "name": "Name of the integration"
-                },
-                "description": "Set up OpenWeatherMap integration. To generate API key go to https://openweathermap.org/appid",
-                "title": "OpenWeatherMap"
-            }
+          "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+          "cannot_connect": "Failed to connect: {error}"
         }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "language": "Language",
-                    "mode": "[%key:common::config_flow::data::mode%]"
-                }
-            }
-        }
+      }
     }
+  },
+  "services": {
+    "get_minute_forecast": {
+      "name": "Get minute forecast",
+      "description": "Retrieves a minute-by-minute weather forecast for one hour."
+    }
+  },
+  "exceptions": {
+    "service_minute_forecast_mode": {
+      "message": "Minute forecast is available only when {name} mode is set to v3.0"
+    }
+  }
 }

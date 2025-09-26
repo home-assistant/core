@@ -1,15 +1,16 @@
 """Config flow to configure the PVOutput integration."""
+
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from pvo import PVOutput, PVOutputAuthenticationError, PVOutputError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SYSTEM_ID, DOMAIN, LOGGER
@@ -23,7 +24,7 @@ async def validate_input(hass: HomeAssistant, *, api_key: str, system_id: int) -
         api_key=api_key,
         system_id=system_id,
     )
-    await pvoutput.status()
+    await pvoutput.system()
 
 
 class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -32,11 +33,10 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     imported_name: str | None = None
-    reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -83,52 +83,34 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Handle a flow initialized by importing a config."""
-        self.imported_name = config[CONF_NAME]
-        return await self.async_step_user(
-            user_input={
-                CONF_SYSTEM_ID: config[CONF_SYSTEM_ID],
-                CONF_API_KEY: config[CONF_API_KEY],
-            }
-        )
-
-    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with PVOutput."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle re-authentication with PVOutput."""
         errors = {}
 
-        if user_input is not None and self.reauth_entry:
+        if user_input is not None:
+            reauth_entry = self._get_reauth_entry()
             try:
                 await validate_input(
                     self.hass,
                     api_key=user_input[CONF_API_KEY],
-                    system_id=self.reauth_entry.data[CONF_SYSTEM_ID],
+                    system_id=reauth_entry.data[CONF_SYSTEM_ID],
                 )
             except PVOutputAuthenticationError:
                 errors["base"] = "invalid_auth"
             except PVOutputError:
                 errors["base"] = "cannot_connect"
             else:
-                self.hass.config_entries.async_update_entry(
-                    self.reauth_entry,
-                    data={
-                        **self.reauth_entry.data,
-                        CONF_API_KEY: user_input[CONF_API_KEY],
-                    },
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=user_input
                 )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-                )
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",

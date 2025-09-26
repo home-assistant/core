@@ -1,4 +1,5 @@
 """Offer sun based automation rules."""
+
 from datetime import timedelta
 
 import voluptuous as vol
@@ -9,11 +10,11 @@ from homeassistant.const import (
     CONF_PLATFORM,
     SUN_EVENT_SUNRISE,
 )
-from homeassistant.core import HassJob, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_sunrise, async_track_sunset
-
-# mypy: allow-untyped-defs, no-check-untyped-defs
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.typing import ConfigType
 
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
@@ -24,9 +25,14 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: TriggerActionType,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
     """Listen for events based on configuration."""
-    trigger_data = automation_info["trigger_data"]
+    trigger_data = trigger_info["trigger_data"]
     event = config.get(CONF_EVENT)
     offset = config.get(CONF_OFFSET)
     description = event
@@ -35,7 +41,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
     job = HassJob(action)
 
     @callback
-    def call_action():
+    def call_action() -> None:
         """Call action with right context."""
         hass.async_run_hass_job(
             job,

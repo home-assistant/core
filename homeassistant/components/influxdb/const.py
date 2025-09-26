@@ -1,4 +1,5 @@
 """Constants for InfluxDB integration."""
+
 from datetime import timedelta
 import re
 
@@ -15,7 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 CONF_DB_NAME = "database"
 CONF_BUCKET = "bucket"
@@ -33,7 +34,6 @@ CONF_IGNORE_ATTRIBUTES = "ignore_attributes"
 CONF_PRECISION = "precision"
 CONF_SSL_CA_CERT = "ssl_ca_cert"
 
-CONF_LANGUAGE = "language"
 CONF_QUERIES = "queries"
 CONF_QUERIES_FLUX = "queries_flux"
 CONF_GROUP_FUNCTION = "group_function"
@@ -72,7 +72,7 @@ INFLUX_CONF_ORG = "org"
 EVENT_NEW_STATE = "new_state"
 DOMAIN = "influxdb"
 API_VERSION_2 = "2"
-TIMEOUT = 5
+TIMEOUT = 10  # seconds
 RETRY_DELAY = 20
 QUEUE_BACKLOG_SECONDS = 30
 RETRY_INTERVAL = 60  # seconds

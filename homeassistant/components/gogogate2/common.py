@@ -1,15 +1,21 @@
 """Common code for GogoGate2 component."""
+
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from typing import Any, NamedTuple
 
-from ismartgate import AbstractGateApi, GogoGate2Api, ISmartGateApi
-from ismartgate.common import AbstractDoor, get_door_by_id
+from ismartgate import (
+    AbstractGateApi,
+    GogoGate2Api,
+    GogoGate2InfoResponse,
+    ISmartGateApi,
+    ISmartGateInfoResponse,
+)
+from ismartgate.common import AbstractDoor
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_IP_ADDRESS,
@@ -17,16 +23,11 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .const import DATA_UPDATE_COORDINATOR, DEVICE_TYPE_ISMARTGATE, DOMAIN, MANUFACTURER
+from .const import DEVICE_TYPE_ISMARTGATE
+from .coordinator import DeviceDataUpdateCoordinator, GogoGateConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,127 +40,40 @@ class StateData(NamedTuple):
     door: AbstractDoor | None
 
 
-class DeviceDataUpdateCoordinator(DataUpdateCoordinator):
-    """Manages polling for state changes from the device."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        logger: logging.Logger,
-        api: AbstractGateApi,
-        *,
-        name: str,
-        update_interval: timedelta,
-        update_method: Callable[[], Awaitable] | None = None,
-        request_refresh_debouncer: Debouncer | None = None,
-    ) -> None:
-        """Initialize the data update coordinator."""
-        DataUpdateCoordinator.__init__(
-            self,
-            hass,
-            logger,
-            name=name,
-            update_interval=update_interval,
-            update_method=update_method,
-            request_refresh_debouncer=request_refresh_debouncer,
-        )
-        self.api = api
-
-
-class GoGoGate2Entity(CoordinatorEntity):
-    """Base class for gogogate2 entities."""
-
-    def __init__(
-        self,
-        config_entry: ConfigEntry,
-        data_update_coordinator: DeviceDataUpdateCoordinator,
-        door: AbstractDoor,
-        unique_id: str,
-    ) -> None:
-        """Initialize gogogate2 base entity."""
-        super().__init__(data_update_coordinator)
-        self._config_entry = config_entry
-        self._door = door
-        self._door_id = door.door_id
-        self._api = data_update_coordinator.api
-        self._attr_unique_id = unique_id
-
-    @property
-    def door(self) -> AbstractDoor:
-        """Return the door object."""
-        door = get_door_by_id(self._door.door_id, self.coordinator.data)
-        self._door = door or self._door
-        return self._door
-
-    @property
-    def door_status(self) -> AbstractDoor:
-        """Return the door with status."""
-        data = self.coordinator.data
-        door_with_statuses = self._api.async_get_door_statuses_from_info(data)
-        return door_with_statuses[self._door_id]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Device info for the controller."""
-        data = self.coordinator.data
-        configuration_url = (
-            f"https://{data.remoteaccess}" if data.remoteaccess else None
-        )
-        return DeviceInfo(
-            configuration_url=configuration_url,
-            identifiers={(DOMAIN, str(self._config_entry.unique_id))},
-            name=self._config_entry.title,
-            manufacturer=MANUFACTURER,
-            model=data.model,
-            sw_version=data.firmwareversion,
-        )
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {"door_id": self._door_id}
-
-
-def get_data_update_coordinator(
-    hass: HomeAssistant, config_entry: ConfigEntry
+def create_data_update_coordinator(
+    hass: HomeAssistant, config_entry: GogoGateConfigEntry
 ) -> DeviceDataUpdateCoordinator:
     """Get an update coordinator."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(config_entry.entry_id, {})
-    config_entry_data = hass.data[DOMAIN][config_entry.entry_id]
+    api = get_api(hass, config_entry.data)
 
-    if DATA_UPDATE_COORDINATOR not in config_entry_data:
-        api = get_api(hass, config_entry.data)
+    async def async_update_data() -> GogoGate2InfoResponse | ISmartGateInfoResponse:
+        try:
+            return await api.async_info()
+        except Exception as exception:
+            raise UpdateFailed(
+                f"Error communicating with API: {exception}"
+            ) from exception
 
-        async def async_update_data():
-            try:
-                return await api.async_info()
-            except Exception as exception:
-                raise UpdateFailed(
-                    f"Error communicating with API: {exception}"
-                ) from exception
-
-        config_entry_data[DATA_UPDATE_COORDINATOR] = DeviceDataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            api,
-            # Name of the data. For logging purposes.
-            name="gogogate2",
-            update_method=async_update_data,
-            # Polling interval. Will only be polled if there are subscribers.
-            update_interval=timedelta(seconds=5),
-        )
-
-    return config_entry_data[DATA_UPDATE_COORDINATOR]
+    return DeviceDataUpdateCoordinator(
+        hass,
+        config_entry,
+        _LOGGER,
+        api,
+        # Name of the data. For logging purposes.
+        name="gogogate2",
+        update_method=async_update_data,
+        # Polling interval. Will only be polled if there are subscribers.
+        update_interval=timedelta(seconds=5),
+    )
 
 
-def cover_unique_id(config_entry: ConfigEntry, door: AbstractDoor) -> str:
+def cover_unique_id(config_entry: GogoGateConfigEntry, door: AbstractDoor) -> str:
     """Generate a cover entity unique id."""
     return f"{config_entry.unique_id}_{door.door_id}"
 
 
 def sensor_unique_id(
-    config_entry: ConfigEntry, door: AbstractDoor, sensor_type: str
+    config_entry: GogoGateConfigEntry, door: AbstractDoor, sensor_type: str
 ) -> str:
     """Generate a cover entity unique id."""
     return f"{config_entry.unique_id}_{door.door_id}_{sensor_type}"

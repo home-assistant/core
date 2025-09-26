@@ -1,62 +1,50 @@
 """Test GitHub sensor."""
-from unittest.mock import MagicMock, patch
 
-from aiogithubapi import GitHubNotModifiedException
+import json
+
 import pytest
 
-from homeassistant.components.github.const import DEFAULT_UPDATE_INTERVAL
+from homeassistant.components.github.const import DOMAIN, FALLBACK_UPDATE_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from .common import TEST_REPOSITORY
+
+from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_SENSOR_ENTITY = "sensor.octocat_hello_world_latest_release"
 
 
-async def test_sensor_updates_with_not_modified_content(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the sensor updates by default GitHub sensors."""
-    state = hass.states.get(TEST_SENSOR_ENTITY)
-    assert state.state == "v1.0.0"
-    assert (
-        "Content for octocat/Hello-World with RepositoryReleaseDataUpdateCoordinator not modified"
-        not in caplog.text
-    )
-
-    with patch(
-        "aiogithubapi.namespaces.releases.GitHubReleasesNamespace.list",
-        side_effect=GitHubNotModifiedException,
-    ):
-
-        async_fire_time_changed(hass, dt.utcnow() + DEFAULT_UPDATE_INTERVAL)
-        await hass.async_block_till_done()
-
-        assert (
-            "Content for octocat/Hello-World with RepositoryReleaseDataUpdateCoordinator not modified"
-            in caplog.text
-        )
-    new_state = hass.states.get(TEST_SENSOR_ENTITY)
-    assert state.state == new_state.state
-
-
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_sensor_updates_with_empty_release_array(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test the sensor updates by default GitHub sensors."""
     state = hass.states.get(TEST_SENSOR_ENTITY)
     assert state.state == "v1.0.0"
 
-    with patch(
-        "aiogithubapi.namespaces.releases.GitHubReleasesNamespace.list",
-        return_value=MagicMock(data=[]),
-    ):
+    response_json = json.loads(await async_load_fixture(hass, "graphql.json", DOMAIN))
+    response_json["data"]["repository"]["release"] = None
+    headers = json.loads(await async_load_fixture(hass, "base_headers.json", DOMAIN))
 
-        async_fire_time_changed(hass, dt.utcnow() + DEFAULT_UPDATE_INTERVAL)
-        await hass.async_block_till_done()
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        f"https://api.github.com/repos/{TEST_REPOSITORY}/events",
+        json=[],
+        headers=headers,
+    )
+    aioclient_mock.post(
+        "https://api.github.com/graphql",
+        json=response_json,
+        headers=headers,
+    )
+
+    async_fire_time_changed(hass, dt_util.utcnow() + FALLBACK_UPDATE_INTERVAL)
+    await hass.async_block_till_done()
 
     new_state = hass.states.get(TEST_SENSOR_ENTITY)
     assert new_state.state == "unavailable"

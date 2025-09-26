@@ -1,20 +1,22 @@
 """Binary sensor platform for hvv_departures."""
+
+from __future__ import annotations
+
+import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aiohttp import ClientConnectorError
-import async_timeout
 from pygti.exceptions import InvalidAuth
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -22,15 +24,18 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import ATTRIBUTION, CONF_STATION, DOMAIN, MANUFACTURER
+from .hub import HVVConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: HVVConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the binary_sensor platform."""
-    hub = hass.data[DOMAIN][entry.entry_id]
+    hub = entry.runtime_data
     station_name = entry.data[CONF_STATION]["name"]
     station = entry.data[CONF_STATION]
 
@@ -45,16 +50,15 @@ async def async_setup_entry(
 
         for partial_station in station_information.get("partialStations", []):
             for elevator in partial_station.get("elevators", []):
-
                 state = elevator.get("state") != "READY"
                 available = elevator.get("state") != "UNKNOWN"
                 label = elevator.get("label")
                 description = elevator.get("description")
 
                 if label is not None:
-                    name = f"Elevator {label} at {station_name}"
+                    name = f"Elevator {label}"
                 else:
-                    name = f"Unknown elevator at {station_name}"
+                    name = "Unknown elevator"
 
                 if description is not None:
                     name += f" ({description})"
@@ -75,7 +79,6 @@ async def async_setup_entry(
                         "button_type": elevator.get("buttonType"),
                         "cause": elevator.get("cause"),
                         "lines": lines,
-                        ATTR_ATTRIBUTION: ATTRIBUTION,
                     },
                 }
         return elevators
@@ -87,10 +90,10 @@ async def async_setup_entry(
         so entities can quickly look up their data.
         """
 
-        payload = {"station": station}
+        payload = {"station": {"id": station["id"], "type": station["type"]}}
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 return get_elevator_entities_from_station_information(
                     station_name, await hub.gti.stationInformation(payload)
                 )
@@ -123,12 +126,31 @@ async def async_setup_entry(
 class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """HVVDepartureBinarySensor class."""
 
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+
     def __init__(self, coordinator, idx, config_entry):
         """Initialize."""
         super().__init__(coordinator)
         self.coordinator = coordinator
         self.idx = idx
-        self.config_entry = config_entry
+
+        self._attr_name = coordinator.data[idx]["name"]
+        self._attr_unique_id = idx
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={
+                (
+                    DOMAIN,
+                    config_entry.entry_id,
+                    config_entry.data[CONF_STATION]["id"],
+                    config_entry.data[CONF_STATION]["type"],
+                )
+            },
+            manufacturer=MANUFACTURER,
+            name=f"Departures at {config_entry.data[CONF_STATION]['name']}",
+        )
 
     @property
     def is_on(self):
@@ -136,12 +158,7 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         return self.coordinator.data[self.idx]["state"]
 
     @property
-    def should_poll(self):
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    @property
-    def available(self):
+    def available(self) -> bool:
         """Return if entity is available."""
         return (
             self.coordinator.last_update_success
@@ -149,38 +166,7 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         )
 
     @property
-    def device_info(self):
-        """Return the device info for this sensor."""
-        return DeviceInfo(
-            identifiers={
-                (
-                    DOMAIN,
-                    self.config_entry.entry_id,
-                    self.config_entry.data[CONF_STATION]["id"],
-                    self.config_entry.data[CONF_STATION]["type"],
-                )
-            },
-            manufacturer=MANUFACTURER,
-            name=f"Departures at {self.config_entry.data[CONF_STATION]['name']}",
-        )
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self.coordinator.data[self.idx]["name"]
-
-    @property
-    def unique_id(self):
-        """Return a unique ID to use for this sensor."""
-        return self.idx
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return BinarySensorDeviceClass.PROBLEM
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if not (
             self.coordinator.last_update_success
@@ -192,16 +178,3 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
             for k, v in self.coordinator.data[self.idx]["attributes"].items()
             if v is not None
         }
-
-    async def async_added_to_hass(self):
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self.async_write_ha_state)
-        )
-
-    async def async_update(self):
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        """
-        await self.coordinator.async_request_refresh()

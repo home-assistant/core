@@ -1,40 +1,50 @@
 """The tests the for Meraki device tracker."""
+
 from http import HTTPStatus
 import json
 
+from aiohttp.test_utils import TestClient
 import pytest
 
-import homeassistant.components.device_tracker as device_tracker
+from homeassistant.components import device_tracker
+from homeassistant.components.device_tracker import legacy
 from homeassistant.components.meraki.device_tracker import (
     CONF_SECRET,
     CONF_VALIDATOR,
     URL,
 )
 from homeassistant.const import CONF_PLATFORM
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
-def meraki_client(loop, hass, hass_client):
+async def meraki_client(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> TestClient:
     """Meraki mock client."""
-    assert loop.run_until_complete(
-        async_setup_component(
-            hass,
-            device_tracker.DOMAIN,
-            {
-                device_tracker.DOMAIN: {
-                    CONF_PLATFORM: "meraki",
-                    CONF_VALIDATOR: "validator",
-                    CONF_SECRET: "secret",
-                }
-            },
-        )
+    assert await async_setup_component(
+        hass,
+        device_tracker.DOMAIN,
+        {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: "meraki",
+                CONF_VALIDATOR: "validator",
+                CONF_SECRET: "secret",
+            }
+        },
     )
+    await hass.async_block_till_done()
 
-    yield loop.run_until_complete(hass_client())
+    return await hass_client()
 
 
-async def test_invalid_or_missing_data(mock_device_tracker_conf, meraki_client):
+async def test_invalid_or_missing_data(
+    mock_device_tracker_conf: list[legacy.Device], meraki_client
+) -> None:
     """Test validator with invalid or missing data."""
     req = await meraki_client.get(URL)
     text = await req.text()
@@ -79,7 +89,9 @@ async def test_invalid_or_missing_data(mock_device_tracker_conf, meraki_client):
     assert req.status == HTTPStatus.OK
 
 
-async def test_data_will_be_saved(mock_device_tracker_conf, hass, meraki_client):
+async def test_data_will_be_saved(
+    mock_device_tracker_conf: list[legacy.Device], hass: HomeAssistant, meraki_client
+) -> None:
     """Test with valid data."""
     data = {
         "version": "2.0",
@@ -123,12 +135,8 @@ async def test_data_will_be_saved(mock_device_tracker_conf, hass, meraki_client)
     req = await meraki_client.post(URL, data=json.dumps(data))
     assert req.status == HTTPStatus.OK
     await hass.async_block_till_done()
-    state_name = hass.states.get(
-        "{}.{}".format("device_tracker", "00_26_ab_b8_a9_a4")
-    ).state
+    state_name = hass.states.get("device_tracker.00_26_ab_b8_a9_a4").state
     assert state_name == "home"
 
-    state_name = hass.states.get(
-        "{}.{}".format("device_tracker", "00_26_ab_b8_a9_a5")
-    ).state
+    state_name = hass.states.get("device_tracker.00_26_ab_b8_a9_a5").state
     assert state_name == "home"

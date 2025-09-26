@@ -1,7 +1,8 @@
 {
   "domain": "google_wifi",
   "name": "Google Wifi",
-  "documentation": "https://www.home-assistant.io/integrations/google_wifi",
   "codeowners": [],
-  "iot_class": "local_polling"
+  "documentation": "https://www.home-assistant.io/integrations/google_wifi",
+  "iot_class": "local_polling",
+  "quality_scale": "legacy"
 }

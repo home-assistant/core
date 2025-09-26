@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<nowPlaying deviceID="020000000001" source="BLUETOOTH" sourceAccount="">
+    <ContentItem source="BLUETOOTH" location="" sourceAccount="" isPresetable="false">
+        <itemName>MockPairedBluetoothDevice</itemName>
+    </ContentItem>
+    <track>MockTrack</track>
+    <artist>MockArtist</artist>
+    <album>MockAlbum</album>
+    <stationName>MockPairedBluetoothDevice</stationName>
+    <art artImageStatus="SHOW_DEFAULT_IMAGE" />
+    <skipEnabled />
+    <playStatus>PLAY_STATE</playStatus>
+    <skipPreviousEnabled />
+    <genre></genre>
+    <connectionStatusInfo status="CONNECTED" deviceName="MockPairedBluetoothDevice" />
+</nowPlaying>

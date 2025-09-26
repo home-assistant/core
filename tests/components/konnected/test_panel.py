@@ -1,10 +1,13 @@
 """Test Konnected setup process."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.konnected import config_flow, panel
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
 
@@ -42,7 +45,7 @@ async def mock_panel_fixture():
         yield konn_client
 
 
-async def test_create_and_setup(hass, mock_panel):
+async def test_create_and_setup(hass: HomeAssistant, mock_panel) -> None:
     """Test that we create a Konnected Panel and save the data."""
     device_config = config_flow.CONFIG_ENTRY_SCHEMA(
         {
@@ -134,12 +137,10 @@ async def test_create_and_setup(hass, mock_panel):
     await device.update_switch("1", 0)
 
     # confirm the correct api is used
-    # pylint: disable=no-member
     assert mock_panel.put_device.call_count == 1
     assert mock_panel.put_zone.call_count == 0
 
     # confirm the settings are sent to the panel
-    # pylint: disable=no-member
     assert mock_panel.put_settings.call_args_list[0][1] == {
         "sensors": [{"pin": "1"}, {"pin": "2"}, {"pin": "5"}],
         "actuators": [{"trigger": 0, "pin": "8"}, {"trigger": 1, "pin": "9"}],
@@ -152,16 +153,25 @@ async def test_create_and_setup(hass, mock_panel):
     }
 
     # confirm the device settings are saved in hass.data
+    # This test should not access hass.data since its integration internals
     assert device.stored_configuration == {
         "binary_sensors": {
             "1": {
+                "entity_id": "binary_sensor.konnected_445566_zone_1",
                 "inverse": False,
                 "name": "Konnected 445566 Zone 1",
                 "state": None,
                 "type": "door",
             },
-            "2": {"inverse": True, "name": "winder", "state": None, "type": "window"},
+            "2": {
+                "entity_id": "binary_sensor.winder",
+                "inverse": True,
+                "name": "winder",
+                "state": None,
+                "type": "window",
+            },
             "3": {
+                "entity_id": "binary_sensor.konnected_445566_zone_3",
                 "inverse": False,
                 "name": "Konnected 445566 Zone 3",
                 "state": None,
@@ -169,14 +179,16 @@ async def test_create_and_setup(hass, mock_panel):
             },
         },
         "blink": True,
-        "panel": device,
         "discovery": True,
         "host": "1.2.3.4",
+        "panel": device,
         "port": 1234,
         "sensors": [
             {
+                "humidity": "sensor.konnected_445566_sensor_4_humidity",
                 "name": "Konnected 445566 Sensor 4",
                 "poll_interval": 3,
+                "temperature": "sensor.konnected_445566_sensor_4_temperature",
                 "type": "dht",
                 "zone": "4",
             },
@@ -185,6 +197,7 @@ async def test_create_and_setup(hass, mock_panel):
         "switches": [
             {
                 "activation": "low",
+                "entity_id": "switch.switcher",
                 "momentary": 50,
                 "name": "switcher",
                 "pause": 100,
@@ -194,6 +207,7 @@ async def test_create_and_setup(hass, mock_panel):
             },
             {
                 "activation": "high",
+                "entity_id": "switch.konnected_445566_actuator_6",
                 "momentary": None,
                 "name": "Konnected 445566 Actuator 6",
                 "pause": None,
@@ -205,7 +219,7 @@ async def test_create_and_setup(hass, mock_panel):
     }
 
 
-async def test_create_and_setup_pro(hass, mock_panel):
+async def test_create_and_setup_pro(hass: HomeAssistant, mock_panel) -> None:
     """Test that we create a Konnected Pro Panel and save the data."""
     device_config = config_flow.CONFIG_ENTRY_SCHEMA(
         {
@@ -287,12 +301,10 @@ async def test_create_and_setup_pro(hass, mock_panel):
     await device.update_switch("2", 1)
 
     # confirm the correct api is used
-    # pylint: disable=no-member
     assert mock_panel.put_device.call_count == 0
     assert mock_panel.put_zone.call_count == 1
 
     # confirm the settings are sent to the panel
-    # pylint: disable=no-member
     assert mock_panel.put_settings.call_args_list[0][1] == {
         "sensors": [{"zone": "2"}, {"zone": "6"}, {"zone": "10"}, {"zone": "11"}],
         "actuators": [
@@ -310,37 +322,49 @@ async def test_create_and_setup_pro(hass, mock_panel):
     }
 
     # confirm the device settings are saved in hass.data
+    # hass.data should not be accessed in tests as its considered integration internals
     assert device.stored_configuration == {
         "binary_sensors": {
-            "11": {
-                "inverse": False,
-                "name": "Konnected 445566 Zone 11",
-                "state": None,
-                "type": "window",
-            },
             "10": {
+                "entity_id": "binary_sensor.konnected_445566_zone_10",
                 "inverse": False,
                 "name": "Konnected 445566 Zone 10",
                 "state": None,
                 "type": "door",
             },
+            "11": {
+                "entity_id": "binary_sensor.konnected_445566_zone_11",
+                "inverse": False,
+                "name": "Konnected 445566 Zone 11",
+                "state": None,
+                "type": "window",
+            },
             "2": {
+                "entity_id": "binary_sensor.konnected_445566_zone_2",
                 "inverse": False,
                 "name": "Konnected 445566 Zone 2",
                 "state": None,
                 "type": "door",
             },
-            "6": {"inverse": True, "name": "winder", "state": None, "type": "window"},
+            "6": {
+                "entity_id": "binary_sensor.winder",
+                "inverse": True,
+                "name": "winder",
+                "state": None,
+                "type": "window",
+            },
         },
         "blink": True,
-        "panel": device,
         "discovery": True,
         "host": "1.2.3.4",
+        "panel": device,
         "port": 1234,
         "sensors": [
             {
+                "humidity": "sensor.konnected_445566_sensor_3_humidity",
                 "name": "Konnected 445566 Sensor 3",
                 "poll_interval": 5,
+                "temperature": "sensor.konnected_445566_sensor_3_temperature",
                 "type": "dht",
                 "zone": "3",
             },
@@ -349,6 +373,7 @@ async def test_create_and_setup_pro(hass, mock_panel):
         "switches": [
             {
                 "activation": "high",
+                "entity_id": "switch.konnected_445566_actuator_4",
                 "momentary": None,
                 "name": "Konnected 445566 Actuator 4",
                 "pause": None,
@@ -358,6 +383,7 @@ async def test_create_and_setup_pro(hass, mock_panel):
             },
             {
                 "activation": "low",
+                "entity_id": "switch.switcher",
                 "momentary": 50,
                 "name": "switcher",
                 "pause": 100,
@@ -367,6 +393,7 @@ async def test_create_and_setup_pro(hass, mock_panel):
             },
             {
                 "activation": "high",
+                "entity_id": "switch.konnected_445566_actuator_out1",
                 "momentary": None,
                 "name": "Konnected 445566 Actuator out1",
                 "pause": None,
@@ -376,6 +403,7 @@ async def test_create_and_setup_pro(hass, mock_panel):
             },
             {
                 "activation": "high",
+                "entity_id": "switch.konnected_445566_actuator_alarm1",
                 "momentary": None,
                 "name": "Konnected 445566 Actuator alarm1",
                 "pause": None,
@@ -387,7 +415,7 @@ async def test_create_and_setup_pro(hass, mock_panel):
     }
 
 
-async def test_default_options(hass, mock_panel):
+async def test_default_options(hass: HomeAssistant, mock_panel) -> None:
     """Test that we create a Konnected Panel and save the data."""
     device_config = config_flow.CONFIG_ENTRY_SCHEMA(
         {
@@ -482,12 +510,10 @@ async def test_default_options(hass, mock_panel):
     await device.update_switch("1", 0)
 
     # confirm the correct api is used
-    # pylint: disable=no-member
     assert mock_panel.put_device.call_count == 1
     assert mock_panel.put_zone.call_count == 0
 
     # confirm the settings are sent to the panel
-    # pylint: disable=no-member
     assert mock_panel.put_settings.call_args_list[0][1] == {
         "sensors": [{"pin": "1"}, {"pin": "2"}, {"pin": "5"}],
         "actuators": [{"trigger": 0, "pin": "8"}, {"trigger": 1, "pin": "9"}],
@@ -500,16 +526,25 @@ async def test_default_options(hass, mock_panel):
     }
 
     # confirm the device settings are saved in hass.data
+    # This test should not access hass.data since its integration internals
     assert device.stored_configuration == {
         "binary_sensors": {
             "1": {
+                "entity_id": "binary_sensor.konnected_445566_zone_1",
                 "inverse": False,
                 "name": "Konnected 445566 Zone 1",
                 "state": None,
                 "type": "door",
             },
-            "2": {"inverse": True, "name": "winder", "state": None, "type": "window"},
+            "2": {
+                "entity_id": "binary_sensor.winder",
+                "inverse": True,
+                "name": "winder",
+                "state": None,
+                "type": "window",
+            },
             "3": {
+                "entity_id": "binary_sensor.konnected_445566_zone_3",
                 "inverse": False,
                 "name": "Konnected 445566 Zone 3",
                 "state": None,
@@ -517,14 +552,16 @@ async def test_default_options(hass, mock_panel):
             },
         },
         "blink": True,
-        "panel": device,
         "discovery": True,
         "host": "1.2.3.4",
+        "panel": device,
         "port": 1234,
         "sensors": [
             {
+                "humidity": "sensor.konnected_445566_sensor_4_humidity",
                 "name": "Konnected 445566 Sensor 4",
                 "poll_interval": 3,
+                "temperature": "sensor.konnected_445566_sensor_4_temperature",
                 "type": "dht",
                 "zone": "4",
             },
@@ -533,6 +570,7 @@ async def test_default_options(hass, mock_panel):
         "switches": [
             {
                 "activation": "low",
+                "entity_id": "switch.switcher",
                 "momentary": 50,
                 "name": "switcher",
                 "pause": 100,
@@ -542,6 +580,7 @@ async def test_default_options(hass, mock_panel):
             },
             {
                 "activation": "high",
+                "entity_id": "switch.konnected_445566_actuator_6",
                 "momentary": None,
                 "name": "Konnected 445566 Actuator 6",
                 "pause": None,
@@ -553,7 +592,7 @@ async def test_default_options(hass, mock_panel):
     }
 
 
-async def test_connect_retry(hass, mock_panel):
+async def test_connect_retry(hass: HomeAssistant, mock_panel) -> None:
     """Test that we create a Konnected Panel and save the data."""
     device_config = config_flow.CONFIG_ENTRY_SCHEMA(
         {
@@ -654,15 +693,11 @@ async def test_connect_retry(hass, mock_panel):
     # confirm switch is unavailable after second attempt
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=11))
     await hass.async_block_till_done()
-    await hass.helpers.entity_component.async_update_entity(
-        "switch.konnected_445566_actuator_6"
-    )
+    await async_update_entity(hass, "switch.konnected_445566_actuator_6")
     assert hass.states.get("switch.konnected_445566_actuator_6").state == "unavailable"
 
     # confirm switch is available after third attempt
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=21))
     await hass.async_block_till_done()
-    await hass.helpers.entity_component.async_update_entity(
-        "switch.konnected_445566_actuator_6"
-    )
-    assert hass.states.get("switch.konnected_445566_actuator_6").state == "off"
+    await async_update_entity(hass, "switch.konnected_445566_actuator_6")
+    assert hass.states.get("switch.konnected_445566_actuator_6").state == "unknown"

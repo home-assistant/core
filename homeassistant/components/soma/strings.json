@@ -16,8 +16,10 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
-        "description": "Please enter connection settings of your SOMA Connect.",
-        "title": "SOMA Connect"
+        "data_description": {
+          "host": "The hostname or IP address of your SOMA Connect."
+        },
+        "description": "Please enter connection settings of your SOMA Connect."
       }
     }
   }

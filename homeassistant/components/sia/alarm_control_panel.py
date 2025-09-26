@@ -1,45 +1,30 @@
 """Module for SIA Alarm Control Panels."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+from typing import TYPE_CHECKING
 
 from pysiaalarm import SIAEvent
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityDescription,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_PORT,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_ACCOUNT,
-    CONF_ACCOUNTS,
-    CONF_PING_INTERVAL,
-    CONF_ZONES,
-    KEY_ALARM,
-    PREVIOUS_STATE,
-    SIA_NAME_FORMAT,
-    SIA_UNIQUE_ID_FORMAT_ALARM,
-)
-from .sia_entity_base import SIABaseEntity, SIAEntityDescription
+from .const import CONF_ACCOUNT, CONF_ACCOUNTS, CONF_ZONES, KEY_ALARM, PREVIOUS_STATE
+from .entity import SIABaseEntity, SIAEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class SIAAlarmControlPanelEntityDescription(
     AlarmControlPanelEntityDescription,
     SIAEntityDescription,
@@ -50,30 +35,33 @@ class SIAAlarmControlPanelEntityDescription(
 ENTITY_DESCRIPTION_ALARM = SIAAlarmControlPanelEntityDescription(
     key=KEY_ALARM,
     code_consequences={
-        "PA": STATE_ALARM_TRIGGERED,
-        "JA": STATE_ALARM_TRIGGERED,
-        "TA": STATE_ALARM_TRIGGERED,
-        "BA": STATE_ALARM_TRIGGERED,
-        "CA": STATE_ALARM_ARMED_AWAY,
-        "CB": STATE_ALARM_ARMED_AWAY,
-        "CG": STATE_ALARM_ARMED_AWAY,
-        "CL": STATE_ALARM_ARMED_AWAY,
-        "CP": STATE_ALARM_ARMED_AWAY,
-        "CQ": STATE_ALARM_ARMED_AWAY,
-        "CS": STATE_ALARM_ARMED_AWAY,
-        "CF": STATE_ALARM_ARMED_CUSTOM_BYPASS,
-        "OA": STATE_ALARM_DISARMED,
-        "OB": STATE_ALARM_DISARMED,
-        "OG": STATE_ALARM_DISARMED,
-        "OP": STATE_ALARM_DISARMED,
-        "OQ": STATE_ALARM_DISARMED,
-        "OR": STATE_ALARM_DISARMED,
-        "OS": STATE_ALARM_DISARMED,
-        "NC": STATE_ALARM_ARMED_NIGHT,
-        "NL": STATE_ALARM_ARMED_NIGHT,
+        "PA": AlarmControlPanelState.TRIGGERED,
+        "JA": AlarmControlPanelState.TRIGGERED,
+        "TA": AlarmControlPanelState.TRIGGERED,
+        "BA": AlarmControlPanelState.TRIGGERED,
+        "HA": AlarmControlPanelState.TRIGGERED,
+        "CA": AlarmControlPanelState.ARMED_AWAY,
+        "CB": AlarmControlPanelState.ARMED_AWAY,
+        "CG": AlarmControlPanelState.ARMED_AWAY,
+        "CL": AlarmControlPanelState.ARMED_AWAY,
+        "CP": AlarmControlPanelState.ARMED_AWAY,
+        "CQ": AlarmControlPanelState.ARMED_AWAY,
+        "CS": AlarmControlPanelState.ARMED_AWAY,
+        "CF": AlarmControlPanelState.ARMED_AWAY,
+        "NP": AlarmControlPanelState.DISARMED,
+        "NO": AlarmControlPanelState.DISARMED,
+        "OA": AlarmControlPanelState.DISARMED,
+        "OB": AlarmControlPanelState.DISARMED,
+        "OG": AlarmControlPanelState.DISARMED,
+        "OP": AlarmControlPanelState.DISARMED,
+        "OQ": AlarmControlPanelState.DISARMED,
+        "OR": AlarmControlPanelState.DISARMED,
+        "OS": AlarmControlPanelState.DISARMED,
+        "NC": AlarmControlPanelState.ARMED_NIGHT,
+        "NL": AlarmControlPanelState.ARMED_NIGHT,
+        "NE": AlarmControlPanelState.ARMED_NIGHT,
+        "NF": AlarmControlPanelState.ARMED_NIGHT,
         "BR": PREVIOUS_STATE,
-        "NP": PREVIOUS_STATE,
-        "NO": PREVIOUS_STATE,
     },
 )
 
@@ -81,22 +69,12 @@ ENTITY_DESCRIPTION_ALARM = SIAAlarmControlPanelEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SIA alarm_control_panel(s) from a config entry."""
     async_add_entities(
         SIAAlarmControlPanel(
-            port=entry.data[CONF_PORT],
-            account=account_data[CONF_ACCOUNT],
-            zone=zone,
-            ping_interval=account_data[CONF_PING_INTERVAL],
-            entity_description=ENTITY_DESCRIPTION_ALARM,
-            unique_id=SIA_UNIQUE_ID_FORMAT_ALARM.format(
-                entry.entry_id, account_data[CONF_ACCOUNT], zone
-            ),
-            name=SIA_NAME_FORMAT.format(
-                entry.data[CONF_PORT], account_data[CONF_ACCOUNT], zone, "alarm"
-            ),
+            entry, account_data[CONF_ACCOUNT], zone, ENTITY_DESCRIPTION_ALARM
         )
         for account_data in entry.data[CONF_ACCOUNTS]
         for zone in range(
@@ -110,46 +88,50 @@ class SIAAlarmControlPanel(SIABaseEntity, AlarmControlPanelEntity):
     """Class for SIA Alarm Control Panels."""
 
     entity_description: SIAAlarmControlPanelEntityDescription
-    _attr_supported_features = 0
 
     def __init__(
         self,
-        port: int,
+        entry: ConfigEntry,
         account: str,
-        zone: int | None,
-        ping_interval: int,
+        zone: int,
         entity_description: SIAAlarmControlPanelEntityDescription,
-        unique_id: str,
-        name: str,
     ) -> None:
         """Create SIAAlarmControlPanel object."""
         super().__init__(
-            port,
+            entry,
             account,
             zone,
-            ping_interval,
             entity_description,
-            unique_id,
-            name,
         )
 
-        self._attr_state: StateType = None
-        self._old_state: StateType = None
+        self._attr_alarm_state: AlarmControlPanelState | None = None
+        self._old_state: AlarmControlPanelState | None = None
 
     def handle_last_state(self, last_state: State | None) -> None:
         """Handle the last state."""
-        if last_state is not None:
-            self._attr_state = last_state.state
+        self._attr_alarm_state = None
+        if last_state is not None and last_state.state not in (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            self._attr_alarm_state = AlarmControlPanelState(last_state.state)
         if self.state == STATE_UNAVAILABLE:
             self._attr_available = False
 
     def update_state(self, sia_event: SIAEvent) -> bool:
-        """Update the state of the alarm control panel."""
-        new_state = self.entity_description.code_consequences.get(sia_event.code)
+        """Update the state of the alarm control panel.
+
+        Return True if the event was relevant for this entity.
+        """
+        new_state = None
+        if sia_event.code:
+            new_state = self.entity_description.code_consequences.get(sia_event.code)
         if new_state is None:
             return False
         _LOGGER.debug("New state will be %s", new_state)
         if new_state == PREVIOUS_STATE:
             new_state = self._old_state
-        self._attr_state, self._old_state = new_state, self._attr_state
+        if TYPE_CHECKING:
+            assert isinstance(new_state, AlarmControlPanelState)
+        self._attr_alarm_state, self._old_state = new_state, self._attr_alarm_state
         return True

@@ -1,17 +1,10 @@
 {
   "domain": "advantage_air",
   "name": "Advantage Air",
+  "codeowners": ["@Bre77"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/advantage_air",
-  "codeowners": [
-    "@Bre77"
-  ],
-  "requirements": [
-    "advantage_air==0.2.6"
-  ],
-  "quality_scale": "platinum",
   "iot_class": "local_polling",
-  "loggers": [
-    "advantage_air"
-  ]
+  "loggers": ["advantage_air"],
+  "requirements": ["advantage-air==0.4.4"]
 }

@@ -1,38 +1,32 @@
 """Support for Insteon thermostat."""
+
 from __future__ import annotations
 
-from pyinsteon.constants import ThermostatMode
-from pyinsteon.operating_flag import CELSIUS
+from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from pyinsteon.config import CELSIUS
+from pyinsteon.constants import ThermostatMode
+
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_FAN,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    DOMAIN as CLIMATE_DOMAIN,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    FAN_AUTO,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import SIGNAL_ADD_ENTITIES
-from .insteon_entity import InsteonEntity
-from .utils import async_add_insteon_entities
+from .entity import InsteonEntity
+from .utils import async_add_insteon_devices, async_add_insteon_entities
+
+FAN_ONLY = "fan_only"
 
 COOLING = 1
 HEATING = 2
@@ -50,24 +44,18 @@ HUMIDITY_LOW = 17
 
 
 HVAC_MODES = {
-    0: HVAC_MODE_OFF,
-    1: HVAC_MODE_HEAT,
-    2: HVAC_MODE_COOL,
-    3: HVAC_MODE_HEAT_COOL,
+    0: HVACMode.OFF,
+    1: HVACMode.HEAT,
+    2: HVACMode.COOL,
+    3: HVACMode.HEAT_COOL,
 }
-FAN_MODES = {4: HVAC_MODE_AUTO, 8: HVAC_MODE_FAN_ONLY}
-SUPPORTED_FEATURES = (
-    SUPPORT_FAN_MODE
-    | SUPPORT_TARGET_HUMIDITY
-    | SUPPORT_TARGET_TEMPERATURE
-    | SUPPORT_TARGET_TEMPERATURE_RANGE
-)
+FAN_MODES = {4: FAN_AUTO, 8: FAN_ONLY}
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Insteon climate entities from a config entry."""
 
@@ -76,31 +64,43 @@ async def async_setup_entry(
         """Add the Insteon entities for the platform."""
         async_add_insteon_entities(
             hass,
-            CLIMATE_DOMAIN,
+            Platform.CLIMATE,
             InsteonClimateEntity,
             async_add_entities,
             discovery_info,
         )
 
-    signal = f"{SIGNAL_ADD_ENTITIES}_{CLIMATE_DOMAIN}"
+    signal = f"{SIGNAL_ADD_ENTITIES}_{Platform.CLIMATE}"
     async_dispatcher_connect(hass, signal, async_add_insteon_climate_entities)
-    async_add_insteon_climate_entities()
+    async_add_insteon_devices(
+        hass,
+        Platform.CLIMATE,
+        InsteonClimateEntity,
+        async_add_entities,
+    )
 
 
 class InsteonClimateEntity(InsteonEntity, ClimateEntity):
     """A Class for an Insteon climate entity."""
 
-    @property
-    def supported_features(self):
-        """Return the supported features for this entity."""
-        return SUPPORTED_FEATURES
+    _attr_supported_features = (
+        ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TARGET_HUMIDITY
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+    _attr_hvac_modes = list(HVAC_MODES.values())
+    _attr_fan_modes = list(FAN_MODES.values())
+    _attr_min_humidity = 1
 
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        if self._insteon_device.properties[CELSIUS].value:
-            return TEMP_CELSIUS
-        return TEMP_FAHRENHEIT
+        if self._insteon_device.configuration[CELSIUS].value:
+            return UnitOfTemperature.CELSIUS
+        return UnitOfTemperature.FAHRENHEIT
 
     @property
     def current_humidity(self) -> int | None:
@@ -108,14 +108,9 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         return self._insteon_device.groups[HUMIDITY].value
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         return HVAC_MODES[self._insteon_device.groups[SYSTEM_MODE].value]
-
-    @property
-    def hvac_modes(self) -> list[str]:
-        """Return the list of available hvac operation modes."""
-        return list(HVAC_MODES.values())
 
     @property
     def current_temperature(self) -> float | None:
@@ -151,11 +146,6 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         return FAN_MODES[self._insteon_device.groups[FAN_MODE].value]
 
     @property
-    def fan_modes(self) -> list[str] | None:
-        """Return the list of available fan modes."""
-        return list(FAN_MODES.values())
-
-    @property
     def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
         high = self._insteon_device.groups[HUMIDITY_HIGH].value
@@ -164,23 +154,18 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         return (high + low) / 2 if high and low else None
 
     @property
-    def min_humidity(self) -> int:
-        """Return the minimum humidity."""
-        return 1
-
-    @property
-    def hvac_action(self) -> str | None:
+    def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation if supported.
 
         Need to be one of CURRENT_HVAC_*.
         """
         if self._insteon_device.groups[COOLING].value:
-            return CURRENT_HVAC_COOL
+            return HVACAction.COOLING
         if self._insteon_device.groups[HEATING].value:
-            return CURRENT_HVAC_HEAT
+            return HVACAction.HEATING
         if self._insteon_device.groups[FAN_MODE].value == ThermostatMode.FAN_ALWAYS_ON:
-            return CURRENT_HVAC_FAN
-        return CURRENT_HVAC_IDLE
+            return HVACAction.FAN
+        return HVACAction.IDLE
 
     @property
     def extra_state_attributes(self):
@@ -194,7 +179,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         attr["humidifier"] = humidifier
         return attr
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temp = kwargs.get(ATTR_TEMPERATURE)
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
@@ -213,20 +198,20 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         mode = list(FAN_MODES)[list(FAN_MODES.values()).index(fan_mode)]
         await self._insteon_device.async_set_mode(mode)
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         mode = list(HVAC_MODES)[list(HVAC_MODES.values()).index(hvac_mode)]
         await self._insteon_device.async_set_mode(mode)
 
-    async def async_set_humidity(self, humidity):
+    async def async_set_humidity(self, humidity: int) -> None:
         """Set new humidity level."""
-        change = humidity - self.target_humidity
+        change = humidity - (self.target_humidity or 0)
         high = self._insteon_device.groups[HUMIDITY_HIGH].value + change
         low = self._insteon_device.groups[HUMIDITY_LOW].value + change
         await self._insteon_device.async_set_humidity_low_set_point(low)
         await self._insteon_device.async_set_humidity_high_set_point(high)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register INSTEON update events."""
         await super().async_added_to_hass()
         await self._insteon_device.async_read_op_flags()

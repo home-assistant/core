@@ -1,0 +1,502 @@
+{
+  "info": {
+    "project_id": "P-04FF",
+    "name": "Fixture",
+    "last_modified": "2023-04-30T09:04:04.4043671Z",
+    "group_address_style": "ThreeLevel",
+    "guid": "6a019e80-5945-489e-95a3-378735c642d1",
+    "created_by": "ETS5",
+    "schema_version": "20",
+    "tool_version": "5.7.1428.39779",
+    "xknxproject_version": "3.1.0",
+    "language_code": "de-DE"
+  },
+  "communication_objects": {
+    "1.0.9/O-57_R-21": {
+      "name": "Ch A Current Setpoint",
+      "number": 57,
+      "text": "Kanal A - Regler",
+      "function_text": "aktueller Sollwert",
+      "description": "",
+      "device_address": "1.0.9",
+      "dpts": [
+        {
+          "main": 9,
+          "sub": 1
+        }
+      ],
+      "object_size": "2 Bytes",
+      "flags": {
+        "read": true,
+        "write": false,
+        "communication": true,
+        "update": false,
+        "read_on_init": false,
+        "transmit": true
+      },
+      "group_address_links": ["0/0/2"]
+    },
+    "1.0.9/O-73_R-29": {
+      "name": "Ch A On/Off Request Master",
+      "number": 73,
+      "text": "Kanal A - Regler",
+      "function_text": "Regelung aktivieren/deaktivieren",
+      "description": "",
+      "device_address": "1.0.9",
+      "dpts": [
+        {
+          "main": 1,
+          "sub": 1
+        }
+      ],
+      "object_size": "1 Bit",
+      "flags": {
+        "read": false,
+        "write": true,
+        "communication": true,
+        "update": false,
+        "read_on_init": false,
+        "transmit": false
+      },
+      "group_address_links": ["0/0/1"]
+    },
+    "1.1.6/O-4_R-4": {
+      "name": "DayNight_General_1_GO",
+      "number": 4,
+      "text": "Zeit",
+      "function_text": "Tag (0) / Nacht (1)",
+      "description": "",
+      "device_address": "1.1.6",
+      "dpts": [
+        {
+          "main": 1,
+          "sub": 24
+        }
+      ],
+      "object_size": "1 Bit",
+      "flags": {
+        "read": false,
+        "write": true,
+        "communication": true,
+        "update": true,
+        "read_on_init": false,
+        "transmit": true
+      },
+      "group_address_links": ["0/0/1"]
+    },
+    "1.1.6/O-1_R-1": {
+      "name": "Time_General_1_GO",
+      "number": 1,
+      "text": "Zeit",
+      "function_text": "Uhrzeit",
+      "description": "",
+      "device_address": "1.1.6",
+      "dpts": [
+        {
+          "main": 10,
+          "sub": 1
+        }
+      ],
+      "object_size": "3 Bytes",
+      "flags": {
+        "read": false,
+        "write": true,
+        "communication": true,
+        "update": true,
+        "read_on_init": false,
+        "transmit": true
+      },
+      "group_address_links": ["0/1/2"]
+    },
+    "1.1.6/O-241_R-124": {
+      "name": "StatusOnOff_RGB_1_GO",
+      "number": 241,
+      "text": "RGB:",
+      "function_text": "Status An/Aus",
+      "description": "",
+      "device_address": "1.1.6",
+      "dpts": [
+        {
+          "main": 1,
+          "sub": 1
+        }
+      ],
+      "object_size": "1 Bit",
+      "flags": {
+        "read": true,
+        "write": false,
+        "communication": true,
+        "update": false,
+        "read_on_init": false,
+        "transmit": true
+      },
+      "group_address_links": ["0/1/0"]
+    },
+    "2.0.5/O-107_R-61": {
+      "name": "UHRZEIT",
+      "number": 107,
+      "text": "Uhrzeit",
+      "function_text": "Eingang / Ausgang",
+      "description": "",
+      "device_address": "2.0.5",
+      "dpts": [
+        {
+          "main": 10,
+          "sub": 1
+        }
+      ],
+      "object_size": "3 Bytes",
+      "flags": {
+        "read": true,
+        "write": true,
+        "communication": true,
+        "update": false,
+        "read_on_init": false,
+        "transmit": true
+      },
+      "group_address_links": ["0/0/3"]
+    },
+    "2.0.5/O-123_R-3923": {
+      "name": "T_MW_INTERN",
+      "number": 123,
+      "text": "Temp.Sensor: Messwert",
+      "function_text": "Ausgang",
+      "description": "",
+      "device_address": "2.0.5",
+      "dpts": [
+        {
+          "main": 9,
+          "sub": 1
+        }
+      ],
+      "object_size": "2 Bytes",
+      "flags": {
+        "read": true,
+        "write": false,
+        "communication": true,
+        "update": false,
+        "read_on_init": false,
+        "transmit": true
+      },
+      "group_address_links": ["0/0/2"]
+    },
+    "2.0.5/O-331_R-254": {
+      "name": "NACHT_SA",
+      "number": 331,
+      "text": "Nacht: Schaltausgang",
+      "function_text": "Ausgang",
+      "description": "",
+      "device_address": "2.0.5",
+      "dpts": [
+        {
+          "main": 1,
+          "sub": 1
+        }
+      ],
+      "object_size": "1 Bit",
+      "flags": {
+        "read": true,
+        "write": false,
+        "communication": true,
+        "update": false,
+        "read_on_init": false,
+        "transmit": true
+      },
+      "group_address_links": ["0/0/1"]
+    },
+    "2.0.15/O-1_R-0": {
+      "name": "Time",
+      "number": 1,
+      "text": "Uhrzeit",
+      "function_text": "Senden",
+      "description": "",
+      "device_address": "2.0.15",
+      "dpts": [
+        {
+          "main": 10,
+          "sub": 1
+        }
+      ],
+      "object_size": "3 Bytes",
+      "flags": {
+        "read": false,
+        "write": false,
+        "communication": true,
+        "update": false,
+        "read_on_init": false,
+        "transmit": true
+      },
+      "group_address_links": ["0/1/2"]
+    },
+    "2.0.15/O-3_R-2": {
+      "name": "Trigger send date/time",
+      "number": 3,
+      "text": "Trigger sende Datum/Uhrzeit",
+      "function_text": "Empfangen",
+      "description": "",
+      "device_address": "2.0.15",
+      "dpts": [
+        {
+          "main": 1,
+          "sub": 17
+        }
+      ],
+      "object_size": "1 Bit",
+      "flags": {
+        "read": false,
+        "write": true,
+        "communication": true,
+        "update": false,
+        "read_on_init": false,
+        "transmit": false
+      },
+      "group_address_links": ["0/1/0"]
+    }
+  },
+  "topology": {
+    "0": {
+      "name": "Backbone Bereich",
+      "description": null,
+      "lines": {
+        "0": {
+          "name": "Bereichslinie",
+          "description": null,
+          "devices": [],
+          "medium_type": "KNXnet/IP (IP)"
+        }
+      }
+    },
+    "1": {
+      "name": "Eins",
+      "description": null,
+      "lines": {
+        "0": {
+          "name": "Hauptlinie",
+          "description": null,
+          "devices": ["1.0.0", "1.0.9"],
+          "medium_type": "Twisted Pair (TP)"
+        },
+        "1": {
+          "name": "L1",
+          "description": null,
+          "devices": ["1.1.0", "1.1.1", "1.1.6"],
+          "medium_type": "Twisted Pair (TP)"
+        }
+      }
+    },
+    "2": {
+      "name": "Zwei",
+      "description": null,
+      "lines": {
+        "0": {
+          "name": "Hauptlinie",
+          "description": null,
+          "devices": ["2.0.0", "2.0.5", "2.0.6", "2.0.15"],
+          "medium_type": "Twisted Pair (TP)"
+        }
+      }
+    }
+  },
+  "devices": {
+    "1.0.0": {
+      "name": "KNX IP Router 752 secure",
+      "hardware_name": "KNX IP Router 752 secure",
+      "description": "",
+      "manufacturer_name": "Weinzierl Engineering GmbH",
+      "individual_address": "1.0.0",
+      "project_uid": 6,
+      "communication_object_ids": []
+    },
+    "1.0.9": {
+      "name": "HCC/S2.2.1.1 Heiz-/Kühlkreis Controller,3-Punkt,2-fach,REG",
+      "hardware_name": "HCC/S2.2.1.1 Heiz-/Kühlkreis Controller,3-Punkt,2-fach,REG",
+      "description": "",
+      "manufacturer_name": "ABB",
+      "individual_address": "1.0.9",
+      "project_uid": 30,
+      "communication_object_ids": ["1.0.9/O-57_R-21", "1.0.9/O-73_R-29"]
+    },
+    "1.1.0": {
+      "name": "Bereichs-/Linienkoppler REG",
+      "hardware_name": "Bereichs-/Linienkoppler REG",
+      "description": "",
+      "manufacturer_name": "Albrecht Jung",
+      "individual_address": "1.1.0",
+      "project_uid": 23,
+      "communication_object_ids": []
+    },
+    "1.1.1": {
+      "name": "SCN-IP000.03 IP Interface mit Secure",
+      "hardware_name": "IP Interface Secure",
+      "description": "",
+      "manufacturer_name": "MDT technologies",
+      "individual_address": "1.1.1",
+      "project_uid": 24,
+      "communication_object_ids": []
+    },
+    "1.1.6": {
+      "name": "Enertex KNX LED Dimmsequenzer 20A/5x REG",
+      "hardware_name": "LED Dimmsequenzer 20A/5x REG/DK",
+      "description": "",
+      "manufacturer_name": "Enertex Bayern GmbH",
+      "individual_address": "1.1.6",
+      "project_uid": 29,
+      "communication_object_ids": [
+        "1.1.6/O-4_R-4",
+        "1.1.6/O-1_R-1",
+        "1.1.6/O-241_R-124"
+      ]
+    },
+    "2.0.0": {
+      "name": "KNX/IP-Router",
+      "hardware_name": "IP Router",
+      "description": "",
+      "manufacturer_name": "GIRA Giersiepen",
+      "individual_address": "2.0.0",
+      "project_uid": 17,
+      "communication_object_ids": []
+    },
+    "2.0.5": {
+      "name": "Suntracer KNX pro",
+      "hardware_name": "KNX Suntracer Pro",
+      "description": "",
+      "manufacturer_name": "Elsner Elektronik GmbH",
+      "individual_address": "2.0.5",
+      "project_uid": 31,
+      "communication_object_ids": [
+        "2.0.5/O-107_R-61",
+        "2.0.5/O-123_R-3923",
+        "2.0.5/O-331_R-254"
+      ]
+    },
+    "2.0.6": {
+      "name": "KNX Modbus TCP Gateway 716",
+      "hardware_name": "KNX Modbus TCP Gateway 716",
+      "description": "",
+      "manufacturer_name": "Weinzierl Engineering GmbH",
+      "individual_address": "2.0.6",
+      "project_uid": 32,
+      "communication_object_ids": []
+    },
+    "2.0.15": {
+      "name": "KNX/IP-Router",
+      "hardware_name": "Router Applications",
+      "description": "",
+      "manufacturer_name": "GIRA Giersiepen",
+      "individual_address": "2.0.15",
+      "project_uid": 50,
+      "communication_object_ids": ["2.0.15/O-1_R-0", "2.0.15/O-3_R-2"]
+    }
+  },
+  "group_addresses": {
+    "0/0/1": {
+      "name": "Binary",
+      "identifier": "GA-1",
+      "raw_address": 1,
+      "address": "0/0/1",
+      "project_uid": 43,
+      "dpt": {
+        "main": 1,
+        "sub": 1
+      },
+      "communication_object_ids": [
+        "1.0.9/O-73_R-29",
+        "1.1.6/O-4_R-4",
+        "2.0.5/O-331_R-254"
+      ],
+      "description": ""
+    },
+    "0/0/2": {
+      "name": "2-byte float",
+      "identifier": "GA-2",
+      "raw_address": 2,
+      "address": "0/0/2",
+      "project_uid": 44,
+      "dpt": {
+        "main": 9,
+        "sub": 1
+      },
+      "communication_object_ids": ["1.0.9/O-57_R-21", "2.0.5/O-123_R-3923"],
+      "description": ""
+    },
+    "0/0/3": {
+      "name": "daytime",
+      "identifier": "GA-3",
+      "raw_address": 3,
+      "address": "0/0/3",
+      "project_uid": 45,
+      "dpt": {
+        "main": 10,
+        "sub": 1
+      },
+      "communication_object_ids": ["2.0.5/O-107_R-61"],
+      "description": ""
+    },
+    "0/0/4": {
+      "name": "RGB color",
+      "identifier": "GA-7",
+      "raw_address": 4,
+      "address": "0/0/4",
+      "project_uid": 69,
+      "dpt": {
+        "main": 232,
+        "sub": 600
+      },
+      "communication_object_ids": [],
+      "description": ""
+    },
+    "0/1/0": {
+      "name": "binary (1.017)",
+      "identifier": "GA-4",
+      "raw_address": 256,
+      "address": "0/1/0",
+      "project_uid": 47,
+      "dpt": {
+        "main": 1,
+        "sub": 17
+      },
+      "communication_object_ids": ["1.1.6/O-241_R-124", "2.0.15/O-3_R-2"],
+      "description": ""
+    },
+    "0/1/1": {
+      "name": "percent",
+      "identifier": "GA-5",
+      "raw_address": 257,
+      "address": "0/1/1",
+      "project_uid": 48,
+      "dpt": {
+        "main": 5,
+        "sub": 1
+      },
+      "communication_object_ids": [],
+      "description": ""
+    },
+    "0/1/2": {
+      "name": "daytime",
+      "identifier": "GA-6",
+      "raw_address": 258,
+      "address": "0/1/2",
+      "project_uid": 49,
+      "dpt": {
+        "main": 10,
+        "sub": 1
+      },
+      "communication_object_ids": ["1.1.6/O-1_R-1", "2.0.15/O-1_R-0"],
+      "description": ""
+    }
+  },
+  "locations": {
+    "Neues Projekt": {
+      "type": "Building",
+      "identifier": "P-04FF-0_BP-1",
+      "name": "Neues Projekt",
+      "usage_id": null,
+      "usage_text": "",
+      "number": "",
+      "description": "",
+      "project_uid": 3,
+      "devices": [],
+      "spaces": {}
+    }
+  }
+}

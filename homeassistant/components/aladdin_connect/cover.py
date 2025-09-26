@@ -1,96 +1,64 @@
-"""Platform for the Aladdin Connect cover component."""
+"""Cover Entity for Genie Garage Door."""
+
 from __future__ import annotations
 
-import logging
-from typing import Any, Final
+from typing import Any
 
-from aladdin_connect import AladdinConnectClient
-import voluptuous as vol
-
-from homeassistant.components import persistent_notification
-from homeassistant.components.cover import (
-    PLATFORM_SCHEMA as BASE_PLATFORM_SCHEMA,
-    CoverDeviceClass,
-    CoverEntity,
-)
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPENING,
-)
+from homeassistant.components.cover import CoverDeviceClass, CoverEntity
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import NOTIFICATION_ID, NOTIFICATION_TITLE, STATES_MAP, SUPPORTED_FEATURES
-from .model import DoorDevice
-
-_LOGGER: Final = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA: Final = BASE_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
-)
+from .const import SUPPORTED_FEATURES
+from .coordinator import AladdinConnectConfigEntry, AladdinConnectCoordinator
+from .entity import AladdinConnectEntity
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: AladdinConnectConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Aladdin Connect platform."""
+    """Set up the cover platform."""
+    coordinators = entry.runtime_data
 
-    username: str = config[CONF_USERNAME]
-    password: str = config[CONF_PASSWORD]
-    acc = AladdinConnectClient(username, password)
-
-    try:
-        if not acc.login():
-            raise ValueError("Username or Password is incorrect")
-        add_entities(
-            (AladdinDevice(acc, door) for door in acc.get_doors()),
-            update_before_add=True,
-        )
-    except (TypeError, KeyError, NameError, ValueError) as ex:
-        _LOGGER.error("%s", ex)
-        persistent_notification.create(
-            hass,
-            "Error: {ex}<br />You will need to restart hass after fixing.",
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
-        )
+    async_add_entities(
+        AladdinCoverEntity(coordinator) for coordinator in coordinators.values()
+    )
 
 
-class AladdinDevice(CoverEntity):
+class AladdinCoverEntity(AladdinConnectEntity, CoverEntity):
     """Representation of Aladdin Connect cover."""
 
     _attr_device_class = CoverDeviceClass.GARAGE
     _attr_supported_features = SUPPORTED_FEATURES
+    _attr_name = None
 
-    def __init__(self, acc: AladdinConnectClient, device: DoorDevice) -> None:
-        """Initialize the cover."""
-        self._acc = acc
-        self._device_id = device["device_id"]
-        self._number = device["door_number"]
-        self._attr_name = device["name"]
-        self._attr_unique_id = f"{self._device_id}-{self._number}"
+    def __init__(self, coordinator: AladdinConnectCoordinator) -> None:
+        """Initialize the Aladdin Connect cover."""
+        super().__init__(coordinator)
+        self._attr_unique_id = coordinator.data.unique_id
 
-    def close_cover(self, **kwargs: Any) -> None:
-        """Issue close command to cover."""
-        self._acc.close_door(self._device_id, self._number)
-
-    def open_cover(self, **kwargs: Any) -> None:
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Issue open command to cover."""
-        self._acc.open_door(self._device_id, self._number)
+        await self.client.open_door(self._device_id, self._number)
 
-    def update(self) -> None:
-        """Update status of cover."""
-        status = STATES_MAP.get(
-            self._acc.get_door_status(self._device_id, self._number)
-        )
-        self._attr_is_opening = status == STATE_OPENING
-        self._attr_is_closing = status == STATE_CLOSING
-        self._attr_is_closed = None if status is None else status == STATE_CLOSED
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Issue close command to cover."""
+        await self.client.close_door(self._device_id, self._number)
+
+    @property
+    def is_closed(self) -> bool | None:
+        """Update is closed attribute."""
+        if (status := self.coordinator.data.status) is None:
+            return None
+        return status == "closed"
+
+    @property
+    def is_closing(self) -> bool | None:
+        """Update is closing attribute."""
+        return self.coordinator.data.status == "closing"
+
+    @property
+    def is_opening(self) -> bool | None:
+        """Update is opening attribute."""
+        return self.coordinator.data.status == "opening"

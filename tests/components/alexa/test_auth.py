@@ -1,19 +1,23 @@
 """Test Alexa auth endpoints."""
+
 from homeassistant.components.alexa.auth import Auth
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
+from homeassistant.core import HomeAssistant
 
-from . import TEST_TOKEN_URL
+from .test_common import TEST_TOKEN_URL
+
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def run_auth_get_access_token(
-    hass,
-    aioclient_mock,
-    expires_in,
-    client_id,
-    client_secret,
-    accept_grant_code,
-    refresh_token,
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    expires_in: int,
+    client_id: str,
+    client_secret: str,
+    accept_grant_code: str,
+    refresh_token: str,
+) -> None:
     """Do auth and request a new token for tests."""
     aioclient_mock.post(
         TEST_TOKEN_URL,
@@ -29,7 +33,9 @@ async def run_auth_get_access_token(
     await auth.async_get_access_token()
 
 
-async def test_auth_get_access_token_expired(hass, aioclient_mock):
+async def test_auth_get_access_token_expired(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test the auth get access token function."""
     client_id = "client123"
     client_secret = "shhhhh"
@@ -63,7 +69,9 @@ async def test_auth_get_access_token_expired(hass, aioclient_mock):
     assert token_call_json[CONF_CLIENT_SECRET] == client_secret
 
 
-async def test_auth_get_access_token_not_expired(hass, aioclient_mock):
+async def test_auth_get_access_token_not_expired(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test the auth get access token function."""
     client_id = "client123"
     client_secret = "shhhhh"

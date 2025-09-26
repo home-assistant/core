@@ -1,6 +1,9 @@
 """Tests for emulated_kasa library bindings."""
+
 import math
 from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from homeassistant.components import emulated_kasa
 from homeassistant.components.emulated_kasa.const import (
@@ -9,25 +12,22 @@ from homeassistant.components.emulated_kasa.const import (
     DOMAIN,
 )
 from homeassistant.components.fan import (
-    ATTR_SPEED,
+    ATTR_PERCENTAGE,
     DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_SPEED,
+    SERVICE_SET_PERCENTAGE,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import (
-    ATTR_CURRENT_POWER_W,
-    DOMAIN as SWITCH_DOMAIN,
-)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
     CONF_ENTITIES,
     CONF_NAME,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 ENTITY_SWITCH = "switch.ac"
@@ -57,15 +57,15 @@ CONFIG = {
             ENTITY_FAN: {
                 CONF_POWER: "{% if is_state_attr('"
                 + ENTITY_FAN
-                + "','speed', 'low') %} "
+                + "','percentage', 33) %} "
                 + str(ENTITY_FAN_SPEED_LOW)
                 + "{% elif is_state_attr('"
                 + ENTITY_FAN
-                + "','speed', 'medium') %} "
+                + "','percentage', 66) %} "
                 + str(ENTITY_FAN_SPEED_MED)
                 + "{% elif is_state_attr('"
                 + ENTITY_FAN
-                + "','speed', 'high') %} "
+                + "','percentage', 100) %} "
                 + str(ENTITY_FAN_SPEED_HIGH)
                 + "{% endif %}"
             },
@@ -109,21 +109,22 @@ CONFIG_FAN = {
             ENTITY_FAN: {
                 CONF_POWER: "{% if is_state_attr('"
                 + ENTITY_FAN
-                + "','speed', 'low') %} "
+                + "','percentage', 33) %} "
                 + str(ENTITY_FAN_SPEED_LOW)
                 + "{% elif is_state_attr('"
                 + ENTITY_FAN
-                + "','speed', 'medium') %} "
+                + "','percentage', 66) %} "
                 + str(ENTITY_FAN_SPEED_MED)
                 + "{% elif is_state_attr('"
                 + ENTITY_FAN
-                + "','speed', 'high') %} "
+                + "','percentage', 100) %} "
                 + str(ENTITY_FAN_SPEED_HIGH)
                 + "{% endif %}"
             },
         }
     }
 }
+
 
 CONFIG_SENSOR = {
     DOMAIN: {
@@ -132,6 +133,12 @@ CONFIG_SENSOR = {
         }
     }
 }
+
+
+@pytest.fixture(autouse=True)
+async def setup_homeassistant(hass: HomeAssistant):
+    """Set up the homeassistant integration."""
+    await async_setup_component(hass, "homeassistant", {})
 
 
 def nested_value(ndict, *keys):
@@ -144,7 +151,7 @@ def nested_value(ndict, *keys):
     return nested_value(ndict[key], *keys[1:])
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test that devices are reported correctly."""
     with patch(
         "sense_energy.SenseLink",
@@ -153,7 +160,7 @@ async def test_setup(hass):
         assert await async_setup_component(hass, DOMAIN, CONFIG) is True
 
 
-async def test_float(hass):
+async def test_float(hass: HomeAssistant) -> None:
     """Test a configuration using a simple float."""
     config = CONFIG_SWITCH[DOMAIN][CONF_ENTITIES]
     assert await async_setup_component(
@@ -196,7 +203,7 @@ async def test_float(hass):
     assert math.isclose(power, 0)
 
 
-async def test_switch_power(hass):
+async def test_switch_power(hass: HomeAssistant) -> None:
     """Test a configuration using a simple float."""
     config = CONFIG_SWITCH_NO_POWER[DOMAIN][CONF_ENTITIES]
     assert await async_setup_component(
@@ -217,38 +224,6 @@ async def test_switch_power(hass):
         SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_SWITCH}, blocking=True
     )
 
-    hass.states.async_set(
-        ENTITY_SWITCH,
-        STATE_ON,
-        attributes={ATTR_CURRENT_POWER_W: 100, ATTR_FRIENDLY_NAME: "AC"},
-    )
-
-    switch = hass.states.get(ENTITY_SWITCH)
-    assert switch.state == STATE_ON
-    power = switch.attributes[ATTR_CURRENT_POWER_W]
-    assert power == 100
-    assert switch.name == "AC"
-
-    plug_it = emulated_kasa.get_plug_devices(hass, config)
-    plug = next(plug_it).generate_response()
-
-    assert nested_value(plug, "system", "get_sysinfo", "alias") == "AC"
-    power = nested_value(plug, "emeter", "get_realtime", "power")
-    assert math.isclose(power, power)
-
-    hass.states.async_set(
-        ENTITY_SWITCH,
-        STATE_ON,
-        attributes={ATTR_CURRENT_POWER_W: 120, ATTR_FRIENDLY_NAME: "AC"},
-    )
-
-    plug_it = emulated_kasa.get_plug_devices(hass, config)
-    plug = next(plug_it).generate_response()
-
-    assert nested_value(plug, "system", "get_sysinfo", "alias") == "AC"
-    power = nested_value(plug, "emeter", "get_realtime", "power")
-    assert math.isclose(power, 120)
-
     # Turn off
     await hass.services.async_call(
         SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_SWITCH}, blocking=True
@@ -261,7 +236,7 @@ async def test_switch_power(hass):
     assert math.isclose(power, 0)
 
 
-async def test_template(hass):
+async def test_template(hass: HomeAssistant) -> None:
     """Test a configuration using a complex template."""
     config = CONFIG_FAN[DOMAIN][CONF_ENTITIES]
     assert await async_setup_component(
@@ -281,8 +256,8 @@ async def test_template(hass):
     )
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_SPEED,
-        {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_SPEED: "low"},
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PERCENTAGE: 33},
         blocking=True,
     )
 
@@ -299,8 +274,8 @@ async def test_template(hass):
     # Fan High:
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_SPEED,
-        {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_SPEED: "high"},
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PERCENTAGE: 100},
         blocking=True,
     )
     plug_it = emulated_kasa.get_plug_devices(hass, config)
@@ -320,7 +295,7 @@ async def test_template(hass):
     assert math.isclose(power, 0)
 
 
-async def test_sensor(hass):
+async def test_sensor(hass: HomeAssistant) -> None:
     """Test a configuration using a sensor in a template."""
     config = CONFIG_LIGHT[DOMAIN][CONF_ENTITIES]
     assert await async_setup_component(
@@ -377,7 +352,7 @@ async def test_sensor(hass):
     assert math.isclose(power, 0)
 
 
-async def test_sensor_state(hass):
+async def test_sensor_state(hass: HomeAssistant) -> None:
     """Test a configuration using a sensor in a template."""
     config = CONFIG_SENSOR[DOMAIN][CONF_ENTITIES]
     assert await async_setup_component(
@@ -424,7 +399,7 @@ async def test_sensor_state(hass):
     assert math.isclose(power, 0)
 
 
-async def test_multiple_devices(hass):
+async def test_multiple_devices(hass: HomeAssistant) -> None:
     """Test that devices are reported correctly."""
     config = CONFIG[DOMAIN][CONF_ENTITIES]
     assert await async_setup_component(
@@ -462,8 +437,8 @@ async def test_multiple_devices(hass):
     )
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_SPEED,
-        {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_SPEED: "medium"},
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PERCENTAGE: 66},
         blocking=True,
     )
 

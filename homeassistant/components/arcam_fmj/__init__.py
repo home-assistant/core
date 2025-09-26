@@ -1,97 +1,61 @@
 """Arcam component."""
+
 import asyncio
-from contextlib import suppress
+from asyncio import timeout
 import logging
+from typing import Any
 
 from arcam.fmj import ConnectionFailed
 from arcam.fmj.client import Client
-import async_timeout
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    DOMAIN_DATA_ENTRIES,
-    DOMAIN_DATA_TASKS,
     SIGNAL_CLIENT_DATA,
     SIGNAL_CLIENT_STARTED,
     SIGNAL_CLIENT_STOPPED,
 )
 
+type ArcamFmjConfigEntry = ConfigEntry[Client]
+
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
-async def _await_cancel(task):
-    task.cancel()
-    with suppress(asyncio.CancelledError):
-        await task
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the component."""
-    hass.data[DOMAIN_DATA_ENTRIES] = {}
-    hass.data[DOMAIN_DATA_TASKS] = {}
-
-    async def _stop(_):
-        asyncio.gather(
-            *(_await_cancel(task) for task in hass.data[DOMAIN_DATA_TASKS].values())
-        )
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop)
-
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ArcamFmjConfigEntry) -> bool:
     """Set up config entry."""
-    entries = hass.data[DOMAIN_DATA_ENTRIES]
-    tasks = hass.data[DOMAIN_DATA_TASKS]
+    entry.runtime_data = Client(entry.data[CONF_HOST], entry.data[CONF_PORT])
 
-    client = Client(entry.data[CONF_HOST], entry.data[CONF_PORT])
-    entries[entry.entry_id] = client
+    entry.async_create_background_task(
+        hass, _run_client(hass, entry.runtime_data, DEFAULT_SCAN_INTERVAL), "arcam_fmj"
+    )
 
-    task = asyncio.create_task(_run_client(hass, client, DEFAULT_SCAN_INTERVAL))
-    tasks[entry.entry_id] = task
-
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Cleanup before removing config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    task = hass.data[DOMAIN_DATA_TASKS].pop(entry.entry_id)
-    await _await_cancel(task)
-
-    hass.data[DOMAIN_DATA_ENTRIES].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def _run_client(hass, client, interval):
-    def _listen(_):
-        hass.helpers.dispatcher.async_dispatcher_send(SIGNAL_CLIENT_DATA, client.host)
+async def _run_client(hass: HomeAssistant, client: Client, interval: float) -> None:
+    def _listen(_: Any) -> None:
+        async_dispatcher_send(hass, SIGNAL_CLIENT_DATA, client.host)
 
     while True:
         try:
-            async with async_timeout.timeout(interval):
+            async with timeout(interval):
                 await client.start()
 
             _LOGGER.debug("Client connected %s", client.host)
-            hass.helpers.dispatcher.async_dispatcher_send(
-                SIGNAL_CLIENT_STARTED, client.host
-            )
+            async_dispatcher_send(hass, SIGNAL_CLIENT_STARTED, client.host)
 
             try:
                 with client.listen(_listen):
@@ -100,14 +64,12 @@ async def _run_client(hass, client, interval):
                 await client.stop()
 
                 _LOGGER.debug("Client disconnected %s", client.host)
-                hass.helpers.dispatcher.async_dispatcher_send(
-                    SIGNAL_CLIENT_STOPPED, client.host
-                )
+                async_dispatcher_send(hass, SIGNAL_CLIENT_STOPPED, client.host)
 
         except ConnectionFailed:
             await asyncio.sleep(interval)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             continue
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception("Unexpected exception, aborting arcam client")
             return

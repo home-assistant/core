@@ -1,166 +1,306 @@
 """Support for UK Met Office weather service."""
+
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any, cast
+
+from datapoint.Forecast import Forecast as ForecastData
+
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_IS_DAYTIME,
+    ATTR_FORECAST_NATIVE_APPARENT_TEMP,
+    ATTR_FORECAST_NATIVE_PRESSURE,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
+    ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TIME,
+    ATTR_FORECAST_UV_INDEX,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
-    WeatherEntity,
+    DOMAIN as WEATHER_DOMAIN,
+    CoordinatorWeatherEntity,
+    Forecast,
+    WeatherEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.const import (
+    UnitOfLength,
+    UnitOfPressure,
+    UnitOfSpeed,
+    UnitOfTemperature,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 
 from . import get_device_info
 from .const import (
     ATTRIBUTION,
-    CONDITION_CLASSES,
-    DEFAULT_NAME,
+    CONDITION_MAP,
+    DAILY_FORECAST_ATTRIBUTE_MAP,
+    DAY_FORECAST_ATTRIBUTE_MAP,
     DOMAIN,
+    HOURLY_FORECAST_ATTRIBUTE_MAP,
     METOFFICE_COORDINATES,
     METOFFICE_DAILY_COORDINATOR,
     METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
-    MODE_3HOURLY_LABEL,
-    MODE_DAILY,
-    MODE_DAILY_LABEL,
-    VISIBILITY_CLASSES,
-    VISIBILITY_DISTANCE_CLASSES,
+    METOFFICE_TWICE_DAILY_COORDINATOR,
+    NIGHT_FORECAST_ATTRIBUTE_MAP,
 )
+from .helpers import get_attribute
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Met Office weather sensor platform."""
+    entity_registry = er.async_get(hass)
     hass_data = hass.data[DOMAIN][entry.entry_id]
+
+    # Remove daily entity from legacy config entries
+    if entity_id := entity_registry.async_get_entity_id(
+        WEATHER_DOMAIN,
+        DOMAIN,
+        f"{hass_data[METOFFICE_COORDINATES]}_daily",
+    ):
+        entity_registry.async_remove(entity_id)
 
     async_add_entities(
         [
-            MetOfficeWeather(hass_data[METOFFICE_HOURLY_COORDINATOR], hass_data, True),
-            MetOfficeWeather(hass_data[METOFFICE_DAILY_COORDINATOR], hass_data, False),
+            MetOfficeWeather(
+                hass_data[METOFFICE_DAILY_COORDINATOR],
+                hass_data[METOFFICE_HOURLY_COORDINATOR],
+                hass_data[METOFFICE_TWICE_DAILY_COORDINATOR],
+                hass_data,
+            )
         ],
         False,
     )
 
 
-def _build_forecast_data(timestep):
-    data = {}
-    data[ATTR_FORECAST_TIME] = timestep.date.isoformat()
-    if timestep.weather:
-        data[ATTR_FORECAST_CONDITION] = _get_weather_condition(timestep.weather.value)
-    if timestep.precipitation:
-        data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = timestep.precipitation.value
-    if timestep.temperature:
-        data[ATTR_FORECAST_TEMP] = timestep.temperature.value
-    if timestep.wind_direction:
-        data[ATTR_FORECAST_WIND_BEARING] = timestep.wind_direction.value
-    if timestep.wind_speed:
-        data[ATTR_FORECAST_WIND_SPEED] = timestep.wind_speed.value
+def _build_hourly_forecast_data(timestep: dict[str, Any]) -> Forecast:
+    data = Forecast(datetime=timestep["time"].isoformat())
+    _populate_forecast_data(data, timestep, HOURLY_FORECAST_ATTRIBUTE_MAP)
     return data
 
 
-def _get_weather_condition(metoffice_code):
-    for hass_name, metoffice_codes in CONDITION_CLASSES.items():
-        if metoffice_code in metoffice_codes:
-            return hass_name
-    return None
+def _build_daily_forecast_data(timestep: dict[str, Any]) -> Forecast:
+    data = Forecast(datetime=timestep["time"].isoformat())
+    _populate_forecast_data(data, timestep, DAILY_FORECAST_ATTRIBUTE_MAP)
+    return data
 
 
-class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
+def _build_twice_daily_forecast_data(timestep: dict[str, Any]) -> Forecast:
+    data = Forecast(datetime=timestep["time"].isoformat())
+
+    # day and night forecasts have slightly different format
+    if "daySignificantWeatherCode" in timestep:
+        data[ATTR_FORECAST_IS_DAYTIME] = True
+        _populate_forecast_data(data, timestep, DAY_FORECAST_ATTRIBUTE_MAP)
+    else:
+        data[ATTR_FORECAST_IS_DAYTIME] = False
+        _populate_forecast_data(data, timestep, NIGHT_FORECAST_ATTRIBUTE_MAP)
+    return data
+
+
+def _populate_forecast_data(
+    forecast: Forecast, timestep: dict[str, Any], mapping: dict[str, str]
+) -> None:
+    def get_mapped_attribute(attr: str) -> Any:
+        if attr not in mapping:
+            return None
+        return get_attribute(timestep, mapping[attr])
+
+    weather_code = get_mapped_attribute(ATTR_FORECAST_CONDITION)
+    if weather_code is not None:
+        forecast[ATTR_FORECAST_CONDITION] = CONDITION_MAP.get(weather_code)
+    forecast[ATTR_FORECAST_NATIVE_APPARENT_TEMP] = get_mapped_attribute(
+        ATTR_FORECAST_NATIVE_APPARENT_TEMP
+    )
+    forecast[ATTR_FORECAST_NATIVE_PRESSURE] = get_mapped_attribute(
+        ATTR_FORECAST_NATIVE_PRESSURE
+    )
+    forecast[ATTR_FORECAST_NATIVE_TEMP] = get_mapped_attribute(
+        ATTR_FORECAST_NATIVE_TEMP
+    )
+    forecast[ATTR_FORECAST_NATIVE_TEMP_LOW] = get_mapped_attribute(
+        ATTR_FORECAST_NATIVE_TEMP_LOW
+    )
+    forecast[ATTR_FORECAST_PRECIPITATION] = get_mapped_attribute(
+        ATTR_FORECAST_PRECIPITATION
+    )
+    forecast[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = get_mapped_attribute(
+        ATTR_FORECAST_PRECIPITATION_PROBABILITY
+    )
+    forecast[ATTR_FORECAST_UV_INDEX] = get_mapped_attribute(ATTR_FORECAST_UV_INDEX)
+    forecast[ATTR_FORECAST_WIND_BEARING] = get_mapped_attribute(
+        ATTR_FORECAST_WIND_BEARING
+    )
+    forecast[ATTR_FORECAST_NATIVE_WIND_SPEED] = get_mapped_attribute(
+        ATTR_FORECAST_NATIVE_WIND_SPEED
+    )
+    forecast[ATTR_FORECAST_NATIVE_WIND_GUST_SPEED] = get_mapped_attribute(
+        ATTR_FORECAST_NATIVE_WIND_GUST_SPEED
+    )
+
+
+class MetOfficeWeather(
+    CoordinatorWeatherEntity[
+        TimestampDataUpdateCoordinator[ForecastData],
+        TimestampDataUpdateCoordinator[ForecastData],
+        TimestampDataUpdateCoordinator[ForecastData],
+    ]
+):
     """Implementation of a Met Office weather condition."""
 
-    def __init__(self, coordinator, hass_data, use_3hourly):
-        """Initialise the platform with a data instance."""
-        super().__init__(coordinator)
+    _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
+    _attr_name = None
 
-        mode_label = MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_pressure_unit = UnitOfPressure.PA
+    _attr_native_precipitation_unit = UnitOfLength.MILLIMETERS
+    _attr_native_visibility_unit = UnitOfLength.METERS
+    _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
+    _attr_supported_features = (
+        WeatherEntityFeature.FORECAST_HOURLY
+        | WeatherEntityFeature.FORECAST_TWICE_DAILY
+        | WeatherEntityFeature.FORECAST_DAILY
+    )
+
+    def __init__(
+        self,
+        coordinator_daily: TimestampDataUpdateCoordinator[ForecastData],
+        coordinator_hourly: TimestampDataUpdateCoordinator[ForecastData],
+        coordinator_twice_daily: TimestampDataUpdateCoordinator[ForecastData],
+        hass_data: dict[str, Any],
+    ) -> None:
+        """Initialise the platform with a data instance."""
+        observation_coordinator = coordinator_hourly
+        super().__init__(
+            observation_coordinator,
+            daily_coordinator=coordinator_daily,
+            hourly_coordinator=coordinator_hourly,
+            twice_daily_coordinator=coordinator_twice_daily,
+        )
+
         self._attr_device_info = get_device_info(
             coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
         )
-        self._attr_name = f"{DEFAULT_NAME} {hass_data[METOFFICE_NAME]} {mode_label}"
         self._attr_unique_id = hass_data[METOFFICE_COORDINATES]
-        if not use_3hourly:
-            self._attr_unique_id = f"{self._attr_unique_id}_{MODE_DAILY}"
 
     @property
-    def condition(self):
+    def condition(self) -> str | None:
         """Return the current condition."""
-        if self.coordinator.data.now:
-            return _get_weather_condition(self.coordinator.data.now.weather.value)
+        weather_now = self.coordinator.data.now()
+        value = get_attribute(weather_now, "significantWeatherCode")
+
+        if value is not None:
+            return CONDITION_MAP.get(value)
         return None
 
     @property
-    def temperature(self):
+    def native_temperature(self) -> float | None:
         """Return the platform temperature."""
-        if self.coordinator.data.now.temperature:
-            return self.coordinator.data.now.temperature.value
-        return None
+        weather_now = self.coordinator.data.now()
+        value = get_attribute(weather_now, "screenTemperature")
+        return float(value) if value is not None else None
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
+    def native_dew_point(self) -> float | None:
+        """Return the dew point."""
+        weather_now = self.coordinator.data.now()
+        value = get_attribute(weather_now, "screenDewPointTemperature")
+        return float(value) if value is not None else None
 
     @property
-    def visibility(self):
-        """Return the platform visibility."""
-        _visibility = None
-        weather_now = self.coordinator.data.now
-        if hasattr(weather_now, "visibility"):
-            visibility_class = VISIBILITY_CLASSES.get(weather_now.visibility.value)
-            visibility_distance = VISIBILITY_DISTANCE_CLASSES.get(
-                weather_now.visibility.value
-            )
-            _visibility = f"{visibility_class} - {visibility_distance}"
-        return _visibility
-
-    @property
-    def pressure(self):
+    def native_pressure(self) -> float | None:
         """Return the mean sea-level pressure."""
-        weather_now = self.coordinator.data.now
-        if weather_now and weather_now.pressure:
-            return weather_now.pressure.value
-        return None
+        weather_now = self.coordinator.data.now()
+        value = get_attribute(weather_now, "mslp")
+        return float(value) if value is not None else None
 
     @property
-    def humidity(self):
+    def humidity(self) -> float | None:
         """Return the relative humidity."""
-        weather_now = self.coordinator.data.now
-        if weather_now and weather_now.humidity:
-            return weather_now.humidity.value
-        return None
+        weather_now = self.coordinator.data.now()
+        value = get_attribute(weather_now, "screenRelativeHumidity")
+        return float(value) if value is not None else None
 
     @property
-    def wind_speed(self):
+    def uv_index(self) -> float | None:
+        """Return the UV index."""
+        weather_now = self.coordinator.data.now()
+        value = get_attribute(weather_now, "uvIndex")
+        return float(value) if value is not None else None
+
+    @property
+    def native_visibility(self) -> float | None:
+        """Return the visibility."""
+        weather_now = self.coordinator.data.now()
+        value = get_attribute(weather_now, "visibility")
+        return float(value) if value is not None else None
+
+    @property
+    def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
-        weather_now = self.coordinator.data.now
-        if weather_now and weather_now.wind_speed:
-            return weather_now.wind_speed.value
-        return None
+        weather_now = self.coordinator.data.now()
+        value = get_attribute(weather_now, "windSpeed10m")
+        return float(value) if value is not None else None
 
     @property
-    def wind_bearing(self):
+    def wind_bearing(self) -> float | None:
         """Return the wind bearing."""
-        weather_now = self.coordinator.data.now
-        if weather_now and weather_now.wind_direction:
-            return weather_now.wind_direction.value
-        return None
+        weather_now = self.coordinator.data.now()
+        value = get_attribute(weather_now, "windDirectionFrom10m")
+        return float(value) if value is not None else None
 
-    @property
-    def forecast(self):
-        """Return the forecast array."""
-        if self.coordinator.data.forecast is None:
-            return None
+    @callback
+    def _async_forecast_daily(self) -> list[Forecast] | None:
+        """Return the daily forecast in native units."""
+        coordinator = cast(
+            TimestampDataUpdateCoordinator[ForecastData],
+            self.forecast_coordinators["daily"],
+        )
+        timesteps = coordinator.data.timesteps
         return [
-            _build_forecast_data(timestep)
-            for timestep in self.coordinator.data.forecast
+            _build_daily_forecast_data(timestep)
+            for timestep in timesteps
+            if timestep["time"] > datetime.now(tz=timesteps[0]["time"].tzinfo)
         ]
 
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION
+    @callback
+    def _async_forecast_hourly(self) -> list[Forecast] | None:
+        """Return the hourly forecast in native units."""
+        coordinator = cast(
+            TimestampDataUpdateCoordinator[ForecastData],
+            self.forecast_coordinators["hourly"],
+        )
+
+        timesteps = coordinator.data.timesteps
+        return [
+            _build_hourly_forecast_data(timestep)
+            for timestep in timesteps
+            if timestep["time"] > datetime.now(tz=timesteps[0]["time"].tzinfo)
+        ]
+
+    @callback
+    def _async_forecast_twice_daily(self) -> list[Forecast] | None:
+        """Return the twice daily forecast in native units."""
+        coordinator = cast(
+            TimestampDataUpdateCoordinator[ForecastData],
+            self.forecast_coordinators["twice_daily"],
+        )
+        timesteps = coordinator.data.timesteps
+        return [
+            _build_twice_daily_forecast_data(timestep)
+            for timestep in timesteps
+            if timestep["time"] > datetime.now(tz=timesteps[0]["time"].tzinfo)
+        ]

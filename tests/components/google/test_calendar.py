@@ -2,141 +2,1238 @@
 
 from __future__ import annotations
 
-import copy
+from collections.abc import Awaitable, Callable
+import datetime
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import patch
+import urllib
 
-import httplib2
+from aiohttp.client_exceptions import ClientError
+from freezegun.api import FrozenDateTimeFactory
+from gcal_sync.auth import API_BASE_URL
 import pytest
 
-from homeassistant.components.google import (
-    CONF_CAL_ID,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_DEVICE_ID,
-    CONF_ENTITIES,
-    CONF_IGNORE_AVAILABILITY,
-    CONF_NAME,
-    CONF_TRACK,
-    DEVICE_SCHEMA,
-    SERVICE_SCAN_CALENDARS,
-    do_setup,
-)
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.google.const import CONF_CALENDAR_ACCESS, DOMAIN
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.helpers.template import DATE_STR_FORMAT
-from homeassistant.setup import async_setup_component
-from homeassistant.util import slugify
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from .conftest import TEST_CALENDAR
+from .conftest import (
+    CALENDAR_ID,
+    TEST_API_ENTITY,
+    TEST_API_ENTITY_NAME,
+    TEST_EVENT,
+    TEST_YAML_ENTITY,
+    TEST_YAML_ENTITY_NAME,
+    ApiResult,
+    ComponentSetup,
+)
 
-from tests.common import async_mock_service
+from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
-GOOGLE_CONFIG = {CONF_CLIENT_ID: "client_id", CONF_CLIENT_SECRET: "client_secret"}
-TEST_ENTITY = "calendar.we_are_we_are_a_test_calendar"
-TEST_ENTITY_NAME = "We are, we are, a... Test Calendar"
-
-TEST_EVENT = {
-    "summary": "Test All Day Event",
-    "start": {},
-    "end": {},
-    "location": "Test Cases",
-    "description": "test event",
-    "kind": "calendar#event",
-    "created": "2016-06-23T16:37:57.000Z",
-    "transparency": "transparent",
-    "updated": "2016-06-24T01:57:21.045Z",
-    "reminders": {"useDefault": True},
-    "organizer": {
-        "email": "uvrttabwegnui4gtia3vyqb@import.calendar.google.com",
-        "displayName": "Organizer Name",
-        "self": True,
-    },
-    "sequence": 0,
-    "creator": {
-        "email": "uvrttabwegnui4gtia3vyqb@import.calendar.google.com",
-        "displayName": "Organizer Name",
-        "self": True,
-    },
-    "id": "_c8rinwq863h45qnucyoi43ny8",
-    "etag": '"2933466882090000"',
-    "htmlLink": "https://www.google.com/calendar/event?eid=*******",
-    "iCalUID": "cydrevtfuybguinhomj@google.com",
-    "status": "confirmed",
-}
+TEST_ENTITY = TEST_API_ENTITY
+TEST_ENTITY_NAME = TEST_API_ENTITY_NAME
 
 
-def get_calendar_info(calendar):
-    """Convert data from Google into DEVICE_SCHEMA."""
-    calendar_info = DEVICE_SCHEMA(
+@pytest.fixture(autouse=True)
+def mock_test_setup(
+    test_api_calendar: dict[str, Any],
+    mock_calendars_list: ApiResult,
+) -> None:
+    """Fixture that sets up the default API responses during integration setup."""
+    mock_calendars_list({"items": [test_api_calendar]})
+
+
+def get_events_url(entity: str, start: str, end: str) -> str:
+    """Create a url to get events during the specified time range."""
+    return f"/api/calendars/{entity}?start={urllib.parse.quote(start)}&end={urllib.parse.quote(end)}"
+
+
+def upcoming() -> dict[str, Any]:
+    """Create a test event with an arbitrary start/end time fetched from the api url."""
+    now = dt_util.now()
+    return {
+        "start": {"dateTime": now.isoformat()},
+        "end": {"dateTime": (now + datetime.timedelta(minutes=5)).isoformat()},
+    }
+
+
+def upcoming_event_url(entity: str = TEST_ENTITY) -> str:
+    """Return a calendar API to return events created by upcoming()."""
+    now = dt_util.now()
+    start = (now - datetime.timedelta(minutes=60)).isoformat()
+    end = (now + datetime.timedelta(minutes=60)).isoformat()
+    return get_events_url(entity, start, end)
+
+
+class Client:
+    """Test client with helper methods for calendar websocket."""
+
+    def __init__(self, client) -> None:
+        """Initialize Client."""
+        self.client = client
+        self.id = 0
+
+    async def cmd(
+        self, cmd: str, payload: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Send a command and receive the json result."""
+        self.id += 1
+        await self.client.send_json(
+            {
+                "id": self.id,
+                "type": f"calendar/event/{cmd}",
+                **(payload if payload is not None else {}),
+            }
+        )
+        resp = await self.client.receive_json()
+        assert resp.get("id") == self.id
+        return resp
+
+    async def cmd_result(self, cmd: str, payload: dict[str, Any] | None = None) -> Any:
+        """Send a command and parse the result."""
+        resp = await self.cmd(cmd, payload)
+        assert resp.get("success")
+        assert resp.get("type") == "result"
+        return resp.get("result")
+
+
+type ClientFixture = Callable[[], Awaitable[Client]]
+
+
+@pytest.fixture
+async def ws_client(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> ClientFixture:
+    """Fixture for creating the test websocket client."""
+
+    async def create_client() -> Client:
+        ws_client = await hass_ws_client(hass)
+        return Client(ws_client)
+
+    return create_client
+
+
+async def test_all_day_event(
+    hass: HomeAssistant, mock_events_list_items, component_setup
+) -> None:
+    """Test for an all day calendar event."""
+    week_from_today = dt_util.now().date() + datetime.timedelta(days=7)
+    end_event = week_from_today + datetime.timedelta(days=1)
+    event = {
+        **TEST_EVENT,
+        "start": {"date": week_from_today.isoformat()},
+        "end": {"date": end_event.isoformat()},
+    }
+    mock_events_list_items([event])
+
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": event["summary"],
+        "all_day": True,
+        "offset_reached": False,
+        "start_time": week_from_today.strftime(DATE_STR_FORMAT),
+        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+        "supported_features": 3,
+    }
+
+
+async def test_future_event(
+    hass: HomeAssistant, mock_events_list_items, component_setup
+) -> None:
+    """Test for an upcoming event."""
+    one_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
+    end_event = one_hour_from_now + datetime.timedelta(minutes=60)
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": one_hour_from_now.isoformat()},
+        "end": {"dateTime": end_event.isoformat()},
+    }
+    mock_events_list_items([event])
+
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": event["summary"],
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": one_hour_from_now.strftime(DATE_STR_FORMAT),
+        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+        "supported_features": 3,
+    }
+
+
+async def test_in_progress_event(
+    hass: HomeAssistant, mock_events_list_items, component_setup
+) -> None:
+    """Test an event that is active now."""
+    middle_of_event = dt_util.now() - datetime.timedelta(minutes=30)
+    end_event = middle_of_event + datetime.timedelta(minutes=60)
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": middle_of_event.isoformat()},
+        "end": {"dateTime": end_event.isoformat()},
+    }
+    mock_events_list_items([event])
+
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_ON
+    assert dict(state.attributes) == {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": event["summary"],
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": middle_of_event.strftime(DATE_STR_FORMAT),
+        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+        "supported_features": 3,
+    }
+
+
+async def test_offset_in_progress_event(
+    hass: HomeAssistant, mock_events_list_items, component_setup
+) -> None:
+    """Test an event that is active now with an offset."""
+    middle_of_event = dt_util.now() + datetime.timedelta(minutes=14)
+    end_event = middle_of_event + datetime.timedelta(minutes=60)
+    event_summary = "Test Event in Progress"
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": middle_of_event.isoformat()},
+        "end": {"dateTime": end_event.isoformat()},
+        "summary": f"{event_summary} !!-15",
+    }
+    mock_events_list_items([event])
+
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": event_summary,
+        "all_day": False,
+        "offset_reached": True,
+        "start_time": middle_of_event.strftime(DATE_STR_FORMAT),
+        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+        "supported_features": 3,
+    }
+
+
+async def test_all_day_offset_in_progress_event(
+    hass: HomeAssistant, mock_events_list_items, component_setup
+) -> None:
+    """Test an all day event that is currently in progress due to an offset."""
+    tomorrow = dt_util.now().date() + datetime.timedelta(days=1)
+    end_event = tomorrow + datetime.timedelta(days=1)
+    event_summary = "Test All Day Event Offset In Progress"
+    event = {
+        **TEST_EVENT,
+        "start": {"date": tomorrow.isoformat()},
+        "end": {"date": end_event.isoformat()},
+        "summary": f"{event_summary} !!-25:0",
+    }
+    mock_events_list_items([event])
+
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": event_summary,
+        "all_day": True,
+        "offset_reached": True,
+        "start_time": tomorrow.strftime(DATE_STR_FORMAT),
+        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+        "supported_features": 3,
+    }
+
+
+async def test_all_day_offset_event(
+    hass: HomeAssistant, mock_events_list_items, component_setup
+) -> None:
+    """Test an all day event that not in progress due to an offset."""
+    now = dt_util.now()
+    day_after_tomorrow = now.date() + datetime.timedelta(days=2)
+    end_event = day_after_tomorrow + datetime.timedelta(days=1)
+    offset_hours = 1 + now.hour
+    event_summary = "Test All Day Event Offset"
+    event = {
+        **TEST_EVENT,
+        "start": {"date": day_after_tomorrow.isoformat()},
+        "end": {"date": end_event.isoformat()},
+        "summary": f"{event_summary} !!-{offset_hours}:0",
+    }
+    mock_events_list_items([event])
+
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": event_summary,
+        "all_day": True,
+        "offset_reached": False,
+        "start_time": day_after_tomorrow.strftime(DATE_STR_FORMAT),
+        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+        "supported_features": 3,
+    }
+
+
+async def test_missing_summary(
+    hass: HomeAssistant, mock_events_list_items, component_setup
+) -> None:
+    """Test that a summary is optional."""
+    start_event = dt_util.now() + datetime.timedelta(minutes=14)
+    end_event = start_event + datetime.timedelta(minutes=60)
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": start_event.isoformat()},
+        "end": {"dateTime": end_event.isoformat()},
+    }
+    del event["summary"]
+    mock_events_list_items([event])
+
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": "",
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": start_event.strftime(DATE_STR_FORMAT),
+        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+        "supported_features": 3,
+    }
+
+
+async def test_update_error(
+    hass: HomeAssistant,
+    component_setup,
+    mock_events_list,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that the calendar update handles a server error."""
+
+    now = dt_util.now()
+    mock_events_list(
         {
-            CONF_CAL_ID: calendar["id"],
-            CONF_ENTITIES: [
+            "items": [
                 {
-                    CONF_TRACK: calendar["track"],
-                    CONF_NAME: calendar["summary"],
-                    CONF_DEVICE_ID: slugify(calendar["summary"]),
-                    CONF_IGNORE_AVAILABILITY: calendar.get("ignore_availability", True),
+                    **TEST_EVENT,
+                    "start": {
+                        "dateTime": (now + datetime.timedelta(minutes=-30)).isoformat()
+                    },
+                    "end": {
+                        "dateTime": (now + datetime.timedelta(minutes=30)).isoformat()
+                    },
                 }
-            ],
+            ]
         }
     )
-    return calendar_info
+    assert await component_setup()
 
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == "on"
 
-@pytest.fixture(autouse=True)
-def mock_google_setup(hass, test_calendar):
-    """Mock the google set up functions."""
-    hass.loop.run_until_complete(async_setup_component(hass, "group", {"group": {}}))
-    calendar = get_calendar_info(test_calendar)
-    calendars = {calendar[CONF_CAL_ID]: calendar}
-    patch_google_auth = patch(
-        "homeassistant.components.google.do_authentication", side_effect=do_setup
+    # Advance time to next data update interval
+    now += datetime.timedelta(minutes=30)
+
+    aioclient_mock.clear_requests()
+    mock_events_list({}, exc=ClientError())
+
+    with patch("homeassistant.util.utcnow", return_value=now):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+        # Ensure coordinator update completes
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
+
+    # Entity is marked uanvailable due to API failure
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == "unavailable"
+
+    # Advance time past next coordinator update
+    now += datetime.timedelta(minutes=30)
+
+    aioclient_mock.clear_requests()
+    mock_events_list(
+        {
+            "items": [
+                {
+                    **TEST_EVENT,
+                    "start": {
+                        "dateTime": (now + datetime.timedelta(minutes=30)).isoformat()
+                    },
+                    "end": {
+                        "dateTime": (now + datetime.timedelta(minutes=60)).isoformat()
+                    },
+                }
+            ]
+        }
     )
-    patch_google_load = patch(
-        "homeassistant.components.google.load_config", return_value=calendars
-    )
-    patch_google_services = patch("homeassistant.components.google.setup_services")
-    async_mock_service(hass, "google", SERVICE_SCAN_CALENDARS)
 
-    with patch_google_auth, patch_google_load, patch_google_services:
-        yield
+    with patch("homeassistant.util.utcnow", return_value=now):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+        # Ensure coordinator update completes
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
-
-@pytest.fixture(autouse=True)
-def set_time_zone():
-    """Set the time zone for the tests."""
-    # Set our timezone to CST/Regina so we can check calculations
-    # This keeps UTC-6 all year round
-    dt_util.set_default_time_zone(dt_util.get_time_zone("America/Regina"))
-    yield
-    dt_util.set_default_time_zone(dt_util.get_time_zone("UTC"))
+    # State updated with new API response
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == "off"
 
 
-@pytest.fixture(name="google_service")
-def mock_google_service():
-    """Mock google service."""
-    patch_google_service = patch(
-        "homeassistant.components.google.calendar.GoogleCalendarService"
-    )
-    with patch_google_service as mock_service:
-        yield mock_service
+async def test_calendars_api(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    component_setup,
+    mock_events_list_items,
+) -> None:
+    """Test the Rest API returns the calendar."""
+    mock_events_list_items([])
+    assert await component_setup()
+
+    client = await hass_client()
+    response = await client.get("/api/calendars")
+    assert response.status == HTTPStatus.OK
+    data = await response.json()
+    assert data == [
+        {
+            "entity_id": TEST_ENTITY,
+            "name": TEST_ENTITY_NAME,
+        }
+    ]
 
 
-async def test_all_day_event(hass, mock_next_event):
-    """Test that we can create an event trigger on device."""
-    week_from_today = dt_util.dt.date.today() + dt_util.dt.timedelta(days=7)
-    end_event = week_from_today + dt_util.dt.timedelta(days=1)
-    event = copy.deepcopy(TEST_EVENT)
-    start = week_from_today.isoformat()
-    end = end_event.isoformat()
-    event["start"]["date"] = start
-    event["end"]["date"] = end
-    mock_next_event.return_value.event = event
+async def test_http_event_api_failure(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    component_setup,
+    mock_events_list,
+) -> None:
+    """Test the Rest API response during a calendar failure."""
+    mock_events_list({}, exc=ClientError())
 
-    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
+    assert await component_setup()
+
+    client = await hass_client()
+
+    response = await client.get(upcoming_event_url())
+    assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == "unavailable"
+
+
+@pytest.mark.freeze_time("2022-03-27 12:05:00+00:00")
+async def test_http_api_event(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_events_list_items,
+    component_setup,
+) -> None:
+    """Test querying the API and fetching events from the server."""
+    await hass.config.async_set_time_zone("Asia/Baghdad")
+    event = {
+        **TEST_EVENT,
+        **upcoming(),
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    client = await hass_client()
+    response = await client.get(upcoming_event_url())
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert len(events) == 1
+    assert {k: events[0].get(k) for k in ("summary", "start", "end")} == {
+        "summary": TEST_EVENT["summary"],
+        "start": {"dateTime": "2022-03-27T15:05:00+03:00"},
+        "end": {"dateTime": "2022-03-27T15:10:00+03:00"},
+    }
+
+
+@pytest.mark.freeze_time("2022-03-27 12:05:00+00:00")
+async def test_http_api_all_day_event(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_events_list_items,
+    component_setup,
+) -> None:
+    """Test querying the API and fetching events from the server."""
+    event = {
+        **TEST_EVENT,
+        "start": {"date": "2022-03-27"},
+        "end": {"date": "2022-03-28"},
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    client = await hass_client()
+    response = await client.get(upcoming_event_url())
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert len(events) == 1
+    assert {k: events[0].get(k) for k in ("summary", "start", "end")} == {
+        "summary": TEST_EVENT["summary"],
+        "start": {"date": "2022-03-27"},
+        "end": {"date": "2022-03-28"},
+    }
+
+
+@pytest.mark.parametrize(
+    ("calendars_config_ignore_availability", "transparency", "expect_visible_event"),
+    [
+        # Look at visibility to determine if entity is created
+        (False, "opaque", True),
+        (False, "transparent", False),
+        # Ignoring availability and always show the entity
+        (True, "opaque", True),
+        (True, "transparency", True),
+        # Default to ignore availability
+        (None, "opaque", True),
+        (None, "transparency", True),
+    ],
+)
+async def test_opaque_event(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_calendars_yaml,
+    mock_events_list_items,
+    component_setup,
+    transparency,
+    expect_visible_event,
+) -> None:
+    """Test querying the API and fetching events from the server."""
+    event = {
+        **TEST_EVENT,
+        **upcoming(),
+        "transparency": transparency,
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    client = await hass_client()
+    response = await client.get(upcoming_event_url(TEST_YAML_ENTITY))
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert (len(events) > 0) == expect_visible_event
+
+    # Verify entity state for upcoming event
+    state = hass.states.get(TEST_YAML_ENTITY)
+    assert state.name == TEST_YAML_ENTITY_NAME
+    assert state.state == (STATE_ON if expect_visible_event else STATE_OFF)
+
+
+async def test_declined_event(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_calendars_yaml,
+    mock_events_list_items,
+    component_setup,
+) -> None:
+    """Test querying the API and fetching events from the server."""
+    event = {
+        **TEST_EVENT,
+        **upcoming(),
+        "attendees": [
+            {
+                "self": "True",
+                "responseStatus": "declined",
+            }
+        ],
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    client = await hass_client()
+    response = await client.get(upcoming_event_url(TEST_YAML_ENTITY))
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert len(events) == 0
+
+
+async def test_attending_event(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_calendars_yaml,
+    mock_events_list_items,
+    component_setup,
+) -> None:
+    """Test querying the API and fetching events from the server."""
+    event = {
+        **TEST_EVENT,
+        **upcoming(),
+        "attendees": [
+            {
+                "self": "True",
+                "responseStatus": "accepted",
+            }
+        ],
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    client = await hass_client()
+    response = await client.get(upcoming_event_url(TEST_YAML_ENTITY))
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert len(events) == 1
+
+
+@pytest.mark.parametrize("mock_test_setup", [None])
+async def test_scan_calendar_error(
+    hass: HomeAssistant,
+    component_setup,
+    mock_calendars_list: ApiResult,
+    config_entry,
+) -> None:
+    """Test that the calendar update handles a server error."""
+    mock_calendars_list({}, exc=ClientError())
+    assert await component_setup()
+
+    assert not hass.states.get(TEST_ENTITY)
+
+
+async def test_future_event_update_behavior(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_events_list_items,
+    component_setup,
+) -> None:
+    """Test an future event that becomes active."""
+    now = dt_util.now()
+    one_hour_from_now = now + datetime.timedelta(minutes=60)
+    end_event = one_hour_from_now + datetime.timedelta(minutes=90)
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": one_hour_from_now.isoformat()},
+        "end": {"dateTime": end_event.isoformat()},
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    # Event has not started yet
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+
+    # Advance time until event has started
+    now += datetime.timedelta(minutes=60)
+    freezer.move_to(now)
+    async_fire_time_changed(hass, now)
     await hass.async_block_till_done()
+    # Ensure coordinator update completes
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # Event has started
+    state = hass.states.get(TEST_ENTITY)
+    assert state.state == STATE_ON
+
+
+async def test_future_event_offset_update_behavior(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_events_list_items,
+    component_setup,
+) -> None:
+    """Test an future event that becomes active."""
+    now = dt_util.now()
+    one_hour_from_now = now + datetime.timedelta(minutes=60)
+    end_event = one_hour_from_now + datetime.timedelta(minutes=90)
+    event_summary = "Test Event in Progress"
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": one_hour_from_now.isoformat()},
+        "end": {"dateTime": end_event.isoformat()},
+        "summary": f"{event_summary} !!-15",
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    # Event has not started yet
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert not state.attributes["offset_reached"]
+
+    # Advance time until event has started
+    now += datetime.timedelta(minutes=45)
+    freezer.move_to(now)
+    async_fire_time_changed(hass, now)
+    await hass.async_block_till_done()
+    # Ensure coordinator update completes
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # Event has not started, but the offset was reached
+    state = hass.states.get(TEST_ENTITY)
+    assert state.state == STATE_OFF
+    assert state.attributes["offset_reached"]
+
+
+async def test_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_events_list_items,
+    component_setup,
+    config_entry,
+) -> None:
+    """Test entity is created with a unique id based on the config entry."""
+    mock_events_list_items([])
+    assert await component_setup()
+
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert {entry.unique_id for entry in registry_entries} == {
+        f"{config_entry.unique_id}-{CALENDAR_ID}"
+    }
+
+
+@pytest.mark.parametrize(
+    "old_unique_id", [CALENDAR_ID, f"{CALENDAR_ID}-we_are_we_are_a_test_calendar"]
+)
+async def test_unique_id_migration(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_events_list_items,
+    component_setup,
+    config_entry,
+    old_unique_id,
+) -> None:
+    """Test that old unique id format is migrated to the new format that supports multiple accounts."""
+    config_entry.add_to_hass(hass)
+    # Create an entity using the old unique id format
+    entity_registry.async_get_or_create(
+        DOMAIN,
+        Platform.CALENDAR,
+        unique_id=old_unique_id,
+        config_entry=config_entry,
+    )
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert {entry.unique_id for entry in registry_entries} == {old_unique_id}
+
+    mock_events_list_items([])
+    assert await component_setup()
+
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert {entry.unique_id for entry in registry_entries} == {
+        f"{config_entry.unique_id}-{CALENDAR_ID}"
+    }
+
+
+@pytest.mark.parametrize(
+    "calendars_config",
+    [
+        [
+            {
+                "cal_id": CALENDAR_ID,
+                "entities": [
+                    {
+                        "device_id": "backyard_light",
+                        "name": "Backyard Light",
+                        "search": "#Backyard",
+                    },
+                    {
+                        "device_id": "front_light",
+                        "name": "Front Light",
+                        "search": "#Front",
+                    },
+                ],
+            }
+        ],
+    ],
+)
+async def test_invalid_unique_id_cleanup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_events_list_items,
+    component_setup,
+    config_entry,
+    mock_calendars_yaml,
+) -> None:
+    """Test that old unique id format that is not actually unique is removed."""
+    config_entry.add_to_hass(hass)
+    # Create an entity using the old unique id format
+    entity_registry.async_get_or_create(
+        DOMAIN,
+        Platform.CALENDAR,
+        unique_id=f"{CALENDAR_ID}-backyard_light",
+        config_entry=config_entry,
+    )
+    entity_registry.async_get_or_create(
+        DOMAIN,
+        Platform.CALENDAR,
+        unique_id=f"{CALENDAR_ID}-front_light",
+        config_entry=config_entry,
+    )
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert {entry.unique_id for entry in registry_entries} == {
+        f"{CALENDAR_ID}-backyard_light",
+        f"{CALENDAR_ID}-front_light",
+    }
+
+    mock_events_list_items([])
+    assert await component_setup()
+
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert not registry_entries
+
+
+@pytest.mark.parametrize(
+    ("time_zone", "event_order", "calendar_access_role"),
+    # This only tests the reader role to force testing against the local
+    # database filtering based on start/end time. (free busy reader would
+    # just use the API response which this test is not exercising)
+    [
+        ("America/Los_Angeles", ["One", "Two", "All Day Event"], "reader"),
+        ("America/Regina", ["One", "Two", "All Day Event"], "reader"),
+        ("UTC", ["One", "All Day Event", "Two"], "reader"),
+        ("Asia/Tokyo", ["All Day Event", "One", "Two"], "reader"),
+    ],
+)
+async def test_all_day_iter_order(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_events_list_items,
+    component_setup,
+    time_zone,
+    event_order,
+) -> None:
+    """Test the sort order of an all day events depending on the time zone."""
+    await hass.config.async_set_time_zone(time_zone)
+    mock_events_list_items(
+        [
+            {
+                **TEST_EVENT,
+                "id": "event-id-3",
+                "summary": "All Day Event",
+                "start": {"date": "2022-10-08"},
+                "end": {"date": "2022-10-09"},
+            },
+            {
+                **TEST_EVENT,
+                "id": "event-id-1",
+                "summary": "One",
+                "start": {"dateTime": "2022-10-07T23:00:00+00:00"},
+                "end": {"dateTime": "2022-10-07T23:30:00+00:00"},
+            },
+            {
+                **TEST_EVENT,
+                "id": "event-id-2",
+                "summary": "Two",
+                "start": {"dateTime": "2022-10-08T01:00:00+00:00"},
+                "end": {"dateTime": "2022-10-08T02:00:00+00:00"},
+            },
+        ]
+    )
+    assert await component_setup()
+
+    client = await hass_client()
+    response = await client.get(
+        get_events_url(TEST_ENTITY, "2022-10-06T00:00:00Z", "2022-10-09T00:00:00Z")
+    )
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert [event["summary"] for event in events] == event_order
+
+
+async def test_websocket_create(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    test_api_calendar: dict[str, Any],
+    mock_insert_event: Callable[..., None],
+    mock_events_list: ApiResult,
+    aioclient_mock: AiohttpClientMocker,
+    ws_client: ClientFixture,
+) -> None:
+    """Test websocket create command that sets a date/time range."""
+    mock_events_list({})
+    assert await component_setup()
+
+    aioclient_mock.clear_requests()
+    mock_insert_event(
+        calendar_id=CALENDAR_ID,
+    )
+
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-14T17:00:00+00:00",
+                "dtend": "1997-07-15T04:00:00+00:00",
+            },
+        },
+    )
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        "summary": "Bastille Day Party",
+        "description": None,
+        "start": {
+            "dateTime": "1997-07-14T11:00:00-06:00",
+            "timeZone": "America/Regina",
+        },
+        "end": {"dateTime": "1997-07-14T22:00:00-06:00", "timeZone": "America/Regina"},
+    }
+
+
+async def test_websocket_create_all_day(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    test_api_calendar: dict[str, Any],
+    mock_insert_event: Callable[..., None],
+    mock_events_list: ApiResult,
+    aioclient_mock: AiohttpClientMocker,
+    ws_client: ClientFixture,
+) -> None:
+    """Test websocket create command for an all day event."""
+    mock_events_list({})
+    assert await component_setup()
+
+    aioclient_mock.clear_requests()
+    mock_insert_event(
+        calendar_id=CALENDAR_ID,
+    )
+
+    client = await ws_client()
+    await client.cmd_result(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-14",
+                "dtend": "1997-07-15",
+                "rrule": "FREQ=YEARLY",
+            },
+        },
+    )
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        "summary": "Bastille Day Party",
+        "description": None,
+        "start": {
+            "date": "1997-07-14",
+        },
+        "end": {"date": "1997-07-15"},
+        "recurrence": ["RRULE:FREQ=YEARLY"],
+    }
+
+
+async def test_websocket_delete(
+    ws_client: ClientFixture,
+    hass_client: ClientSessionGenerator,
+    component_setup,
+    mock_events_list: ApiResult,
+    mock_events_list_items: ApiResult,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test websocket delete command."""
+    mock_events_list_items(
+        [
+            {
+                **TEST_EVENT,
+                "id": "event-id-1",
+                "iCalUID": "event-id-1@google.com",
+                "summary": "All Day Event",
+                "start": {"date": "2022-10-08"},
+                "end": {"date": "2022-10-09"},
+            },
+        ]
+    )
+    assert await component_setup()
+    assert len(aioclient_mock.mock_calls) == 2
+
+    aioclient_mock.clear_requests()
+
+    # Expect a delete request as well as a follow up to sync state from server
+    aioclient_mock.delete(f"{API_BASE_URL}/calendars/{CALENDAR_ID}/events/event-id-1")
+    mock_events_list_items([])
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "event-id-1@google.com",
+        },
+    )
+
+    assert len(aioclient_mock.mock_calls) == 2
+    assert aioclient_mock.mock_calls[0][0] == "delete"
+
+
+async def test_websocket_delete_recurring_event_instance(
+    ws_client: ClientFixture,
+    hass_client: ClientSessionGenerator,
+    component_setup,
+    mock_events_list: ApiResult,
+    mock_events_list_items: ApiResult,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test websocket delete command with recurring events."""
+    mock_events_list_items(
+        [
+            {
+                **TEST_EVENT,
+                "id": "event-id-1",
+                "iCalUID": "event-id-1@google.com",
+                "summary": "All Day Event",
+                "start": {"date": "2022-10-08"},
+                "end": {"date": "2022-10-09"},
+                "recurrence": ["RRULE:FREQ=WEEKLY"],
+            },
+        ]
+    )
+    assert await component_setup()
+    assert len(aioclient_mock.mock_calls) == 2
+
+    # Get a time range for the first event and the second instance of the
+    # recurring event.
+    web_client = await hass_client()
+    response = await web_client.get(
+        get_events_url(TEST_ENTITY, "2022-10-06T00:00:00Z", "2022-10-20T00:00:00Z")
+    )
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert len(events) == 2
+
+    # Delete the second instance
+    event = events[1]
+    assert event["uid"] == "event-id-1@google.com"
+    assert event["recurrence_id"] == "event-id-1_20221015"
+    assert event["rrule"] == "FREQ=WEEKLY"
+
+    # Expect a delete request as well as a follow up to sync state from server
+    aioclient_mock.clear_requests()
+    aioclient_mock.patch(
+        f"{API_BASE_URL}/calendars/{CALENDAR_ID}/events/event-id-1_20221015"
+    )
+    mock_events_list_items([])
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": event["uid"],
+            "recurrence_id": event["recurrence_id"],
+        },
+    )
+
+    assert len(aioclient_mock.mock_calls) == 2
+    assert aioclient_mock.mock_calls[0][0] == "patch"
+    # Request to cancel the second instance of the recurring event
+    assert aioclient_mock.mock_calls[0][2] == {
+        "id": "event-id-1_20221015",
+        "status": "cancelled",
+    }
+
+    # Attempt delete again, but this time for all future instances
+    aioclient_mock.clear_requests()
+    aioclient_mock.patch(f"{API_BASE_URL}/calendars/{CALENDAR_ID}/events/event-id-1")
+    mock_events_list_items([])
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": event["uid"],
+            "recurrence_id": event["recurrence_id"],
+            "recurrence_range": "THISANDFUTURE",
+        },
+    )
+
+    assert len(aioclient_mock.mock_calls) == 2
+    assert aioclient_mock.mock_calls[0][0] == "patch"
+    # Request to cancel all events after the second instance
+    assert aioclient_mock.mock_calls[0][2] == {
+        "id": "event-id-1",
+        "recurrence": ["RRULE:FREQ=WEEKLY;UNTIL=20221014"],
+    }
+
+
+@pytest.mark.parametrize(
+    ("calendar_access_role", "token_scopes", "config_entry_options"),
+    [
+        (
+            "reader",
+            ["https://www.googleapis.com/auth/calendar"],
+            {CONF_CALENDAR_ACCESS: "read_write"},
+        ),
+        (
+            "reader",
+            ["https://www.googleapis.com/auth/calendar.readonly"],
+            {CONF_CALENDAR_ACCESS: "read_only"},
+        ),
+        (
+            "owner",
+            ["https://www.googleapis.com/auth/calendar.readonly"],
+            {CONF_CALENDAR_ACCESS: "read_only"},
+        ),
+    ],
+)
+async def test_readonly_websocket_create(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    test_api_calendar: dict[str, Any],
+    mock_insert_event: Callable[..., None],
+    mock_events_list: ApiResult,
+    aioclient_mock: AiohttpClientMocker,
+    ws_client: ClientFixture,
+) -> None:
+    """Test websocket create command with read only access."""
+    mock_events_list({})
+    assert await component_setup()
+
+    aioclient_mock.clear_requests()
+    mock_insert_event(
+        calendar_id=CALENDAR_ID,
+    )
+
+    client = await ws_client()
+    result = await client.cmd(
+        "create",
+        {
+            "entity_id": TEST_ENTITY,
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-14T17:00:00+00:00",
+                "dtend": "1997-07-15T04:00:00+00:00",
+            },
+        },
+    )
+    assert result.get("error")
+    assert result["error"].get("code") == "not_supported"
+
+
+@pytest.mark.parametrize(
+    "calendars_config",
+    [
+        [
+            {
+                "cal_id": CALENDAR_ID,
+                "entities": [
+                    {
+                        "device_id": "backyard_light",
+                        "name": "Backyard Light",
+                        "search": "#Backyard",
+                    },
+                ],
+            }
+        ],
+    ],
+)
+async def test_readonly_search_calendar(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    mock_calendars_yaml,
+    mock_insert_event: Callable[..., None],
+    mock_events_list: ApiResult,
+    aioclient_mock: AiohttpClientMocker,
+    ws_client: ClientFixture,
+) -> None:
+    """Test calendar configured with yaml/search does not support mutation."""
+    mock_events_list({})
+    assert await component_setup()
+
+    aioclient_mock.clear_requests()
+    mock_insert_event(
+        calendar_id=CALENDAR_ID,
+    )
+
+    client = await ws_client()
+    result = await client.cmd(
+        "create",
+        {
+            "entity_id": TEST_YAML_ENTITY,
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-14T17:00:00+00:00",
+                "dtend": "1997-07-15T04:00:00+00:00",
+            },
+        },
+    )
+    assert result.get("error")
+    assert result["error"].get("code") == "not_supported"
+
+
+@pytest.mark.parametrize("calendar_access_role", ["reader", "freeBusyReader"])
+async def test_all_day_reader_access(
+    hass: HomeAssistant, mock_events_list_items, component_setup
+) -> None:
+    """Test that reader / freebusy reader access can load properly."""
+    week_from_today = dt_util.now().date() + datetime.timedelta(days=7)
+    end_event = week_from_today + datetime.timedelta(days=1)
+    event = {
+        **TEST_EVENT,
+        "start": {"date": week_from_today.isoformat()},
+        "end": {"date": end_event.isoformat()},
+    }
+    mock_events_list_items([event])
+
+    assert await component_setup()
 
     state = hass.states.get(TEST_ENTITY)
     assert state.name == TEST_ENTITY_NAME
@@ -153,48 +1250,21 @@ async def test_all_day_event(hass, mock_next_event):
     }
 
 
-async def test_future_event(hass, mock_next_event):
-    """Test that we can create an event trigger on device."""
-    one_hour_from_now = dt_util.now() + dt_util.dt.timedelta(minutes=30)
-    end_event = one_hour_from_now + dt_util.dt.timedelta(minutes=60)
-    start = one_hour_from_now.isoformat()
-    end = end_event.isoformat()
-    event = copy.deepcopy(TEST_EVENT)
-    event["start"]["dateTime"] = start
-    event["end"]["dateTime"] = end
-    mock_next_event.return_value.event = event
-
-    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
-    await hass.async_block_till_done()
-
-    state = hass.states.get(TEST_ENTITY)
-    assert state.name == TEST_ENTITY_NAME
-    assert state.state == STATE_OFF
-    assert dict(state.attributes) == {
-        "friendly_name": TEST_ENTITY_NAME,
-        "message": event["summary"],
-        "all_day": False,
-        "offset_reached": False,
-        "start_time": one_hour_from_now.strftime(DATE_STR_FORMAT),
-        "end_time": end_event.strftime(DATE_STR_FORMAT),
-        "location": event["location"],
-        "description": event["description"],
+@pytest.mark.parametrize("calendar_access_role", ["reader", "freeBusyReader"])
+async def test_reader_in_progress_event(
+    hass: HomeAssistant, mock_events_list_items, component_setup
+) -> None:
+    """Test reader access for an event in process."""
+    middle_of_event = dt_util.now() - datetime.timedelta(minutes=30)
+    end_event = middle_of_event + datetime.timedelta(minutes=60)
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": middle_of_event.isoformat()},
+        "end": {"dateTime": end_event.isoformat()},
     }
+    mock_events_list_items([event])
 
-
-async def test_in_progress_event(hass, mock_next_event):
-    """Test that we can create an event trigger on device."""
-    middle_of_event = dt_util.now() - dt_util.dt.timedelta(minutes=30)
-    end_event = middle_of_event + dt_util.dt.timedelta(minutes=60)
-    start = middle_of_event.isoformat()
-    end = end_event.isoformat()
-    event = copy.deepcopy(TEST_EVENT)
-    event["start"]["dateTime"] = start
-    event["end"]["dateTime"] = end
-    mock_next_event.return_value.event = event
-
-    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
-    await hass.async_block_till_done()
+    assert await component_setup()
 
     state = hass.states.get(TEST_ENTITY)
     assert state.name == TEST_ENTITY_NAME
@@ -211,251 +1281,284 @@ async def test_in_progress_event(hass, mock_next_event):
     }
 
 
-async def test_offset_in_progress_event(hass, mock_next_event):
-    """Test that we can create an event trigger on device."""
-    middle_of_event = dt_util.now() + dt_util.dt.timedelta(minutes=14)
-    end_event = middle_of_event + dt_util.dt.timedelta(minutes=60)
-    start = middle_of_event.isoformat()
-    end = end_event.isoformat()
-    event_summary = "Test Event in Progress"
-    event = copy.deepcopy(TEST_EVENT)
-    event["start"]["dateTime"] = start
-    event["end"]["dateTime"] = end
-    event["summary"] = f"{event_summary} !!-15"
-    mock_next_event.return_value.event = event
-
-    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
-    await hass.async_block_till_done()
-
-    state = hass.states.get(TEST_ENTITY)
-    assert state.name == TEST_ENTITY_NAME
-    assert state.state == STATE_OFF
-    assert dict(state.attributes) == {
-        "friendly_name": TEST_ENTITY_NAME,
-        "message": event_summary,
-        "all_day": False,
-        "offset_reached": True,
-        "start_time": middle_of_event.strftime(DATE_STR_FORMAT),
-        "end_time": end_event.strftime(DATE_STR_FORMAT),
-        "location": event["location"],
-        "description": event["description"],
+async def test_all_day_event_without_duration(
+    hass: HomeAssistant, mock_events_list_items, component_setup
+) -> None:
+    """Test that an all day event without a duration is adjusted to have a duration of one day."""
+    week_from_today = dt_util.now().date() + datetime.timedelta(days=7)
+    event = {
+        **TEST_EVENT,
+        "start": {"date": week_from_today.isoformat()},
+        "end": {"date": week_from_today.isoformat()},
     }
+    mock_events_list_items([event])
 
+    assert await component_setup()
 
-@pytest.mark.skip
-async def test_all_day_offset_in_progress_event(hass, mock_next_event):
-    """Test that we can create an event trigger on device."""
-    tomorrow = dt_util.dt.date.today() + dt_util.dt.timedelta(days=1)
-    end_event = tomorrow + dt_util.dt.timedelta(days=1)
-    start = tomorrow.isoformat()
-    end = end_event.isoformat()
-    event_summary = "Test All Day Event Offset In Progress"
-    event = copy.deepcopy(TEST_EVENT)
-    event["start"]["date"] = start
-    event["end"]["date"] = end
-    event["summary"] = f"{event_summary} !!-25:0"
-    mock_next_event.return_value.event = event
-
-    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
-    await hass.async_block_till_done()
+    expected_end_event = week_from_today + datetime.timedelta(days=1)
 
     state = hass.states.get(TEST_ENTITY)
     assert state.name == TEST_ENTITY_NAME
     assert state.state == STATE_OFF
     assert dict(state.attributes) == {
         "friendly_name": TEST_ENTITY_NAME,
-        "message": event_summary,
-        "all_day": True,
-        "offset_reached": True,
-        "start_time": tomorrow.strftime(DATE_STR_FORMAT),
-        "end_time": end_event.strftime(DATE_STR_FORMAT),
-        "location": event["location"],
-        "description": event["description"],
-    }
-
-
-async def test_all_day_offset_event(hass, mock_next_event):
-    """Test that we can create an event trigger on device."""
-    tomorrow = dt_util.dt.date.today() + dt_util.dt.timedelta(days=2)
-    end_event = tomorrow + dt_util.dt.timedelta(days=1)
-    start = tomorrow.isoformat()
-    end = end_event.isoformat()
-    offset_hours = 1 + dt_util.now().hour
-    event_summary = "Test All Day Event Offset"
-    event = copy.deepcopy(TEST_EVENT)
-    event["start"]["date"] = start
-    event["end"]["date"] = end
-    event["summary"] = f"{event_summary} !!-{offset_hours}:0"
-    mock_next_event.return_value.event = event
-
-    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
-    await hass.async_block_till_done()
-
-    state = hass.states.get(TEST_ENTITY)
-    assert state.name == TEST_ENTITY_NAME
-    assert state.state == STATE_OFF
-    assert dict(state.attributes) == {
-        "friendly_name": TEST_ENTITY_NAME,
-        "message": event_summary,
+        "message": event["summary"],
         "all_day": True,
         "offset_reached": False,
-        "start_time": tomorrow.strftime(DATE_STR_FORMAT),
-        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "start_time": week_from_today.strftime(DATE_STR_FORMAT),
+        "end_time": expected_end_event.strftime(DATE_STR_FORMAT),
         "location": event["location"],
         "description": event["description"],
+        "supported_features": 3,
     }
 
 
-async def test_update_error(hass, google_service):
-    """Test that the calendar handles a server error."""
-    google_service.return_value.get = Mock(
-        side_effect=httplib2.ServerNotFoundError("unit test")
-    )
-    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
-    await hass.async_block_till_done()
+async def test_event_without_duration(
+    hass: HomeAssistant, mock_events_list_items, component_setup
+) -> None:
+    """Google calendar UI allows creating events without a duration."""
+    one_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": one_hour_from_now.isoformat()},
+        "end": {"dateTime": one_hour_from_now.isoformat()},
+    }
+    mock_events_list_items([event])
+
+    assert await component_setup()
 
     state = hass.states.get(TEST_ENTITY)
     assert state.name == TEST_ENTITY_NAME
-    assert state.state == "off"
-
-
-async def test_calendars_api(hass, hass_client, google_service):
-    """Test the Rest API returns the calendar."""
-    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
-    await hass.async_block_till_done()
-
-    client = await hass_client()
-    response = await client.get("/api/calendars")
-    assert response.status == HTTPStatus.OK
-    data = await response.json()
-    assert data == [
-        {
-            "entity_id": TEST_ENTITY,
-            "name": TEST_ENTITY_NAME,
-        }
-    ]
-
-
-async def test_http_event_api_failure(hass, hass_client, google_service):
-    """Test the Rest API response during a calendar failure."""
-    google_service.return_value.get = Mock(
-        side_effect=httplib2.ServerNotFoundError("unit test")
+    assert state.state == STATE_OFF
+    # Confirm the event is parsed successfully, but we don't assert on the
+    # specific end date as the client library may adjust it
+    assert state.attributes.get("message") == event["summary"]
+    assert state.attributes.get("start_time") == one_hour_from_now.strftime(
+        DATE_STR_FORMAT
     )
 
-    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
-    await hass.async_block_till_done()
 
-    start = dt_util.now().isoformat()
-    end = (dt_util.now() + dt_util.dt.timedelta(minutes=60)).isoformat()
+async def test_event_differs_timezone(
+    hass: HomeAssistant, mock_events_list_items, component_setup
+) -> None:
+    """Test a case where the event has a different start/end timezone."""
+    one_hour_from_now = dt_util.now() + datetime.timedelta(minutes=30)
+    end_event = one_hour_from_now + datetime.timedelta(hours=8)
+    event = {
+        **TEST_EVENT,
+        "start": {
+            "dateTime": one_hour_from_now.isoformat(),
+            "timeZone": "America/Regina",
+        },
+        "end": {"dateTime": end_event.isoformat(), "timeZone": "UTC"},
+    }
+    mock_events_list_items([event])
 
-    client = await hass_client()
-    response = await client.get(f"/api/calendars/{TEST_ENTITY}?start={start}&end={end}")
-    assert response.status == HTTPStatus.OK
-    # A failure to talk to the server results in an empty list of events
-    events = await response.json()
-    assert events == []
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": event["summary"],
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": one_hour_from_now.strftime(DATE_STR_FORMAT),
+        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+        "supported_features": 3,
+    }
 
 
-async def test_http_api_event(hass, hass_client, google_service, mock_events_list):
-    """Test querying the API and fetching events from the server."""
-    now = dt_util.now()
+@pytest.mark.freeze_time("2023-11-30 12:15:00 +00:00")
+async def test_invalid_rrule_fix(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_events_list_items,
+    component_setup,
+) -> None:
+    """Test that an invalid RRULE returned from Google Calendar API is handled correctly end to end."""
+    week_from_today = dt_util.now().date() + datetime.timedelta(days=7)
+    end_event = week_from_today + datetime.timedelta(days=1)
+    event = {
+        **TEST_EVENT,
+        "start": {"date": week_from_today.isoformat()},
+        "end": {"date": end_event.isoformat()},
+        "recurrence": [
+            "RRULE:DATE;TZID=Europe/Warsaw:20230818T020000,20230915T020000,20231013T020000,20231110T010000,20231208T010000",
+        ],
+    }
+    mock_events_list_items([event])
 
-    mock_events_list(
-        {
-            "items": [
-                {
-                    "summary": "Event title",
-                    "start": {"dateTime": now.isoformat()},
-                    "end": {
-                        "dateTime": (now + dt_util.dt.timedelta(minutes=5)).isoformat()
-                    },
-                }
-            ],
-        }
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+
+    # Pick a date range that contains two instances of the event
+    web_client = await hass_client()
+    response = await web_client.get(
+        get_events_url(TEST_ENTITY, "2023-08-10T00:00:00Z", "2023-09-20T00:00:00Z")
     )
-    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
-    await hass.async_block_till_done()
-
-    start = (now - dt_util.dt.timedelta(minutes=60)).isoformat()
-    end = (now + dt_util.dt.timedelta(minutes=60)).isoformat()
-
-    client = await hass_client()
-    response = await client.get(f"/api/calendars/{TEST_ENTITY}?start={start}&end={end}")
     assert response.status == HTTPStatus.OK
     events = await response.json()
-    assert len(events) == 1
-    assert "summary" in events[0]
-    assert events[0]["summary"] == "Event title"
+
+    # Both instances are returned, however the RDATE rule is ignored by Home
+    # Assistant so they are just treateded as flattened events.
+    assert len(events) == 2
+
+    event = events[0]
+    assert event["uid"] == "cydrevtfuybguinhomj@google.com"
+    assert event["recurrence_id"] == "_c8rinwq863h45qnucyoi43ny8_20230818"
+    assert event["rrule"] is None
+
+    event = events[1]
+    assert event["uid"] == "cydrevtfuybguinhomj@google.com"
+    assert event["recurrence_id"] == "_c8rinwq863h45qnucyoi43ny8_20230915"
+    assert event["rrule"] is None
 
 
-def create_ignore_avail_calendar() -> dict[str, Any]:
-    """Create a calendar with ignore_availability set."""
-    calendar = TEST_CALENDAR.copy()
-    calendar["ignore_availability"] = False
-    return calendar
+@pytest.mark.parametrize(
+    ("event_type", "expected_event_message"),
+    [
+        ("default", "Test All Day Event"),
+        ("workingLocation", None),
+    ],
+)
+async def test_working_location_ignored(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_events_list_items: Callable[[list[dict[str, Any]]], None],
+    component_setup: ComponentSetup,
+    event_type: str,
+    expected_event_message: str | None,
+) -> None:
+    """Test working location events are skipped."""
+    event = {
+        **TEST_EVENT,
+        **upcoming(),
+        "eventType": event_type,
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.name == TEST_ENTITY_NAME
+    assert state.attributes.get("message") == expected_event_message
 
 
-@pytest.mark.parametrize("test_calendar", [create_ignore_avail_calendar()])
-async def test_opaque_event(hass, hass_client, google_service, mock_events_list):
-    """Test querying the API and fetching events from the server."""
-    now = dt_util.now()
+@pytest.mark.parametrize(
+    ("event_type", "expected_event_message"),
+    [
+        ("workingLocation", "Test All Day Event"),
+        ("birthday", None),
+        ("default", None),
+    ],
+)
+@pytest.mark.parametrize("calendar_is_primary", [True])
+async def test_working_location_entity(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    mock_events_list_items: Callable[[list[dict[str, Any]]], None],
+    component_setup: ComponentSetup,
+    event_type: str,
+    expected_event_message: str | None,
+) -> None:
+    """Test that working location events are registered under a disabled by default entity."""
+    event = {
+        **TEST_EVENT,
+        **upcoming(),
+        "eventType": event_type,
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
 
-    mock_events_list(
-        {
-            "items": [
-                {
-                    "summary": "Event title",
-                    "transparency": "opaque",
-                    "start": {"dateTime": now.isoformat()},
-                    "end": {
-                        "dateTime": (now + dt_util.dt.timedelta(minutes=5)).isoformat()
-                    },
-                }
-            ],
-        }
+    entity_entry = entity_registry.async_get("calendar.working_location")
+    assert entity_entry
+    assert entity_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+
+    entity_registry.async_update_entity(
+        entity_id="calendar.working_location", disabled_by=None
     )
-    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
-    await hass.async_block_till_done()
-
-    start = (now - dt_util.dt.timedelta(minutes=60)).isoformat()
-    end = (now + dt_util.dt.timedelta(minutes=60)).isoformat()
-
-    client = await hass_client()
-    response = await client.get(f"/api/calendars/{TEST_ENTITY}?start={start}&end={end}")
-    assert response.status == HTTPStatus.OK
-    events = await response.json()
-    assert len(events) == 1
-    assert "summary" in events[0]
-    assert events[0]["summary"] == "Event title"
-
-
-@pytest.mark.parametrize("test_calendar", [create_ignore_avail_calendar()])
-async def test_transparent_event(hass, hass_client, google_service, mock_events_list):
-    """Test querying the API and fetching events from the server."""
-    now = dt_util.now()
-
-    mock_events_list(
-        {
-            "items": [
-                {
-                    "summary": "Event title",
-                    "transparency": "transparent",
-                    "start": {"dateTime": now.isoformat()},
-                    "end": {
-                        "dateTime": (now + dt_util.dt.timedelta(minutes=5)).isoformat()
-                    },
-                }
-            ],
-        }
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + datetime.timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
     )
-    assert await async_setup_component(hass, "google", {"google": GOOGLE_CONFIG})
     await hass.async_block_till_done()
 
-    start = (now - dt_util.dt.timedelta(minutes=60)).isoformat()
-    end = (now + dt_util.dt.timedelta(minutes=60)).isoformat()
+    state = hass.states.get("calendar.working_location")
+    assert state
+    assert state.name == "Working location"
+    assert state.attributes.get("message") == expected_event_message
 
-    client = await hass_client()
-    response = await client.get(f"/api/calendars/{TEST_ENTITY}?start={start}&end={end}")
-    assert response.status == HTTPStatus.OK
-    events = await response.json()
-    assert events == []
+
+@pytest.mark.parametrize("calendar_is_primary", [False])
+async def test_no_working_location_entity(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    mock_events_list_items: Callable[[list[dict[str, Any]]], None],
+    component_setup: ComponentSetup,
+) -> None:
+    """Test that working location events are not registered for a secondary calendar."""
+    event = {
+        **TEST_EVENT,
+        **upcoming(),
+        "eventType": "workingLocation",
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    entity_entry = entity_registry.async_get("calendar.working_location")
+    assert not entity_entry
+
+
+@pytest.mark.parametrize(
+    ("event_type", "expected_event_message"),
+    [
+        ("workingLocation", None),
+        ("birthday", "Test All Day Event"),
+        ("default", None),
+    ],
+)
+@pytest.mark.parametrize("calendar_is_primary", [True])
+async def test_birthday_entity(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    mock_events_list_items: Callable[[list[dict[str, Any]]], None],
+    component_setup: ComponentSetup,
+    event_type: str,
+    expected_event_message: str | None,
+) -> None:
+    """Test that birthday events appear only on the birthdays calendar."""
+    event = {
+        **TEST_EVENT,
+        **upcoming(),
+        "eventType": event_type,
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    entity_entry = entity_registry.async_get("calendar.birthdays")
+    assert entity_entry
+    assert entity_entry.disabled_by is None  # Enabled by default
+
+    entity_registry.async_update_entity(
+        entity_id="calendar.birthdays", disabled_by=None
+    )
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + datetime.timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.birthdays")
+    assert state
+    assert state.name == "Birthdays"
+    assert state.attributes.get("message") == expected_event_message

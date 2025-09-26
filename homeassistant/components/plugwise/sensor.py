@@ -1,7 +1,10 @@
 """Plugwise Sensor component for Home Assistant."""
+
 from __future__ import annotations
 
-from plugwise.smile import Smile
+from dataclasses import dataclass
+
+from plugwise.constants import SensorType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -9,437 +12,439 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ENERGY_KILO_WATT_HOUR,
-    ENERGY_WATT_HOUR,
+    LIGHT_LUX,
     PERCENTAGE,
-    POWER_WATT,
-    PRESSURE_BAR,
-    TEMP_CELSIUS,
-    VOLUME_CUBIC_METERS,
+    EntityCategory,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfTemperature,
+    UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    COOL_ICON,
-    COORDINATOR,
-    DOMAIN,
-    FLAME_ICON,
-    IDLE_ICON,
-    LOGGER,
-    UNIT_LUMEN,
-)
-from .coordinator import PlugwiseDataUpdateCoordinator
+from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
-SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
+
+@dataclass(frozen=True)
+class PlugwiseSensorEntityDescription(SensorEntityDescription):
+    """Describes Plugwise sensor entity."""
+
+    key: SensorType
+
+
+SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
+    PlugwiseSensorEntityDescription(
         key="setpoint",
-        name="Setpoint",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        translation_key="setpoint",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
+        key="setpoint_high",
+        translation_key="cooling_setpoint",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PlugwiseSensorEntityDescription(
+        key="setpoint_low",
+        translation_key="heating_setpoint",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PlugwiseSensorEntityDescription(
         key="temperature",
-        name="Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="intended_boiler_temperature",
-        name="Intended Boiler Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        translation_key="intended_boiler_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="temperature_difference",
-        name="Temperature Difference",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        translation_key="temperature_difference",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="outdoor_temperature",
-        name="Outdoor Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        translation_key="outdoor_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
+        key="outdoor_air_temperature",
+        translation_key="outdoor_air_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    PlugwiseSensorEntityDescription(
         key="water_temperature",
-        name="Water Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        translation_key="water_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="return_temperature",
-        name="Return Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        translation_key="return_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
-        key="return_temperature",
-        name="Return Temperature",
-        native_unit_of_measurement=TEMP_CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="electricity_consumed",
-        name="Electricity Consumed",
-        native_unit_of_measurement=POWER_WATT,
+        translation_key="electricity_consumed",
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="electricity_produced",
-        name="Electricity Produced",
-        native_unit_of_measurement=POWER_WATT,
+        translation_key="electricity_produced",
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="electricity_consumed_interval",
-        name="Electricity Consumed Interval",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        translation_key="electricity_consumed_interval",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="electricity_consumed_peak_interval",
-        name="Electricity Consumed Peak Interval",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        translation_key="electricity_consumed_peak_interval",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="electricity_consumed_off_peak_interval",
-        name="Electricity Consumed Off Peak Interval",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        translation_key="electricity_consumed_off_peak_interval",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="electricity_produced_interval",
-        name="Electricity Produced Interval",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        translation_key="electricity_produced_interval",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
+        entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="electricity_produced_peak_interval",
-        name="Electricity Produced Peak Interval",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        translation_key="electricity_produced_peak_interval",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="electricity_produced_off_peak_interval",
-        name="Electricity Produced Off Peak Interval",
-        native_unit_of_measurement=ENERGY_WATT_HOUR,
+        translation_key="electricity_produced_off_peak_interval",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
+        key="electricity_consumed_point",
+        translation_key="electricity_consumed_point",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    PlugwiseSensorEntityDescription(
         key="electricity_consumed_off_peak_point",
-        name="Electricity Consumed Off Peak Point",
-        native_unit_of_measurement=POWER_WATT,
+        translation_key="electricity_consumed_off_peak_point",
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="electricity_consumed_peak_point",
-        name="Electricity Consumed Peak Point",
-        native_unit_of_measurement=POWER_WATT,
+        translation_key="electricity_consumed_peak_point",
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="electricity_consumed_off_peak_cumulative",
-        name="Electricity Consumed Off Peak Cumulative",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        translation_key="electricity_consumed_off_peak_cumulative",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="electricity_consumed_peak_cumulative",
-        name="Electricity Consumed Peak Cumulative",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        translation_key="electricity_consumed_peak_cumulative",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
+        key="electricity_produced_point",
+        translation_key="electricity_produced_point",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    PlugwiseSensorEntityDescription(
         key="electricity_produced_off_peak_point",
-        name="Electricity Produced Off Peak Point",
-        native_unit_of_measurement=POWER_WATT,
+        translation_key="electricity_produced_off_peak_point",
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="electricity_produced_peak_point",
-        name="Electricity Produced Peak Point",
-        native_unit_of_measurement=POWER_WATT,
+        translation_key="electricity_produced_peak_point",
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="electricity_produced_off_peak_cumulative",
-        name="Electricity Produced Off Peak Cumulative",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        translation_key="electricity_produced_off_peak_cumulative",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="electricity_produced_peak_cumulative",
-        name="Electricity Produced Peak Cumulative",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        translation_key="electricity_produced_peak_cumulative",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
+        key="electricity_phase_one_consumed",
+        translation_key="electricity_phase_one_consumed",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    PlugwiseSensorEntityDescription(
+        key="electricity_phase_two_consumed",
+        translation_key="electricity_phase_two_consumed",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    PlugwiseSensorEntityDescription(
+        key="electricity_phase_three_consumed",
+        translation_key="electricity_phase_three_consumed",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    PlugwiseSensorEntityDescription(
+        key="electricity_phase_one_produced",
+        translation_key="electricity_phase_one_produced",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    PlugwiseSensorEntityDescription(
+        key="electricity_phase_two_produced",
+        translation_key="electricity_phase_two_produced",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    PlugwiseSensorEntityDescription(
+        key="electricity_phase_three_produced",
+        translation_key="electricity_phase_three_produced",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    PlugwiseSensorEntityDescription(
+        key="voltage_phase_one",
+        translation_key="voltage_phase_one",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    PlugwiseSensorEntityDescription(
+        key="voltage_phase_two",
+        translation_key="voltage_phase_two",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    PlugwiseSensorEntityDescription(
+        key="voltage_phase_three",
+        translation_key="voltage_phase_three",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    PlugwiseSensorEntityDescription(
         key="gas_consumed_interval",
-        name="Gas Consumed Interval",
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
-        device_class=SensorDeviceClass.GAS,
-        state_class=SensorStateClass.TOTAL,
+        translation_key="gas_consumed_interval",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="gas_consumed_cumulative",
-        name="Gas Consumed Cumulative",
-        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        translation_key="gas_consumed_cumulative",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="net_electricity_point",
-        name="Net Electricity Point",
-        native_unit_of_measurement=POWER_WATT,
+        translation_key="net_electricity_point",
+        native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="net_electricity_cumulative",
-        name="Net Electricity Cumulative",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        translation_key="net_electricity_cumulative",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="battery",
-        name="Battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="illuminance",
-        name="Illuminance",
-        native_unit_of_measurement=UNIT_LUMEN,
+        native_unit_of_measurement=LIGHT_LUX,
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="modulation_level",
-        name="Modulation Level",
-        icon="mdi:percent",
+        translation_key="modulation_level",
         native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="valve_position",
-        name="Valve Position",
-        icon="mdi:valve",
+        translation_key="valve_position",
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    PlugwiseSensorEntityDescription(
         key="water_pressure",
-        name="Water Pressure",
-        native_unit_of_measurement=PRESSURE_BAR,
+        translation_key="water_pressure",
+        native_unit_of_measurement=UnitOfPressure.BAR,
         device_class=SensorDeviceClass.PRESSURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-)
-
-INDICATE_ACTIVE_LOCAL_DEVICE_SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="cooling_state",
-        name="Cooling State",
+    PlugwiseSensorEntityDescription(
+        key="humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
-        key="flame_state",
-        name="Flame State",
+    PlugwiseSensorEntityDescription(
+        key="dhw_temperature",
+        translation_key="dhw_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    PlugwiseSensorEntityDescription(
+        key="domestic_hot_water_setpoint",
+        translation_key="domestic_hot_water_setpoint",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: PlugwiseConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Smile sensors from a config entry."""
-    api = hass.data[DOMAIN][config_entry.entry_id]["api"]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
+    coordinator = entry.runtime_data
 
-    entities: list[SmileSensor] = []
-    all_devices = api.get_all_devices()
-    single_thermostat = api.single_master_thermostat()
-    for dev_id, device_properties in all_devices.items():
-        data = api.get_device_data(dev_id)
-        for description in SENSORS:
-            if data.get(description.key) is None:
-                continue
+    @callback
+    def _add_entities() -> None:
+        """Add Entities."""
+        if not coordinator.new_devices:
+            return
 
-            if "power" in device_properties["types"]:
-                model = None
+        async_add_entities(
+            PlugwiseSensorEntity(coordinator, device_id, description)
+            for device_id in coordinator.new_devices
+            if (sensors := coordinator.data[device_id].get("sensors"))
+            for description in SENSORS
+            if description.key in sensors
+        )
 
-                if "plug" in device_properties["types"]:
-                    model = "Metered Switch"
-
-                entities.append(
-                    PwPowerSensor(
-                        api,
-                        coordinator,
-                        device_properties["name"],
-                        dev_id,
-                        model,
-                        description,
-                    )
-                )
-            else:
-                entities.append(
-                    PwThermostatSensor(
-                        api,
-                        coordinator,
-                        device_properties["name"],
-                        dev_id,
-                        description,
-                    )
-                )
-
-        if single_thermostat is False:
-            for description in INDICATE_ACTIVE_LOCAL_DEVICE_SENSORS:
-                if description.key not in data:
-                    continue
-
-                entities.append(
-                    PwAuxDeviceSensor(
-                        api,
-                        coordinator,
-                        device_properties["name"],
-                        dev_id,
-                        description,
-                    )
-                )
-                break
-
-    async_add_entities(entities, True)
+    _add_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
 
-class SmileSensor(PlugwiseEntity, SensorEntity):
-    """Represent Smile Sensors."""
+class PlugwiseSensorEntity(PlugwiseEntity, SensorEntity):
+    """Represent Plugwise Sensors."""
+
+    entity_description: PlugwiseSensorEntityDescription
 
     def __init__(
         self,
-        api: Smile,
         coordinator: PlugwiseDataUpdateCoordinator,
-        name: str,
-        dev_id: str,
-        description: SensorEntityDescription,
+        device_id: str,
+        description: PlugwiseSensorEntityDescription,
     ) -> None:
         """Initialise the sensor."""
-        super().__init__(api, coordinator, name, dev_id)
+        super().__init__(coordinator, device_id)
+        self._attr_unique_id = f"{device_id}-{description.key}"
         self.entity_description = description
-        self._attr_unique_id = f"{dev_id}-{description.key}"
 
-        if dev_id == self._api.heater_id:
-            self._entity_name = "Auxiliary"
-
-        self._name = f"{self._entity_name} {description.name}"
-
-        if dev_id == self._api.gateway_id:
-            self._entity_name = f"Smile {self._entity_name}"
-
-
-class PwThermostatSensor(SmileSensor):
-    """Thermostat (or generic) sensor devices."""
-
-    @callback
-    def _async_process_data(self) -> None:
-        """Update the entity."""
-        if not (data := self._api.get_device_data(self._dev_id)):
-            LOGGER.error("Received no data for device %s", self._entity_name)
-            self.async_write_ha_state()
-            return
-
-        self._attr_native_value = data.get(self.entity_description.key)
-        self.async_write_ha_state()
-
-
-class PwAuxDeviceSensor(SmileSensor):
-    """Auxiliary Device Sensors."""
-
-    _cooling_state = False
-    _heating_state = False
-
-    @callback
-    def _async_process_data(self) -> None:
-        """Update the entity."""
-        if not (data := self._api.get_device_data(self._dev_id)):
-            LOGGER.error("Received no data for device %s", self._entity_name)
-            self.async_write_ha_state()
-            return
-
-        if data.get("heating_state") is not None:
-            self._heating_state = data["heating_state"]
-        if data.get("cooling_state") is not None:
-            self._cooling_state = data["cooling_state"]
-
-        self._attr_native_value = "idle"
-        self._attr_icon = IDLE_ICON
-        if self._heating_state:
-            self._attr_native_value = "heating"
-            self._attr_icon = FLAME_ICON
-        if self._cooling_state:
-            self._attr_native_value = "cooling"
-            self._attr_icon = COOL_ICON
-
-        self.async_write_ha_state()
-
-
-class PwPowerSensor(SmileSensor):
-    """Power sensor entities."""
-
-    def __init__(
-        self,
-        api: Smile,
-        coordinator: PlugwiseDataUpdateCoordinator,
-        name: str,
-        dev_id: str,
-        model: str | None,
-        description: SensorEntityDescription,
-    ) -> None:
-        """Set up the Plugwise API."""
-        super().__init__(api, coordinator, name, dev_id, description)
-        self._model = model
-        if dev_id == self._api.gateway_id:
-            self._model = "P1 DSMR"
-
-    @callback
-    def _async_process_data(self) -> None:
-        """Update the entity."""
-        if not (data := self._api.get_device_data(self._dev_id)):
-            LOGGER.error("Received no data for device %s", self._entity_name)
-            self.async_write_ha_state()
-            return
-
-        self._attr_native_value = data.get(self.entity_description.key)
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> int | float:
+        """Return the value reported by the sensor."""
+        return self.device["sensors"][self.entity_description.key]

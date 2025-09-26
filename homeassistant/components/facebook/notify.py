@@ -1,32 +1,40 @@
 """Facebook platform for notify component."""
+
+from __future__ import annotations
+
 from http import HTTPStatus
 import json
 import logging
 
-from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONTENT_TYPE_JSON
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PAGE_ACCESS_TOKEN = "page_access_token"
 BASE_URL = "https://graph.facebook.com/v2.6/me/messages"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_PAGE_ACCESS_TOKEN): cv.string}
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> FacebookNotificationService:
     """Get the Facebook notification service."""
     return FacebookNotificationService(config[CONF_PAGE_ACCESS_TOKEN])
 
@@ -74,7 +82,7 @@ class FacebookNotificationService(BaseNotificationService):
                 BASE_URL,
                 data=json.dumps(body),
                 params=payload,
-                headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
+                headers={"Content-Type": CONTENT_TYPE_JSON},
                 timeout=10,
             )
             if resp.status_code != HTTPStatus.OK:

@@ -1,4 +1,5 @@
 """Support for Google Cloud Pub/Sub."""
+
 from __future__ import annotations
 
 import datetime
@@ -6,12 +7,12 @@ import json
 import logging
 import os
 
-from google.cloud import pubsub_v1
+from google.cloud.pubsub_v1 import PublisherClient
 import voluptuous as vol
 
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import Event, HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.helpers.typing import ConfigType
 
@@ -52,19 +53,15 @@ def setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
 
     entities_filter = config[CONF_FILTER]
 
-    publisher = pubsub_v1.PublisherClient.from_service_account_json(
-        service_principal_path
-    )
+    publisher = PublisherClient.from_service_account_json(service_principal_path)
 
-    topic_path = publisher.topic_path(  # pylint: disable=no-member
-        project_id, topic_name
-    )
+    topic_path = publisher.topic_path(project_id, topic_name)
 
     encoder = DateTimeJSONEncoder()
 
-    def send_to_pubsub(event: Event):
+    def send_to_pubsub(event: Event[EventStateChangedData]):
         """Send states to Pub/Sub."""
-        state = event.data.get("new_state")
+        state = event.data["new_state"]
         if (
             state is None
             or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE)

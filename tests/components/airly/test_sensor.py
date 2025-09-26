@@ -1,142 +1,59 @@
 """Test sensor of Airly integration."""
-from datetime import timedelta
 
-from homeassistant.components.airly.sensor import ATTRIBUTION
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    SensorDeviceClass,
-    SensorStateClass,
-)
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_UNIT_OF_MEASUREMENT,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    PERCENTAGE,
-    PRESSURE_HPA,
-    STATE_UNAVAILABLE,
-    TEMP_CELSIUS,
-)
+from datetime import timedelta
+from http import HTTPStatus
+from unittest.mock import patch
+
+from airly.exceptions import AirlyError
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.airly.const import DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from . import API_POINT_URL
+from . import API_POINT_URL, init_integration
 
-from tests.common import async_fire_time_changed, load_fixture
-from tests.components.airly import init_integration
+from tests.common import async_fire_time_changed, async_load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-async def test_sensor(hass, aioclient_mock):
+async def test_sensor(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test states of the sensor."""
-    await init_integration(hass, aioclient_mock)
-    registry = er.async_get(hass)
+    with patch("homeassistant.components.airly.PLATFORMS", [Platform.SENSOR]):
+        entry = await init_integration(hass, aioclient_mock)
 
-    state = hass.states.get("sensor.home_caqi")
-    assert state
-    assert state.state == "23"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "CAQI"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.AQI
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 
-    entry = registry.async_get("sensor.home_caqi")
-    assert entry
-    assert entry.unique_id == "123-456-caqi"
-
-    state = hass.states.get("sensor.home_humidity")
-    assert state
-    assert state.state == "92.8"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-
-    entry = registry.async_get("sensor.home_humidity")
-    assert entry
-    assert entry.unique_id == "123-456-humidity"
-
-    state = hass.states.get("sensor.home_pm1")
-    assert state
-    assert state.state == "9"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
-    )
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM1
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-
-    entry = registry.async_get("sensor.home_pm1")
-    assert entry
-    assert entry.unique_id == "123-456-pm1"
-
-    state = hass.states.get("sensor.home_pm2_5")
-    assert state
-    assert state.state == "14"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
-    )
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM25
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-
-    entry = registry.async_get("sensor.home_pm2_5")
-    assert entry
-    assert entry.unique_id == "123-456-pm25"
-
-    state = hass.states.get("sensor.home_pm10")
-    assert state
-    assert state.state == "19"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
-    )
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PM10
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-
-    entry = registry.async_get("sensor.home_pm10")
-    assert entry
-    assert entry.unique_id == "123-456-pm10"
-
-    state = hass.states.get("sensor.home_pressure")
-    assert state
-    assert state.state == "1001"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_HPA
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-
-    entry = registry.async_get("sensor.home_pressure")
-    assert entry
-    assert entry.unique_id == "123-456-pressure"
-
-    state = hass.states.get("sensor.home_temperature")
-    assert state
-    assert state.state == "14.2"
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TEMPERATURE
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-
-    entry = registry.async_get("sensor.home_temperature")
-    assert entry
-    assert entry.unique_id == "123-456-temperature"
+    assert entity_entries
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert (state := hass.states.get(entity_entry.entity_id))
+        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
-async def test_availability(hass, aioclient_mock):
+async def test_availability(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Ensure that we mark the entities unavailable correctly when service is offline."""
     await init_integration(hass, aioclient_mock)
 
     state = hass.states.get("sensor.home_humidity")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "92.8"
+    assert state.state == "68.35"
 
     aioclient_mock.clear_requests()
-    aioclient_mock.get(API_POINT_URL, exc=ConnectionError())
+    aioclient_mock.get(
+        API_POINT_URL, exc=AirlyError(HTTPStatus.NOT_FOUND, {"message": "Not found"})
+    )
     future = utcnow() + timedelta(minutes=60)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
@@ -146,7 +63,9 @@ async def test_availability(hass, aioclient_mock):
     assert state.state == STATE_UNAVAILABLE
 
     aioclient_mock.clear_requests()
-    aioclient_mock.get(API_POINT_URL, text=load_fixture("valid_station.json", "airly"))
+    aioclient_mock.get(
+        API_POINT_URL, text=await async_load_fixture(hass, "valid_station.json", DOMAIN)
+    )
     future = utcnow() + timedelta(minutes=120)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
@@ -154,10 +73,12 @@ async def test_availability(hass, aioclient_mock):
     state = hass.states.get("sensor.home_humidity")
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "92.8"
+    assert state.state == "68.35"
 
 
-async def test_manual_update_entity(hass, aioclient_mock):
+async def test_manual_update_entity(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test manual update entity via service homeassistant/update_entity."""
     await init_integration(hass, aioclient_mock)
 

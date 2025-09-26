@@ -1,16 +1,21 @@
 """Support for ANEL PwrCtrl switches."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
-from anel_pwrctrl import DeviceMaster
+from anel_pwrctrl import Device, DeviceMaster, Switch
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -22,7 +27,7 @@ CONF_PORT_SEND = "port_send"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PORT_RECV): cv.port,
         vol.Required(CONF_PORT_SEND): cv.port,
@@ -71,23 +76,23 @@ def setup_platform(
 class PwrCtrlSwitch(SwitchEntity):
     """Representation of a PwrCtrl switch."""
 
-    def __init__(self, port, parent_device):
+    def __init__(self, port: Switch, parent_device: PwrCtrlDevice) -> None:
         """Initialize the PwrCtrl switch."""
         self._port = port
         self._parent_device = parent_device
         self._attr_unique_id = f"{port.device.host}-{port.get_index()}"
         self._attr_name = port.label
 
-    def update(self):
+    def update(self) -> None:
         """Trigger update for all switches on the parent device."""
         self._parent_device.update()
         self._attr_is_on = self._port.get_state()
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._port.on()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._port.off()
 
@@ -95,11 +100,11 @@ class PwrCtrlSwitch(SwitchEntity):
 class PwrCtrlDevice:
     """Device representation for per device throttling."""
 
-    def __init__(self, device):
+    def __init__(self, device: Device) -> None:
         """Initialize the PwrCtrl device."""
         self._device = device
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Update the device and all its switches."""
         self._device.update()

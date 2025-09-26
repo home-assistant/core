@@ -1,26 +1,29 @@
 """Integration with the Rachio Iro sprinkler system controller."""
+
 from abc import abstractmethod
 from contextlib import suppress
 from datetime import timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_ID
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import as_timestamp, now, parse_datetime, utc_from_timestamp
 
 from .const import (
     CONF_MANUAL_RUN_MINS,
     DEFAULT_MANUAL_RUN_MINS,
-    DOMAIN as DOMAIN_RACHIO,
+    DOMAIN,
+    KEY_CURRENT_STATUS,
     KEY_CUSTOM_CROP,
     KEY_CUSTOM_SHADE,
     KEY_CUSTOM_SLOPE,
@@ -43,6 +46,7 @@ from .const import (
     SCHEDULE_TYPE_FLEX,
     SERVICE_SET_ZONE_MOISTURE,
     SERVICE_START_MULTIPLE_ZONES,
+    SERVICE_START_WATERING,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
     SIGNAL_RACHIO_RAIN_DELAY_UPDATE,
     SIGNAL_RACHIO_SCHEDULE_UPDATE,
@@ -52,7 +56,8 @@ from .const import (
     SLOPE_SLIGHT,
     SLOPE_STEEP,
 )
-from .entity import RachioDevice
+from .device import RachioConfigEntry
+from .entity import RachioDevice, RachioHoseTimerEntity
 from .webhooks import (
     SUBTYPE_RAIN_DELAY_OFF,
     SUBTYPE_RAIN_DELAY_ON,
@@ -76,6 +81,7 @@ ATTR_SCHEDULE_ENABLED = "Enabled"
 ATTR_SCHEDULE_DURATION = "Duration"
 ATTR_SCHEDULE_TYPE = "Type"
 ATTR_SORT_ORDER = "sortOrder"
+ATTR_WATERING_DURATION = "Watering Duration seconds"
 ATTR_ZONE_NUMBER = "Zone number"
 ATTR_ZONE_SHADE = "Shade"
 ATTR_ZONE_SLOPE = "Slope"
@@ -92,8 +98,8 @@ START_MULTIPLE_ZONES_SCHEMA = vol.Schema(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: RachioConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Rachio switches."""
     zone_entities = []
@@ -106,12 +112,11 @@ async def async_setup_entry(
             has_flex_sched = True
 
     async_add_entities(entities)
-    _LOGGER.info("%d Rachio switch(es) added", len(entities))
 
     def start_multiple(service: ServiceCall) -> None:
         """Service to start multiple zones in sequence."""
         zones_list = []
-        person = hass.data[DOMAIN_RACHIO][config_entry.entry_id]
+        person = config_entry.runtime_data
         entity_id = service.data[ATTR_ENTITY_ID]
         duration = iter(service.data[ATTR_DURATION])
         default_time = service.data[ATTR_DURATION][0]
@@ -119,7 +124,7 @@ async def async_setup_entry(
             entity.entity_id: entity.zone_id for entity in zone_entities
         }
 
-        for (count, data) in enumerate(entity_id):
+        for count, data in enumerate(entity_id):
             if data in entity_to_zone_id:
                 # Time can be passed as a list per zone,
                 # or one time for all zones
@@ -138,8 +143,21 @@ async def async_setup_entry(
         else:
             raise HomeAssistantError("No matching zones found in given entity_ids")
 
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_START_WATERING,
+        {
+            vol.Optional(ATTR_DURATION): cv.positive_int,
+        },
+        "turn_on",
+    )
+
+    # If only hose timers on account, none of these services apply
+    if not zone_entities:
+        return
+
     hass.services.async_register(
-        DOMAIN_RACHIO,
+        DOMAIN,
         SERVICE_START_MULTIPLE_ZONES,
         start_multiple,
         schema=START_MULTIPLE_ZONES_SCHEMA,
@@ -154,9 +172,11 @@ async def async_setup_entry(
         )
 
 
-def _create_entities(hass, config_entry):
-    entities = []
-    person = hass.data[DOMAIN_RACHIO][config_entry.entry_id]
+def _create_entities(
+    hass: HomeAssistant, config_entry: RachioConfigEntry
+) -> list[Entity]:
+    entities: list[Entity] = []
+    person = config_entry.runtime_data
     # Fetch the schedule once at startup
     # in order to avoid every zone doing it
     for controller in person.controllers:
@@ -166,31 +186,23 @@ def _create_entities(hass, config_entry):
         schedules = controller.list_schedules()
         flex_schedules = controller.list_flex_schedules()
         current_schedule = controller.current_schedule
-        for zone in zones:
-            entities.append(RachioZone(person, controller, zone, current_schedule))
-        for sched in schedules + flex_schedules:
-            entities.append(RachioSchedule(person, controller, sched, current_schedule))
-    _LOGGER.debug("Added %s", entities)
+        entities.extend(
+            RachioZone(person, controller, zone, current_schedule) for zone in zones
+        )
+        entities.extend(
+            RachioSchedule(person, controller, schedule, current_schedule)
+            for schedule in schedules + flex_schedules
+        )
+    entities.extend(
+        RachioValve(person, base_station, valve, base_station.status_coordinator)
+        for base_station in person.base_stations
+        for valve in base_station.status_coordinator.data.values()
+    )
     return entities
 
 
 class RachioSwitch(RachioDevice, SwitchEntity):
     """Represent a Rachio state that can be toggled."""
-
-    def __init__(self, controller):
-        """Initialize a new Rachio switch."""
-        super().__init__(controller)
-        self._state = None
-
-    @property
-    def name(self) -> str:
-        """Get a name for this switch."""
-        return f"Switch on {self._controller.name}"
-
-    @property
-    def is_on(self) -> bool:
-        """Return whether the switch is currently on."""
-        return self._state
 
     @callback
     def _async_handle_any_update(self, *args, **kwargs) -> None:
@@ -210,43 +222,36 @@ class RachioSwitch(RachioDevice, SwitchEntity):
 class RachioStandbySwitch(RachioSwitch):
     """Representation of a standby status/button."""
 
-    @property
-    def name(self) -> str:
-        """Return the name of the standby switch."""
-        return f"{self._controller.name} in standby mode"
+    _attr_has_entity_name = True
+    _attr_translation_key = "standby"
 
     @property
     def unique_id(self) -> str:
         """Return a unique id by combining controller id and purpose."""
         return f"{self._controller.controller_id}-standby"
 
-    @property
-    def icon(self) -> str:
-        """Return an icon for the standby switch."""
-        return "mdi:power"
-
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:
         """Update the state using webhook data."""
         if args[0][0][KEY_SUBTYPE] == SUBTYPE_SLEEP_MODE_ON:
-            self._state = True
+            self._attr_is_on = True
         elif args[0][0][KEY_SUBTYPE] == SUBTYPE_SLEEP_MODE_OFF:
-            self._state = False
+            self._attr_is_on = False
 
         self.async_write_ha_state()
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Put the controller in standby mode."""
         self._controller.rachio.device.turn_off(self._controller.controller_id)
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Resume controller functionality."""
         self._controller.rachio.device.turn_on(self._controller.controller_id)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         if KEY_ON in self._controller.init_data:
-            self._state = not self._controller.init_data[KEY_ON]
+            self._attr_is_on = not self._controller.init_data[KEY_ON]
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -260,25 +265,18 @@ class RachioStandbySwitch(RachioSwitch):
 class RachioRainDelay(RachioSwitch):
     """Representation of a rain delay status/switch."""
 
-    def __init__(self, controller):
-        """Set up a Rachio rain delay switch."""
-        self._cancel_update = None
-        super().__init__(controller)
+    _attr_has_entity_name = True
+    _attr_translation_key = "rain_delay"
 
-    @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return f"{self._controller.name} rain delay"
+    def __init__(self, controller) -> None:
+        """Set up a Rachio rain delay switch."""
+        self._cancel_update: CALLBACK_TYPE | None = None
+        super().__init__(controller)
 
     @property
     def unique_id(self) -> str:
         """Return a unique id by combining controller id and purpose."""
         return f"{self._controller.controller_id}-delay"
-
-    @property
-    def icon(self) -> str:
-        """Return an icon for rain delay."""
-        return "mdi:camera-timer"
 
     @callback
     def _async_handle_update(self, *args, **kwargs) -> None:
@@ -290,42 +288,42 @@ class RachioRainDelay(RachioSwitch):
         if args[0][0][KEY_SUBTYPE] == SUBTYPE_RAIN_DELAY_ON:
             endtime = parse_datetime(args[0][0][KEY_RAIN_DELAY_END])
             _LOGGER.debug("Rain delay expires at %s", endtime)
-            self._state = True
+            self._attr_is_on = True
             assert endtime is not None
             self._cancel_update = async_track_point_in_utc_time(
                 self.hass, self._delay_expiration, endtime
             )
         elif args[0][0][KEY_SUBTYPE] == SUBTYPE_RAIN_DELAY_OFF:
-            self._state = False
+            self._attr_is_on = False
 
         self.async_write_ha_state()
 
     @callback
     def _delay_expiration(self, *args) -> None:
         """Trigger when a rain delay expires."""
-        self._state = False
+        self._attr_is_on = False
         self._cancel_update = None
         self.async_write_ha_state()
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Activate a 24 hour rain delay on the controller."""
         self._controller.rachio.device.rain_delay(self._controller.controller_id, 86400)
         _LOGGER.debug("Starting rain delay for 24 hours")
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Resume controller functionality."""
         self._controller.rachio.device.rain_delay(self._controller.controller_id, 0)
         _LOGGER.debug("Canceling rain delay")
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         if KEY_RAIN_DELAY in self._controller.init_data:
-            self._state = self._controller.init_data[
+            self._attr_is_on = self._controller.init_data[
                 KEY_RAIN_DELAY
             ] / 1000 > as_timestamp(now())
 
         # If the controller was in a rain delay state during a reboot, this re-sets the timer
-        if self._state is True:
+        if self._attr_is_on is True:
             delay_end = utc_from_timestamp(
                 self._controller.init_data[KEY_RAIN_DELAY] / 1000
             )
@@ -346,24 +344,27 @@ class RachioRainDelay(RachioSwitch):
 class RachioZone(RachioSwitch):
     """Representation of one zone of sprinklers connected to the Rachio Iro."""
 
-    def __init__(self, person, controller, data, current_schedule):
+    _attr_icon = "mdi:water"
+
+    def __init__(self, person, controller, data, current_schedule) -> None:
         """Initialize a new Rachio Zone."""
         self.id = data[KEY_ID]
-        self._zone_name = data[KEY_NAME]
+        self._attr_name = data[KEY_NAME]
         self._zone_number = data[KEY_ZONE_NUMBER]
         self._zone_enabled = data[KEY_ENABLED]
-        self._entity_picture = data.get(KEY_IMAGE_URL)
+        self._attr_entity_picture = data.get(KEY_IMAGE_URL)
         self._person = person
         self._shade_type = data.get(KEY_CUSTOM_SHADE, {}).get(KEY_NAME)
         self._zone_type = data.get(KEY_CUSTOM_CROP, {}).get(KEY_NAME)
         self._slope_type = data.get(KEY_CUSTOM_SLOPE, {}).get(KEY_NAME)
         self._summary = ""
         self._current_schedule = current_schedule
+        self._attr_unique_id = f"{controller.controller_id}-zone-{self.id}"
         super().__init__(controller)
 
     def __str__(self):
         """Display the zone as a string."""
-        return f'Rachio Zone "{self.name}" on {str(self._controller)}'
+        return f'Rachio Zone "{self.name}" on {self._controller!s}'
 
     @property
     def zone_id(self) -> str:
@@ -371,32 +372,12 @@ class RachioZone(RachioSwitch):
         return self.id
 
     @property
-    def name(self) -> str:
-        """Return the friendly name of the zone."""
-        return self._zone_name
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id by combining controller id and zone number."""
-        return f"{self._controller.controller_id}-zone-{self.zone_id}"
-
-    @property
-    def icon(self) -> str:
-        """Return the icon to display."""
-        return "mdi:water"
-
-    @property
     def zone_is_enabled(self) -> bool:
         """Return whether the zone is allowed to run."""
         return self._zone_enabled
 
     @property
-    def entity_picture(self):
-        """Return the entity picture to use in the frontend, if any."""
-        return self._entity_picture
-
-    @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         props = {ATTR_ZONE_NUMBER: self._zone_number, ATTR_ZONE_SUMMARY: self._summary}
         if self._shade_type:
@@ -414,17 +395,20 @@ class RachioZone(RachioSwitch):
                 props[ATTR_ZONE_SLOPE] = "Steep"
         return props
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Start watering this zone."""
         # Stop other zones first
         self.turn_off()
 
         # Start this zone
-        manual_run_time = timedelta(
-            minutes=self._person.config_entry.options.get(
-                CONF_MANUAL_RUN_MINS, DEFAULT_MANUAL_RUN_MINS
+        if ATTR_DURATION in kwargs:
+            manual_run_time = timedelta(minutes=kwargs[ATTR_DURATION])
+        else:
+            manual_run_time = timedelta(
+                minutes=self._person.config_entry.options.get(
+                    CONF_MANUAL_RUN_MINS, DEFAULT_MANUAL_RUN_MINS
+                )
             )
-        )
         # The API limit is 3 hours, and requires an int be passed
         self._controller.rachio.zone.start(self.zone_id, manual_run_time.seconds)
         _LOGGER.debug(
@@ -434,13 +418,13 @@ class RachioZone(RachioSwitch):
             str(manual_run_time),
         )
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Stop watering all zones."""
         self._controller.stop_watering()
 
     def set_moisture_percent(self, percent) -> None:
         """Set the zone moisture percent."""
-        _LOGGER.debug("Setting %s moisture to %s percent", self._zone_name, percent)
+        _LOGGER.debug("Setting %s moisture to %s percent", self.name, percent)
         self._controller.rachio.zone.set_moisture_percent(self.id, percent / 100)
 
     @callback
@@ -452,19 +436,19 @@ class RachioZone(RachioSwitch):
         self._summary = args[0][KEY_SUMMARY]
 
         if args[0][KEY_SUBTYPE] == SUBTYPE_ZONE_STARTED:
-            self._state = True
+            self._attr_is_on = True
         elif args[0][KEY_SUBTYPE] in [
             SUBTYPE_ZONE_STOPPED,
             SUBTYPE_ZONE_COMPLETED,
             SUBTYPE_ZONE_PAUSED,
         ]:
-            self._state = False
+            self._attr_is_on = False
 
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
-        self._state = self.zone_id == self._current_schedule.get(KEY_ZONE_ID)
+        self._attr_is_on = self.zone_id == self._current_schedule.get(KEY_ZONE_ID)
 
         self.async_on_remove(
             async_dispatcher_connect(
@@ -476,26 +460,19 @@ class RachioZone(RachioSwitch):
 class RachioSchedule(RachioSwitch):
     """Representation of one fixed schedule on the Rachio Iro."""
 
-    def __init__(self, person, controller, data, current_schedule):
+    def __init__(self, person, controller, data, current_schedule) -> None:
         """Initialize a new Rachio Schedule."""
         self._schedule_id = data[KEY_ID]
-        self._schedule_name = data[KEY_NAME]
         self._duration = data[KEY_DURATION]
         self._schedule_enabled = data[KEY_ENABLED]
         self._summary = data[KEY_SUMMARY]
         self.type = data.get(KEY_TYPE, SCHEDULE_TYPE_FIXED)
         self._current_schedule = current_schedule
+        self._attr_unique_id = (
+            f"{controller.controller_id}-schedule-{self._schedule_id}"
+        )
+        self._attr_name = f"{data[KEY_NAME]} Schedule"
         super().__init__(controller)
-
-    @property
-    def name(self) -> str:
-        """Return the friendly name of the schedule."""
-        return f"{self._schedule_name} Schedule"
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique id by combining controller id and schedule."""
-        return f"{self._controller.controller_id}-schedule-{self._schedule_id}"
 
     @property
     def icon(self) -> str:
@@ -503,7 +480,7 @@ class RachioSchedule(RachioSwitch):
         return "mdi:water" if self.schedule_is_enabled else "mdi:water-off"
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         return {
             ATTR_SCHEDULE_SUMMARY: self._summary,
@@ -517,7 +494,7 @@ class RachioSchedule(RachioSwitch):
         """Return whether the schedule is allowed to run."""
         return self._schedule_enabled
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Start this schedule."""
         self._controller.rachio.schedulerule.start(self._schedule_id)
         _LOGGER.debug(
@@ -526,7 +503,7 @@ class RachioSchedule(RachioSwitch):
             self._controller.name,
         )
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Stop watering all zones."""
         self._controller.stop_watering()
 
@@ -537,21 +514,66 @@ class RachioSchedule(RachioSwitch):
         with suppress(KeyError):
             if args[0][KEY_SCHEDULE_ID] == self._schedule_id:
                 if args[0][KEY_SUBTYPE] in [SUBTYPE_SCHEDULE_STARTED]:
-                    self._state = True
+                    self._attr_is_on = True
                 elif args[0][KEY_SUBTYPE] in [
                     SUBTYPE_SCHEDULE_STOPPED,
                     SUBTYPE_SCHEDULE_COMPLETED,
                 ]:
-                    self._state = False
+                    self._attr_is_on = False
 
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
-        self._state = self._schedule_id == self._current_schedule.get(KEY_SCHEDULE_ID)
+        self._attr_is_on = self._schedule_id == self._current_schedule.get(
+            KEY_SCHEDULE_ID
+        )
 
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, SIGNAL_RACHIO_SCHEDULE_UPDATE, self._async_handle_update
             )
         )
+
+
+class RachioValve(RachioHoseTimerEntity, SwitchEntity):
+    """Representation of one smart hose timer valve."""
+
+    _attr_name = None
+
+    def __init__(self, person, base, data, coordinator) -> None:
+        """Initialize a new smart hose valve."""
+        super().__init__(data, coordinator)
+        self._person = person
+        self._base = base
+        self._attr_unique_id = f"{self.id}-valve"
+        self._update_attr()
+
+    def turn_on(self, **kwargs: Any) -> None:
+        """Turn on this valve."""
+        if ATTR_DURATION in kwargs:
+            manual_run_time = timedelta(minutes=kwargs[ATTR_DURATION])
+        else:
+            manual_run_time = timedelta(
+                minutes=self._person.config_entry.options.get(
+                    CONF_MANUAL_RUN_MINS, DEFAULT_MANUAL_RUN_MINS
+                )
+            )
+
+        self._base.start_watering(self.id, manual_run_time.seconds)
+        self._attr_is_on = True
+        self.schedule_update_ha_state(force_refresh=True)
+        _LOGGER.debug("Starting valve %s for %s", self._name, str(manual_run_time))
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn off this valve."""
+        self._base.stop_watering(self.id)
+        self._attr_is_on = False
+        self.schedule_update_ha_state(force_refresh=True)
+        _LOGGER.debug("Stopping watering on valve %s", self._name)
+
+    @callback
+    def _update_attr(self) -> None:
+        """Handle updated coordinator data."""
+        self._static_attrs = self.reported_state
+        self._attr_is_on = KEY_CURRENT_STATUS in self._static_attrs

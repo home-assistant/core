@@ -1,22 +1,64 @@
 """Test ZHA select entities."""
 
-import pytest
-from zigpy.const import SIG_EP_PROFILE
-import zigpy.profiles.zha as zha
-import zigpy.zcl.clusters.general as general
-import zigpy.zcl.clusters.security as security
+from collections.abc import Callable, Coroutine
+from unittest.mock import patch
 
-from homeassistant.const import ENTITY_CATEGORY_CONFIG, STATE_UNKNOWN, Platform
-from homeassistant.helpers import entity_registry as er, restore_state
-from homeassistant.util import dt as dt_util
+import pytest
+from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+from zigpy.device import Device
+from zigpy.profiles import zha
+from zigpy.zcl.clusters import general, security
+
+from homeassistant.components.zha.helpers import (
+    ZHADeviceProxy,
+    ZHAGatewayProxy,
+    get_zha_gateway,
+    get_zha_gateway_proxy,
+)
+from homeassistant.const import (
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 
 from .common import find_entity_id
-from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
+
+from tests.common import mock_restore_cache
 
 
-@pytest.fixture
-async def siren(hass, zigpy_device_mock, zha_device_joined_restored):
-    """Siren fixture."""
+@pytest.fixture(autouse=True)
+def select_select_only():
+    """Only set up the select and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.BUTTON,
+            Platform.DEVICE_TRACKER,
+            Platform.SIREN,
+            Platform.LIGHT,
+            Platform.NUMBER,
+            Platform.SELECT,
+            Platform.SENSOR,
+            Platform.SWITCH,
+        ),
+    ):
+        yield
+
+
+async def test_select(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
+    """Test ZHA select platform."""
+
+    await setup_zha()
+    gateway = get_zha_gateway(hass)
+    gateway_proxy: ZHAGatewayProxy = get_zha_gateway_proxy(hass)
 
     zigpy_device = zigpy_device_mock(
         {
@@ -26,56 +68,16 @@ async def siren(hass, zigpy_device_mock, zha_device_joined_restored):
                 SIG_EP_TYPE: zha.DeviceType.IAS_WARNING_DEVICE,
                 SIG_EP_PROFILE: zha.PROFILE_ID,
             }
-        },
+        }
     )
 
-    zha_device = await zha_device_joined_restored(zigpy_device)
-    return zha_device, zigpy_device.endpoints[1].ias_wd
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-
-@pytest.fixture
-def core_rs(hass_storage):
-    """Core.restore_state fixture."""
-
-    def _storage(entity_id, state):
-        now = dt_util.utcnow().isoformat()
-
-        hass_storage[restore_state.STORAGE_KEY] = {
-            "version": restore_state.STORAGE_VERSION,
-            "key": restore_state.STORAGE_KEY,
-            "data": [
-                {
-                    "state": {
-                        "entity_id": entity_id,
-                        "state": str(state),
-                        "last_changed": now,
-                        "last_updated": now,
-                        "context": {
-                            "id": "3c2243ff5f30447eb12e7348cfd5b8ff",
-                            "user_id": None,
-                        },
-                    },
-                    "last_seen": now,
-                }
-            ],
-        }
-        return
-
-    return _storage
-
-
-async def test_select(hass, siren):
-    """Test zha select platform."""
-
-    entity_registry = er.async_get(hass)
-    zha_device, cluster = siren
-    assert cluster is not None
-    select_name = security.IasWd.Warning.WarningMode.__name__
-    entity_id = await find_entity_id(
-        Platform.SELECT,
-        zha_device,
-        hass,
-        qualifier=select_name.lower(),
+    zha_device_proxy: ZHADeviceProxy = gateway_proxy.get_device_proxy(zigpy_device.ieee)
+    entity_id = find_entity_id(
+        Platform.SELECT, zha_device_proxy, hass, qualifier="tone"
     )
     assert entity_id is not None
 
@@ -94,7 +96,7 @@ async def test_select(hass, siren):
 
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry
-    assert entity_entry.entity_category == ENTITY_CATEGORY_CONFIG
+    assert entity_entry.entity_category == EntityCategory.CONFIG
 
     # Test select option with string value
     await hass.services.async_call(
@@ -112,16 +114,32 @@ async def test_select(hass, siren):
     assert state.state == security.IasWd.Warning.WarningMode.Burglar.name
 
 
+@pytest.mark.parametrize(
+    ("restored_state", "expected_state"),
+    [
+        # Unavailable is not restored
+        (STATE_UNAVAILABLE, STATE_UNKNOWN),
+        # Normal state is
+        (
+            security.IasWd.Warning.WarningMode.Burglar.name,
+            security.IasWd.Warning.WarningMode.Burglar.name,
+        ),
+    ],
+)
 async def test_select_restore_state(
-    hass,
-    zigpy_device_mock,
-    core_rs,
-    zha_device_restored,
-):
-    """Test zha select entity restore state."""
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+    restored_state: str,
+    expected_state: str,
+) -> None:
+    """Test ZHA select platform restore state."""
+    entity_id = "select.fakemanufacturer_fakemodel_default_siren_tone"
 
-    entity_id = "select.fakemanufacturer_fakemodel_e769900a_ias_wd_warningmode"
-    core_rs(entity_id, state="Burglar")
+    mock_restore_cache(hass, [State(entity_id, restored_state)])
+
+    await setup_zha()
 
     zigpy_device = zigpy_device_mock(
         {
@@ -131,21 +149,14 @@ async def test_select_restore_state(
                 SIG_EP_TYPE: zha.DeviceType.IAS_WARNING_DEVICE,
                 SIG_EP_PROFILE: zha.PROFILE_ID,
             }
-        },
+        }
     )
 
-    zha_device = await zha_device_restored(zigpy_device)
-    cluster = zigpy_device.endpoints[1].ias_wd
-    assert cluster is not None
-    select_name = security.IasWd.Warning.WarningMode.__name__
-    entity_id = await find_entity_id(
-        Platform.SELECT,
-        zha_device,
-        hass,
-        qualifier=select_name.lower(),
-    )
+    gateway = get_zha_gateway(hass)
+    gateway.get_or_create_device(zigpy_device)
+    await gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert entity_id is not None
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == security.IasWd.Warning.WarningMode.Burglar.name
+    assert state.state == expected_state

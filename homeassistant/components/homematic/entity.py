@@ -1,16 +1,19 @@
 """Homematic base entity."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pyhomematic import HMConnection
 from pyhomematic.devicetypes.generic import HMGeneric
 
 from homeassistant.const import ATTR_NAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.event import track_time_interval
 
 from .const import (
     ATTR_ADDRESS,
@@ -34,6 +37,7 @@ class HMDevice(Entity):
 
     _homematic: HMConnection
     _hmdevice: HMGeneric
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -47,10 +51,10 @@ class HMDevice(Entity):
         self._channel = config.get(ATTR_CHANNEL)
         self._state = config.get(ATTR_PARAM)
         self._unique_id = config.get(ATTR_UNIQUE_ID)
-        self._data: dict[str, str] = {}
+        self._data: dict[str, Any] = {}
         self._connected = False
         self._available = False
-        self._channel_map: set[str] = set()
+        self._channel_map: dict[str, str] = {}
 
         if entity_description is not None:
             self.entity_description = entity_description
@@ -59,7 +63,7 @@ class HMDevice(Entity):
         if self._state:
             self._state = self._state.upper()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Load data init callbacks."""
         self._subscribe_homematic_events()
 
@@ -69,17 +73,12 @@ class HMDevice(Entity):
         return self._unique_id.replace(" ", "_")
 
     @property
-    def should_poll(self):
-        """Return false. HomeMatic states are pushed by the XML-RPC Server."""
-        return False
-
-    @property
     def name(self):
         """Return the name of the device."""
         return self._name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true if device is available."""
         return self._available
 
@@ -101,10 +100,10 @@ class HMDevice(Entity):
 
         return attr
 
-    def update(self):
+    def update(self) -> None:
         """Connect to HomeMatic init values."""
         if self._connected:
-            return True
+            return
 
         # Initialize
         self._homematic = self.hass.data[DATA_HOMEMATIC]
@@ -118,7 +117,7 @@ class HMDevice(Entity):
 
             # Link events from pyhomematic
             self._available = not self._hmdevice.UNREACH
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             self._connected = False
             _LOGGER.error("Exception while linking %s: %s", self._address, str(err))
 
@@ -127,7 +126,7 @@ class HMDevice(Entity):
         has_changed = False
 
         # Is data needed for this instance?
-        if f"{attribute}:{device.partition(':')[2]}" in self._channel_map:
+        if device.partition(":")[2] == self._channel_map.get(attribute):
             self._data[attribute] = value
             has_changed = True
 
@@ -143,12 +142,12 @@ class HMDevice(Entity):
     def _subscribe_homematic_events(self):
         """Subscribe all required events to handle job."""
         for metadata in (
-            self._hmdevice.SENSORNODE,
-            self._hmdevice.BINARYNODE,
-            self._hmdevice.ATTRIBUTENODE,
-            self._hmdevice.WRITENODE,
-            self._hmdevice.EVENTNODE,
             self._hmdevice.ACTIONNODE,
+            self._hmdevice.EVENTNODE,
+            self._hmdevice.WRITENODE,
+            self._hmdevice.ATTRIBUTENODE,
+            self._hmdevice.BINARYNODE,
+            self._hmdevice.SENSORNODE,
         ):
             for node, channels in metadata.items():
                 # Data is needed for this instance
@@ -159,7 +158,9 @@ class HMDevice(Entity):
                     else:
                         channel = self._channel
                     # Remember the channel for this attribute to ignore invalid events later
-                    self._channel_map.add(f"{node}:{channel!s}")
+                    self._channel_map[node] = str(channel)
+
+        _LOGGER.debug("Channel map for %s: %s", self._address, str(self._channel_map))
 
         # Set callbacks
         self._hmdevice.setEventCallback(callback=self._hm_event_callback, bequeath=True)
@@ -210,6 +211,8 @@ class HMDevice(Entity):
 class HMHub(Entity):
     """The HomeMatic hub. (CCU2/HomeGear)."""
 
+    _attr_should_poll = False
+
     def __init__(self, hass, homematic, name):
         """Initialize HomeMatic hub."""
         self.hass = hass
@@ -220,23 +223,16 @@ class HMHub(Entity):
         self._state = None
 
         # Load data
-        self.hass.helpers.event.track_time_interval(self._update_hub, SCAN_INTERVAL_HUB)
+        track_time_interval(self.hass, self._update_hub, SCAN_INTERVAL_HUB)
         self.hass.add_job(self._update_hub, None)
 
-        self.hass.helpers.event.track_time_interval(
-            self._update_variables, SCAN_INTERVAL_VARIABLES
-        )
+        track_time_interval(self.hass, self._update_variables, SCAN_INTERVAL_VARIABLES)
         self.hass.add_job(self._update_variables, None)
 
     @property
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """Return false. HomeMatic Hub object updates variables."""
-        return False
 
     @property
     def state(self):

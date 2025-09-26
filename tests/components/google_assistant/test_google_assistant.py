@@ -1,30 +1,27 @@
 """The tests for the Google Assistant component."""
-from http import HTTPStatus
 
-# pylint: disable=protected-access
+from http import HTTPStatus
 import json
+from unittest.mock import patch
 
 from aiohttp.hdrs import AUTHORIZATION
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import const, core, setup
 from homeassistant.components import (
-    alarm_control_panel,
-    cover,
-    fan,
     google_assistant as ga,
+    humidifier,
     light,
-    lock,
     media_player,
-    switch,
 )
-from homeassistant.components.climate import const as climate
-from homeassistant.components.humidifier import const as humidifier
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES, EntityCategory, Platform
+from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import DEMO_DEVICES
 
-from tests.common import mock_registry
+from tests.typing import ClientSessionGenerator
 
 API_PASSWORD = "test1234"
 
@@ -34,128 +31,105 @@ ACCESS_TOKEN = "superdoublesecret"
 
 
 @pytest.fixture
-def auth_header(hass_access_token):
+def auth_header(hass_access_token: str) -> dict[str, str]:
     """Generate an HTTP header with bearer token authorization."""
     return {AUTHORIZATION: f"Bearer {hass_access_token}"}
 
 
 @pytest.fixture
-def assistant_client(loop, hass, hass_client_no_auth):
+async def assistant_client(
+    hass: core.HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> TestClient:
     """Create web client for the Google Assistant API."""
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass,
-            "google_assistant",
-            {
-                "google_assistant": {
-                    "project_id": PROJECT_ID,
-                    "entity_config": {
-                        "light.ceiling_lights": {
-                            "aliases": ["top lights", "ceiling lights"],
-                            "name": "Roof Lights",
-                        }
-                    },
-                }
-            },
-        )
+    await setup.async_setup_component(
+        hass,
+        "google_assistant",
+        {
+            "google_assistant": {
+                "project_id": PROJECT_ID,
+                "entity_config": {
+                    "light.ceiling_lights": {
+                        "aliases": ["top lights", "ceiling lights"],
+                        "name": "Roof Lights",
+                    }
+                },
+            }
+        },
     )
 
-    return loop.run_until_complete(hass_client_no_auth())
+    return await hass_client_no_auth()
+
+
+@pytest.fixture(autouse=True)
+async def wanted_platforms_only() -> None:
+    """Enable only the wanted demo platforms."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [
+            Platform.ALARM_CONTROL_PANEL,
+            Platform.CLIMATE,
+            Platform.COVER,
+            Platform.FAN,
+            Platform.HUMIDIFIER,
+            Platform.LIGHT,
+            Platform.LOCK,
+            Platform.MEDIA_PLAYER,
+            Platform.SWITCH,
+        ],
+    ):
+        yield
 
 
 @pytest.fixture
-def hass_fixture(loop, hass):
+async def hass_fixture(hass: core.HomeAssistant) -> core.HomeAssistant:
     """Set up a Home Assistant instance for these tests."""
     # We need to do this to get access to homeassistant/turn_(on,off)
-    loop.run_until_complete(setup.async_setup_component(hass, core.DOMAIN, {}))
+    await setup.async_setup_component(hass, core.DOMAIN, {})
 
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, light.DOMAIN, {"light": [{"platform": "demo"}]}
-        )
-    )
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, switch.DOMAIN, {"switch": [{"platform": "demo"}]}
-        )
-    )
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, cover.DOMAIN, {"cover": [{"platform": "demo"}]}
-        )
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, media_player.DOMAIN, {"media_player": [{"platform": "demo"}]}
-        )
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(hass, fan.DOMAIN, {"fan": [{"platform": "demo"}]})
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, climate.DOMAIN, {"climate": [{"platform": "demo"}]}
-        )
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, humidifier.DOMAIN, {"humidifier": [{"platform": "demo"}]}
-        )
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(hass, lock.DOMAIN, {"lock": [{"platform": "demo"}]})
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass,
-            alarm_control_panel.DOMAIN,
-            {"alarm_control_panel": [{"platform": "demo"}]},
-        )
-    )
+    await setup.async_setup_component(hass, "demo", {})
 
     return hass
 
 
-# pylint: disable=redefined-outer-name
-
-
-async def test_sync_request(hass_fixture, assistant_client, auth_header):
+async def test_sync_request(
+    hass_fixture, assistant_client, auth_header, entity_registry: er.EntityRegistry
+) -> None:
     """Test a sync request."""
-
-    entity_registry = mock_registry(hass_fixture)
-
     entity_entry1 = entity_registry.async_get_or_create(
         "switch",
         "test",
         "switch_config_id",
         suggested_object_id="config_switch",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
     )
     entity_entry2 = entity_registry.async_get_or_create(
         "switch",
         "test",
         "switch_diagnostic_id",
         suggested_object_id="diagnostic_switch",
-        entity_category="diagnostic",
+        entity_category=EntityCategory.DIAGNOSTIC,
     )
     entity_entry3 = entity_registry.async_get_or_create(
         "switch",
         "test",
-        "switch_system_id",
-        suggested_object_id="system_switch",
-        entity_category="system",
+        "switch_hidden_integration_id",
+        suggested_object_id="hidden_integration_switch",
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
+    )
+    entity_entry4 = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "switch_hidden_user_id",
+        suggested_object_id="hidden_user_switch",
+        hidden_by=er.RegistryEntryHider.USER,
     )
 
     # These should not show up in the sync request
     hass_fixture.states.async_set(entity_entry1.entity_id, "on")
     hass_fixture.states.async_set(entity_entry2.entity_id, "something_else")
     hass_fixture.states.async_set(entity_entry3.entity_id, "blah")
+    hass_fixture.states.async_set(entity_entry4.entity_id, "foo")
 
     reqid = "5711642932632160983"
     data = {"requestId": reqid, "inputs": [{"intent": "action.devices.SYNC"}]}
@@ -178,13 +152,14 @@ async def test_sync_request(hass_fixture, assistant_client, auth_header):
     for dev, demo in zip(
         sorted(devices, key=lambda d: d["id"]),
         sorted(DEMO_DEVICES, key=lambda d: d["id"]),
+        strict=False,
     ):
         assert dev["name"] == demo["name"]
         assert set(dev["traits"]) == set(demo["traits"])
         assert dev["type"] == demo["type"]
 
 
-async def test_query_request(hass_fixture, assistant_client, auth_header):
+async def test_query_request(hass_fixture, assistant_client, auth_header) -> None:
     """Test a query request."""
     reqid = "5711642932632160984"
     data = {
@@ -215,7 +190,7 @@ async def test_query_request(hass_fixture, assistant_client, auth_header):
     assert len(devices) == 4
     assert devices["light.bed_light"]["on"] is False
     assert devices["light.ceiling_lights"]["on"] is True
-    assert devices["light.ceiling_lights"]["brightness"] == 70
+    assert devices["light.ceiling_lights"]["brightness"] == 71
     assert devices["light.ceiling_lights"]["color"]["temperatureK"] == 2631
     assert devices["light.kitchen_lights"]["color"]["spectrumHsv"] == {
         "hue": 345,
@@ -225,7 +200,9 @@ async def test_query_request(hass_fixture, assistant_client, auth_header):
     assert devices["media_player.lounge_room"]["on"] is True
 
 
-async def test_query_climate_request(hass_fixture, assistant_client, auth_header):
+async def test_query_climate_request(
+    hass_fixture, assistant_client, auth_header
+) -> None:
     """Test a query request."""
     reqid = "5711642932632160984"
     data = {
@@ -255,32 +232,37 @@ async def test_query_climate_request(hass_fixture, assistant_client, auth_header
     assert len(devices) == 3
     assert devices["climate.heatpump"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": 20.0,
         "thermostatTemperatureAmbient": 25.0,
         "thermostatMode": "heat",
     }
     assert devices["climate.ecobee"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpointHigh": 24,
         "thermostatTemperatureAmbient": 23,
         "thermostatMode": "heatcool",
         "thermostatTemperatureSetpointLow": 21,
-        "currentFanSpeedSetting": "Auto Low",
+        "currentFanSpeedSetting": "auto_low",
     }
     assert devices["climate.hvac"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": 21,
         "thermostatTemperatureAmbient": 22,
         "thermostatMode": "cool",
-        "thermostatHumidityAmbient": 54,
-        "currentFanSpeedSetting": "On High",
+        "thermostatHumidityAmbient": 54.2,
+        "currentFanSpeedSetting": "on_high",
     }
 
 
-async def test_query_climate_request_f(hass_fixture, assistant_client, auth_header):
+async def test_query_climate_request_f(
+    hass_fixture, assistant_client, auth_header
+) -> None:
     """Test a query request."""
     # Mock demo devices as fahrenheit to see if we convert to celsius
-    hass_fixture.config.units.temperature_unit = const.TEMP_FAHRENHEIT
+    hass_fixture.config.units = US_CUSTOMARY_SYSTEM
     for entity_id in ("climate.hvac", "climate.heatpump", "climate.ecobee"):
         state = hass_fixture.states.get(entity_id)
         attr = dict(state.attributes)
@@ -314,30 +296,34 @@ async def test_query_climate_request_f(hass_fixture, assistant_client, auth_head
     assert len(devices) == 3
     assert devices["climate.heatpump"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": -6.7,
         "thermostatTemperatureAmbient": -3.9,
         "thermostatMode": "heat",
     }
     assert devices["climate.ecobee"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpointHigh": -4.4,
         "thermostatTemperatureAmbient": -5,
         "thermostatMode": "heatcool",
         "thermostatTemperatureSetpointLow": -6.1,
-        "currentFanSpeedSetting": "Auto Low",
+        "currentFanSpeedSetting": "auto_low",
     }
     assert devices["climate.hvac"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": -6.1,
         "thermostatTemperatureAmbient": -5.6,
         "thermostatMode": "cool",
-        "thermostatHumidityAmbient": 54,
-        "currentFanSpeedSetting": "On High",
+        "thermostatHumidityAmbient": 54.2,
+        "currentFanSpeedSetting": "on_high",
     }
-    hass_fixture.config.units.temperature_unit = const.TEMP_CELSIUS
 
 
-async def test_query_humidifier_request(hass_fixture, assistant_client, auth_header):
+async def test_query_humidifier_request(
+    hass_fixture, assistant_client, auth_header
+) -> None:
     """Test a query request."""
     reqid = "5711642932632160984"
     data = {
@@ -369,11 +355,13 @@ async def test_query_humidifier_request(hass_fixture, assistant_client, auth_hea
         "on": True,
         "online": True,
         "humiditySetpointPercent": 68,
+        "humidityAmbientPercent": 45,
     }
     assert devices["humidifier.dehumidifier"] == {
         "on": True,
         "online": True,
-        "humiditySetpointPercent": 54,
+        "humiditySetpointPercent": 54.2,
+        "humidityAmbientPercent": 59.4,
     }
     assert devices["humidifier.hygrostat"] == {
         "on": True,
@@ -383,7 +371,7 @@ async def test_query_humidifier_request(hass_fixture, assistant_client, auth_hea
     }
 
 
-async def test_execute_request(hass_fixture, assistant_client, auth_header):
+async def test_execute_request(hass_fixture, assistant_client, auth_header) -> None:
     """Test an execute request."""
     reqid = "5711642932632160985"
     data = {
@@ -489,7 +477,7 @@ async def test_execute_request(hass_fixture, assistant_client, auth_header):
     assert kitchen.attributes.get(light.ATTR_RGB_COLOR) == (255, 0, 0)
 
     bed = hass_fixture.states.get("light.bed_light")
-    assert bed.attributes.get(light.ATTR_COLOR_TEMP) == 212
+    assert bed.attributes.get(light.ATTR_COLOR_TEMP_KELVIN) == 4700
 
     assert hass_fixture.states.get("switch.decorative_lights").state == "off"
 

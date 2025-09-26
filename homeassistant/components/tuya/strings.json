@@ -1,20 +1,1045 @@
 {
   "config": {
     "step": {
-      "user": {
-        "description": "Enter your Tuya credentials",
+      "reauth_user_code": {
+        "description": "The Tuya integration now uses an improved login method. To reauthenticate with your Smart Life or Tuya Smart account, you need to enter your user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case-sensitive, please be sure to enter it exactly as shown in the app.",
         "data": {
-          "country_code": "Country",
-          "access_id": "Tuya IoT Access ID",
-          "access_secret": "Tuya IoT Access Secret",
-          "username": "Account",
-          "password": "[%key:common::config_flow::data::password%]"
+          "user_code": "User code"
         }
+      },
+      "user": {
+        "description": "Enter your Smart Life or Tuya Smart user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case-sensitive, please be sure to enter it exactly as shown in the app.",
+        "data": {
+          "user_code": "User code"
+        }
+      },
+      "scan": {
+        "description": "Use the Smart Life app or Tuya Smart app to scan the following QR code to complete the login.\n\nContinue to the next step once you have completed this step in the app."
       }
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "login_error": "Login error ({code}): {msg}"
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "methane": {
+        "name": "Methane"
+      },
+      "voc": {
+        "name": "VOCs"
+      },
+      "pm25": {
+        "name": "PM2.5"
+      },
+      "carbon_monoxide": {
+        "name": "Carbon monoxide"
+      },
+      "carbon_dioxide": {
+        "name": "Carbon dioxide"
+      },
+      "formaldehyde": {
+        "name": "Formaldehyde"
+      },
+      "pressure": {
+        "name": "Pressure"
+      },
+      "feeding": {
+        "name": "Feeding"
+      },
+      "drop": {
+        "name": "Drop"
+      },
+      "tilt": {
+        "name": "Tilt"
+      },
+      "tankfull": {
+        "name": "Tank full"
+      },
+      "defrost": {
+        "name": "Defrost"
+      },
+      "valve": {
+        "name": "Valve"
+      },
+      "wet": {
+        "name": "Wet"
+      }
+    },
+    "button": {
+      "reset_duster_cloth": {
+        "name": "Reset duster cloth"
+      },
+      "reset_edge_brush": {
+        "name": "Reset edge brush"
+      },
+      "reset_filter": {
+        "name": "Reset filter"
+      },
+      "reset_map": {
+        "name": "Reset map"
+      },
+      "reset_roll_brush": {
+        "name": "Reset roll brush"
+      },
+      "snooze": {
+        "name": "Snooze"
+      }
+    },
+    "cover": {
+      "blind": {
+        "name": "[%key:component::cover::entity_component::blind::name%]"
+      },
+      "curtain": {
+        "name": "[%key:component::cover::entity_component::curtain::name%]"
+      },
+      "indexed_curtain": {
+        "name": "Curtain {index}"
+      },
+      "indexed_door": {
+        "name": "Door {index}"
+      }
+    },
+    "event": {
+      "numbered_button": {
+        "name": "Button {button_number}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "click": "Clicked",
+              "double_click": "Double-clicked",
+              "press": "Long-pressed"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "backlight": {
+        "name": "Backlight"
+      },
+      "light": {
+        "name": "[%key:component::light::title%]"
+      },
+      "indexed_light": {
+        "name": "Light {index}"
+      },
+      "night_light": {
+        "name": "Night light"
+      }
+    },
+    "number": {
+      "alarm_duration": {
+        "name": "Alarm duration"
+      },
+      "temperature": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "indexed_temperature": {
+        "name": "Temperature {index}"
+      },
+      "time": {
+        "name": "Time"
+      },
+      "temperature_after_boiling": {
+        "name": "Temperature after boiling"
+      },
+      "heat_preservation_time": {
+        "name": "Heat preservation time"
+      },
+      "indexed_irrigation_duration": {
+        "name": "Irrigation duration {index}"
+      },
+      "feed": {
+        "name": "Feed"
+      },
+      "voice_times": {
+        "name": "Voice times"
+      },
+      "sensitivity": {
+        "name": "Sensitivity"
+      },
+      "near_detection": {
+        "name": "Near detection"
+      },
+      "far_detection": {
+        "name": "Far detection"
+      },
+      "target_dis_closest": {
+        "name": "Closest target distance"
+      },
+      "water_level": {
+        "name": "Water level"
+      },
+      "powder": {
+        "name": "Powder"
+      },
+      "cook_temperature": {
+        "name": "Cooking temperature"
+      },
+      "indexed_cook_temperature": {
+        "name": "Cooking temperature {index}"
+      },
+      "cook_time": {
+        "name": "Cooking time"
+      },
+      "cloud_recipe": {
+        "name": "Cloud recipe"
+      },
+      "volume": {
+        "name": "Volume"
+      },
+      "minimum_brightness": {
+        "name": "Minimum brightness"
+      },
+      "maximum_brightness": {
+        "name": "Maximum brightness"
+      },
+      "indexed_minimum_brightness": {
+        "name": "Minimum brightness {index}"
+      },
+      "indexed_maximum_brightness": {
+        "name": "Maximum brightness {index}"
+      },
+      "move_down": {
+        "name": "Move down"
+      },
+      "move_up": {
+        "name": "Move up"
+      },
+      "down_delay": {
+        "name": "Down delay"
+      },
+      "temp_correction": {
+        "name": "Temperature correction"
+      },
+      "arm_delay": {
+        "name": "Arm delay"
+      },
+      "alarm_delay": {
+        "name": "Alarm delay"
+      },
+      "siren_duration": {
+        "name": "Siren duration"
+      },
+      "alarm_maximum": {
+        "name": "Alarm maximum"
+      },
+      "alarm_minimum": {
+        "name": "Alarm minimum"
+      },
+      "battery_backup_reserve": {
+        "name": "Battery backup reserve"
+      },
+      "installation_height": {
+        "name": "Installation height"
+      },
+      "maximum_liquid_depth": {
+        "name": "Maximum liquid depth"
+      },
+      "inverter_output_power_limit": {
+        "name": "Inverter output power limit"
+      }
+    },
+    "select": {
+      "volume": {
+        "name": "[%key:component::tuya::entity::number::volume::name%]"
+      },
+      "cups": {
+        "name": "Cups"
+      },
+      "concentration": {
+        "name": "Concentration"
+      },
+      "material": {
+        "name": "Material"
+      },
+      "mode": {
+        "name": "Mode"
+      },
+      "temperature_level": {
+        "name": "Temperature level"
+      },
+      "brightness": {
+        "name": "Brightness"
+      },
+      "target_humidity": {
+        "name": "Target humidity"
+      },
+      "basic_anti_flicker": {
+        "name": "Anti-flicker",
+        "state": {
+          "0": "[%key:common::state::disabled%]",
+          "1": "50 Hz",
+          "2": "60 Hz"
+        }
+      },
+      "basic_nightvision": {
+        "name": "Night vision",
+        "state": {
+          "0": "Automatic",
+          "1": "[%key:common::state::off%]",
+          "2": "[%key:common::state::on%]"
+        }
+      },
+      "decibel_sensitivity": {
+        "name": "Sound detection sensitivity",
+        "state": {
+          "0": "Low sensitivity",
+          "1": "High sensitivity"
+        }
+      },
+      "ipc_work_mode": {
+        "name": "IPC mode",
+        "state": {
+          "0": "Low power mode",
+          "1": "Continuous working mode"
+        }
+      },
+      "led_type": {
+        "name": "Light source type",
+        "state": {
+          "halogen": "Halogen",
+          "incandescent": "Incandescent",
+          "led": "LED"
+        }
+      },
+      "indexed_led_type": {
+        "name": "Light {index} source type",
+        "state": {
+          "halogen": "[%key:component::tuya::entity::select::led_type::state::halogen%]",
+          "incandescent": "[%key:component::tuya::entity::select::led_type::state::incandescent%]",
+          "led": "[%key:component::tuya::entity::select::led_type::state::led%]"
+        }
+      },
+      "light_mode": {
+        "name": "Indicator light mode",
+        "state": {
+          "none": "[%key:common::state::off%]",
+          "pos": "Indicate inverted switch state",
+          "relay": "Indicate switch on/off state"
+        }
+      },
+      "motion_sensitivity": {
+        "name": "Motion detection sensitivity",
+        "state": {
+          "0": "[%key:common::state::low%]",
+          "1": "[%key:common::state::medium%]",
+          "2": "[%key:common::state::high%]"
+        }
+      },
+      "record_mode": {
+        "name": "Record mode",
+        "state": {
+          "1": "Record events only",
+          "2": "Continuous recording"
+        }
+      },
+      "relay_status": {
+        "name": "Power on behavior",
+        "state": {
+          "last": "Remember last state",
+          "memory": "[%key:component::tuya::entity::select::relay_status::state::last%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "power_off": "[%key:common::state::off%]",
+          "power_on": "[%key:common::state::on%]"
+        }
+      },
+      "fingerbot_mode": {
+        "name": "Mode",
+        "state": {
+          "click": "Push",
+          "switch": "Switch"
+        }
+      },
+      "vacuum_cistern": {
+        "name": "Water tank adjustment",
+        "state": {
+          "low": "[%key:common::state::low%]",
+          "middle": "Middle",
+          "high": "[%key:common::state::high%]",
+          "closed": "[%key:common::state::closed%]"
+        }
+      },
+      "vacuum_collection": {
+        "name": "Dust collection mode",
+        "state": {
+          "small": "Small",
+          "middle": "Middle",
+          "large": "Large"
+        }
+      },
+      "vacuum_mode": {
+        "name": "Mode",
+        "state": {
+          "standby": "[%key:common::state::standby%]",
+          "random": "Random",
+          "smart": "Smart",
+          "wall_follow": "Follow wall",
+          "mop": "Mop",
+          "spiral": "Spiral",
+          "left_spiral": "Spiral left",
+          "right_spiral": "Spiral right",
+          "bow": "Bow",
+          "left_bow": "Bow left",
+          "right_bow": "Bow right",
+          "partial_bow": "Bow partially",
+          "chargego": "Return to dock",
+          "single": "Single",
+          "zone": "Zone",
+          "pose": "Pose",
+          "point": "Point",
+          "part": "Part",
+          "pick_zone": "Pick zone"
+        }
+      },
+      "vertical_fan_angle": {
+        "name": "Vertical swing flap angle",
+        "state": {
+          "30": "30°",
+          "60": "60°",
+          "90": "90°"
+        }
+      },
+      "horizontal_fan_angle": {
+        "name": "Horizontal swing flap angle",
+        "state": {
+          "30": "30°",
+          "60": "60°",
+          "90": "90°"
+        }
+      },
+      "curtain_mode": {
+        "name": "Mode",
+        "state": {
+          "morning": "Morning",
+          "night": "Night"
+        }
+      },
+      "curtain_motor_mode": {
+        "name": "Motor mode",
+        "state": {
+          "forward": "Forward",
+          "back": "Back"
+        }
+      },
+      "countdown": {
+        "name": "Countdown",
+        "state": {
+          "cancel": "Cancel",
+          "1h": "1 hour",
+          "2h": "2 hours",
+          "3h": "3 hours",
+          "4h": "4 hours",
+          "5h": "5 hours",
+          "6h": "6 hours"
+        }
+      },
+      "humidifier_spray_mode": {
+        "name": "Spray mode",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "health": "Health",
+          "sleep": "Sleep",
+          "humidity": "Humidity",
+          "work": "Work"
+        }
+      },
+      "humidifier_level": {
+        "name": "Spraying level",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "level_9": "Level 9",
+          "level_10": "Level 10"
+        }
+      },
+      "humidifier_moodlighting": {
+        "name": "Moodlighting",
+        "state": {
+          "1": "Mood 1",
+          "2": "Mood 2",
+          "3": "Mood 3",
+          "4": "Mood 4",
+          "5": "Mood 5"
+        }
+      },
+      "weather_delay": {
+        "name": "Weather delay",
+        "state": {
+          "cancel": "Cancel",
+          "24h": "24h",
+          "48h": "48h",
+          "72h": "72h",
+          "96h": "96h",
+          "120h": "120h",
+          "144h": "144h",
+          "168h": "168h"
+        }
+      },
+      "blanket_level": {
+        "name": "Level",
+        "state": {
+          "level_1": "[%key:common::state::low%]",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6",
+          "level_7": "Level 7",
+          "level_8": "Level 8",
+          "level_9": "Level 9",
+          "level_10": "[%key:common::state::high%]"
+        }
+      },
+      "indexed_blanket_level": {
+        "name": "Level {index}",
+        "state": {
+          "level_1": "[%key:common::state::low%]",
+          "level_2": "[%key:component::tuya::entity::select::blanket_level::state::level_2%]",
+          "level_3": "[%key:component::tuya::entity::select::blanket_level::state::level_3%]",
+          "level_4": "[%key:component::tuya::entity::select::blanket_level::state::level_4%]",
+          "level_5": "[%key:component::tuya::entity::select::blanket_level::state::level_5%]",
+          "level_6": "[%key:component::tuya::entity::select::blanket_level::state::level_6%]",
+          "level_7": "[%key:component::tuya::entity::select::blanket_level::state::level_7%]",
+          "level_8": "[%key:component::tuya::entity::select::blanket_level::state::level_8%]",
+          "level_9": "[%key:component::tuya::entity::select::blanket_level::state::level_9%]",
+          "level_10": "[%key:common::state::high%]"
+        }
+      },
+      "odor_elimination_mode": {
+        "name": "Odor elimination mode",
+        "state": {
+          "smart": "Smart",
+          "interim": "Interim"
+        }
+      },
+      "desk_level": {
+        "name": "Level",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4"
+        }
+      },
+      "desk_up_down": {
+        "name": "Up/Down",
+        "state": {
+          "up": "Up",
+          "down": "Down",
+          "stop": "Stop"
+        }
+      },
+      "inverter_work_mode": {
+        "name": "Inverter work mode",
+        "state": {
+          "self_powered": "Self-powered",
+          "time_of_use": "Time of use",
+          "manual": "Manual mode"
+        }
+      }
+    },
+    "sensor": {
+      "battery": {
+        "name": "[%key:component::sensor::entity_component::battery::name%]"
+      },
+      "voc": {
+        "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
+      },
+      "carbon_monoxide": {
+        "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
+      },
+      "carbon_dioxide": {
+        "name": "[%key:component::sensor::entity_component::carbon_dioxide::name%]"
+      },
+      "illuminance": {
+        "name": "[%key:component::sensor::entity_component::illuminance::name%]"
+      },
+      "temperature": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "temperature_external": {
+        "name": "Probe temperature"
+      },
+      "indexed_temperature_external": {
+        "name": "Probe temperature channel {index}"
+      },
+      "humidity": {
+        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+      },
+      "humidity_outdoor": {
+        "name": "Outdoor humidity"
+      },
+      "indexed_humidity_outdoor": {
+        "name": "Outdoor humidity channel {index}"
+      },
+      "air_pressure": {
+        "name": "Air pressure"
+      },
+      "precipitation_today": {
+        "name": "Total precipitation today"
+      },
+      "precipitation_intensity": {
+        "name": "[%key:component::sensor::entity_component::precipitation_intensity::name%]"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "wind_direction": {
+        "name": "[%key:component::sensor::entity_component::wind_direction::name%]"
+      },
+      "pm25": {
+        "name": "[%key:component::sensor::entity_component::pm25::name%]"
+      },
+      "pm1": {
+        "name": "[%key:component::sensor::entity_component::pm1::name%]"
+      },
+      "pm10": {
+        "name": "[%key:component::sensor::entity_component::pm10::name%]"
+      },
+      "current": {
+        "name": "[%key:component::sensor::entity_component::current::name%]"
+      },
+      "power": {
+        "name": "[%key:component::sensor::entity_component::power::name%]"
+      },
+      "voltage": {
+        "name": "[%key:component::sensor::entity_component::voltage::name%]"
+      },
+      "battery_state": {
+        "name": "Battery state"
+      },
+      "battery_soc": {
+        "name": "Battery SOC"
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "total_pv_power": {
+        "name": "Total PV power"
+      },
+      "pv_channel_power": {
+        "name": "PV channel {index} power"
+      },
+      "inverter_output_power": {
+        "name": "Inverter output power"
+      },
+      "lifetime_pv_energy": {
+        "name": "Lifetime PV energy"
+      },
+      "lifetime_inverter_output_energy": {
+        "name": "Lifetime inverter output energy"
+      },
+      "lifetime_battery_discharge_energy": {
+        "name": "Lifetime battery discharge energy"
+      },
+      "lifetime_battery_charge_energy": {
+        "name": "Lifetime battery charge energy"
+      },
+      "lifetime_offgrid_port_energy": {
+        "name": "Lifetime off-grid port energy"
+      },
+      "gas": {
+        "name": "Gas"
+      },
+      "formaldehyde": {
+        "name": "[%key:component::tuya::entity::binary_sensor::formaldehyde::name%]"
+      },
+      "luminosity": {
+        "name": "Luminosity"
+      },
+      "smoke_amount": {
+        "name": "Smoke amount"
+      },
+      "current_temperature": {
+        "name": "Current temperature"
+      },
+      "status": {
+        "name": "Status"
+      },
+      "depth": {
+        "name": "Depth"
+      },
+      "last_amount": {
+        "name": "Last amount"
+      },
+      "remaining_time": {
+        "name": "Remaining time"
+      },
+      "methane": {
+        "name": "[%key:component::tuya::entity::binary_sensor::methane::name%]"
+      },
+      "total_energy": {
+        "name": "Total energy"
+      },
+      "total_power": {
+        "name": "Total power"
+      },
+      "total_production": {
+        "name": "Total production"
+      },
+      "phase_a_current": {
+        "name": "Phase A current"
+      },
+      "phase_a_power": {
+        "name": "Phase A power"
+      },
+      "phase_a_voltage": {
+        "name": "Phase A voltage"
+      },
+      "phase_b_current": {
+        "name": "Phase B current"
+      },
+      "phase_b_power": {
+        "name": "Phase B power"
+      },
+      "phase_b_voltage": {
+        "name": "Phase B voltage"
+      },
+      "phase_c_current": {
+        "name": "Phase C current"
+      },
+      "phase_c_power": {
+        "name": "Phase C power"
+      },
+      "phase_c_voltage": {
+        "name": "Phase C voltage"
+      },
+      "cleaning_area": {
+        "name": "Cleaning area"
+      },
+      "cleaning_time": {
+        "name": "Cleaning time"
+      },
+      "total_cleaning_area": {
+        "name": "Total cleaning area"
+      },
+      "total_cleaning_time": {
+        "name": "Total cleaning time"
+      },
+      "total_cleaning_times": {
+        "name": "Total cleaning times"
+      },
+      "duster_cloth_life": {
+        "name": "Duster cloth lifetime"
+      },
+      "side_brush_life": {
+        "name": "Side brush lifetime"
+      },
+      "filter_life": {
+        "name": "Filter lifetime"
+      },
+      "rolling_brush_life": {
+        "name": "Rolling brush lifetime"
+      },
+      "last_operation_duration": {
+        "name": "Last operation duration"
+      },
+      "water_level": {
+        "name": "Water level"
+      },
+      "water_level_state": {
+        "name": "Water level",
+        "state": {
+          "level_1": "[%key:common::state::low%]",
+          "level_2": "[%key:common::state::medium%]",
+          "level_3": "[%key:common::state::full%]"
+        }
+      },
+      "total_watering_time": {
+        "name": "Total watering time"
+      },
+      "filter_utilization": {
+        "name": "Filter utilization"
+      },
+      "total_volatile_organic_compound": {
+        "name": "Total volatile organic compound"
+      },
+      "concentration_carbon_dioxide": {
+        "name": "Concentration of carbon dioxide"
+      },
+      "total_operating_time": {
+        "name": "Total operating time"
+      },
+      "total_absorption_particles": {
+        "name": "Total absorption of particles"
+      },
+      "sous_vide_status": {
+        "name": "Status",
+        "state": {
+          "boiling_temp": "Boiling temperature",
+          "cooling": "Cooling",
+          "heating_temp": "Heating temperature",
+          "heating": "Heating",
+          "reserve_1": "Reserve 1",
+          "reserve_2": "Reserve 2",
+          "reserve_3": "Reserve 3",
+          "standby": "[%key:common::state::standby%]",
+          "warm": "Heat preservation"
+        }
+      },
+      "air_quality": {
+        "name": "Air quality",
+        "state": {
+          "great": "Great",
+          "mild": "Mild",
+          "good": "Good",
+          "severe": "Severe"
+        }
+      },
+      "air_quality_index": {
+        "name": "Air quality index",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4",
+          "level_5": "Level 5",
+          "level_6": "Level 6"
+        }
+      },
+      "uv_runtime": {
+        "name": "UV runtime"
+      },
+      "pump_time": {
+        "name": "Water pump duration"
+      },
+      "filter_duration": {
+        "name": "Filter duration"
+      },
+      "water_time": {
+        "name": "Water usage duration"
+      },
+      "cat_weight": {
+        "name": "Cat weight"
+      },
+      "odor_elimination_status": {
+        "name": "Status",
+        "state": {
+          "work": "Working",
+          "standby": "[%key:common::state::standby%]",
+          "charging": "[%key:common::state::charging%]",
+          "charge_done": "Charge done"
+        }
+      },
+      "liquid_state": {
+        "name": "Liquid state",
+        "state": {
+          "normal": "[%key:common::state::normal%]",
+          "lower_alarm": "[%key:common::state::low%]",
+          "upper_alarm": "[%key:common::state::high%]"
+        }
+      },
+      "liquid_depth": {
+        "name": "Liquid depth"
+      },
+      "liquid_level": {
+        "name": "Liquid level"
+      },
+      "supply_frequency": {
+        "name": "Supply frequency"
+      },
+      "total_dissolved_solids": {
+        "name": "Total dissolved solids"
+      }
+    },
+    "switch": {
+      "start": {
+        "name": "Start"
+      },
+      "heat_preservation": {
+        "name": "Heat preservation"
+      },
+      "disinfection": {
+        "name": "Disinfection"
+      },
+      "water": {
+        "name": "Water"
+      },
+      "slow_feed": {
+        "name": "Slow feed"
+      },
+      "filter_reset": {
+        "name": "Filter reset"
+      },
+      "pump": {
+        "name": "Pump"
+      },
+      "water_pump_reset": {
+        "name": "Water pump reset"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "reset_of_water_usage_days": {
+        "name": "Reset of water usage days"
+      },
+      "uv_sterilization": {
+        "name": "UV sterilization"
+      },
+      "plug": {
+        "name": "Plug"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "switch": {
+        "name": "Switch"
+      },
+      "indexed_switch": {
+        "name": "Switch {index}"
+      },
+      "socket": {
+        "name": "Socket"
+      },
+      "indexed_socket": {
+        "name": "Socket {index}"
+      },
+      "radio": {
+        "name": "Radio"
+      },
+      "indexed_alarm": {
+        "name": "Alarm {index}"
+      },
+      "sleep_aid": {
+        "name": "Sleep aid"
+      },
+      "indexed_usb": {
+        "name": "USB {index}"
+      },
+      "ionizer": {
+        "name": "Ionizer"
+      },
+      "filter_cartridge_reset": {
+        "name": "Filter cartridge reset"
+      },
+      "humidification": {
+        "name": "Humidification"
+      },
+      "do_not_disturb": {
+        "name": "Do not disturb"
+      },
+      "mute_voice": {
+        "name": "Mute voice"
+      },
+      "mute": {
+        "name": "Mute"
+      },
+      "battery_lock": {
+        "name": "Battery lock"
+      },
+      "cry_detection": {
+        "name": "Cry detection"
+      },
+      "sound_detection": {
+        "name": "Sound detection"
+      },
+      "video_recording": {
+        "name": "Video recording"
+      },
+      "motion_recording": {
+        "name": "Motion recording"
+      },
+      "privacy_mode": {
+        "name": "Privacy mode"
+      },
+      "flip": {
+        "name": "Flip"
+      },
+      "time_watermark": {
+        "name": "Time watermark"
+      },
+      "wide_dynamic_range": {
+        "name": "Wide dynamic range"
+      },
+      "motion_tracking": {
+        "name": "Motion tracking"
+      },
+      "motion_alarm": {
+        "name": "Motion alarm"
+      },
+      "energy_saving": {
+        "name": "Energy saving"
+      },
+      "open_window_detection": {
+        "name": "Open window detection"
+      },
+      "spray": {
+        "name": "Spray"
+      },
+      "voice": {
+        "name": "Voice"
+      },
+      "anion": {
+        "name": "Anion"
+      },
+      "oxygen_bar": {
+        "name": "Oxygen bar"
+      },
+      "natural_wind": {
+        "name": "Natural wind"
+      },
+      "sound": {
+        "name": "Sound"
+      },
+      "reverse": {
+        "name": "Reverse"
+      },
+      "sleep": {
+        "name": "Sleep"
+      },
+      "sterilization": {
+        "name": "Sterilization"
+      },
+      "arm_beep": {
+        "name": "Arm beep"
+      },
+      "siren": {
+        "name": "Siren"
+      },
+      "frost_protection": {
+        "name": "Frost protection"
+      },
+      "output_power_limit": {
+        "name": "Output power limit"
+      },
+      "music": {
+        "name": "Music"
+      },
+      "snooze": {
+        "name": "Snooze"
+      }
+    },
+    "valve": {
+      "valve": {
+        "name": "Valve"
+      },
+      "indexed_valve": {
+        "name": "Valve {index}"
+      }
+    }
+  },
+  "exceptions": {
+    "action_dpcode_not_found": {
+      "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
+    }
+  },
+  "issues": {
+    "deprecated_entity_new_valve": {
+      "title": "{name} is deprecated",
+      "description": "The Tuya entity `{entity}` is deprecated, replaced by a new valve entity.\nPlease update your dashboards, automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
     }
   }
 }

@@ -1,10 +1,11 @@
 {
   "domain": "amcrest",
   "name": "Amcrest",
-  "documentation": "https://www.home-assistant.io/integrations/amcrest",
-  "requirements": ["amcrest==1.9.3"],
-  "dependencies": ["ffmpeg"],
   "codeowners": ["@flacjacket"],
+  "dependencies": ["ffmpeg"],
+  "documentation": "https://www.home-assistant.io/integrations/amcrest",
   "iot_class": "local_polling",
-  "loggers": ["amcrest"]
+  "loggers": ["amcrest"],
+  "quality_scale": "legacy",
+  "requirements": ["amcrest==1.9.9"]
 }

@@ -1,8 +1,12 @@
 """Support for the definition of zones."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-from typing import Any, cast
+from operator import attrgetter
+import sys
+from typing import Any, Self, cast
 
 import voluptuous as vol
 
@@ -11,6 +15,7 @@ from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    ATTR_PERSONS,
     CONF_ICON,
     CONF_ID,
     CONF_LATITUDE,
@@ -19,19 +24,30 @@ from homeassistant.const import (
     CONF_RADIUS,
     EVENT_CORE_CONFIG_UPDATE,
     SERVICE_RELOAD,
+    STATE_HOME,
+    STATE_NOT_HOME,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, State, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    ServiceCall,
+    State,
+    callback,
+)
 from homeassistant.helpers import (
     collection,
     config_validation as cv,
-    entity,
     entity_component,
+    event,
     service,
     storage,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.location import distance
 
 from .const import ATTR_PASSIVE, ATTR_RADIUS, CONF_PASSIVE, DOMAIN, HOME_ZONE
@@ -47,7 +63,7 @@ ENTITY_ID_HOME = ENTITY_ID_FORMAT.format(HOME_ZONE)
 ICON_HOME = "mdi:home"
 ICON_IMPORT = "mdi:import"
 
-CREATE_FIELDS = {
+CREATE_FIELDS: VolDictType = {
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_LATITUDE): cv.latitude,
     vol.Required(CONF_LONGITUDE): cv.longitude,
@@ -57,7 +73,7 @@ CREATE_FIELDS = {
 }
 
 
-UPDATE_FIELDS = {
+UPDATE_FIELDS: VolDictType = {
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_LATITUDE): cv.latitude,
     vol.Optional(CONF_LONGITUDE): cv.longitude,
@@ -89,51 +105,93 @@ RELOAD_SERVICE_SCHEMA = vol.Schema({})
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
+ENTITY_ID_SORTER = attrgetter("entity_id")
+
+ZONE_ENTITY_IDS = "zone_entity_ids"
+
+DATA_ZONE_STORAGE_COLLECTION: HassKey[ZoneStorageCollection] = HassKey(DOMAIN)
+DATA_ZONE_ENTITY_IDS: HassKey[list[str]] = HassKey(ZONE_ENTITY_IDS)
+
 
 @bind_hass
 def async_active_zone(
-    hass: HomeAssistant, latitude: float, longitude: float, radius: int = 0
+    hass: HomeAssistant, latitude: float, longitude: float, radius: float = 0
 ) -> State | None:
     """Find the active zone for given latitude, longitude.
 
     This method must be run in the event loop.
     """
     # Sort entity IDs so that we are deterministic if equal distance to 2 zones
-    zones = (
-        cast(State, hass.states.get(entity_id))
-        for entity_id in sorted(hass.states.async_entity_ids(DOMAIN))
-    )
+    min_dist: float = sys.maxsize
+    closest: State | None = None
 
-    min_dist = None
-    closest = None
+    # This can be called before async_setup by device tracker
+    zone_entity_ids = hass.data.get(DATA_ZONE_ENTITY_IDS, ())
 
-    for zone in zones:
-        if zone.state == STATE_UNAVAILABLE or zone.attributes.get(ATTR_PASSIVE):
+    for entity_id in zone_entity_ids:
+        if (
+            not (zone := hass.states.get(entity_id))
+            # Skip unavailable zones
+            or zone.state == STATE_UNAVAILABLE
+            # Skip passive zones
+            or (zone_attrs := zone.attributes).get(ATTR_PASSIVE)
+            # Skip zones where we cannot calculate distance
+            or (
+                zone_dist := distance(
+                    latitude,
+                    longitude,
+                    zone_attrs[ATTR_LATITUDE],
+                    zone_attrs[ATTR_LONGITUDE],
+                )
+            )
+            is None
+            # Skip zone that are outside the radius aka the
+            # lat/long is outside the zone
+            or not (zone_dist - (zone_radius := zone_attrs[ATTR_RADIUS]) < radius)
+        ):
             continue
 
-        zone_dist = distance(
-            latitude,
-            longitude,
-            zone.attributes[ATTR_LATITUDE],
-            zone.attributes[ATTR_LONGITUDE],
-        )
-
-        if zone_dist is None:
+        # If have a closest and its not closer than the closest skip it
+        if closest and not (
+            zone_dist < min_dist
+            or (
+                # If same distance, prefer smaller zone
+                zone_dist == min_dist and zone_radius < closest.attributes[ATTR_RADIUS]
+            )
+        ):
             continue
 
-        within_zone = zone_dist - radius < zone.attributes[ATTR_RADIUS]
-        closer_zone = closest is None or zone_dist < min_dist  # type: ignore
-        smaller_zone = (
-            zone_dist == min_dist
-            and zone.attributes[ATTR_RADIUS]
-            < cast(State, closest).attributes[ATTR_RADIUS]
-        )
-
-        if within_zone and (closer_zone or smaller_zone):
-            min_dist = zone_dist
-            closest = zone
+        # We got here which means it closer than the previous known closest
+        # or equal distance but this one is smaller.
+        min_dist = zone_dist
+        closest = zone
 
     return closest
+
+
+@callback
+def async_setup_track_zone_entity_ids(hass: HomeAssistant) -> None:
+    """Set up track of entity IDs for zones."""
+    zone_entity_ids = hass.states.async_entity_ids(DOMAIN)
+    hass.data[DATA_ZONE_ENTITY_IDS] = zone_entity_ids
+
+    @callback
+    def _async_add_zone_entity_id(
+        event_: Event[EventStateChangedData],
+    ) -> None:
+        """Add zone entity ID."""
+        zone_entity_ids.append(event_.data["entity_id"])
+        zone_entity_ids.sort()
+
+    @callback
+    def _async_remove_zone_entity_id(
+        event_: Event[EventStateChangedData],
+    ) -> None:
+        """Remove zone entity ID."""
+        zone_entity_ids.remove(event_.data["entity_id"])
+
+    event.async_track_state_added_domain(hass, DOMAIN, _async_add_zone_entity_id)
+    event.async_track_state_removed_domain(hass, DOMAIN, _async_remove_zone_entity_id)
 
 
 def in_zone(zone: State, latitude: float, longitude: float, radius: float = 0) -> bool:
@@ -156,7 +214,7 @@ def in_zone(zone: State, latitude: float, longitude: float, radius: float = 0) -
     return zone_dist - radius < cast(float, zone.attributes[ATTR_RADIUS])
 
 
-class ZoneStorageCollection(collection.StorageCollection):
+class ZoneStorageCollection(collection.DictStorageCollection):
     """Zone collection stored in storage."""
 
     CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
@@ -171,27 +229,28 @@ class ZoneStorageCollection(collection.StorageCollection):
         """Suggest an ID based on the config."""
         return cast(str, info[CONF_NAME])
 
-    async def _update_data(self, data: dict, update_data: dict) -> dict:
+    async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
-        return {**data, **update_data}
+        return {**item, **update_data}
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up configured zones as well as Home Assistant zone if necessary."""
-    component = entity_component.EntityComponent(_LOGGER, DOMAIN, hass)
+    async_setup_track_zone_entity_ids(hass)
+
+    component = entity_component.EntityComponent[Zone](_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
 
     yaml_collection = collection.IDLessCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
     collection.sync_entity_lifecycle(
-        hass, DOMAIN, DOMAIN, component, yaml_collection, Zone.from_yaml
+        hass, DOMAIN, DOMAIN, component, yaml_collection, Zone
     )
 
     storage_collection = ZoneStorageCollection(
         storage.Store(hass, STORAGE_VERSION, STORAGE_KEY),
-        logging.getLogger(f"{__name__}.storage_collection"),
         id_manager,
     )
     collection.sync_entity_lifecycle(
@@ -203,7 +262,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await storage_collection.async_load()
 
-    collection.StorageCollectionWebsocket(
+    collection.DictStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
@@ -235,7 +294,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, core_config_updated)
 
-    hass.data[DOMAIN] = storage_collection
+    hass.data[DATA_ZONE_STORAGE_COLLECTION] = storage_collection
 
     return True
 
@@ -247,7 +306,7 @@ def _home_conf(hass: HomeAssistant) -> dict:
         CONF_NAME: hass.config.location_name,
         CONF_LATITUDE: hass.config.latitude,
         CONF_LONGITUDE: hass.config.longitude,
-        CONF_RADIUS: DEFAULT_RADIUS,
+        CONF_RADIUS: hass.config.radius,
         CONF_ICON: ICON_HOME,
         CONF_PASSIVE: False,
     }
@@ -257,15 +316,15 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
 ) -> bool:
     """Set up zone as config entry."""
-    storage_collection = cast(ZoneStorageCollection, hass.data[DOMAIN])
-
     data = dict(config_entry.data)
     data.setdefault(CONF_PASSIVE, DEFAULT_PASSIVE)
     data.setdefault(CONF_RADIUS, DEFAULT_RADIUS)
 
-    await storage_collection.async_create_item(data)
+    await hass.data[DATA_ZONE_STORAGE_COLLECTION].async_create_item(data)
 
-    hass.async_create_task(hass.config_entries.async_remove(config_entry.entry_id))
+    hass.async_create_task(
+        hass.config_entries.async_remove(config_entry.entry_id), eager_start=True
+    )
 
     return True
 
@@ -277,55 +336,92 @@ async def async_unload_entry(
     return True
 
 
-class Zone(entity.Entity):
+class Zone(collection.CollectionEntity):
     """Representation of a Zone."""
 
-    def __init__(self, config: dict) -> None:
+    editable: bool
+    _attr_should_poll = False
+
+    def __init__(self, config: ConfigType) -> None:
         """Initialize the zone."""
         self._config = config
         self.editable = True
-        self._generate_attrs()
+        self._attrs: dict | None = None
+        self._remove_listener: Callable[[], None] | None = None
+        self._persons_in_zone: set[str] = set()
+        self._set_attrs_from_config()
+
+    def _set_attrs_from_config(self) -> None:
+        """Set the attributes from the config."""
+        config = self._config
+        name: str = config[CONF_NAME]
+        self._attr_name = name
+        self._case_folded_name = name.casefold()
+        self._attr_unique_id = config.get(CONF_ID)
+        self._attr_icon = config.get(CONF_ICON)
 
     @classmethod
-    def from_yaml(cls, config: dict) -> Zone:
-        """Return entity instance initialized from yaml storage."""
+    def from_storage(cls, config: ConfigType) -> Self:
+        """Return entity instance initialized from storage."""
+        zone = cls(config)
+        zone.editable = True
+        zone._generate_attrs()
+        return zone
+
+    @classmethod
+    def from_yaml(cls, config: ConfigType) -> Self:
+        """Return entity instance initialized from yaml."""
         zone = cls(config)
         zone.editable = False
         zone._generate_attrs()
         return zone
 
     @property
-    def state(self) -> str:
+    def state(self) -> int:
         """Return the state property really does nothing for a zone."""
-        return "zoning"
+        return len(self._persons_in_zone)
 
-    @property
-    def name(self) -> str:
-        """Return name."""
-        return cast(str, self._config[CONF_NAME])
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return unique ID."""
-        return self._config.get(CONF_ID)
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon if any."""
-        return self._config.get(CONF_ICON)
-
-    @property
-    def should_poll(self) -> bool:
-        """Zone does not poll."""
-        return False
-
-    async def async_update_config(self, config: dict) -> None:
+    async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         if self._config == config:
             return
         self._config = config
+        self._set_attrs_from_config()
         self._generate_attrs()
         self.async_write_ha_state()
+
+    @callback
+    def _person_state_change_listener(self, evt: Event[EventStateChangedData]) -> None:
+        person_entity_id = evt.data["entity_id"]
+        persons_in_zone = self._persons_in_zone
+        cur_count = len(persons_in_zone)
+        if self._state_is_in_zone(evt.data["new_state"]):
+            persons_in_zone.add(person_entity_id)
+        elif person_entity_id in persons_in_zone:
+            persons_in_zone.remove(person_entity_id)
+
+        if len(persons_in_zone) != cur_count:
+            self._generate_attrs()
+            self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        person_domain = "person"  # avoid circular import
+        self._persons_in_zone = {
+            state.entity_id
+            for state in self.hass.states.async_all(person_domain)
+            if self._state_is_in_zone(state)
+        }
+        self._generate_attrs()
+
+        self.async_on_remove(
+            event.async_track_state_change_filtered(
+                self.hass,
+                event.TrackStates(False, set(), {person_domain}),
+                self._person_state_change_listener,
+            ).async_remove
+        )
 
     @callback
     def _generate_attrs(self) -> None:
@@ -335,5 +431,23 @@ class Zone(entity.Entity):
             ATTR_LONGITUDE: self._config[CONF_LONGITUDE],
             ATTR_RADIUS: self._config[CONF_RADIUS],
             ATTR_PASSIVE: self._config[CONF_PASSIVE],
+            ATTR_PERSONS: sorted(self._persons_in_zone),
             ATTR_EDITABLE: self.editable,
         }
+
+    @callback
+    def _state_is_in_zone(self, state: State | None) -> bool:
+        """Return if given state is in zone."""
+        return (
+            state is not None
+            and state.state
+            not in (
+                STATE_NOT_HOME,
+                STATE_UNKNOWN,
+                STATE_UNAVAILABLE,
+            )
+            and (
+                state.state.casefold() == self._case_folded_name
+                or (state.state == STATE_HOME and self.entity_id == ENTITY_ID_HOME)
+            )
+        )

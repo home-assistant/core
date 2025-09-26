@@ -1,22 +1,22 @@
 """Support for the Elgato Avea lights."""
+
 from __future__ import annotations
 
-import avea  # pylint: disable=import-error
+from typing import Any
+
+import avea
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.color as color_util
-
-SUPPORT_AVEA = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
+from homeassistant.util import color as color_util
 
 
 def setup_platform(
@@ -40,7 +40,8 @@ def setup_platform(
 class AveaLight(LightEntity):
     """Representation of an Avea."""
 
-    _attr_supported_features = SUPPORT_AVEA
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
 
     def __init__(self, light):
         """Initialize an AveaLight."""
@@ -48,7 +49,7 @@ class AveaLight(LightEntity):
         self._attr_name = light.name
         self._attr_brightness = light.brightness
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if not kwargs:
             self._light.set_brightness(4095)
@@ -60,11 +61,11 @@ class AveaLight(LightEntity):
                 rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
                 self._light.set_rgb(rgb[0], rgb[1], rgb[2])
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         self._light.set_brightness(0)
 
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data for this light.
 
         This is the only method that should fetch new data for Home Assistant.

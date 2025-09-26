@@ -1,4 +1,5 @@
 """Support for RDW binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -13,9 +14,8 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -24,30 +24,22 @@ from homeassistant.helpers.update_coordinator import (
 from .const import DOMAIN
 
 
-@dataclass
-class RDWBinarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RDWBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes RDW binary sensor entity."""
 
     is_on_fn: Callable[[Vehicle], bool | None]
-
-
-@dataclass
-class RDWBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RDWBinarySensorEntityDescriptionMixin
-):
-    """Describes RDW binary sensor entity."""
 
 
 BINARY_SENSORS: tuple[RDWBinarySensorEntityDescription, ...] = (
     RDWBinarySensorEntityDescription(
         key="liability_insured",
-        name="Liability Insured",
-        icon="mdi:shield-car",
+        translation_key="liability_insured",
         is_on_fn=lambda vehicle: vehicle.liability_insured,
     ),
     RDWBinarySensorEntityDescription(
         key="pending_recall",
-        name="Pending Recall",
+        translation_key="pending_recall",
         device_class=BinarySensorDeviceClass.PROBLEM,
         is_on_fn=lambda vehicle: vehicle.pending_recall,
     ),
@@ -57,7 +49,7 @@ BINARY_SENSORS: tuple[RDWBinarySensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up RDW binary sensors based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -71,15 +63,18 @@ async def async_setup_entry(
     )
 
 
-class RDWBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
+class RDWBinarySensorEntity(
+    CoordinatorEntity[DataUpdateCoordinator[Vehicle]], BinarySensorEntity
+):
     """Defines an RDW binary sensor."""
 
     entity_description: RDWBinarySensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         *,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[Vehicle],
         description: RDWBinarySensorEntityDescription,
     ) -> None:
         """Initialize RDW binary sensor."""
@@ -91,7 +86,7 @@ class RDWBinarySensorEntity(CoordinatorEntity, BinarySensorEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.data.license_plate)},
             manufacturer=coordinator.data.brand,
-            name=f"{coordinator.data.brand}: {coordinator.data.license_plate}",
+            name=f"{coordinator.data.brand} {coordinator.data.license_plate}",
             model=coordinator.data.model,
             configuration_url=f"https://ovi.rdw.nl/default.aspx?kenteken={coordinator.data.license_plate}",
         )

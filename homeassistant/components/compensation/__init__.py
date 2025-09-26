@@ -1,12 +1,23 @@
 """The Compensation integration."""
+
 import logging
+from operator import itemgetter
 
 import numpy as np
 import voluptuous as vol
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
+    DOMAIN as SENSOR_DOMAIN,
+    STATE_CLASSES_SCHEMA as SENSOR_STATE_CLASSES_SCHEMA,
+)
 from homeassistant.const import (
     CONF_ATTRIBUTE,
+    CONF_DEVICE_CLASS,
+    CONF_MAXIMUM,
+    CONF_MINIMUM,
+    CONF_NAME,
     CONF_SOURCE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
@@ -20,8 +31,10 @@ from .const import (
     CONF_COMPENSATION,
     CONF_DATAPOINTS,
     CONF_DEGREE,
+    CONF_LOWER_LIMIT,
     CONF_POLYNOMIAL,
     CONF_PRECISION,
+    CONF_UPPER_LIMIT,
     DATA_COMPENSATION,
     DEFAULT_DEGREE,
     DEFAULT_PRECISION,
@@ -35,7 +48,8 @@ def datapoints_greater_than_degree(value: dict) -> dict:
     """Validate data point list is greater than polynomial degrees."""
     if len(value[CONF_DATAPOINTS]) <= value[CONF_DEGREE]:
         raise vol.Invalid(
-            f"{CONF_DATAPOINTS} must have at least {value[CONF_DEGREE]+1} {CONF_DATAPOINTS}"
+            f"{CONF_DATAPOINTS} must have at least"
+            f" {value[CONF_DEGREE] + 1} {CONF_DATAPOINTS}"
         )
 
     return value
@@ -43,18 +57,23 @@ def datapoints_greater_than_degree(value: dict) -> dict:
 
 COMPENSATION_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_SOURCE): cv.entity_id,
+        vol.Optional(CONF_ATTRIBUTE): cv.string,
         vol.Required(CONF_DATAPOINTS): [
             vol.ExactSequence([vol.Coerce(float), vol.Coerce(float)])
         ],
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_ATTRIBUTE): cv.string,
-        vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): cv.positive_int,
         vol.Optional(CONF_DEGREE, default=DEFAULT_DEGREE): vol.All(
             vol.Coerce(int),
             vol.Range(min=1, max=7),
         ),
+        vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_LOWER_LIMIT, default=False): cv.boolean,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): cv.positive_int,
+        vol.Required(CONF_SOURCE): cv.entity_id,
+        vol.Optional(CONF_STATE_CLASS): SENSOR_STATE_CLASSES_SCHEMA,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_UPPER_LIMIT, default=False): cv.boolean,
     }
 )
 
@@ -77,8 +96,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         degree = conf[CONF_DEGREE]
 
+        initial_coefficients: list[tuple[float, float]] = conf[CONF_DATAPOINTS]
+        sorted_coefficients = sorted(initial_coefficients, key=itemgetter(0))
+
         # get x values and y values from the x,y point pairs
-        x_values, y_values = zip(*conf[CONF_DATAPOINTS])
+        x_values, y_values = zip(*initial_coefficients, strict=False)
 
         # try to get valid coefficients for a polynomial
         coefficients = None
@@ -97,6 +119,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 k: v for k, v in conf.items() if k not in [CONF_DEGREE, CONF_DATAPOINTS]
             }
             data[CONF_POLYNOMIAL] = np.poly1d(coefficients)
+
+            if data[CONF_LOWER_LIMIT]:
+                data[CONF_MINIMUM] = sorted_coefficients[0]
+            else:
+                data[CONF_MINIMUM] = None
+
+            if data[CONF_UPPER_LIMIT]:
+                data[CONF_MAXIMUM] = sorted_coefficients[-1]
+            else:
+                data[CONF_MAXIMUM] = None
 
             hass.data[DATA_COMPENSATION][compensation] = data
 

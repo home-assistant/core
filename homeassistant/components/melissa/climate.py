@@ -1,24 +1,20 @@
 """Support for Melissa Climate A/C."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -27,14 +23,12 @@ from . import DATA_MELISSA
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS = SUPPORT_FAN_MODE | SUPPORT_TARGET_TEMPERATURE
-
 OP_MODES = [
-    HVAC_MODE_HEAT,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_OFF,
+    HVACMode.HEAT,
+    HVACMode.COOL,
+    HVACMode.DRY,
+    HVACMode.FAN_ONLY,
+    HVACMode.OFF,
 ]
 
 FAN_MODES = [FAN_AUTO, FAN_HIGH, FAN_MEDIUM, FAN_LOW]
@@ -50,21 +44,35 @@ async def async_setup_platform(
     api = hass.data[DATA_MELISSA]
     devices = (await api.async_fetch_devices()).values()
 
-    all_devices = []
-
-    for device in devices:
-        if device["type"] == "melissa":
-            all_devices.append(MelissaClimate(api, device["serial_number"], device))
-
-    async_add_entities(all_devices)
+    async_add_entities(
+        (
+            MelissaClimate(api, device["serial_number"], device)
+            for device in devices
+            if device["type"] == "melissa"
+        ),
+        True,
+    )
 
 
 class MelissaClimate(ClimateEntity):
     """Representation of a Melissa Climate device."""
 
+    _attr_fan_modes = FAN_MODES
+    _attr_hvac_modes = OP_MODES
+    _attr_supported_features = (
+        ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+    _attr_target_temperature_step = PRECISION_WHOLE
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_min_temp = 16
+    _attr_max_temp = 30
+
     def __init__(self, api, serial_number, init_data):
         """Initialize the climate device."""
-        self._name = init_data["name"]
+        self._attr_name = init_data["name"]
         self._api = api
         self._serial_number = serial_number
         self._data = init_data["controller_log"]
@@ -72,35 +80,28 @@ class MelissaClimate(ClimateEntity):
         self._cur_settings = None
 
     @property
-    def name(self):
-        """Return the name of the thermostat, if any."""
-        return self._name
-
-    @property
-    def fan_mode(self):
+    def fan_mode(self) -> str | None:
         """Return the current fan mode."""
         if self._cur_settings is not None:
             return self.melissa_fan_to_hass(self._cur_settings[self._api.FAN])
+        return None
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self._data:
             return self._data[self._api.TEMP]
+        return None
 
     @property
-    def current_humidity(self):
+    def current_humidity(self) -> float | None:
         """Return the current humidity value."""
         if self._data:
             return self._data[self._api.HUMIDITY]
+        return None
 
     @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return PRECISION_WHOLE
-
-    @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode | None:
         """Return the current operation mode."""
         if self._cur_settings is None:
             return None
@@ -111,60 +112,30 @@ class MelissaClimate(ClimateEntity):
         )
 
         if not is_on:
-            return HVAC_MODE_OFF
+            return HVACMode.OFF
 
         return self.melissa_op_to_hass(self._cur_settings[self._api.MODE])
 
     @property
-    def hvac_modes(self):
-        """Return the list of available operation modes."""
-        return OP_MODES
-
-    @property
-    def fan_modes(self):
-        """List of available fan modes."""
-        return FAN_MODES
-
-    @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self._cur_settings is None:
             return None
         return self._cur_settings[self._api.TEMP]
 
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement which this thermostat uses."""
-        return TEMP_CELSIUS
-
-    @property
-    def min_temp(self):
-        """Return the minimum supported temperature for the thermostat."""
-        return 16
-
-    @property
-    def max_temp(self):
-        """Return the maximum supported temperature for the thermostat."""
-        return 30
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
-
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         await self.async_send({self._api.TEMP: temp})
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         melissa_fan_mode = self.hass_fan_to_melissa(fan_mode)
         await self.async_send({self._api.FAN: melissa_fan_mode})
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set operation mode."""
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             await self.async_send({self._api.STATE: self._api.STATE_OFF})
             return
 
@@ -185,7 +156,7 @@ class MelissaClimate(ClimateEntity):
         ):
             self._cur_settings = old_value
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get latest data from Melissa."""
         try:
             self._data = (await self._api.async_status(cached=True))[
@@ -200,20 +171,20 @@ class MelissaClimate(ClimateEntity):
     def melissa_op_to_hass(self, mode):
         """Translate Melissa modes to hass states."""
         if mode == self._api.MODE_HEAT:
-            return HVAC_MODE_HEAT
+            return HVACMode.HEAT
         if mode == self._api.MODE_COOL:
-            return HVAC_MODE_COOL
+            return HVACMode.COOL
         if mode == self._api.MODE_DRY:
-            return HVAC_MODE_DRY
+            return HVACMode.DRY
         if mode == self._api.MODE_FAN:
-            return HVAC_MODE_FAN_ONLY
+            return HVACMode.FAN_ONLY
         _LOGGER.warning("Operation mode %s could not be mapped to hass", mode)
         return None
 
     def melissa_fan_to_hass(self, fan):
         """Translate Melissa fan modes to hass modes."""
         if fan == self._api.FAN_AUTO:
-            return HVAC_MODE_AUTO
+            return FAN_AUTO
         if fan == self._api.FAN_LOW:
             return FAN_LOW
         if fan == self._api.FAN_MEDIUM:
@@ -225,19 +196,20 @@ class MelissaClimate(ClimateEntity):
 
     def hass_mode_to_melissa(self, mode):
         """Translate hass states to melissa modes."""
-        if mode == HVAC_MODE_HEAT:
+        if mode == HVACMode.HEAT:
             return self._api.MODE_HEAT
-        if mode == HVAC_MODE_COOL:
+        if mode == HVACMode.COOL:
             return self._api.MODE_COOL
-        if mode == HVAC_MODE_DRY:
+        if mode == HVACMode.DRY:
             return self._api.MODE_DRY
-        if mode == HVAC_MODE_FAN_ONLY:
+        if mode == HVACMode.FAN_ONLY:
             return self._api.MODE_FAN
         _LOGGER.warning("Melissa have no setting for %s mode", mode)
+        return None
 
     def hass_fan_to_melissa(self, fan):
         """Translate hass fan modes to melissa modes."""
-        if fan == HVAC_MODE_AUTO:
+        if fan == FAN_AUTO:
             return self._api.FAN_AUTO
         if fan == FAN_LOW:
             return self._api.FAN_LOW
@@ -246,3 +218,4 @@ class MelissaClimate(ClimateEntity):
         if fan == FAN_HIGH:
             return self._api.FAN_HIGH
         _LOGGER.warning("Melissa have no setting for %s fan mode", fan)
+        return None

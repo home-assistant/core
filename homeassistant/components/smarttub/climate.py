@@ -1,47 +1,54 @@
 """Platform for climate integration."""
+
+from __future__ import annotations
+
+from typing import Any
+
 from smarttub import Spa
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    HVAC_MODE_HEAT,
+from homeassistant.components.climate import (
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN, SMARTTUB_CONTROLLER
+from .const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
+from .controller import SmartTubConfigEntry
 from .entity import SmartTubEntity
 
 PRESET_DAY = "day"
+PRESET_READY = "ready"
 
 PRESET_MODES = {
     Spa.HeatMode.AUTO: PRESET_NONE,
     Spa.HeatMode.ECONOMY: PRESET_ECO,
     Spa.HeatMode.DAY: PRESET_DAY,
+    Spa.HeatMode.READY: PRESET_READY,
 }
 
 HEAT_MODES = {v: k for k, v in PRESET_MODES.items()}
 
 HVAC_ACTIONS = {
-    "OFF": CURRENT_HVAC_IDLE,
-    "ON": CURRENT_HVAC_HEAT,
+    "OFF": HVACAction.IDLE,
+    "ON": HVACAction.HEATING,
 }
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SmartTubConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up climate entity for the thermostat in the tub."""
 
-    controller = hass.data[DOMAIN][entry.entry_id][SMARTTUB_CONTROLLER]
+    controller = entry.runtime_data
 
     entities = [
         SmartTubThermostat(controller.coordinator, spa) for spa in controller.spas
@@ -53,72 +60,43 @@ async def async_setup_entry(
 class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     """The target water temperature for the spa."""
 
-    def __init__(self, coordinator, spa):
+    # SmartTub devices don't seem to have the option of disabling the heater,
+    # so this is always HVACMode.HEAT.
+    _attr_hvac_mode = HVACMode.HEAT
+    _attr_hvac_modes = [HVACMode.HEAT]
+    # Only target temperature is supported.
+    _attr_supported_features = (
+        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+    )
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_min_temp = DEFAULT_MIN_TEMP
+    _attr_max_temp = DEFAULT_MAX_TEMP
+    _attr_preset_modes = list(PRESET_MODES.values())
+
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[dict[str, Any]], spa: Spa
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, spa, "Thermostat")
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
-
-    @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation."""
         return HVAC_ACTIONS.get(self.spa_status.heater)
 
-    @property
-    def hvac_modes(self):
-        """Return the list of available hvac operation modes."""
-        return [HVAC_MODE_HEAT]
-
-    @property
-    def hvac_mode(self):
-        """Return the current hvac mode.
-
-        SmartTub devices don't seem to have the option of disabling the heater,
-        so this is always HVAC_MODE_HEAT.
-        """
-        return HVAC_MODE_HEAT
-
-    async def async_set_hvac_mode(self, hvac_mode: str):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode.
 
         As with hvac_mode, we don't really have an option here.
         """
-        if hvac_mode == HVAC_MODE_HEAT:
+        if hvac_mode == HVACMode.HEAT:
             return
         raise NotImplementedError(hvac_mode)
 
     @property
-    def min_temp(self):
-        """Return the minimum temperature."""
-        min_temp = DEFAULT_MIN_TEMP
-        return convert_temperature(min_temp, TEMP_CELSIUS, self.temperature_unit)
-
-    @property
-    def max_temp(self):
-        """Return the maximum temperature."""
-        max_temp = DEFAULT_MAX_TEMP
-        return convert_temperature(max_temp, TEMP_CELSIUS, self.temperature_unit)
-
-    @property
-    def supported_features(self):
-        """Return the set of supported features.
-
-        Only target temperature is supported.
-        """
-        return SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
-
-    @property
-    def preset_mode(self):
+    def preset_mode(self) -> str:
         """Return the current preset mode."""
         return PRESET_MODES[self.spa_status.heat_mode]
-
-    @property
-    def preset_modes(self):
-        """Return the available preset modes."""
-        return list(PRESET_MODES.values())
 
     @property
     def current_temperature(self):
@@ -130,13 +108,13 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         """Return the target water temperature."""
         return self.spa_status.set_temperature
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
         await self.spa.set_temperature(temperature)
         await self.coordinator.async_refresh()
 
-    async def async_set_preset_mode(self, preset_mode: str):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Activate the specified preset mode."""
         heat_mode = HEAT_MODES[preset_mode]
         await self.spa.set_heat_mode(heat_mode)

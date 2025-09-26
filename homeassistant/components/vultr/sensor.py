@@ -1,4 +1,5 @@
 """Support for monitoring the state of Vultr Subscriptions."""
+
 from __future__ import annotations
 
 import logging
@@ -6,13 +7,14 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, DATA_GIGABYTES
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, UnitOfInformation
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -30,7 +32,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_CURRENT_BANDWIDTH_USED,
         name="Current Bandwidth Used",
-        native_unit_of_measurement=DATA_GIGABYTES,
+        native_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
         icon="mdi:chart-histogram",
     ),
     SensorEntityDescription(
@@ -42,7 +45,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 )
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SUBSCRIPTION): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -82,7 +85,9 @@ def setup_platform(
 class VultrSensor(SensorEntity):
     """Representation of a Vultr subscription sensor."""
 
-    def __init__(self, vultr, subscription, name, description: SensorEntityDescription):
+    def __init__(
+        self, vultr, subscription, name, description: SensorEntityDescription
+    ) -> None:
         """Initialize a new Vultr sensor."""
         self.entity_description = description
         self._vultr = vultr
@@ -112,7 +117,7 @@ class VultrSensor(SensorEntity):
         except (TypeError, ValueError):
             return self.data.get(self.entity_description.key)
 
-    def update(self):
+    def update(self) -> None:
         """Update state of sensor."""
         self._vultr.update()
         self.data = self._vultr.data[self.subscription]

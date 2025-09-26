@@ -1,15 +1,23 @@
 """Test qwikswitch sensors."""
+
 import asyncio
+from typing import Any
 from unittest.mock import Mock
 
 from aiohttp.client_exceptions import ClientError
 import pytest
 from yarl import URL
 
-from homeassistant.components.qwikswitch import DOMAIN as QWIKSWITCH
+from homeassistant.components.qwikswitch import DOMAIN
+from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.test_util.aiohttp import AiohttpClientMockResponse, MockLongPollSideEffect
+from tests.test_util.aiohttp import (
+    AiohttpClientMocker,
+    AiohttpClientMockResponse,
+    MockLongPollSideEffect,
+)
 
 
 @pytest.fixture
@@ -46,7 +54,9 @@ def qs_devices():
 EMPTY_PACKET = {"cmd": ""}
 
 
-async def test_binary_sensor_device(hass, aioclient_mock, qs_devices):
+async def test_binary_sensor_device(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, qs_devices
+) -> None:
     """Test a binary sensor device."""
     config = {
         "qwikswitch": {
@@ -56,7 +66,7 @@ async def test_binary_sensor_device(hass, aioclient_mock, qs_devices):
     aioclient_mock.get("http://127.0.0.1:2020/&device", json=qs_devices)
     listen_mock = MockLongPollSideEffect()
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
-    assert await async_setup_component(hass, QWIKSWITCH, config)
+    assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -85,7 +95,9 @@ async def test_binary_sensor_device(hass, aioclient_mock, qs_devices):
     listen_mock.stop()
 
 
-async def test_sensor_device(hass, aioclient_mock, qs_devices):
+async def test_sensor_device(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, qs_devices
+) -> None:
     """Test a sensor device."""
     config = {
         "qwikswitch": {
@@ -100,12 +112,12 @@ async def test_sensor_device(hass, aioclient_mock, qs_devices):
     aioclient_mock.get("http://127.0.0.1:2020/&device", json=qs_devices)
     listen_mock = MockLongPollSideEffect()
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
-    assert await async_setup_component(hass, QWIKSWITCH, config)
+    assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_start()
     await hass.async_block_till_done()
 
     state_obj = hass.states.get("sensor.ss1")
-    assert state_obj.state == "None"
+    assert state_obj.state == STATE_UNKNOWN
 
     # receive command that sets the sensor value
     listen_mock.queue_response(
@@ -119,7 +131,9 @@ async def test_sensor_device(hass, aioclient_mock, qs_devices):
     listen_mock.stop()
 
 
-async def test_switch_device(hass, aioclient_mock, qs_devices):
+async def test_switch_device(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, qs_devices
+) -> None:
     """Test a switch device."""
 
     async def get_devices_json(method, url, data):
@@ -129,7 +143,7 @@ async def test_switch_device(hass, aioclient_mock, qs_devices):
     aioclient_mock.get("http://127.0.0.1:2020/&device", side_effect=get_devices_json)
     listen_mock = MockLongPollSideEffect()
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
-    assert await async_setup_component(hass, QWIKSWITCH, config)
+    assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -160,6 +174,7 @@ async def test_switch_device(hass, aioclient_mock, qs_devices):
     await hass.services.async_call(
         "switch", "turn_off", {"entity_id": "switch.switch_1"}, blocking=True
     )
+    await hass.async_block_till_done()
     assert (
         "GET",
         URL("http://127.0.0.1:2020/@a00001=0"),
@@ -180,7 +195,9 @@ async def test_switch_device(hass, aioclient_mock, qs_devices):
     listen_mock.stop()
 
 
-async def test_light_device(hass, aioclient_mock, qs_devices):
+async def test_light_device(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, qs_devices
+) -> None:
     """Test a light device."""
 
     async def get_devices_json(method, url, data):
@@ -190,7 +207,7 @@ async def test_light_device(hass, aioclient_mock, qs_devices):
     aioclient_mock.get("http://127.0.0.1:2020/&device", side_effect=get_devices_json)
     listen_mock = MockLongPollSideEffect()
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
-    assert await async_setup_component(hass, QWIKSWITCH, config)
+    assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -238,6 +255,7 @@ async def test_light_device(hass, aioclient_mock, qs_devices):
     await hass.services.async_call(
         "light", "turn_on", {"entity_id": "light.dim_3"}, blocking=True
     )
+    await hass.async_block_till_done()
     assert (
         "GET",
         URL("http://127.0.0.1:2020/@a00003=100"),
@@ -251,7 +269,9 @@ async def test_light_device(hass, aioclient_mock, qs_devices):
     listen_mock.stop()
 
 
-async def test_button(hass, aioclient_mock, qs_devices):
+async def test_button(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, qs_devices
+) -> None:
     """Test that buttons fire an event."""
 
     async def get_devices_json(method, url, data):
@@ -261,7 +281,7 @@ async def test_button(hass, aioclient_mock, qs_devices):
     aioclient_mock.get("http://127.0.0.1:2020/&device", side_effect=get_devices_json)
     listen_mock = MockLongPollSideEffect()
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
-    assert await async_setup_component(hass, QWIKSWITCH, config)
+    assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_start()
     await hass.async_block_till_done()
 
@@ -277,20 +297,24 @@ async def test_button(hass, aioclient_mock, qs_devices):
     listen_mock.stop()
 
 
-async def test_failed_update_devices(hass, aioclient_mock):
+async def test_failed_update_devices(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that code behaves correctly when unable to get the devices."""
 
     config = {"qwikswitch": {}}
     aioclient_mock.get("http://127.0.0.1:2020/&device", exc=ClientError())
     listen_mock = MockLongPollSideEffect()
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
-    assert not await async_setup_component(hass, QWIKSWITCH, config)
+    assert not await async_setup_component(hass, DOMAIN, config)
     await hass.async_start()
     await hass.async_block_till_done()
     listen_mock.stop()
 
 
-async def test_single_invalid_sensor(hass, aioclient_mock, qs_devices):
+async def test_single_invalid_sensor(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, qs_devices
+) -> None:
     """Test that a single misconfigured sensor doesn't block the others."""
 
     config = {
@@ -305,7 +329,7 @@ async def test_single_invalid_sensor(hass, aioclient_mock, qs_devices):
     aioclient_mock.get("http://127.0.0.1:2020/&device", json=qs_devices)
     listen_mock = MockLongPollSideEffect()
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
-    assert await async_setup_component(hass, QWIKSWITCH, config)
+    assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_start()
     await hass.async_block_till_done()
     await asyncio.sleep(0.01)
@@ -316,8 +340,11 @@ async def test_single_invalid_sensor(hass, aioclient_mock, qs_devices):
 
 
 async def test_non_binary_sensor_with_binary_args(
-    hass, aioclient_mock, qs_devices, caplog
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    qs_devices,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that the system logs a warning when a non-binary device has binary specific args."""
 
     config = {
@@ -336,7 +363,7 @@ async def test_non_binary_sensor_with_binary_args(
     aioclient_mock.get("http://127.0.0.1:2020/&device", json=qs_devices)
     listen_mock = MockLongPollSideEffect()
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
-    assert await async_setup_component(hass, QWIKSWITCH, config)
+    assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_start()
     await hass.async_block_till_done()
     await asyncio.sleep(0.01)
@@ -346,14 +373,19 @@ async def test_non_binary_sensor_with_binary_args(
     listen_mock.stop()
 
 
-async def test_non_relay_switch(hass, aioclient_mock, qs_devices, caplog):
+async def test_non_relay_switch(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    qs_devices,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that the system logs a warning when a switch is configured for a device that is not a relay."""
 
     config = {"qwikswitch": {"switches": ["@a00003"]}}
     aioclient_mock.get("http://127.0.0.1:2020/&device", json=qs_devices)
     listen_mock = MockLongPollSideEffect()
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
-    assert await async_setup_component(hass, QWIKSWITCH, config)
+    assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_start()
     await hass.async_block_till_done()
     await asyncio.sleep(0.01)
@@ -363,7 +395,12 @@ async def test_non_relay_switch(hass, aioclient_mock, qs_devices, caplog):
     listen_mock.stop()
 
 
-async def test_unknown_device(hass, aioclient_mock, qs_devices, caplog):
+async def test_unknown_device(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    qs_devices,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that the system logs a warning when a network device has unknown type."""
 
     config = {"qwikswitch": {}}
@@ -371,7 +408,7 @@ async def test_unknown_device(hass, aioclient_mock, qs_devices, caplog):
     aioclient_mock.get("http://127.0.0.1:2020/&device", json=qs_devices)
     listen_mock = MockLongPollSideEffect()
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
-    assert await async_setup_component(hass, QWIKSWITCH, config)
+    assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_start()
     await hass.async_block_till_done()
     await asyncio.sleep(0.01)
@@ -383,7 +420,12 @@ async def test_unknown_device(hass, aioclient_mock, qs_devices, caplog):
     listen_mock.stop()
 
 
-async def test_no_discover_info(hass, hass_storage, aioclient_mock, caplog):
+async def test_no_discover_info(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test that discovery with no discovery_info does not result in errors."""
     config = {
         "qwikswitch": {},

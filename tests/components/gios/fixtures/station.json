@@ -1,72 +1,74 @@
 [
-    {
-      "id": 672,
-      "stationId": 117,
-      "param": {
-        "paramName": "dwutlenek siarki",
-        "paramFormula": "SO2",
-        "paramCode": "SO2",
-        "idParam": 1
-      }
-    },
-    {
-      "id": 658,
-      "stationId": 117,
-      "param": {
-        "paramName": "benzen",
-        "paramFormula": "C6H6",
-        "paramCode": "C6H6",
-        "idParam": 10
-      }
-    },
-    {
-      "id": 660,
-      "stationId": 117,
-      "param": {
-        "paramName": "tlenek węgla",
-        "paramFormula": "CO",
-        "paramCode": "CO",
-        "idParam": 8
-      }
-    },
-    {
-      "id": 665,
-      "stationId": 117,
-      "param": {
-        "paramName": "dwutlenek azotu",
-        "paramFormula": "NO2",
-        "paramCode": "NO2",
-        "idParam": 6
-      }
-    },
-    {
-      "id": 667,
-      "stationId": 117,
-      "param": {
-        "paramName": "ozon",
-        "paramFormula": "O3",
-        "paramCode": "O3",
-        "idParam": 5
-      }
-    },
-    {
-      "id": 670,
-      "stationId": 117,
-      "param": {
-        "paramName": "pył zawieszony PM2.5",
-        "paramFormula": "PM2.5",
-        "paramCode": "PM2.5",
-        "idParam": 69
-      }
-    },
-    {
-      "id": 14395,
-      "stationId": 117,
-      "param": {
-        "paramName": "pył zawieszony PM10",
-        "paramFormula": "PM10",
-        "paramCode": "PM10",
-        "idParam": 3
-      }
-    }
-  ]
+  {
+    "Identyfikator stanowiska": 672,
+    "Identyfikator stacji": 117,
+    "Wskaźnik": "dwutlenek siarki",
+    "Wskaźnik - wzór": "SO2",
+    "Wskaźnik - kod": "SO2",
+    "Id wskaźnika": 1
+  },
+  {
+    "Identyfikator stanowiska": 658,
+    "Identyfikator stacji": 117,
+    "Wskaźnik": "benzen",
+    "Wskaźnik - wzór": "C6H6",
+    "Wskaźnik - kod": "C6H6",
+    "Id wskaźnika": 10
+  },
+  {
+    "Identyfikator stanowiska": 660,
+    "Identyfikator stacji": 117,
+    "Wskaźnik": "tlenek węgla",
+    "Wskaźnik - wzór": "CO",
+    "Wskaźnik - kod": "CO",
+    "Id wskaźnika": 8
+  },
+  {
+    "Identyfikator stanowiska": 664,
+    "Identyfikator stacji": 117,
+    "Wskaźnik": "tlenek azotu",
+    "Wskaźnik - wzór": "NO",
+    "Wskaźnik - kod": "NO",
+    "Id wskaźnika": 16
+  },
+  {
+    "Identyfikator stanowiska": 665,
+    "Identyfikator stacji": 117,
+    "Wskaźnik": "dwutlenek azotu",
+    "Wskaźnik - wzór": "NO2",
+    "Wskaźnik - kod": "NO2",
+    "Id wskaźnika": 6
+  },
+  {
+    "Identyfikator stanowiska": 666,
+    "Identyfikator stacji": 117,
+    "Wskaźnik": "tlenki azotu",
+    "Wskaźnik - wzór": "NOx",
+    "Wskaźnik - kod": "NOx",
+    "Id wskaźnika": 7
+  },
+  {
+    "Identyfikator stanowiska": 667,
+    "Identyfikator stacji": 117,
+    "Wskaźnik": "ozon",
+    "Wskaźnik - wzór": "O3",
+    "Wskaźnik - kod": "O3",
+    "Id wskaźnika": 5
+  },
+  {
+    "Identyfikator stanowiska": 670,
+    "Identyfikator stacji": 117,
+    "Wskaźnik": "pył zawieszony PM2.5",
+    "Wskaźnik - wzór": "PM2.5",
+    "Wskaźnik - kod": "PM2.5",
+    "Id wskaźnika": 69
+  },
+  {
+    "Identyfikator stanowiska": 14395,
+    "Identyfikator stacji": 117,
+    "Wskaźnik": "pył zawieszony PM10",
+    "Wskaźnik - wzór": "PM10",
+    "Wskaźnik - kod": "PM10",
+    "Id wskaźnika": 3
+  }
+]

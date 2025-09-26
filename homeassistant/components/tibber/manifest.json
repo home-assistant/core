@@ -1,12 +1,11 @@
 {
-  "dependencies": ["recorder"],
   "domain": "tibber",
   "name": "Tibber",
-  "documentation": "https://www.home-assistant.io/integrations/tibber",
-  "requirements": ["pyTibber==0.21.7"],
   "codeowners": ["@danielhiversen"],
-  "quality_scale": "silver",
   "config_flow": true,
+  "dependencies": ["recorder"],
+  "documentation": "https://www.home-assistant.io/integrations/tibber",
   "iot_class": "cloud_polling",
-  "loggers": ["tibber"]
+  "loggers": ["tibber"],
+  "requirements": ["pyTibber==0.32.1"]
 }

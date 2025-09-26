@@ -1,13 +1,10 @@
 {
   "domain": "signal_messenger",
   "name": "Signal Messenger",
+  "codeowners": ["@bbernhard"],
   "documentation": "https://www.home-assistant.io/integrations/signal_messenger",
-  "codeowners": [
-    "@bbernhard"
-  ],
-  "requirements": [
-    "pysignalclirestapi==0.3.18"
-  ],
   "iot_class": "cloud_push",
-  "loggers": ["pysignalclirestapi"]
+  "loggers": ["pysignalclirestapi"],
+  "quality_scale": "legacy",
+  "requirements": ["pysignalclirestapi==0.3.24"]
 }

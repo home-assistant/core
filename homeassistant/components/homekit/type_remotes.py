@@ -1,6 +1,8 @@
 """Class to hold remote accessories."""
-from abc import abstractmethod
+
+from abc import ABC, abstractmethod
 import logging
+from typing import Any
 
 from pyhap.const import CATEGORY_TELEVISION
 
@@ -9,7 +11,7 @@ from homeassistant.components.remote import (
     ATTR_ACTIVITY_LIST,
     ATTR_CURRENT_ACTIVITY,
     DOMAIN as REMOTE_DOMAIN,
-    SUPPORT_ACTIVITY,
+    RemoteEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -18,7 +20,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import State, callback
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -75,37 +77,39 @@ REMOTE_KEYS = {
 }
 
 
-class RemoteInputSelectAccessory(HomeAccessory):
+class RemoteInputSelectAccessory(HomeAccessory, ABC):
     """Generate a InputSelect accessory."""
 
     def __init__(
         self,
-        required_feature,
-        source_key,
-        source_list_key,
-        *args,
-        **kwargs,
-    ):
+        required_feature: int,
+        source_key: str,
+        source_list_key: str,
+        *args: Any,
+        category: int = CATEGORY_TELEVISION,
+        **kwargs: Any,
+    ) -> None:
         """Initialize a InputSelect accessory object."""
-        super().__init__(*args, category=CATEGORY_TELEVISION, **kwargs)
+        super().__init__(*args, category=category, **kwargs)
         state = self.hass.states.get(self.entity_id)
+        assert state
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-
+        self._reload_on_change_attrs.extend((source_list_key,))
+        self._mapped_sources_list: list[str] = []
+        self._mapped_sources: dict[str, str] = {}
         self.source_key = source_key
         self.source_list_key = source_list_key
         self.sources = []
         self.support_select_source = False
         if features & required_feature:
-            sources = state.attributes.get(source_list_key, [])
+            sources = self._get_ordered_source_list_from_state(state)
             if len(sources) > MAXIMUM_SOURCES:
                 _LOGGER.warning(
                     "%s: Reached maximum number of sources (%s)",
                     self.entity_id,
                     MAXIMUM_SOURCES,
                 )
-            self.sources = [
-                cleanup_name_for_homekit(source) for source in sources[:MAXIMUM_SOURCES]
-            ]
+            self.sources = sources[:MAXIMUM_SOURCES]
             if self.sources:
                 self.support_select_source = True
 
@@ -131,7 +135,7 @@ class RemoteInputSelectAccessory(HomeAccessory):
         )
         for index, source in enumerate(self.sources):
             serv_input = self.add_preload_service(
-                SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME]
+                SERV_INPUT_SOURCE, [CHAR_IDENTIFIER, CHAR_NAME], unique_id=source
             )
             serv_tv.add_linked_service(serv_input)
             serv_input.configure_char(CHAR_CONFIGURED_NAME, value=source)
@@ -143,20 +147,38 @@ class RemoteInputSelectAccessory(HomeAccessory):
             serv_input.configure_char(CHAR_CURRENT_VISIBILITY_STATE, value=False)
             _LOGGER.debug("%s: Added source %s", self.entity_id, source)
 
+    def _get_mapped_sources(self, state: State) -> dict[str, str]:
+        """Return a dict of sources mapped to their homekit safe name."""
+        source_list = state.attributes.get(self.source_list_key, [])
+        if self._mapped_sources_list != source_list:
+            self._mapped_sources = {
+                cleanup_name_for_homekit(source): source for source in source_list
+            }
+        return self._mapped_sources
+
+    def _get_ordered_source_list_from_state(self, state: State) -> list[str]:
+        """Return ordered source list while preserving order with duplicates removed.
+
+        Some integrations have duplicate sources in the source list
+        which will make the source list conflict as HomeKit requires
+        unique source names.
+        """
+        return list(self._get_mapped_sources(state))
+
     @abstractmethod
-    def set_on_off(self, value):
+    def set_on_off(self, value: bool) -> None:
         """Move switch state to value if call came from HomeKit."""
 
     @abstractmethod
-    def set_input_source(self, value):
+    def set_input_source(self, value: int) -> None:
         """Send input set value if call came from HomeKit."""
 
     @abstractmethod
-    def set_remote_key(self, value):
+    def set_remote_key(self, value: int) -> None:
         """Send remote key value if call came from HomeKit."""
 
     @callback
-    def _async_update_input_state(self, hk_state, new_state):
+    def _async_update_input_state(self, hk_state: int, new_state: State) -> None:
         """Update input state after state changed."""
         # Set active input
         if not self.support_select_source or not self.sources:
@@ -169,9 +191,9 @@ class RemoteInputSelectAccessory(HomeAccessory):
             self.char_input_source.set_value(index)
             return
 
-        possible_sources = new_state.attributes.get(self.source_list_key, [])
-        if source in possible_sources:
-            index = possible_sources.index(source)
+        possible_sources = self._get_ordered_source_list_from_state(new_state)
+        if source_name in possible_sources:
+            index = possible_sources.index(source_name)
             if index >= MAXIMUM_SOURCES:
                 _LOGGER.debug(
                     "%s: Source %s and above are not supported",
@@ -183,8 +205,6 @@ class RemoteInputSelectAccessory(HomeAccessory):
                     "%s: Sources out of sync. Rebuilding Accessory",
                     self.entity_id,
                 )
-                # Sources are out of sync, recreate the accessory
-                self.async_reset()
                 return
 
         _LOGGER.debug(
@@ -200,31 +220,33 @@ class RemoteInputSelectAccessory(HomeAccessory):
 class ActivityRemote(RemoteInputSelectAccessory):
     """Generate a Activity Remote accessory."""
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize a Activity Remote accessory object."""
         super().__init__(
-            SUPPORT_ACTIVITY,
+            RemoteEntityFeature.ACTIVITY,
             ATTR_CURRENT_ACTIVITY,
             ATTR_ACTIVITY_LIST,
             *args,
         )
-        self.async_update_state(self.hass.states.get(self.entity_id))
+        state = self.hass.states.get(self.entity_id)
+        assert state
+        self.async_update_state(state)
 
-    def set_on_off(self, value):
+    def set_on_off(self, value: bool) -> None:
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state for "on_off" to %s', self.entity_id, value)
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
         params = {ATTR_ENTITY_ID: self.entity_id}
         self.async_call_service(REMOTE_DOMAIN, service, params)
 
-    def set_input_source(self, value):
+    def set_input_source(self, value: int) -> None:
         """Send input set value if call came from HomeKit."""
         _LOGGER.debug("%s: Set current input to %s", self.entity_id, value)
-        source = self.sources[value]
+        source = self._mapped_sources[self.sources[value]]
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_ACTIVITY: source}
         self.async_call_service(REMOTE_DOMAIN, SERVICE_TURN_ON, params)
 
-    def set_remote_key(self, value):
+    def set_remote_key(self, value: int) -> None:
         """Send remote key value if call came from HomeKit."""
         _LOGGER.debug("%s: Set remote key to %s", self.entity_id, value)
         if (key_name := REMOTE_KEYS.get(value)) is None:
@@ -236,7 +258,7 @@ class ActivityRemote(RemoteInputSelectAccessory):
         )
 
     @callback
-    def async_update_state(self, new_state):
+    def async_update_state(self, new_state: State) -> None:
         """Update Television remote state after state changed."""
         current_state = new_state.state
         # Power state remote

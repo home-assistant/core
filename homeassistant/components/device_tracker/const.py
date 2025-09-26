@@ -1,7 +1,13 @@
 """Device tracker constants."""
+
+from __future__ import annotations
+
 from datetime import timedelta
+from enum import StrEnum
 import logging
 from typing import Final
+
+from homeassistant.util.signal_type import SignalType
 
 LOGGER: Final = logging.getLogger(__package__)
 
@@ -11,10 +17,15 @@ ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 PLATFORM_TYPE_LEGACY: Final = "legacy"
 PLATFORM_TYPE_ENTITY: Final = "entity_platform"
 
-SOURCE_TYPE_GPS: Final = "gps"
-SOURCE_TYPE_ROUTER: Final = "router"
-SOURCE_TYPE_BLUETOOTH: Final = "bluetooth"
-SOURCE_TYPE_BLUETOOTH_LE: Final = "bluetooth_le"
+
+class SourceType(StrEnum):
+    """Source type for device trackers."""
+
+    GPS = "gps"
+    ROUTER = "router"
+    BLUETOOTH = "bluetooth"
+    BLUETOOTH_LE = "bluetooth_le"
+
 
 CONF_SCAN_INTERVAL: Final = "interval_seconds"
 SCAN_INTERVAL: Final = timedelta(seconds=12)
@@ -37,3 +48,7 @@ ATTR_MAC: Final = "mac"
 ATTR_SOURCE_TYPE: Final = "source_type"
 ATTR_CONSIDER_HOME: Final = "consider_home"
 ATTR_IP: Final = "ip"
+
+CONNECTED_DEVICE_REGISTERED = SignalType[dict[str, str | None]](
+    "device_tracker_connected_device_registered"
+)

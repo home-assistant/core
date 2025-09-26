@@ -1,47 +1,50 @@
 """Support for Velbus thermostat."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from velbusaio.channels import Temperature as VelbusTemp
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import VelbusEntity
+from . import VelbusConfigEntry
 from .const import DOMAIN, PRESET_MODES
+from .entity import VelbusEntity, api_call
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: VelbusConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Velbus switch based on config_entry."""
-    await hass.data[DOMAIN][entry.entry_id]["tsk"]
-    cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    entities = []
-    for channel in cntrl.get_all("climate"):
-        entities.append(VelbusClimate(channel))
-    async_add_entities(entities)
+    await entry.runtime_data.scan_task
+    async_add_entities(
+        VelbusClimate(channel)
+        for channel in entry.runtime_data.controller.get_all_climate()
+    )
 
 
 class VelbusClimate(VelbusEntity, ClimateEntity):
     """Representation of a Velbus thermostat."""
 
     _channel: VelbusTemp
-    _attr_supported_features = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-    _attr_temperature_unit = TEMP_CELSIUS
-    _attr_hvac_mode = HVAC_MODE_HEAT
-    _attr_hvac_modes = [HVAC_MODE_HEAT]
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL]
     _attr_preset_modes = list(PRESET_MODES)
 
     @property
@@ -66,6 +69,12 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
         """Return the current temperature."""
         return self._channel.get_state()
 
+    @property
+    def hvac_mode(self) -> HVACMode:
+        """Return the current hvac mode based on cool_mode message."""
+        return HVACMode.COOL if self._channel.get_cool_mode() else HVACMode.HEAT
+
+    @api_call
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -73,7 +82,20 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
         await self._channel.set_temp(temp)
         self.async_write_ha_state()
 
+    @api_call
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the new preset mode."""
         await self._channel.set_preset(PRESET_MODES[preset_mode])
+        self.async_write_ha_state()
+
+    @api_call
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set the new hvac mode."""
+        if hvac_mode not in self._attr_hvac_modes:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_hvac_mode",
+                translation_placeholders={"hvac_mode": str(hvac_mode)},
+            )
+        await self._channel.set_mode(hvac_mode)
         self.async_write_ha_state()

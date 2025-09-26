@@ -1,41 +1,43 @@
 """Support for Swisscom routers (Internet-Box)."""
+
 from __future__ import annotations
 
 from contextlib import suppress
 import logging
 
-from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_IP = "192.168.1.1"
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string}
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner | None:
+def get_scanner(
+    hass: HomeAssistant, config: ConfigType
+) -> SwisscomDeviceScanner | None:
     """Return the Swisscom device scanner."""
-    scanner = SwisscomDeviceScanner(config[DOMAIN])
+    scanner = SwisscomDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
     return scanner if scanner.success_init else None
 
 
 class SwisscomDeviceScanner(DeviceScanner):
-    """This class queries a router running Swisscom Internet-Box firmware."""
+    """Class which queries a router running Swisscom Internet-Box firmware."""
 
     def __init__(self, config):
         """Initialize the scanner."""
@@ -68,7 +70,7 @@ class SwisscomDeviceScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        _LOGGER.info("Loading data from Swisscom Internet Box")
+        _LOGGER.debug("Loading data from Swisscom Internet Box")
         if not (data := self.get_swisscom_data()):
             return False
 
@@ -79,7 +81,7 @@ class SwisscomDeviceScanner(DeviceScanner):
     def get_swisscom_data(self):
         """Retrieve data from Swisscom and return parsed result."""
         url = f"http://{self.host}/ws"
-        headers = {CONTENT_TYPE: "application/x-sah-ws-4-call+json"}
+        headers = {"Content-Type": "application/x-sah-ws-4-call+json"}
         data = """
         {"service":"Devices", "method":"get",
         "parameters":{"expression":"lan and not self"}}"""
@@ -93,11 +95,11 @@ class SwisscomDeviceScanner(DeviceScanner):
             requests.exceptions.Timeout,
             requests.exceptions.ConnectTimeout,
         ):
-            _LOGGER.info("No response from Swisscom Internet Box")
+            _LOGGER.debug("No response from Swisscom Internet Box")
             return devices
 
         if "status" not in request.json():
-            _LOGGER.info("No status in response from Swisscom Internet Box")
+            _LOGGER.debug("No status in response from Swisscom Internet Box")
             return devices
 
         for device in request.json()["status"]:

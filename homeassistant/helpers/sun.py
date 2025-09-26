@@ -1,20 +1,28 @@
 """Helpers for sun events."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     import astral
+    import astral.location
 
-DATA_LOCATION_CACHE = "astral_location_cache"
+DATA_LOCATION_CACHE: HassKey[
+    dict[tuple[str, str, str, float, float], astral.location.Location]
+] = HassKey("astral_location_cache")
 
 ELEVATION_AGNOSTIC_EVENTS = ("noon", "midnight")
+
+type _AstralSunEventCallable = Callable[..., datetime.datetime]
 
 
 @callback
@@ -23,8 +31,8 @@ def get_astral_location(
     hass: HomeAssistant,
 ) -> tuple[astral.location.Location, astral.Elevation]:
     """Get an astral location for the current Home Assistant configuration."""
-    from astral import LocationInfo  # pylint: disable=import-outside-toplevel
-    from astral.location import Location  # pylint: disable=import-outside-toplevel
+    from astral import LocationInfo  # noqa: PLC0415
+    from astral.location import Location  # noqa: PLC0415
 
     latitude = hass.config.latitude
     longitude = hass.config.longitude
@@ -73,15 +81,16 @@ def get_location_astral_event_next(
     if utc_point_in_time is None:
         utc_point_in_time = dt_util.utcnow()
 
-    kwargs = {"local": False}
+    kwargs: dict[str, Any] = {"local": False}
     if event not in ELEVATION_AGNOSTIC_EVENTS:
         kwargs["observer_elevation"] = elevation
 
     mod = -1
-    while True:
+    first_err = None
+    while mod < 367:
         try:
-            next_dt: datetime.datetime = (
-                getattr(location, event)(
+            next_dt = (
+                cast(_AstralSunEventCallable, getattr(location, event))(
                     dt_util.as_local(utc_point_in_time).date()
                     + datetime.timedelta(days=mod),
                     **kwargs,
@@ -90,9 +99,13 @@ def get_location_astral_event_next(
             )
             if next_dt > utc_point_in_time:
                 return next_dt
-        except ValueError:
-            pass
+        except ValueError as err:
+            if not first_err:
+                first_err = err
         mod += 1
+    raise ValueError(
+        f"Unable to find event after one year, initial ValueError: {first_err}"
+    ) from first_err
 
 
 @callback
@@ -111,12 +124,12 @@ def get_astral_event_date(
     if isinstance(date, datetime.datetime):
         date = dt_util.as_local(date).date()
 
-    kwargs = {"local": False}
+    kwargs: dict[str, Any] = {"local": False}
     if event not in ELEVATION_AGNOSTIC_EVENTS:
         kwargs["observer_elevation"] = elevation
 
     try:
-        return getattr(location, event)(date, **kwargs)  # type: ignore
+        return cast(_AstralSunEventCallable, getattr(location, event))(date, **kwargs)
     except ValueError:
         # Event never occurs for specified date.
         return None

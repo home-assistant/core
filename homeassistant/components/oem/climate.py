@@ -1,19 +1,19 @@
 """OpenEnergyMonitor Thermostat Support."""
+
 from __future__ import annotations
+
+from typing import Any
 
 from oemthermostat import Thermostat
 import requests
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
-from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_TARGET_TEMPERATURE,
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -22,14 +22,14 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
-    TEMP_CELSIUS,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default="Thermostat"): cv.string,
@@ -39,8 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
-SUPPORT_HVAC = [HVAC_MODE_AUTO, HVAC_MODE_HEAT, HVAC_MODE_OFF]
+SUPPORT_HVAC = [HVACMode.AUTO, HVACMode.HEAT, HVACMode.OFF]
 
 
 def setup_platform(
@@ -67,6 +66,14 @@ def setup_platform(
 class ThermostatDevice(ClimateEntity):
     """Interface class for the oemthermostat module."""
 
+    _attr_hvac_modes = SUPPORT_HVAC
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+
     def __init__(self, thermostat, name):
         """Initialize the device."""
         self._name = name
@@ -79,29 +86,16 @@ class ThermostatDevice(ClimateEntity):
         self._mode = None
 
     @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return SUPPORT_FLAGS
-
-    @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
         """
         if self._mode == 2:
-            return HVAC_MODE_HEAT
+            return HVACMode.HEAT
         if self._mode == 1:
-            return HVAC_MODE_AUTO
-        return HVAC_MODE_OFF
-
-    @property
-    def hvac_modes(self):
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
-        return SUPPORT_HVAC
+            return HVACMode.AUTO
+        return HVACMode.OFF
 
     @property
     def name(self):
@@ -109,18 +103,13 @@ class ThermostatDevice(ClimateEntity):
         return self._name
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement used by the platform."""
-        return TEMP_CELSIUS
-
-    @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction:
         """Return current hvac i.e. heat, cool, idle."""
         if not self._mode:
-            return CURRENT_HVAC_OFF
+            return HVACAction.OFF
         if self._state:
-            return CURRENT_HVAC_HEAT
-        return CURRENT_HVAC_IDLE
+            return HVACAction.HEATING
+        return HVACAction.IDLE
 
     @property
     def current_temperature(self):
@@ -132,21 +121,21 @@ class ThermostatDevice(ClimateEntity):
         """Return the temperature we try to reach."""
         return self._setpoint
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVAC_MODE_AUTO:
+        if hvac_mode == HVACMode.AUTO:
             self.thermostat.mode = 1
-        elif hvac_mode == HVAC_MODE_HEAT:
+        elif hvac_mode == HVACMode.HEAT:
             self.thermostat.mode = 2
-        elif hvac_mode == HVAC_MODE_OFF:
+        elif hvac_mode == HVACMode.OFF:
             self.thermostat.mode = 0
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
         self.thermostat.setpoint = temp
 
-    def update(self):
+    def update(self) -> None:
         """Update local state."""
         self._setpoint = self.thermostat.setpoint
         self._temperature = self.thermostat.temperature

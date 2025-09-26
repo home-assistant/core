@@ -1,4 +1,5 @@
 """Support for KEBA charging stations."""
+
 import asyncio
 import logging
 
@@ -7,8 +8,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -235,7 +235,9 @@ class KebaHandler(KebaKeContact):
             self._set_fast_polling()
         except (KeyError, ValueError) as ex:
             _LOGGER.warning(
-                "Values are not correct for: failsafe_timeout, failsafe_fallback and/or "
-                "failsafe_persist: %s",
+                (
+                    "Values are not correct for: failsafe_timeout, failsafe_fallback"
+                    " and/or failsafe_persist: %s"
+                ),
                 ex,
             )

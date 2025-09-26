@@ -1,22 +1,34 @@
 """Support for Free Mobile SMS platform."""
+
+from __future__ import annotations
+
 from http import HTTPStatus
 import logging
 
 from freesms import FreeClient
 import voluptuous as vol
 
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.components.notify import (
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_ACCESS_TOKEN): cv.string}
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> FreeSMSNotificationService:
     """Get the Free Mobile SMS notification service."""
     return FreeSMSNotificationService(config[CONF_USERNAME], config[CONF_ACCESS_TOKEN])
 

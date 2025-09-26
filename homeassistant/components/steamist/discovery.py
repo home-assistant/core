@@ -1,4 +1,5 @@
 """The Steamist integration discovery."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,12 +10,12 @@ from discovery30303 import AIODiscovery30303, Device30303
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, discovery_flow
 from homeassistant.util.network import is_ip_address
 
-from .const import CONF_MODEL, DISCOVER_SCAN_TIMEOUT, DISCOVERY, DOMAIN
+from .const import DISCOVER_SCAN_TIMEOUT, DISCOVERY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,16 +62,18 @@ async def async_discover_devices(
         targets = [address]
     else:
         targets = [
-            str(address)
-            for address in await network.async_get_ipv4_broadcast_addresses(hass)
+            str(broadcast_address)
+            for broadcast_address in await network.async_get_ipv4_broadcast_addresses(
+                hass
+            )
         ]
 
     scanner = AIODiscovery30303()
     for idx, discovered in enumerate(
         await asyncio.gather(
             *[
-                scanner.async_scan(timeout=timeout, address=address)
-                for address in targets
+                scanner.async_scan(timeout=timeout, address=target_address)
+                for target_address in targets
             ],
             return_exceptions=True,
         )
@@ -122,15 +125,14 @@ def async_trigger_discovery(
 ) -> None:
     """Trigger config flows for discovered devices."""
     for device in discovered_devices:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_DISCOVERY},
-                data={
-                    "ipaddress": device.ipaddress,
-                    "name": device.name,
-                    "mac": device.mac,
-                    "hostname": device.hostname,
-                },
-            )
+        discovery_flow.async_create_flow(
+            hass,
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data={
+                "ipaddress": device.ipaddress,
+                "name": device.name,
+                "mac": device.mac,
+                "hostname": device.hostname,
+            },
         )

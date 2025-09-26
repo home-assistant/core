@@ -1,4 +1,7 @@
 """Rocket.Chat notification service."""
+
+from __future__ import annotations
+
 from http import HTTPStatus
 import logging
 
@@ -11,16 +14,17 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_ROOM, CONF_URL, CONF_USERNAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-# pylint: disable=no-value-for-parameter
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_URL): vol.Url(),
         vol.Required(CONF_USERNAME): cv.string,
@@ -30,7 +34,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> RocketChatNotificationService | None:
     """Return the notify service."""
 
     username = config.get(CONF_USERNAME)
@@ -44,8 +52,10 @@ def get_service(hass, config, discovery_info=None):
     except RocketConnectionException:
         _LOGGER.warning("Unable to connect to Rocket.Chat server at %s", url)
     except RocketAuthenticationException:
-        _LOGGER.warning("Rocket.Chat authentication failed for user %s", username)
-        _LOGGER.info("Please check your username/password")
+        _LOGGER.warning(
+            "Rocket.Chat authentication failed for user %s. Please check your username/password",
+            username,
+        )
 
     return None
 

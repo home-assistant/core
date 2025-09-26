@@ -1,15 +1,20 @@
 """Switch logic for loading/unloading pulseaudio loopback modules."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pulsectl import Pulse, PulseError
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -25,7 +30,7 @@ DEFAULT_PORT = 4713
 
 IGNORED_SWITCH_WARN = "Switch is already in the desired state. Ignoring."
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_SINK_NAME): cv.string,
         vol.Required(CONF_SOURCE_NAME): cv.string,
@@ -100,7 +105,7 @@ class PALoopbackSwitch(SwitchEntity):
         return None
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return true when connected to server."""
         return self._pa_svr.connected
 
@@ -114,7 +119,7 @@ class PALoopbackSwitch(SwitchEntity):
         """Return true if device is on."""
         return self._module_idx is not None
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if not self.is_on:
             self._pa_svr.module_load(
@@ -124,13 +129,13 @@ class PALoopbackSwitch(SwitchEntity):
         else:
             _LOGGER.warning(IGNORED_SWITCH_WARN)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self.is_on:
             self._pa_svr.module_unload(self._module_idx)
         else:
             _LOGGER.warning(IGNORED_SWITCH_WARN)
 
-    def update(self):
+    def update(self) -> None:
         """Refresh state in case an alternate process modified this data."""
         self._module_idx = self._get_module_idx()

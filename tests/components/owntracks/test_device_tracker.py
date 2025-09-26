@@ -1,14 +1,26 @@
 """The tests for the Owntracks device tracker."""
+
+import base64
+from collections.abc import Callable, Generator
 import json
+import pickle
+from typing import Any
 from unittest.mock import patch
 
+from nacl.encoding import Base64Encoder
+from nacl.secret import SecretBox
 import pytest
 
 from homeassistant.components import owntracks
+from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.const import STATE_NOT_HOME
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_fire_mqtt_message, mock_coro
+from tests.common import MockConfigEntry, async_fire_mqtt_message
+from tests.typing import ClientSessionGenerator, MqttMockHAClient
+
+type OwnTracksContextFactory = Callable[[], owntracks.OwnTracksContext]
 
 USER = "greg"
 DEVICE = "phone"
@@ -277,23 +289,26 @@ BAD_MESSAGE = {"_type": "unsupported", "tst": 1}
 BAD_JSON_PREFIX = "--$this is bad json#--"
 BAD_JSON_SUFFIX = "** and it ends here ^^"
 
-# pylint: disable=invalid-name, len-as-condition, redefined-outer-name
-
 
 @pytest.fixture
-def setup_comp(hass, mock_device_tracker_conf, mqtt_mock):
+async def setup_comp(
+    hass: HomeAssistant,
+    mock_device_tracker_conf: list[Device],
+    mqtt_mock: MqttMockHAClient,
+) -> None:
     """Initialize components."""
-    hass.loop.run_until_complete(async_setup_component(hass, "device_tracker", {}))
+    await async_setup_component(hass, "device_tracker", {})
 
     hass.states.async_set("zone.inner", "zoning", INNER_ZONE)
 
     hass.states.async_set("zone.inner_2", "zoning", INNER_ZONE)
 
     hass.states.async_set("zone.outer", "zoning", OUTER_ZONE)
-    yield
 
 
-async def setup_owntracks(hass, config, ctx_cls=owntracks.OwnTracksContext):
+async def setup_owntracks(
+    hass: HomeAssistant, config: dict[str, Any], ctx_cls=owntracks.OwnTracksContext
+) -> None:
     """Set up OwnTracks."""
     MockConfigEntry(
         domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
@@ -305,12 +320,10 @@ async def setup_owntracks(hass, config, ctx_cls=owntracks.OwnTracksContext):
 
 
 @pytest.fixture
-def context(hass, setup_comp):
+async def context(hass: HomeAssistant, setup_comp: None) -> OwnTracksContextFactory:
     """Set up the mocked context."""
     orig_context = owntracks.OwnTracksContext
     context = None
-
-    # pylint: disable=no-value-for-parameter
 
     def store_context(*args):
         """Store the context."""
@@ -318,26 +331,26 @@ def context(hass, setup_comp):
         context = orig_context(*args)
         return context
 
-    hass.loop.run_until_complete(
-        setup_owntracks(
-            hass,
-            {
-                CONF_MAX_GPS_ACCURACY: 200,
-                CONF_WAYPOINT_IMPORT: True,
-                CONF_WAYPOINT_WHITELIST: ["jon", "greg"],
-            },
-            store_context,
-        )
+    await setup_owntracks(
+        hass,
+        {
+            CONF_MAX_GPS_ACCURACY: 200,
+            CONF_WAYPOINT_IMPORT: True,
+            CONF_WAYPOINT_WHITELIST: ["jon", "greg"],
+        },
+        store_context,
     )
 
     def get_context():
         """Get the current context."""
         return context
 
-    yield get_context
+    return get_context
 
 
-async def send_message(hass, topic, message, corrupt=False):
+async def send_message(
+    hass: HomeAssistant, topic: str, message: dict[str, Any], corrupt: bool = False
+) -> None:
     """Test the sending of a message."""
     str_message = json.dumps(message)
     if corrupt:
@@ -349,65 +362,73 @@ async def send_message(hass, topic, message, corrupt=False):
     await hass.async_block_till_done()
 
 
-def assert_location_state(hass, location):
+def assert_location_state(hass: HomeAssistant, location: str) -> None:
     """Test the assertion of a location state."""
     state = hass.states.get(DEVICE_TRACKER_STATE)
     assert state.state == location
 
 
-def assert_location_latitude(hass, latitude):
+def assert_location_latitude(hass: HomeAssistant, latitude: float) -> None:
     """Test the assertion of a location latitude."""
     state = hass.states.get(DEVICE_TRACKER_STATE)
     assert state.attributes.get("latitude") == latitude
 
 
-def assert_location_longitude(hass, longitude):
+def assert_location_longitude(hass: HomeAssistant, longitude: float) -> None:
     """Test the assertion of a location longitude."""
     state = hass.states.get(DEVICE_TRACKER_STATE)
     assert state.attributes.get("longitude") == longitude
 
 
-def assert_location_accuracy(hass, accuracy):
+def assert_location_accuracy(hass: HomeAssistant, accuracy: float) -> None:
     """Test the assertion of a location accuracy."""
     state = hass.states.get(DEVICE_TRACKER_STATE)
     assert state.attributes.get("gps_accuracy") == accuracy
 
 
-def assert_location_source_type(hass, source_type):
+def assert_location_source_type(hass: HomeAssistant, source_type: str) -> None:
     """Test the assertion of source_type."""
     state = hass.states.get(DEVICE_TRACKER_STATE)
     assert state.attributes.get("source_type") == source_type
 
 
-def assert_mobile_tracker_state(hass, location, beacon=IBEACON_DEVICE):
+def assert_mobile_tracker_state(
+    hass: HomeAssistant, location: str, beacon: str = IBEACON_DEVICE
+) -> None:
     """Test the assertion of a mobile beacon tracker state."""
     dev_id = MOBILE_BEACON_FMT.format(beacon)
     state = hass.states.get(dev_id)
     assert state.state == location
 
 
-def assert_mobile_tracker_latitude(hass, latitude, beacon=IBEACON_DEVICE):
+def assert_mobile_tracker_latitude(
+    hass: HomeAssistant, latitude: float, beacon: str = IBEACON_DEVICE
+) -> None:
     """Test the assertion of a mobile beacon tracker latitude."""
     dev_id = MOBILE_BEACON_FMT.format(beacon)
     state = hass.states.get(dev_id)
     assert state.attributes.get("latitude") == latitude
 
 
-def assert_mobile_tracker_accuracy(hass, accuracy, beacon=IBEACON_DEVICE):
+def assert_mobile_tracker_accuracy(
+    hass: HomeAssistant, accuracy: int, beacon: str = IBEACON_DEVICE
+) -> None:
     """Test the assertion of a mobile beacon tracker accuracy."""
     dev_id = MOBILE_BEACON_FMT.format(beacon)
     state = hass.states.get(dev_id)
     assert state.attributes.get("gps_accuracy") == accuracy
 
 
-async def test_location_invalid_devid(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_location_invalid_devid(hass: HomeAssistant) -> None:
     """Test the update of a location."""
     await send_message(hass, "owntracks/paulus/nexus-5x", LOCATION_MESSAGE)
     state = hass.states.get("device_tracker.paulus_nexus_5x")
     assert state.state == "outer"
 
 
-async def test_location_update(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_location_update(hass: HomeAssistant) -> None:
     """Test the update of a location."""
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
 
@@ -417,7 +438,8 @@ async def test_location_update(hass, context):
     assert_location_state(hass, "outer")
 
 
-async def test_location_update_no_t_key(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_location_update_no_t_key(hass: HomeAssistant) -> None:
     """Test the update of a location when message does not contain 't'."""
     message = LOCATION_MESSAGE.copy()
     message.pop("t")
@@ -429,7 +451,8 @@ async def test_location_update_no_t_key(hass, context):
     assert_location_state(hass, "outer")
 
 
-async def test_location_inaccurate_gps(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_location_inaccurate_gps(hass: HomeAssistant) -> None:
     """Test the location for inaccurate GPS information."""
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE_INACCURATE)
@@ -439,7 +462,8 @@ async def test_location_inaccurate_gps(hass, context):
     assert_location_longitude(hass, LOCATION_MESSAGE["lon"])
 
 
-async def test_location_zero_accuracy_gps(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_location_zero_accuracy_gps(hass: HomeAssistant) -> None:
     """Ignore the location for zero accuracy GPS information."""
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE_ZERO_ACCURACY)
@@ -451,7 +475,9 @@ async def test_location_zero_accuracy_gps(hass, context):
 
 # ------------------------------------------------------------------------
 # GPS based event entry / exit testing
-async def test_event_gps_entry_exit(hass, context):
+async def test_event_gps_entry_exit(
+    hass: HomeAssistant, context: OwnTracksContextFactory
+) -> None:
     """Test the entry event."""
     # Entering the owntracks circular region named "inner"
     await send_message(hass, EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE)
@@ -489,7 +515,9 @@ async def test_event_gps_entry_exit(hass, context):
     assert_location_accuracy(hass, LOCATION_MESSAGE["acc"])
 
 
-async def test_event_gps_with_spaces(hass, context):
+async def test_event_gps_with_spaces(
+    hass: HomeAssistant, context: OwnTracksContextFactory
+) -> None:
     """Test the entry event."""
     message = build_message({"desc": "inner 2"}, REGION_GPS_ENTER_MESSAGE)
     await send_message(hass, EVENT_TOPIC, message)
@@ -502,7 +530,8 @@ async def test_event_gps_with_spaces(hass, context):
     assert not context().regions_entered[USER]
 
 
-async def test_event_gps_entry_inaccurate(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_event_gps_entry_inaccurate(hass: HomeAssistant) -> None:
     """Test the event for inaccurate entry."""
     # Set location to the outer zone.
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
@@ -515,7 +544,9 @@ async def test_event_gps_entry_inaccurate(hass, context):
     assert_location_state(hass, "inner")
 
 
-async def test_event_gps_entry_exit_inaccurate(hass, context):
+async def test_event_gps_entry_exit_inaccurate(
+    hass: HomeAssistant, context: OwnTracksContextFactory
+) -> None:
     """Test the event for inaccurate exit."""
     await send_message(hass, EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE)
 
@@ -535,7 +566,9 @@ async def test_event_gps_entry_exit_inaccurate(hass, context):
     assert not context().regions_entered[USER]
 
 
-async def test_event_gps_entry_exit_zero_accuracy(hass, context):
+async def test_event_gps_entry_exit_zero_accuracy(
+    hass: HomeAssistant, context: OwnTracksContextFactory
+) -> None:
     """Test entry/exit events with accuracy zero."""
     await send_message(hass, EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE_ZERO)
 
@@ -555,7 +588,8 @@ async def test_event_gps_entry_exit_zero_accuracy(hass, context):
     assert not context().regions_entered[USER]
 
 
-async def test_event_gps_exit_outside_zone_sets_away(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_event_gps_exit_outside_zone_sets_away(hass: HomeAssistant) -> None:
     """Test the event for exit zone."""
     await send_message(hass, EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE)
     assert_location_state(hass, "inner")
@@ -568,7 +602,8 @@ async def test_event_gps_exit_outside_zone_sets_away(hass, context):
     assert_location_state(hass, STATE_NOT_HOME)
 
 
-async def test_event_gps_entry_exit_right_order(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_event_gps_entry_exit_right_order(hass: HomeAssistant) -> None:
     """Test the event for ordering."""
     # Enter inner zone
     # Set location to the outer zone.
@@ -593,7 +628,8 @@ async def test_event_gps_entry_exit_right_order(hass, context):
     assert_location_state(hass, "outer")
 
 
-async def test_event_gps_entry_exit_wrong_order(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_event_gps_entry_exit_wrong_order(hass: HomeAssistant) -> None:
     """Test the event for wrong order."""
     # Enter inner zone
     await send_message(hass, EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE)
@@ -616,7 +652,8 @@ async def test_event_gps_entry_exit_wrong_order(hass, context):
     assert_location_state(hass, "outer")
 
 
-async def test_event_gps_entry_unknown_zone(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_event_gps_entry_unknown_zone(hass: HomeAssistant) -> None:
     """Test the event for unknown zone."""
     # Just treat as location update
     message = build_message({"desc": "unknown"}, REGION_GPS_ENTER_MESSAGE)
@@ -625,7 +662,8 @@ async def test_event_gps_entry_unknown_zone(hass, context):
     assert_location_state(hass, "inner")
 
 
-async def test_event_gps_exit_unknown_zone(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_event_gps_exit_unknown_zone(hass: HomeAssistant) -> None:
     """Test the event for unknown zone."""
     # Just treat as location update
     message = build_message({"desc": "unknown"}, REGION_GPS_LEAVE_MESSAGE)
@@ -634,7 +672,8 @@ async def test_event_gps_exit_unknown_zone(hass, context):
     assert_location_state(hass, "outer")
 
 
-async def test_event_entry_zone_loading_dash(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_event_entry_zone_loading_dash(hass: HomeAssistant) -> None:
     """Test the event for zone landing."""
     # Make sure the leading - is ignored
     # Owntracks uses this to switch on hold
@@ -643,7 +682,9 @@ async def test_event_entry_zone_loading_dash(hass, context):
     assert_location_state(hass, "inner")
 
 
-async def test_events_only_on(hass, context):
+async def test_events_only_on(
+    hass: HomeAssistant, context: OwnTracksContextFactory
+) -> None:
     """Test events_only config suppresses location updates."""
     # Sending a location message that is not home
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE_NOT_HOME)
@@ -664,7 +705,9 @@ async def test_events_only_on(hass, context):
     assert_location_state(hass, STATE_NOT_HOME)
 
 
-async def test_events_only_off(hass, context):
+async def test_events_only_off(
+    hass: HomeAssistant, context: OwnTracksContextFactory
+) -> None:
     """Test when events_only is False."""
     # Sending a location message that is not home
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE_NOT_HOME)
@@ -685,7 +728,8 @@ async def test_events_only_off(hass, context):
     assert_location_state(hass, "outer")
 
 
-async def test_event_source_type_entry_exit(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_event_source_type_entry_exit(hass: HomeAssistant) -> None:
     """Test the entry and exit events of source type."""
     # Entering the owntracks circular region named "inner"
     await send_message(hass, EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE)
@@ -715,7 +759,9 @@ async def test_event_source_type_entry_exit(hass, context):
 
 
 # Region Beacon based event entry / exit testing
-async def test_event_region_entry_exit(hass, context):
+async def test_event_region_entry_exit(
+    hass: HomeAssistant, context: OwnTracksContextFactory
+) -> None:
     """Test the entry event."""
     # Seeing a beacon named "inner"
     await send_message(hass, EVENT_TOPIC, REGION_BEACON_ENTER_MESSAGE)
@@ -754,7 +800,9 @@ async def test_event_region_entry_exit(hass, context):
     assert_location_accuracy(hass, LOCATION_MESSAGE["acc"])
 
 
-async def test_event_region_with_spaces(hass, context):
+async def test_event_region_with_spaces(
+    hass: HomeAssistant, context: OwnTracksContextFactory
+) -> None:
     """Test the entry event."""
     message = build_message({"desc": "inner 2"}, REGION_BEACON_ENTER_MESSAGE)
     await send_message(hass, EVENT_TOPIC, message)
@@ -767,7 +815,8 @@ async def test_event_region_with_spaces(hass, context):
     assert not context().regions_entered[USER]
 
 
-async def test_event_region_entry_exit_right_order(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_event_region_entry_exit_right_order(hass: HomeAssistant) -> None:
     """Test the event for ordering."""
     # Enter inner zone
     # Set location to the outer zone.
@@ -798,7 +847,8 @@ async def test_event_region_entry_exit_right_order(hass, context):
     assert_location_state(hass, "inner")
 
 
-async def test_event_region_entry_exit_wrong_order(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_event_region_entry_exit_wrong_order(hass: HomeAssistant) -> None:
     """Test the event for wrong order."""
     # Enter inner zone
     await send_message(hass, EVENT_TOPIC, REGION_BEACON_ENTER_MESSAGE)
@@ -825,7 +875,8 @@ async def test_event_region_entry_exit_wrong_order(hass, context):
     assert_location_state(hass, "inner_2")
 
 
-async def test_event_beacon_unknown_zone_no_location(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_event_beacon_unknown_zone_no_location(hass: HomeAssistant) -> None:
     """Test the event for unknown zone."""
     # A beacon which does not match a HA zone is the
     # definition of a mobile beacon. In this case, "unknown"
@@ -850,7 +901,8 @@ async def test_event_beacon_unknown_zone_no_location(hass, context):
     assert_mobile_tracker_state(hass, "unknown", "unknown")
 
 
-async def test_event_beacon_unknown_zone(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_event_beacon_unknown_zone(hass: HomeAssistant) -> None:
     """Test the event for unknown zone."""
     # A beacon which does not match a HA zone is the
     # definition of a mobile beacon. In this case, "unknown"
@@ -870,7 +922,8 @@ async def test_event_beacon_unknown_zone(hass, context):
     assert_mobile_tracker_state(hass, "outer", "unknown")
 
 
-async def test_event_beacon_entry_zone_loading_dash(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_event_beacon_entry_zone_loading_dash(hass: HomeAssistant) -> None:
     """Test the event for beacon zone landing."""
     # Make sure the leading - is ignored
     # Owntracks uses this to switch on hold
@@ -882,7 +935,8 @@ async def test_event_beacon_entry_zone_loading_dash(hass, context):
 
 # ------------------------------------------------------------------------
 # Mobile Beacon based event entry / exit testing
-async def test_mobile_enter_move_beacon(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_mobile_enter_move_beacon(hass: HomeAssistant) -> None:
     """Test the movement of a beacon."""
     # I am in the outer zone.
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
@@ -906,7 +960,8 @@ async def test_mobile_enter_move_beacon(hass, context):
     assert_mobile_tracker_latitude(hass, not_home_lat)
 
 
-async def test_mobile_enter_exit_region_beacon(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_mobile_enter_exit_region_beacon(hass: HomeAssistant) -> None:
     """Test the enter and the exit of a mobile beacon."""
     # I am in the outer zone.
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
@@ -929,7 +984,8 @@ async def test_mobile_enter_exit_region_beacon(hass, context):
     assert_mobile_tracker_state(hass, "outer")
 
 
-async def test_mobile_exit_move_beacon(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_mobile_exit_move_beacon(hass: HomeAssistant) -> None:
     """Test the exit move of a beacon."""
     # I am in the outer zone.
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
@@ -951,10 +1007,12 @@ async def test_mobile_exit_move_beacon(hass, context):
     assert_mobile_tracker_state(hass, "outer")
 
 
-async def test_mobile_multiple_async_enter_exit(hass, context):
+async def test_mobile_multiple_async_enter_exit(
+    hass: HomeAssistant, context: OwnTracksContextFactory
+) -> None:
     """Test the multiple entering."""
     # Test race condition
-    for _ in range(0, 20):
+    for _ in range(20):
         async_fire_mqtt_message(
             hass, EVENT_TOPIC, json.dumps(MOBILE_BEACON_ENTER_EVENT_MESSAGE)
         )
@@ -971,7 +1029,9 @@ async def test_mobile_multiple_async_enter_exit(hass, context):
     assert len(context().mobile_beacons_active["greg_phone"]) == 0
 
 
-async def test_mobile_multiple_enter_exit(hass, context):
+async def test_mobile_multiple_enter_exit(
+    hass: HomeAssistant, context: OwnTracksContextFactory
+) -> None:
     """Test the multiple entering."""
     await send_message(hass, EVENT_TOPIC, MOBILE_BEACON_ENTER_EVENT_MESSAGE)
     await send_message(hass, EVENT_TOPIC, MOBILE_BEACON_ENTER_EVENT_MESSAGE)
@@ -980,7 +1040,8 @@ async def test_mobile_multiple_enter_exit(hass, context):
     assert len(context().mobile_beacons_active["greg_phone"]) == 0
 
 
-async def test_complex_movement(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_complex_movement(hass: HomeAssistant) -> None:
     """Test a complex sequence representative of real-world use."""
     # I am in the outer zone.
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
@@ -1102,7 +1163,8 @@ async def test_complex_movement(hass, context):
     assert_mobile_tracker_state(hass, "outer")
 
 
-async def test_complex_movement_sticky_keys_beacon(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_complex_movement_sticky_keys_beacon(hass: HomeAssistant) -> None:
     """Test a complex sequence which was previously broken."""
     # I am not_home
     await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
@@ -1214,7 +1276,8 @@ async def test_complex_movement_sticky_keys_beacon(hass, context):
     assert_mobile_tracker_latitude(hass, INNER_ZONE["latitude"])
 
 
-async def test_waypoint_import_simple(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_waypoint_import_simple(hass: HomeAssistant) -> None:
     """Test a simple import of list of waypoints."""
     waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
     await send_message(hass, WAYPOINTS_TOPIC, waypoints_message)
@@ -1225,7 +1288,8 @@ async def test_waypoint_import_simple(hass, context):
     assert wayp is not None
 
 
-async def test_waypoint_import_block(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_waypoint_import_block(hass: HomeAssistant) -> None:
     """Test import of list of waypoints for blocked user."""
     waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
     await send_message(hass, WAYPOINTS_TOPIC_BLOCKED, waypoints_message)
@@ -1236,7 +1300,7 @@ async def test_waypoint_import_block(hass, context):
     assert wayp is None
 
 
-async def test_waypoint_import_no_whitelist(hass, setup_comp):
+async def test_waypoint_import_no_whitelist(hass: HomeAssistant, setup_comp) -> None:
     """Test import of list of waypoints with no whitelist set."""
     await setup_owntracks(
         hass,
@@ -1256,7 +1320,8 @@ async def test_waypoint_import_no_whitelist(hass, setup_comp):
     assert wayp is not None
 
 
-async def test_waypoint_import_bad_json(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_waypoint_import_bad_json(hass: HomeAssistant) -> None:
     """Test importing a bad JSON payload."""
     waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
     await send_message(hass, WAYPOINTS_TOPIC, waypoints_message, True)
@@ -1267,7 +1332,8 @@ async def test_waypoint_import_bad_json(hass, context):
     assert wayp is None
 
 
-async def test_waypoint_import_existing(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_waypoint_import_existing(hass: HomeAssistant) -> None:
     """Test importing a zone that exists."""
     waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
     await send_message(hass, WAYPOINTS_TOPIC, waypoints_message)
@@ -1280,7 +1346,8 @@ async def test_waypoint_import_existing(hass, context):
     assert wayp == new_wayp
 
 
-async def test_single_waypoint_import(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_single_waypoint_import(hass: HomeAssistant) -> None:
     """Test single waypoint message."""
     waypoint_message = WAYPOINT_MESSAGE.copy()
     await send_message(hass, WAYPOINT_TOPIC, waypoint_message)
@@ -1288,22 +1355,24 @@ async def test_single_waypoint_import(hass, context):
     assert wayp is not None
 
 
-async def test_not_implemented_message(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_not_implemented_message(hass: HomeAssistant) -> None:
     """Handle not implemented message type."""
     patch_handler = patch(
         "homeassistant.components.owntracks.messages.async_handle_not_impl_msg",
-        return_value=mock_coro(False),
+        return_value=False,
     )
     patch_handler.start()
     assert not await send_message(hass, LWT_TOPIC, LWT_MESSAGE)
     patch_handler.stop()
 
 
-async def test_unsupported_message(hass, context):
+@pytest.mark.usefixtures("context")
+async def test_unsupported_message(hass: HomeAssistant) -> None:
     """Handle not implemented message type."""
     patch_handler = patch(
         "homeassistant.components.owntracks.messages.async_handle_unsupported_msg",
-        return_value=mock_coro(False),
+        return_value=False,
     )
     patch_handler.start()
     assert not await send_message(hass, BAD_TOPIC, BAD_MESSAGE)
@@ -1315,23 +1384,14 @@ def generate_ciphers(secret):
     # PyNaCl ciphertext generation will fail if the module
     # cannot be imported. However, the test for decryption
     # also relies on this library and won't be run without it.
-    import base64
-    import pickle
+    keylen = SecretBox.KEY_SIZE
+    key = secret.encode("utf-8")
+    key = key[:keylen]
+    key = key.ljust(keylen, b"\0")
 
-    try:
-        from nacl.encoding import Base64Encoder
-        from nacl.secret import SecretBox
+    msg = json.dumps(DEFAULT_LOCATION_MESSAGE).encode("utf-8")
 
-        keylen = SecretBox.KEY_SIZE
-        key = secret.encode("utf-8")
-        key = key[:keylen]
-        key = key.ljust(keylen, b"\0")
-
-        msg = json.dumps(DEFAULT_LOCATION_MESSAGE).encode("utf-8")
-
-        ctxt = SecretBox(key).encrypt(msg, encoder=Base64Encoder).decode("utf-8")
-    except (ImportError, OSError):
-        ctxt = ""
+    ctxt = SecretBox(key).encrypt(msg, encoder=Base64Encoder).decode("utf-8")
 
     mctxt = base64.b64encode(
         pickle.dumps(
@@ -1366,23 +1426,20 @@ def mock_cipher():
 
     def mock_decrypt(ciphertext, key):
         """Decrypt/unpickle."""
-        import base64
-        import pickle
-
         (mkey, plaintext) = pickle.loads(base64.b64decode(ciphertext))
         if key != mkey:
-            raise ValueError()
+            raise ValueError
         return plaintext
 
     return len(TEST_SECRET_KEY), mock_decrypt
 
 
 @pytest.fixture
-def config_context(hass, setup_comp):
+def config_context(setup_comp: None) -> Generator[None]:
     """Set up the mocked context."""
     patch_load = patch(
         "homeassistant.components.device_tracker.async_load_config",
-        return_value=mock_coro([]),
+        return_value=[],
     )
     patch_load.start()
 
@@ -1417,7 +1474,7 @@ def mock_get_cipher_error():
 
 
 @patch("homeassistant.components.owntracks.messages.get_cipher", mock_cipher)
-async def test_encrypted_payload(hass, setup_comp):
+async def test_encrypted_payload(hass: HomeAssistant, setup_comp) -> None:
     """Test encrypted payload."""
     await setup_owntracks(hass, {CONF_SECRET: TEST_SECRET_KEY})
     await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
@@ -1425,7 +1482,7 @@ async def test_encrypted_payload(hass, setup_comp):
 
 
 @patch("homeassistant.components.owntracks.messages.get_cipher", mock_cipher)
-async def test_encrypted_payload_topic_key(hass, setup_comp):
+async def test_encrypted_payload_topic_key(hass: HomeAssistant, setup_comp) -> None:
     """Test encrypted payload with a topic key."""
     await setup_owntracks(hass, {CONF_SECRET: {LOCATION_TOPIC: TEST_SECRET_KEY}})
     await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
@@ -1433,15 +1490,17 @@ async def test_encrypted_payload_topic_key(hass, setup_comp):
 
 
 async def test_encrypted_payload_not_supports_encryption(
-    hass, setup_comp, not_supports_encryption
-):
+    hass: HomeAssistant, setup_comp, not_supports_encryption
+) -> None:
     """Test encrypted payload with no supported encryption."""
     await setup_owntracks(hass, {CONF_SECRET: TEST_SECRET_KEY})
     await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
 
 
-async def test_encrypted_payload_get_cipher_error(hass, setup_comp, get_cipher_error):
+async def test_encrypted_payload_get_cipher_error(
+    hass: HomeAssistant, setup_comp, get_cipher_error
+) -> None:
     """Test encrypted payload with no supported encryption."""
     await setup_owntracks(hass, {CONF_SECRET: TEST_SECRET_KEY})
     await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
@@ -1449,7 +1508,7 @@ async def test_encrypted_payload_get_cipher_error(hass, setup_comp, get_cipher_e
 
 
 @patch("homeassistant.components.owntracks.messages.get_cipher", mock_cipher)
-async def test_encrypted_payload_no_key(hass, setup_comp):
+async def test_encrypted_payload_no_key(hass: HomeAssistant, setup_comp) -> None:
     """Test encrypted payload with no key, ."""
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
     await setup_owntracks(hass, {CONF_SECRET: {}})
@@ -1458,7 +1517,7 @@ async def test_encrypted_payload_no_key(hass, setup_comp):
 
 
 @patch("homeassistant.components.owntracks.messages.get_cipher", mock_cipher)
-async def test_encrypted_payload_wrong_key(hass, setup_comp):
+async def test_encrypted_payload_wrong_key(hass: HomeAssistant, setup_comp) -> None:
     """Test encrypted payload with wrong key."""
     await setup_owntracks(hass, {CONF_SECRET: "wrong key"})
     await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
@@ -1466,7 +1525,9 @@ async def test_encrypted_payload_wrong_key(hass, setup_comp):
 
 
 @patch("homeassistant.components.owntracks.messages.get_cipher", mock_cipher)
-async def test_encrypted_payload_wrong_topic_key(hass, setup_comp):
+async def test_encrypted_payload_wrong_topic_key(
+    hass: HomeAssistant, setup_comp
+) -> None:
     """Test encrypted payload with wrong  topic key."""
     await setup_owntracks(hass, {CONF_SECRET: {LOCATION_TOPIC: "wrong key"}})
     await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
@@ -1474,30 +1535,24 @@ async def test_encrypted_payload_wrong_topic_key(hass, setup_comp):
 
 
 @patch("homeassistant.components.owntracks.messages.get_cipher", mock_cipher)
-async def test_encrypted_payload_no_topic_key(hass, setup_comp):
+async def test_encrypted_payload_no_topic_key(hass: HomeAssistant, setup_comp) -> None:
     """Test encrypted payload with no topic key."""
     await setup_owntracks(
-        hass, {CONF_SECRET: {"owntracks/{}/{}".format(USER, "otherdevice"): "foobar"}}
+        hass, {CONF_SECRET: {f"owntracks/{USER}/otherdevice": "foobar"}}
     )
     await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
     assert hass.states.get(DEVICE_TRACKER_STATE) is None
 
 
-async def test_encrypted_payload_libsodium(hass, setup_comp):
+async def test_encrypted_payload_libsodium(hass: HomeAssistant, setup_comp) -> None:
     """Test sending encrypted message payload."""
-    try:
-        import nacl  # noqa: F401 pylint: disable=unused-import
-    except (ImportError, OSError):
-        pytest.skip("PyNaCl/libsodium is not installed")
-        return
-
     await setup_owntracks(hass, {CONF_SECRET: TEST_SECRET_KEY})
 
     await send_message(hass, LOCATION_TOPIC, ENCRYPTED_LOCATION_MESSAGE)
     assert_location_latitude(hass, LOCATION_MESSAGE["lat"])
 
 
-async def test_customized_mqtt_topic(hass, setup_comp):
+async def test_customized_mqtt_topic(hass: HomeAssistant, setup_comp) -> None:
     """Test subscribing to a custom mqtt topic."""
     await setup_owntracks(hass, {CONF_MQTT_TOPIC: "mytracks/#"})
 
@@ -1507,7 +1562,7 @@ async def test_customized_mqtt_topic(hass, setup_comp):
     assert_location_latitude(hass, LOCATION_MESSAGE["lat"])
 
 
-async def test_region_mapping(hass, setup_comp):
+async def test_region_mapping(hass: HomeAssistant, setup_comp) -> None:
     """Test region to zone mapping."""
     await setup_owntracks(hass, {CONF_REGION_MAPPING: {"foo": "inner"}})
 
@@ -1520,7 +1575,9 @@ async def test_region_mapping(hass, setup_comp):
     assert_location_state(hass, "inner")
 
 
-async def test_restore_state(hass, hass_client):
+async def test_restore_state(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that we can restore state."""
     entry = MockConfigEntry(
         domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
@@ -1558,7 +1615,9 @@ async def test_restore_state(hass, hass_client):
     assert state_1.attributes["source_type"] == state_2.attributes["source_type"]
 
 
-async def test_returns_empty_friends(hass, hass_client):
+async def test_returns_empty_friends(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that an empty list of persons' locations is returned."""
     entry = MockConfigEntry(
         domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}
@@ -1579,7 +1638,9 @@ async def test_returns_empty_friends(hass, hass_client):
     assert await resp.text() == "[]"
 
 
-async def test_returns_array_friends(hass, hass_client):
+async def test_returns_array_friends(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that a list of persons' current locations is returned."""
     otracks = MockConfigEntry(
         domain="owntracks", data={"webhook_id": "owntracks_test", "secret": "abcd"}

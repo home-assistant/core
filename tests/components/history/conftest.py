@@ -1,29 +1,38 @@
 """Fixtures for history tests."""
+
 import pytest
 
 from homeassistant.components import history
-from homeassistant.setup import setup_component
+from homeassistant.components.recorder import Recorder
+from homeassistant.const import CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+
+from tests.typing import RecorderInstanceContextManager
 
 
 @pytest.fixture
-def hass_history(hass_recorder):
-    """Home Assistant fixture with history."""
-    hass = hass_recorder()
+async def mock_recorder_before_hass(
+    async_test_recorder: RecorderInstanceContextManager,
+) -> None:
+    """Set up recorder."""
 
+
+@pytest.fixture
+async def hass_history(hass: HomeAssistant, recorder_mock: Recorder) -> None:
+    """Home Assistant fixture with history."""
     config = history.CONFIG_SCHEMA(
         {
             history.DOMAIN: {
-                history.CONF_INCLUDE: {
-                    history.CONF_DOMAINS: ["media_player"],
-                    history.CONF_ENTITIES: ["thermostat.test"],
+                CONF_INCLUDE: {
+                    CONF_DOMAINS: ["media_player"],
+                    CONF_ENTITIES: ["thermostat.test"],
                 },
-                history.CONF_EXCLUDE: {
-                    history.CONF_DOMAINS: ["thermostat"],
-                    history.CONF_ENTITIES: ["media_player.test"],
+                CONF_EXCLUDE: {
+                    CONF_DOMAINS: ["thermostat"],
+                    CONF_ENTITIES: ["media_player.test"],
                 },
             }
         }
     )
-    assert setup_component(hass, history.DOMAIN, config)
-
-    yield hass
+    assert await async_setup_component(hass, history.DOMAIN, config)

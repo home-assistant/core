@@ -1,4 +1,5 @@
 """Tests for the steamist switch."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -7,7 +8,7 @@ from unittest.mock import AsyncMock
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import (
     MOCK_ASYNC_GET_STATUS_ACTIVE,

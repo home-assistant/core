@@ -1,14 +1,17 @@
 """Support gathering system information of hosts which are running netdata."""
+
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 from netdata import Netdata
 from netdata.exceptions import NetdataError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_ICON,
@@ -19,14 +22,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 CONF_DATA_GROUP = "data_group"
 CONF_ELEMENT = "element"
@@ -47,7 +48,7 @@ RESOURCE_SCHEMA = vol.Any(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -70,7 +71,9 @@ async def async_setup_platform(
     port = config[CONF_PORT]
     resources = config[CONF_RESOURCES]
 
-    netdata = NetdataData(Netdata(host, port=port))
+    netdata = NetdataData(
+        Netdata(host, port=port, timeout=20.0, httpx_client=get_async_client(hass))
+    )
     await netdata.async_update()
 
     if netdata.api.metrics is None:
@@ -140,11 +143,11 @@ class NetdataSensor(SensorEntity):
         return self._state
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Could the resource be accessed during the last update call."""
         return self.netdata.available
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data from Netdata REST API."""
         await self.netdata.async_update()
         resource_data = self.netdata.api.metrics.get(self._sensor)
@@ -186,11 +189,11 @@ class NetdataAlarms(SensorEntity):
         return "mdi:crosshairs-question"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Could the resource be accessed during the last update call."""
         return self.netdata.available
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest alarms from Netdata REST API."""
         await self.netdata.async_update()
         alarms = self.netdata.api.alarms["alarms"]
@@ -201,13 +204,11 @@ class NetdataAlarms(SensorEntity):
         _LOGGER.debug("Host %s has %s alarms", self.name, number_of_alarms)
 
         for alarm in alarms:
-            if alarms[alarm]["recipient"] == "silent":
-                number_of_relevant_alarms = number_of_relevant_alarms - 1
-            elif alarms[alarm]["status"] == "CLEAR":
-                number_of_relevant_alarms = number_of_relevant_alarms - 1
-            elif alarms[alarm]["status"] == "UNDEFINED":
-                number_of_relevant_alarms = number_of_relevant_alarms - 1
-            elif alarms[alarm]["status"] == "UNINITIALIZED":
+            if alarms[alarm]["recipient"] == "silent" or alarms[alarm]["status"] in (
+                "CLEAR",
+                "UNDEFINED",
+                "UNINITIALIZED",
+            ):
                 number_of_relevant_alarms = number_of_relevant_alarms - 1
             elif alarms[alarm]["status"] == "CRITICAL":
                 self._state = "critical"
@@ -223,7 +224,6 @@ class NetdataData:
         self.api = api
         self.available = True
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data from the Netdata REST API."""
 

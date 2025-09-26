@@ -1,4 +1,10 @@
 """Constants for Stream component."""
+
+from __future__ import annotations
+
+from enum import IntEnum
+from typing import Final
+
 DOMAIN = "stream"
 
 ATTR_ENDPOINTS = "endpoints"
@@ -10,13 +16,14 @@ RECORDER_PROVIDER = "recorder"
 
 OUTPUT_FORMATS = [HLS_PROVIDER]
 
-SEGMENT_CONTAINER_FORMAT = "mp4"  # format for segments
-RECORDER_CONTAINER_FORMAT = "mp4"  # format for recorder output
+SEGMENT_CONTAINER_FORMAT: Final = "mp4"  # format for segments
+RECORDER_CONTAINER_FORMAT: Final = "mp4"  # format for recorder output
 AUDIO_CODECS = {"aac", "mp3"}
 
 FORMAT_CONTENT_TYPE = {HLS_PROVIDER: "application/vnd.apple.mpegurl"}
 
-OUTPUT_IDLE_TIMEOUT = 300  # Idle timeout due to inactivity
+OUTPUT_STARTUP_TIMEOUT = 60  # timeout due to no startup
+OUTPUT_IDLE_TIMEOUT = 30  # Idle timeout due to inactivity
 
 NUM_PLAYLIST_SEGMENTS = 3  # Number of segments to use in HLS playlist
 MAX_SEGMENTS = 5  # Max number of segments to keep around
@@ -31,7 +38,7 @@ EXT_X_START_LL_HLS = 2
 
 
 PACKETS_TO_WAIT_FOR_AUDIO = 20  # Some streams have an audio stream with no audio
-MAX_TIMESTAMP_GAP = 10000  # seconds - anything from 10 to 50000 is probably reasonable
+MAX_TIMESTAMP_GAP = 30  # seconds - anything from 10 to 50000 is probably reasonable
 
 MAX_MISSING_DTS = 6  # Number of packets missing DTS to allow
 SOURCE_TIMEOUT = 30  # Timeout for reading stream source
@@ -42,3 +49,30 @@ STREAM_RESTART_RESET_TIME = 300  # Reset wait_timeout after this many seconds
 CONF_LL_HLS = "ll_hls"
 CONF_PART_DURATION = "part_duration"
 CONF_SEGMENT_DURATION = "segment_duration"
+
+ATTR_PREFER_TCP = "prefer_tcp"
+CONF_RTSP_TRANSPORT = "rtsp_transport"
+# The first dict entry below may be used as the default when populating options
+RTSP_TRANSPORTS = {
+    "tcp": "TCP",
+    "udp": "UDP",
+    "udp_multicast": "UDP Multicast",
+    "http": "HTTP",
+}
+CONF_USE_WALLCLOCK_AS_TIMESTAMPS = "use_wallclock_as_timestamps"
+CONF_EXTRA_PART_WAIT_TIME = "extra_part_wait_time"
+
+
+class StreamClientError(IntEnum):
+    """Enum for stream client errors.
+
+    These are errors that can be returned by the stream client when trying to
+    open a stream. The caller should not interpret the int values directly, but
+    should use the enum values instead.
+    """
+
+    BadRequest = 400
+    Unauthorized = 401
+    Forbidden = 403
+    NotFound = 404
+    Other = 4

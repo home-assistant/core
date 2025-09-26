@@ -4,17 +4,14 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
+          "url": "[%key:common::config_flow::data::url%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "base_path": "Path to API",
-          "port": "[%key:common::config_flow::data::port%]",
-          "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Sonarr integration needs to be manually re-authenticated with the Sonarr API hosted at: {host}"
+        "description": "The Sonarr integration needs to be manually re-authenticated with the Sonarr API hosted at: {url}"
       }
     },
     "error": {
@@ -34,6 +31,33 @@
           "upcoming_days": "Number of upcoming days to display",
           "wanted_max_items": "Max number of wanted items to display"
         }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "commands": {
+        "name": "Commands",
+        "unit_of_measurement": "commands"
+      },
+      "diskspace": {
+        "name": "Disk space"
+      },
+      "queue": {
+        "name": "Queue",
+        "unit_of_measurement": "episodes"
+      },
+      "series": {
+        "name": "Shows",
+        "unit_of_measurement": "series"
+      },
+      "upcoming": {
+        "name": "Upcoming",
+        "unit_of_measurement": "[%key:component::sonarr::entity::sensor::queue::unit_of_measurement%]"
+      },
+      "wanted": {
+        "name": "Wanted",
+        "unit_of_measurement": "[%key:component::sonarr::entity::sensor::queue::unit_of_measurement%]"
       }
     }
   }

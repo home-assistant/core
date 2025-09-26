@@ -3,17 +3,15 @@
     "flow_title": "{name} ({host})",
     "step": {
       "user": {
-        "title": "Plex Media Server",
         "description": "Continue to [plex.tv](https://plex.tv) to link a Plex server."
       },
       "user_advanced": {
-        "title": "Plex Media Server",
         "data": {
           "setup_method": "Setup method"
         }
       },
       "manual_setup": {
-        "title": "Manual Plex Configuration",
+        "title": "Manual Plex configuration",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
@@ -31,8 +29,8 @@
       }
     },
     "error": {
-      "faulty_credentials": "Authorization failed, verify Token",
-      "host_or_token": "Must provide at least one of Host or Token",
+      "faulty_credentials": "Authorization failed, verify token",
+      "host_or_token": "Must provide at least one of host or token",
       "no_servers": "No servers linked to Plex account",
       "not_found": "Plex server not found",
       "ssl_error": "SSL certificate issue"
@@ -49,12 +47,40 @@
   "options": {
     "step": {
       "plex_mp_settings": {
-        "description": "Options for Plex Media Players",
+        "description": "Options for Plex media players",
         "data": {
           "use_episode_art": "Use episode art",
           "ignore_new_shared_users": "Ignore new managed/shared users",
           "monitored_users": "Monitored users",
-          "ignore_plex_web_clients": "Ignore Plex Web clients"
+          "ignore_plex_web_clients": "Ignore Plex web clients"
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "scan_clients": {
+        "name": "Scan clients"
+      }
+    },
+    "update": {
+      "server_update": {
+        "name": "[%key:component::update::title%]"
+      }
+    }
+  },
+  "services": {
+    "refresh_library": {
+      "name": "Refresh library",
+      "description": "Refreshes a Plex library to scan for new and updated media.",
+      "fields": {
+        "server_name": {
+          "name": "Server name",
+          "description": "Name of a Plex server if multiple Plex servers configured."
+        },
+        "library_name": {
+          "name": "Library name",
+          "description": "Name of the Plex library to refresh."
         }
       }
     }

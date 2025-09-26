@@ -1,4 +1,5 @@
 """Integrate with NO-IP Dynamic DNS service."""
+
 import asyncio
 import base64
 from datetime import datetime, timedelta
@@ -6,16 +7,16 @@ import logging
 
 import aiohttp
 from aiohttp.hdrs import AUTHORIZATION, USER_AGENT
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import CONF_DOMAIN, CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     SERVER_SOFTWARE,
     async_get_clientsession,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,7 +77,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Update the NO-IP entry."""
         await _update_no_ip(hass, session, domain, auth_str, timeout)
 
-    hass.helpers.event.async_track_time_interval(update_domain_interval, INTERVAL)
+    async_track_time_interval(hass, update_domain_interval, INTERVAL)
 
     return True
 
@@ -93,17 +94,18 @@ async def _update_no_ip(
 
     params = {"hostname": domain}
 
-    headers = {
+    headers: dict[str, str] = {
         AUTHORIZATION: f"Basic {auth_str.decode('utf-8')}",
         USER_AGENT: HA_USER_AGENT,
     }
 
     try:
-        async with async_timeout.timeout(timeout):
+        async with asyncio.timeout(timeout):
             resp = await session.get(url, params=params, headers=headers)
             body = await resp.text()
 
-            if body.startswith("good") or body.startswith("nochg"):
+            if body.startswith(("good", "nochg")):
+                _LOGGER.debug("Updating NO-IP success: %s", domain)
                 return True
 
             _LOGGER.warning(
@@ -113,7 +115,7 @@ async def _update_no_ip(
     except aiohttp.ClientError:
         _LOGGER.warning("Can't connect to NO-IP API")
 
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.warning("Timeout from NO-IP API for domain: %s", domain)
 
     return False

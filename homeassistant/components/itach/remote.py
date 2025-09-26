@@ -1,7 +1,10 @@
 """Support for iTach IR devices."""
+
 from __future__ import annotations
 
+from collections.abc import Iterable
 import logging
+from typing import Any
 
 import pyitachip2ir
 import voluptuous as vol
@@ -10,7 +13,7 @@ from homeassistant.components import remote
 from homeassistant.components.remote import (
     ATTR_NUM_REPEATS,
     DEFAULT_NUM_REPEATS,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as REMOTE_PLATFORM_SCHEMA,
 )
 from homeassistant.const import (
     CONF_DEVICES,
@@ -21,7 +24,7 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -39,7 +42,7 @@ CONF_COMMANDS = "commands"
 CONF_DATA = "data"
 CONF_IR_COUNT = "ir_count"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = REMOTE_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MAC): cv.string,
         vol.Required(CONF_HOST): cv.string,
@@ -123,19 +126,19 @@ class ITachIP2IRRemote(remote.RemoteEntity):
         """Return true if device is on."""
         return self._power
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._power = True
         self.itachip2ir.send(self._name, "ON", self._ir_count)
         self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._power = False
         self.itachip2ir.send(self._name, "OFF", self._ir_count)
         self.schedule_update_ha_state()
 
-    def send_command(self, command, **kwargs):
+    def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         num_repeats = kwargs.get(ATTR_NUM_REPEATS, DEFAULT_NUM_REPEATS)
         for single_command in command:
@@ -143,6 +146,6 @@ class ITachIP2IRRemote(remote.RemoteEntity):
                 self._name, single_command, self._ir_count * num_repeats
             )
 
-    def update(self):
+    def update(self) -> None:
         """Update the device."""
         self.itachip2ir.update()

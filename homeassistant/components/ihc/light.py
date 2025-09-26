@@ -1,18 +1,18 @@
 """Support for IHC lights."""
+
 from __future__ import annotations
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
-    LightEntity,
-)
+from typing import Any
+
+from ihcsdk.ihccontroller import IHCController
+
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import IHC_CONTROLLER, IHC_INFO
-from .const import CONF_DIMMABLE, CONF_OFF_ID, CONF_ON_ID
-from .ihcdevice import IHCDevice
+from .const import CONF_DIMMABLE, CONF_OFF_ID, CONF_ON_ID, DOMAIN, IHC_CONTROLLER
+from .entity import IHCEntity
 from .util import async_pulse, async_set_bool, async_set_int
 
 
@@ -31,21 +31,26 @@ def setup_platform(
         product_cfg = device["product_cfg"]
         product = device["product"]
         # Find controller that corresponds with device id
-        ctrl_id = device["ctrl_id"]
-        ihc_key = f"ihc{ctrl_id}"
-        info = hass.data[ihc_key][IHC_INFO]
-        ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
+        controller_id = device["ctrl_id"]
+        ihc_controller: IHCController = hass.data[DOMAIN][controller_id][IHC_CONTROLLER]
         ihc_off_id = product_cfg.get(CONF_OFF_ID)
         ihc_on_id = product_cfg.get(CONF_ON_ID)
         dimmable = product_cfg[CONF_DIMMABLE]
         light = IhcLight(
-            ihc_controller, name, ihc_id, ihc_off_id, ihc_on_id, info, dimmable, product
+            ihc_controller,
+            controller_id,
+            name,
+            ihc_id,
+            ihc_off_id,
+            ihc_on_id,
+            dimmable,
+            product,
         )
         devices.append(light)
     add_entities(devices)
 
 
-class IhcLight(IHCDevice, LightEntity):
+class IhcLight(IHCEntity, LightEntity):
     """Representation of a IHC light.
 
     For dimmable lights, the associated IHC resource should be a light
@@ -55,22 +60,28 @@ class IhcLight(IHCDevice, LightEntity):
 
     def __init__(
         self,
-        ihc_controller,
-        name,
+        ihc_controller: IHCController,
+        controller_id: str,
+        name: str,
         ihc_id: int,
         ihc_off_id: int,
         ihc_on_id: int,
-        info: bool,
         dimmable=False,
         product=None,
     ) -> None:
         """Initialize the light."""
-        super().__init__(ihc_controller, name, ihc_id, info, product)
+        super().__init__(ihc_controller, controller_id, name, ihc_id, product)
         self._ihc_off_id = ihc_off_id
         self._ihc_on_id = ihc_on_id
         self._brightness = 0
         self._dimmable = dimmable
         self._state = False
+
+        if self._dimmable:
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+        else:
+            self._attr_color_mode = ColorMode.ONOFF
+        self._attr_supported_color_modes = {self._attr_color_mode}
 
     @property
     def brightness(self) -> int:
@@ -82,40 +93,30 @@ class IhcLight(IHCDevice, LightEntity):
         """Return true if light is on."""
         return self._state
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        if self._dimmable:
-            return SUPPORT_BRIGHTNESS
-        return 0
-
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
-        else:
-            if (brightness := self._brightness) == 0:
-                brightness = 255
+        elif (brightness := self._brightness) == 0:
+            brightness = 255
 
         if self._dimmable:
             await async_set_int(
                 self.hass, self.ihc_controller, self.ihc_id, int(brightness * 100 / 255)
             )
+        elif self._ihc_on_id:
+            await async_pulse(self.hass, self.ihc_controller, self._ihc_on_id)
         else:
-            if self._ihc_on_id:
-                await async_pulse(self.hass, self.ihc_controller, self._ihc_on_id)
-            else:
-                await async_set_bool(self.hass, self.ihc_controller, self.ihc_id, True)
+            await async_set_bool(self.hass, self.ihc_controller, self.ihc_id, True)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         if self._dimmable:
             await async_set_int(self.hass, self.ihc_controller, self.ihc_id, 0)
+        elif self._ihc_off_id:
+            await async_pulse(self.hass, self.ihc_controller, self._ihc_off_id)
         else:
-            if self._ihc_off_id:
-                await async_pulse(self.hass, self.ihc_controller, self._ihc_off_id)
-            else:
-                await async_set_bool(self.hass, self.ihc_controller, self.ihc_id, False)
+            await async_set_bool(self.hass, self.ihc_controller, self.ihc_id, False)
 
     def on_ihc_change(self, ihc_id, value):
         """Handle IHC notifications."""

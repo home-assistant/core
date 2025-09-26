@@ -1,116 +1,102 @@
-"""Tests for 1-Wire sensor platform."""
+"""Tests for 1-Wire sensors."""
+
+from collections.abc import Generator
+from copy import deepcopy
 import logging
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, _patch_dict, patch
 
+from freezegun.api import FrozenDateTimeFactory
+from pyownet.protocol import OwnetError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.onewire.onewirehub import _DEVICE_SCAN_INTERVAL
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_validation import ensure_list
+from homeassistant.helpers import entity_registry as er
 
-from . import (
-    check_and_enable_disabled_entities,
-    check_device_registry,
-    check_entities,
-    setup_owproxy_mock_devices,
-    setup_sysbus_mock_devices,
-)
-from .const import (
-    ATTR_DEVICE_INFO,
-    ATTR_UNKNOWN_DEVICE,
-    MOCK_OWPROXY_DEVICES,
-    MOCK_SYSBUS_DEVICES,
-)
+from . import setup_owproxy_mock_devices
+from .const import ATTR_INJECT_READS, MOCK_OWPROXY_DEVICES
 
-from tests.common import mock_device_registry, mock_registry
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
-def override_platforms():
+def override_platforms() -> Generator[None]:
     """Override PLATFORMS."""
-    with patch("homeassistant.components.onewire.PLATFORMS", [Platform.SENSOR]):
+    with patch("homeassistant.components.onewire._PLATFORMS", [Platform.SENSOR]):
         yield
 
 
-async def test_owserver_sensor(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test for 1-Wire sensor entities."""
+    setup_owproxy_mock_devices(owproxy, MOCK_OWPROXY_DEVICES.keys())
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+@pytest.mark.parametrize("device_id", ["12.111111111111"])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_delayed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     owproxy: MagicMock,
     device_id: str,
-    caplog: pytest.LogCaptureFixture,
-):
-    """Test for 1-Wire device.
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test for delayed 1-Wire sensor entities."""
+    setup_owproxy_mock_devices(owproxy, [])
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
-    As they would be on a clean setup: all binary-sensors and switches disabled.
-    """
-    device_registry = mock_device_registry(hass)
-    entity_registry = mock_registry(hass)
+    assert not er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
 
-    mock_device = MOCK_OWPROXY_DEVICES[device_id]
-    expected_entities = mock_device.get(Platform.SENSOR, [])
-    if "branches" in mock_device:
-        for branch_details in mock_device["branches"].values():
-            for sub_device in branch_details.values():
-                expected_entities += sub_device[Platform.SENSOR]
-    expected_devices = ensure_list(mock_device.get(ATTR_DEVICE_INFO))
+    setup_owproxy_mock_devices(owproxy, [device_id])
+    freezer.tick(_DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [device_id])
-    with caplog.at_level(logging.WARNING, logger="homeassistant.components.onewire"):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        if mock_device.get(ATTR_UNKNOWN_DEVICE):
-            assert "Ignoring unknown device family/type" in caplog.text
-        else:
-            assert "Ignoring unknown device family/type" not in caplog.text
-
-    check_device_registry(device_registry, expected_devices)
-    assert len(entity_registry.entities) == len(expected_entities)
-    check_and_enable_disabled_entities(entity_registry, expected_entities)
-
-    setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [device_id])
-    await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    check_entities(hass, entity_registry, expected_entities)
-
-
-@pytest.mark.usefixtures("sysbus")
-@pytest.mark.parametrize("device_id", MOCK_SYSBUS_DEVICES.keys(), indirect=True)
-async def test_onewiredirect_setup_valid_device(
-    hass: HomeAssistant,
-    sysbus_config_entry: ConfigEntry,
-    device_id: str,
-    caplog: pytest.LogCaptureFixture,
-):
-    """Test that sysbus config entry works correctly."""
-    device_registry = mock_device_registry(hass)
-    entity_registry = mock_registry(hass)
-
-    glob_result, read_side_effect = setup_sysbus_mock_devices(
-        Platform.SENSOR, [device_id]
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
+        == 2
     )
 
-    mock_device = MOCK_SYSBUS_DEVICES[device_id]
-    expected_entities = mock_device.get(Platform.SENSOR, [])
-    expected_devices = ensure_list(mock_device.get(ATTR_DEVICE_INFO))
 
-    with patch("pi1wire._finder.glob.glob", return_value=glob_result,), patch(
-        "pi1wire.OneWire.get_temperature",
-        side_effect=read_side_effect,
-    ), caplog.at_level(
-        logging.WARNING, logger="homeassistant.components.onewire"
-    ), patch(
-        "homeassistant.components.onewire.sensor.asyncio.sleep"
-    ):
-        await hass.config_entries.async_setup(sysbus_config_entry.entry_id)
+@pytest.mark.parametrize("device_id", ["12.111111111111"])
+async def test_tai8570_sensors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    device_id: str,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The DS2602 is often used without TAI8570.
+
+    The sensors should be ignored.
+    """
+    mock_devices = deepcopy(MOCK_OWPROXY_DEVICES)
+    mock_device = mock_devices[device_id]
+    mock_device[ATTR_INJECT_READS]["/TAI8570/temperature"] = [OwnetError]
+    mock_device[ATTR_INJECT_READS]["/TAI8570/pressure"] = [OwnetError]
+
+    with _patch_dict(MOCK_OWPROXY_DEVICES, mock_devices):
+        setup_owproxy_mock_devices(owproxy, [device_id])
+
+    with caplog.at_level(logging.DEBUG):
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert "No onewire sensor found. Check if dtoverlay=w1-gpio" not in caplog.text
-        if mock_device.get(ATTR_UNKNOWN_DEVICE):
-            assert "Ignoring unknown device family" in caplog.text
-        else:
-            assert "Ignoring unknown device family" not in caplog.text
 
-    check_device_registry(device_registry, expected_devices)
-    assert len(entity_registry.entities) == len(expected_entities)
-    check_entities(hass, entity_registry, expected_entities)
+    assert entity_registry.entities.get("sensor.12_111111111111_temperature") is None
+    assert "unreachable sensor /12.111111111111/TAI8570/temperature" in caplog.text
+
+    assert entity_registry.entities.get("sensor.12_111111111111_pressure") is None
+    assert "unreachable sensor /12.111111111111/TAI8570/pressure" in caplog.text

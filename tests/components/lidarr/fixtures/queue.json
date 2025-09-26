@@ -1,0 +1,57 @@
+{
+  "page": 1,
+  "pageSize": 20,
+  "sortKey": "timeleft",
+  "sortDirection": "default",
+  "totalRecords": 2,
+  "records": [
+    {
+      "artistId": 1,
+      "albumId": 1,
+      "quality": {
+        "quality": { "id": 0, "name": "Unknown" },
+        "revision": { "version": 1, "real": 0, "isRepack": false }
+      },
+      "size": 1000000,
+      "title": "string",
+      "sizeleft": 100000,
+      "timeleft": "00:00:00",
+      "estimatedCompletionTime": "2020-09-26T18:47:46Z",
+      "status": "downloading",
+      "trackedDownloadStatus": "ok",
+      "trackedDownloadState": "downloading",
+      "statusMessages": [],
+      "downloadId": "string",
+      "protocol": "string",
+      "downloadClient": "testclient",
+      "indexer": "test",
+      "outputPath": "/downloads/string",
+      "downloadForced": false,
+      "id": 1
+    },
+    {
+      "artistId": 1,
+      "albumId": 1,
+      "quality": {
+        "quality": { "id": 0, "name": "Unknown" },
+        "revision": { "version": 1, "real": 0, "isRepack": false }
+      },
+      "size": 2000000,
+      "title": "string2",
+      "sizeleft": 1000000,
+      "timeleft": "00:00:10",
+      "estimatedCompletionTime": "2020-09-26T18:47:46Z",
+      "status": "downloading",
+      "trackedDownloadStatus": "ok",
+      "trackedDownloadState": "downloading",
+      "statusMessages": [],
+      "downloadId": "string",
+      "protocol": "string",
+      "downloadClient": "testclient",
+      "indexer": "test",
+      "outputPath": "/downloads/string",
+      "downloadForced": false,
+      "id": 1
+    }
+  ]
+}

@@ -1,9 +1,11 @@
 {
   "domain": "seventeentrack",
   "name": "17TRACK",
+  "codeowners": ["@shaiu"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/seventeentrack",
-  "requirements": ["py17track==2021.12.2"],
-  "codeowners": [],
+  "integration_type": "service",
   "iot_class": "cloud_polling",
-  "loggers": ["py17track"]
+  "loggers": ["pyseventeentrack"],
+  "requirements": ["pyseventeentrack==1.1.1"]
 }

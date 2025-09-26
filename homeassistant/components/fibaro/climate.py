@@ -1,28 +1,28 @@
 """Support for Fibaro thermostats."""
+
 from __future__ import annotations
 
+from contextlib import suppress
 import logging
+from typing import Any
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
+from pyfibaro.fibaro_device import DeviceModel
+
+from homeassistant.components.climate import (
+    ENTITY_ID_FORMAT,
     PRESET_AWAY,
     PRESET_BOOST,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FIBARO_DEVICES, FibaroDevice
+from . import FibaroConfigEntry
+from .entity import FibaroEntity
 
 PRESET_RESUME = "resume"
 PRESET_MOIST = "moist"
@@ -71,289 +71,310 @@ OPMODES_PRESET = {
 HA_OPMODES_PRESET = {v: k for k, v in OPMODES_PRESET.items()}
 
 OPMODES_HVAC = {
-    0: HVAC_MODE_OFF,
-    1: HVAC_MODE_HEAT,
-    2: HVAC_MODE_COOL,
-    3: HVAC_MODE_AUTO,
-    4: HVAC_MODE_HEAT,
-    5: HVAC_MODE_AUTO,
-    6: HVAC_MODE_FAN_ONLY,
-    7: HVAC_MODE_HEAT,
-    8: HVAC_MODE_DRY,
-    9: HVAC_MODE_DRY,
-    10: HVAC_MODE_AUTO,
-    11: HVAC_MODE_HEAT,
-    12: HVAC_MODE_COOL,
-    13: HVAC_MODE_AUTO,
-    15: HVAC_MODE_AUTO,
-    31: HVAC_MODE_HEAT,
+    0: HVACMode.OFF,
+    1: HVACMode.HEAT,
+    2: HVACMode.COOL,
+    3: HVACMode.AUTO,
+    4: HVACMode.HEAT,
+    5: HVACMode.AUTO,
+    6: HVACMode.FAN_ONLY,
+    7: HVACMode.HEAT,
+    8: HVACMode.DRY,
+    9: HVACMode.DRY,
+    10: HVACMode.AUTO,
+    11: HVACMode.HEAT,
+    12: HVACMode.COOL,
+    13: HVACMode.AUTO,
+    15: HVACMode.AUTO,
+    31: HVACMode.HEAT,
 }
 
 HA_OPMODES_HVAC = {
-    HVAC_MODE_OFF: 0,
-    HVAC_MODE_HEAT: 1,
-    HVAC_MODE_COOL: 2,
-    HVAC_MODE_AUTO: 3,
-    HVAC_MODE_FAN_ONLY: 6,
+    HVACMode.OFF: 0,
+    HVACMode.HEAT: 1,
+    HVACMode.COOL: 2,
+    HVACMode.AUTO: 3,
+    HVACMode.FAN_ONLY: 6,
+    HVACMode.DRY: 8,
 }
 
+TARGET_TEMP_ACTIONS = (
+    "setTargetLevel",
+    "setThermostatSetpoint",
+    "setHeatingThermostatSetpoint",
+)
 
-def setup_platform(
+OP_MODE_ACTIONS = ("setMode", "setOperatingMode", "setThermostatMode")
+
+
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: FibaroConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Fibaro controller devices."""
-    if discovery_info is None:
-        return
-
-    add_entities(
-        [FibaroThermostat(device) for device in hass.data[FIBARO_DEVICES]["climate"]],
+    controller = entry.runtime_data
+    async_add_entities(
+        [
+            FibaroThermostat(device)
+            for device in controller.fibaro_devices[Platform.CLIMATE]
+        ],
         True,
     )
 
 
-class FibaroThermostat(FibaroDevice, ClimateEntity):
+class FibaroThermostat(FibaroEntity, ClimateEntity):
     """Representation of a Fibaro Thermostat."""
 
-    def __init__(self, fibaro_device):
+    def __init__(self, fibaro_device: DeviceModel) -> None:
         """Initialize the Fibaro device."""
         super().__init__(fibaro_device)
-        self._temp_sensor_device = None
-        self._target_temp_device = None
-        self._op_mode_device = None
-        self._fan_mode_device = None
-        self._support_flags = 0
-        self.entity_id = f"climate.{self.ha_id}"
-        self._hvac_support = []
-        self._preset_support = []
-        self._fan_support = []
+        self._temp_sensor_device: DeviceModel | None = None
+        self._target_temp_device: DeviceModel | None = None
+        self._op_mode_device: DeviceModel | None = None
+        self._fan_mode_device: DeviceModel | None = None
+        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
-        siblings = fibaro_device.fibaro_controller.get_siblings(fibaro_device)
+        siblings = self.controller.get_siblings(fibaro_device)
         _LOGGER.debug("%s siblings: %s", fibaro_device.ha_id, siblings)
         tempunit = "C"
         for device in siblings:
             # Detecting temperature device, one strong and one weak way of
             # doing so, so we prefer the hard evidence, if there is such.
-            if device.type == "com.fibaro.temperatureSensor":
-                self._temp_sensor_device = FibaroDevice(device)
-                tempunit = device.properties.unit
-            elif (
+            if device.type == "com.fibaro.temperatureSensor" or (
                 self._temp_sensor_device is None
-                and "unit" in device.properties
-                and (
-                    "value" in device.properties
-                    or "heatingThermostatSetpoint" in device.properties
-                )
-                and device.properties.unit in ("C", "F")
+                and device.has_unit
+                and (device.value.has_value or device.has_heating_thermostat_setpoint)
+                and device.unit in ("C", "F")
             ):
-                self._temp_sensor_device = FibaroDevice(device)
-                tempunit = device.properties.unit
+                self._temp_sensor_device = device
+                tempunit = device.unit
 
-            if (
-                "setTargetLevel" in device.actions
-                or "setThermostatSetpoint" in device.actions
-                or "setHeatingThermostatSetpoint" in device.actions
+            if any(
+                action for action in TARGET_TEMP_ACTIONS if action in device.actions
             ):
-                self._target_temp_device = FibaroDevice(device)
-                self._support_flags |= SUPPORT_TARGET_TEMPERATURE
-                tempunit = device.properties.unit
+                self._target_temp_device = device
+                self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
+                if device.has_unit:
+                    tempunit = device.unit
 
-            if "setMode" in device.actions or "setOperatingMode" in device.actions:
-                self._op_mode_device = FibaroDevice(device)
-                self._support_flags |= SUPPORT_PRESET_MODE
+            if any(action for action in OP_MODE_ACTIONS if action in device.actions):
+                self._op_mode_device = device
+                self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
 
             if "setFanMode" in device.actions:
-                self._fan_mode_device = FibaroDevice(device)
-                self._support_flags |= SUPPORT_FAN_MODE
+                self._fan_mode_device = device
+                self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
         if tempunit == "F":
-            self._unit_of_temp = TEMP_FAHRENHEIT
+            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
         else:
-            self._unit_of_temp = TEMP_CELSIUS
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
         if self._fan_mode_device:
-            fan_modes = (
-                self._fan_mode_device.fibaro_device.properties.supportedModes.split(",")
-            )
+            fan_modes = self._fan_mode_device.supported_modes
+            self._attr_fan_modes = []
             for mode in fan_modes:
-                mode = int(mode)
                 if mode not in FANMODES:
                     _LOGGER.warning("%d unknown fan mode", mode)
                     continue
-                self._fan_support.append(FANMODES[int(mode)])
+                self._attr_fan_modes.append(FANMODES[int(mode)])
 
+        self._attr_hvac_modes = [HVACMode.AUTO]  # default
         if self._op_mode_device:
-            prop = self._op_mode_device.fibaro_device.properties
-            if "supportedOperatingModes" in prop:
-                op_modes = prop.supportedOperatingModes.split(",")
-            elif "supportedModes" in prop:
-                op_modes = prop.supportedModes.split(",")
-            for mode in op_modes:
-                mode = int(mode)
-                if mode in OPMODES_HVAC:
-                    mode_ha = OPMODES_HVAC[mode]
-                    if mode_ha not in self._hvac_support:
-                        self._hvac_support.append(mode_ha)
-                if mode in OPMODES_PRESET:
-                    self._preset_support.append(OPMODES_PRESET[mode])
+            self._attr_preset_modes = []
+            self._attr_hvac_modes: list[HVACMode] = []
+            device = self._op_mode_device
+            if device.has_supported_thermostat_modes:
+                for mode in device.supported_thermostat_modes:
+                    try:
+                        self._attr_hvac_modes.append(HVACMode(mode.lower()))
+                    except ValueError:
+                        self._attr_preset_modes.append(mode)
+            else:
+                if device.has_supported_operating_modes:
+                    op_modes = device.supported_operating_modes
+                else:
+                    op_modes = device.supported_modes
+                for mode in op_modes:
+                    if (
+                        mode in OPMODES_HVAC
+                        and (mode_ha := OPMODES_HVAC.get(mode))
+                        and mode_ha not in self._attr_hvac_modes
+                    ):
+                        self._attr_hvac_modes.append(mode_ha)
+                    if mode in OPMODES_PRESET:
+                        self._attr_preset_modes.append(OPMODES_PRESET[mode])
 
-    async def async_added_to_hass(self):
+        if HVACMode.OFF in self._attr_hvac_modes and len(self._attr_hvac_modes) > 1:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
+
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         _LOGGER.debug(
-            "Climate %s\n"
-            "- _temp_sensor_device %s\n"
-            "- _target_temp_device %s\n"
-            "- _op_mode_device %s\n"
-            "- _fan_mode_device %s",
+            (
+                "Climate %s\n"
+                "- _temp_sensor_device %s\n"
+                "- _target_temp_device %s\n"
+                "- _op_mode_device %s\n"
+                "- _fan_mode_device %s"
+            ),
             self.ha_id,
-            self._temp_sensor_device.ha_id if self._temp_sensor_device else "None",
-            self._target_temp_device.ha_id if self._target_temp_device else "None",
-            self._op_mode_device.ha_id if self._op_mode_device else "None",
-            self._fan_mode_device.ha_id if self._fan_mode_device else "None",
+            self._temp_sensor_device.fibaro_id if self._temp_sensor_device else "None",
+            self._target_temp_device.fibaro_id if self._target_temp_device else "None",
+            self._op_mode_device.fibaro_id if self._op_mode_device else "None",
+            self._fan_mode_device.fibaro_id if self._fan_mode_device else "None",
         )
         await super().async_added_to_hass()
 
         # Register update callback for child devices
-        siblings = self.fibaro_device.fibaro_controller.get_siblings(self.fibaro_device)
+        siblings = self.controller.get_siblings(self.fibaro_device)
         for device in siblings:
             if device != self.fibaro_device:
-                self.controller.register(device.id, self._update_callback)
+                self.controller.register(device.fibaro_id, self._update_callback)
 
     @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._support_flags
-
-    @property
-    def fan_modes(self):
-        """Return the list of available fan modes."""
-        if not self._fan_mode_device:
-            return None
-        return self._fan_support
-
-    @property
-    def fan_mode(self):
+    def fan_mode(self) -> str | None:
         """Return the fan setting."""
         if not self._fan_mode_device:
             return None
-        mode = int(self._fan_mode_device.fibaro_device.properties.mode)
+        mode = self._fan_mode_device.mode
         return FANMODES[mode]
 
-    def set_fan_mode(self, fan_mode):
+    def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if not self._fan_mode_device:
             return
-        self._fan_mode_device.action("setFanMode", HA_FANMODES[fan_mode])
+        self._fan_mode_device.execute_action("setFanMode", [HA_FANMODES[fan_mode]])
 
     @property
-    def fibaro_op_mode(self):
+    def fibaro_op_mode(self) -> str | int:
         """Return the operating mode of the device."""
         if not self._op_mode_device:
-            return 3  # Default to AUTO
+            return HA_OPMODES_HVAC[HVACMode.AUTO]
 
-        if "operatingMode" in self._op_mode_device.fibaro_device.properties:
-            return int(self._op_mode_device.fibaro_device.properties.operatingMode)
+        device = self._op_mode_device
 
-        return int(self._op_mode_device.fibaro_device.properties.mode)
-
-    @property
-    def hvac_mode(self):
-        """Return current operation ie. heat, cool, idle."""
-        return OPMODES_HVAC[self.fibaro_op_mode]
+        if device.has_operating_mode:
+            return device.operating_mode
+        if device.has_thermostat_mode:
+            return device.thermostat_mode
+        return device.mode
 
     @property
-    def hvac_modes(self):
-        """Return the list of available operation modes."""
-        if not self._op_mode_device:
-            return [HVAC_MODE_AUTO]  # Default to this
-        return self._hvac_support
+    def hvac_mode(self) -> HVACMode | None:
+        """Return hvac operation ie. heat, cool, idle."""
+        fibaro_operation_mode = self.fibaro_op_mode
+        if isinstance(fibaro_operation_mode, str):
+            with suppress(ValueError):
+                return HVACMode(fibaro_operation_mode.lower())
+            # when the mode cannot be instantiated a preset_mode is selected
+            return HVACMode.AUTO
+        if fibaro_operation_mode in OPMODES_HVAC:
+            return OPMODES_HVAC[fibaro_operation_mode]
+        return None
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if not self._op_mode_device:
             return
-        if self.preset_mode:
-            return
 
-        if "setOperatingMode" in self._op_mode_device.fibaro_device.actions:
-            self._op_mode_device.action("setOperatingMode", HA_OPMODES_HVAC[hvac_mode])
-        elif "setMode" in self._op_mode_device.fibaro_device.actions:
-            self._op_mode_device.action("setMode", HA_OPMODES_HVAC[hvac_mode])
+        device = self._op_mode_device
+        if "setOperatingMode" in device.actions:
+            device.execute_action("setOperatingMode", [HA_OPMODES_HVAC[hvac_mode]])
+        elif "setThermostatMode" in device.actions:
+            if device.has_supported_thermostat_modes:
+                for mode in device.supported_thermostat_modes:
+                    if mode.lower() == hvac_mode:
+                        device.execute_action("setThermostatMode", [mode])
+                        break
+        elif "setMode" in device.actions:
+            device.execute_action("setMode", [HA_OPMODES_HVAC[hvac_mode]])
 
     @property
-    def preset_mode(self):
+    def hvac_action(self) -> HVACAction | None:
+        """Return the current running hvac operation if supported."""
+        if not self._op_mode_device:
+            return None
+
+        device = self._op_mode_device
+        if device.has_thermostat_operating_state:
+            with suppress(ValueError):
+                return HVACAction(device.thermostat_operating_state.lower())
+
+        return None
+
+    @property
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp.
 
-        Requires SUPPORT_PRESET_MODE.
+        Requires ClimateEntityFeature.PRESET_MODE.
         """
         if not self._op_mode_device:
             return None
 
-        if "operatingMode" in self._op_mode_device.fibaro_device.properties:
-            mode = int(self._op_mode_device.fibaro_device.properties.operatingMode)
+        if self._op_mode_device.has_thermostat_mode:
+            mode = self._op_mode_device.thermostat_mode
+            if self.preset_modes is not None and mode in self.preset_modes:
+                return mode
+            return None
+        if self._op_mode_device.has_operating_mode:
+            mode = self._op_mode_device.operating_mode
         else:
-            mode = int(self._op_mode_device.fibaro_device.properties.mode)
+            mode = self._op_mode_device.mode
 
         if mode not in OPMODES_PRESET:
             return None
         return OPMODES_PRESET[mode]
 
-    @property
-    def preset_modes(self):
-        """Return a list of available preset modes.
-
-        Requires SUPPORT_PRESET_MODE.
-        """
-        if not self._op_mode_device:
-            return None
-        return self._preset_support
-
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if self._op_mode_device is None:
             return
-        if "setOperatingMode" in self._op_mode_device.fibaro_device.actions:
-            self._op_mode_device.action(
-                "setOperatingMode", HA_OPMODES_PRESET[preset_mode]
+
+        if "setThermostatMode" in self._op_mode_device.actions:
+            self._op_mode_device.execute_action("setThermostatMode", [preset_mode])
+        elif "setOperatingMode" in self._op_mode_device.actions:
+            self._op_mode_device.execute_action(
+                "setOperatingMode", [HA_OPMODES_PRESET[preset_mode]]
             )
-        elif "setMode" in self._op_mode_device.fibaro_device.actions:
-            self._op_mode_device.action("setMode", HA_OPMODES_PRESET[preset_mode])
+        elif "setMode" in self._op_mode_device.actions:
+            self._op_mode_device.execute_action(
+                "setMode", [HA_OPMODES_PRESET[preset_mode]]
+            )
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return self._unit_of_temp
-
-    @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self._temp_sensor_device:
-            device = self._temp_sensor_device.fibaro_device
-            if "heatingThermostatSetpoint" in device.properties:
-                return float(device.properties.heatingThermostatSetpoint)
-            return float(device.properties.value)
+            device = self._temp_sensor_device
+            if device.has_heating_thermostat_setpoint:
+                return device.heating_thermostat_setpoint
+            return device.value.float_value()
         return None
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self._target_temp_device:
-            device = self._target_temp_device.fibaro_device
-            if "heatingThermostatSetpointFuture" in device.properties:
-                return float(device.properties.heatingThermostatSetpointFuture)
-            return float(device.properties.targetLevel)
+            device = self._target_temp_device
+            if device.has_heating_thermostat_setpoint_future:
+                return device.heating_thermostat_setpoint_future
+            return device.target_level
         return None
 
-    def set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         target = self._target_temp_device
-        if temperature is not None:
-            if "setThermostatSetpoint" in target.fibaro_device.actions:
-                target.action("setThermostatSetpoint", self.fibaro_op_mode, temperature)
-            elif "setHeatingThermostatSetpoint" in target.fibaro_device.actions:
-                target.action("setHeatingThermostatSetpoint", temperature)
+        if target is not None and temperature is not None:
+            if "setThermostatSetpoint" in target.actions:
+                target.execute_action(
+                    "setThermostatSetpoint", [self.fibaro_op_mode, temperature]
+                )
+            elif "setHeatingThermostatSetpoint" in target.actions:
+                target.execute_action("setHeatingThermostatSetpoint", [temperature])
             else:
-                target.action("setTargetLevel", temperature)
+                target.execute_action("setTargetLevel", [temperature])

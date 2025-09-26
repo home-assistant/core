@@ -4,8 +4,15 @@
 # Stop on errors
 set -e
 
-cd "$(dirname "$0")/.."
+cd "$(realpath "$(dirname "$0")/..")"
 
 echo "Installing development dependencies..."
-python3 -m pip install wheel --constraint homeassistant/package_constraints.txt
-python3 -m pip install tox tox-pip-version colorlog pre-commit $(grep mypy requirements_test.txt) $(grep stdlib-list requirements_test.txt) $(grep tqdm requirements_test.txt) $(grep pipdeptree requirements_test.txt) $(grep awesomeversion requirements.txt) --constraint homeassistant/package_constraints.txt
+uv pip install \
+  -e . \
+  -r requirements_test.txt \
+  colorlog \
+  --constraint homeassistant/package_constraints.txt \
+  --upgrade \
+  --config-settings editable_mode=compat
+
+python3 -m script.translations develop --all

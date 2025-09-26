@@ -1,63 +1,52 @@
 """Support for BSH Home Connect appliances."""
 
-from datetime import timedelta
+from __future__ import annotations
+
 import logging
+from typing import Any
 
-from requests import HTTPError
-import voluptuous as vol
+from aiohomeconnect.client import Client as HomeConnectClient
+import aiohttp
+import jwt
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    config_validation as cv,
+    issue_registry as ir,
+)
+from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import Throttle
 
-from . import api, config_flow
-from .const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .api import AsyncConfigEntryAuth
+from .const import DOMAIN, OLD_NEW_UNIQUE_ID_SUFFIX_MAP
+from .coordinator import HomeConnectConfigEntry, HomeConnectCoordinator
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=1)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Home Connect component."""
-    hass.data[DOMAIN] = {}
-
-    if DOMAIN not in config:
-        return True
-
-    config_flow.OAuth2FlowHandler.async_register_implementation(
-        hass,
-        config_entry_oauth2_flow.LocalOAuth2Implementation(
-            hass,
-            DOMAIN,
-            config[DOMAIN][CONF_CLIENT_ID],
-            config[DOMAIN][CONF_CLIENT_SECRET],
-            OAUTH2_AUTHORIZE,
-            OAUTH2_TOKEN,
-        ),
-    )
-
+    async_setup_services(hass)
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) -> bool:
     """Set up Home Connect from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -65,34 +54,95 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    hc_api = api.ConfigEntryAuth(hass, entry, implementation)
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
-    hass.data[DOMAIN][entry.entry_id] = hc_api
+    config_entry_auth = AsyncConfigEntryAuth(hass, session)
+    try:
+        await config_entry_auth.async_get_access_token()
+    except aiohttp.ClientResponseError as err:
+        if 400 <= err.status < 500:
+            raise ConfigEntryAuthFailed from err
+        raise ConfigEntryNotReady from err
+    except aiohttp.ClientError as err:
+        raise ConfigEntryNotReady from err
 
-    await update_all_devices(hass, entry)
+    home_connect_client = HomeConnectClient(config_entry_auth)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    coordinator = HomeConnectCoordinator(hass, entry, home_connect_client)
+    await coordinator.async_setup()
+    entry.runtime_data = coordinator
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    entry.runtime_data.start_event_listener()
+
+    entry.async_create_background_task(
+        hass,
+        coordinator.async_refresh(),
+        f"home_connect-initial-full-refresh-{entry.entry_id}",
+    )
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: HomeConnectConfigEntry
+) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+    issue_registry = ir.async_get(hass)
+    issues_to_delete = [
+        "deprecated_set_program_and_option_actions",
+        "deprecated_command_actions",
+    ] + [
+        issue_id
+        for (issue_domain, issue_id) in issue_registry.issues
+        if issue_domain == DOMAIN
+        and issue_id.startswith("home_connect_too_many_connected_paired_events")
+    ]
+    for issue_id in issues_to_delete:
+        issue_registry.async_delete(DOMAIN, issue_id)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    return unload_ok
 
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: HomeConnectConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", entry.version)
 
-@Throttle(SCAN_INTERVAL)
-async def update_all_devices(hass, entry):
-    """Update all the devices."""
-    data = hass.data[DOMAIN]
-    hc_api = data[entry.entry_id]
-    try:
-        await hass.async_add_executor_job(hc_api.get_devices)
-        for device_dict in hc_api.devices:
-            await hass.async_add_executor_job(device_dict["device"].initialize)
-    except HTTPError as err:
-        _LOGGER.warning("Cannot update devices: %s", err.response.status_code)
+    if entry.version == 1:
+        match entry.minor_version:
+            case 1:
+
+                @callback
+                def update_unique_id(
+                    entity_entry: RegistryEntry,
+                ) -> dict[str, Any] | None:
+                    """Update unique ID of entity entry."""
+                    for (
+                        old_id_suffix,
+                        new_id_suffix,
+                    ) in OLD_NEW_UNIQUE_ID_SUFFIX_MAP.items():
+                        if entity_entry.unique_id.endswith(f"-{old_id_suffix}"):
+                            return {
+                                "new_unique_id": entity_entry.unique_id.replace(
+                                    old_id_suffix, new_id_suffix
+                                )
+                            }
+                    return None
+
+                await async_migrate_entries(hass, entry.entry_id, update_unique_id)
+
+                hass.config_entries.async_update_entry(entry, minor_version=2)
+            case 2:
+                hass.config_entries.async_update_entry(
+                    entry,
+                    minor_version=3,
+                    unique_id=jwt.decode(
+                        entry.data["token"]["access_token"],
+                        options={"verify_signature": False},
+                    )["sub"],
+                )
+
+    _LOGGER.debug("Migration to version %s successful", entry.version)
+    return True

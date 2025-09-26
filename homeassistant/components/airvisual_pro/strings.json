@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "reauth_confirm": {
+        "description": "[%key:component::airvisual_pro::config::step::user::description%]",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "user": {
+        "description": "The password can be retrieved from the AirVisual Pro's UI.",
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "ip_address": "The hostname or IP address of your AirVisual Pro device."
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "pm01": {
+        "name": "PM0.1"
+      },
+      "outdoor_air_quality_index": {
+        "name": "Outdoor air quality index"
+      }
+    }
+  }
+}

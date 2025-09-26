@@ -2,12 +2,16 @@
   "config": {
     "step": {
       "user": {
-        "title": "Twente Milieu",
         "description": "Set up Twente Milieu providing waste collection information on your address.",
         "data": {
           "post_code": "Postal code",
           "house_number": "House number",
           "house_letter": "House letter/additional"
+        },
+        "data_description": {
+          "post_code": "The postal code of the address, for example 7500AA",
+          "house_number": "The house number of the address",
+          "house_letter": "The house letter or additional information of the address"
         }
       }
     },
@@ -15,6 +19,27 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_address": "Address not found in Twente Milieu service area."
     },
-    "abort": { "already_configured": "[%key:common::config_flow::abort::already_configured_location%]" }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "non_recyclable_waste_pickup": {
+        "name": "Non-recyclable waste pickup"
+      },
+      "organic_waste_pickup": {
+        "name": "Organic waste pickup"
+      },
+      "packages_waste_pickup": {
+        "name": "Packages waste pickup"
+      },
+      "paper_waste_pickup": {
+        "name": "Paper waste pickup"
+      },
+      "christmas_tree_pickup": {
+        "name": "Christmas tree pickup"
+      }
+    }
   }
 }

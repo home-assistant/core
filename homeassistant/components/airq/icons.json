@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "health_index": {
+        "default": "mdi:heart-pulse"
+      },
+      "oxygen": {
+        "default": "mdi:leaf"
+      },
+      "performance_index": {
+        "default": "mdi:head-check"
+      },
+      "radon": {
+        "default": "mdi:radioactive"
+      },
+      "virus_index": {
+        "default": "mdi:virus-off"
+      }
+    }
+  }
+}

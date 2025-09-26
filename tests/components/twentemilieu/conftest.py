@@ -1,4 +1,5 @@
 """Fixtures for the Twente Milieu integration tests."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -37,7 +38,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[None, None, None]:
+def mock_setup_entry() -> Generator[None]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.twentemilieu.async_setup_entry", return_value=True
@@ -46,30 +47,26 @@ def mock_setup_entry() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def mock_twentemilieu_config_flow() -> Generator[None, MagicMock, None]:
+def mock_twentemilieu() -> Generator[MagicMock]:
     """Return a mocked Twente Milieu client."""
-    with patch(
-        "homeassistant.components.twentemilieu.config_flow.TwenteMilieu", autospec=True
-    ) as twentemilieu_mock:
-        twentemilieu = twentemilieu_mock.return_value
-        twentemilieu.unique_id.return_value = 12345
-        yield twentemilieu
-
-
-@pytest.fixture
-def mock_twentemilieu() -> Generator[None, MagicMock, None]:
-    """Return a mocked Twente Milieu client."""
-    with patch(
-        "homeassistant.components.twentemilieu.TwenteMilieu", autospec=True
-    ) as twentemilieu_mock:
+    with (
+        patch(
+            "homeassistant.components.twentemilieu.coordinator.TwenteMilieu",
+            autospec=True,
+        ) as twentemilieu_mock,
+        patch(
+            "homeassistant.components.twentemilieu.config_flow.TwenteMilieu",
+            new=twentemilieu_mock,
+        ),
+    ):
         twentemilieu = twentemilieu_mock.return_value
         twentemilieu.unique_id.return_value = 12345
         twentemilieu.update.return_value = {
-            WasteType.NON_RECYCLABLE: date(2021, 11, 1),
-            WasteType.ORGANIC: date(2021, 11, 2),
-            WasteType.PACKAGES: date(2021, 11, 3),
-            WasteType.PAPER: None,
-            WasteType.TREE: date(2022, 1, 6),
+            WasteType.NON_RECYCLABLE: [date(2021, 11, 1), date(2021, 12, 1)],
+            WasteType.ORGANIC: [date(2021, 11, 2)],
+            WasteType.PACKAGES: [date(2021, 11, 3)],
+            WasteType.PAPER: [],
+            WasteType.TREE: [date(2022, 1, 6)],
         }
         yield twentemilieu
 

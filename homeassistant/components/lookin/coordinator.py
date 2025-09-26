@@ -1,19 +1,22 @@
 """Coordinator for lookin devices."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 import time
-from typing import cast
+from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
+from .const import NEVER_TIME, POLLING_FALLBACK_SECONDS
 
-NEVER_TIME = -120.0  # Time that will never match time.monotonic()
-ACTIVE_UPDATES_INTERVAL = 3  # Consider active for 3x the update interval
+if TYPE_CHECKING:
+    from .models import LookinConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class LookinPushCoordinator:
@@ -31,9 +34,7 @@ class LookinPushCoordinator:
     def active(self, interval: timedelta) -> bool:
         """Check if the last push update was recently."""
         time_since_last_update = time.monotonic() - self.last_update
-        is_active = (
-            time_since_last_update < interval.total_seconds() * ACTIVE_UPDATES_INTERVAL
-        )
+        is_active = time_since_last_update < POLLING_FALLBACK_SECONDS
         _LOGGER.debug(
             "%s: push updates active: %s (time_since_last_update=%s)",
             self.name,
@@ -43,34 +44,39 @@ class LookinPushCoordinator:
         return is_active
 
 
-class LookinDataUpdateCoordinator(DataUpdateCoordinator):
+class LookinDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """DataUpdateCoordinator to gather data for a specific lookin devices."""
+
+    config_entry: LookinConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: LookinConfigEntry,
         push_coordinator: LookinPushCoordinator,
         name: str,
         update_interval: timedelta | None = None,
-        update_method: Callable[[], Awaitable[dict]] | None = None,
+        update_method: Callable[[], Awaitable[_DataT]] | None = None,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific device."""
         self.push_coordinator = push_coordinator
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=name,
             update_interval=update_interval,
             update_method=update_method,
+            always_update=False,
         )
 
     @callback
-    def async_set_updated_data(self, data: dict) -> None:
+    def async_set_updated_data(self, data: _DataT) -> None:
         """Manually update data, notify listeners and reset refresh interval, and remember."""
         self.push_coordinator.update()
         super().async_set_updated_data(data)
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> _DataT:
         """Fetch data only if we have not received a push inside the interval."""
         interval = self.update_interval
         if (
@@ -82,4 +88,4 @@ class LookinDataUpdateCoordinator(DataUpdateCoordinator):
             data = self.data
         else:
             data = await super()._async_update_data()
-        return cast(dict, data)
+        return data

@@ -1,19 +1,27 @@
 """The tests for the litejet component."""
+
 from datetime import timedelta
 import logging
+from typing import Any
 from unittest import mock
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant import setup
-import homeassistant.components.automation as automation
-import homeassistant.util.dt as dt_util
+from homeassistant.components import automation
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.util import dt as dt_util
 
 from . import async_init_integration
 
-from tests.common import async_fire_time_changed, async_mock_service
-from tests.components.blueprint.conftest import stub_blueprint_populate  # noqa: F401
+from tests.common import async_fire_time_changed_exact
+
+
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,13 +31,9 @@ ENTITY_OTHER_SWITCH = "switch.mock_switch_2"
 ENTITY_OTHER_SWITCH_NUMBER = 2
 
 
-@pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
-
-
-async def simulate_press(hass, mock_litejet, number):
+async def simulate_press(
+    hass: HomeAssistant, mock_litejet: MagicMock, number: int
+) -> None:
     """Test to simulate a press."""
     _LOGGER.info("*** simulate press of %d", number)
     callback = mock_litejet.switch_pressed_callbacks.get(number)
@@ -42,7 +46,9 @@ async def simulate_press(hass, mock_litejet, number):
         await hass.async_block_till_done()
 
 
-async def simulate_release(hass, mock_litejet, number):
+async def simulate_release(
+    hass: HomeAssistant, mock_litejet: MagicMock, number: int
+) -> None:
     """Test to simulate releasing."""
     _LOGGER.info("*** simulate release of %d", number)
     callback = mock_litejet.switch_released_callbacks.get(number)
@@ -55,7 +61,9 @@ async def simulate_release(hass, mock_litejet, number):
         await hass.async_block_till_done()
 
 
-async def simulate_time(hass, mock_litejet, delta):
+async def simulate_time(
+    hass: HomeAssistant, mock_litejet: MagicMock, delta: timedelta
+) -> None:
     """Test to simulate time."""
     _LOGGER.info(
         "*** simulate time change by %s: %s", delta, mock_litejet.start_time + delta
@@ -65,13 +73,13 @@ async def simulate_time(hass, mock_litejet, delta):
         "homeassistant.helpers.condition.dt_util.utcnow",
         return_value=mock_litejet.start_time + delta,
     ):
-        _LOGGER.info("now=%s", dt_util.utcnow())
-        async_fire_time_changed(hass, mock_litejet.start_time + delta)
+        _LOGGER.info("*** now=%s", dt_util.utcnow())
+        async_fire_time_changed_exact(hass, mock_litejet.start_time + delta)
         await hass.async_block_till_done()
-        _LOGGER.info("done with now=%s", dt_util.utcnow())
+        _LOGGER.info("*** done with now=%s", dt_util.utcnow())
 
 
-async def setup_automation(hass, trigger):
+async def setup_automation(hass: HomeAssistant, trigger: dict[str, Any]) -> None:
     """Test setting up the automation."""
     await async_init_integration(hass, use_switch=True)
     assert await setup.async_setup_component(
@@ -93,7 +101,9 @@ async def setup_automation(hass, trigger):
     await hass.async_block_till_done()
 
 
-async def test_simple(hass, calls, mock_litejet):
+async def test_simple(
+    hass: HomeAssistant, service_calls: list[ServiceCall], mock_litejet: MagicMock
+) -> None:
     """Test the simplest form of a LiteJet trigger."""
     await setup_automation(
         hass, {"platform": "litejet", "number": ENTITY_OTHER_SWITCH_NUMBER}
@@ -102,153 +112,182 @@ async def test_simple(hass, calls, mock_litejet):
     await simulate_press(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
     await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
 
-    assert len(calls) == 1
-    assert calls[0].data["id"] == 0
+    assert len(service_calls) == 1
+    assert service_calls[0].data["id"] == 0
 
 
-async def test_held_more_than_short(hass, calls, mock_litejet):
+async def test_only_release(
+    hass: HomeAssistant, service_calls: list[ServiceCall], mock_litejet: MagicMock
+) -> None:
+    """Test the simplest form of a LiteJet trigger."""
+    await setup_automation(
+        hass, {"platform": "litejet", "number": ENTITY_OTHER_SWITCH_NUMBER}
+    )
+
+    await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
+
+    assert len(service_calls) == 0
+
+
+async def test_held_more_than_short(
+    hass: HomeAssistant, service_calls: list[ServiceCall], mock_litejet: MagicMock
+) -> None:
     """Test a too short hold."""
     await setup_automation(
         hass,
         {
             "platform": "litejet",
             "number": ENTITY_OTHER_SWITCH_NUMBER,
-            "held_more_than": {"milliseconds": "200"},
+            "held_more_than": {"milliseconds": "2000"},
         },
     )
 
     await simulate_press(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
-    await simulate_time(hass, mock_litejet, timedelta(seconds=0.1))
+    await simulate_time(hass, mock_litejet, timedelta(seconds=1))
     await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
 
-async def test_held_more_than_long(hass, calls, mock_litejet):
+async def test_held_more_than_long(
+    hass: HomeAssistant, service_calls: list[ServiceCall], mock_litejet: MagicMock
+) -> None:
     """Test a hold that is long enough."""
     await setup_automation(
         hass,
         {
             "platform": "litejet",
             "number": ENTITY_OTHER_SWITCH_NUMBER,
-            "held_more_than": {"milliseconds": "200"},
+            "held_more_than": {"milliseconds": "2000"},
         },
     )
 
     await simulate_press(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
-    assert len(calls) == 0
-    await simulate_time(hass, mock_litejet, timedelta(seconds=0.3))
-    assert len(calls) == 1
-    assert calls[0].data["id"] == 0
+    assert len(service_calls) == 0
+    await simulate_time(hass, mock_litejet, timedelta(seconds=3))
+    assert len(service_calls) == 1
+    assert service_calls[0].data["id"] == 0
     await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
-    assert len(calls) == 1
+    assert len(service_calls) == 1
 
 
-async def test_held_less_than_short(hass, calls, mock_litejet):
+async def test_held_less_than_short(
+    hass: HomeAssistant, service_calls: list[ServiceCall], mock_litejet: MagicMock
+) -> None:
     """Test a hold that is short enough."""
     await setup_automation(
         hass,
         {
             "platform": "litejet",
             "number": ENTITY_OTHER_SWITCH_NUMBER,
-            "held_less_than": {"milliseconds": "200"},
+            "held_less_than": {"milliseconds": "2000"},
         },
     )
 
     await simulate_press(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
-    await simulate_time(hass, mock_litejet, timedelta(seconds=0.1))
-    assert len(calls) == 0
+    await simulate_time(hass, mock_litejet, timedelta(seconds=1))
+    assert len(service_calls) == 0
     await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
-    assert len(calls) == 1
-    assert calls[0].data["id"] == 0
+    assert len(service_calls) == 1
+    assert service_calls[0].data["id"] == 0
 
 
-async def test_held_less_than_long(hass, calls, mock_litejet):
+async def test_held_less_than_long(
+    hass: HomeAssistant, service_calls: list[ServiceCall], mock_litejet: MagicMock
+) -> None:
     """Test a hold that is too long."""
     await setup_automation(
         hass,
         {
             "platform": "litejet",
             "number": ENTITY_OTHER_SWITCH_NUMBER,
-            "held_less_than": {"milliseconds": "200"},
+            "held_less_than": {"milliseconds": "2000"},
         },
     )
 
     await simulate_press(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
-    assert len(calls) == 0
-    await simulate_time(hass, mock_litejet, timedelta(seconds=0.3))
-    assert len(calls) == 0
+    assert len(service_calls) == 0
+    await simulate_time(hass, mock_litejet, timedelta(seconds=3))
+    assert len(service_calls) == 0
     await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
 
-async def test_held_in_range_short(hass, calls, mock_litejet):
+async def test_held_in_range_short(
+    hass: HomeAssistant, service_calls: list[ServiceCall], mock_litejet: MagicMock
+) -> None:
     """Test an in-range trigger with a too short hold."""
     await setup_automation(
         hass,
         {
             "platform": "litejet",
             "number": ENTITY_OTHER_SWITCH_NUMBER,
-            "held_more_than": {"milliseconds": "100"},
-            "held_less_than": {"milliseconds": "300"},
+            "held_more_than": {"milliseconds": "1000"},
+            "held_less_than": {"milliseconds": "3000"},
         },
     )
 
     await simulate_press(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
-    await simulate_time(hass, mock_litejet, timedelta(seconds=0.05))
+    await simulate_time(hass, mock_litejet, timedelta(seconds=0.5))
     await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
 
-async def test_held_in_range_just_right(hass, calls, mock_litejet):
+async def test_held_in_range_just_right(
+    hass: HomeAssistant, service_calls: list[ServiceCall], mock_litejet: MagicMock
+) -> None:
     """Test an in-range trigger with a just right hold."""
     await setup_automation(
         hass,
         {
             "platform": "litejet",
             "number": ENTITY_OTHER_SWITCH_NUMBER,
-            "held_more_than": {"milliseconds": "100"},
-            "held_less_than": {"milliseconds": "300"},
+            "held_more_than": {"milliseconds": "1000"},
+            "held_less_than": {"milliseconds": "3000"},
         },
     )
 
     await simulate_press(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
-    assert len(calls) == 0
-    await simulate_time(hass, mock_litejet, timedelta(seconds=0.2))
-    assert len(calls) == 0
+    assert len(service_calls) == 0
+    await simulate_time(hass, mock_litejet, timedelta(seconds=2))
+    assert len(service_calls) == 0
     await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
-    assert len(calls) == 1
-    assert calls[0].data["id"] == 0
+    assert len(service_calls) == 1
+    assert service_calls[0].data["id"] == 0
 
 
-async def test_held_in_range_long(hass, calls, mock_litejet):
+async def test_held_in_range_long(
+    hass: HomeAssistant, service_calls: list[ServiceCall], mock_litejet: MagicMock
+) -> None:
     """Test an in-range trigger with a too long hold."""
     await setup_automation(
         hass,
         {
             "platform": "litejet",
             "number": ENTITY_OTHER_SWITCH_NUMBER,
-            "held_more_than": {"milliseconds": "100"},
-            "held_less_than": {"milliseconds": "300"},
+            "held_more_than": {"milliseconds": "1000"},
+            "held_less_than": {"milliseconds": "3000"},
         },
     )
 
     await simulate_press(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
-    assert len(calls) == 0
-    await simulate_time(hass, mock_litejet, timedelta(seconds=0.4))
-    assert len(calls) == 0
+    assert len(service_calls) == 0
+    await simulate_time(hass, mock_litejet, timedelta(seconds=4))
+    assert len(service_calls) == 0
     await simulate_release(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
 
-async def test_reload(hass, calls, mock_litejet):
+async def test_reload(
+    hass: HomeAssistant, service_calls: list[ServiceCall], mock_litejet: MagicMock
+) -> None:
     """Test reloading automation."""
     await setup_automation(
         hass,
         {
             "platform": "litejet",
             "number": ENTITY_OTHER_SWITCH_NUMBER,
-            "held_more_than": {"milliseconds": "100"},
-            "held_less_than": {"milliseconds": "300"},
+            "held_more_than": {"milliseconds": "1000"},
+            "held_less_than": {"milliseconds": "3000"},
         },
     )
 
@@ -260,7 +299,7 @@ async def test_reload(hass, calls, mock_litejet):
                 "trigger": {
                     "platform": "litejet",
                     "number": ENTITY_OTHER_SWITCH_NUMBER,
-                    "held_more_than": {"milliseconds": "1000"},
+                    "held_more_than": {"milliseconds": "10000"},
                 },
                 "action": {"service": "test.automation"},
             }
@@ -274,8 +313,8 @@ async def test_reload(hass, calls, mock_litejet):
         await hass.async_block_till_done()
 
     await simulate_press(hass, mock_litejet, ENTITY_OTHER_SWITCH_NUMBER)
-    assert len(calls) == 0
-    await simulate_time(hass, mock_litejet, timedelta(seconds=0.5))
-    assert len(calls) == 0
-    await simulate_time(hass, mock_litejet, timedelta(seconds=1.25))
-    assert len(calls) == 1
+    assert len(service_calls) == 1
+    await simulate_time(hass, mock_litejet, timedelta(seconds=5))
+    assert len(service_calls) == 1
+    await simulate_time(hass, mock_litejet, timedelta(seconds=12.5))
+    assert len(service_calls) == 2

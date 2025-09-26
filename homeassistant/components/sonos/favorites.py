@@ -1,4 +1,5 @@
 """Class representing Sonos favorites."""
+
 from __future__ import annotations
 
 from collections.abc import Iterator
@@ -11,9 +12,10 @@ from soco.data_structures import DidlFavorite
 from soco.events_base import Event as SonosEvent
 from soco.exceptions import SoCoException
 
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 
-from .const import SONOS_FAVORITES_UPDATED
+from .const import SONOS_CREATE_FAVORITES_SENSOR, SONOS_FAVORITES_UPDATED
+from .helpers import soco_error
 from .household_coordinator import SonosHouseholdCoordinator
 
 if TYPE_CHECKING:
@@ -31,10 +33,20 @@ class SonosFavorites(SonosHouseholdCoordinator):
         self._favorites: list[DidlFavorite] = []
         self.last_polled_ids: dict[str, int] = {}
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> Iterator[DidlFavorite]:
         """Return an iterator for the known favorites."""
         favorites = self._favorites.copy()
         return iter(favorites)
+
+    def setup(self, soco: SoCo) -> None:
+        """Override to send a signal on base class setup completion."""
+        super().setup(soco)
+        dispatcher_send(self.hass, SONOS_CREATE_FAVORITES_SENSOR, self)
+
+    @property
+    def count(self) -> int:
+        """Return the number of favorites."""
+        return len(self._favorites)
 
     def lookup_by_item_id(self, item_id: str) -> DidlFavorite | None:
         """Return the favorite object with the provided item_id."""
@@ -60,10 +72,10 @@ class SonosFavorites(SonosHouseholdCoordinator):
         """Process the event payload in an async lock and update entities."""
         event_id = event.variables["favorites_update_id"]
         container_ids = event.variables["container_update_i_ds"]
-        if not (match := re.search(r"FV:2,(\d+)", container_ids)):
+        if not container_ids or not (match := re.search(r"FV:2,(\d+)", container_ids)):
             return
 
-        container_id = int(match.groups()[0])
+        container_id = int(match.group(1))
         event_id = int(event_id.split(",")[-1])
 
         async with self.cache_update_lock:
@@ -90,9 +102,13 @@ class SonosFavorites(SonosHouseholdCoordinator):
             self.last_processed_event_id = event_id
             await self.async_update_entities(speaker.soco, container_id)
 
+    @soco_error()
     def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
         """Update cache of known favorites and return if cache has changed."""
-        new_favorites = soco.music_library.get_sonos_favorites()
+        new_favorites = soco.music_library.get_sonos_favorites(full_album_art_uri=True)
+        new_playlists = soco.music_library.get_music_library_information(
+            "sonos_playlists", full_album_art_uri=True
+        )
 
         # Polled update_id values do not match event_id values
         # Each speaker can return a different polled update_id
@@ -118,6 +134,16 @@ class SonosFavorites(SonosHouseholdCoordinator):
             except SoCoException as ex:
                 # Skip unknown types
                 _LOGGER.error("Unhandled favorite '%s': %s", fav.title, ex)
+        for playlist in new_playlists:
+            playlist_reference = DidlFavorite(
+                title=playlist.title,
+                parent_id=playlist.parent_id,
+                item_id=playlist.item_id,
+                resources=playlist.resources,
+                desc=playlist.desc,
+            )
+            playlist_reference.reference = playlist
+            self._favorites.append(playlist_reference)
 
         _LOGGER.debug(
             "Cached %s favorites for household %s using %s",

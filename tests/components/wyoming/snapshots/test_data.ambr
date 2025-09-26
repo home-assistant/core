@@ -1,0 +1,11 @@
+# serializer version: 1
+# name: test_load_info
+  list([
+    dict({
+      'data': dict({
+      }),
+      'payload': None,
+      'type': 'describe',
+    }),
+  ])
+# ---

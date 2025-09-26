@@ -1,17 +1,96 @@
 {
   "system_health": {
     "info": {
-      "can_reach_cert_server": "Reach Certificate Server",
+      "can_reach_cert_server": "Reach certificate server",
       "can_reach_cloud": "Reach Home Assistant Cloud",
-      "can_reach_cloud_auth": "Reach Authentication Server",
-      "relayer_connected": "Relayer Connected",
-      "remote_connected": "Remote Connected",
-      "remote_enabled": "Remote Enabled",
-      "remote_server": "Remote Server",
-      "alexa_enabled": "Alexa Enabled",
-      "google_enabled": "Google Enabled",
+      "can_reach_cloud_auth": "Reach authentication server",
+      "certificate_status": "Certificate status",
+      "relayer_connected": "Relayer connected",
+      "relayer_region": "Relayer region",
+      "remote_connected": "Remote connected",
+      "remote_enabled": "Remote enabled",
+      "remote_server": "Remote server",
+      "alexa_enabled": "Alexa enabled",
+      "google_enabled": "Google enabled",
       "logged_in": "Logged In",
-      "subscription_expiration": "Subscription Expiration"
+      "instance_id": "Instance ID",
+      "subscription_expiration": "Subscription expiration"
+    }
+  },
+  "exceptions": {
+    "backup_size_too_large": {
+      "message": "The backup size of {size}GB is too large to be uploaded to Home Assistant Cloud."
+    }
+  },
+  "issues": {
+    "deprecated_gender": {
+      "title": "The {deprecated_option} text-to-speech option is deprecated",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::cloud::issues::deprecated_voice::title%]",
+            "description": "The `{deprecated_option}` option for text-to-speech in the {integration_name} integration is deprecated and will be removed.\nPlease update your automations and scripts to replace the `{deprecated_option}` option with an option for a supported `{replacement_option}` instead."
+          }
+        }
+      }
+    },
+    "deprecated_tts_platform_config": {
+      "title": "The Cloud text-to-speech platform configuration is deprecated",
+      "description": "The whole `platform: cloud` entry under the `tts:` section in configuration.yaml is deprecated and should be removed. You can use the UI to change settings for the Cloud text-to-speech platform. Please adjust your configuration.yaml and restart Home Assistant to fix this issue."
+    },
+    "deprecated_voice": {
+      "title": "A deprecated voice was used",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::cloud::issues::deprecated_voice::title%]",
+            "description": "The `{deprecated_voice}`voice is deprecated and will be removed.\nPlease update your automations and scripts to replace the `{deprecated_voice}` with another voice like eg. `{replacement_voice}`."
+          }
+        }
+      }
+    },
+    "legacy_subscription": {
+      "title": "Legacy subscription detected",
+      "fix_flow": {
+        "step": {
+          "confirm_change_plan": {
+            "description": "We've recently updated our subscription system. To continue using Home Assistant Cloud you need to one-time approve the change in PayPal.\n\nThis takes 1 minute and will not increase the price."
+          }
+        },
+        "abort": {
+          "operation_took_too_long": "The operation took too long. Please try again later."
+        }
+      }
+    },
+    "connection_error": {
+      "title": "No connection",
+      "description": "You do not have a connection to Home Assistant Cloud. Check your network."
+    },
+    "no_subscription": {
+      "title": "No subscription detected",
+      "description": "You do not have a Home Assistant Cloud subscription. Subscribe at {account_url}."
+    },
+    "warn_bad_custom_domain_configuration": {
+      "title": "Detected wrong custom domain configuration",
+      "description": "The DNS configuration for your custom domain ({custom_domains}) is not correct. Please check the DNS configuration of your domain and make sure it points to the correct CNAME."
+    },
+    "reset_bad_custom_domain_configuration": {
+      "title": "Custom domain ignored",
+      "description": "The DNS configuration for your custom domain ({custom_domains}) is not correct. This domain has now been ignored and will not be used for Home Assistant Cloud. If you want to use this domain, please fix the DNS configuration and restart Home Assistant. If you do not need this anymore, you can remove it from the account page."
+    },
+    "subscription_expired": {
+      "title": "Subscription has expired",
+      "description": "Your Home Assistant Cloud subscription has expired. Resubscribe at {account_url}."
+    }
+  },
+  "services": {
+    "remote_connect": {
+      "name": "Enable remote access",
+      "description": "Makes the instance UI accessible from outside of the local network by enabling your Home Assistant Cloud connection."
+    },
+    "remote_disconnect": {
+      "name": "Disable remote access",
+      "description": "Disconnects the instance UI from Home Assistant Cloud. This disables access to it from outside your local network."
     }
   }
 }

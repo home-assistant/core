@@ -1,4 +1,5 @@
 """Support for Snips on-device ASR and NLU."""
+
 from datetime import timedelta
 import json
 import logging
@@ -6,8 +7,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import mqtt
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    HomeAssistant,
+    ServiceCall,
+)
 from homeassistant.helpers import config_validation as cv, intent
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "snips"
@@ -90,6 +96,25 @@ SERVICE_SCHEMA_FEEDBACK = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Snips component."""
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_system_packages_yaml_integration_{DOMAIN}",
+        breaks_in_ha_version="2025.12.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_system_packages_yaml_integration",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Snips",
+        },
+    )
+
+    # Make sure MQTT integration is enabled and the client is available
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        _LOGGER.error("MQTT integration is not available")
+        return False
 
     async def async_set_feedback(site_ids, state):
         """Set Feedback sound state."""
@@ -134,7 +159,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         slots = {}
         for slot in request.get("slots", []):
             slots[slot["slotName"]] = {"value": resolve_slot_values(slot)}
-            slots["{}_raw".format(slot["slotName"])] = {"value": slot["rawValue"]}
+            slots[f"{slot['slotName']}_raw"] = {"value": slot["rawValue"]}
         slots["site_id"] = {"value": request.get("siteId")}
         slots["session_id"] = {"value": request.get("sessionId")}
         slots["confidenceScore"] = {"value": request["intent"]["confidenceScore"]}
@@ -171,7 +196,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await mqtt.async_publish(
             hass, "hermes/dialogueManager/startSession", json.dumps(notification)
         )
-        return
 
     async def snips_say_action(call: ServiceCall) -> None:
         """Send a Snips action message."""
@@ -188,7 +212,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await mqtt.async_publish(
             hass, "hermes/dialogueManager/startSession", json.dumps(notification)
         )
-        return
 
     async def feedback_on(call: ServiceCall) -> None:
         """Turn feedback sounds on."""

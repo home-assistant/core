@@ -1,4 +1,5 @@
 """Support for monitoring OctoPrint binary sensors."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -8,7 +9,7 @@ from pyoctoprintapi import OctoprintPrinterInfo
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import OctoprintDataUpdateCoordinator
@@ -18,7 +19,7 @@ from .const import DOMAIN
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the available OctoPrint binary sensors."""
     coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN][
@@ -36,10 +37,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
+class OctoPrintBinarySensorBase(
+    CoordinatorEntity[OctoprintDataUpdateCoordinator], BinarySensorEntity
+):
     """Representation an OctoPrint binary sensor."""
-
-    coordinator: OctoprintDataUpdateCoordinator
 
     def __init__(
         self,
@@ -52,11 +53,7 @@ class OctoPrintBinarySensorBase(CoordinatorEntity, BinarySensorEntity):
         self._device_id = device_id
         self._attr_name = f"OctoPrint {sensor_type}"
         self._attr_unique_id = f"{sensor_type}-{device_id}"
-
-    @property
-    def device_info(self):
-        """Device info."""
-        return self.coordinator.device_info
+        self._attr_device_info = coordinator.device_info
 
     @property
     def is_on(self):

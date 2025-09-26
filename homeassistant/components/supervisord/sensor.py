@@ -1,4 +1,5 @@
 """Sensor for Supervisord process status."""
+
 from __future__ import annotations
 
 import logging
@@ -6,10 +7,13 @@ import xmlrpc.client
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -20,7 +24,7 @@ ATTR_GROUP = "group"
 
 DEFAULT_URL = "http://localhost:9001/RPC2"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_URL, default=DEFAULT_URL): cv.url}
 )
 
@@ -67,7 +71,7 @@ class SupervisorProcessSensor(SensorEntity):
         return self._info.get("statename")
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self._available
 
@@ -79,7 +83,7 @@ class SupervisorProcessSensor(SensorEntity):
             ATTR_GROUP: self._info.get("group"),
         }
 
-    def update(self):
+    def update(self) -> None:
         """Update device state."""
         try:
             self._info = self._server.supervisor.getProcessInfo(

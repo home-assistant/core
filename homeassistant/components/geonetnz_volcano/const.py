@@ -1,11 +1,10 @@
 """Define constants for the GeoNet NZ Volcano integration."""
+
 from datetime import timedelta
 
 from homeassistant.const import Platform
 
 DOMAIN = "geonetnz_volcano"
-
-FEED = "feed"
 
 ATTR_ACTIVITY = "activity"
 ATTR_DISTANCE = "distance"
@@ -18,3 +17,6 @@ DEFAULT_RADIUS = 50.0
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORMS = [Platform.SENSOR]
+
+IMPERIAL_UNITS = "imperial"
+METRIC_UNITS = "metric"

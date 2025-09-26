@@ -1,0 +1,9 @@
+{
+  "domain": "switchbee",
+  "name": "SwitchBee",
+  "codeowners": ["@jafar-atili"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/switchbee",
+  "iot_class": "local_push",
+  "requirements": ["pyswitchbee==1.8.3"]
+}

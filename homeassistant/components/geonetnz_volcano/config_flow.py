@@ -1,24 +1,32 @@
 """Config flow to configure the GeoNet NZ Volcano integration."""
+
+from typing import Any
+
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
     CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .const import DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    DEFAULT_RADIUS,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    IMPERIAL_UNITS,
+    METRIC_UNITS,
+)
 
 
 @callback
-def configured_instances(hass):
+def configured_instances(hass: HomeAssistant) -> set[str]:
     """Return a set of configured GeoNet NZ Volcano instances."""
     return {
         f"{entry.data[CONF_LATITUDE]}, {entry.data[CONF_LONGITUDE]}"
@@ -26,7 +34,7 @@ def configured_instances(hass):
     }
 
 
-class GeonetnzVolcanoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class GeonetnzVolcanoFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a GeoNet NZ Volcano config flow."""
 
     async def _show_form(self, errors=None):
@@ -39,11 +47,13 @@ class GeonetnzVolcanoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors or {}
         )
 
-    async def async_step_import(self, import_config):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
+        return await self.async_step_user(import_data)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         if not user_input:
             return await self._show_form()
@@ -57,10 +67,10 @@ class GeonetnzVolcanoFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if identifier in configured_instances(self.hass):
             return await self._show_form({"base": "already_configured"})
 
-        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
-            user_input[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_IMPERIAL
+        if self.hass.config.units is US_CUSTOMARY_SYSTEM:
+            user_input[CONF_UNIT_SYSTEM] = IMPERIAL_UNITS
         else:
-            user_input[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_METRIC
+            user_input[CONF_UNIT_SYSTEM] = METRIC_UNITS
 
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         user_input[CONF_SCAN_INTERVAL] = scan_interval.total_seconds()

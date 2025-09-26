@@ -6,20 +6,59 @@
   "configurations": [
     {
       "name": "Home Assistant",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "module": "homeassistant",
       "justMyCode": false,
-      "args": ["--debug", "-c", "config"]
+      "args": [
+        "--debug",
+        "-c",
+        "config"
+      ],
+      "preLaunchTask": "Compile English translations"
     },
     {
-      // Debug by attaching to local Home Asistant server using Remote Python Debugger.
+      "name": "Home Assistant (skip pip)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "homeassistant",
+      "justMyCode": false,
+      "args": [
+        "--debug",
+        "-c",
+        "config",
+        "--skip-pip"
+      ],
+      "preLaunchTask": "Compile English translations"
+    },
+    {
+      "name": "Home Assistant: Changed tests",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "justMyCode": false,
+      "args": [
+        "--picked"
+      ],
+    },
+    {
+      "name": "Home Assistant: Debug Current Test File",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "console": "integratedTerminal",
+      "args": ["-vv", "${file}"]
+    },
+    {
+      // Debug by attaching to local Home Assistant server using Remote Python Debugger.
       // See https://www.home-assistant.io/integrations/debugpy/
       "name": "Home Assistant: Attach Local",
-      "type": "python",
+      "type": "debugpy",
       "request": "attach",
-      "port": 5678,
-      "host": "localhost",
+      "connect": {
+        "port": 5678,
+        "host": "localhost"
+      },
       "pathMappings": [
         {
           "localRoot": "${workspaceFolder}",
@@ -28,13 +67,15 @@
       ]
     },
     {
-      // Debug by attaching to remote Home Asistant server using Remote Python Debugger.
+      // Debug by attaching to remote Home Assistant server using Remote Python Debugger.
       // See https://www.home-assistant.io/integrations/debugpy/
       "name": "Home Assistant: Attach Remote",
-      "type": "python",
+      "type": "debugpy",
       "request": "attach",
-      "port": 5678,
-      "host": "homeassistant.local",
+      "connect": {
+        "port": 5678,
+        "host": "homeassistant.local"
+      },
       "pathMappings": [
         {
           "localRoot": "${workspaceFolder}",

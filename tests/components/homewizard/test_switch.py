@@ -1,293 +1,222 @@
-"""Test the update coordinator for HomeWizard."""
+"""Test the switch entity for HomeWizard."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock
+
+from homewizard_energy import UnsupportedError
+from homewizard_energy.errors import DisabledError, RequestError
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import switch
-from homeassistant.components.switch import DEVICE_CLASS_OUTLET, DEVICE_CLASS_SWITCH
+from homeassistant.components.homewizard.const import UPDATE_INTERVAL
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
+    ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
-from .generator import get_mock_device
+from tests.common import async_fire_time_changed
+
+pytestmark = [
+    pytest.mark.usefixtures("init_integration"),
+]
 
 
-async def test_switch_entity_not_loaded_when_not_available(
-    hass, mock_config_entry_data, mock_config_entry
-):
-    """Test entity loads smr version."""
+@pytest.mark.parametrize(
+    ("device_fixture", "entity_ids"),
+    [
+        (
+            "HWE-P1",
+            [
+                "switch.device",
+                "switch.device_switch_lock",
+            ],
+        ),
+        (
+            "HWE-WTR",
+            [
+                "switch.device",
+                "switch.device_switch_lock",
+            ],
+        ),
+        (
+            "SDM230",
+            [
+                "switch.device",
+                "switch.device_switch_lock",
+            ],
+        ),
+        (
+            "SDM630",
+            [
+                "switch.device",
+                "switch.device_switch_lock",
+            ],
+        ),
+        (
+            "HWE-KWH1",
+            [
+                "switch.device",
+                "switch.device_switch_lock",
+            ],
+        ),
+        (
+            "HWE-KWH3",
+            [
+                "switch.device",
+                "switch.device_switch_lock",
+            ],
+        ),
+    ],
+)
+async def test_entities_not_created_for_device(
+    hass: HomeAssistant,
+    entity_ids: list[str],
+) -> None:
+    """Ensures entities for a specific device are not created."""
+    for entity_id in entity_ids:
+        assert not hass.states.get(entity_id)
 
-    api = get_mock_device()
 
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
+@pytest.mark.parametrize(
+    ("device_fixture", "entity_id", "method", "parameter"),
+    [
+        ("HWE-SKT-11", "switch.device", "state", "power_on"),
+        ("HWE-SKT-11", "switch.device_switch_lock", "state", "switch_lock"),
+        ("HWE-SKT-11", "switch.device_cloud_connection", "system", "cloud_enabled"),
+        ("HWE-SKT-21", "switch.device", "state", "power_on"),
+        ("HWE-SKT-21", "switch.device_switch_lock", "state", "switch_lock"),
+        ("HWE-SKT-21", "switch.device_cloud_connection", "system", "cloud_enabled"),
+        ("HWE-WTR", "switch.device_cloud_connection", "system", "cloud_enabled"),
+        ("SDM230", "switch.device_cloud_connection", "system", "cloud_enabled"),
+        ("SDM630", "switch.device_cloud_connection", "system", "cloud_enabled"),
+        ("HWE-KWH1", "switch.device_cloud_connection", "system", "cloud_enabled"),
+        ("HWE-KWH3", "switch.device_cloud_connection", "system", "cloud_enabled"),
+    ],
+)
+async def test_switch_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_homewizardenergy: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_id: str,
+    method: str,
+    parameter: str,
+) -> None:
+    """Test that switch handles state changes correctly."""
+    assert (state := hass.states.get(entity_id))
+    assert snapshot == state
+
+    assert (entity_entry := entity_registry.async_get(entity_id))
+    assert snapshot == entity_entry
+
+    assert entity_entry.device_id
+    assert (device_entry := device_registry.async_get(entity_entry.device_id))
+    assert snapshot == device_entry
+
+    mocked_method = getattr(mock_homewizardenergy, method)
+
+    # Turn power_on on
+    await hass.services.async_call(
+        switch.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(mocked_method.mock_calls) == 1
+    mocked_method.assert_called_with(**{parameter: True})
+
+    # Turn power_on off
+    await hass.services.async_call(
+        switch.DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(mocked_method.mock_calls) == 2
+    mocked_method.assert_called_with(**{parameter: False})
+
+    # Test request error handling
+    mocked_method.side_effect = RequestError
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"^An error occurred while communicating with your HomeWizard Energy device$",
     ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    state_power_on = hass.states.get("sensor.product_name_aabbccddeeff_switch")
-    state_switch_lock = hass.states.get("sensor.product_name_aabbccddeeff_switch_lock")
-
-    assert state_power_on is None
-    assert state_switch_lock is None
-
-
-async def test_switch_loads_entities(hass, mock_config_entry_data, mock_config_entry):
-    """Test entity loads smr version."""
-
-    api = get_mock_device()
-    api.state = AsyncMock()
-
-    api.state.power_on = False
-    api.state.switch_lock = False
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
-    ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-
-    state_power_on = hass.states.get("switch.product_name_aabbccddeeff_switch")
-    entry_power_on = entity_registry.async_get(
-        "switch.product_name_aabbccddeeff_switch"
-    )
-    assert state_power_on
-    assert entry_power_on
-    assert entry_power_on.unique_id == "aabbccddeeff_power_on"
-    assert not entry_power_on.disabled
-    assert state_power_on.state == STATE_OFF
-    assert (
-        state_power_on.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Switch"
-    )
-    assert state_power_on.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_OUTLET
-    assert ATTR_ICON not in state_power_on.attributes
-
-    state_switch_lock = hass.states.get("switch.product_name_aabbccddeeff_switch_lock")
-    entry_switch_lock = entity_registry.async_get(
-        "switch.product_name_aabbccddeeff_switch_lock"
-    )
-
-    assert state_switch_lock
-    assert entry_switch_lock
-    assert entry_switch_lock.unique_id == "aabbccddeeff_switch_lock"
-    assert not entry_switch_lock.disabled
-    assert state_switch_lock.state == STATE_OFF
-    assert (
-        state_switch_lock.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Switch Lock"
-    )
-    assert state_switch_lock.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_SWITCH
-    assert ATTR_ICON not in state_switch_lock.attributes
-
-
-async def test_switch_power_on_off(hass, mock_config_entry_data, mock_config_entry):
-    """Test entity turns switch on and off."""
-
-    api = get_mock_device()
-    api.state = AsyncMock()
-    api.state.power_on = False
-    api.state.switch_lock = False
-
-    def set_power_on(power_on):
-        api.state.power_on = power_on
-
-    api.state.set = AsyncMock(side_effect=set_power_on)
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
-    ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert (
-            hass.states.get("switch.product_name_aabbccddeeff_switch").state
-            == STATE_OFF
-        )
-
-        # Turn power_on on
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_ON,
-            {"entity_id": "switch.product_name_aabbccddeeff_switch"},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
-        await hass.async_block_till_done()
-        assert len(api.state.set.mock_calls) == 1
-        assert (
-            hass.states.get("switch.product_name_aabbccddeeff_switch").state == STATE_ON
-        )
-
-        # Turn power_on off
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"^An error occurred while communicating with your HomeWizard Energy device$",
+    ):
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_OFF,
-            {"entity_id": "switch.product_name_aabbccddeeff_switch"},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
-        await hass.async_block_till_done()
-        assert (
-            hass.states.get("switch.product_name_aabbccddeeff_switch").state
-            == STATE_OFF
-        )
-        assert len(api.state.set.mock_calls) == 2
+    # Test disabled error handling
+    mocked_method.side_effect = DisabledError
 
-
-async def test_switch_lock_power_on_off(
-    hass, mock_config_entry_data, mock_config_entry
-):
-    """Test entity turns switch on and off."""
-
-    api = get_mock_device()
-    api.state = AsyncMock()
-    api.state.power_on = False
-    api.state.switch_lock = False
-
-    def set_switch_lock(switch_lock):
-        api.state.switch_lock = switch_lock
-
-    api.state.set = AsyncMock(side_effect=set_switch_lock)
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"^The local API is disabled$",
     ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert (
-            hass.states.get("switch.product_name_aabbccddeeff_switch_lock").state
-            == STATE_OFF
-        )
-
-        # Turn power_on on
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_ON,
-            {"entity_id": "switch.product_name_aabbccddeeff_switch_lock"},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
-        await hass.async_block_till_done()
-        assert len(api.state.set.mock_calls) == 1
-        assert (
-            hass.states.get("switch.product_name_aabbccddeeff_switch_lock").state
-            == STATE_ON
-        )
-
-        # Turn power_on off
-        await hass.services.async_call(
-            switch.DOMAIN,
-            SERVICE_TURN_OFF,
-            {"entity_id": "switch.product_name_aabbccddeeff_switch_lock"},
-            blocking=True,
-        )
-
-        await hass.async_block_till_done()
-        assert (
-            hass.states.get("switch.product_name_aabbccddeeff_switch_lock").state
-            == STATE_OFF
-        )
-        assert len(api.state.set.mock_calls) == 2
-
-
-async def test_switch_lock_sets_power_on_unavailable(
-    hass, mock_config_entry_data, mock_config_entry
-):
-    """Test entity turns switch on and off."""
-
-    api = get_mock_device()
-    api.state = AsyncMock()
-    api.state.power_on = True
-    api.state.switch_lock = False
-
-    def set_switch_lock(switch_lock):
-        api.state.switch_lock = switch_lock
-
-    api.state.set = AsyncMock(side_effect=set_switch_lock)
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=api,
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"^The local API is disabled$",
     ):
-        entry = mock_config_entry
-        entry.data = mock_config_entry_data
-        entry.add_to_hass(hass)
-
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert (
-            hass.states.get("switch.product_name_aabbccddeeff_switch").state == STATE_ON
-        )
-        assert (
-            hass.states.get("switch.product_name_aabbccddeeff_switch_lock").state
-            == STATE_OFF
-        )
-
-        # Turn power_on on
-        await hass.services.async_call(
-            switch.DOMAIN,
-            SERVICE_TURN_ON,
-            {"entity_id": "switch.product_name_aabbccddeeff_switch_lock"},
-            blocking=True,
-        )
-
-        await hass.async_block_till_done()
-        assert len(api.state.set.mock_calls) == 1
-        assert (
-            hass.states.get("switch.product_name_aabbccddeeff_switch").state
-            == STATE_UNAVAILABLE
-        )
-        assert (
-            hass.states.get("switch.product_name_aabbccddeeff_switch_lock").state
-            == STATE_ON
-        )
-
-        # Turn power_on off
         await hass.services.async_call(
             switch.DOMAIN,
             SERVICE_TURN_OFF,
-            {"entity_id": "switch.product_name_aabbccddeeff_switch_lock"},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
-        await hass.async_block_till_done()
-        assert (
-            hass.states.get("switch.product_name_aabbccddeeff_switch").state == STATE_ON
-        )
-        assert (
-            hass.states.get("switch.product_name_aabbccddeeff_switch_lock").state
-            == STATE_OFF
-        )
-        assert len(api.state.set.mock_calls) == 2
+
+@pytest.mark.parametrize("device_fixture", ["HWE-SKT-11", "HWE-SKT-21"])
+@pytest.mark.parametrize("exception", [RequestError, UnsupportedError])
+@pytest.mark.parametrize(
+    ("entity_id", "method"),
+    [
+        ("switch.device", "combined"),
+        ("switch.device_switch_lock", "combined"),
+        ("switch.device_cloud_connection", "combined"),
+    ],
+)
+async def test_switch_unreachable(
+    hass: HomeAssistant,
+    mock_homewizardenergy: MagicMock,
+    exception: Exception,
+    entity_id: str,
+    method: str,
+) -> None:
+    """Test that unreachable devices are marked as unavailable."""
+    mocked_method = getattr(mock_homewizardenergy, method)
+    mocked_method.side_effect = exception
+    async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE

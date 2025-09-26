@@ -1,11 +1,13 @@
 """Common helpers for gree test cases."""
+
 import asyncio
 import logging
 from unittest.mock import AsyncMock, Mock
 
 from greeclimate.discovery import Listener
 
-from homeassistant.components.gree.const import DISCOVERY_TIMEOUT, DOMAIN as GREE_DOMAIN
+from homeassistant.components.gree.const import DISCOVERY_TIMEOUT, DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -28,7 +30,7 @@ class FakeDiscovery:
         """Add an event listener."""
         self._listeners.append(listener)
 
-    async def scan(self, wait_for: int = 0):
+    async def scan(self, wait_for: int = 0, bcast_ifaces=None):
         """Search for devices, return mocked data."""
         self.scan_count += 1
         _LOGGER.info("CALLED SCAN %d TIMES", self.scan_count)
@@ -67,7 +69,7 @@ def build_device_info_mock(
 
 def build_device_mock(name="fake-device-1", ipAddress="1.1.1.1", mac="aabbcc112233"):
     """Build mock device object."""
-    mock = Mock(
+    return Mock(
         device_info=build_device_info_mock(name, ipAddress, mac),
         name=name,
         bind=AsyncMock(),
@@ -87,11 +89,12 @@ def build_device_mock(name="fake-device-1", ipAddress="1.1.1.1", mac="aabbcc1122
         power_save=False,
         steady_heat=False,
     )
-    return mock
 
 
-async def async_setup_gree(hass):
+async def async_setup_gree(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the gree platform."""
-    MockConfigEntry(domain=GREE_DOMAIN).add_to_hass(hass)
-    await async_setup_component(hass, GREE_DOMAIN, {GREE_DOMAIN: {"climate": {}}})
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"climate": {}}})
     await hass.async_block_till_done()
+    return entry

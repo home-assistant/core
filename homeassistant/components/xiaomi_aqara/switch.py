@@ -1,13 +1,17 @@
 """Support for Xiaomi Aqara binary sensors."""
+
 import logging
+from typing import Any
+
+from xiaomi_gateway import XiaomiGateway
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import XiaomiDevice
 from .const import DOMAIN, GATEWAYS_KEY
+from .entity import XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +31,7 @@ IN_USE = "inuse"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
     entities = []
@@ -136,19 +140,21 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
 
     def __init__(
         self,
-        device,
-        name,
-        data_key,
-        supports_power_consumption,
-        xiaomi_hub,
-        config_entry,
-    ):
+        device: dict[str, Any],
+        name: str,
+        data_key: str,
+        supports_power_consumption: bool,
+        xiaomi_hub: XiaomiGateway,
+        config_entry: ConfigEntry,
+    ) -> None:
         """Initialize the XiaomiPlug."""
         self._data_key = data_key
         self._in_use = None
         self._load_power = None
         self._power_consumed = None
         self._supports_power_consumption = supports_power_consumption
+        # Polling needed for Zigbee plug only.
+        self._attr_should_poll = supports_power_consumption
         super().__init__(device, name, xiaomi_hub, config_entry)
 
     @property
@@ -157,11 +163,6 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
         if self._data_key == "status":
             return "mdi:power-plug"
         return "mdi:power-socket"
-
-    @property
-    def is_on(self):
-        """Return true if it is on."""
-        return self._state
 
     @property
     def extra_state_attributes(self):
@@ -177,21 +178,16 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
         attrs.update(super().extra_state_attributes)
         return attrs
 
-    @property
-    def should_poll(self):
-        """Return the polling state. Polling needed for Zigbee plug only."""
-        return self._supports_power_consumption
-
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if self._write_to_hub(self._sid, **{self._data_key: "on"}):
-            self._state = True
+            self._attr_is_on = True
             self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         if self._write_to_hub(self._sid, **{self._data_key: "off"}):
-            self._state = False
+            self._attr_is_on = False
             self.schedule_update_ha_state()
 
     def parse_data(self, data, raw_data):
@@ -214,12 +210,12 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchEntity):
             return False
 
         state = value == "on"
-        if self._state == state:
+        if self._attr_is_on == state:
             return False
-        self._state = state
+        self._attr_is_on = state
         return True
 
-    def update(self):
+    def update(self) -> None:
         """Get data from hub."""
         _LOGGER.debug("Update data from hub: %s", self._name)
         self._get_from_hub(self._sid)

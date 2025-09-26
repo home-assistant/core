@@ -1,7 +1,9 @@
 """Support for Lagute LW-12 WiFi LED Controller."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import lw12
 import voluptuous as vol
@@ -11,19 +13,17 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
-    PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "LW-12 FC"
 DEFAULT_PORT = 5000
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -59,6 +59,11 @@ def setup_platform(
 class LW12WiFi(LightEntity):
     """LW-12 WiFi LED Controller."""
 
+    _attr_color_mode = ColorMode.HS
+    _attr_should_poll = False
+    _attr_supported_color_modes = {ColorMode.HS}
+    _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
+
     def __init__(self, name, lw12_light):
         """Initialise LW-12 WiFi LED Controller.
 
@@ -71,10 +76,6 @@ class LW12WiFi(LightEntity):
         self._effect = None
         self._rgb_color = [255, 255, 255]
         self._brightness = 255
-        # Setup feature list
-        self._supported_features = (
-            SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_COLOR | SUPPORT_TRANSITION
-        )
 
     @property
     def name(self):
@@ -104,11 +105,6 @@ class LW12WiFi(LightEntity):
         return self._state
 
     @property
-    def supported_features(self):
-        """Return a list of supported features."""
-        return self._supported_features
-
-    @property
     def effect_list(self):
         """Return a list of available effects.
 
@@ -121,12 +117,7 @@ class LW12WiFi(LightEntity):
         """Return True if unable to access real state of the entity."""
         return True
 
-    @property
-    def should_poll(self) -> bool:
-        """Return False to not poll the state of this entity."""
-        return False
-
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         self._light.light_on()
         if ATTR_HS_COLOR in kwargs:
@@ -134,7 +125,7 @@ class LW12WiFi(LightEntity):
             self._light.set_color(*self._rgb_color)
             self._effect = None
         if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = kwargs.get(ATTR_BRIGHTNESS)
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
             brightness = int(self._brightness / 255 * 100)
             self._light.set_light_option(lw12.LW12_LIGHT.BRIGHTNESS, brightness)
         if ATTR_EFFECT in kwargs:
@@ -153,7 +144,7 @@ class LW12WiFi(LightEntity):
             self._light.set_light_option(lw12.LW12_LIGHT.FLASH, transition_speed)
         self._state = True
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         self._light.light_off()
         self._state = False

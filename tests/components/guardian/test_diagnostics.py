@@ -1,31 +1,48 @@
 """Test Guardian diagnostics."""
+
 from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.guardian import (
-    DATA_PAIRED_SENSOR_MANAGER,
-    DOMAIN,
-    PairedSensorManager,
-)
+from homeassistant.components.guardian import GuardianData
+from homeassistant.core import HomeAssistant
 
+from tests.common import ANY, MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_entry_diagnostics(hass, config_entry, hass_client, setup_guardian):
+async def test_entry_diagnostics(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    setup_guardian: None,  # relies on config_entry fixture
+) -> None:
     """Test config entry diagnostics."""
-    paired_sensor_manager: PairedSensorManager = hass.data[DOMAIN][
-        config_entry.entry_id
-    ][DATA_PAIRED_SENSOR_MANAGER]
+    data: GuardianData = config_entry.runtime_data
 
     # Simulate the pairing of a paired sensor:
-    await paired_sensor_manager.async_pair_sensor("AABBCCDDEEFF")
+    await data.paired_sensor_manager.async_pair_sensor("AABBCCDDEEFF")
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {
         "entry": {
-            "title": "Mock Title",
+            "entry_id": config_entry.entry_id,
+            "version": 1,
+            "minor_version": 1,
+            "domain": "guardian",
+            "title": REDACTED,
             "data": {
+                "uid": REDACTED,
                 "ip_address": "192.168.1.100",
                 "port": 7777,
-                "uid": REDACTED,
             },
+            "options": {},
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "source": "user",
+            "unique_id": REDACTED,
+            "disabled_by": None,
+            "created_at": ANY,
+            "modified_at": ANY,
+            "discovery_keys": {},
+            "subentries": [],
         },
         "data": {
             "valve_controller": {

@@ -1,0 +1,12 @@
+{
+  "wifi_ssid": "simulating v1 support",
+  "wifi_strength": 100,
+  "total_power_import_kwh": 123.456,
+  "total_power_export_kwh": 123.456,
+  "active_power_w": 123,
+  "active_voltage_v": 230,
+  "active_current_a": 1.5,
+  "active_frequency_hz": 50,
+  "state_of_charge_pct": 50,
+  "cycles": 123
+}

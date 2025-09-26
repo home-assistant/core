@@ -1,11 +1,14 @@
 """Color util methods."""
+
 from __future__ import annotations
 
 import colorsys
 import math
-from typing import NamedTuple, cast
+from typing import NamedTuple
 
 import attr
+
+from .scaling import scale_to_ranged_value
 
 
 class RGBColor(NamedTuple):
@@ -172,7 +175,7 @@ COLORS = {
     "yellow": RGBColor(255, 255, 0),
     "yellowgreen": RGBColor(154, 205, 50),
     # And...
-    "homeassistant": RGBColor(3, 169, 244),
+    "homeassistant": RGBColor(24, 188, 242),
 }
 
 
@@ -180,8 +183,8 @@ COLORS = {
 class XYPoint:
     """Represents a CIE 1931 XY coordinate pair."""
 
-    x: float = attr.ib()  # pylint: disable=invalid-name
-    y: float = attr.ib()  # pylint: disable=invalid-name
+    x: float = attr.ib()
+    y: float = attr.ib()
 
 
 @attr.s()
@@ -203,9 +206,6 @@ def color_name_to_rgb(color_name: str) -> RGBColor:
         raise ValueError("Unknown color")
 
     return hex_value
-
-
-# pylint: disable=invalid-name
 
 
 def color_RGB_to_xy(
@@ -244,7 +244,7 @@ def color_RGB_to_xy_brightness(
     y = Y / (X + Y + Z)
 
     # Brightness
-    Y = 1 if Y > 1 else Y
+    Y = min(Y, 1)
     brightness = round(Y * 255)
 
     # Check if the given xy value is within the color-reach of the lamp.
@@ -294,22 +294,20 @@ def color_xy_brightness_to_RGB(
     b = X * 0.051713 - Y * 0.121364 + Z * 1.011530
 
     # Apply reverse gamma correction.
-    r, g, b = map(
-        lambda x: (12.92 * x)
-        if (x <= 0.0031308)
-        else ((1.0 + 0.055) * cast(float, pow(x, (1.0 / 2.4))) - 0.055),
-        [r, g, b],
+    r, g, b = (
+        12.92 * x if (x <= 0.0031308) else ((1.0 + 0.055) * pow(x, (1.0 / 2.4)) - 0.055)
+        for x in (r, g, b)
     )
 
     # Bring all negative components to zero.
-    r, g, b = map(lambda x: max(0, x), [r, g, b])
+    r, g, b = (max(0, x) for x in (r, g, b))
 
     # If one component is greater than 1, weight components by that value.
     max_component = max(r, g, b)
     if max_component > 1:
-        r, g, b = map(lambda x: x / max_component, [r, g, b])
+        r, g, b = (x / max_component for x in (r, g, b))
 
-    ir, ig, ib = map(lambda x: int(x * 255), [r, g, b])
+    ir, ig, ib = (int(x * 255) for x in (r, g, b))
 
     return (ir, ig, ib)
 
@@ -379,7 +377,7 @@ def color_hsv_to_RGB(iH: float, iS: float, iV: float) -> tuple[int, int, int]:
     Val is scaled 0-100
     """
     fRGB = colorsys.hsv_to_rgb(iH / 360, iS / 100, iV / 100)
-    return (int(fRGB[0] * 255), int(fRGB[1] * 255), int(fRGB[2] * 255))
+    return (round(fRGB[0] * 255), round(fRGB[1] * 255), round(fRGB[2] * 255))
 
 
 def color_hs_to_RGB(iH: float, iS: float) -> tuple[int, int, int]:
@@ -438,10 +436,12 @@ def color_rgbw_to_rgb(r: int, g: int, b: int, w: int) -> tuple[int, int, int]:
 
 
 def color_rgb_to_rgbww(
-    r: int, g: int, b: int, min_mireds: int, max_mireds: int
+    r: int, g: int, b: int, min_kelvin: int, max_kelvin: int
 ) -> tuple[int, int, int, int, int]:
     """Convert an rgb color to an rgbww representation."""
     # Find the color temperature when both white channels have equal brightness
+    max_mireds = color_temperature_kelvin_to_mired(min_kelvin)
+    min_mireds = color_temperature_kelvin_to_mired(max_kelvin)
     mired_range = max_mireds - min_mireds
     mired_midpoint = min_mireds + mired_range / 2
     color_temp_kelvin = color_temperature_mired_to_kelvin(mired_midpoint)
@@ -462,10 +462,12 @@ def color_rgb_to_rgbww(
 
 
 def color_rgbww_to_rgb(
-    r: int, g: int, b: int, cw: int, ww: int, min_mireds: int, max_mireds: int
+    r: int, g: int, b: int, cw: int, ww: int, min_kelvin: int, max_kelvin: int
 ) -> tuple[int, int, int]:
     """Convert an rgbww color to an rgb representation."""
     # Calculate color temperature of the white channels
+    max_mireds = color_temperature_kelvin_to_mired(min_kelvin)
+    min_mireds = color_temperature_kelvin_to_mired(max_kelvin)
     mired_range = max_mireds - min_mireds
     try:
         ct_ratio = ww / (cw + ww)
@@ -508,8 +510,7 @@ def color_temperature_to_hs(color_temperature_kelvin: float) -> tuple[float, flo
 def color_temperature_to_rgb(
     color_temperature_kelvin: float,
 ) -> tuple[float, float, float]:
-    """
-    Return an RGB color from a color temperature in Kelvin.
+    """Return an RGB color from a color temperature in Kelvin.
 
     This is a rough approximation based on the formula provided by T. Helland
     http://www.tannerhelland.com/4435/convert-temperature-rgb-algorithm-code/
@@ -532,9 +533,15 @@ def color_temperature_to_rgb(
 
 
 def color_temperature_to_rgbww(
-    temperature: int, brightness: int, min_mireds: int, max_mireds: int
+    temperature: int, brightness: int, min_kelvin: int, max_kelvin: int
 ) -> tuple[int, int, int, int, int]:
-    """Convert color temperature in mireds to rgbcw."""
+    """Convert color temperature in kelvin to rgbcw.
+
+    Returns a (r, g, b, cw, ww) tuple.
+    """
+    max_mireds = color_temperature_kelvin_to_mired(min_kelvin)
+    min_mireds = color_temperature_kelvin_to_mired(max_kelvin)
+    temperature = color_temperature_kelvin_to_mired(temperature)
     mired_range = max_mireds - min_mireds
     cold = ((max_mireds - temperature) / mired_range) * brightness
     warm = brightness - cold
@@ -542,28 +549,50 @@ def color_temperature_to_rgbww(
 
 
 def rgbww_to_color_temperature(
-    rgbww: tuple[int, int, int, int, int], min_mireds: int, max_mireds: int
+    rgbww: tuple[int, int, int, int, int], min_kelvin: int, max_kelvin: int
 ) -> tuple[int, int]:
-    """Convert rgbcw to color temperature in mireds."""
+    """Convert rgbcw to color temperature in kelvin.
+
+    Returns a tuple (color_temperature, brightness).
+    """
     _, _, _, cold, warm = rgbww
-    return while_levels_to_color_temperature(cold, warm, min_mireds, max_mireds)
+    return _white_levels_to_color_temperature(cold, warm, min_kelvin, max_kelvin)
 
 
-def while_levels_to_color_temperature(
-    cold: int, warm: int, min_mireds: int, max_mireds: int
+def _white_levels_to_color_temperature(
+    cold: int, warm: int, min_kelvin: int, max_kelvin: int
 ) -> tuple[int, int]:
-    """Convert whites to color temperature in mireds."""
+    """Convert whites to color temperature in kelvin.
+
+    Returns a tuple (color_temperature, brightness).
+    """
+    max_mireds = color_temperature_kelvin_to_mired(min_kelvin)
+    min_mireds = color_temperature_kelvin_to_mired(max_kelvin)
     brightness = warm / 255 + cold / 255
     if brightness == 0:
-        return (max_mireds, 0)
+        # Return the warmest color if brightness is 0
+        return (min_kelvin, 0)
     return round(
-        ((cold / 255 / brightness) * (min_mireds - max_mireds)) + max_mireds
+        color_temperature_mired_to_kelvin(
+            ((cold / 255 / brightness) * (min_mireds - max_mireds)) + max_mireds
+        )
     ), min(255, round(brightness * 255))
 
 
-def _clamp(color_component: float, minimum: float = 0, maximum: float = 255) -> float:
+def color_xy_to_temperature(x: float, y: float) -> int:
+    """Convert an xy color to a color temperature in Kelvin.
+
+    Uses McCamy's approximation (https://doi.org/10.1002/col.5080170211),
+    close enough for uses between 2000 K and 10000 K.
     """
-    Clamp the given color component value between the given min and max values.
+    n = (x - 0.3320) / (0.1858 - y)
+    CCT = 437 * (n**3) + 3601 * (n**2) + 6861 * n + 5517
+
+    return int(CCT)
+
+
+def _clamp(color_component: float, minimum: float = 0, maximum: float = 255) -> float:
+    """Clamp the given color component value between the given min and max values.
 
     The range defined by the minimum and maximum values is inclusive, i.e. given a
     color_component of 0 and a minimum of 10, the returned value is 10.
@@ -625,8 +654,7 @@ def get_distance_between_two_points(one: XYPoint, two: XYPoint) -> float:
 
 
 def get_closest_point_to_line(A: XYPoint, B: XYPoint, P: XYPoint) -> XYPoint:
-    """
-    Find the closest point from P to a line defined by A and B.
+    """Find the closest point from P to a line defined by A and B.
 
     This point will be reproducible by the lamp
     as it is on the edge of the gamut.
@@ -648,8 +676,7 @@ def get_closest_point_to_line(A: XYPoint, B: XYPoint, P: XYPoint) -> XYPoint:
 def get_closest_point_to_point(
     xy_tuple: tuple[float, float], Gamut: GamutType
 ) -> tuple[float, float]:
-    """
-    Get the closest matching color within the gamut of the light.
+    """Get the closest matching color within the gamut of the light.
 
     Should only be used if the supplied color is outside of the color gamut.
     """
@@ -720,3 +747,38 @@ def check_valid_gamut(Gamut: GamutType) -> bool:
     )
 
     return not_on_line and red_valid and green_valid and blue_valid
+
+
+def brightness_to_value(low_high_range: tuple[float, float], brightness: int) -> float:
+    """Given a brightness_scale convert a brightness to a single value.
+
+    Do not include 0 if the light is off for value 0.
+
+    Given a brightness low_high_range of (1,100) this function
+    will return:
+
+    255: 100.0
+    127: ~49.8039
+    10: ~3.9216
+    """
+    return scale_to_ranged_value((1, 255), low_high_range, brightness)
+
+
+def value_to_brightness(low_high_range: tuple[float, float], value: float) -> int:
+    """Given a brightness_scale convert a single value to a brightness.
+
+    Do not include 0 if the light is off for value 0.
+
+    Given a brightness low_high_range of (1,100) this function
+    will return:
+
+    100: 255
+    50: 128
+    4: 10
+
+    The value will be clamped between 1..255 to ensure valid value.
+    """
+    return min(
+        255,
+        max(1, round(scale_to_ranged_value(low_high_range, (1, 255), value))),
+    )

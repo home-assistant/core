@@ -1,50 +1,57 @@
 {
   "domain": "flux_led",
   "name": "Magic Home",
+  "codeowners": ["@icemanch"],
   "config_flow": true,
   "dependencies": ["network"],
-  "documentation": "https://www.home-assistant.io/integrations/flux_led",
-  "requirements": ["flux_led==0.28.21"],
-  "quality_scale": "platinum",
-  "codeowners": ["@icemanch", "@bdraco"],
-  "iot_class": "local_push",
   "dhcp": [
-  {
-    "macaddress": "18B905*",
-    "hostname": "[ba][lk]*"
-  },
-  {
-    "macaddress": "249494*",
-    "hostname": "[ba][lk]*"
-  },
-  {
-    "macaddress": "7CB94C*",
-    "hostname": "[ba][lk]*"
-  },
-  {
-    "macaddress": "ACCF23*",
-    "hostname": "[hba][flk]*"
-  },
-  {
-    "macaddress": "B4E842*",
-    "hostname": "[ba][lk]*"
-  },
-  {
-    "macaddress": "F0FE6B*",
-    "hostname": "[hba][flk]*"
-  },
-  {
-    "macaddress": "8CCE4E*",
-    "hostname": "lwip*"
-  },
-  {
-    "hostname": "zengge_[0-9a-f][0-9a-f]_*"
-  },
-  {
-    "macaddress": "C82E47*",
-    "hostname": "sta*"
-  }
+    {
+      "registered_devices": true
+    },
+    {
+      "macaddress": "18B905*",
+      "hostname": "[ba][lk]*"
+    },
+    {
+      "macaddress": "249494*",
+      "hostname": "[ba][lk]*"
+    },
+    {
+      "macaddress": "7CB94C*",
+      "hostname": "[ba][lk]*"
+    },
+    {
+      "macaddress": "ACCF23*",
+      "hostname": "[hba][flk]*"
+    },
+    {
+      "macaddress": "B4E842*",
+      "hostname": "[ba][lk]*"
+    },
+    {
+      "macaddress": "F0FE6B*",
+      "hostname": "[hba][flk]*"
+    },
+    {
+      "macaddress": "8CCE4E*",
+      "hostname": "lwip*"
+    },
+    {
+      "hostname": "hf-lpb100-zj*"
+    },
+    {
+      "hostname": "zengge_[0-9a-f][0-9a-f]_*"
+    },
+    {
+      "hostname": "zengge"
+    },
+    {
+      "macaddress": "C82E47*",
+      "hostname": "sta*"
+    }
   ],
-  "loggers": ["flux_led"]
+  "documentation": "https://www.home-assistant.io/integrations/flux_led",
+  "iot_class": "local_push",
+  "loggers": ["flux_led"],
+  "requirements": ["flux-led==1.2.0"]
 }
-

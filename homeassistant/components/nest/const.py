@@ -2,15 +2,18 @@
 
 DOMAIN = "nest"
 DATA_SDM = "sdm"
-DATA_SUBSCRIBER = "subscriber"
-DATA_NEST_CONFIG = "nest_config"
 
 WEB_AUTH_DOMAIN = DOMAIN
 INSTALLED_AUTH_DOMAIN = f"{DOMAIN}.installed"
 
 CONF_PROJECT_ID = "project_id"
-CONF_SUBSCRIBER_ID = "subscriber_id"
+CONF_TOPIC_NAME = "topic_name"
+CONF_SUBSCRIPTION_NAME = "subscription_name"
+CONF_SUBSCRIBER_ID = "subscriber_id"  # Old format
+CONF_SUBSCRIBER_ID_IMPORTED = "subscriber_id_imported"
 CONF_CLOUD_PROJECT_ID = "cloud_project_id"
+
+CONNECTIVITY_TRAIT_OFFLINE = "OFFLINE"
 
 SIGNAL_NEST_UPDATE = "nest_update"
 
@@ -24,4 +27,3 @@ SDM_SCOPES = [
     "https://www.googleapis.com/auth/pubsub",
 ]
 API_URL = "https://smartdevicemanagement.googleapis.com/v1"
-OOB_REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob"

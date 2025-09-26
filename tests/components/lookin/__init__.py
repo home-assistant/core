@@ -1,11 +1,13 @@
 """Tests for the lookin integration."""
+
 from __future__ import annotations
 
+from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
 from aiolookin import Climate, Device, Remote
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 DEVICE_ID = "98F33163"
 MODULE = "homeassistant.components.lookin"
@@ -18,7 +20,8 @@ DEFAULT_ENTRY_TITLE = DEVICE_NAME
 ZC_NAME = f"LOOKin_{DEVICE_ID}"
 ZC_TYPE = "_lookin._tcp."
 ZEROCONF_DATA = ZeroconfServiceInfo(
-    host=IP_ADDRESS,
+    ip_address=ip_address(IP_ADDRESS),
+    ip_addresses=[ip_address(IP_ADDRESS)],
     hostname=f"{ZC_NAME.lower()}.local.",
     port=80,
     type=ZC_TYPE,
@@ -28,13 +31,11 @@ ZEROCONF_DATA = ZeroconfServiceInfo(
 
 
 def _mocked_climate() -> Climate:
-    climate = MagicMock(auto_spec=Climate)
-    return climate
+    return MagicMock(auto_spec=Climate)
 
 
 def _mocked_remote() -> Remote:
-    remote = MagicMock(auto_spec=Remote)
-    return remote
+    return MagicMock(auto_spec=Remote)
 
 
 def _mocked_device() -> Device:

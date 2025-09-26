@@ -1,51 +1,95 @@
 """Support for Overkiz (virtual) buttons."""
+
 from __future__ import annotations
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from dataclasses import dataclass
 
-from . import HomeAssistantOverkizData
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
+from pyoverkiz.enums import OverkizCommand, OverkizCommandParam
+from pyoverkiz.types import StateType as OverkizStateType
+
+from homeassistant.components.button import (
+    ButtonDeviceClass,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import OverkizDataConfigEntry
+from .const import IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
-BUTTON_DESCRIPTIONS: list[ButtonEntityDescription] = [
+
+@dataclass(frozen=True)
+class OverkizButtonDescription(ButtonEntityDescription):
+    """Class to describe an Overkiz button."""
+
+    press_args: OverkizStateType | None = None
+
+
+BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
     # My Position (cover, light)
-    ButtonEntityDescription(
-        key="my",
-        name="My Position",
+    OverkizButtonDescription(
+        key=OverkizCommand.MY,
+        name="My position",
         icon="mdi:star",
     ),
     # Identify
-    ButtonEntityDescription(
-        key="identify",  # startIdentify and identify are reversed... Swap this when fixed in API.
-        name="Start Identify",
+    OverkizButtonDescription(
+        key=OverkizCommand.IDENTIFY,  # startIdentify and identify are reversed... Swap this when fixed in API.
+        name="Start identify",
         icon="mdi:human-greeting-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    ButtonEntityDescription(
-        key="stopIdentify",
-        name="Stop Identify",
+    OverkizButtonDescription(
+        key=OverkizCommand.STOP_IDENTIFY,
+        name="Stop identify",
         icon="mdi:human-greeting-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    ButtonEntityDescription(
-        key="startIdentify",  # startIdentify and identify are reversed... Swap this when fixed in API.
+    OverkizButtonDescription(
+        key=OverkizCommand.START_IDENTIFY,  # startIdentify and identify are reversed... Swap this when fixed in API.
         name="Identify",
         icon="mdi:human-greeting-variant",
         entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=ButtonDeviceClass.IDENTIFY,
     ),
     # RTDIndoorSiren / RTDOutdoorSiren
-    ButtonEntityDescription(key="dingDong", name="Ding Dong", icon="mdi:bell-ring"),
-    ButtonEntityDescription(key="bip", name="Bip", icon="mdi:bell-ring"),
-    ButtonEntityDescription(
-        key="fastBipSequence", name="Fast Bip Sequence", icon="mdi:bell-ring"
+    OverkizButtonDescription(
+        key=OverkizCommand.DING_DONG, name="Ding dong", icon="mdi:bell-ring"
     ),
-    ButtonEntityDescription(key="ring", name="Ring", icon="mdi:bell-ring"),
+    OverkizButtonDescription(key=OverkizCommand.BIP, name="Bip", icon="mdi:bell-ring"),
+    OverkizButtonDescription(
+        key=OverkizCommand.FAST_BIP_SEQUENCE,
+        name="Fast bip sequence",
+        icon="mdi:bell-ring",
+    ),
+    OverkizButtonDescription(
+        key=OverkizCommand.RING, name="Ring", icon="mdi:bell-ring"
+    ),
+    # DynamicScreen (ogp:blind) uses goToAlias (id 1: favorite1) instead of 'my'
+    OverkizButtonDescription(
+        key=OverkizCommand.GO_TO_ALIAS,
+        press_args="1",
+        name="My position",
+        icon="mdi:star",
+    ),
+    OverkizButtonDescription(
+        key=OverkizCommand.CYCLE,
+        name="Toggle",
+        icon="mdi:sync",
+    ),
+    # SmokeSensor
+    OverkizButtonDescription(
+        key=OverkizCommand.CHECK_EVENT_TRIGGER,
+        press_args=OverkizCommandParam.SHORT,
+        name="Test",
+        icon="mdi:smoke-detector",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 ]
 
 SUPPORTED_COMMANDS = {
@@ -55,11 +99,11 @@ SUPPORTED_COMMANDS = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: OverkizDataConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Overkiz button from a config entry."""
-    data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     entities: list[ButtonEntity] = []
 
     for device in data.coordinator.data.values():
@@ -69,15 +113,15 @@ async def async_setup_entry(
         ):
             continue
 
-        for command in device.definition.commands:
-            if description := SUPPORTED_COMMANDS.get(command.command_name):
-                entities.append(
-                    OverkizButton(
-                        device.device_url,
-                        data.coordinator,
-                        description,
-                    )
-                )
+        entities.extend(
+            OverkizButton(
+                device.device_url,
+                data.coordinator,
+                description,
+            )
+            for command in device.definition.commands
+            if (description := SUPPORTED_COMMANDS.get(command.command_name))
+        )
 
     async_add_entities(entities)
 
@@ -85,6 +129,14 @@ async def async_setup_entry(
 class OverkizButton(OverkizDescriptiveEntity, ButtonEntity):
     """Representation of an Overkiz Button."""
 
+    entity_description: OverkizButtonDescription
+
     async def async_press(self) -> None:
         """Handle the button press."""
+        if self.entity_description.press_args:
+            await self.executor.async_execute_command(
+                self.entity_description.key, self.entity_description.press_args
+            )
+            return
+
         await self.executor.async_execute_command(self.entity_description.key)

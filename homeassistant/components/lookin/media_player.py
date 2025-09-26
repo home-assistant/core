@@ -1,4 +1,5 @@
 """The lookin integration light platform."""
+
 from __future__ import annotations
 
 import logging
@@ -8,24 +9,17 @@ from aiolookin import Remote
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
 )
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP,
-)
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON, STATE_STANDBY, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, TYPE_TO_PLATFORM
+from .const import TYPE_TO_PLATFORM
 from .coordinator import LookinDataUpdateCoordinator
 from .entity import LookinPowerPushRemoteEntity
-from .models import LookinData
+from .models import LookinConfigEntry, LookinData
 
 LOGGER = logging.getLogger(__name__)
 
@@ -35,23 +29,24 @@ _TYPE_TO_DEVICE_CLASS = {
 }
 
 _FUNCTION_NAME_TO_FEATURE = {
-    "power": SUPPORT_TURN_OFF,
-    "poweron": SUPPORT_TURN_ON,
-    "poweroff": SUPPORT_TURN_OFF,
-    "mute": SUPPORT_VOLUME_MUTE,
-    "volup": SUPPORT_VOLUME_STEP,
-    "chup": SUPPORT_NEXT_TRACK,
-    "chdown": SUPPORT_PREVIOUS_TRACK,
+    "power": MediaPlayerEntityFeature.TURN_OFF,
+    "poweron": MediaPlayerEntityFeature.TURN_ON,
+    "poweroff": MediaPlayerEntityFeature.TURN_OFF,
+    "mute": MediaPlayerEntityFeature.VOLUME_MUTE,
+    "volup": MediaPlayerEntityFeature.VOLUME_STEP,
+    "chup": MediaPlayerEntityFeature.NEXT_TRACK,
+    "chdown": MediaPlayerEntityFeature.PREVIOUS_TRACK,
+    "mode": MediaPlayerEntityFeature.SELECT_SOURCE,
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: LookinConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the media_player platform for lookin from a config entry."""
-    lookin_data: LookinData = hass.data[DOMAIN][config_entry.entry_id]
+    lookin_data = config_entry.runtime_data
     entities = []
 
     for remote in lookin_data.devices:
@@ -84,15 +79,37 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
         uuid: str,
         device: Remote,
         lookin_data: LookinData,
-        device_class: str,
+        device_class: MediaPlayerDeviceClass,
     ) -> None:
         """Init the lookin media player."""
         self._attr_device_class = device_class
-        self._attr_supported_features: int = 0
         super().__init__(coordinator, uuid, device, lookin_data)
         for function_name, feature in _FUNCTION_NAME_TO_FEATURE.items():
             if function_name in self._function_names:
                 self._attr_supported_features |= feature
+        self._source_list: dict[str, str] | None = None
+
+    @property
+    def source_list(self) -> list[str]:
+        """List of available input sources."""
+        return list(self._source_list.keys()) if self._source_list else []
+
+    async def async_select_source(self, source: str) -> None:
+        """Choose an available playlist and play it."""
+        if not self._source_list:
+            return
+        await self._async_send_command(command="mode", signal=self._source_list[source])
+
+    async def async_added_to_hass(self) -> None:
+        """Get list of available input sources."""
+        if self._source_list is None and "mode" in self._function_names:
+            if sources := await self._lookin_protocol.get_media_sources(
+                uuid=self._uuid
+            ):
+                self._source_list = {
+                    f"INPUT_{index}": f"{index:02x}" for index in range(len(sources))
+                }
+        await super().async_added_to_hass()
 
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
@@ -119,13 +136,13 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._async_send_command(self._power_off_command)
-        self._attr_state = STATE_STANDBY
+        self._attr_state = MediaPlayerState.OFF
         self.async_write_ha_state()
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         await self._async_send_command(self._power_on_command)
-        self._attr_state = STATE_ON
+        self._attr_state = MediaPlayerState.ON
         self.async_write_ha_state()
 
     def _update_from_status(self, status: str) -> None:
@@ -142,5 +159,5 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
         state = status[0]
         mute = status[2]
 
-        self._attr_state = STATE_ON if state == "1" else STATE_STANDBY
+        self._attr_state = MediaPlayerState.ON if state == "1" else MediaPlayerState.OFF
         self._attr_is_volume_muted = mute == "0"

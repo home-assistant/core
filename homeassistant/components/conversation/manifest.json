@@ -1,9 +1,10 @@
 {
   "domain": "conversation",
   "name": "Conversation",
+  "codeowners": ["@home-assistant/core", "@synesthesiam", "@arturpragacz"],
+  "dependencies": ["http", "intent"],
   "documentation": "https://www.home-assistant.io/integrations/conversation",
-  "dependencies": ["http"],
-  "codeowners": ["@home-assistant/core"],
+  "integration_type": "entity",
   "quality_scale": "internal",
-  "iot_class": "local_push"
+  "requirements": ["hassil==3.2.0", "home-assistant-intents==2025.9.24"]
 }

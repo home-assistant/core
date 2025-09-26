@@ -11,11 +11,14 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your deCONZ host."
         }
       },
       "link": {
         "title": "Link with deCONZ",
-        "description": "Unlock your deCONZ gateway to register with Home Assistant.\n\n1. Go to deCONZ Settings -> Gateway -> Advanced\n2. Press \"Authenticate app\" button"
+        "description": "Unlock your deCONZ gateway to register with Home Assistant.\n\n1. Go to deCONZ Settings > Gateway > Advanced\n2. Select the **Authenticate app** button"
       },
       "hassio_confirm": {
         "title": "deCONZ Zigbee gateway via Home Assistant add-on",
@@ -23,6 +26,7 @@
       }
     },
     "error": {
+      "linking_not_possible": "Couldn't link with the gateway",
       "no_key": "Couldn't get an API key"
     },
     "abort": {
@@ -30,7 +34,6 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "no_bridges": "No deCONZ bridges discovered",
       "no_hardware_available": "No radio hardware connected to deCONZ",
-      "not_deconz_bridge": "Not a deCONZ bridge",
       "updated_instance": "Updated deCONZ instance with new host address"
     }
   },
@@ -49,14 +52,14 @@
   },
   "device_automation": {
     "trigger_type": {
-      "remote_button_short_press": "\"{subtype}\" button pressed",
-      "remote_button_short_release": "\"{subtype}\" button released",
-      "remote_button_long_press": "\"{subtype}\" button continuously pressed",
-      "remote_button_long_release": "\"{subtype}\" button released after long press",
-      "remote_button_double_press": "\"{subtype}\" button double clicked",
-      "remote_button_triple_press": "\"{subtype}\" button triple clicked",
-      "remote_button_quadruple_press": "\"{subtype}\" button quadruple clicked",
-      "remote_button_quintuple_press": "\"{subtype}\" button quintuple clicked",
+      "remote_button_short_press": "\"{subtype}\" pressed",
+      "remote_button_short_release": "\"{subtype}\" released",
+      "remote_button_long_press": "\"{subtype}\" continuously pressed",
+      "remote_button_long_release": "\"{subtype}\" released after long press",
+      "remote_button_double_press": "\"{subtype}\" double clicked",
+      "remote_button_triple_press": "\"{subtype}\" triple clicked",
+      "remote_button_quadruple_press": "\"{subtype}\" quadruple clicked",
+      "remote_button_quintuple_press": "\"{subtype}\" quintuple clicked",
       "remote_button_rotated": "Button rotated \"{subtype}\"",
       "remote_button_rotated_fast": "Button rotated fast \"{subtype}\"",
       "remote_button_rotation_stopped": "Button rotation \"{subtype}\" stopped",
@@ -70,7 +73,7 @@
       "remote_moved_any_side": "Device moved with any side up",
       "remote_double_tap_any_side": "Device double tapped on any side",
       "remote_turned_clockwise": "Device turned clockwise",
-      "remote_turned_counter_clockwise": "Device turned counter clockwise",
+      "remote_turned_counter_clockwise": "Device turned counterclockwise",
       "remote_rotate_from_side_1": "Device rotated from \"side 1\" to \"{subtype}\"",
       "remote_rotate_from_side_2": "Device rotated from \"side 2\" to \"{subtype}\"",
       "remote_rotate_from_side_3": "Device rotated from \"side 3\" to \"{subtype}\"",
@@ -79,14 +82,14 @@
       "remote_rotate_from_side_6": "Device rotated from \"side 6\" to \"{subtype}\""
     },
     "trigger_subtype": {
-      "turn_on": "Turn on",
-      "turn_off": "Turn off",
+      "turn_on": "[%key:common::action::turn_on%]",
+      "turn_off": "[%key:common::action::turn_off%]",
       "dim_up": "Dim up",
       "dim_down": "Dim down",
       "left": "Left",
       "right": "Right",
-      "open": "Open",
-      "close": "Close",
+      "open": "[%key:common::action::open%]",
+      "close": "[%key:common::action::close%]",
       "both_buttons": "Both buttons",
       "top_buttons": "Top buttons",
       "bottom_buttons": "Bottom buttons",
@@ -104,6 +107,50 @@
       "side_4": "Side 4",
       "side_5": "Side 5",
       "side_6": "Side 6"
+    }
+  },
+  "services": {
+    "configure": {
+      "name": "Configure",
+      "description": "Configures attributes of either a device endpoint in deCONZ or the deCONZ service itself.",
+      "fields": {
+        "entity": {
+          "name": "Entity",
+          "description": "Represents a specific device endpoint in deCONZ."
+        },
+        "field": {
+          "name": "[%key:common::config_flow::data::path%]",
+          "description": "String representing a full path to deCONZ endpoint (when entity is not specified) or a subpath of the device path for the entity (when entity is specified)."
+        },
+        "data": {
+          "name": "Configuration payload",
+          "description": "JSON object with what data you want to alter."
+        },
+        "bridgeid": {
+          "name": "Bridge identifier",
+          "description": "Unique string for each deCONZ hardware. It can be found as part of the integration name. Useful if you run multiple deCONZ integrations."
+        }
+      }
+    },
+    "device_refresh": {
+      "name": "Device refresh",
+      "description": "Refreshes available devices from deCONZ.",
+      "fields": {
+        "bridgeid": {
+          "name": "[%key:component::deconz::services::configure::fields::bridgeid::name%]",
+          "description": "[%key:component::deconz::services::configure::fields::bridgeid::description%]"
+        }
+      }
+    },
+    "remove_orphaned_entries": {
+      "name": "Remove orphaned entries",
+      "description": "Cleans up device and entity registry entries orphaned by deCONZ.",
+      "fields": {
+        "bridgeid": {
+          "name": "[%key:component::deconz::services::configure::fields::bridgeid::name%]",
+          "description": "[%key:component::deconz::services::configure::fields::bridgeid::description%]"
+        }
+      }
     }
   }
 }

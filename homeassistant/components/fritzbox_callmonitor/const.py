@@ -1,24 +1,24 @@
 """Constants for the AVM Fritz!Box call monitor integration."""
+
+from enum import StrEnum
+from typing import Final
+
 from homeassistant.const import Platform
 
-STATE_RINGING = "ringing"
-STATE_DIALING = "dialing"
-STATE_TALKING = "talking"
-STATE_IDLE = "idle"
 
-FRITZ_STATE_RING = "RING"
-FRITZ_STATE_CALL = "CALL"
-FRITZ_STATE_CONNECT = "CONNECT"
-FRITZ_STATE_DISCONNECT = "DISCONNECT"
+class FritzState(StrEnum):
+    """Fritz!Box call states."""
 
-ICON_PHONE = "mdi:phone"
+    RING = "RING"
+    CALL = "CALL"
+    CONNECT = "CONNECT"
+    DISCONNECT = "DISCONNECT"
+
 
 ATTR_PREFIXES = "prefixes"
 
-FRITZ_ACTION_GET_INFO = "GetInfo"
 FRITZ_ATTR_NAME = "name"
-FRITZ_ATTR_SERIAL_NUMBER = "NewSerialNumber"
-FRITZ_SERVICE_DEVICE_INFO = "DeviceInfo"
+FRITZ_ATTR_SERIAL_NUMBER = "Serial"
 
 UNKNOWN_NAME = "unknown"
 SERIAL_NUMBER = "serial_number"
@@ -34,9 +34,7 @@ DEFAULT_USERNAME = "admin"
 DEFAULT_PHONEBOOK = 0
 DEFAULT_NAME = "Phone"
 
-DOMAIN = "fritzbox_callmonitor"
-MANUFACTURER = "AVM"
+DOMAIN: Final = "fritzbox_callmonitor"
+MANUFACTURER: Final = "FRITZ!"
 
 PLATFORMS = [Platform.SENSOR]
-UNDO_UPDATE_LISTENER = "undo_update_listener"
-FRITZBOX_PHONEBOOK = "fritzbox_phonebook"

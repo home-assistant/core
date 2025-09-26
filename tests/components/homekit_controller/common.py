@@ -1,33 +1,38 @@
 """Code to support homekit_controller tests."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
-import json
 import logging
 import os
 from typing import Any, Final
 from unittest import mock
 
-from aiohomekit.model import Accessories, Accessory
+from aiohomekit.controller.abstract import AbstractDescription, AbstractPairing
+from aiohomekit.hkjson import loads as hkloads
+from aiohomekit.model import Accessories, AccessoriesState, Accessory
+from aiohomekit.model.services import Service
 from aiohomekit.testing import FakeController, FakePairing
 
-from homeassistant.components import zeroconf
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import (
     CONTROLLER,
+    DEBOUNCE_COOLDOWN,
     DOMAIN,
     HOMEKIT_ACCESSORY_DISPATCH,
     IDENTIFIER_ACCESSORY_ID,
-    IDENTIFIER_SERIAL_NUMBER,
+    SUBSCRIBE_COOLDOWN,
 )
+from homeassistant.components.homekit_controller.utils import async_get_controller
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
@@ -41,6 +46,19 @@ logger = logging.getLogger(__name__)
 
 # Root device in test harness always has an accessory id of this
 HUB_TEST_ACCESSORY_ID: Final[str] = "00:00:00:00:00:00:aid:1"
+
+TEST_ACCESSORY_ADDRESS = "AA:BB:CC:DD:EE:FF"
+
+
+TEST_DEVICE_SERVICE_INFO = BluetoothServiceInfo(
+    name="test_accessory",
+    address=TEST_ACCESSORY_ADDRESS,
+    rssi=-56,
+    manufacturer_data={},
+    service_uuids=["0000ec88-0000-1000-8000-00805f9b34fb"],
+    service_data={},
+    source="local",
+)
 
 
 @dataclass
@@ -59,8 +77,7 @@ class EntityTestInfo:
 
 @dataclass
 class DeviceTriggerInfo:
-    """
-    Describe a automation trigger we expect to be created.
+    """Describe a automation trigger we expect to be created.
 
     We only use these for a stateless characteristic like a doorbell.
     """
@@ -128,12 +145,20 @@ class Helper:
             # If they are enabled, then HA will pick up the changes next time
             # we yield control
             await time_changed(self.hass, 60)
+            await time_changed(self.hass, DEBOUNCE_COOLDOWN)
 
         await self.hass.async_block_till_done()
 
         state = self.hass.states.get(self.entity_id)
         assert state is not None
         return state
+
+    async def async_set_aid_iid_status(
+        self, aid_iid_status: list[tuple[int, int, int]]
+    ) -> None:
+        """Set the status of a set of aid/iid pairs."""
+        self.pairing.testing.set_aid_iid_status(aid_iid_status)
+        await self.hass.async_block_till_done()
 
     @callback
     def async_assert_service_values(
@@ -147,43 +172,58 @@ class Helper:
     async def poll_and_get_state(self) -> State:
         """Trigger a time based poll and return the current entity state."""
         await time_changed(self.hass, 60)
+        await time_changed(self.hass, DEBOUNCE_COOLDOWN)
 
         state = self.hass.states.get(self.entity_id)
         assert state is not None
         return state
 
 
-async def time_changed(hass, seconds):
+async def time_changed(hass: HomeAssistant, seconds: int) -> None:
     """Trigger time changed."""
     next_update = dt_util.utcnow() + timedelta(seconds)
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
 
 
-async def setup_accessories_from_file(hass, path):
+async def setup_accessories_from_file(hass: HomeAssistant, path: str) -> Accessories:
     """Load an collection of accessory defs from JSON data."""
     accessories_fixture = await hass.async_add_executor_job(
         load_fixture, os.path.join("homekit_controller", path)
     )
-    accessories_json = json.loads(accessories_fixture)
-    accessories = Accessories.from_list(accessories_json)
-    return accessories
+    accessories_json = hkloads(accessories_fixture)
+    return Accessories.from_list(accessories_json)
 
 
-async def setup_platform(hass):
+async def setup_platform(hass: HomeAssistant) -> FakeController:
     """Load the platform but with a fake Controller API."""
     config = {"discovery": {}}
 
-    with mock.patch("aiohomekit.Controller") as controller:
-        fake_controller = controller.return_value = FakeController()
+    with mock.patch(
+        "homeassistant.components.homekit_controller.utils.Controller", FakeController
+    ):
         await async_setup_component(hass, DOMAIN, config)
 
-    return fake_controller
+    return await async_get_controller(hass)
 
 
-async def setup_test_accessories(hass, accessories):
+async def setup_test_accessories(
+    hass: HomeAssistant, accessories: list[Accessory], connection: str | None = None
+) -> tuple[MockConfigEntry, AbstractPairing]:
     """Load a fake homekit device based on captured JSON profile."""
     fake_controller = await setup_platform(hass)
+    return await setup_test_accessories_with_controller(
+        hass, accessories, fake_controller, connection
+    )
+
+
+async def setup_test_accessories_with_controller(
+    hass: HomeAssistant,
+    accessories: list[Accessory],
+    fake_controller: FakeController,
+    connection: str | None = None,
+) -> tuple[MockConfigEntry, AbstractPairing]:
+    """Load a fake homekit device based on captured JSON profile."""
 
     pairing_id = "00:00:00:00:00:00"
 
@@ -192,61 +232,65 @@ async def setup_test_accessories(hass, accessories):
         accessories_obj.add_accessory(accessory)
     pairing = await fake_controller.add_paired_device(accessories_obj, pairing_id)
 
+    data = {"AccessoryPairingID": pairing_id}
+    if connection == "BLE":
+        data["Connection"] = "BLE"
+        data["AccessoryAddress"] = TEST_ACCESSORY_ADDRESS
+
     config_entry = MockConfigEntry(
         version=1,
         domain="homekit_controller",
         entry_id="TestData",
-        data={"AccessoryPairingID": pairing_id},
+        data=data,
         title="test",
     )
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
+    await time_changed(hass, SUBSCRIBE_COOLDOWN)
     await hass.async_block_till_done()
 
     return config_entry, pairing
 
 
-async def device_config_changed(hass, accessories):
+async def device_config_changed(hass: HomeAssistant, accessories: Accessories):
     """Discover new devices added to Home Assistant at runtime."""
     # Update the accessories our FakePairing knows about
     controller = hass.data[CONTROLLER]
-    pairing = controller.pairings["00:00:00:00:00:00"]
+    pairing: AbstractPairing = controller.pairings["00:00:00:00:00:00"]
 
     accessories_obj = Accessories()
     for accessory in accessories:
         accessories_obj.add_accessory(accessory)
-    pairing.accessories = accessories_obj
 
-    discovery_info = zeroconf.ZeroconfServiceInfo(
-        host="127.0.0.1",
-        hostname="mock_hostname",
-        name="TestDevice",
-        port=8080,
-        properties={
-            "md": "TestDevice",
-            "id": "00:00:00:00:00:00",
-            "c#": "2",
-            "sf": "0",
-        },
-        type="mock_type",
+    new_config_num = pairing.config_num + 1
+    pairing._async_description_update(
+        AbstractDescription(
+            name="testdevice.local.",
+            id="00:00:00:00:00:00",
+            status_flags=0,
+            config_num=new_config_num,
+            category=1,
+        )
     )
-
-    # Config Flow will abort and notify us if the discovery event is of
-    # interest - in this case c# has incremented
-    flow = config_flow.HomekitControllerFlowHandler()
-    flow.hass = hass
-    flow.context = {}
-    result = await flow.async_step_zeroconf(discovery_info)
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
+    # Set the accessories state only after calling
+    # _async_description_update, otherwise the config_num will be
+    # overwritten
+    pairing._accessories_state = AccessoriesState(accessories_obj, new_config_num)
 
     # Wait for services to reconfigure
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
 
-async def setup_test_component(hass, setup_accessory, capitalize=False, suffix=None):
+async def setup_test_component(
+    hass: HomeAssistant,
+    aid: int,
+    setup_accessory: Callable[[Accessory], Service | None],
+    capitalize: bool = False,
+    suffix: str | None = None,
+    connection: str | None = None,
+) -> Helper:
     """Load a fake homekit accessory based on a homekit accessory model.
 
     If capitalize is True, property names will be in upper case.
@@ -254,7 +298,7 @@ async def setup_test_component(hass, setup_accessory, capitalize=False, suffix=N
     If suffix is set, entityId will include the suffix
     """
     accessory = Accessory.create_with_info(
-        "TestDevice", "example.com", "Test", "0001", "0.1"
+        aid, "TestDevice", "example.com", "Test", "0001", "0.1"
     )
     setup_accessory(accessory)
 
@@ -267,9 +311,9 @@ async def setup_test_component(hass, setup_accessory, capitalize=False, suffix=N
 
     assert domain, "Cannot map test homekit services to Home Assistant domain"
 
-    config_entry, pairing = await setup_test_accessories(hass, [accessory])
+    config_entry, pairing = await setup_test_accessories(hass, [accessory], connection)
     entity = "testdevice" if suffix is None else f"testdevice_{suffix}"
-    return Helper(hass, ".".join((domain, entity)), pairing, accessory, config_entry)
+    return Helper(hass, f"{domain}.{entity}", pairing, accessory, config_entry)
 
 
 async def assert_devices_and_entities_created(
@@ -292,10 +336,7 @@ async def assert_devices_and_entities_created(
         #   we have detected broken serial numbers (and serial number is not used as an identifier).
 
         device = device_registry.async_get_device(
-            {
-                (IDENTIFIER_SERIAL_NUMBER, expected.serial_number),
-                (IDENTIFIER_ACCESSORY_ID, expected.unique_id),
-            }
+            identifiers={(IDENTIFIER_ACCESSORY_ID, expected.unique_id)}
         )
 
         logger.debug("Comparing device %r to %r", device, expected)
@@ -309,21 +350,15 @@ async def assert_devices_and_entities_created(
 
         # We might have matched the device by one identifier only
         # Lets check that the other one is correct. Otherwise the test might silently be wrong.
-        serial_number_set = False
         accessory_id_set = False
 
         for key, value in device.identifiers:
-            if key == IDENTIFIER_SERIAL_NUMBER:
-                assert value == expected.serial_number
-                serial_number_set = True
-
-            elif key == IDENTIFIER_ACCESSORY_ID:
+            if key == IDENTIFIER_ACCESSORY_ID:
                 assert value == expected.unique_id
                 accessory_id_set = True
 
         # If unique_id or serial is provided it MUST actually appear in the device registry entry.
         assert (not expected.unique_id) ^ accessory_id_set
-        assert (not expected.serial_number) ^ serial_number_set
 
         for entity_info in expected.entities:
             entity = entity_registry.async_get(entity_info.entity_id)

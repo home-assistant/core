@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up the IFTTT Webhook Applet",
+        "title": "Set up the IFTTT webhook applet",
         "description": "Are you sure you want to set up IFTTT?"
       }
     },
@@ -12,7 +12,45 @@
       "webhook_not_internet_accessible": "[%key:common::config_flow::abort::webhook_not_internet_accessible%]"
     },
     "create_entry": {
-      "default": "To send events to Home Assistant, you will need to use the \"Make a web request\" action from the [IFTTT Webhook applet]({applet_url}).\n\nFill in the following info:\n\n- URL: `{webhook_url}`\n- Method: POST\n- Content Type: application/json\n\nSee [the documentation]({docs_url}) on how to configure automations to handle incoming data."
+      "default": "To send events to Home Assistant, you will need to use the \"Make a web request\" action from the [IFTTT webhook applet]({applet_url}).\n\nFill in the following info:\n\n- URL: `{webhook_url}`\n- Method: POST\n- Content Type: application/json\n\nSee [the documentation]({docs_url}) on how to configure automations to handle incoming data."
+    }
+  },
+  "services": {
+    "push_alarm_state": {
+      "name": "Push alarm state",
+      "description": "Updates the alarm state to the specified value.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity ID",
+          "description": "Name of the alarm control panel which state has to be updated."
+        },
+        "state": {
+          "name": "State",
+          "description": "The state to which the alarm control panel has to be set."
+        }
+      }
+    },
+    "trigger": {
+      "name": "Trigger",
+      "description": "Triggers the configured IFTTT webhook.",
+      "fields": {
+        "event": {
+          "name": "Event",
+          "description": "The name of the event to send."
+        },
+        "value1": {
+          "name": "Value 1",
+          "description": "Generic field to send data via the event."
+        },
+        "value2": {
+          "name": "Value 2",
+          "description": "[%key:component::ifttt::services::trigger::fields::value1::description%]"
+        },
+        "value3": {
+          "name": "Value 3",
+          "description": "[%key:component::ifttt::services::trigger::fields::value1::description%]"
+        }
+      }
     }
   }
 }

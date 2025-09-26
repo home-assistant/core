@@ -1,14 +1,12 @@
 """Tests for the Bond button device."""
 
-from bond_api import Action, DeviceType
+from bond_async import Action, DeviceType
 
-from homeassistant import core
 from homeassistant.components.bond.button import STEP_SIZE
-from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.button.const import SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .common import patch_bond_action, patch_bond_device_state, setup_platform
 
@@ -30,6 +28,7 @@ def light_brightness_increase_decrease_only(name: str):
         "actions": [
             Action.TURN_LIGHT_ON,
             Action.TURN_LIGHT_OFF,
+            Action.START_DIMMER,
             Action.START_INCREASING_BRIGHTNESS,
             Action.START_DECREASING_BRIGHTNESS,
             Action.STOP,
@@ -58,7 +57,19 @@ def light(name: str):
     }
 
 
-async def test_entity_registry(hass: core.HomeAssistant):
+def motorized_shade(name: str):
+    """Create a motorized shade with a given name."""
+    return {
+        "name": name,
+        "type": DeviceType.MOTORIZED_SHADES,
+        "actions": [Action.OPEN, Action.OPEN_NEXT, Action.CLOSE, Action.CLOSE_NEXT],
+    }
+
+
+async def test_entity_registry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(
         hass,
@@ -68,16 +79,17 @@ async def test_entity_registry(hass: core.HomeAssistant):
         bond_device_id="test-device-id",
     )
 
-    registry: EntityRegistry = er.async_get(hass)
-    entity = registry.entities["button.name_1_stop_actions"]
+    entity = entity_registry.entities["button.name_1_stop_actions"]
     assert entity.unique_id == "test-hub-id_test-device-id_stop"
-    entity = registry.entities["button.name_1_start_increasing_brightness"]
+    entity = entity_registry.entities["button.name_1_start_increasing_brightness"]
     assert entity.unique_id == "test-hub-id_test-device-id_startincreasingbrightness"
-    entity = registry.entities["button.name_1_start_decreasing_brightness"]
+    entity = entity_registry.entities["button.name_1_start_decreasing_brightness"]
     assert entity.unique_id == "test-hub-id_test-device-id_startdecreasingbrightness"
+    entity = entity_registry.entities["button.name_1_start_dimmer"]
+    assert entity.unique_id == "test-hub-id_test-device-id_startdimmer"
 
 
-async def test_mutually_exclusive_actions(hass: core.HomeAssistant):
+async def test_mutually_exclusive_actions(hass: HomeAssistant) -> None:
     """Tests we do not create the button when there is a mutually exclusive action."""
     await setup_platform(
         hass,
@@ -89,7 +101,7 @@ async def test_mutually_exclusive_actions(hass: core.HomeAssistant):
     assert not hass.states.async_all("button")
 
 
-async def test_stop_not_created_no_other_buttons(hass: core.HomeAssistant):
+async def test_stop_not_created_no_other_buttons(hass: HomeAssistant) -> None:
     """Tests we do not create the stop button when there are no other buttons."""
     await setup_platform(
         hass,
@@ -101,7 +113,7 @@ async def test_stop_not_created_no_other_buttons(hass: core.HomeAssistant):
     assert not hass.states.async_all("button")
 
 
-async def test_press_button_with_argument(hass: core.HomeAssistant):
+async def test_press_button_with_argument(hass: HomeAssistant) -> None:
     """Tests we can press a button with an argument."""
     await setup_platform(
         hass,
@@ -140,7 +152,7 @@ async def test_press_button_with_argument(hass: core.HomeAssistant):
     )
 
 
-async def test_press_button(hass: core.HomeAssistant):
+async def test_press_button(hass: HomeAssistant) -> None:
     """Tests we can press a button."""
     await setup_platform(
         hass,
@@ -177,3 +189,38 @@ async def test_press_button(hass: core.HomeAssistant):
     mock_action.assert_called_once_with(
         "test-device-id", Action(Action.START_DECREASING_BRIGHTNESS)
     )
+
+
+async def test_motorized_shade_actions(hass: HomeAssistant) -> None:
+    """Tests motorized shade open next and close next actions."""
+    await setup_platform(
+        hass,
+        BUTTON_DOMAIN,
+        motorized_shade("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    assert hass.states.get("button.name_1_open_next")
+    assert hass.states.get("button.name_1_close_next")
+
+    with patch_bond_action() as mock_action, patch_bond_device_state():
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.name_1_open_next"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_action.assert_called_once_with("test-device-id", Action(Action.OPEN_NEXT))
+
+    with patch_bond_action() as mock_action, patch_bond_device_state():
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.name_1_close_next"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    mock_action.assert_called_once_with("test-device-id", Action(Action.CLOSE_NEXT))

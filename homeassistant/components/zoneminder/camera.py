@@ -1,20 +1,19 @@
 """Support for ZoneMinder camera streaming."""
+
 from __future__ import annotations
 
 import logging
 
-from homeassistant.components.mjpeg.camera import (
-    CONF_MJPEG_URL,
-    CONF_STILL_IMAGE_URL,
-    MjpegCamera,
-    filter_urllib3_logging,
-)
-from homeassistant.const import CONF_NAME, CONF_VERIFY_SSL
+from zoneminder.monitor import Monitor
+from zoneminder.zm import ZoneMinder
+
+from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as ZONEMINDER_DOMAIN
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,13 +27,15 @@ def setup_platform(
     """Set up the ZoneMinder cameras."""
     filter_urllib3_logging()
     cameras = []
-    for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
+    zm_client: ZoneMinder
+    for zm_client in hass.data[DOMAIN].values():
         if not (monitors := zm_client.get_monitors()):
-            _LOGGER.warning("Could not fetch monitors from ZoneMinder host: %s")
-            return
+            raise PlatformNotReady(
+                "Camera could not fetch any monitors from ZoneMinder"
+            )
 
         for monitor in monitors:
-            _LOGGER.info("Initializing camera %s", monitor.id)
+            _LOGGER.debug("Initializing camera %s", monitor.id)
             cameras.append(ZoneMinderCamera(monitor, zm_client.verify_ssl))
     add_entities(cameras)
 
@@ -42,36 +43,22 @@ def setup_platform(
 class ZoneMinderCamera(MjpegCamera):
     """Representation of a ZoneMinder Monitor Stream."""
 
-    def __init__(self, monitor, verify_ssl):
+    _attr_should_poll = True  # Cameras default to False
+
+    def __init__(self, monitor: Monitor, verify_ssl: bool) -> None:
         """Initialize as a subclass of MjpegCamera."""
-        device_info = {
-            CONF_NAME: monitor.name,
-            CONF_MJPEG_URL: monitor.mjpeg_image_url,
-            CONF_STILL_IMAGE_URL: monitor.still_image_url,
-            CONF_VERIFY_SSL: verify_ssl,
-        }
-        super().__init__(device_info)
-        self._is_recording = None
-        self._is_available = None
+        super().__init__(
+            name=monitor.name,
+            mjpeg_url=monitor.mjpeg_image_url,
+            still_image_url=monitor.still_image_url,
+            verify_ssl=verify_ssl,
+        )
+        self._attr_is_recording = False
+        self._attr_available = False
         self._monitor = monitor
 
-    @property
-    def should_poll(self):
-        """Update the recording state periodically."""
-        return True
-
-    def update(self):
+    def update(self) -> None:
         """Update our recording state from the ZM API."""
         _LOGGER.debug("Updating camera state for monitor %i", self._monitor.id)
-        self._is_recording = self._monitor.is_recording
-        self._is_available = self._monitor.is_available
-
-    @property
-    def is_recording(self):
-        """Return whether the monitor is in alarm mode."""
-        return self._is_recording
-
-    @property
-    def available(self):
-        """Return True if entity is available."""
-        return self._is_available
+        self._attr_is_recording = self._monitor.is_recording
+        self._attr_available = self._monitor.is_available

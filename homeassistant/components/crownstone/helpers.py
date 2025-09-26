@@ -1,6 +1,8 @@
 """Helper functions for the Crownstone integration."""
+
 from __future__ import annotations
 
+from collections.abc import Sequence
 import os
 
 from serial.tools.list_ports_common import ListPortInfo
@@ -11,10 +13,9 @@ from .const import DONT_USE_USB, MANUAL_PATH, REFRESH_LIST
 
 
 def list_ports_as_str(
-    serial_ports: list[ListPortInfo], no_usb_option: bool = True
+    serial_ports: Sequence[ListPortInfo], no_usb_option: bool = True
 ) -> list[str]:
-    """
-    Represent currently available serial ports as string.
+    """Represent currently available serial ports as string.
 
     Adds option to not use usb on top of the list,
     option to use manual path or refresh list at the end.
@@ -24,17 +25,18 @@ def list_ports_as_str(
     if no_usb_option:
         ports_as_string.append(DONT_USE_USB)
 
-    for port in serial_ports:
-        ports_as_string.append(
-            usb.human_readable_device_name(
-                port.device,
-                port.serial_number,
-                port.manufacturer,
-                port.description,
-                f"{hex(port.vid)[2:]:0>4}".upper() if port.vid else None,
-                f"{hex(port.pid)[2:]:0>4}".upper() if port.pid else None,
-            )
+    ports_as_string.extend(
+        usb.human_readable_device_name(
+            port.device,
+            port.serial_number,
+            port.manufacturer,
+            port.description,
+            f"{hex(port.vid)[2:]:0>4}".upper() if port.vid else None,
+            f"{hex(port.pid)[2:]:0>4}".upper() if port.pid else None,
         )
+        for port in serial_ports
+    )
+
     ports_as_string.append(MANUAL_PATH)
     ports_as_string.append(REFRESH_LIST)
 

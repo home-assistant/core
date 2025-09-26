@@ -1,4 +1,5 @@
 """Support for Plaato devices."""
+
 from datetime import timedelta
 import logging
 
@@ -17,8 +18,6 @@ from pyplaato.plaato import (
     ATTR_TEMP,
     ATTR_TEMP_UNIT,
     ATTR_VOLUME_UNIT,
-    Plaato,
-    PlaatoDeviceType,
 )
 import voluptuous as vol
 
@@ -29,17 +28,12 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_WEBHOOK_ID,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-    VOLUME_GALLONS,
-    VOLUME_LITERS,
-    Platform,
+    UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import aiohttp_client
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     CONF_DEVICE_NAME,
@@ -56,6 +50,7 @@ from .const import (
     SENSOR_DATA,
     UNDO_UPDATE_LISTENER,
 )
+from .coordinator import PlaatoCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,8 +63,12 @@ WEBHOOK_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_NAME): cv.string,
         vol.Required(ATTR_DEVICE_ID): cv.positive_int,
-        vol.Required(ATTR_TEMP_UNIT): vol.Any(TEMP_CELSIUS, TEMP_FAHRENHEIT),
-        vol.Required(ATTR_VOLUME_UNIT): vol.Any(VOLUME_LITERS, VOLUME_GALLONS),
+        vol.Required(ATTR_TEMP_UNIT): vol.In(
+            [UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT]
+        ),
+        vol.Required(ATTR_VOLUME_UNIT): vol.In(
+            [UnitOfVolume.LITERS, UnitOfVolume.GALLONS]
+        ),
         vol.Required(ATTR_BPM): cv.positive_int,
         vol.Required(ATTR_TEMP): vol.Coerce(float),
         vol.Required(ATTR_SG): vol.Coerce(float),
@@ -92,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         await async_setup_coordinator(hass, entry)
 
-    hass.config_entries.async_setup_platforms(
+    await hass.config_entries.async_forward_entry_setups(
         entry, [platform for platform in PLATFORMS if entry.options.get(platform, True)]
     )
 
@@ -122,7 +121,9 @@ async def async_setup_coordinator(hass: HomeAssistant, entry: ConfigEntry):
     else:
         update_interval = timedelta(minutes=DEFAULT_SCAN_INTERVAL)
 
-    coordinator = PlaatoCoordinator(hass, auth_token, device_type, update_interval)
+    coordinator = PlaatoCoordinator(
+        hass, entry, auth_token, device_type, update_interval
+    )
     await coordinator.async_config_entry_first_refresh()
 
     _set_entry_data(entry, hass, coordinator, auth_token)
@@ -185,13 +186,15 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def handle_webhook(hass, webhook_id, request):
+async def handle_webhook(
+    hass: HomeAssistant, webhook_id: str, request: web.Request
+) -> web.Response | None:
     """Handle incoming webhook from Plaato."""
     try:
         data = WEBHOOK_SCHEMA(await request.json())
     except vol.MultipleInvalid as error:
         _LOGGER.warning("An error occurred when parsing webhook data <%s>", error)
-        return
+        return None
 
     device_id = _device_id(data)
     sensor_data = PlaatoAirlock.from_web_hook(data)
@@ -204,35 +207,3 @@ async def handle_webhook(hass, webhook_id, request):
 def _device_id(data):
     """Return name of device sensor."""
     return f"{data.get(ATTR_DEVICE_NAME)}_{data.get(ATTR_DEVICE_ID)}"
-
-
-class PlaatoCoordinator(DataUpdateCoordinator):
-    """Class to manage fetching data from the API."""
-
-    def __init__(
-        self,
-        hass,
-        auth_token,
-        device_type: PlaatoDeviceType,
-        update_interval: timedelta,
-    ):
-        """Initialize."""
-        self.api = Plaato(auth_token=auth_token)
-        self.hass = hass
-        self.device_type = device_type
-        self.platforms: list[Platform] = []
-
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_interval=update_interval,
-        )
-
-    async def _async_update_data(self):
-        """Update data via library."""
-        data = await self.api.get_data(
-            session=aiohttp_client.async_get_clientsession(self.hass),
-            device_type=self.device_type,
-        )
-        return data

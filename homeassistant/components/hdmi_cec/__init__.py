@@ -1,4 +1,5 @@
 """Support for HDMI CEC."""
+
 from __future__ import annotations
 
 from functools import reduce
@@ -17,11 +18,6 @@ from pycec.const import (
     KEY_MUTE_TOGGLE,
     KEY_VOLUME_DOWN,
     KEY_VOLUME_UP,
-    POWER_OFF,
-    POWER_ON,
-    STATUS_PLAY,
-    STATUS_STILL,
-    STATUS_STOP,
 )
 from pycec.network import HDMINetwork, PhysicalAddress
 from pycec.tcp import TcpAdapter
@@ -35,39 +31,17 @@ from homeassistant.const import (
     CONF_PLATFORM,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import discovery, event
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
+from homeassistant.helpers import config_validation as cv, discovery, event
 from homeassistant.helpers.typing import ConfigType
 
-DOMAIN = "hdmi_cec"
+from .const import DOMAIN, EVENT_HDMI_CEC_UNAVAILABLE
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_DISPLAY_NAME = "HA"
 CONF_TYPES = "types"
-
-ICON_UNKNOWN = "mdi:help"
-ICON_AUDIO = "mdi:speaker"
-ICON_PLAYER = "mdi:play"
-ICON_TUNER = "mdi:radio"
-ICON_RECORDER = "mdi:microphone"
-ICON_TV = "mdi:television"
-ICONS_BY_TYPE = {
-    0: ICON_TV,
-    1: ICON_RECORDER,
-    3: ICON_TUNER,
-    4: ICON_PLAYER,
-    5: ICON_AUDIO,
-}
 
 CMD_UP = "up"
 CMD_DOWN = "down"
@@ -80,12 +54,7 @@ CMD_RELEASE = "release"
 EVENT_CEC_COMMAND_RECEIVED = "cec_command_received"
 EVENT_CEC_KEYPRESS_RECEIVED = "cec_keypress_received"
 
-ATTR_PHYSICAL_ADDRESS = "physical_address"
-ATTR_TYPE_ID = "type_id"
-ATTR_VENDOR_NAME = "vendor_name"
-ATTR_VENDOR_ID = "vendor_id"
 ATTR_DEVICE = "device"
-ATTR_TYPE = "type"
 ATTR_KEY = "key"
 ATTR_DUR = "dur"
 ATTR_SRC = "src"
@@ -134,11 +103,12 @@ SERVICE_SELECT_DEVICE = "select_device"
 SERVICE_POWER_ON = "power_on"
 SERVICE_STANDBY = "standby"
 
-# pylint: disable=unnecessary-lambda
 DEVICE_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.All(cv.positive_int): vol.Any(
-            lambda devices: DEVICE_SCHEMA(devices), cv.string
+            # pylint: disable-next=unnecessary-lambda
+            lambda devices: DEVICE_SCHEMA(devices),
+            cv.string,
         )
     }
 )
@@ -165,7 +135,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 WATCHDOG_INTERVAL = 120
-EVENT_HDMI_CEC_UNAVAILABLE = "hdmi_cec_unavailable"
 
 
 def pad_physical_address(addr):
@@ -181,7 +150,7 @@ def parse_mapping(mapping, parents=None):
         if isinstance(addr, (str,)) and isinstance(val, (str,)):
             yield (addr, PhysicalAddress(val))
         else:
-            cur = parents + [addr]
+            cur = [*parents, addr]
             if isinstance(val, dict):
                 yield from parse_mapping(val, cur)
             elif isinstance(val, str):
@@ -190,6 +159,8 @@ def parse_mapping(mapping, parents=None):
 
 def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
     """Set up the CEC capability."""
+
+    hass.data[DOMAIN] = {}
 
     # Parse configuration into a dict of device name to physical address
     # represented as a list of four elements.
@@ -203,9 +174,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
 
     loop = (
         # Create own thread if more than 1 CPU
-        hass.loop
-        if multiprocessing.cpu_count() < 2
-        else None
+        hass.loop if multiprocessing.cpu_count() < 2 else None
     )
     host = base_config[DOMAIN].get(CONF_HOST)
     display_name = base_config[DOMAIN].get(CONF_DISPLAY_NAME, DEFAULT_DISPLAY_NAME)
@@ -217,16 +186,18 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
 
     def _adapter_watchdog(now=None):
         _LOGGER.debug("Reached _adapter_watchdog")
-        event.async_call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog)
+        event.call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog_job)
         if not adapter.initialized:
-            _LOGGER.info("Adapter not initialized; Trying to restart")
+            _LOGGER.warning("Adapter not initialized; Trying to restart")
             hass.bus.fire(EVENT_HDMI_CEC_UNAVAILABLE)
             adapter.init()
+
+    _adapter_watchdog_job = HassJob(_adapter_watchdog, cancel_on_shutdown=True)
 
     @callback
     def _async_initialized_callback(*_: Any):
         """Add watchdog on initialization."""
-        return event.async_call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog)
+        return event.async_call_later(hass, WATCHDOG_INTERVAL, _adapter_watchdog_job)
 
     hdmi_network.set_initialized_callback(_async_initialized_callback)
 
@@ -247,7 +218,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
                     KeyPressCommand(mute_key_mapping[att], dst=ADDR_AUDIOSYSTEM)
                 )
                 hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
-                _LOGGER.info("Audio muted")
+                _LOGGER.debug("Audio muted")
             else:
                 _LOGGER.warning("Unknown command %s", cmd)
 
@@ -260,7 +231,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
             hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
         else:
             att = 1 if att == "" else int(att)
-            for _ in range(0, att):
+            for _ in range(att):
                 hdmi_network.send_command(KeyPressCommand(cmd, dst=ADDR_AUDIOSYSTEM))
                 hdmi_network.send_command(KeyReleaseCommand(dst=ADDR_AUDIOSYSTEM))
 
@@ -270,14 +241,8 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
         if ATTR_RAW in data:
             command = CecCommand(data[ATTR_RAW])
         else:
-            if ATTR_SRC in data:
-                src = data[ATTR_SRC]
-            else:
-                src = ADDR_UNREGISTERED
-            if ATTR_DST in data:
-                dst = data[ATTR_DST]
-            else:
-                dst = ADDR_BROADCAST
+            src = data.get(ATTR_SRC, ADDR_UNREGISTERED)
+            dst = data.get(ATTR_DST, ADDR_BROADCAST)
             if ATTR_CMD in data:
                 cmd = data[ATTR_CMD]
             else:
@@ -320,11 +285,10 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
         if not isinstance(addr, (PhysicalAddress,)):
             addr = PhysicalAddress(addr)
         hdmi_network.active_source(addr)
-        _LOGGER.info("Selected %s (%s)", call.data[ATTR_DEVICE], addr)
+        _LOGGER.debug("Selected %s (%s)", call.data[ATTR_DEVICE], addr)
 
     def _update(call: ServiceCall) -> None:
-        """
-        Update if device update is needed.
+        """Update if device update is needed.
 
         Called by service, requests CEC network to update data.
         """
@@ -370,106 +334,3 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start_cec)
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
     return True
-
-
-class CecEntity(Entity):
-    """Representation of a HDMI CEC device entity."""
-
-    _attr_should_poll = False
-
-    def __init__(self, device, logical) -> None:
-        """Initialize the device."""
-        self._device = device
-        self._state: str | None = None
-        self._logical_address = logical
-        self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
-        self._set_attr_name()
-        if self._device.type in ICONS_BY_TYPE:
-            self._attr_icon = ICONS_BY_TYPE[self._device.type]
-        else:
-            self._attr_icon = ICON_UNKNOWN
-
-    def _set_attr_name(self):
-        """Set name."""
-        if (
-            self._device.osd_name is not None
-            and self.vendor_name is not None
-            and self.vendor_name != "Unknown"
-        ):
-            self._attr_name = f"{self.vendor_name} {self._device.osd_name}"
-        elif self._device.osd_name is None:
-            self._attr_name = f"{self._device.type_name} {self._logical_address}"
-        else:
-            self._attr_name = f"{self._device.type_name} {self._logical_address} ({self._device.osd_name})"
-
-    def _hdmi_cec_unavailable(self, callback_event):
-        # Change state to unavailable. Without this, entity would remain in
-        # its last state, since the state changes are pushed.
-        self._state = STATE_UNAVAILABLE
-        self.schedule_update_ha_state(False)
-
-    def update(self):
-        """Update device status."""
-        device = self._device
-        if device.power_status in [POWER_OFF, 3]:
-            self._state = STATE_OFF
-        elif device.status == STATUS_PLAY:
-            self._state = STATE_PLAYING
-        elif device.status == STATUS_STOP:
-            self._state = STATE_IDLE
-        elif device.status == STATUS_STILL:
-            self._state = STATE_PAUSED
-        elif device.power_status in [POWER_ON, 4]:
-            self._state = STATE_ON
-        else:
-            _LOGGER.warning("Unknown state: %d", device.power_status)
-
-    async def async_added_to_hass(self):
-        """Register HDMI callbacks after initialization."""
-        self._device.set_update_callback(self._update)
-        self.hass.bus.async_listen(
-            EVENT_HDMI_CEC_UNAVAILABLE, self._hdmi_cec_unavailable
-        )
-
-    def _update(self, device=None):
-        """Device status changed, schedule an update."""
-        self.schedule_update_ha_state(True)
-
-    @property
-    def vendor_id(self):
-        """Return the ID of the device's vendor."""
-        return self._device.vendor_id
-
-    @property
-    def vendor_name(self):
-        """Return the name of the device's vendor."""
-        return self._device.vendor
-
-    @property
-    def physical_address(self):
-        """Return the physical address of device in HDMI network."""
-        return str(self._device.physical_address)
-
-    @property
-    def type(self):
-        """Return a string representation of the device's type."""
-        return self._device.type_name
-
-    @property
-    def type_id(self):
-        """Return the type ID of device."""
-        return self._device.type
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        state_attr = {}
-        if self.vendor_id is not None:
-            state_attr[ATTR_VENDOR_ID] = self.vendor_id
-            state_attr[ATTR_VENDOR_NAME] = self.vendor_name
-        if self.type_id is not None:
-            state_attr[ATTR_TYPE_ID] = self.type_id
-            state_attr[ATTR_TYPE] = self.type
-        if self.physical_address is not None:
-            state_attr[ATTR_PHYSICAL_ADDRESS] = self.physical_address
-        return state_attr

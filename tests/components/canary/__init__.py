@@ -1,7 +1,8 @@
 """Tests for the Canary integration."""
+
 from unittest.mock import MagicMock, PropertyMock, patch
 
-from canary.api import SensorType
+from canary.model import SensorType
 
 from homeassistant.components.canary.const import (
     CONF_FFMPEG_ARGUMENTS,
@@ -36,13 +37,6 @@ YAML_CONFIG = {
 }
 
 
-def _patch_async_setup(return_value=True):
-    return patch(
-        "homeassistant.components.canary.async_setup",
-        return_value=return_value,
-    )
-
-
 def _patch_async_setup_entry(return_value=True):
     return patch(
         "homeassistant.components.canary.async_setup_entry",
@@ -53,12 +47,10 @@ def _patch_async_setup_entry(return_value=True):
 async def init_integration(
     hass: HomeAssistant,
     *,
-    data: dict = ENTRY_CONFIG,
-    options: dict = ENTRY_OPTIONS,
     skip_entry_setup: bool = False,
 ) -> MockConfigEntry:
     """Set up the Canary integration in Home Assistant."""
-    entry = MockConfigEntry(domain=DOMAIN, data=data, options=options)
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_CONFIG, options=ENTRY_OPTIONS)
     entry.add_to_hass(hass)
 
     if not skip_entry_setup:

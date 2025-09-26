@@ -1,17 +1,14 @@
 """Support for Telegram bot to send messages only."""
-import logging
 
-from . import initialize_bot
+from telegram import Bot
 
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.core import HomeAssistant
+
+from .bot import BaseTelegramBot, TelegramBotConfigEntry
 
 
-async def async_setup_platform(hass, config):
+async def async_setup_platform(
+    hass: HomeAssistant, bot: Bot, config: TelegramBotConfigEntry
+) -> type[BaseTelegramBot] | None:
     """Set up the Telegram broadcast platform."""
-    bot = initialize_bot(config)
-
-    bot_config = await hass.async_add_executor_job(bot.getMe)
-    _LOGGER.debug(
-        "Telegram broadcast platform setup with bot %s", bot_config["username"]
-    )
-    return True
+    return None

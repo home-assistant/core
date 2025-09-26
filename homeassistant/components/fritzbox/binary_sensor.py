@@ -1,4 +1,5 @@
 """Support for Fritzbox binary sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -12,91 +13,110 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ENTITY_CATEGORY_CONFIG
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FritzBoxEntity
-from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
-from .coordinator import FritzboxDataUpdateCoordinator
+from .coordinator import FritzboxConfigEntry
+from .entity import FritzBoxDeviceEntity
 from .model import FritzEntityDescriptionMixinBase
 
 
-@dataclass
-class FritzEntityDescriptionMixinBinarySensor(FritzEntityDescriptionMixinBase):
-    """BinarySensor description mixin for Fritz!Smarthome entities."""
-
-    is_on: Callable[[FritzhomeDevice], bool | None]
-
-
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class FritzBinarySensorEntityDescription(
-    BinarySensorEntityDescription, FritzEntityDescriptionMixinBinarySensor
+    BinarySensorEntityDescription, FritzEntityDescriptionMixinBase
 ):
     """Description for Fritz!Smarthome binary sensor entities."""
+
+    is_on: Callable[[FritzhomeDevice], bool | None]
 
 
 BINARY_SENSOR_TYPES: Final[tuple[FritzBinarySensorEntityDescription, ...]] = (
     FritzBinarySensorEntityDescription(
         key="alarm",
-        name="Alarm",
+        translation_key="alarm",
         device_class=BinarySensorDeviceClass.WINDOW,
-        suitable=lambda device: device.has_alarm,  # type: ignore[no-any-return]
-        is_on=lambda device: device.alert_state,  # type: ignore[no-any-return]
+        suitable=lambda device: device.has_alarm,
+        is_on=lambda device: device.alert_state,
     ),
     FritzBinarySensorEntityDescription(
         key="lock",
-        name="Button Lock on Device",
+        translation_key="lock",
         device_class=BinarySensorDeviceClass.LOCK,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.DIAGNOSTIC,
         suitable=lambda device: device.lock is not None,
         is_on=lambda device: not device.lock,
     ),
     FritzBinarySensorEntityDescription(
         key="device_lock",
-        name="Button Lock via UI",
+        translation_key="device_lock",
         device_class=BinarySensorDeviceClass.LOCK,
-        entity_category=ENTITY_CATEGORY_CONFIG,
+        entity_category=EntityCategory.DIAGNOSTIC,
         suitable=lambda device: device.device_lock is not None,
         is_on=lambda device: not device.device_lock,
+    ),
+    FritzBinarySensorEntityDescription(
+        key="battery_low",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suitable=lambda device: device.battery_low is not None,
+        is_on=lambda device: device.battery_low,
+        entity_registry_enabled_default=False,
+    ),
+    FritzBinarySensorEntityDescription(
+        key="holiday_active",
+        translation_key="holiday_active",
+        suitable=lambda device: device.holiday_active is not None,
+        is_on=lambda device: device.holiday_active,
+    ),
+    FritzBinarySensorEntityDescription(
+        key="summer_active",
+        translation_key="summer_active",
+        suitable=lambda device: device.summer_active is not None,
+        is_on=lambda device: device.summer_active,
+    ),
+    FritzBinarySensorEntityDescription(
+        key="window_open",
+        translation_key="window_open",
+        suitable=lambda device: device.window_open is not None,
+        is_on=lambda device: device.window_open,
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FritzboxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the FRITZ!SmartHome binary sensor from ConfigEntry."""
-    coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
+    coordinator = entry.runtime_data
 
-    async_add_entities(
-        [
+    @callback
+    def _add_entities(devices: set[str] | None = None) -> None:
+        """Add devices."""
+        if devices is None:
+            devices = coordinator.new_devices
+        if not devices:
+            return
+        async_add_entities(
             FritzboxBinarySensor(coordinator, ain, description)
-            for ain, device in coordinator.data.items()
+            for ain in devices
             for description in BINARY_SENSOR_TYPES
-            if description.suitable(device)
-        ]
-    )
+            if description.suitable(coordinator.data.devices[ain])
+        )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
+
+    _add_entities(set(coordinator.data.devices))
 
 
-class FritzboxBinarySensor(FritzBoxEntity, BinarySensorEntity):
+class FritzboxBinarySensor(FritzBoxDeviceEntity, BinarySensorEntity):
     """Representation of a binary FRITZ!SmartHome device."""
 
     entity_description: FritzBinarySensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: FritzboxDataUpdateCoordinator,
-        ain: str,
-        entity_description: FritzBinarySensorEntityDescription,
-    ) -> None:
-        """Initialize the FritzBox entity."""
-        super().__init__(coordinator, ain, entity_description)
-        self._attr_name = f"{self.device.name} {entity_description.name}"
-        self._attr_unique_id = f"{ain}_{entity_description.key}"
-
     @property
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
-        return self.entity_description.is_on(self.device)
+        return self.entity_description.is_on(self.data)

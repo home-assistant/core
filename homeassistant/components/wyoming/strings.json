@@ -1,0 +1,73 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      },
+      "hassio_confirm": {
+        "description": "Do you want to configure Home Assistant to connect to the Wyoming service provided by the add-on: {addon}?"
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to configure Home Assistant to connect to the Wyoming service {name}?",
+        "title": "Discovered Wyoming service"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "no_services": "No services found at endpoint",
+      "no_port": "No port for endpoint"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "assist_in_progress": {
+        "name": "[%key:component::assist_pipeline::entity::binary_sensor::assist_in_progress::name%]"
+      }
+    },
+    "select": {
+      "pipeline": {
+        "name": "[%key:component::assist_pipeline::entity::select::pipeline::name%]",
+        "state": {
+          "preferred": "[%key:component::assist_pipeline::entity::select::pipeline::state::preferred%]"
+        }
+      },
+      "noise_suppression_level": {
+        "name": "Noise suppression level",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
+          "max": "Max"
+        }
+      },
+      "vad_sensitivity": {
+        "name": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::name%]",
+        "state": {
+          "default": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::default%]",
+          "aggressive": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::aggressive%]",
+          "relaxed": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::relaxed%]"
+        }
+      }
+    },
+    "switch": {
+      "mute": {
+        "name": "Mute"
+      }
+    },
+    "number": {
+      "auto_gain": {
+        "name": "Auto gain"
+      },
+      "volume_multiplier": {
+        "name": "Mic volume"
+      }
+    }
+  }
+}

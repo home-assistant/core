@@ -6,14 +6,27 @@ from unittest.mock import Mock, patch
 from ndms2_client import ConnectionException
 from ndms2_client.client import InterfaceInfo, RouterInfo
 import pytest
+import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components import keenetic_ndms2 as keenetic, ssdp
-from homeassistant.components.keenetic_ndms2 import const
+from homeassistant import config_entries
+from homeassistant.components import keenetic_ndms2 as keenetic
+from homeassistant.components.keenetic_ndms2 import CONF_INTERFACES, const
 from homeassistant.const import CONF_HOST, CONF_SOURCE
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+)
 
-from . import MOCK_DATA, MOCK_NAME, MOCK_OPTIONS, MOCK_SSDP_DISCOVERY_INFO
+from . import (
+    MOCK_DATA,
+    MOCK_IP,
+    MOCK_NAME,
+    MOCK_OPTIONS,
+    MOCK_RECONFIGURE,
+    MOCK_SSDP_DISCOVERY_INFO,
+)
 
 from tests.common import MockConfigEntry
 
@@ -51,7 +64,7 @@ async def test_flow_works(hass: HomeAssistant, connect) -> None:
     result = await hass.config_entries.flow.async_init(
         keenetic.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
@@ -63,9 +76,37 @@ async def test_flow_works(hass: HomeAssistant, connect) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == MOCK_DATA
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure(hass: HomeAssistant, connect) -> None:
+    """Test reconfigure flow."""
+    entry = MockConfigEntry(domain=keenetic.DOMAIN, data=MOCK_DATA)
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_RECONFIGURE,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        CONF_HOST: MOCK_IP,
+        **MOCK_RECONFIGURE,
+    }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -82,23 +123,20 @@ async def test_options(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
     # fake router
-    hass.data.setdefault(keenetic.DOMAIN, {})
-    hass.data[keenetic.DOMAIN][entry.entry_id] = {
-        keenetic.ROUTER: Mock(
-            client=Mock(
-                get_interfaces=Mock(
-                    return_value=[
-                        InterfaceInfo.from_dict({"id": name, "type": "bridge"})
-                        for name in MOCK_OPTIONS[const.CONF_INTERFACES]
-                    ]
-                )
+    entry.runtime_data = Mock(
+        client=Mock(
+            get_interfaces=Mock(
+                return_value=[
+                    InterfaceInfo.from_dict({"id": name, "type": "bridge"})
+                    for name in MOCK_OPTIONS[const.CONF_INTERFACES]
+                ]
             )
         )
-    }
+    )
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result2 = await hass.config_entries.options.async_configure(
@@ -106,7 +144,7 @@ async def test_options(hass: HomeAssistant) -> None:
         user_input=MOCK_OPTIONS,
     )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == MOCK_OPTIONS
 
 
@@ -126,7 +164,7 @@ async def test_host_already_configured(hass: HomeAssistant, connect) -> None:
         result["flow_id"], user_input=MOCK_DATA
     )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
@@ -139,8 +177,72 @@ async def test_connection_error(hass: HomeAssistant, connect_error) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_DATA
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_options_not_initialized(hass: HomeAssistant) -> None:
+    """Test the error when the integration is not initialized."""
+
+    entry = MockConfigEntry(domain=keenetic.DOMAIN, data=MOCK_DATA)
+    entry.add_to_hass(hass)
+
+    # not setting entry.runtime_data
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_initialized"
+
+
+async def test_options_connection_error(hass: HomeAssistant) -> None:
+    """Test updating options."""
+
+    entry = MockConfigEntry(domain=keenetic.DOMAIN, data=MOCK_DATA)
+    entry.add_to_hass(hass)
+
+    def get_interfaces_error():
+        raise ConnectionException("Mocked failure")
+
+    # fake with connection error
+    entry.runtime_data = Mock(
+        client=Mock(get_interfaces=Mock(wraps=get_interfaces_error))
+    )
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_options_interface_filter(hass: HomeAssistant) -> None:
+    """Test the case when the default Home interface is missing on the router."""
+
+    entry = MockConfigEntry(domain=keenetic.DOMAIN, data=MOCK_DATA)
+    entry.add_to_hass(hass)
+
+    # fake interfaces
+    entry.runtime_data = Mock(
+        client=Mock(
+            get_interfaces=Mock(
+                return_value=[
+                    InterfaceInfo.from_dict({"id": name, "type": "bridge"})
+                    for name in ("not_a_home", "also_not_home")
+                ]
+            )
+        )
+    )
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    interfaces_schema = next(
+        i
+        for i, s in result["data_schema"].schema.items()
+        if i.schema == CONF_INTERFACES
+    )
+    assert isinstance(interfaces_schema, vol.Required)
+    assert interfaces_schema.default() == []
 
 
 async def test_ssdp_works(hass: HomeAssistant, connect) -> None:
@@ -153,7 +255,7 @@ async def test_ssdp_works(hass: HomeAssistant, connect) -> None:
         data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
@@ -168,7 +270,7 @@ async def test_ssdp_works(hass: HomeAssistant, connect) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == MOCK_DATA
     assert len(mock_setup_entry.mock_calls) == 1
@@ -189,7 +291,7 @@ async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
         data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -199,7 +301,7 @@ async def test_ssdp_ignored(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=keenetic.DOMAIN,
         source=config_entries.SOURCE_IGNORE,
-        unique_id=MOCK_SSDP_DISCOVERY_INFO.upnp[ssdp.ATTR_UPNP_UDN],
+        unique_id=MOCK_SSDP_DISCOVERY_INFO.upnp[ATTR_UPNP_UDN],
     )
     entry.add_to_hass(hass)
 
@@ -210,7 +312,7 @@ async def test_ssdp_ignored(hass: HomeAssistant) -> None:
         data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -221,7 +323,7 @@ async def test_ssdp_update_host(hass: HomeAssistant) -> None:
         domain=keenetic.DOMAIN,
         data=MOCK_DATA,
         options=MOCK_OPTIONS,
-        unique_id=MOCK_SSDP_DISCOVERY_INFO.upnp[ssdp.ATTR_UPNP_UDN],
+        unique_id=MOCK_SSDP_DISCOVERY_INFO.upnp[ATTR_UPNP_UDN],
     )
     entry.add_to_hass(hass)
 
@@ -236,7 +338,7 @@ async def test_ssdp_update_host(hass: HomeAssistant) -> None:
         data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == new_ip
 
@@ -246,7 +348,7 @@ async def test_ssdp_reject_no_udn(hass: HomeAssistant) -> None:
 
     discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     discovery_info.upnp = {**discovery_info.upnp}
-    discovery_info.upnp.pop(ssdp.ATTR_UPNP_UDN)
+    discovery_info.upnp.pop(ATTR_UPNP_UDN)
 
     result = await hass.config_entries.flow.async_init(
         keenetic.DOMAIN,
@@ -254,7 +356,7 @@ async def test_ssdp_reject_no_udn(hass: HomeAssistant) -> None:
         data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_udn"
 
 
@@ -263,12 +365,12 @@ async def test_ssdp_reject_non_keenetic(hass: HomeAssistant) -> None:
 
     discovery_info = dataclasses.replace(MOCK_SSDP_DISCOVERY_INFO)
     discovery_info.upnp = {**discovery_info.upnp}
-    discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME] = "Suspicious device"
+    discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME] = "Suspicious device"
     result = await hass.config_entries.flow.async_init(
         keenetic.DOMAIN,
         context={CONF_SOURCE: config_entries.SOURCE_SSDP},
         data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_keenetic_ndms2"

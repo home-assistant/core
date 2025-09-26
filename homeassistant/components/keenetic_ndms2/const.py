@@ -1,12 +1,10 @@
 """Constants used in the Keenetic NDMS2 components."""
 
-from homeassistant.components.device_tracker.const import (
+from homeassistant.components.device_tracker import (
     DEFAULT_CONSIDER_HOME as _DEFAULT_CONSIDER_HOME,
 )
 
 DOMAIN = "keenetic_ndms2"
-ROUTER = "router"
-UNDO_UPDATE_LISTENER = "undo_update_listener"
 DEFAULT_TELNET_PORT = 23
 DEFAULT_SCAN_INTERVAL = 120
 DEFAULT_CONSIDER_HOME = _DEFAULT_CONSIDER_HOME.total_seconds()

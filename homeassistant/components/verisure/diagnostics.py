@@ -1,4 +1,5 @@
 """Diagnostics support for Verisure."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -16,6 +17,7 @@ TO_REDACT = {
     "deviceArea",
     "name",
     "time",
+    "reportTime",
     "userString",
 }
 

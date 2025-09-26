@@ -1,32 +1,30 @@
 """Test the ProgettiHWSW Automation config flow."""
+
 from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.progettihwsw.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 mock_value_step_user = {
     "title": "1R & 1IN Board",
-    "relay_count": 1,
-    "input_count": 1,
-    "is_old": False,
+    "relays": 1,
+    "inputs": 1,
+    "temps": False,
 }
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -43,7 +41,7 @@ async def test_form(hass):
             {CONF_HOST: "", CONF_PORT: 80},
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "relay_modes"
     assert result2["errors"] == {}
 
@@ -56,14 +54,14 @@ async def test_form(hass):
             mock_value_step_rm,
         )
 
-    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"]
     assert result3["data"]["title"] == "1R & 1IN Board"
     assert result3["data"]["is_old"] is False
     assert result3["data"]["relay_count"] == result3["data"]["input_count"] == 1
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle unexisting board."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -80,12 +78,12 @@ async def test_form_cannot_connect(hass):
             {CONF_HOST: "", CONF_PORT: 80},
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_existing_entry_exception(hass):
+async def test_form_existing_entry_exception(hass: HomeAssistant) -> None:
     """Test we handle existing board."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -107,11 +105,11 @@ async def test_form_existing_entry_exception(hass):
         {CONF_HOST: "", CONF_PORT: 80},
     )
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_user_exception(hass):
+async def test_form_user_exception(hass: HomeAssistant) -> None:
     """Test we handle unknown exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -128,6 +126,6 @@ async def test_form_user_exception(hass):
             {CONF_HOST: "", CONF_PORT: 80},
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
     assert result2["errors"] == {"base": "unknown"}

@@ -1,16 +1,13 @@
 """Class to manage the entities for a single platform."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable
+from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from contextvars import ContextVar
-from datetime import datetime, timedelta
+from datetime import timedelta
 from logging import Logger, getLogger
-from types import ModuleType
 from typing import TYPE_CHECKING, Any, Protocol
-from urllib.parse import urlparse
-
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -20,31 +17,38 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
     HomeAssistant,
     ServiceCall,
+    SupportsResponse,
     callback,
     split_entity_id,
     valid_entity_id,
 )
 from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
     HomeAssistantError,
     PlatformNotReady,
-    RequiredParameterMissing,
 )
-from homeassistant.setup import async_start_setup
-from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.generated import languages
+from homeassistant.setup import SetupPhases, async_start_setup
+from homeassistant.util.async_ import create_eager_task
+from homeassistant.util.hass_dict import HassKey
 
 from . import (
-    config_validation as cv,
     device_registry as dev_reg,
     entity_registry as ent_reg,
     service,
+    translation,
 )
-from .device_registry import DeviceRegistry
-from .entity_registry import EntityRegistry, RegistryEntryDisabler
-from .event import async_call_later, async_track_time_interval
-from .typing import ConfigType, DiscoveryInfoType
+from .deprecation import deprecated_function
+from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
+from .event import async_call_later
+from .issue_registry import IssueSeverity, async_create_issue
+from .typing import UNDEFINED, ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
 
 if TYPE_CHECKING:
     from .entity import Entity
@@ -56,7 +60,13 @@ SLOW_ADD_ENTITY_MAX_WAIT = 15  # Per Entity
 SLOW_ADD_MIN_TIMEOUT = 500
 
 PLATFORM_NOT_READY_RETRIES = 10
-DATA_ENTITY_PLATFORM = "entity_platform"
+DATA_ENTITY_PLATFORM: HassKey[dict[str, list[EntityPlatform]]] = HassKey(
+    "entity_platform"
+)
+DATA_DOMAIN_ENTITIES: HassKey[dict[str, dict[str, Entity]]] = HassKey("domain_entities")
+DATA_DOMAIN_PLATFORM_ENTITIES: HassKey[dict[tuple[str, str], dict[str, Entity]]] = (
+    HassKey("domain_platform_entities")
+)
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
 _LOGGER = getLogger(__name__)
@@ -71,8 +81,129 @@ class AddEntitiesCallback(Protocol):
         """Define add_entities type."""
 
 
+class AddConfigEntryEntitiesCallback(Protocol):
+    """Protocol type for EntityPlatform.add_entities callback."""
+
+    def __call__(
+        self,
+        new_entities: Iterable[Entity],
+        update_before_add: bool = False,
+        *,
+        config_subentry_id: str | None = None,
+    ) -> None:
+        """Define add_entities type.
+
+        :param config_subentry_id: subentry which the entities should be added to
+        """
+
+
+class EntityPlatformModule(Protocol):
+    """Protocol type for entity platform modules."""
+
+    async def async_setup_platform(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        async_add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
+        """Set up an integration platform async."""
+
+    def setup_platform(
+        self,
+        hass: HomeAssistant,
+        config: ConfigType,
+        add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
+        """Set up an integration platform."""
+
+    async def async_setup_entry(
+        self,
+        hass: HomeAssistant,
+        entry: config_entries.ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Set up an integration platform from a config entry."""
+
+
+class PlatformData:
+    """Information about a platform, used by entities."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        *,
+        domain: str,
+        platform_name: str,
+    ) -> None:
+        """Initialize the base entity platform."""
+        self.hass = hass
+        self.domain = domain
+        self.platform_name = platform_name
+        self.component_translations: dict[str, str] = {}
+        self.platform_translations: dict[str, str] = {}
+        self.object_id_component_translations: dict[str, str] = {}
+        self.object_id_platform_translations: dict[str, str] = {}
+        self.default_language_platform_translations: dict[str, str] = {}
+
+    async def _async_get_translations(
+        self, language: str, category: str, integration: str
+    ) -> dict[str, str]:
+        """Get translations for a language, category, and integration."""
+        try:
+            return await translation.async_get_translations(
+                self.hass, language, category, {integration}
+            )
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.debug(
+                "Could not load translations for %s",
+                integration,
+                exc_info=err,
+            )
+        return {}
+
+    async def async_load_translations(self) -> None:
+        """Load translations."""
+        hass = self.hass
+        object_id_language = (
+            hass.config.language
+            if hass.config.language in languages.NATIVE_ENTITY_IDS
+            else languages.DEFAULT_LANGUAGE
+        )
+        config_language = hass.config.language
+        self.component_translations = await self._async_get_translations(
+            config_language, "entity_component", self.domain
+        )
+        self.platform_translations = await self._async_get_translations(
+            config_language, "entity", self.platform_name
+        )
+        if object_id_language == config_language:
+            self.object_id_component_translations = self.component_translations
+            self.object_id_platform_translations = self.platform_translations
+        else:
+            self.object_id_component_translations = await self._async_get_translations(
+                object_id_language, "entity_component", self.domain
+            )
+            self.object_id_platform_translations = await self._async_get_translations(
+                object_id_language, "entity", self.platform_name
+            )
+        if config_language == languages.DEFAULT_LANGUAGE:
+            self.default_language_platform_translations = self.platform_translations
+        else:
+            self.default_language_platform_translations = (
+                await self._async_get_translations(
+                    languages.DEFAULT_LANGUAGE, "entity", self.platform_name
+                )
+            )
+
+
 class EntityPlatform:
-    """Manage the entities for a single platform."""
+    """Manage the entities for a single platform.
+
+    An example of an entity platform is 'hue.light', which is managed by
+    the entity component 'light'.
+    """
 
     def __init__(
         self,
@@ -81,55 +212,83 @@ class EntityPlatform:
         logger: Logger,
         domain: str,
         platform_name: str,
-        platform: ModuleType | None,
+        platform: EntityPlatformModule | None,
         scan_interval: timedelta,
         entity_namespace: str | None,
     ) -> None:
         """Initialize the entity platform."""
         self.hass = hass
         self.logger = logger
-        self.domain = domain
-        self.platform_name = platform_name
         self.platform = platform
         self.scan_interval = scan_interval
+        self.scan_interval_seconds = scan_interval.total_seconds()
         self.entity_namespace = entity_namespace
         self.config_entry: config_entries.ConfigEntry | None = None
+        # Storage for entities for this specific platform only
+        # which are indexed by entity_id
         self.entities: dict[str, Entity] = {}
-        self._tasks: list[asyncio.Future] = []
+        self._tasks: list[asyncio.Task[None]] = []
         # Stop tracking tasks after setup is completed
         self._setup_complete = False
         # Method to cancel the state change listener
-        self._async_unsub_polling: CALLBACK_TYPE | None = None
+        self._async_polling_timer: asyncio.TimerHandle | None = None
         # Method to cancel the retry of setup
         self._async_cancel_retry_setup: CALLBACK_TYPE | None = None
         self._process_updates: asyncio.Lock | None = None
 
         self.parallel_updates: asyncio.Semaphore | None = None
+        self._update_in_sequence: bool = False
 
         # Platform is None for the EntityComponent "catch-all" EntityPlatform
         # which powers entity_component.add_entities
         self.parallel_updates_created = platform is None
 
-        hass.data.setdefault(DATA_ENTITY_PLATFORM, {}).setdefault(
-            self.platform_name, []
-        ).append(self)
+        # Storage for entities indexed by domain
+        # with the child dict indexed by entity_id
+        #
+        # This is usually media_player, light, switch, etc.
+        self.domain_entities = hass.data.setdefault(
+            DATA_DOMAIN_ENTITIES, {}
+        ).setdefault(domain, {})
+
+        # Storage for entities indexed by domain and platform
+        # with the child dict indexed by entity_id
+        #
+        # This is usually media_player.yamaha, light.hue, switch.tplink, etc.
+        key = (domain, platform_name)
+        self.domain_platform_entities = hass.data.setdefault(
+            DATA_DOMAIN_PLATFORM_ENTITIES, {}
+        ).setdefault(key, {})
+
+        self.platform_data = PlatformData(
+            hass, domain=domain, platform_name=platform_name
+        )
 
     def __repr__(self) -> str:
         """Represent an EntityPlatform."""
-        return f"<EntityPlatform domain={self.domain} platform_name={self.platform_name} config_entry={self.config_entry}>"
+        return (
+            "<EntityPlatform "
+            f"domain={self.domain} "
+            f"platform_name={self.platform_name} "
+            f"config_entry={self.config_entry}>"
+        )
 
     @callback
     def _get_parallel_updates_semaphore(
-        self, entity_has_async_update: bool
+        self, entity_has_sync_update: bool
     ) -> asyncio.Semaphore | None:
         """Get or create a semaphore for parallel updates.
 
-        Semaphore will be created on demand because we base it off if update method is async or not.
+        Semaphore will be created on demand because we base it off if update
+        method is async or not.
 
-        If parallel updates is set to 0, we skip the semaphore.
-        If parallel updates is set to a number, we initialize the semaphore to that number.
-        The default value for parallel requests is decided based on the first entity that is added to Home Assistant.
-        It's 0 if the entity defines the async_update method, else it's 1.
+        - If parallel updates is set to 0, we skip the semaphore.
+        - If parallel updates is set to a number, we initialize the semaphore
+          to that number.
+
+        The default value for parallel requests is decided based on the first
+        entity of the platform which is added to Home Assistant. It's 1 if the
+        entity implements the update method, else it's 0.
         """
         if self.parallel_updates_created:
             return self.parallel_updates
@@ -138,7 +297,7 @@ class EntityPlatform:
 
         parallel_updates = getattr(self.platform, "PARALLEL_UPDATES", None)
 
-        if parallel_updates is None and not entity_has_async_update:
+        if parallel_updates is None and entity_has_sync_update:
             parallel_updates = 1
 
         if parallel_updates == 0:
@@ -146,6 +305,7 @@ class EntityPlatform:
 
         if parallel_updates is not None:
             self.parallel_updates = asyncio.Semaphore(parallel_updates)
+            self._update_in_sequence = parallel_updates == 1
 
         return self.parallel_updates
 
@@ -162,17 +322,46 @@ class EntityPlatform:
             platform, "setup_platform"
         ):
             self.logger.error(
-                "The %s platform for the %s integration does not support platform setup. Please remove it from your config.",
+                (
+                    "The %s platform for the %s integration does not support platform"
+                    " setup. Please remove it from your config."
+                ),
                 self.platform_name,
                 self.domain,
             )
+            learn_more_url = None
+            if self.platform and "custom_components" not in self.platform.__file__:  # type: ignore[attr-defined]
+                learn_more_url = (
+                    f"https://www.home-assistant.io/integrations/{self.platform_name}/"
+                )
+            platform_key = f"platform: {self.platform_name}"
+            yaml_example = f"```yaml\n{self.domain}:\n  - {platform_key}\n```"
+            async_create_issue(
+                self.hass,
+                HOMEASSISTANT_DOMAIN,
+                f"platform_integration_no_support_{self.domain}_{self.platform_name}",
+                is_fixable=False,
+                issue_domain=self.platform_name,
+                learn_more_url=learn_more_url,
+                severity=IssueSeverity.ERROR,
+                translation_key="no_platform_setup",
+                translation_placeholders={
+                    "domain": self.domain,
+                    "platform": self.platform_name,
+                    "platform_key": platform_key,
+                    "yaml_example": yaml_example,
+                },
+            )
+
             return
 
         @callback
-        def async_create_setup_task() -> Coroutine:
+        def async_create_setup_awaitable() -> (
+            Coroutine[Any, Any, None] | asyncio.Future[None]
+        ):
             """Get task to set up platform."""
             if getattr(platform, "async_setup_platform", None):
-                return platform.async_setup_platform(  # type: ignore
+                return platform.async_setup_platform(  # type: ignore[union-attr]
                     hass,
                     platform_config,
                     self._async_schedule_add_entities,
@@ -181,18 +370,25 @@ class EntityPlatform:
 
             # This should not be replaced with hass.async_add_job because
             # we don't want to track this task in case it blocks startup.
-            return hass.loop.run_in_executor(  # type: ignore[return-value]
+            return hass.loop.run_in_executor(
                 None,
-                platform.setup_platform,  # type: ignore
+                platform.setup_platform,  # type: ignore[union-attr]
                 hass,
                 platform_config,
                 self._schedule_add_entities,
                 discovery_info,
             )
 
-        await self._async_setup_platform(async_create_setup_task)
+        with async_start_setup(
+            hass,
+            integration=self.platform_name,
+            group=str(id(platform_config)),
+            phase=SetupPhases.PLATFORM_SETUP,
+        ):
+            await self._async_setup_platform(async_create_setup_awaitable)
 
-    async def async_shutdown(self) -> None:
+    @callback
+    def async_shutdown(self) -> None:
         """Call when Home Assistant is stopping."""
         self.async_cancel_retry_setup()
         self.async_unsub_polling()
@@ -211,124 +407,180 @@ class EntityPlatform:
         platform = self.platform
 
         @callback
-        def async_create_setup_task() -> Coroutine:
+        def async_create_setup_awaitable() -> Coroutine[Any, Any, None]:
             """Get task to set up platform."""
             config_entries.current_entry.set(config_entry)
-            return platform.async_setup_entry(  # type: ignore[no-any-return,union-attr]
-                self.hass, config_entry, self._async_schedule_add_entities
+
+            return platform.async_setup_entry(  # type: ignore[union-attr]
+                self.hass, config_entry, self._async_schedule_add_entities_for_entry
             )
 
-        return await self._async_setup_platform(async_create_setup_task)
+        return await self._async_setup_platform(async_create_setup_awaitable)
 
     async def _async_setup_platform(
-        self, async_create_setup_task: Callable[[], Coroutine], tries: int = 0
+        self,
+        async_create_setup_awaitable: Callable[[], Awaitable[None]],
+        tries: int = 0,
     ) -> bool:
         """Set up a platform via config file or config entry.
 
-        async_create_setup_task creates a coroutine that sets up platform.
+        async_create_setup_awaitable creates an awaitable that sets up platform.
         """
         current_platform.set(self)
         logger = self.logger
         hass = self.hass
-        full_name = f"{self.domain}.{self.platform_name}"
+        full_name = f"{self.platform_name}.{self.domain}"
+
+        await self.platform_data.async_load_translations()
 
         logger.info("Setting up %s", full_name)
-        warn_task = hass.loop.call_later(
-            SLOW_SETUP_WARNING,
+        warn_task = hass.loop.call_at(
+            hass.loop.time() + SLOW_SETUP_WARNING,
             logger.warning,
             "Setup of %s platform %s is taking over %s seconds.",
             self.domain,
             self.platform_name,
             SLOW_SETUP_WARNING,
         )
-        with async_start_setup(hass, [full_name]):
-            try:
-                task = async_create_setup_task()
+        try:
+            awaitable = async_create_setup_awaitable()
+            if asyncio.iscoroutine(awaitable):
+                awaitable = create_eager_task(awaitable, loop=hass.loop)
 
-                async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, self.domain):
-                    await asyncio.shield(task)
+            async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, self.domain):
+                await asyncio.shield(awaitable)
 
-                # Block till all entities are done
-                while self._tasks:
-                    pending = [task for task in self._tasks if not task.done()]
-                    self._tasks.clear()
+            # Block till all entities are done
+            while self._tasks:
+                # Await all tasks even if they are done
+                # to ensure exceptions are propagated
+                pending = self._tasks.copy()
+                self._tasks.clear()
+                await asyncio.gather(*pending)
+        except PlatformNotReady as ex:
+            tries += 1
+            wait_time = min(tries, 6) * PLATFORM_NOT_READY_BASE_WAIT_TIME
+            message = str(ex)
+            ready_message = f"ready yet: {message}" if message else "ready yet"
+            if tries == 1:
+                logger.warning(
+                    "Platform %s not %s; Retrying in background in %d seconds",
+                    self.platform_name,
+                    ready_message,
+                    wait_time,
+                )
+            else:
+                logger.debug(
+                    "Platform %s not %s; Retrying in %d seconds",
+                    self.platform_name,
+                    ready_message,
+                    wait_time,
+                )
 
-                    if pending:
-                        await asyncio.gather(*pending)
+            async def setup_again(*_args: Any) -> None:
+                """Run setup again."""
+                self._async_cancel_retry_setup = None
+                await self._async_setup_platform(async_create_setup_awaitable, tries)
 
-                hass.config.components.add(full_name)
-                self._setup_complete = True
-                return True
-            except PlatformNotReady as ex:
-                tries += 1
-                wait_time = min(tries, 6) * PLATFORM_NOT_READY_BASE_WAIT_TIME
-                message = str(ex)
-                ready_message = f"ready yet: {message}" if message else "ready yet"
-                if tries == 1:
-                    logger.warning(
-                        "Platform %s not %s; Retrying in background in %d seconds",
-                        self.platform_name,
-                        ready_message,
-                        wait_time,
-                    )
-                else:
-                    logger.debug(
-                        "Platform %s not %s; Retrying in %d seconds",
-                        self.platform_name,
-                        ready_message,
-                        wait_time,
-                    )
-
-                async def setup_again(*_args: Any) -> None:
-                    """Run setup again."""
-                    self._async_cancel_retry_setup = None
-                    await self._async_setup_platform(async_create_setup_task, tries)
-
-                if hass.state == CoreState.running:
-                    self._async_cancel_retry_setup = async_call_later(
-                        hass, wait_time, setup_again
-                    )
-                else:
-                    self._async_cancel_retry_setup = hass.bus.async_listen_once(
-                        EVENT_HOMEASSISTANT_STARTED, setup_again
-                    )
-                return False
-            except asyncio.TimeoutError:
-                logger.error(
+            if hass.state is CoreState.running:
+                self._async_cancel_retry_setup = async_call_later(
+                    hass, wait_time, setup_again
+                )
+            else:
+                self._async_cancel_retry_setup = hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STARTED, setup_again
+                )
+            return False
+        except TimeoutError:
+            logger.error(
+                (
                     "Setup of platform %s is taking longer than %s seconds."
-                    " Startup will proceed without waiting any longer.",
-                    self.platform_name,
-                    SLOW_SETUP_MAX_WAIT,
-                )
-                return False
-            except Exception:  # pylint: disable=broad-except
-                logger.exception(
-                    "Error while setting up %s platform for %s",
-                    self.platform_name,
-                    self.domain,
-                )
-                return False
-            finally:
-                warn_task.cancel()
+                    " Startup will proceed without waiting any longer."
+                ),
+                self.platform_name,
+                SLOW_SETUP_MAX_WAIT,
+            )
+            return False
+        except (ConfigEntryNotReady, ConfigEntryAuthFailed, ConfigEntryError) as exc:
+            _LOGGER.error(
+                "%s raises exception %s in forwarded platform "
+                "%s; Instead raise %s before calling async_forward_entry_setups",
+                self.platform_name,
+                type(exc).__name__,
+                self.domain,
+                type(exc).__name__,
+            )
+            return False
+        except Exception as exc:
+            logger.exception(
+                "Error while setting up %s platform for %s: %s",
+                self.platform_name,
+                self.domain,
+                exc,  # noqa: TRY401
+            )
+            return False
+        else:
+            hass.config.components.add(full_name)
+            self._setup_complete = True
+            return True
+        finally:
+            warn_task.cancel()
 
     def _schedule_add_entities(
         self, new_entities: Iterable[Entity], update_before_add: bool = False
     ) -> None:
         """Schedule adding entities for a single platform, synchronously."""
-        run_callback_threadsafe(
-            self.hass.loop,
+        self.hass.loop.call_soon_threadsafe(
             self._async_schedule_add_entities,
             list(new_entities),
             update_before_add,
-        ).result()
+        )
 
     @callback
     def _async_schedule_add_entities(
         self, new_entities: Iterable[Entity], update_before_add: bool = False
     ) -> None:
         """Schedule adding entities for a single platform async."""
-        task = self.hass.async_create_task(
-            self.async_add_entities(new_entities, update_before_add=update_before_add),
+        entities: list[Entity] = (
+            new_entities if type(new_entities) is list else list(new_entities)
+        )
+        # handle empty list from component/platform
+        if not entities:
+            return
+        task = self.hass.async_create_task_internal(
+            self.async_add_entities(entities, update_before_add=update_before_add),
+            f"EntityPlatform async_add_entities {self.domain}.{self.platform_name}",
+            eager_start=True,
+        )
+
+        if not self._setup_complete:
+            self._tasks.append(task)
+
+    @callback
+    def _async_schedule_add_entities_for_entry(
+        self,
+        new_entities: Iterable[Entity],
+        update_before_add: bool = False,
+        *,
+        config_subentry_id: str | None = None,
+    ) -> None:
+        """Schedule adding entities for a single platform async and track the task."""
+        assert self.config_entry
+        entities: list[Entity] = (
+            new_entities if type(new_entities) is list else list(new_entities)
+        )
+        # handle empty list from component/platform
+        if not entities:
+            return
+        task = self.config_entry.async_create_task(
+            self.hass,
+            self.async_add_entities(
+                entities,
+                update_before_add=update_before_add,
+                config_subentry_id=config_subentry_id,
+            ),
+            f"EntityPlatform async_add_entities_for_entry {self.domain}.{self.platform_name}",
+            eager_start=True,
         )
 
         if not self._setup_complete:
@@ -350,70 +602,193 @@ class EntityPlatform:
             self.hass.loop,
         ).result()
 
-    async def async_add_entities(
-        self, new_entities: Iterable[Entity], update_before_add: bool = False
+    async def _async_add_and_update_entities(
+        self,
+        entities: list[Entity],
+        timeout: float,
+        config_subentry_id: str | None,
     ) -> None:
-        """Add entities for a single platform async.
+        """Add entities for a single platform and update them.
 
-        This method must be run in the event loop.
+        Since we are updating the entities before adding them, we need to
+        schedule the coroutines as tasks so we can await them in the event
+        loop. This is because the update is likely to yield control to the
+        event loop and will finish faster if we run them concurrently.
         """
-        # handle empty list from component/platform
-        if not new_entities:
-            return
-
-        hass = self.hass
-
-        device_registry = dev_reg.async_get(hass)
-        entity_registry = ent_reg.async_get(hass)
-        tasks = [
-            self._async_add_entity(
-                entity, update_before_add, entity_registry, device_registry
-            )
-            for entity in new_entities
-        ]
-
-        # No entities for processing
-        if not tasks:
-            return
-
-        timeout = max(SLOW_ADD_ENTITY_MAX_WAIT * len(tasks), SLOW_ADD_MIN_TIMEOUT)
+        results: list[BaseException | None] | None = None
+        entity_registry = ent_reg.async_get(self.hass)
         try:
             async with self.hass.timeout.async_timeout(timeout, self.domain):
-                await asyncio.gather(*tasks)
-        except asyncio.TimeoutError:
+                results = await asyncio.gather(
+                    *(
+                        create_eager_task(
+                            self._async_add_entity(
+                                entity, True, entity_registry, config_subentry_id
+                            ),
+                            loop=self.hass.loop,
+                        )
+                        for entity in entities
+                    ),
+                    return_exceptions=True,
+                )
+        except TimeoutError:
             self.logger.warning(
                 "Timed out adding entities for domain %s with platform %s after %ds",
                 self.domain,
                 self.platform_name,
                 timeout,
             )
-        except Exception:
-            self.logger.exception(
-                "Error adding entities for domain %s with platform %s",
+
+        if not results:
+            return
+
+        for idx, result in enumerate(results):
+            if isinstance(result, Exception):
+                entity = entities[idx]
+                self.logger.exception(
+                    "Error adding entity %s for domain %s with platform %s",
+                    entity.entity_id,
+                    self.domain,
+                    self.platform_name,
+                    exc_info=result,
+                )
+            elif isinstance(result, BaseException):
+                raise result
+
+    async def _async_add_entities(
+        self,
+        entities: list[Entity],
+        timeout: float,
+        config_subentry_id: str | None,
+    ) -> None:
+        """Add entities for a single platform without updating.
+
+        In this case we are not updating the entities before adding them
+        which means it is likely that we will not have to yield control
+        to the event loop so we can await the coros directly without
+        scheduling them as tasks.
+        """
+        entity_registry = ent_reg.async_get(self.hass)
+        try:
+            async with self.hass.timeout.async_timeout(timeout, self.domain):
+                for entity in entities:
+                    try:
+                        await self._async_add_entity(
+                            entity, False, entity_registry, config_subentry_id
+                        )
+                    except Exception as ex:
+                        self.logger.exception(
+                            "Error adding entity %s for domain %s with platform %s",
+                            entity.entity_id,
+                            self.domain,
+                            self.platform_name,
+                            exc_info=ex,
+                        )
+        except TimeoutError:
+            self.logger.warning(
+                "Timed out adding entities for domain %s with platform %s after %ds",
                 self.domain,
                 self.platform_name,
+                timeout,
             )
-            raise
+
+    async def async_add_entities(
+        self,
+        new_entities: Iterable[Entity],
+        update_before_add: bool = False,
+        *,
+        config_subentry_id: str | None = None,
+    ) -> None:
+        """Add entities for a single platform async.
+
+        This method must be run in the event loop.
+
+        :param config_subentry_id: subentry which the entities should be added to
+        """
+        if config_subentry_id and (
+            not self.config_entry
+            or config_subentry_id not in self.config_entry.subentries
+        ):
+            raise HomeAssistantError(
+                f"Can't add entities to unknown subentry {config_subentry_id} of config "
+                f"entry {self.config_entry.entry_id if self.config_entry else None}"
+            )
+
+        entities: list[Entity] = (
+            new_entities if type(new_entities) is list else list(new_entities)
+        )
+        timeout = max(SLOW_ADD_ENTITY_MAX_WAIT * len(entities), SLOW_ADD_MIN_TIMEOUT)
+        if update_before_add:
+            await self._async_add_and_update_entities(
+                entities, timeout, config_subentry_id
+            )
+        else:
+            await self._async_add_entities(entities, timeout, config_subentry_id)
 
         if (
             (self.config_entry and self.config_entry.pref_disable_polling)
-            or self._async_unsub_polling is not None
-            or not any(entity.should_poll for entity in self.entities.values())
+            or self._async_polling_timer is not None
+            or not any(
+                # Entity may have failed to add or called `add_to_platform_abort`
+                # so we check if the entity is in self.entities before
+                # checking `entity.should_poll` since `should_poll` may need to
+                # check `self.hass` which will be `None` if the entity did not add
+                entity.entity_id
+                and entity.entity_id in self.entities
+                and entity.should_poll
+                for entity in entities
+            )
         ):
             return
 
-        self._async_unsub_polling = async_track_time_interval(
-            self.hass,
-            self._update_entity_states,
-            self.scan_interval,
+        self._async_polling_timer = self.hass.loop.call_later(
+            self.scan_interval_seconds,
+            self._async_handle_interval_callback,
         )
+
+    @callback
+    def _async_handle_interval_callback(self) -> None:
+        """Update all the entity states in a single platform."""
+        self._async_polling_timer = self.hass.loop.call_later(
+            self.scan_interval_seconds,
+            self._async_handle_interval_callback,
+        )
+        if self.config_entry:
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self._async_update_entity_states(),
+                name=f"EntityPlatform poll {self.domain}.{self.platform_name}",
+                eager_start=True,
+            )
+        else:
+            self.hass.async_create_background_task(
+                self._async_update_entity_states(),
+                name=f"EntityPlatform poll {self.domain}.{self.platform_name}",
+                eager_start=True,
+            )
+
+    def _entity_id_already_exists(self, entity_id: str) -> tuple[bool, bool]:
+        """Check if an entity_id already exists.
+
+        Returns a tuple [already_exists, restored]
+        """
+        already_exists = entity_id in self.entities
+        restored = False
+
+        if not already_exists and not self.hass.states.async_available(entity_id):
+            existing = self.hass.states.get(entity_id)
+            if existing is not None and ATTR_RESTORED in existing.attributes:
+                restored = True
+            else:
+                already_exists = True
+        return (already_exists, restored)
 
     async def _async_add_entity(  # noqa: C901
         self,
         entity: Entity,
         update_before_add: bool,
         entity_registry: EntityRegistry,
-        device_registry: DeviceRegistry,
+        config_subentry_id: str | None,
     ) -> None:
         """Add an entity to the platform."""
         if entity is None:
@@ -422,106 +797,121 @@ class EntityPlatform:
         entity.add_to_platform_start(
             self.hass,
             self,
-            self._get_parallel_updates_semaphore(hasattr(entity, "async_update")),
+            self._get_parallel_updates_semaphore(hasattr(entity, "update")),
         )
 
-        # Update properties before we generate the entity_id
+        # Update properties before we generate the entity_id. This will happen
+        # also for disabled entities.
         if update_before_add:
             try:
                 await entity.async_device_update(warning=False)
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 self.logger.exception("%s: Error on device update!", self.platform_name)
                 entity.add_to_platform_abort()
                 return
 
-        requested_entity_id = None
         suggested_object_id: str | None = None
-        generate_new_entity_id = False
+
+        entity_name = entity.name
+        if entity_name is UNDEFINED:
+            entity_name = None
 
         # Get entity_id from unique ID registration
         if entity.unique_id is not None:
-            if entity.entity_id is not None:
-                requested_entity_id = entity.entity_id
-                suggested_object_id = split_entity_id(entity.entity_id)[1]
-            else:
-                suggested_object_id = entity.name  # type: ignore[unreachable]
+            registered_entity_id = entity_registry.async_get_entity_id(
+                self.domain, self.platform_name, entity.unique_id
+            )
+            if registered_entity_id:
+                already_exists, _ = self._entity_id_already_exists(registered_entity_id)
 
-            if self.entity_namespace is not None:
-                suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
-
-            if self.config_entry is not None:
-                config_entry_id: str | None = self.config_entry.entry_id
-            else:
-                config_entry_id = None
-
-            device_info = entity.device_info
-            device_id = None
-            device = None
-
-            if config_entry_id is not None and device_info is not None:
-                processed_dev_info: dict[str, str | None] = {
-                    "config_entry_id": config_entry_id
-                }
-                for key in (
-                    "connections",
-                    "default_manufacturer",
-                    "default_model",
-                    "default_name",
-                    "entry_type",
-                    "identifiers",
-                    "manufacturer",
-                    "model",
-                    "name",
-                    "suggested_area",
-                    "sw_version",
-                    "hw_version",
-                    "via_device",
-                ):
-                    if key in device_info:
-                        processed_dev_info[key] = device_info[key]  # type: ignore[misc]
-
-                if "configuration_url" in device_info:
-                    if device_info["configuration_url"] is None:
-                        processed_dev_info["configuration_url"] = None
+                if already_exists:
+                    # If there's a collision, the entry belongs to another entity
+                    entity.registry_entry = None
+                    msg = (
+                        f"Platform {self.platform_name} does not generate unique IDs. "
+                    )
+                    if entity.entity_id:
+                        msg += (
+                            f"ID {entity.unique_id} is already used by"
+                            f" {registered_entity_id} - ignoring {entity.entity_id}"
+                        )
                     else:
-                        configuration_url = str(device_info["configuration_url"])
-                        if urlparse(configuration_url).scheme in [
-                            "http",
-                            "https",
-                            "homeassistant",
-                        ]:
-                            processed_dev_info["configuration_url"] = configuration_url
-                        else:
-                            _LOGGER.warning(
-                                "Ignoring invalid device configuration_url '%s'",
-                                configuration_url,
-                            )
+                        msg += (
+                            f"ID {entity.unique_id} already exists - ignoring"
+                            f" {registered_entity_id}"
+                        )
+                    self.logger.error(msg)
+                    entity.add_to_platform_abort()
+                    return
 
-                try:
-                    device = device_registry.async_get_or_create(**processed_dev_info)  # type: ignore[arg-type]
-                    device_id = device.id
-                except RequiredParameterMissing:
-                    pass
+            device: dev_reg.DeviceEntry | None
+            if self.config_entry:
+                if device_info := entity.device_info:
+                    try:
+                        device = dev_reg.async_get(self.hass).async_get_or_create(
+                            config_entry_id=self.config_entry.entry_id,
+                            config_subentry_id=config_subentry_id,
+                            **device_info,
+                        )
+                    except dev_reg.DeviceInfoError as exc:
+                        self.logger.error(
+                            "%s: Not adding entity with invalid device info: %s",
+                            self.platform_name,
+                            str(exc),
+                        )
+                        entity.add_to_platform_abort()
+                        return
+                else:
+                    device = entity.device_entry
+            else:
+                device = None
+
+            calculated_object_id: str | None = None
+            # An entity may suggest the entity_id by setting entity_id itself
+            suggested_entity_id: str | None = entity.entity_id
+            if suggested_entity_id is not None:
+                suggested_object_id = split_entity_id(entity.entity_id)[1]
+                if self.entity_namespace is not None:
+                    suggested_object_id = (
+                        f"{self.entity_namespace} {suggested_object_id}"
+                    )
+            if not registered_entity_id and suggested_entity_id is None:
+                # Do not bother working out a suggested_object_id
+                # if the entity is already registered as it will
+                # be ignored.
+                #
+                calculated_object_id = async_calculate_suggested_object_id(
+                    entity, device
+                )
 
             disabled_by: RegistryEntryDisabler | None = None
             if not entity.entity_registry_enabled_default:
                 disabled_by = RegistryEntryDisabler.INTEGRATION
 
+            hidden_by: RegistryEntryHider | None = None
+            if not entity.entity_registry_visible_default:
+                hidden_by = RegistryEntryHider.INTEGRATION
+
             entry = entity_registry.async_get_or_create(
                 self.domain,
                 self.platform_name,
                 entity.unique_id,
+                calculated_object_id=calculated_object_id,
                 capabilities=entity.capability_attributes,
                 config_entry=self.config_entry,
-                device_id=device_id,
+                config_subentry_id=config_subentry_id,
+                device_id=device.id if device else None,
                 disabled_by=disabled_by,
                 entity_category=entity.entity_category,
-                known_object_ids=self.entities.keys(),
+                get_initial_options=entity.get_initial_entity_options,
+                has_entity_name=entity.has_entity_name,
+                hidden_by=hidden_by,
                 original_device_class=entity.device_class,
                 original_icon=entity.icon,
-                original_name=entity.name,
+                original_name=entity_name,
                 suggested_object_id=suggested_object_id,
                 supported_features=entity.supported_features,
+                translation_key=entity.translation_key,
                 unit_of_measurement=entity.unit_of_measurement,
             )
 
@@ -531,71 +921,67 @@ class EntityPlatform:
                 )
 
             entity.registry_entry = entry
+            if device:
+                entity.device_entry = device
             entity.entity_id = entry.entity_id
 
-            if entry.disabled:
-                self.logger.debug(
-                    "Not adding entity %s because it's disabled",
-                    entry.name
-                    or entity.name
-                    or f'"{self.platform_name} {entity.unique_id}"',
+        else:  # entity.unique_id is None
+            generate_new_entity_id = False
+            # We won't generate an entity ID if the platform has already set one
+            # We will however make sure that platform cannot pick a registered ID
+            if entity.entity_id is not None and entity_registry.async_is_registered(
+                entity.entity_id
+            ):
+                # If entity already registered, convert entity id to suggestion
+                suggested_object_id = split_entity_id(entity.entity_id)[1]
+                generate_new_entity_id = True
+
+            # Generate entity ID
+            if entity.entity_id is None or generate_new_entity_id:
+                suggested_object_id = (
+                    suggested_object_id
+                    or entity.suggested_object_id
+                    or DEVICE_DEFAULT_NAME
                 )
+
+                if self.entity_namespace is not None:
+                    suggested_object_id = (
+                        f"{self.entity_namespace} {suggested_object_id}"
+                    )
+                entity.entity_id = entity_registry.async_generate_entity_id(
+                    self.domain, suggested_object_id
+                )
+
+            # Make sure it is valid in case an entity set the value themselves
+            # Avoid calling valid_entity_id if we already know it is valid
+            # since it already made it in the registry
+            if not valid_entity_id(entity.entity_id):
                 entity.add_to_platform_abort()
-                return
+                raise HomeAssistantError(f"Invalid entity ID: {entity.entity_id}")
 
-        # We won't generate an entity ID if the platform has already set one
-        # We will however make sure that platform cannot pick a registered ID
-        elif entity.entity_id is not None and entity_registry.async_is_registered(
-            entity.entity_id
-        ):
-            # If entity already registered, convert entity id to suggestion
-            suggested_object_id = split_entity_id(entity.entity_id)[1]
-            generate_new_entity_id = True
-
-        # Generate entity ID
-        if entity.entity_id is None or generate_new_entity_id:
-            suggested_object_id = (
-                suggested_object_id or entity.name or DEVICE_DEFAULT_NAME
-            )
-
-            if self.entity_namespace is not None:
-                suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
-            entity.entity_id = entity_registry.async_generate_entity_id(
-                self.domain, suggested_object_id, self.entities.keys()
-            )
-
-        # Make sure it is valid in case an entity set the value themselves
-        if not valid_entity_id(entity.entity_id):
-            entity.add_to_platform_abort()
-            raise HomeAssistantError(f"Invalid entity ID: {entity.entity_id}")
-
-        already_exists = entity.entity_id in self.entities
-        restored = False
-
-        if not already_exists and not self.hass.states.async_available(
-            entity.entity_id
-        ):
-            existing = self.hass.states.get(entity.entity_id)
-            if existing is not None and ATTR_RESTORED in existing.attributes:
-                restored = True
-            else:
-                already_exists = True
+        already_exists, restored = self._entity_id_already_exists(entity.entity_id)
 
         if already_exists:
-            if entity.unique_id is not None:
-                msg = f"Platform {self.platform_name} does not generate unique IDs. "
-                if requested_entity_id:
-                    msg += f"ID {entity.unique_id} is already used by {entity.entity_id} - ignoring {requested_entity_id}"
-                else:
-                    msg += f"ID {entity.unique_id} already exists - ignoring {entity.entity_id}"
-            else:
-                msg = f"Entity id already exists - ignoring: {entity.entity_id}"
-            self.logger.error(msg)
+            self.logger.error(
+                "Entity id already exists - ignoring: %s", entity.entity_id
+            )
+            entity.add_to_platform_abort()
+            return
+
+        if entity.registry_entry and entity.registry_entry.disabled:
+            self.logger.debug(
+                "Not adding entity %s because it's disabled",
+                entry.name
+                or entity_name
+                or f'"{self.platform_name} {entity.unique_id}"',
+            )
             entity.add_to_platform_abort()
             return
 
         entity_id = entity.entity_id
         self.entities[entity_id] = entity
+        self.domain_entities[entity_id] = entity
+        self.domain_platform_entities[entity_id] = entity
 
         if not restored:
             # Reserve the state in the state machine
@@ -606,8 +992,10 @@ class EntityPlatform:
             self.hass.states.async_reserve(entity.entity_id)
 
         def remove_entity_cb() -> None:
-            """Remove entity from entities list."""
-            self.entities.pop(entity_id)
+            """Remove entity from entities dict."""
+            del self.entities[entity_id]
+            del self.domain_entities[entity_id]
+            del self.domain_platform_entities[entity_id]
 
         entity.async_on_remove(remove_entity_cb)
 
@@ -623,9 +1011,17 @@ class EntityPlatform:
         if not self.entities:
             return
 
-        tasks = [entity.async_remove() for entity in self.entities.values()]
-
-        await asyncio.gather(*tasks)
+        # Removals are awaited in series since in most
+        # cases calling async_remove will not yield control
+        # to the event loop and we want to avoid scheduling
+        # one task per entity.
+        for entity in list(self.entities.values()):
+            try:
+                await entity.async_remove()
+            except Exception:
+                self.logger.exception(
+                    "Error while removing entity %s", entity.entity_id
+                )
 
         self.async_unsub_polling()
         self._setup_complete = False
@@ -633,9 +1029,16 @@ class EntityPlatform:
     @callback
     def async_unsub_polling(self) -> None:
         """Stop polling."""
-        if self._async_unsub_polling is not None:
-            self._async_unsub_polling()
-            self._async_unsub_polling = None
+        if self._async_polling_timer is not None:
+            self._async_polling_timer.cancel()
+            self._async_polling_timer = None
+
+    @callback
+    def async_prepare(self) -> None:
+        """Register the entity platform in DATA_ENTITY_PLATFORM."""
+        self.hass.data.setdefault(DATA_ENTITY_PLATFORM, {}).setdefault(
+            self.platform_name, []
+        ).append(self)
 
     async def async_destroy(self) -> None:
         """Destroy an entity platform.
@@ -650,11 +1053,10 @@ class EntityPlatform:
         await self.entities[entity_id].async_remove()
 
         # Clean up polling job if no longer needed
-        if self._async_unsub_polling is not None and not any(
+        if self._async_polling_timer is not None and not any(
             entity.should_poll for entity in self.entities.values()
         ):
-            self._async_unsub_polling()
-            self._async_unsub_polling = None
+            self.async_unsub_polling()
 
     async def async_extract_from_service(
         self, service_call: ServiceCall, expand_group: bool = True
@@ -666,16 +1068,17 @@ class EntityPlatform:
         This method must be run in the event loop.
         """
         return await service.async_extract_entities(
-            self.hass, self.entities.values(), service_call, expand_group
+            self.entities.values(), service_call, expand_group
         )
 
     @callback
     def async_register_entity_service(
         self,
         name: str,
-        schema: dict | vol.Schema,
+        schema: VolDictType | VolSchemaType | None,
         func: str | Callable[..., Any],
         required_features: Iterable[int] | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
     ) -> None:
         """Register an entity service.
 
@@ -684,28 +1087,19 @@ class EntityPlatform:
         if self.hass.services.has_service(self.platform_name, name):
             return
 
-        if isinstance(schema, dict):
-            schema = cv.make_entity_service_schema(schema)
-
-        async def handle_service(call: ServiceCall) -> None:
-            """Handle the service."""
-            await service.entity_service_call(
-                self.hass,
-                [
-                    plf
-                    for plf in self.hass.data[DATA_ENTITY_PLATFORM][self.platform_name]
-                    if plf.domain == self.domain
-                ],
-                func,
-                call,
-                required_features,
-            )
-
-        self.hass.services.async_register(
-            self.platform_name, name, handle_service, schema
+        service.async_register_entity_service(
+            self.hass,
+            self.platform_name,
+            name,
+            entities=self.domain_platform_entities,
+            func=func,
+            job_type=None,
+            required_features=required_features,
+            schema=schema,
+            supports_response=supports_response,
         )
 
-    async def _update_entity_states(self, now: datetime) -> None:
+    async def _async_update_entity_states(self) -> None:
         """Update the states of all the polling entities.
 
         To protect from flooding the executor, we will update async entities
@@ -725,14 +1119,127 @@ class EntityPlatform:
             return
 
         async with self._process_updates:
-            tasks = []
-            for entity in self.entities.values():
-                if not entity.should_poll:
-                    continue
-                tasks.append(entity.async_update_ha_state(True))
+            if self._update_in_sequence or len(self.entities) <= 1:
+                # If we know we will update sequentially, we want to avoid scheduling
+                # the coroutines as tasks that will wait on the semaphore lock.
+                for entity in list(self.entities.values()):
+                    # If the entity is removed from hass during the previous
+                    # entity being updated, we need to skip updating the
+                    # entity.
+                    if entity.should_poll and entity.hass:
+                        await entity.async_update_ha_state(True)
+                return
 
-            if tasks:
+            if tasks := [
+                create_eager_task(
+                    entity.async_update_ha_state(True), loop=self.hass.loop
+                )
+                for entity in self.entities.values()
+                if entity.should_poll
+            ]:
                 await asyncio.gather(*tasks)
+
+    @property
+    def domain(self) -> str:
+        """Return the domain (e.g. light)."""
+        return self.platform_data.domain
+
+    @property
+    def platform_name(self) -> str:
+        """Return the platform name (e.g hue)."""
+        return self.platform_data.platform_name
+
+    @property
+    @deprecated_function(
+        "platform_data.component_translations",
+        breaks_in_ha_version="2026.8",
+    )
+    def component_translations(self) -> dict[str, str]:
+        """Return the component translations.
+
+        Will be removed in Home Assistant Core 2026.8.
+        """
+        return self.platform_data.component_translations
+
+    @property
+    @deprecated_function(
+        "platform_data.platform_translations",
+        breaks_in_ha_version="2026.8",
+    )
+    def platform_translations(self) -> dict[str, str]:
+        """Return the platform translations.
+
+        Will be removed in Home Assistant Core 2026.8.
+        """
+        return self.platform_data.platform_translations
+
+    @property
+    @deprecated_function(
+        "platform_data.object_id_component_translations",
+        breaks_in_ha_version="2026.8",
+    )
+    def object_id_component_translations(self) -> dict[str, str]:
+        """Return the object ID component translations.
+
+        Will be removed in Home Assistant Core 2026.8.
+        """
+        return self.platform_data.object_id_component_translations
+
+    @property
+    @deprecated_function(
+        "platform_data.object_id_platform_translations",
+        breaks_in_ha_version="2026.8",
+    )
+    def object_id_platform_translations(self) -> dict[str, str]:
+        """Return the object ID platform translations.
+
+        Will be removed in Home Assistant Core 2026.8.
+        """
+        return self.platform_data.object_id_platform_translations
+
+    @property
+    @deprecated_function(
+        "platform_data.default_language_platform_translations",
+        breaks_in_ha_version="2026.8",
+    )
+    def default_language_platform_translations(self) -> dict[str, str]:
+        """Return the default language platform translations.
+
+        Will be removed in Home Assistant Core 2026.8.
+        """
+        return self.platform_data.default_language_platform_translations
+
+    @deprecated_function(
+        "platform_data.async_load_translations",
+        breaks_in_ha_version="2026.8",
+    )
+    async def async_load_translations(self) -> None:
+        """Load translations.
+
+        Will be removed in Home Assistant Core 2026.8.
+        """
+        return await self.platform_data.async_load_translations()
+
+
+@callback
+def async_calculate_suggested_object_id(
+    entity: Entity, device: dev_reg.DeviceEntry | None
+) -> str | None:
+    """Calculate the suggested object ID for an entity."""
+    calculated_object_id: str | None = None
+    if device and entity.has_entity_name:
+        device_name = device.name_by_user or device.name
+        if entity.use_device_name:
+            calculated_object_id = device_name
+        else:
+            calculated_object_id = f"{device_name} {entity.suggested_object_id}"
+    if not calculated_object_id:
+        calculated_object_id = entity.suggested_object_id
+
+    if (platform := entity.platform) and platform.entity_namespace is not None:
+        calculated_object_id = f"{platform.entity_namespace} {calculated_object_id}"
+
+    return calculated_object_id
 
 
 current_platform: ContextVar[EntityPlatform | None] = ContextVar(
@@ -759,6 +1266,4 @@ def async_get_platforms(
     ):
         return []
 
-    platforms: list[EntityPlatform] = hass.data[DATA_ENTITY_PLATFORM][integration_name]
-
-    return platforms
+    return hass.data[DATA_ENTITY_PLATFORM][integration_name]

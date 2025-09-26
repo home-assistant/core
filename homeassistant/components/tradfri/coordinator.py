@@ -1,31 +1,33 @@
 """Tradfri DataUpdateCoordinator."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import timedelta
-import logging
 from typing import Any
 
 from pytradfri.command import Command
 from pytradfri.device import Device
 from pytradfri.error import RequestError
-from pytradfri.group import Group
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import SCAN_INTERVAL
+from .const import LOGGER
 
-_LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = 60  # Interval for updating the coordinator
 
 
 class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
     """Coordinator to manage data for a specific Tradfri device."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        *,
+        config_entry: ConfigEntry,
         api: Callable[[Command | list[Command]], Any],
         device: Device,
     ) -> None:
@@ -36,7 +38,8 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
 
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
+            config_entry=config_entry,
             name=f"Update coordinator for {device}",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
@@ -63,7 +66,7 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         # Store exception so that it gets raised in _async_update_data
         self._exception = exc
 
-        _LOGGER.debug(
+        LOGGER.debug(
             "Observation failed for %s, trying again", self.device, exc_info=exc
         )
         # Change interval so we get a swift refresh
@@ -76,7 +79,7 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
             if self._exception:
                 exc = self._exception
                 self._exception = None  # Clear stored exception
-                raise exc  # pylint: disable-msg=raising-bad-type
+                raise exc
         except RequestError as err:
             raise UpdateFailed(f"Error communicating with API: {err}.") from err
 
@@ -95,47 +98,3 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
             self.update_interval = timedelta(seconds=SCAN_INTERVAL)
 
         return self.device
-
-
-class TradfriGroupDataUpdateCoordinator(DataUpdateCoordinator[Group]):
-    """Coordinator to manage data for a specific Tradfri group."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        *,
-        api: Callable[[Command | list[Command]], Any],
-        group: Group,
-    ) -> None:
-        """Initialize group coordinator."""
-        self.api = api
-        self.group = group
-        self._exception: Exception | None = None
-
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=f"Update coordinator for {group}",
-            update_interval=timedelta(seconds=SCAN_INTERVAL),
-        )
-
-    async def set_hub_available(self, available: bool) -> None:
-        """Set status of hub."""
-        if available != self.last_update_success:
-            if not available:
-                self.last_update_success = False
-            await self.async_request_refresh()
-
-    async def _async_update_data(self) -> Group:
-        """Fetch data from the gateway for a specific group."""
-        self.update_interval = timedelta(seconds=SCAN_INTERVAL)  # Reset update interval
-        cmd = self.group.update()
-        try:
-            await self.api(cmd)
-        except RequestError as exc:
-            self.update_interval = timedelta(
-                seconds=5
-            )  # Change interval so we get a swift refresh
-            raise UpdateFailed("Unable to update group coordinator") from exc
-
-        return self.group

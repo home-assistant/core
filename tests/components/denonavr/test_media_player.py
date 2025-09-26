@@ -1,4 +1,5 @@
 """The tests for the denonavr media player platform."""
+
 from unittest.mock import patch
 
 import pytest
@@ -6,7 +7,6 @@ import pytest
 from homeassistant.components import media_player
 from homeassistant.components.denonavr.config_flow import (
     CONF_MANUFACTURER,
-    CONF_MODEL,
     CONF_SERIAL_NUMBER,
     CONF_TYPE,
     DOMAIN,
@@ -18,7 +18,8 @@ from homeassistant.components.denonavr.media_player import (
     SERVICE_SET_DYNAMIC_EQ,
     SERVICE_UPDATE_AUDYSSEY,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -40,11 +41,12 @@ ENTITY_ID = f"{media_player.DOMAIN}.{TEST_NAME}"
 @pytest.fixture(name="client")
 def client_fixture():
     """Patch of client library for tests."""
-    with patch(
-        "homeassistant.components.denonavr.receiver.DenonAVR",
-        autospec=True,
-    ) as mock_client_class, patch(
-        "homeassistant.components.denonavr.config_flow.denonavr.async_discover"
+    with (
+        patch(
+            "homeassistant.components.denonavr.receiver.DenonAVR",
+            autospec=True,
+        ) as mock_client_class,
+        patch("homeassistant.components.denonavr.config_flow.denonavr.async_discover"),
     ):
         mock_client_class.return_value.name = TEST_NAME
         mock_client_class.return_value.model_name = TEST_MODEL
@@ -58,7 +60,7 @@ def client_fixture():
         yield mock_client_class.return_value
 
 
-async def setup_denonavr(hass):
+async def setup_denonavr(hass: HomeAssistant) -> None:
     """Initialize media_player for tests."""
     entry_data = {
         CONF_HOST: TEST_HOST,
@@ -85,7 +87,7 @@ async def setup_denonavr(hass):
     assert state.name == TEST_NAME
 
 
-async def test_get_command(hass, client):
+async def test_get_command(hass: HomeAssistant, client) -> None:
     """Test generic command functionality."""
     await setup_denonavr(hass)
 
@@ -99,7 +101,7 @@ async def test_get_command(hass, client):
     client.async_get_command.assert_awaited_with("test_command")
 
 
-async def test_dynamic_eq(hass, client):
+async def test_dynamic_eq(hass: HomeAssistant, client) -> None:
     """Test that dynamic eq method works."""
     await setup_denonavr(hass)
 
@@ -120,7 +122,7 @@ async def test_dynamic_eq(hass, client):
     client.async_dynamic_eq_off.assert_called_once()
 
 
-async def test_update_audyssey(hass, client):
+async def test_update_audyssey(hass: HomeAssistant, client) -> None:
     """Test that dynamic eq method works."""
     await setup_denonavr(hass)
 

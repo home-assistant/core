@@ -1,7 +1,9 @@
 """The motionEye integration."""
+
 from __future__ import annotations
 
-from types import MappingProxyType
+from collections.abc import Mapping
+from contextlib import suppress
 from typing import Any
 
 import aiohttp
@@ -11,7 +13,6 @@ from motioneye_client.const import (
     DEFAULT_SURVEILLANCE_USERNAME,
     KEY_ACTION_SNAPSHOT,
     KEY_MOTION_DETECTION,
-    KEY_NAME,
     KEY_STREAMING_AUTH_MODE,
     KEY_TEXT_OVERLAY_CAMERA_NAME,
     KEY_TEXT_OVERLAY_CUSTOM_TEXT,
@@ -24,10 +25,9 @@ from motioneye_client.const import (
 )
 import voluptuous as vol
 
-from homeassistant.components.mjpeg.camera import (
+from homeassistant.components.mjpeg import (
     CONF_MJPEG_URL,
     CONF_STILL_IMAGE_URL,
-    CONF_VERIFY_SSL,
     MjpegCamera,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -42,15 +42,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import (
-    MotionEyeEntity,
-    get_camera_from_cameras,
-    is_acceptable_camera,
-    listen_for_new_cameras,
-)
+from . import get_camera_from_cameras, is_acceptable_camera, listen_for_new_cameras
 from .const import (
     CONF_ACTION,
     CONF_CLIENT,
@@ -65,6 +60,7 @@ from .const import (
     SERVICE_SNAPSHOT,
     TYPE_MOTIONEYE_MJPEG_CAMERA,
 )
+from .entity import MotionEyeEntity
 
 PLATFORMS = [Platform.CAMERA]
 
@@ -97,7 +93,9 @@ SCHEMA_SERVICE_SET_TEXT = vol.Schema(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up motionEye from a config entry."""
     entry_data = hass.data[DOMAIN][entry.entry_id]
@@ -136,13 +134,17 @@ async def async_setup_entry(
     )
     platform.async_register_entity_service(
         SERVICE_SNAPSHOT,
-        {},
+        None,
         "async_request_snapshot",
     )
 
 
 class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
     """motionEye mjpeg camera."""
+
+    _attr_brand = MOTIONEYE_MANUFACTURER
+    # motionEye cameras are always streaming or unavailable.
+    _attr_is_streaming = True
 
     def __init__(
         self,
@@ -152,15 +154,12 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         camera: dict[str, Any],
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
-        options: MappingProxyType[str, str],
+        options: Mapping[str, str],
     ) -> None:
         """Initialize a MJPEG camera."""
         self._surveillance_username = username
         self._surveillance_password = password
         self._motion_detection_enabled: bool = camera.get(KEY_MOTION_DETECTION, False)
-
-        # motionEye cameras are always streaming or unavailable.
-        self._attr_is_streaming = True
 
         MotionEyeEntity.__init__(
             self,
@@ -173,10 +172,8 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         )
         MjpegCamera.__init__(
             self,
-            {
-                CONF_VERIFY_SSL: False,
-                **self._get_mjpeg_camera_properties_for_camera(camera),
-            },
+            verify_ssl=False,
+            **self._get_mjpeg_camera_properties_for_camera(camera),
         )
 
     @callback
@@ -199,15 +196,13 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
             # which is not available during entity construction.
             streaming_url = Template(streaming_template).render(**camera)
         else:
-            try:
+            with suppress(MotionEyeClientURLParseError):
                 streaming_url = self._client.get_camera_stream_url(camera)
-            except MotionEyeClientURLParseError:
-                pass
 
         return {
-            CONF_NAME: camera[KEY_NAME],
+            CONF_NAME: None,
             CONF_USERNAME: self._surveillance_username if auth is not None else None,
-            CONF_PASSWORD: self._surveillance_password if auth is not None else None,
+            CONF_PASSWORD: self._surveillance_password if auth is not None else "",
             CONF_MJPEG_URL: streaming_url or "",
             CONF_STILL_IMAGE_URL: self._client.get_camera_snapshot_url(camera),
             CONF_AUTHENTICATION: auth,
@@ -220,14 +215,16 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         # Sets the state of the underlying (inherited) MjpegCamera based on the updated
         # MotionEye camera dictionary.
         properties = self._get_mjpeg_camera_properties_for_camera(camera)
-        self._name = properties[CONF_NAME]
         self._username = properties[CONF_USERNAME]
         self._password = properties[CONF_PASSWORD]
         self._mjpeg_url = properties[CONF_MJPEG_URL]
         self._still_image_url = properties[CONF_STILL_IMAGE_URL]
         self._authentication = properties[CONF_AUTHENTICATION]
 
-        if self._authentication == HTTP_BASIC_AUTHENTICATION:
+        if (
+            self._authentication == HTTP_BASIC_AUTHENTICATION
+            and self._username is not None
+        ):
             self._auth = aiohttp.BasicAuth(self._username, password=self._password)
 
     def _is_acceptable_streaming_camera(self) -> bool:
@@ -253,21 +250,16 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         super()._handle_coordinator_update()
 
     @property
-    def brand(self) -> str:
-        """Return the camera brand."""
-        return MOTIONEYE_MANUFACTURER
-
-    @property
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         return self._motion_detection_enabled
 
     async def async_set_text_overlay(
         self,
-        left_text: str = None,
-        right_text: str = None,
-        custom_left_text: str = None,
-        custom_right_text: str = None,
+        left_text: str | None = None,
+        right_text: str | None = None,
+        custom_left_text: str | None = None,
+        custom_right_text: str | None = None,
     ) -> None:
         """Set text overlay for a camera."""
         # Fetch the very latest camera config to reduce the risk of updating with a

@@ -1,10 +1,11 @@
 """Energy data."""
+
 from __future__ import annotations
 
 import asyncio
 from collections import Counter
 from collections.abc import Awaitable, Callable
-from typing import Literal, Optional, TypedDict, Union, cast
+from typing import Literal, TypedDict
 
 import voluptuous as vol
 
@@ -32,12 +33,11 @@ class FlowFromGridSourceType(TypedDict):
     stat_energy_from: str
 
     # statistic_id of costs ($) incurred from the energy meter
-    # If set to None and entity_energy_from and entity_energy_price are configured,
+    # If set to None and entity_energy_price or number_energy_price are configured,
     # an EnergyCostSensor will be automatically created
     stat_cost: str | None
 
     # Used to generate costs if stat_cost is set to None
-    entity_energy_from: str | None  # entity_id of an energy meter (kWh), entity_id of the energy meter for stat_energy_from
     entity_energy_price: str | None  # entity_id of an entity providing price ($/kWh)
     number_energy_price: float | None  # Price for energy ($/kWh)
 
@@ -49,12 +49,11 @@ class FlowToGridSourceType(TypedDict):
     stat_energy_to: str
 
     # statistic_id of compensation ($) received for contributing back
-    # If set to None and entity_energy_from and entity_energy_price are configured,
+    # If set to None and entity_energy_price or number_energy_price are configured,
     # an EnergyCostSensor will be automatically created
     stat_compensation: str | None
 
     # Used to generate costs if stat_compensation is set to None
-    entity_energy_from: str | None  # entity_id of an energy meter (kWh), entity_id of the energy meter for stat_energy_from
     entity_energy_price: str | None  # entity_id of an entity providing price ($/kWh)
     number_energy_price: float | None  # Price for energy ($/kWh)
 
@@ -89,24 +88,46 @@ class BatterySourceType(TypedDict):
 
 
 class GasSourceType(TypedDict):
-    """Dictionary holding the source of gas storage."""
+    """Dictionary holding the source of gas consumption."""
 
     type: Literal["gas"]
 
     stat_energy_from: str
 
-    # statistic_id of costs ($) incurred from the energy meter
-    # If set to None and entity_energy_from and entity_energy_price are configured,
+    # statistic_id of costs ($) incurred from the gas meter
+    # If set to None and entity_energy_price or number_energy_price are configured,
     # an EnergyCostSensor will be automatically created
     stat_cost: str | None
 
     # Used to generate costs if stat_cost is set to None
-    entity_energy_from: str | None  # entity_id of an gas meter (m³), entity_id of the gas meter for stat_energy_from
     entity_energy_price: str | None  # entity_id of an entity providing price ($/m³)
     number_energy_price: float | None  # Price for energy ($/m³)
 
 
-SourceType = Union[GridSourceType, SolarSourceType, BatterySourceType, GasSourceType]
+class WaterSourceType(TypedDict):
+    """Dictionary holding the source of water consumption."""
+
+    type: Literal["water"]
+
+    stat_energy_from: str
+
+    # statistic_id of costs ($) incurred from the water meter
+    # If set to None and entity_energy_price or number_energy_price are configured,
+    # an EnergyCostSensor will be automatically created
+    stat_cost: str | None
+
+    # Used to generate costs if stat_cost is set to None
+    entity_energy_price: str | None  # entity_id of an entity providing price ($/m³)
+    number_energy_price: float | None  # Price for energy ($/m³)
+
+
+type SourceType = (
+    GridSourceType
+    | SolarSourceType
+    | BatterySourceType
+    | GasSourceType
+    | WaterSourceType
+)
 
 
 class DeviceConsumption(TypedDict):
@@ -114,6 +135,13 @@ class DeviceConsumption(TypedDict):
 
     # This is an ever increasing value
     stat_consumption: str
+
+    # An optional custom name for display in energy graphs
+    name: str | None
+
+    # An optional statistic_id identifying a device
+    # that includes this device's consumption in its total
+    included_in_stat: str | None
 
 
 class EnergyPreferences(TypedDict):
@@ -145,7 +173,8 @@ FLOW_FROM_GRID_SOURCE_SCHEMA = vol.All(
         {
             vol.Required("stat_energy_from"): str,
             vol.Optional("stat_cost"): vol.Any(str, None),
-            vol.Optional("entity_energy_from"): vol.Any(str, None),
+            # entity_energy_from was removed in HA Core 2022.10
+            vol.Remove("entity_energy_from"): vol.Any(str, None),
             vol.Optional("entity_energy_price"): vol.Any(str, None),
             vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
         }
@@ -158,7 +187,8 @@ FLOW_TO_GRID_SOURCE_SCHEMA = vol.Schema(
     {
         vol.Required("stat_energy_to"): str,
         vol.Optional("stat_compensation"): vol.Any(str, None),
-        vol.Optional("entity_energy_to"): vol.Any(str, None),
+        # entity_energy_to was removed in HA Core 2022.10
+        vol.Remove("entity_energy_to"): vol.Any(str, None),
         vol.Optional("entity_energy_price"): vol.Any(str, None),
         vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
     }
@@ -216,7 +246,17 @@ GAS_SOURCE_SCHEMA = vol.Schema(
         vol.Required("type"): "gas",
         vol.Required("stat_energy_from"): str,
         vol.Optional("stat_cost"): vol.Any(str, None),
-        vol.Optional("entity_energy_from"): vol.Any(str, None),
+        # entity_energy_from was removed in HA Core 2022.10
+        vol.Remove("entity_energy_from"): vol.Any(str, None),
+        vol.Optional("entity_energy_price"): vol.Any(str, None),
+        vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
+    }
+)
+WATER_SOURCE_SCHEMA = vol.Schema(
+    {
+        vol.Required("type"): "water",
+        vol.Required("stat_energy_from"): str,
+        vol.Optional("stat_cost"): vol.Any(str, None),
         vol.Optional("entity_energy_price"): vol.Any(str, None),
         vol.Optional("number_energy_price"): vol.Any(vol.Coerce(float), None),
     }
@@ -243,6 +283,7 @@ ENERGY_SOURCE_SCHEMA = vol.All(
                     "solar": SOLAR_SOURCE_SCHEMA,
                     "battery": BATTERY_SOURCE_SCHEMA,
                     "gas": GAS_SOURCE_SCHEMA,
+                    "water": WATER_SOURCE_SCHEMA,
                 },
             )
         ]
@@ -253,6 +294,8 @@ ENERGY_SOURCE_SCHEMA = vol.All(
 DEVICE_CONSUMPTION_SCHEMA = vol.Schema(
     {
         vol.Required("stat_consumption"): str,
+        vol.Optional("name"): str,
+        vol.Optional("included_in_stat"): str,
     }
 )
 
@@ -263,13 +306,15 @@ class EnergyManager:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize energy manager."""
         self._hass = hass
-        self._store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        self._store = storage.Store[EnergyPreferences](
+            hass, STORAGE_VERSION, STORAGE_KEY
+        )
         self.data: EnergyPreferences | None = None
         self._update_listeners: list[Callable[[], Awaitable]] = []
 
     async def async_initialize(self) -> None:
         """Initialize the energy integration."""
-        self.data = cast(Optional[EnergyPreferences], await self._store.async_load())
+        self.data = await self._store.async_load()
 
     @staticmethod
     def default_preferences() -> EnergyPreferences:
@@ -291,10 +336,10 @@ class EnergyManager:
             "device_consumption",
         ):
             if key in update:
-                data[key] = update[key]  # type: ignore
+                data[key] = update[key]
 
         self.data = data
-        self._store.async_delay_save(lambda: cast(dict, self.data), 60)
+        self._store.async_delay_save(lambda: data, 60)
 
         if not self._update_listeners:
             return

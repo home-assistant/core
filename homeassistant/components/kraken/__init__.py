@@ -1,11 +1,11 @@
 """The kraken integration."""
+
 from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
 import logging
 
-import async_timeout
 import krakenex
 import pykrakenapi
 
@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await kraken_data.async_setup()
     hass.data[DOMAIN] = kraken_data
     entry.async_on_unload(entry.add_update_listener(async_options_updated))
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -73,12 +73,13 @@ class KrakenData:
         once.
         """
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 return await self._hass.async_add_executor_job(self._get_kraken_data)
         except pykrakenapi.pykrakenapi.KrakenAPIError as error:
             if "Unknown asset pair" in str(error):
-                _LOGGER.info(
-                    "Kraken.com reported an unknown asset pair. Refreshing list of tradable asset pairs"
+                _LOGGER.warning(
+                    "Kraken.com reported an unknown asset pair. Refreshing list of"
+                    " tradable asset pairs"
                 )
                 await self._async_refresh_tradable_asset_pairs()
             else:
@@ -87,7 +88,8 @@ class KrakenData:
                 ) from error
         except pykrakenapi.pykrakenapi.CallRateLimitError:
             _LOGGER.warning(
-                "Exceeded the Kraken.com call rate limit. Increase the update interval to prevent this error"
+                "Exceeded the Kraken.com call rate limit. Increase the update interval"
+                " to prevent this error"
             )
         return None
 
@@ -133,6 +135,7 @@ class KrakenData:
             self._hass,
             _LOGGER,
             name=DOMAIN,
+            config_entry=self._config_entry,
             update_method=self.async_update,
             update_interval=timedelta(
                 seconds=self._config_entry.options[CONF_SCAN_INTERVAL]
@@ -143,7 +146,10 @@ class KrakenData:
         await asyncio.sleep(CALL_RATE_LIMIT_SLEEP)
 
     def _get_websocket_name_asset_pairs(self) -> str:
-        return ",".join(wsname for wsname in self.tradable_asset_pairs.values())
+        return ",".join(
+            self.tradable_asset_pairs[tracked_pair]
+            for tracked_pair in self._config_entry.options[CONF_TRACKED_ASSET_PAIRS]
+        )
 
     def set_update_interval(self, update_interval: int) -> None:
         """Set the coordinator update_interval to the supplied update_interval."""

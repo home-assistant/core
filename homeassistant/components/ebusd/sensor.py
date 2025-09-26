@@ -1,4 +1,5 @@
 """Support for Ebusd sensors."""
+
 from __future__ import annotations
 
 import datetime
@@ -8,8 +9,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
-import homeassistant.util.dt as dt_util
+from homeassistant.util import Throttle, dt as dt_util
 
 from .const import DOMAIN
 
@@ -37,13 +37,13 @@ def setup_platform(
     monitored_conditions = discovery_info["monitored_conditions"]
     name = discovery_info["client_name"]
 
-    dev = []
-    for condition in monitored_conditions:
-        dev.append(
+    add_entities(
+        (
             EbusdSensor(ebusd_api, discovery_info["sensor_types"][condition], name)
-        )
-
-    add_entities(dev, True)
+            for condition in monitored_conditions
+        ),
+        True,
+    )
 
 
 class EbusdSensor(SensorEntity):
@@ -111,7 +111,7 @@ class EbusdSensor(SensorEntity):
         return self._unit_of_measurement
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def update(self) -> None:
         """Fetch new state data for the sensor."""
         try:
             self.data.update(self._name, self._type)

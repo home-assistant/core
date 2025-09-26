@@ -1,32 +1,30 @@
 """Config flow to configure the Pi-hole integration."""
+
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
-from hole import Hole
 from hole.exceptions import HoleError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
+    CONF_LOCATION,
     CONF_NAME,
     CONF_PORT,
     CONF_SSL,
     CONF_VERIFY_SSL,
 )
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from . import Hole, api_by_version, determine_api_version
 from .const import (
-    CONF_LOCATION,
-    CONF_STATISTICS_ONLY,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
     DEFAULT_SSL,
-    DEFAULT_STATISTICS_ONLY,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
 )
@@ -34,7 +32,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Pi-hole config flow."""
 
     VERSION = 1
@@ -45,67 +43,31 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        return await self.async_step_init(user_input)
-
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle a flow initiated by import."""
-        return await self.async_step_init(user_input, is_import=True)
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None, is_import: bool = False
-    ) -> FlowResult:
-        """Handle init step of a flow."""
         errors = {}
 
         if user_input is not None:
-            host = (
-                user_input[CONF_HOST]
-                if is_import
-                else f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
-            )
-            name = user_input[CONF_NAME]
-            location = user_input[CONF_LOCATION]
-            tls = user_input[CONF_SSL]
-            verify_tls = user_input[CONF_VERIFY_SSL]
-            endpoint = f"{host}/{location}"
+            self._config = {
+                CONF_HOST: f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
+                CONF_NAME: user_input[CONF_NAME],
+                CONF_LOCATION: user_input[CONF_LOCATION],
+                CONF_SSL: user_input[CONF_SSL],
+                CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                CONF_API_KEY: user_input[CONF_API_KEY],
+            }
 
-            if await self._async_endpoint_existed(endpoint):
-                return self.async_abort(reason="already_configured")
-
-            try:
-                await self._async_try_connect(host, location, tls, verify_tls)
-            except HoleError as ex:
-                _LOGGER.debug("Connection failed: %s", ex)
-                if is_import:
-                    _LOGGER.error("Failed to import: %s", ex)
-                    return self.async_abort(reason="cannot_connect")
-                errors["base"] = "cannot_connect"
-            else:
-                self._config = {
-                    CONF_HOST: host,
-                    CONF_NAME: name,
-                    CONF_LOCATION: location,
-                    CONF_SSL: tls,
-                    CONF_VERIFY_SSL: verify_tls,
+            self._async_abort_entries_match(
+                {
+                    CONF_HOST: f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
+                    CONF_LOCATION: user_input[CONF_LOCATION],
                 }
-                if is_import:
-                    api_key = user_input.get(CONF_API_KEY)
-                    return self.async_create_entry(
-                        title=name,
-                        data={
-                            **self._config,
-                            CONF_STATISTICS_ONLY: api_key is None,
-                            CONF_API_KEY: api_key,
-                        },
-                    )
-                self._config[CONF_STATISTICS_ONLY] = user_input[CONF_STATISTICS_ONLY]
-                if self._config[CONF_STATISTICS_ONLY]:
-                    return self.async_create_entry(title=name, data=self._config)
-                return await self.async_step_api_key()
+            )
+
+            if not (errors := await self._async_try_connect()):
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=self._config
+                )
 
         user_input = user_input or {}
         return self.async_show_form(
@@ -124,11 +86,9 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         default=user_input.get(CONF_LOCATION, DEFAULT_LOCATION),
                     ): str,
                     vol.Required(
-                        CONF_STATISTICS_ONLY,
-                        default=user_input.get(
-                            CONF_STATISTICS_ONLY, DEFAULT_STATISTICS_ONLY
-                        ),
-                    ): bool,
+                        CONF_API_KEY,
+                        default=user_input.get(CONF_API_KEY),
+                    ): str,
                     vol.Required(
                         CONF_SSL,
                         default=user_input.get(CONF_SSL, DEFAULT_SSL),
@@ -142,34 +102,79 @@ class PiHoleFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_api_key(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle step to setup API key."""
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        self._config = dict(entry_data)
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Perform reauth confirm upon an API authentication error."""
+        errors = {}
         if user_input is not None:
-            return self.async_create_entry(
-                title=self._config[CONF_NAME],
-                data={
-                    **self._config,
-                    CONF_API_KEY: user_input.get(CONF_API_KEY, ""),
-                },
-            )
+            self._config = {**self._config, CONF_API_KEY: user_input[CONF_API_KEY]}
+            if not (errors := await self._async_try_connect()):
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data=self._config
+                )
 
         return self.async_show_form(
-            step_id="api_key",
-            data_schema=vol.Schema({vol.Optional(CONF_API_KEY): str}),
+            step_id="reauth_confirm",
+            description_placeholders={
+                CONF_HOST: self._config[CONF_HOST],
+                CONF_LOCATION: self._config[CONF_LOCATION],
+            },
+            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            errors=errors,
         )
 
-    async def _async_endpoint_existed(self, endpoint: str) -> bool:
-        existing_endpoints = [
-            f"{entry.data.get(CONF_HOST)}/{entry.data.get(CONF_LOCATION)}"
-            for entry in self._async_current_entries()
-        ]
-        return endpoint in existing_endpoints
+    async def _async_try_connect(self) -> dict[str, str]:
+        """Try to connect to the Pi-hole API and determine the version."""
+        try:
+            version = await determine_api_version(hass=self.hass, entry=self._config)
+        except HoleError:
+            return {"base": "cannot_connect"}
+        pi_hole: Hole = api_by_version(self.hass, self._config, version)
 
-    async def _async_try_connect(
-        self, host: str, location: str, tls: bool, verify_tls: bool
-    ) -> None:
-        session = async_get_clientsession(self.hass, verify_tls)
-        pi_hole = Hole(host, session, location=location, tls=tls)
-        await pi_hole.get_data()
+        if version == 6:
+            try:
+                await pi_hole.authenticate()
+                _LOGGER.debug("Success authenticating with pihole API version: %s", 6)
+            except HoleError:
+                _LOGGER.debug("Failed authenticating with pihole API version: %s", 6)
+                return {CONF_API_KEY: "invalid_auth"}
+
+        elif version == 5:
+            try:
+                await pi_hole.get_data()
+                if pi_hole.data is not None and "error" in pi_hole.data:
+                    _LOGGER.debug(
+                        "API version %s returned an unexpected error: %s",
+                        5,
+                        str(pi_hole.data),
+                    )
+                    raise HoleError(pi_hole.data)  # noqa: TRY301
+            except HoleError as ex_v5:
+                _LOGGER.error(
+                    "Connection to API version 5 failed: %s",
+                    ex_v5,
+                )
+                return {"base": "cannot_connect"}
+            else:
+                _LOGGER.debug(
+                    "Success connecting to, but necessarily authenticating with, pihole, API version is: %s",
+                    5,
+                )
+            # the v5 API returns an empty list to unauthenticated requests.
+            if not isinstance(pi_hole.data, dict):
+                _LOGGER.debug(
+                    "API version %s returned %s, '[]' is expected for unauthenticated requests",
+                    5,
+                    pi_hole.data,
+                )
+                return {CONF_API_KEY: "invalid_auth"}
+        return {}

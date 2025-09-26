@@ -10,25 +10,20 @@ from aiohue.v2.models.resource import ResourceTypes
 from homeassistant import core
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_USERNAME
-from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.device_registry import (
-    async_entries_for_config_entry as devices_for_config_entries,
-    async_get as async_get_device_registry,
-)
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_config_entry as entities_for_config_entry,
-    async_entries_for_device,
-    async_get as async_get_entity_registry,
+from homeassistant.const import CONF_API_KEY, CONF_API_VERSION, CONF_HOST, CONF_USERNAME
+from homeassistant.helpers import (
+    aiohttp_client,
+    device_registry as dr,
+    entity_registry as er,
 )
 
-from .const import CONF_API_VERSION, DOMAIN
+from .bridge import HueConfigEntry
+from .const import DOMAIN
 
 LOGGER = logging.getLogger(__name__)
 
 
-async def check_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> None:
+async def check_migration(hass: core.HomeAssistant, entry: HueConfigEntry) -> None:
     """Check if config entry needs any migration actions."""
     host = entry.data[CONF_HOST]
 
@@ -39,8 +34,7 @@ async def check_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> None:
         data[CONF_API_KEY] = data.pop(CONF_USERNAME)
         hass.config_entries.async_update_entry(entry, data=data)
 
-    conf_api_version = entry.data.get(CONF_API_VERSION, 1)
-    if conf_api_version == 1:
+    if (conf_api_version := entry.data.get(CONF_API_VERSION, 1)) == 1:
         # a bridge might have upgraded firmware since last run so
         # we discover its capabilities at every startup
         websession = aiohttp_client.async_get_clientsession(hass)
@@ -72,19 +66,19 @@ async def check_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> None:
             hass.config_entries.async_update_entry(entry, data=data)
 
 
-async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> None:
+async def handle_v2_migration(hass: core.HomeAssistant, entry: HueConfigEntry) -> None:
     """Perform migration of devices and entities to V2 Id's."""
     host = entry.data[CONF_HOST]
     api_key = entry.data[CONF_API_KEY]
-    dev_reg = async_get_device_registry(hass)
-    ent_reg = async_get_entity_registry(hass)
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
     LOGGER.info("Start of migration of devices and entities to support API schema 2")
 
     # Create mapping of mac address to HA device id's.
     # Identifier in dev reg should be mac-address,
     # but in some cases it has a postfix like `-0b` or `-01`.
     dev_ids = {}
-    for hass_dev in devices_for_config_entries(dev_reg, entry.entry_id):
+    for hass_dev in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
         for domain, mac in hass_dev.identifiers:
             if domain != DOMAIN:
                 continue
@@ -93,7 +87,6 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
 
     # initialize bridge connection just for the migration
     async with HueBridgeV2(host, api_key) as api:
-
         sensor_class_mapping = {
             SensorDeviceClass.BATTERY.value: ResourceTypes.DEVICE_POWER,
             BinarySensorDeviceClass.MOTION.value: ResourceTypes.MOTION,
@@ -116,7 +109,10 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
             if hass_dev_id is None:
                 # can be safely ignored, this device does not exist in current config
                 LOGGER.debug(
-                    "Ignoring device %s (%s) as it does not (yet) exist in the device registry",
+                    (
+                        "Ignoring device %s (%s) as it does not (yet) exist in the"
+                        " device registry"
+                    ),
                     hue_dev.metadata.name,
                     hue_dev.id,
                 )
@@ -127,8 +123,7 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
             LOGGER.info("Migrated device %s (%s)", hue_dev.metadata.name, hass_dev_id)
 
             # loop through all entities for device and find match
-            for ent in async_entries_for_device(ent_reg, hass_dev_id, True):
-
+            for ent in er.async_entries_for_device(ent_reg, hass_dev_id, True):
                 if ent.entity_id.startswith("light"):
                     # migrate light
                     # should always return one lightid here
@@ -150,7 +145,10 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
                 if new_unique_id is None:
                     # this may happen if we're looking at orphaned or unsupported entity
                     LOGGER.warning(
-                        "Skip migration of %s because it no longer exists on the bridge",
+                        (
+                            "Skip migration of %s because it no longer exists on the"
+                            " bridge"
+                        ),
                         ent.entity_id,
                     )
                     continue
@@ -176,7 +174,7 @@ async def handle_v2_migration(hass: core.HomeAssistant, entry: ConfigEntry) -> N
                     )
 
         # migrate entities that are not connected to a device (groups)
-        for ent in entities_for_config_entry(ent_reg, entry.entry_id):
+        for ent in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
             if ent.device_id is not None:
                 continue
             if "-" in ent.unique_id:

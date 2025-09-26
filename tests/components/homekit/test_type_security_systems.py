@@ -1,33 +1,29 @@
 """Test different accessory types: Security Systems."""
+
 from pyhap.loader import get_loader
 import pytest
 
-from homeassistant.components.alarm_control_panel import DOMAIN
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_TRIGGER,
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
 from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.components.homekit.type_security_systems import SecuritySystem
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import Event, HomeAssistant
 
 from tests.common import async_mock_service
 
 
-async def test_switch_set_state(hass, hk_driver, events):
+async def test_switch_set_state(
+    hass: HomeAssistant, hk_driver, events: list[Event]
+) -> None:
     """Test if accessory and HA are updated accordingly."""
     code = "1234"
     config = {ATTR_CODE: code}
@@ -36,7 +32,7 @@ async def test_switch_set_state(hass, hk_driver, events):
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
     acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, config)
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     assert acc.aid == 2
@@ -45,27 +41,27 @@ async def test_switch_set_state(hass, hk_driver, events):
     assert acc.char_current_state.value == 3
     assert acc.char_target_state.value == 3
 
-    hass.states.async_set(entity_id, STATE_ALARM_ARMED_AWAY)
+    hass.states.async_set(entity_id, AlarmControlPanelState.ARMED_AWAY)
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 1
     assert acc.char_current_state.value == 1
 
-    hass.states.async_set(entity_id, STATE_ALARM_ARMED_HOME)
+    hass.states.async_set(entity_id, AlarmControlPanelState.ARMED_HOME)
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 0
     assert acc.char_current_state.value == 0
 
-    hass.states.async_set(entity_id, STATE_ALARM_ARMED_NIGHT)
+    hass.states.async_set(entity_id, AlarmControlPanelState.ARMED_NIGHT)
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 2
     assert acc.char_current_state.value == 2
 
-    hass.states.async_set(entity_id, STATE_ALARM_DISARMED)
+    hass.states.async_set(entity_id, AlarmControlPanelState.DISARMED)
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 3
     assert acc.char_current_state.value == 3
 
-    hass.states.async_set(entity_id, STATE_ALARM_TRIGGERED)
+    hass.states.async_set(entity_id, AlarmControlPanelState.TRIGGERED)
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 3
     assert acc.char_current_state.value == 4
@@ -76,10 +72,16 @@ async def test_switch_set_state(hass, hk_driver, events):
     assert acc.char_current_state.value == 4
 
     # Set from HomeKit
-    call_arm_home = async_mock_service(hass, DOMAIN, "alarm_arm_home")
-    call_arm_away = async_mock_service(hass, DOMAIN, "alarm_arm_away")
-    call_arm_night = async_mock_service(hass, DOMAIN, "alarm_arm_night")
-    call_disarm = async_mock_service(hass, DOMAIN, "alarm_disarm")
+    call_arm_home = async_mock_service(
+        hass, ALARM_CONTROL_PANEL_DOMAIN, "alarm_arm_home"
+    )
+    call_arm_away = async_mock_service(
+        hass, ALARM_CONTROL_PANEL_DOMAIN, "alarm_arm_away"
+    )
+    call_arm_night = async_mock_service(
+        hass, ALARM_CONTROL_PANEL_DOMAIN, "alarm_arm_night"
+    )
+    call_disarm = async_mock_service(hass, ALARM_CONTROL_PANEL_DOMAIN, "alarm_disarm")
 
     acc.char_target_state.client_update_value(0)
     await hass.async_block_till_done()
@@ -119,7 +121,9 @@ async def test_switch_set_state(hass, hk_driver, events):
 
 
 @pytest.mark.parametrize("config", [{}, {ATTR_CODE: None}])
-async def test_no_alarm_code(hass, hk_driver, config, events):
+async def test_no_alarm_code(
+    hass: HomeAssistant, hk_driver, config, events: list[Event]
+) -> None:
     """Test accessory if security_system doesn't require an alarm_code."""
     entity_id = "alarm_control_panel.test"
 
@@ -128,7 +132,9 @@ async def test_no_alarm_code(hass, hk_driver, config, events):
     acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, config)
 
     # Set from HomeKit
-    call_arm_home = async_mock_service(hass, DOMAIN, "alarm_arm_home")
+    call_arm_home = async_mock_service(
+        hass, ALARM_CONTROL_PANEL_DOMAIN, "alarm_arm_home"
+    )
 
     acc.char_target_state.client_update_value(0)
     await hass.async_block_till_done()
@@ -140,58 +146,58 @@ async def test_no_alarm_code(hass, hk_driver, config, events):
     assert events[-1].data[ATTR_VALUE] is None
 
 
-async def test_arming(hass, hk_driver, events):
+async def test_arming(hass: HomeAssistant, hk_driver) -> None:
     """Test to make sure arming sets the right state."""
     entity_id = "alarm_control_panel.test"
 
     hass.states.async_set(entity_id, None)
 
     acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, {})
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
-    hass.states.async_set(entity_id, STATE_ALARM_ARMED_AWAY)
+    hass.states.async_set(entity_id, AlarmControlPanelState.ARMED_AWAY)
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 1
     assert acc.char_current_state.value == 1
 
-    hass.states.async_set(entity_id, STATE_ALARM_ARMED_HOME)
+    hass.states.async_set(entity_id, AlarmControlPanelState.ARMED_HOME)
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 0
     assert acc.char_current_state.value == 0
 
-    hass.states.async_set(entity_id, STATE_ALARM_ARMED_VACATION)
+    hass.states.async_set(entity_id, AlarmControlPanelState.ARMED_VACATION)
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 1
     assert acc.char_current_state.value == 1
 
-    hass.states.async_set(entity_id, STATE_ALARM_ARMED_NIGHT)
+    hass.states.async_set(entity_id, AlarmControlPanelState.ARMED_NIGHT)
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 2
     assert acc.char_current_state.value == 2
 
-    hass.states.async_set(entity_id, STATE_ALARM_ARMING)
+    hass.states.async_set(entity_id, AlarmControlPanelState.ARMING)
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 1
     assert acc.char_current_state.value == 3
 
-    hass.states.async_set(entity_id, STATE_ALARM_DISARMED)
+    hass.states.async_set(entity_id, AlarmControlPanelState.DISARMED)
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 3
     assert acc.char_current_state.value == 3
 
-    hass.states.async_set(entity_id, STATE_ALARM_ARMED_AWAY)
+    hass.states.async_set(entity_id, AlarmControlPanelState.ARMED_AWAY)
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 1
     assert acc.char_current_state.value == 1
 
-    hass.states.async_set(entity_id, STATE_ALARM_TRIGGERED)
+    hass.states.async_set(entity_id, AlarmControlPanelState.TRIGGERED)
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 1
     assert acc.char_current_state.value == 4
 
 
-async def test_supported_states(hass, hk_driver, events):
+async def test_supported_states(hass: HomeAssistant, hk_driver) -> None:
     """Test different supported states."""
     code = "1234"
     config = {ATTR_CODE: code}
@@ -208,7 +214,7 @@ async def test_supported_states(hass, hk_driver, events):
     # Set up a number of test configuration
     test_configs = [
         {
-            "features": SUPPORT_ALARM_ARM_HOME,
+            "features": AlarmControlPanelEntityFeature.ARM_HOME,
             "current_values": [
                 default_current_states["Disarmed"],
                 default_current_states["AlarmTriggered"],
@@ -220,7 +226,7 @@ async def test_supported_states(hass, hk_driver, events):
             ],
         },
         {
-            "features": SUPPORT_ALARM_ARM_AWAY,
+            "features": AlarmControlPanelEntityFeature.ARM_AWAY,
             "current_values": [
                 default_current_states["Disarmed"],
                 default_current_states["AlarmTriggered"],
@@ -232,7 +238,8 @@ async def test_supported_states(hass, hk_driver, events):
             ],
         },
         {
-            "features": SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY,
+            "features": AlarmControlPanelEntityFeature.ARM_HOME
+            | AlarmControlPanelEntityFeature.ARM_AWAY,
             "current_values": [
                 default_current_states["Disarmed"],
                 default_current_states["AlarmTriggered"],
@@ -246,9 +253,9 @@ async def test_supported_states(hass, hk_driver, events):
             ],
         },
         {
-            "features": SUPPORT_ALARM_ARM_HOME
-            | SUPPORT_ALARM_ARM_AWAY
-            | SUPPORT_ALARM_ARM_NIGHT,
+            "features": AlarmControlPanelEntityFeature.ARM_HOME
+            | AlarmControlPanelEntityFeature.ARM_AWAY
+            | AlarmControlPanelEntityFeature.ARM_NIGHT,
             "current_values": [
                 default_current_states["Disarmed"],
                 default_current_states["AlarmTriggered"],
@@ -264,10 +271,10 @@ async def test_supported_states(hass, hk_driver, events):
             ],
         },
         {
-            "features": SUPPORT_ALARM_ARM_HOME
-            | SUPPORT_ALARM_ARM_AWAY
-            | SUPPORT_ALARM_ARM_NIGHT
-            | SUPPORT_ALARM_TRIGGER,
+            "features": AlarmControlPanelEntityFeature.ARM_HOME
+            | AlarmControlPanelEntityFeature.ARM_AWAY
+            | AlarmControlPanelEntityFeature.ARM_NIGHT
+            | AlarmControlPanelEntityFeature.TRIGGER,
             "current_values": [
                 default_current_states["Disarmed"],
                 default_current_states["AlarmTriggered"],
@@ -284,14 +291,17 @@ async def test_supported_states(hass, hk_driver, events):
         },
     ]
 
+    aid = 1
+
     for test_config in test_configs:
         attrs = {"supported_features": test_config.get("features")}
 
         hass.states.async_set(entity_id, None, attributes=attrs)
         await hass.async_block_till_done()
 
-        acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, config)
-        await acc.run()
+        aid += 1
+        acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, aid, config)
+        acc.run()
         await hass.async_block_till_done()
 
         valid_current_values = acc.char_current_state.properties.get("ValidValues")
@@ -302,3 +312,33 @@ async def test_supported_states(hass, hk_driver, events):
 
         for val in valid_target_values.values():
             assert val in test_config.get("target_values")
+
+
+@pytest.mark.parametrize(
+    ("state"),
+    [
+        (None),
+        ("None"),
+        (STATE_UNKNOWN),
+        (STATE_UNAVAILABLE),
+    ],
+)
+async def test_handle_non_alarm_states(
+    hass: HomeAssistant, hk_driver, events: list[Event], state: str
+) -> None:
+    """Test we can handle states that should not raise."""
+    code = "1234"
+    config = {ATTR_CODE: code}
+    entity_id = "alarm_control_panel.test"
+
+    hass.states.async_set(entity_id, state)
+    await hass.async_block_till_done()
+    acc = SecuritySystem(hass, hk_driver, "SecuritySystem", entity_id, 2, config)
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.aid == 2
+    assert acc.category == 11  # AlarmSystem
+
+    assert acc.char_current_state.value == 3
+    assert acc.char_target_state.value == 3

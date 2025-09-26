@@ -1,4 +1,5 @@
 """The Whois integration."""
+
 from __future__ import annotations
 
 from whois import Domain, query as whois_query
@@ -34,6 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator: DataUpdateCoordinator[Domain | None] = DataUpdateCoordinator(
         hass,
         LOGGER,
+        config_entry=entry,
         name=f"{DOMAIN}_APK",
         update_interval=SCAN_INTERVAL,
         update_method=_async_query_domain,
@@ -41,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

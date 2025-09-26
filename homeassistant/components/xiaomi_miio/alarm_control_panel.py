@@ -1,24 +1,23 @@
 """Support for Xiomi Gateway alarm control panels."""
+
+from __future__ import annotations
+
 from functools import partial
 import logging
 
 from miio import DeviceException
 
 from homeassistant.components.alarm_control_panel import (
-    SUPPORT_ALARM_ARM_AWAY,
     AlarmControlPanelEntity,
-)
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
+    AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_GATEWAY, DOMAIN
+from .const import DOMAIN
+from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,12 +28,12 @@ XIAOMI_STATE_ARMING_VALUE = "oning"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: XiaomiMiioConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi Gateway Alarm from a config entry."""
     entities = []
-    gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
+    gateway = config_entry.runtime_data.gateway
     entity = XiaomiGatewayAlarm(
         gateway,
         f"{config_entry.title} Alarm",
@@ -49,59 +48,21 @@ async def async_setup_entry(
 class XiaomiGatewayAlarm(AlarmControlPanelEntity):
     """Representation of the XiaomiGatewayAlarm."""
 
+    _attr_icon = "mdi:shield-home"
+    _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
+    _attr_code_arm_required = False
+
     def __init__(
         self, gateway_device, gateway_name, model, mac_address, gateway_device_id
     ):
         """Initialize the entity."""
         self._gateway = gateway_device
-        self._name = gateway_name
-        self._gateway_device_id = gateway_device_id
-        self._unique_id = f"{model}-{mac_address}"
-        self._icon = "mdi:shield-home"
-        self._available = None
-        self._state = None
-
-    @property
-    def unique_id(self):
-        """Return an unique ID."""
-        return self._unique_id
-
-    @property
-    def device_id(self):
-        """Return the device id of the gateway."""
-        return self._gateway_device_id
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info of the gateway."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._gateway_device_id)},
+        self._attr_name = gateway_name
+        self._attr_unique_id = f"{model}-{mac_address}"
+        self._attr_available = False
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, gateway_device_id)},
         )
-
-    @property
-    def name(self):
-        """Return the name of this entity, if any."""
-        return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to use for device if any."""
-        return self._icon
-
-    @property
-    def available(self):
-        """Return true when state is known."""
-        return self._available
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_AWAY
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a device command handling error messages."""
@@ -113,39 +74,39 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
         except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Turn on."""
         await self._try_command(
             "Turning the alarm on failed: %s", self._gateway.alarm.on
         )
 
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Turn off."""
         await self._try_command(
             "Turning the alarm off failed: %s", self._gateway.alarm.off
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch state from the device."""
         try:
             state = await self.hass.async_add_executor_job(self._gateway.alarm.status)
         except DeviceException as ex:
-            if self._available:
-                self._available = False
+            if self._attr_available:
+                self._attr_available = False
                 _LOGGER.error("Got exception while fetching the state: %s", ex)
 
             return
 
         _LOGGER.debug("Got new state: %s", state)
 
-        self._available = True
+        self._attr_available = True
 
         if state == XIAOMI_STATE_ARMED_VALUE:
-            self._state = STATE_ALARM_ARMED_AWAY
+            self._attr_alarm_state = AlarmControlPanelState.ARMED_AWAY
         elif state == XIAOMI_STATE_DISARMED_VALUE:
-            self._state = STATE_ALARM_DISARMED
+            self._attr_alarm_state = AlarmControlPanelState.DISARMED
         elif state == XIAOMI_STATE_ARMING_VALUE:
-            self._state = STATE_ALARM_ARMING
+            self._attr_alarm_state = AlarmControlPanelState.ARMING
         else:
             _LOGGER.warning(
                 "New state (%s) doesn't match expected values: %s/%s/%s",
@@ -154,6 +115,6 @@ class XiaomiGatewayAlarm(AlarmControlPanelEntity):
                 XIAOMI_STATE_DISARMED_VALUE,
                 XIAOMI_STATE_ARMING_VALUE,
             )
-            self._state = None
+            self._attr_alarm_state = None
 
-        _LOGGER.debug("State value: %s", self._state)
+        _LOGGER.debug("State value: %s", self._attr_alarm_state)

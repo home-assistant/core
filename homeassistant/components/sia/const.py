@@ -1,4 +1,5 @@
 """Constants for the sia integration."""
+
 from __future__ import annotations
 
 from typing import Final
@@ -24,18 +25,14 @@ CONF_IGNORE_TIMESTAMPS: Final = "ignore_timestamps"
 CONF_PING_INTERVAL: Final = "ping_interval"
 CONF_ZONES: Final = "zones"
 
-SIA_NAME_FORMAT: Final = "{} - {} - zone {} - {}"
-SIA_NAME_FORMAT_HUB: Final = "{} - {} - {}"
-SIA_UNIQUE_ID_FORMAT_ALARM: Final = "{}_{}_{}"
-SIA_UNIQUE_ID_FORMAT_BINARY: Final = "{}_{}_{}_{}"
-SIA_UNIQUE_ID_FORMAT_HUB: Final = "{}_{}_{}"
 SIA_HUB_ZONE: Final = 0
 SIA_EVENT: Final = "sia_event_{}_{}"
 
-KEY_ALARM: Final = "alarm_control_panel"
+KEY_ALARM: Final = "alarm"
 KEY_SMOKE: Final = "smoke"
 KEY_MOISTURE: Final = "moisture"
 KEY_POWER: Final = "power"
+KEY_CONNECTIVITY: Final = "connectivity"
 
 PREVIOUS_STATE: Final = "previous_state"
 AVAILABILITY_EVENT_CODE: Final = "RP"

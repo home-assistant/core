@@ -1,9 +1,13 @@
 """The tests for the emulated Hue component."""
+
+from collections.abc import Generator
 from http import HTTPStatus
 import json
 import unittest
+from unittest.mock import patch
 
 from aiohttp import web
+from aiohttp.test_utils import TestClient
 import defusedxml.ElementTree as ET
 import pytest
 
@@ -11,8 +15,10 @@ from homeassistant import setup
 from homeassistant.components import emulated_hue
 from homeassistant.components.emulated_hue import upnp
 from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant.core import HomeAssistant
 
 from tests.common import get_test_instance_port
+from tests.typing import ClientSessionGenerator
 
 BRIDGE_SERVER_PORT = get_test_instance_port()
 
@@ -20,7 +26,7 @@ BRIDGE_SERVER_PORT = get_test_instance_port()
 class MockTransport:
     """Mock asyncio transport."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Create a place to store the sends."""
         self.sends = []
 
@@ -30,13 +36,18 @@ class MockTransport:
 
 
 @pytest.fixture
-def aiohttp_client(loop, aiohttp_client, socket_enabled):
+def aiohttp_client(
+    aiohttp_client: ClientSessionGenerator,
+    socket_enabled: None,
+) -> ClientSessionGenerator:
     """Return aiohttp_client and allow opening sockets."""
     return aiohttp_client
 
 
 @pytest.fixture
-def hue_client(aiohttp_client):
+def hue_client(
+    aiohttp_client: ClientSessionGenerator,
+) -> Generator[TestClient]:
     """Return a hue API client."""
     app = web.Application()
     with unittest.mock.patch(
@@ -50,22 +61,26 @@ def hue_client(aiohttp_client):
         yield client
 
 
-async def setup_hue(hass):
+async def setup_hue(hass: HomeAssistant) -> None:
     """Set up the emulated_hue integration."""
-    assert await setup.async_setup_component(
-        hass,
-        emulated_hue.DOMAIN,
-        {emulated_hue.DOMAIN: {emulated_hue.CONF_LISTEN_PORT: BRIDGE_SERVER_PORT}},
-    )
+    with patch(
+        "homeassistant.components.emulated_hue.async_create_upnp_datagram_endpoint"
+    ):
+        assert await setup.async_setup_component(
+            hass,
+            emulated_hue.DOMAIN,
+            {emulated_hue.DOMAIN: {emulated_hue.CONF_LISTEN_PORT: BRIDGE_SERVER_PORT}},
+        )
+        await hass.async_block_till_done()
 
 
-def test_upnp_discovery_basic():
+def test_upnp_discovery_basic() -> None:
     """Tests the UPnP basic discovery response."""
     upnp_responder_protocol = upnp.UPNPResponderProtocol(None, None, "192.0.2.42", 8080)
     mock_transport = MockTransport()
     upnp_responder_protocol.transport = mock_transport
 
-    """Original request emitted by the Hue Bridge v1 app."""
+    # Original request emitted by the Hue Bridge v1 app.
     request = """M-SEARCH * HTTP/1.1
 HOST:239.255.255.250:1900
 ST:ssdp:all
@@ -91,13 +106,13 @@ USN: uuid:2f402f80-da50-11e1-9b23-001788255acc
     assert mock_transport.sends == [(expected_send, 1234)]
 
 
-def test_upnp_discovery_rootdevice():
+def test_upnp_discovery_rootdevice() -> None:
     """Tests the UPnP rootdevice discovery response."""
     upnp_responder_protocol = upnp.UPNPResponderProtocol(None, None, "192.0.2.42", 8080)
     mock_transport = MockTransport()
     upnp_responder_protocol.transport = mock_transport
 
-    """Original request emitted by Busch-Jaeger free@home SysAP."""
+    # Original request emitted by Busch-Jaeger free@home SysAP.
     request = """M-SEARCH * HTTP/1.1
 HOST: 239.255.255.250:1900
 MAN: "ssdp:discover"
@@ -123,13 +138,13 @@ USN: uuid:2f402f80-da50-11e1-9b23-001788255acc::upnp:rootdevice
     assert mock_transport.sends == [(expected_send, 1234)]
 
 
-def test_upnp_no_response():
+def test_upnp_no_response() -> None:
     """Tests the UPnP does not response on an invalid request."""
     upnp_responder_protocol = upnp.UPNPResponderProtocol(None, None, "192.0.2.42", 8080)
     mock_transport = MockTransport()
     upnp_responder_protocol.transport = mock_transport
 
-    """Original request emitted by the Hue Bridge v1 app."""
+    # Original request emitted by the Hue Bridge v1 app.
     request = """INVALID * HTTP/1.1
 HOST:239.255.255.250:1900
 ST:ssdp:all
@@ -141,10 +156,10 @@ MX:3
 
     upnp_responder_protocol.datagram_received(encoded_request, 1234)
 
-    assert mock_transport.sends == []
+    assert not mock_transport.sends
 
 
-async def test_description_xml(hass, hue_client):
+async def test_description_xml(hass: HomeAssistant, hue_client) -> None:
     """Test the description."""
     await setup_hue(hass)
     client = await hue_client()
@@ -157,11 +172,11 @@ async def test_description_xml(hass, hue_client):
         root = ET.fromstring(await result.text())
         ns = {"s": "urn:schemas-upnp-org:device-1-0"}
         assert root.find("./s:device/s:serialNumber", ns).text == "001788FFFE23BFC2"
-    except:  # noqa: E722 pylint: disable=bare-except
+    except Exception:  # noqa: BLE001
         pytest.fail("description.xml is not valid XML!")
 
 
-async def test_create_username(hass, hue_client):
+async def test_create_username(hass: HomeAssistant, hue_client) -> None:
     """Test the creation of an username."""
     await setup_hue(hass)
     client = await hue_client()
@@ -179,7 +194,7 @@ async def test_create_username(hass, hue_client):
     assert "username" in success_json["success"]
 
 
-async def test_unauthorized_view(hass, hue_client):
+async def test_unauthorized_view(hass: HomeAssistant, hue_client) -> None:
     """Test unauthorized view."""
     await setup_hue(hass)
     client = await hue_client()
@@ -205,7 +220,7 @@ async def test_unauthorized_view(hass, hue_client):
     assert "1" in error_json["type"]
 
 
-async def test_valid_username_request(hass, hue_client):
+async def test_valid_username_request(hass: HomeAssistant, hue_client) -> None:
     """Test request with a valid username."""
     await setup_hue(hass)
     client = await hue_client()

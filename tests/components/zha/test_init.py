@@ -1,27 +1,52 @@
 """Tests for ZHA integration init."""
 
-from unittest.mock import AsyncMock, patch
+import asyncio
+from collections.abc import Callable
+import typing
+from unittest.mock import AsyncMock, Mock, patch
+import zoneinfo
 
 import pytest
+from zigpy.application import ControllerApplication
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
+from zigpy.device import Device
+from zigpy.exceptions import TransientConnectionError
 
-from homeassistant.components.zha.core.const import (
+from homeassistant.components.zha.const import (
     CONF_BAUDRATE,
+    CONF_FLOW_CONTROL,
     CONF_RADIO_TYPE,
     CONF_USB_PATH,
     DOMAIN,
 )
-from homeassistant.const import MAJOR_VERSION, MINOR_VERSION
+from homeassistant.components.zha.helpers import get_zha_data, get_zha_gateway
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    MAJOR_VERSION,
+    MINOR_VERSION,
+    Platform,
+)
+from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.helpers.event import async_call_later
 from homeassistant.setup import async_setup_component
+
+from .test_light import LIGHT_ON_OFF
 
 from tests.common import MockConfigEntry
 
-DATA_RADIO_TYPE = "deconz"
+DATA_RADIO_TYPE = "ezsp"
 DATA_PORT_PATH = "/dev/serial/by-id/FTDI_USB__-__Serial_Cable_12345678-if00-port0"
 
 
+@pytest.fixture(autouse=True)
+def disable_platform_only():
+    """Disable platforms to speed up tests."""
+    with patch("homeassistant.components.zha.PLATFORMS", []):
+        yield
+
+
 @pytest.fixture
-def config_entry_v1(hass):
+def config_entry_v1(hass: HomeAssistant):
     """Config entry version 1 fixture."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -30,9 +55,11 @@ def config_entry_v1(hass):
     )
 
 
-@pytest.mark.parametrize("config", ({}, {DOMAIN: {}}))
+@pytest.mark.parametrize("config", [{}, {DOMAIN: {}}])
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-async def test_migration_from_v1_no_baudrate(hass, config_entry_v1, config):
+async def test_migration_from_v1_no_baudrate(
+    hass: HomeAssistant, config_entry_v1, config
+) -> None:
     """Test migration of config entry from v1."""
     config_entry_v1.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, config)
@@ -40,13 +67,14 @@ async def test_migration_from_v1_no_baudrate(hass, config_entry_v1, config):
     assert config_entry_v1.data[CONF_RADIO_TYPE] == DATA_RADIO_TYPE
     assert CONF_DEVICE in config_entry_v1.data
     assert config_entry_v1.data[CONF_DEVICE][CONF_DEVICE_PATH] == DATA_PORT_PATH
-    assert CONF_BAUDRATE not in config_entry_v1.data[CONF_DEVICE]
     assert CONF_USB_PATH not in config_entry_v1.data
-    assert config_entry_v1.version == 3
+    assert config_entry_v1.version == 4
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-async def test_migration_from_v1_with_baudrate(hass, config_entry_v1):
+async def test_migration_from_v1_with_baudrate(
+    hass: HomeAssistant, config_entry_v1
+) -> None:
     """Test migration of config entry from v1 with baudrate in config."""
     config_entry_v1.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_BAUDRATE: 115200}})
@@ -57,11 +85,13 @@ async def test_migration_from_v1_with_baudrate(hass, config_entry_v1):
     assert CONF_USB_PATH not in config_entry_v1.data
     assert CONF_BAUDRATE in config_entry_v1.data[CONF_DEVICE]
     assert config_entry_v1.data[CONF_DEVICE][CONF_BAUDRATE] == 115200
-    assert config_entry_v1.version == 3
+    assert config_entry_v1.version == 4
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-async def test_migration_from_v1_wrong_baudrate(hass, config_entry_v1):
+async def test_migration_from_v1_wrong_baudrate(
+    hass: HomeAssistant, config_entry_v1
+) -> None:
     """Test migration of config entry from v1 with wrong baudrate."""
     config_entry_v1.add_to_hass(hass)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_BAUDRATE: 115222}})
@@ -70,8 +100,7 @@ async def test_migration_from_v1_wrong_baudrate(hass, config_entry_v1):
     assert CONF_DEVICE in config_entry_v1.data
     assert config_entry_v1.data[CONF_DEVICE][CONF_DEVICE_PATH] == DATA_PORT_PATH
     assert CONF_USB_PATH not in config_entry_v1.data
-    assert CONF_BAUDRATE not in config_entry_v1.data[CONF_DEVICE]
-    assert config_entry_v1.version == 3
+    assert config_entry_v1.version == 4
 
 
 @pytest.mark.skipif(
@@ -80,14 +109,14 @@ async def test_migration_from_v1_wrong_baudrate(hass, config_entry_v1):
 )
 @pytest.mark.parametrize(
     "zha_config",
-    (
+    [
         {},
         {CONF_USB_PATH: "str"},
         {CONF_RADIO_TYPE: "ezsp"},
         {CONF_RADIO_TYPE: "ezsp", CONF_USB_PATH: "str"},
-    ),
+    ],
 )
-async def test_config_depreciation(hass, zha_config):
+async def test_config_depreciation(hass: HomeAssistant, zha_config) -> None:
     """Test config option depreciation."""
 
     with patch(
@@ -95,3 +124,190 @@ async def test_config_depreciation(hass, zha_config):
     ) as setup_mock:
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: zha_config})
         assert setup_mock.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("path", "cleaned_path"),
+    [
+        # No corrections
+        ("/dev/path1", "/dev/path1"),
+        ("/dev/path1[asd]", "/dev/path1[asd]"),
+        ("/dev/path1 ", "/dev/path1 "),
+        ("socket://1.2.3.4:5678", "socket://1.2.3.4:5678"),
+        # Brackets around URI
+        ("socket://[1.2.3.4]:5678", "socket://1.2.3.4:5678"),
+        # Spaces
+        ("socket://dev/path1 ", "socket://dev/path1"),
+        # Both
+        ("socket://[1.2.3.4]:5678 ", "socket://1.2.3.4:5678"),
+    ],
+)
+@patch(
+    "homeassistant.components.zha.websocket_api.async_load_api", Mock(return_value=True)
+)
+async def test_setup_with_v3_cleaning_uri(
+    hass: HomeAssistant,
+    path: str,
+    cleaned_path: str,
+    mock_zigpy_connect: ControllerApplication,
+) -> None:
+    """Test migration of config entry from v3, applying corrections to the port path."""
+    config_entry_v4 = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_RADIO_TYPE: DATA_RADIO_TYPE,
+            CONF_DEVICE: {
+                CONF_DEVICE_PATH: path,
+                CONF_BAUDRATE: 115200,
+                CONF_FLOW_CONTROL: None,
+            },
+        },
+        version=4,
+    )
+    config_entry_v4.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry_v4.entry_id)
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry_v4.entry_id)
+
+    assert config_entry_v4.data[CONF_RADIO_TYPE] == DATA_RADIO_TYPE
+    assert config_entry_v4.data[CONF_DEVICE][CONF_DEVICE_PATH] == cleaned_path
+    assert config_entry_v4.version == 4
+
+
+@pytest.mark.parametrize(
+    (
+        "radio_type",
+        "old_baudrate",
+        "old_flow_control",
+        "new_baudrate",
+        "new_flow_control",
+    ),
+    [
+        ("znp", None, None, 115200, None),
+        ("znp", None, "software", 115200, "software"),
+        ("znp", 57600, "software", 57600, "software"),
+        ("deconz", None, None, 38400, None),
+        ("deconz", 115200, None, 115200, None),
+    ],
+)
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_migration_baudrate_and_flow_control(
+    radio_type: str,
+    old_baudrate: int,
+    old_flow_control: typing.Literal["hardware", "software"] | None,
+    new_baudrate: int,
+    new_flow_control: typing.Literal["hardware", "software"] | None,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test baudrate and flow control migration."""
+
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            **config_entry.data,
+            CONF_RADIO_TYPE: radio_type,
+            CONF_DEVICE: {
+                CONF_BAUDRATE: old_baudrate,
+                CONF_FLOW_CONTROL: old_flow_control,
+                CONF_DEVICE_PATH: "/dev/null",
+            },
+        },
+        version=3,
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.version > 3
+    assert config_entry.data[CONF_DEVICE][CONF_BAUDRATE] == new_baudrate
+    assert config_entry.data[CONF_DEVICE][CONF_FLOW_CONTROL] == new_flow_control
+
+
+@patch(
+    "homeassistant.components.zha.PLATFORMS",
+    [Platform.LIGHT, Platform.BUTTON, Platform.SENSOR, Platform.SELECT],
+)
+async def test_zha_retry_unique_ids(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    zigpy_device_mock: Callable[..., Device],
+    mock_zigpy_connect: ControllerApplication,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that ZHA retrying creates unique entity IDs."""
+
+    config_entry.add_to_hass(hass)
+
+    # Ensure we have some device to try to load
+    app = mock_zigpy_connect
+    light = zigpy_device_mock(LIGHT_ON_OFF)
+    app.devices[light.ieee] = light
+
+    # Re-try setup but have it fail once, so entities have two chances to be created
+    with patch.object(
+        app,
+        "startup",
+        side_effect=[TransientConnectionError(), None],
+    ) as mock_connect:
+        with patch(
+            "homeassistant.config_entries.async_call_later",
+            lambda hass, delay, action: async_call_later(hass, 0.01, action),
+        ):
+            await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+            # Wait for the config entry setup to retry
+            await asyncio.sleep(0.1)
+            await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert len(mock_connect.mock_calls) == 2
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+    assert "does not generate unique IDs" not in caplog.text
+
+
+async def test_shutdown_on_ha_stop(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+) -> None:
+    """Test that the ZHA gateway is stopped when HA is shut down."""
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    zha_data = get_zha_data(hass)
+
+    with patch.object(
+        zha_data.gateway_proxy, "shutdown", wraps=zha_data.gateway_proxy.shutdown
+    ) as mock_shutdown:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        hass.set_state(CoreState.stopping)
+        await hass.async_block_till_done()
+
+    assert len(mock_shutdown.mock_calls) == 1
+
+
+async def test_timezone_update(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+) -> None:
+    """Test that the ZHA gateway timezone is updated when HA timezone changes."""
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    gateway = get_zha_gateway(hass)
+
+    assert hass.config.time_zone == "US/Pacific"
+    assert gateway.config.local_timezone == zoneinfo.ZoneInfo("US/Pacific")
+
+    await hass.config.async_update(time_zone="America/New_York")
+
+    assert hass.config.time_zone == "America/New_York"
+    assert gateway.config.local_timezone == zoneinfo.ZoneInfo("America/New_York")

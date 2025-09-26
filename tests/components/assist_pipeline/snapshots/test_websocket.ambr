@@ -1,0 +1,1111 @@
+# serializer version: 1
+# name: test_audio_pipeline
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'test_token.mp3',
+      'url': '/api/tts_proxy/test_token.mp3',
+    }),
+  })
+# ---
+# name: test_audio_pipeline.1
+  dict({
+    'engine': 'stt.mock_stt',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'language': 'en-US',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_audio_pipeline.2
+  dict({
+    'stt_output': dict({
+      'text': 'test transcript',
+    }),
+  })
+# ---
+# name: test_audio_pipeline.3
+  dict({
+    'conversation_id': 'mock-ulid',
+    'device_id': None,
+    'engine': 'conversation.home_assistant',
+    'intent_input': 'test transcript',
+    'language': 'en',
+    'prefer_local_intents': False,
+    'satellite_id': None,
+  })
+# ---
+# name: test_audio_pipeline.4
+  dict({
+    'intent_output': dict({
+      'continue_conversation': False,
+      'conversation_id': <ANY>,
+      'response': dict({
+        'card': dict({
+        }),
+        'data': dict({
+          'code': 'no_intent_match',
+        }),
+        'language': 'en',
+        'response_type': 'error',
+        'speech': dict({
+          'plain': dict({
+            'extra_data': None,
+            'speech': "Sorry, I couldn't understand that",
+          }),
+        }),
+      }),
+    }),
+    'processed_locally': True,
+  })
+# ---
+# name: test_audio_pipeline.5
+  dict({
+    'acknowledge_override': False,
+    'engine': 'tts.test',
+    'language': 'en_US',
+    'tts_input': "Sorry, I couldn't understand that",
+    'voice': None,
+  })
+# ---
+# name: test_audio_pipeline.6
+  dict({
+    'tts_output': dict({
+      'media_id': 'media-source://tts/-stream-/test_token.mp3',
+      'mime_type': 'audio/mpeg',
+      'token': 'test_token.mp3',
+      'url': '/api/tts_proxy/test_token.mp3',
+    }),
+  })
+# ---
+# name: test_audio_pipeline.7
+  None
+# ---
+# name: test_audio_pipeline_debug
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'test_token.mp3',
+      'url': '/api/tts_proxy/test_token.mp3',
+    }),
+  })
+# ---
+# name: test_audio_pipeline_debug.1
+  dict({
+    'engine': 'stt.mock_stt',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'language': 'en-US',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_audio_pipeline_debug.2
+  dict({
+    'stt_output': dict({
+      'text': 'test transcript',
+    }),
+  })
+# ---
+# name: test_audio_pipeline_debug.3
+  dict({
+    'conversation_id': 'mock-ulid',
+    'device_id': None,
+    'engine': 'conversation.home_assistant',
+    'intent_input': 'test transcript',
+    'language': 'en',
+    'prefer_local_intents': False,
+    'satellite_id': None,
+  })
+# ---
+# name: test_audio_pipeline_debug.4
+  dict({
+    'intent_output': dict({
+      'continue_conversation': False,
+      'conversation_id': <ANY>,
+      'response': dict({
+        'card': dict({
+        }),
+        'data': dict({
+          'code': 'no_intent_match',
+        }),
+        'language': 'en',
+        'response_type': 'error',
+        'speech': dict({
+          'plain': dict({
+            'extra_data': None,
+            'speech': "Sorry, I couldn't understand that",
+          }),
+        }),
+      }),
+    }),
+    'processed_locally': True,
+  })
+# ---
+# name: test_audio_pipeline_debug.5
+  dict({
+    'acknowledge_override': False,
+    'engine': 'tts.test',
+    'language': 'en_US',
+    'tts_input': "Sorry, I couldn't understand that",
+    'voice': None,
+  })
+# ---
+# name: test_audio_pipeline_debug.6
+  dict({
+    'tts_output': dict({
+      'media_id': 'media-source://tts/-stream-/test_token.mp3',
+      'mime_type': 'audio/mpeg',
+      'token': 'test_token.mp3',
+      'url': '/api/tts_proxy/test_token.mp3',
+    }),
+  })
+# ---
+# name: test_audio_pipeline_debug.7
+  None
+# ---
+# name: test_audio_pipeline_no_wake_word_engine
+  dict({
+    'code': 'wake-engine-missing',
+    'message': 'No wake word engine',
+  })
+# ---
+# name: test_audio_pipeline_no_wake_word_entity
+  dict({
+    'code': 'wake-provider-missing',
+    'message': 'No wake-word-detection provider for: wake_word.bad-entity-id',
+  })
+# ---
+# name: test_audio_pipeline_with_enhancements
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'test_token.mp3',
+      'url': '/api/tts_proxy/test_token.mp3',
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_enhancements.1
+  dict({
+    'engine': 'stt.mock_stt',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'language': 'en-US',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_enhancements.2
+  dict({
+    'stt_output': dict({
+      'text': 'test transcript',
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_enhancements.3
+  dict({
+    'conversation_id': 'mock-ulid',
+    'device_id': None,
+    'engine': 'conversation.home_assistant',
+    'intent_input': 'test transcript',
+    'language': 'en',
+    'prefer_local_intents': False,
+    'satellite_id': None,
+  })
+# ---
+# name: test_audio_pipeline_with_enhancements.4
+  dict({
+    'intent_output': dict({
+      'continue_conversation': False,
+      'conversation_id': <ANY>,
+      'response': dict({
+        'card': dict({
+        }),
+        'data': dict({
+          'code': 'no_intent_match',
+        }),
+        'language': 'en',
+        'response_type': 'error',
+        'speech': dict({
+          'plain': dict({
+            'extra_data': None,
+            'speech': "Sorry, I couldn't understand that",
+          }),
+        }),
+      }),
+    }),
+    'processed_locally': True,
+  })
+# ---
+# name: test_audio_pipeline_with_enhancements.5
+  dict({
+    'acknowledge_override': False,
+    'engine': 'tts.test',
+    'language': 'en_US',
+    'tts_input': "Sorry, I couldn't understand that",
+    'voice': None,
+  })
+# ---
+# name: test_audio_pipeline_with_enhancements.6
+  dict({
+    'tts_output': dict({
+      'media_id': 'media-source://tts/-stream-/test_token.mp3',
+      'mime_type': 'audio/mpeg',
+      'token': 'test_token.mp3',
+      'url': '/api/tts_proxy/test_token.mp3',
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_enhancements.7
+  None
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'test_token.mp3',
+      'url': '/api/tts_proxy/test_token.mp3',
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout.1
+  dict({
+    'entity_id': 'wake_word.test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'sample_rate': 16000,
+    }),
+    'timeout': 0,
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout.2
+  dict({
+    'wake_word_output': dict({
+      'timestamp': 0,
+      'wake_word_id': 'test_ww',
+      'wake_word_phrase': 'Test Wake Word',
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout.3
+  dict({
+    'engine': 'stt.mock_stt',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'language': 'en-US',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout.4
+  dict({
+    'stt_output': dict({
+      'text': 'test transcript',
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout.5
+  dict({
+    'conversation_id': 'mock-ulid',
+    'device_id': None,
+    'engine': 'conversation.home_assistant',
+    'intent_input': 'test transcript',
+    'language': 'en',
+    'prefer_local_intents': False,
+    'satellite_id': None,
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout.6
+  dict({
+    'intent_output': dict({
+      'continue_conversation': False,
+      'conversation_id': <ANY>,
+      'response': dict({
+        'card': dict({
+        }),
+        'data': dict({
+          'code': 'no_intent_match',
+        }),
+        'language': 'en',
+        'response_type': 'error',
+        'speech': dict({
+          'plain': dict({
+            'extra_data': None,
+            'speech': "Sorry, I couldn't understand that",
+          }),
+        }),
+      }),
+    }),
+    'processed_locally': True,
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout.7
+  dict({
+    'acknowledge_override': False,
+    'engine': 'tts.test',
+    'language': 'en_US',
+    'tts_input': "Sorry, I couldn't understand that",
+    'voice': None,
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout.8
+  dict({
+    'tts_output': dict({
+      'media_id': 'media-source://tts/-stream-/test_token.mp3',
+      'mime_type': 'audio/mpeg',
+      'token': 'test_token.mp3',
+      'url': '/api/tts_proxy/test_token.mp3',
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_no_timeout.9
+  None
+# ---
+# name: test_audio_pipeline_with_wake_word_timeout
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'test_token.mp3',
+      'url': '/api/tts_proxy/test_token.mp3',
+    }),
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_timeout.1
+  dict({
+    'entity_id': 'wake_word.test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'sample_rate': 16000,
+    }),
+    'timeout': 1,
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_timeout.2
+  dict({
+    'code': 'wake-word-timeout',
+    'message': 'Wake word was not detected',
+  })
+# ---
+# name: test_audio_pipeline_with_wake_word_timeout.3
+  None
+# ---
+# name: test_device_capture
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_device_capture.1
+  dict({
+    'engine': 'stt.mock_stt',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'language': 'en-US',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_device_capture.2
+  None
+# ---
+# name: test_device_capture_override
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_device_capture_override.1
+  dict({
+    'engine': 'stt.mock_stt',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'language': 'en-US',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_device_capture_override.2
+  dict({
+    'audio': 'Y2h1bmsxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+    'channels': 1,
+    'rate': 16000,
+    'type': 'audio',
+    'width': 2,
+  })
+# ---
+# name: test_device_capture_override.3
+  dict({
+    'stt_output': dict({
+      'text': 'test transcript',
+    }),
+  })
+# ---
+# name: test_device_capture_override.4
+  None
+# ---
+# name: test_device_capture_override.5
+  dict({
+    'overflow': False,
+    'type': 'end',
+  })
+# ---
+# name: test_device_capture_queue_full
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_device_capture_queue_full.1
+  dict({
+    'engine': 'stt.mock_stt',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'language': 'en-US',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_device_capture_queue_full.2
+  dict({
+    'stt_output': dict({
+      'text': 'test transcript',
+    }),
+  })
+# ---
+# name: test_device_capture_queue_full.3
+  None
+# ---
+# name: test_device_capture_queue_full.4
+  dict({
+    'overflow': True,
+    'type': 'end',
+  })
+# ---
+# name: test_intent_failed
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': None,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_intent_failed.1
+  dict({
+    'conversation_id': 'mock-ulid',
+    'device_id': None,
+    'engine': 'conversation.home_assistant',
+    'intent_input': 'Are the lights on?',
+    'language': 'en',
+    'prefer_local_intents': False,
+    'satellite_id': None,
+  })
+# ---
+# name: test_intent_failed.2
+  None
+# ---
+# name: test_intent_timeout
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': None,
+      'timeout': 0.1,
+    }),
+  })
+# ---
+# name: test_intent_timeout.1
+  dict({
+    'conversation_id': 'mock-ulid',
+    'device_id': None,
+    'engine': 'conversation.home_assistant',
+    'intent_input': 'Are the lights on?',
+    'language': 'en',
+    'prefer_local_intents': False,
+    'satellite_id': None,
+  })
+# ---
+# name: test_intent_timeout.2
+  None
+# ---
+# name: test_intent_timeout.3
+  dict({
+    'code': 'timeout',
+    'message': 'Timeout running pipeline',
+  })
+# ---
+# name: test_pipeline_empty_tts_output
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': None,
+      'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
+  })
+# ---
+# name: test_pipeline_empty_tts_output.1
+  dict({
+    'conversation_id': 'mock-ulid',
+    'device_id': None,
+    'engine': 'conversation.home_assistant',
+    'intent_input': 'never mind',
+    'language': 'en',
+    'prefer_local_intents': False,
+    'satellite_id': None,
+  })
+# ---
+# name: test_pipeline_empty_tts_output.2
+  dict({
+    'intent_output': dict({
+      'continue_conversation': False,
+      'conversation_id': <ANY>,
+      'response': dict({
+        'card': dict({
+        }),
+        'data': dict({
+          'failed': list([
+          ]),
+          'success': list([
+          ]),
+          'targets': list([
+          ]),
+        }),
+        'language': 'en',
+        'response_type': 'action_done',
+        'speech': dict({
+        }),
+      }),
+    }),
+    'processed_locally': True,
+  })
+# ---
+# name: test_pipeline_empty_tts_output.3
+  None
+# ---
+# name: test_stt_cooldown_different_ids
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
+  })
+# ---
+# name: test_stt_cooldown_different_ids.1
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
+  })
+# ---
+# name: test_stt_cooldown_same_id
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
+  })
+# ---
+# name: test_stt_cooldown_same_id.1
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
+  })
+# ---
+# name: test_stt_stream_failed
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
+  })
+# ---
+# name: test_stt_stream_failed.1
+  dict({
+    'engine': 'stt.mock_stt',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'language': 'en-US',
+      'sample_rate': 16000,
+    }),
+  })
+# ---
+# name: test_stt_stream_failed.2
+  None
+# ---
+# name: test_text_only_pipeline[extra_msg0]
+  dict({
+    'conversation_id': 'mock-conversation-id',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': None,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_text_only_pipeline[extra_msg0].1
+  dict({
+    'conversation_id': 'mock-conversation-id',
+    'device_id': 'mock-device-id',
+    'engine': 'conversation.home_assistant',
+    'intent_input': 'Are the lights on?',
+    'language': 'en',
+    'prefer_local_intents': False,
+    'satellite_id': None,
+  })
+# ---
+# name: test_text_only_pipeline[extra_msg0].2
+  dict({
+    'intent_output': dict({
+      'continue_conversation': False,
+      'conversation_id': <ANY>,
+      'response': dict({
+        'card': dict({
+        }),
+        'data': dict({
+          'code': 'no_valid_targets',
+        }),
+        'language': 'en',
+        'response_type': 'error',
+        'speech': dict({
+          'plain': dict({
+            'extra_data': None,
+            'speech': 'Sorry, I am not aware of any area called Are the',
+          }),
+        }),
+      }),
+    }),
+    'processed_locally': True,
+  })
+# ---
+# name: test_text_only_pipeline[extra_msg0].3
+  None
+# ---
+# name: test_text_only_pipeline[extra_msg1]
+  dict({
+    'conversation_id': 'mock-conversation-id',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': None,
+      'timeout': 300,
+    }),
+  })
+# ---
+# name: test_text_only_pipeline[extra_msg1].1
+  dict({
+    'conversation_id': 'mock-conversation-id',
+    'device_id': 'mock-device-id',
+    'engine': 'conversation.home_assistant',
+    'intent_input': 'Are the lights on?',
+    'language': 'en',
+    'prefer_local_intents': False,
+    'satellite_id': None,
+  })
+# ---
+# name: test_text_only_pipeline[extra_msg1].2
+  dict({
+    'intent_output': dict({
+      'continue_conversation': False,
+      'conversation_id': <ANY>,
+      'response': dict({
+        'card': dict({
+        }),
+        'data': dict({
+          'code': 'no_valid_targets',
+        }),
+        'language': 'en',
+        'response_type': 'error',
+        'speech': dict({
+          'plain': dict({
+            'extra_data': None,
+            'speech': 'Sorry, I am not aware of any area called Are the',
+          }),
+        }),
+      }),
+    }),
+    'processed_locally': True,
+  })
+# ---
+# name: test_text_only_pipeline[extra_msg1].3
+  None
+# ---
+# name: test_text_pipeline_timeout
+  dict({
+    'code': 'timeout',
+    'message': 'Timeout running pipeline',
+  })
+# ---
+# name: test_wake_word_cooldown_different_entities
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_different_entities.1
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_different_entities.2
+  dict({
+    'entity_id': 'wake_word.test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'sample_rate': 16000,
+    }),
+    'timeout': 3,
+  })
+# ---
+# name: test_wake_word_cooldown_different_entities.3
+  dict({
+    'entity_id': 'wake_word.test2',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'sample_rate': 16000,
+    }),
+    'timeout': 3,
+  })
+# ---
+# name: test_wake_word_cooldown_different_entities.4
+  dict({
+    'wake_word_output': dict({
+      'timestamp': 0,
+      'wake_word_id': 'test_ww',
+      'wake_word_phrase': 'Test Wake Word',
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_different_entities.5
+  dict({
+    'code': 'duplicate_wake_up_detected',
+    'message': 'Duplicate wake-up detected for Test Wake Word',
+  })
+# ---
+# name: test_wake_word_cooldown_different_ids
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_different_ids.1
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_different_ids.2
+  dict({
+    'entity_id': 'wake_word.test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'sample_rate': 16000,
+    }),
+    'timeout': 3,
+  })
+# ---
+# name: test_wake_word_cooldown_different_ids.3
+  dict({
+    'entity_id': 'wake_word.test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'sample_rate': 16000,
+    }),
+    'timeout': 3,
+  })
+# ---
+# name: test_wake_word_cooldown_different_ids.4
+  dict({
+    'wake_word_output': dict({
+      'timestamp': 0,
+      'wake_word_id': 'test_ww',
+      'wake_word_phrase': 'Test Wake Word',
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_different_ids.5
+  dict({
+    'wake_word_output': dict({
+      'timestamp': 0,
+      'wake_word_id': 'test_ww_2',
+      'wake_word_phrase': 'Test Wake Word 2',
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_same_id
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_same_id.1
+  dict({
+    'conversation_id': 'mock-ulid',
+    'language': 'en',
+    'pipeline': <ANY>,
+    'runner_data': dict({
+      'stt_binary_handler_id': 1,
+      'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'stream_response': False,
+      'token': 'mocked-token.mp3',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_same_id.2
+  dict({
+    'entity_id': 'wake_word.test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'sample_rate': 16000,
+    }),
+    'timeout': 3,
+  })
+# ---
+# name: test_wake_word_cooldown_same_id.3
+  dict({
+    'entity_id': 'wake_word.test',
+    'metadata': dict({
+      'bit_rate': 16,
+      'channel': 1,
+      'codec': 'pcm',
+      'format': 'wav',
+      'sample_rate': 16000,
+    }),
+    'timeout': 3,
+  })
+# ---
+# name: test_wake_word_cooldown_same_id.4
+  dict({
+    'wake_word_output': dict({
+      'timestamp': 0,
+      'wake_word_id': 'test_ww',
+      'wake_word_phrase': 'Test Wake Word',
+    }),
+  })
+# ---
+# name: test_wake_word_cooldown_same_id.5
+  dict({
+    'code': 'duplicate_wake_up_detected',
+    'message': 'Duplicate wake-up detected for Test Wake Word',
+  })
+# ---

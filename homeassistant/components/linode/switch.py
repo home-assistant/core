@@ -1,13 +1,18 @@
 """Support for interacting with Linode nodes."""
+
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -28,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Node"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_NODES): vol.All(cv.ensure_list, [cv.string])}
 )
 
@@ -56,24 +61,24 @@ def setup_platform(
 class LinodeSwitch(SwitchEntity):
     """Representation of a Linode Node switch."""
 
-    def __init__(self, li, node_id):  # pylint: disable=invalid-name
+    def __init__(self, li, node_id):
         """Initialize a new Linode sensor."""
         self._linode = li
         self._node_id = node_id
         self.data = None
         self._attr_extra_state_attributes = {}
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Boot-up the Node."""
         if self.data.status != "running":
             self.data.boot()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Shutdown the nodes."""
         if self.data.status == "running":
             self.data.shutdown()
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data from the device and update the data."""
         self._linode.update()
         if self._linode.data is not None:

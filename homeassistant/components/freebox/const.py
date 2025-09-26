@@ -1,13 +1,13 @@
 """Freebox component constants."""
+
 from __future__ import annotations
 
+import enum
 import socket
 
-from homeassistant.components.sensor import SensorEntityDescription
-from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND, PERCENTAGE, Platform
+from homeassistant.const import Platform
 
 DOMAIN = "freebox"
-SERVICE_REBOOT = "reboot"
 
 APP_DESC = {
     "app_id": "hass",
@@ -17,7 +17,15 @@ APP_DESC = {
 }
 API_VERSION = "v6"
 
-PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CAMERA,
+    Platform.DEVICE_TRACKER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 DEFAULT_DEVICE_NAME = "Unknown device"
 
@@ -26,38 +34,7 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 
-CONNECTION_SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="rate_down",
-        name="Freebox download speed",
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
-        icon="mdi:download-network",
-    ),
-    SensorEntityDescription(
-        key="rate_up",
-        name="Freebox upload speed",
-        native_unit_of_measurement=DATA_RATE_KILOBYTES_PER_SECOND,
-        icon="mdi:upload-network",
-    ),
-)
-CONNECTION_SENSORS_KEYS: list[str] = [desc.key for desc in CONNECTION_SENSORS]
-
-CALL_SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="missed",
-        name="Freebox missed calls",
-        icon="mdi:phone-missed",
-    ),
-)
-
-DISK_PARTITION_SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="partition_free_space",
-        name="free space",
-        native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:harddisk",
-    ),
-)
+CONNECTION_SENSORS_KEYS = {"rate_down", "rate_up"}
 
 # Icons
 DEVICE_ICONS = {
@@ -79,3 +56,40 @@ DEVICE_ICONS = {
     "vg_console": "mdi:gamepad-variant",
     "workstation": "mdi:desktop-tower-monitor",
 }
+
+ATTR_DETECTION = "detection"
+
+
+# Home
+class FreeboxHomeCategory(enum.StrEnum):
+    """Freebox Home categories."""
+
+    ALARM = "alarm"
+    CAMERA = "camera"
+    DWS = "dws"
+    IOHOME = "iohome"
+    KFB = "kfb"
+    OPENER = "opener"
+    PIR = "pir"
+    RTS = "rts"
+
+
+CATEGORY_TO_MODEL = {
+    FreeboxHomeCategory.PIR: "F-HAPIR01A",
+    FreeboxHomeCategory.CAMERA: "F-HACAM01A",
+    FreeboxHomeCategory.DWS: "F-HADWS01A",
+    FreeboxHomeCategory.KFB: "F-HAKFB01A",
+    FreeboxHomeCategory.ALARM: "F-MSEC07A",
+    FreeboxHomeCategory.RTS: "RTS",
+    FreeboxHomeCategory.IOHOME: "IOHome",
+}
+
+HOME_COMPATIBLE_CATEGORIES = [
+    FreeboxHomeCategory.ALARM,
+    FreeboxHomeCategory.CAMERA,
+    FreeboxHomeCategory.DWS,
+    FreeboxHomeCategory.IOHOME,
+    FreeboxHomeCategory.KFB,
+    FreeboxHomeCategory.PIR,
+    FreeboxHomeCategory.RTS,
+]

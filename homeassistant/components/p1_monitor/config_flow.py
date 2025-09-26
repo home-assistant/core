@@ -1,4 +1,5 @@
 """Config flow for P1 Monitor integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,10 +7,15 @@ from typing import Any
 from p1monitor import P1Monitor, P1MonitorError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+    TextSelector,
+)
 
 from .const import DOMAIN
 
@@ -17,11 +23,11 @@ from .const import DOMAIN
 class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for P1 Monitor."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
         errors = {}
@@ -30,16 +36,19 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
             session = async_get_clientsession(self.hass)
             try:
                 async with P1Monitor(
-                    host=user_input[CONF_HOST], session=session
+                    host=user_input[CONF_HOST],
+                    port=user_input[CONF_PORT],
+                    session=session,
                 ) as client:
-                    await client.smartmeter()
+                    await client.settings()
             except P1MonitorError:
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME],
+                    title="P1 Monitor",
                     data={
                         CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
                     },
                 )
 
@@ -47,10 +56,15 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(
-                        CONF_NAME, default=self.hass.config.location_name
-                    ): str,
-                    vol.Required(CONF_HOST): str,
+                    vol.Required(CONF_HOST): TextSelector(),
+                    vol.Required(CONF_PORT, default=80): vol.All(
+                        NumberSelector(
+                            NumberSelectorConfig(
+                                min=1, max=65535, mode=NumberSelectorMode.BOX
+                            ),
+                        ),
+                        vol.Coerce(int),
+                    ),
                 }
             ),
             errors=errors,

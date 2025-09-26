@@ -4,44 +4,36 @@ from __future__ import annotations
 
 from typing import Any
 
-from tololib.const import Calefaction
+from tololib import (
+    TARGET_HUMIDITY_MAX,
+    TARGET_HUMIDITY_MIN,
+    TARGET_TEMPERATURE_MAX,
+    TARGET_TEMPERATURE_MIN,
+    Calefaction,
+)
 
 from homeassistant.components.climate import (
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    ClimateEntity,
-)
-from homeassistant.components.climate.const import (
-    CURRENT_HVAC_DRY,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
     FAN_OFF,
     FAN_ON,
-    HVAC_MODE_DRY,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ToloSaunaCoordinatorEntity, ToloSaunaUpdateCoordinator
-from .const import (
-    DEFAULT_MAX_HUMIDITY,
-    DEFAULT_MAX_TEMP,
-    DEFAULT_MIN_HUMIDITY,
-    DEFAULT_MIN_TEMP,
-    DOMAIN,
-)
+from .const import DOMAIN
+from .coordinator import ToloSaunaUpdateCoordinator
+from .entity import ToloSaunaCoordinatorEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up climate controls for TOLO Sauna."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -52,18 +44,22 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
     """Sauna climate control."""
 
     _attr_fan_modes = [FAN_ON, FAN_OFF]
-    _attr_hvac_modes = [HVAC_MODE_OFF, HVAC_MODE_HEAT, HVAC_MODE_DRY]
-    _attr_max_humidity = DEFAULT_MAX_HUMIDITY
-    _attr_max_temp = DEFAULT_MAX_TEMP
-    _attr_min_humidity = DEFAULT_MIN_HUMIDITY
-    _attr_min_temp = DEFAULT_MIN_TEMP
-    _attr_name = "Sauna Climate"
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.DRY]
+    _attr_max_humidity = TARGET_HUMIDITY_MAX
+    _attr_max_temp = TARGET_TEMPERATURE_MAX
+    _attr_min_humidity = TARGET_HUMIDITY_MIN
+    _attr_min_temp = TARGET_TEMPERATURE_MIN
+    _attr_name = None
     _attr_precision = PRECISION_WHOLE
     _attr_supported_features = (
-        SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_HUMIDITY | SUPPORT_FAN_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TARGET_HUMIDITY
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = 1
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self, coordinator: ToloSaunaUpdateCoordinator, entry: ConfigEntry
@@ -94,28 +90,28 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
         return self.coordinator.data.settings.target_humidity
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Get current HVAC mode."""
         if self.coordinator.data.status.power_on:
-            return HVAC_MODE_HEAT
+            return HVACMode.HEAT
         if (
             not self.coordinator.data.status.power_on
             and self.coordinator.data.status.fan_on
         ):
-            return HVAC_MODE_DRY
-        return HVAC_MODE_OFF
+            return HVACMode.DRY
+        return HVACMode.OFF
 
     @property
-    def hvac_action(self) -> str | None:
+    def hvac_action(self) -> HVACAction | None:
         """Execute HVAC action."""
         if self.coordinator.data.status.calefaction == Calefaction.HEAT:
-            return CURRENT_HVAC_HEAT
+            return HVACAction.HEATING
         if self.coordinator.data.status.calefaction == Calefaction.KEEP:
-            return CURRENT_HVAC_IDLE
+            return HVACAction.IDLE
         if self.coordinator.data.status.calefaction == Calefaction.INACTIVE:
             if self.coordinator.data.status.fan_on:
-                return CURRENT_HVAC_DRY
-            return CURRENT_HVAC_OFF
+                return HVACAction.DRYING
+            return HVACAction.OFF
         return None
 
     @property
@@ -125,27 +121,26 @@ class SaunaClimate(ToloSaunaCoordinatorEntity, ClimateEntity):
             return FAN_ON
         return FAN_OFF
 
-    def set_hvac_mode(self, hvac_mode: str) -> None:
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
-        if hvac_mode == HVAC_MODE_OFF:
+        if hvac_mode == HVACMode.OFF:
             self._set_power_and_fan(False, False)
-        if hvac_mode == HVAC_MODE_HEAT:
+        if hvac_mode == HVACMode.HEAT:
             self._set_power_and_fan(True, False)
-        if hvac_mode == HVAC_MODE_DRY:
+        if hvac_mode == HVACMode.DRY:
             self._set_power_and_fan(False, True)
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         self.coordinator.client.set_fan_on(fan_mode == FAN_ON)
 
-    def set_humidity(self, humidity: float) -> None:
+    def set_humidity(self, humidity: int) -> None:
         """Set desired target humidity."""
-        self.coordinator.client.set_target_humidity(round(humidity))
+        self.coordinator.client.set_target_humidity(humidity)
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set desired target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
         self.coordinator.client.set_target_temperature(round(temperature))

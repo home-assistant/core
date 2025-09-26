@@ -1,13 +1,14 @@
 """Support for Firmata binary sensor input."""
+
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_NEGATE_STATE, CONF_PIN_MODE, DOMAIN
+from . import FirmataConfigEntry
+from .const import CONF_NEGATE_STATE, CONF_PIN_MODE
 from .entity import FirmataPinEntity
 from .pin import FirmataBinaryDigitalInput, FirmataPinUsedException
 
@@ -16,13 +17,13 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FirmataConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Firmata binary sensors."""
     new_entities = []
 
-    board = hass.data[DOMAIN][config_entry.entry_id]
+    board = config_entry.runtime_data
     for binary_sensor in board.binary_sensors:
         pin = binary_sensor[CONF_PIN]
         pin_mode = binary_sensor[CONF_PIN_MODE]
@@ -40,8 +41,7 @@ async def async_setup_entry(
         binary_sensor_entity = FirmataBinarySensor(api, config_entry, name, pin)
         new_entities.append(binary_sensor_entity)
 
-    if new_entities:
-        async_add_entities(new_entities)
+    async_add_entities(new_entities)
 
 
 class FirmataBinarySensor(FirmataPinEntity, BinarySensorEntity):

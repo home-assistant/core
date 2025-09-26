@@ -1,224 +1,94 @@
 """Sensor to indicate whether the current day is a workday."""
+
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
-from typing import Any
+from datetime import datetime
+from typing import Final
 
-import holidays
+from holidays import HolidayBase
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
-from homeassistant.const import CONF_NAME, WEEKDAYS
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt
-
-_LOGGER = logging.getLogger(__name__)
-
-ALLOWED_DAYS = WEEKDAYS + ["holiday"]
-
-CONF_COUNTRY = "country"
-CONF_PROVINCE = "province"
-CONF_WORKDAYS = "workdays"
-CONF_EXCLUDES = "excludes"
-CONF_OFFSET = "days_offset"
-CONF_ADD_HOLIDAYS = "add_holidays"
-CONF_REMOVE_HOLIDAYS = "remove_holidays"
-
-# By default, Monday - Friday are workdays
-DEFAULT_WORKDAYS = ["mon", "tue", "wed", "thu", "fri"]
-# By default, public holidays, Saturdays and Sundays are excluded from workdays
-DEFAULT_EXCLUDES = ["sat", "sun", "holiday"]
-DEFAULT_NAME = "Workday Sensor"
-DEFAULT_OFFSET = 0
-
-
-def valid_country(value: Any) -> str:
-    """Validate that the given country is supported."""
-    value = cv.string(value)
-    all_supported_countries = holidays.list_supported_countries()
-
-    try:
-        raw_value = value.encode("utf-8")
-    except UnicodeError as err:
-        raise vol.Invalid(
-            "The country name or the abbreviation must be a valid UTF-8 string."
-        ) from err
-    if not raw_value:
-        raise vol.Invalid("Country name or the abbreviation must not be empty.")
-    if value not in all_supported_countries:
-        raise vol.Invalid("Country is not supported.")
-    return value
-
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_COUNTRY): valid_country,
-        vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES): vol.All(
-            cv.ensure_list, [vol.In(ALLOWED_DAYS)]
-        ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): vol.Coerce(int),
-        vol.Optional(CONF_PROVINCE): cv.string,
-        vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): vol.All(
-            cv.ensure_list, [vol.In(ALLOWED_DAYS)]
-        ),
-        vol.Optional(CONF_ADD_HOLIDAYS, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
-        vol.Optional(CONF_REMOVE_HOLIDAYS, default=[]): vol.All(
-            cv.ensure_list, [cv.string]
-        ),
-    }
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant, SupportsResponse
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    async_get_current_platform,
 )
 
+from . import WorkdayConfigEntry
+from .const import CONF_EXCLUDES, CONF_OFFSET, CONF_WORKDAYS
+from .entity import BaseWorkdayEntity
 
-def setup_platform(
+SERVICE_CHECK_DATE: Final = "check_date"
+CHECK_DATE: Final = "check_date"
+
+
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: WorkdayConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Workday sensor."""
-    add_holidays = config[CONF_ADD_HOLIDAYS]
-    remove_holidays = config[CONF_REMOVE_HOLIDAYS]
-    country = config[CONF_COUNTRY]
-    days_offset = config[CONF_OFFSET]
-    excludes = config[CONF_EXCLUDES]
-    province = config.get(CONF_PROVINCE)
-    sensor_name = config[CONF_NAME]
-    workdays = config[CONF_WORKDAYS]
+    days_offset: int = int(entry.options[CONF_OFFSET])
+    excludes: list[str] = entry.options[CONF_EXCLUDES]
+    sensor_name: str = entry.options[CONF_NAME]
+    workdays: list[str] = entry.options[CONF_WORKDAYS]
+    obj_holidays = entry.runtime_data
 
-    year = (get_date(dt.now()) + timedelta(days=days_offset)).year
-    obj_holidays = getattr(holidays, country)(years=year)
+    platform = async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_CHECK_DATE,
+        {vol.Required(CHECK_DATE): cv.date},
+        "check_date",
+        None,
+        SupportsResponse.ONLY,
+    )
 
-    if province:
-        # 'state' and 'prov' are not interchangeable, so need to make
-        # sure we use the right one
-        if hasattr(obj_holidays, "PROVINCES") and province in obj_holidays.PROVINCES:
-            obj_holidays = getattr(holidays, country)(prov=province, years=year)
-        elif hasattr(obj_holidays, "STATES") and province in obj_holidays.STATES:
-            obj_holidays = getattr(holidays, country)(state=province, years=year)
-        else:
-            _LOGGER.error(
-                "There is no province/state %s in country %s", province, country
+    async_add_entities(
+        [
+            IsWorkdaySensor(
+                obj_holidays,
+                workdays,
+                excludes,
+                days_offset,
+                sensor_name,
+                entry.entry_id,
             )
-            return
-
-    # Add custom holidays
-    try:
-        obj_holidays.append(add_holidays)
-    except TypeError:
-        _LOGGER.debug("No custom holidays or invalid holidays")
-
-    # Remove holidays
-    try:
-        for date in remove_holidays:
-            try:
-                # is this formatted as a date?
-                if dt.parse_date(date):
-                    # remove holiday by date
-                    removed = obj_holidays.pop(date)
-                    _LOGGER.debug("Removed %s", date)
-                else:
-                    # remove holiday by name
-                    _LOGGER.debug("Treating '%s' as named holiday", date)
-                    removed = obj_holidays.pop_named(date)
-                    for holiday in removed:
-                        _LOGGER.debug("Removed %s by name '%s'", holiday, date)
-            except KeyError as unmatched:
-                _LOGGER.warning("No holiday found matching %s", unmatched)
-    except TypeError:
-        _LOGGER.debug("No holidays to remove or invalid holidays")
-
-    _LOGGER.debug("Found the following holidays for your configuration:")
-    for date, name in sorted(obj_holidays.items()):
-        _LOGGER.debug("%s %s", date, name)
-
-    add_entities(
-        [IsWorkdaySensor(obj_holidays, workdays, excludes, days_offset, sensor_name)],
-        True,
+        ],
     )
 
 
-def day_to_string(day):
-    """Convert day index 0 - 7 to string."""
-    try:
-        return ALLOWED_DAYS[day]
-    except IndexError:
-        return None
-
-
-def get_date(date):
-    """Return date. Needed for testing."""
-    return date
-
-
-class IsWorkdaySensor(BinarySensorEntity):
+class IsWorkdaySensor(BaseWorkdayEntity, BinarySensorEntity):
     """Implementation of a Workday sensor."""
 
-    def __init__(self, obj_holidays, workdays, excludes, days_offset, name):
+    _attr_name = None
+
+    def __init__(
+        self,
+        obj_holidays: HolidayBase,
+        workdays: list[str],
+        excludes: list[str],
+        days_offset: int,
+        name: str,
+        entry_id: str,
+    ) -> None:
         """Initialize the Workday sensor."""
-        self._name = name
-        self._obj_holidays = obj_holidays
-        self._workdays = workdays
-        self._excludes = excludes
-        self._days_offset = days_offset
-        self._state = None
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return the state of the device."""
-        return self._state
-
-    def is_include(self, day, now):
-        """Check if given day is in the includes list."""
-        if day in self._workdays:
-            return True
-        if "holiday" in self._workdays and now in self._obj_holidays:
-            return True
-
-        return False
-
-    def is_exclude(self, day, now):
-        """Check if given day is in the excludes list."""
-        if day in self._excludes:
-            return True
-        if "holiday" in self._excludes and now in self._obj_holidays:
-            return True
-
-        return False
-
-    @property
-    def extra_state_attributes(self):
-        """Return the attributes of the entity."""
-        # return self._attributes
-        return {
-            CONF_WORKDAYS: self._workdays,
-            CONF_EXCLUDES: self._excludes,
-            CONF_OFFSET: self._days_offset,
+        super().__init__(
+            obj_holidays,
+            workdays,
+            excludes,
+            days_offset,
+            name,
+            entry_id,
+        )
+        self._attr_extra_state_attributes = {
+            CONF_WORKDAYS: workdays,
+            CONF_EXCLUDES: excludes,
+            CONF_OFFSET: days_offset,
         }
 
-    async def async_update(self):
+    def update_data(self, now: datetime) -> None:
         """Get date and look whether it is a holiday."""
-        # Default is no workday
-        self._state = False
-
-        # Get ISO day of the week (1 = Monday, 7 = Sunday)
-        date = get_date(dt.now()) + timedelta(days=self._days_offset)
-        day = date.isoweekday() - 1
-        day_of_week = day_to_string(day)
-
-        if self.is_include(day_of_week, date):
-            self._state = True
-
-        if self.is_exclude(day_of_week, date):
-            self._state = False
+        self._attr_is_on = self.date_is_workday(now)
