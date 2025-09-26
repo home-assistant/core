@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from asyncio import Lock
 
 from epson_projector import Projector, ProjectorUnavailableError
 from epson_projector.const import (
@@ -92,6 +93,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
     ) -> None:
         """Initialize entity to control Epson projector."""
         self._projector = projector
+        self._lock = Lock()
         self._entry = entry
         self._attr_available = False
         self._cmode = None
@@ -108,7 +110,9 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
         _LOGGER.debug("Setting unique_id for projector")
         if self._entry.unique_id:
             return False
-        if uid := await self._projector.get_serial_number():
+        async with self._lock:
+            uid = await self._projector.get_serial_number()
+        if uid:
             self.hass.config_entries.async_update_entry(self._entry, unique_id=uid)
             ent_reg = er.async_get(self.hass)
             old_entity_id = ent_reg.async_get_entity_id(
@@ -129,7 +133,8 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
     async def async_update(self) -> None:
         """Update state of device."""
         try:
-            power_state = await self._projector.get_power()
+            async with self._lock:
+                power_state = await self._projector.get_power()
         except ProjectorUnavailableError as ex:
             _LOGGER.debug("Projector is unavailable: %s", ex)
             self._attr_available = False
@@ -144,11 +149,15 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
             if await self.set_unique_id():
                 return
             self._attr_source_list = list(DEFAULT_SOURCES.values())
-            cmode = await self._projector.get_property(CMODE)
+            async with self._lock:
+                cmode = await self._projector.get_property(CMODE)
             self._cmode = CMODE_LIST.get(cmode, self._cmode)
-            source = await self._projector.get_property(SOURCE)
+            async with self._lock:
+                source = await self._projector.get_property(SOURCE)
             self._attr_source = SOURCE_LIST.get(source, self._attr_source)
-            if volume := await self._projector.get_property(VOLUME):
+            async with self._lock:
+                volume = await self._projector.get_property(VOLUME)
+            if volume:
                 try:
                     self._attr_volume_level = float(volume)
                 except ValueError:
@@ -161,51 +170,62 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
     async def async_turn_on(self) -> None:
         """Turn on epson."""
         if self.state == MediaPlayerState.OFF:
-            await self._projector.send_command(TURN_ON)
+            async with self._lock:
+                await self._projector.send_command(TURN_ON)
             self._attr_state = MediaPlayerState.ON
 
     async def async_turn_off(self) -> None:
         """Turn off epson."""
         if self.state == MediaPlayerState.ON:
-            await self._projector.send_command(TURN_OFF)
+            async with self._lock:
+                await self._projector.send_command(TURN_OFF)
             self._attr_state = MediaPlayerState.OFF
 
     async def select_cmode(self, cmode: str) -> None:
         """Set color mode in Epson."""
-        await self._projector.send_command(CMODE_LIST_SET[cmode])
+        async with self._lock:
+            await self._projector.send_command(CMODE_LIST_SET[cmode])
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         selected_source = INV_SOURCES[source]
-        await self._projector.send_command(selected_source)
+        async with self._lock:
+            await self._projector.send_command(selected_source)
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) sound."""
-        await self._projector.send_command(MUTE)
+        async with self._lock:
+            await self._projector.send_command(MUTE)
 
     async def async_volume_up(self) -> None:
         """Increase volume."""
-        await self._projector.send_command(VOL_UP)
+        async with self._lock:
+            await self._projector.send_command(VOL_UP)
 
     async def async_volume_down(self) -> None:
         """Decrease volume."""
-        await self._projector.send_command(VOL_DOWN)
+        async with self._lock:
+            await self._projector.send_command(VOL_DOWN)
 
     async def async_media_play(self) -> None:
         """Play media via Epson."""
-        await self._projector.send_command(PLAY)
+        async with self._lock:
+            await self._projector.send_command(PLAY)
 
     async def async_media_pause(self) -> None:
         """Pause media via Epson."""
-        await self._projector.send_command(PAUSE)
+        async with self._lock:
+            await self._projector.send_command(PAUSE)
 
     async def async_media_next_track(self) -> None:
         """Skip to next."""
-        await self._projector.send_command(FAST)
+        async with self._lock:
+            await self._projector.send_command(FAST)
 
     async def async_media_previous_track(self) -> None:
         """Skip to previous."""
-        await self._projector.send_command(BACK)
+        async with self._lock:
+            await self._projector.send_command(BACK)
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
