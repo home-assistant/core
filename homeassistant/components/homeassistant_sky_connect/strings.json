@@ -28,10 +28,10 @@
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::install_addon::title%]"
       },
       "install_thread_firmware": {
-        "title": "Updating adapter"
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_thread_firmware::title%]"
       },
       "install_zigbee_firmware": {
-        "title": "Updating adapter"
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_zigbee_firmware::title%]"
       },
       "notify_channel_change": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_channel_change::title%]",
@@ -166,10 +166,10 @@
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_otbr_addon::title%]"
       },
       "install_thread_firmware": {
-        "title": "Updating adapter"
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_thread_firmware::title%]"
       },
       "install_zigbee_firmware": {
-        "title": "Updating adapter"
+        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_zigbee_firmware::title%]"
       },
       "start_otbr_addon": {
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::start_otbr_addon::title%]"

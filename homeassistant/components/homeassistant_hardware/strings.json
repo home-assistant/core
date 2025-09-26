@@ -25,6 +25,12 @@
         "install_otbr_addon": {
           "title": "Configuring Thread"
         },
+        "install_thread_firmware": {
+          "title": "Updating adapter"
+        },
+        "install_zigbee_firmware": {
+          "title": "Updating adapter"
+        },
         "start_otbr_addon": {
           "title": "Configuring Thread"
         },
