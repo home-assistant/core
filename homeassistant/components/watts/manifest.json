@@ -1,0 +1,13 @@
+{
+  "domain": "watts",
+  "name": "Watts Vision +",
+  "codeowners": ["@theobld-ww", "@devender-verma-ww", "@ssi-spyro"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/watts",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["visionpluspython==1.0.0"],
+  "ssdp": [],
+  "zeroconf": []
+}
