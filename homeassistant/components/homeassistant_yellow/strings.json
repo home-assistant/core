@@ -35,6 +35,12 @@
       "install_addon": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::install_addon::title%]"
       },
+      "install_thread_firmware": {
+        "title": "Updating adapter"
+      },
+      "install_zigbee_firmware": {
+        "title": "Updating adapter"
+      },
       "notify_channel_change": {
         "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_channel_change::title%]",
         "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::notify_channel_change::description%]"

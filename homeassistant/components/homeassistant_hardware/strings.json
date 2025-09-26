@@ -70,7 +70,7 @@
         "fw_install_failed": "{firmware_name} firmware failed to install, check Home Assistant logs for more information."
       },
       "progress": {
-        "install_firmware": "Please wait while {firmware_name} firmware is installed to your {model}, this will take a few minutes. Do not make any changes to your hardware or software until this finishes.",
+        "install_firmware": "Installing {firmware_name} firmware. Do not make any changes to your hardware or software until this finishes.",
         "install_otbr_addon": "Installing add-on",
         "start_otbr_addon": "Starting add-on"
       }
