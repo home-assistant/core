@@ -43,7 +43,7 @@ from .util import (
 # Defaults for color temperature clamping
 # if the device does not report min/max physical mireds (it should!),
 # or device has ranges outside normal implementations, use these defaults
-DEFAULT_MIREDS_MAX = 65279  # 15 Kelvin
+DEFAULT_MIREDS_MAX = 500  # 2000 Kelvin
 DEFAULT_MIREDS_MIN = 153  # 6535 Kelvin
 
 COLOR_MODE_MAP = {
