@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock
 from aiomealie import About, MealieAuthenticationError, MealieConnectionError
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.mealie.const import DOMAIN
 from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_IGNORE, SOURCE_USER
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
@@ -381,7 +380,7 @@ async def test_hassio_success(
             slug="mealie",
             uuid="1234",
         ),
-        context={"source": config_entries.SOURCE_HASSIO},
+        context={"source": SOURCE_HASSIO},
     )
 
     assert result.get("type") is FlowResultType.FORM
@@ -420,7 +419,7 @@ async def test_hassio_already_configured(
             slug="mealie",
             uuid="1234",
         ),
-        context={"source": config_entries.SOURCE_HASSIO},
+        context={"source": SOURCE_HASSIO},
     )
     assert result
     assert result["type"] is FlowResultType.ABORT
@@ -476,7 +475,7 @@ async def test_hassio_connection_error(
             slug="mealie",
             uuid="1234",
         ),
-        context={"source": config_entries.SOURCE_HASSIO},
+        context={"source": SOURCE_HASSIO},
     )
 
     assert result["type"] is FlowResultType.FORM
