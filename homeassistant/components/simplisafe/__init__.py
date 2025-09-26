@@ -290,7 +290,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SimpliSafe as config entry."""
     _async_standardize_config_entry(hass, entry)
 
-    _verify_domain_control = verify_domain_control(hass, DOMAIN)
+    _verify_domain_control = verify_domain_control(DOMAIN)
     websession = aiohttp_client.async_get_clientsession(hass)
 
     try:
@@ -573,6 +573,7 @@ class SimpliSafe:
             self._hass,
             LOGGER,
             name=self.entry.title,
+            config_entry=self.entry,
             update_interval=DEFAULT_SCAN_INTERVAL,
             update_method=self.async_update,
         )

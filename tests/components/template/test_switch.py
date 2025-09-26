@@ -14,6 +14,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -34,8 +35,13 @@ TEST_ENTITY_ID = f"switch.{TEST_OBJECT_ID}"
 TEST_STATE_ENTITY_ID = "switch.test_state"
 
 TEST_EVENT_TRIGGER = {
-    "trigger": {"platform": "event", "event_type": "test_event"},
-    "variables": {"type": "{{ trigger.event.data.type }}"},
+    "triggers": [
+        {"trigger": "event", "event_type": "test_event"},
+        {"trigger": "state", "entity_id": [TEST_STATE_ENTITY_ID]},
+    ],
+    "variables": {
+        "type": "{{ trigger.event.data.type if trigger.event is defined else trigger.entity_id }}"
+    },
     "action": [{"event": "action_event", "event_data": {"type": "{{ type }}"}}],
 }
 
@@ -1211,3 +1217,90 @@ async def test_empty_action_config(hass: HomeAssistant, setup_switch) -> None:
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("count", "switch_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_OBJECT_ID,
+                "state": "{{ is_state('switch.test_state', 'on') }}",
+                "turn_on": [],
+                "turn_off": [],
+                "optimistic": True,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [
+        ConfigurationStyle.MODERN,
+        ConfigurationStyle.TRIGGER,
+    ],
+)
+@pytest.mark.usefixtures("setup_switch")
+async def test_optimistic_option(hass: HomeAssistant) -> None:
+    """Test optimistic yaml option."""
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OFF)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        switch.DOMAIN,
+        "turn_on",
+        {"entity_id": TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_ON
+
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OFF)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("count", "switch_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_OBJECT_ID,
+                "state": "{{ is_state('switch.test_state', 'on') }}",
+                "turn_on": [],
+                "turn_off": [],
+                "optimistic": False,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("style", "expected"),
+    [
+        (ConfigurationStyle.MODERN, STATE_OFF),
+        (ConfigurationStyle.TRIGGER, STATE_UNKNOWN),
+    ],
+)
+@pytest.mark.usefixtures("setup_switch")
+async def test_not_optimistic(hass: HomeAssistant, expected: str) -> None:
+    """Test optimistic yaml option set to false."""
+    await hass.services.async_call(
+        switch.DOMAIN,
+        "turn_on",
+        {"entity_id": TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == expected

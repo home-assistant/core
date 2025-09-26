@@ -38,10 +38,9 @@ from .const import (
     SHTRV_01_TEMPERATURE_SETTINGS,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
-from .entity import ShellyRpcEntity, rpc_call
+from .entity import ShellyRpcEntity, get_entity_block_device_info, rpc_call
 from .utils import (
     async_remove_shelly_entity,
-    get_block_device_info,
     get_block_entity_name,
     get_blu_trv_device_info,
     get_device_entry_gen,
@@ -210,12 +209,7 @@ class BlockSleepingClimate(
             ]
         elif entry is not None:
             self._unique_id = entry.unique_id
-        self._attr_device_info = get_block_device_info(
-            coordinator.device,
-            coordinator.mac,
-            sensor_block,
-            suggested_area=coordinator.suggested_area,
-        )
+        self._attr_device_info = get_entity_block_device_info(coordinator, sensor_block)
         self._attr_name = get_block_entity_name(
             self.coordinator.device, sensor_block, None
         )
@@ -563,11 +557,12 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
 
         super().__init__(coordinator, f"{BLU_TRV_IDENTIFIER}:{id_}")
         self._id = id_
-        self._config = coordinator.device.config[f"{BLU_TRV_IDENTIFIER}:{id_}"]
+        self._config = coordinator.device.config[self.key]
         ble_addr: str = self._config["addr"]
         self._attr_unique_id = f"{ble_addr}-{self.key}"
+        fw_ver = coordinator.device.status[self.key].get("fw_ver")
         self._attr_device_info = get_blu_trv_device_info(
-            self._config, ble_addr, self.coordinator.mac
+            self._config, ble_addr, self.coordinator.mac, fw_ver
         )
 
     @property

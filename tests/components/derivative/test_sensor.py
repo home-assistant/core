@@ -717,7 +717,7 @@ async def test_total_increasing_reset(hass: HomeAssistant) -> None:
     expected_times = [0, 20, 30, 35, 50, 60]
     expected_values = ["0.00", "0.50", "2.00", "2.00", "1.00", "3.00"]
 
-    config, entity_id = await _setup_sensor(hass, {"unit_time": UnitOfTime.SECONDS})
+    _config, entity_id = await _setup_sensor(hass, {"unit_time": UnitOfTime.SECONDS})
 
     base_time = dt_util.utcnow()
     actual_times = []

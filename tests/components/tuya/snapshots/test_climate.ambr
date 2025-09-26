@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[kt_serenelife_slpac905wuk_air_conditioner][climate.air_conditioner-entry]
+# name: test_platform_setup_and_discovery[climate.air_conditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -42,11 +42,11 @@
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 393>,
     'translation_key': None,
-    'unique_id': 'tuya.mock_device_id',
+    'unique_id': 'tuya.mvsdcwtskkezlnw5tk',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[kt_serenelife_slpac905wuk_air_conditioner][climate.air_conditioner-state]
+# name: test_platform_setup_and_discovery[climate.air_conditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 22.0,
@@ -74,7 +74,941 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[wk_wifi_smart_gas_boiler_thermostat][climate.wifi_smart_gas_boiler_thermostat-entry]
+# name: test_platform_setup_and_discovery[climate.anbau-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_modes': list([
+        'off',
+      ]),
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.anbau',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 17>,
+    'translation_key': None,
+    'unique_id': 'tuya.sq6fbd3pfkw',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.anbau-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Anbau',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_modes': list([
+        'off',
+      ]),
+      'supported_features': <ClimateEntityFeature: 17>,
+      'target_temp_step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.anbau',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.bathroom_radiator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 70.0,
+      'min_temp': 1.0,
+      'preset_modes': list([
+        'holiday',
+        'eco',
+      ]),
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.bathroom_radiator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 17>,
+    'translation_key': None,
+    'unique_id': 'tuya.fc2ngmpckw',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.bathroom_radiator-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 19.5,
+      'friendly_name': 'Bathroom radiator',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 70.0,
+      'min_temp': 1.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        'holiday',
+        'eco',
+      ]),
+      'supported_features': <ClimateEntityFeature: 17>,
+      'target_temp_step': 0.5,
+      'temperature': 12.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.bathroom_radiator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.boiler_temperature_controller-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.boiler_temperature_controller',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 384>,
+    'translation_key': None,
+    'unique_id': 'tuya.zgiyrxflahjowpcckw',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.boiler_temperature_controller-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 57.5,
+      'friendly_name': 'Boiler Temperature Controller',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 384>,
+      'target_temp_step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.boiler_temperature_controller',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.clima_cucina-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'low',
+        'middle',
+        'high',
+        'auto',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.clima_cucina',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 393>,
+    'translation_key': None,
+    'unique_id': 'tuya.x7quooqakw',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.clima_cucina-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 27.0,
+      'fan_mode': 'auto',
+      'fan_modes': list([
+        'low',
+        'middle',
+        'high',
+        'auto',
+      ]),
+      'friendly_name': 'Clima cucina',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 393>,
+      'target_temp_step': 1.0,
+      'temperature': 25.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.clima_cucina',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.el_termostato_de_la_cocina-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.el_termostato_de_la_cocina',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 384>,
+    'translation_key': None,
+    'unique_id': 'tuya.LmLMc0ht1KW2zYAIkw',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.el_termostato_de_la_cocina-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 5.5,
+      'friendly_name': 'El termostato de la cocina',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 384>,
+      'target_temp_step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.el_termostato_de_la_cocina',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.empore-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_modes': list([
+        'off',
+      ]),
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.empore',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 17>,
+    'translation_key': None,
+    'unique_id': 'tuya.paxijfx9fkw',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.empore-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 19.0,
+      'friendly_name': 'Empore',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        'off',
+      ]),
+      'supported_features': <ClimateEntityFeature: 17>,
+      'target_temp_step': 1.0,
+      'temperature': 35.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.empore',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.kabinet-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 95.0,
+      'min_temp': 5.0,
+      'preset_modes': list([
+        'program',
+      ]),
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.kabinet',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': 'tuya.dn7cjik6kw',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.kabinet-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 19.5,
+      'friendly_name': 'Кабінет',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 95.0,
+      'min_temp': 5.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        'program',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 0.5,
+      'temperature': 21.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.kabinet',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.master_bedroom_ac-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 88.0,
+      'min_temp': 16.0,
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.master_bedroom_ac',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': 'tuya.g1fmm26qhhrimmbitk',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.master_bedroom_ac-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 0,
+      'current_temperature': 26.0,
+      'friendly_name': 'Master Bedroom AC',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 88.0,
+      'min_temp': 16.0,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'target_temp_step': 0.5,
+      'temperature': 75.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.master_bedroom_ac',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.mr_pure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.mr_pure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.gnqwzcph94wj2sl5nq',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.mr_pure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': None,
+      'friendly_name': 'Mr. Pure',
+      'hvac_modes': list([
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'supported_features': <ClimateEntityFeature: 0>,
+      'target_temp_step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.mr_pure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.polotentsosushitel-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 40.0,
+      'min_temp': 5.0,
+      'preset_modes': list([
+        'holiday',
+      ]),
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.polotentsosushitel',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': 'tuya.53apxfah2qoxb1cgkw',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.polotentsosushitel-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 25.3,
+      'friendly_name': 'Полотенцосушитель',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 40.0,
+      'min_temp': 5.0,
+      'preset_mode': 'hold',
+      'preset_modes': list([
+        'holiday',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 0.5,
+      'temperature': 5.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.polotentsosushitel',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.smart_thermostats-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 90.0,
+      'min_temp': 5.0,
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.smart_thermostats',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': 'tuya.sb3zdertrw50bgogkw',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.smart_thermostats-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 21.5,
+      'friendly_name': 'smart thermostats',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 90.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'target_temp_step': 1.0,
+      'temperature': 12.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.smart_thermostats',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.sove-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        '1',
+        '2',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': 86.0,
+      'min_temp': 16.0,
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.sove',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 393>,
+    'translation_key': None,
+    'unique_id': 'tuya.dt4whlrosmnldadvtk',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.sove-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 24.0,
+      'fan_mode': 2,
+      'fan_modes': list([
+        '1',
+        '2',
+      ]),
+      'friendly_name': 'Sove',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+      ]),
+      'max_temp': 86.0,
+      'min_temp': 16.0,
+      'supported_features': <ClimateEntityFeature: 393>,
+      'target_temp_step': 1.0,
+      'temperature': 16.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.sove',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.term_prizemi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 70.0,
+      'min_temp': 0.5,
+      'target_temp_step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.term_prizemi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 385>,
+    'translation_key': None,
+    'unique_id': 'tuya.jm2fsqtzuhqtbo5ykw',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.term_prizemi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 23.0,
+      'friendly_name': 'Term - Prizemi',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 70.0,
+      'min_temp': 0.5,
+      'supported_features': <ClimateEntityFeature: 385>,
+      'target_temp_step': 0.1,
+      'temperature': 23.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.term_prizemi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_platform_setup_and_discovery[climate.wifi_smart_gas_boiler_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -113,11 +1047,11 @@
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': None,
-    'unique_id': 'tuya.bfb45cb8a9452fba66lexg',
+    'unique_id': 'tuya.j6mn1t4ut5end6ifkw',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[wk_wifi_smart_gas_boiler_thermostat][climate.wifi_smart_gas_boiler_thermostat-state]
+# name: test_platform_setup_and_discovery[climate.wifi_smart_gas_boiler_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 24.9,

@@ -30,6 +30,22 @@
       "stop_charge_session": {
         "default": "mdi:stop"
       }
+    },
+    "switch": {
+      "plug_and_charge": {
+        "default": "mdi:ev-plug-type2"
+      },
+      "linked_charge_cards": {
+        "default": "mdi:account-group"
+      },
+      "block": {
+        "default": "mdi:lock"
+      }
+    }
+  },
+  "services": {
+    "start_charge_session": {
+      "service": "mdi:play"
     }
   }
 }

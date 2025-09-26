@@ -33,20 +33,39 @@ async def async_setup_entry(
 ) -> None:
     """Set up the UptimeRobot sensors."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        UptimeRobotSensor(
-            coordinator,
-            SensorEntityDescription(
-                key=str(monitor.id),
-                entity_category=EntityCategory.DIAGNOSTIC,
-                device_class=SensorDeviceClass.ENUM,
-                options=["down", "not_checked_yet", "pause", "seems_down", "up"],
-                translation_key="monitor_status",
-            ),
-            monitor=monitor,
-        )
-        for monitor in coordinator.data
-    )
+
+    known_devices: set[int] = set()
+
+    def _check_device() -> None:
+        entities: list[UptimeRobotSensor] = []
+        for monitor in coordinator.data:
+            if monitor.id in known_devices:
+                continue
+            known_devices.add(monitor.id)
+            entities.append(
+                UptimeRobotSensor(
+                    coordinator,
+                    SensorEntityDescription(
+                        key=str(monitor.id),
+                        entity_category=EntityCategory.DIAGNOSTIC,
+                        device_class=SensorDeviceClass.ENUM,
+                        options=[
+                            "down",
+                            "not_checked_yet",
+                            "pause",
+                            "seems_down",
+                            "up",
+                        ],
+                        translation_key="monitor_status",
+                    ),
+                    monitor=monitor,
+                )
+            )
+        if entities:
+            async_add_entities(entities)
+
+    _check_device()
+    entry.async_on_unload(coordinator.async_add_listener(_check_device))
 
 
 class UptimeRobotSensor(UptimeRobotEntity, SensorEntity):

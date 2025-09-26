@@ -94,7 +94,7 @@ class ShellyEntryData:
     rpc_poll: ShellyRpcPollingCoordinator | None = None
     rpc_script_events: dict[int, list[str]] | None = None
     rpc_supports_scripts: bool | None = None
-    rpc_zigbee_enabled: bool | None = None
+    rpc_zigbee_firmware: bool | None = None
 
 
 type ShellyConfigEntry = ConfigEntry[ShellyEntryData]
@@ -146,9 +146,19 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         )
 
     @cached_property
+    def configuration_url(self) -> str:
+        """Return the configuration URL for the device."""
+        return f"http://{get_host(self.config_entry.data[CONF_HOST])}:{get_http_port(self.config_entry.data)}"
+
+    @cached_property
     def model(self) -> str:
         """Model of the device."""
         return cast(str, self.config_entry.data[CONF_MODEL])
+
+    @cached_property
+    def model_name(self) -> str | None:
+        """Model name of the device."""
+        return get_shelly_model_name(self.model, self.sleep_period, self.device)
 
     @cached_property
     def mac(self) -> str:
@@ -175,11 +185,11 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             connections={(CONNECTION_NETWORK_MAC, self.mac)},
             identifiers={(DOMAIN, self.mac)},
             manufacturer="Shelly",
-            model=get_shelly_model_name(self.model, self.sleep_period, self.device),
+            model=self.model_name,
             model_id=self.model,
             sw_version=self.sw_version,
             hw_version=f"gen{get_device_entry_gen(self.config_entry)}",
-            configuration_url=f"http://{get_host(self.config_entry.data[CONF_HOST])}:{get_http_port(self.config_entry.data)}",
+            configuration_url=self.configuration_url,
         )
         # We want to use the main device area as the suggested area for sub-devices.
         if (area_id := device_entry.area_id) is not None:
@@ -621,6 +631,11 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         """Handle device events."""
         events: list[dict[str, Any]] = event_data["events"]
         for event in events:
+            # filter out button events as they are triggered by button entities
+            component = event.get("component")
+            if component is not None and component.startswith("button"):
+                continue
+
             event_type = event.get("event")
             if event_type is None:
                 continue
@@ -730,7 +745,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         if not self.sleep_period:
             if (
                 self.config_entry.runtime_data.rpc_supports_scripts
-                and not self.config_entry.runtime_data.rpc_zigbee_enabled
+                and not self.config_entry.runtime_data.rpc_zigbee_firmware
             ):
                 await self._async_connect_ble_scanner()
         else:

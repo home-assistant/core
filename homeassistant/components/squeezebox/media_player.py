@@ -44,6 +44,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.start import async_at_start
 from homeassistant.util.dt import utcnow
 
+from . import SQUEEZEBOX_HASS_DATA
 from .browse_media import (
     BrowseData,
     build_item_response,
@@ -58,7 +59,6 @@ from .const import (
     CONF_VOLUME_STEP,
     DEFAULT_BROWSE_LIMIT,
     DEFAULT_VOLUME_STEP,
-    DISCOVERY_TASK,
     DOMAIN,
     SERVER_MANUFACTURER,
     SERVER_MODEL,
@@ -110,12 +110,10 @@ async def start_server_discovery(hass: HomeAssistant) -> None:
             },
         )
 
-    hass.data.setdefault(DOMAIN, {})
-    if DISCOVERY_TASK not in hass.data[DOMAIN]:
+    if not hass.data.get(SQUEEZEBOX_HASS_DATA):
         _LOGGER.debug("Adding server discovery task for squeezebox")
-        hass.data[DOMAIN][DISCOVERY_TASK] = hass.async_create_background_task(
-            async_discover(_discovered_server),
-            name="squeezebox server discovery",
+        hass.data[SQUEEZEBOX_HASS_DATA] = hass.async_create_background_task(
+            async_discover(_discovered_server), name="squeezebox server discovery"
         )
 
 
@@ -311,6 +309,11 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
         return None
 
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        await self._browse_data.async_init(self._player, self.browse_limit)
+
     async def async_will_remove_from_hass(self) -> None:
         """Remove from list of known players when removed from hass."""
         self.coordinator.config_entry.runtime_data.known_player_ids.remove(
@@ -320,8 +323,8 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        if self._player.volume:
-            return int(float(self._player.volume)) / 100.0
+        if self._player.volume is not None:
+            return float(self._player.volume) / 100.0
 
         return None
 
@@ -430,7 +433,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        volume_percent = str(int(volume * 100))
+        volume_percent = str(round(volume * 100))
         await self._player.async_set_volume(volume_percent)
         await self.coordinator.async_refresh()
 
@@ -602,7 +605,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         _media_content_type_list = (
             query.media_content_type.lower().replace(", ", ",").split(",")
             if query.media_content_type
-            else ["albums", "tracks", "artists", "genres"]
+            else ["albums", "tracks", "artists", "genres", "playlists"]
         )
 
         if query.media_content_type and set(_media_content_type_list).difference(

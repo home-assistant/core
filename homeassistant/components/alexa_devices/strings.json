@@ -1,29 +1,37 @@
 {
   "common": {
     "data_code": "One-time password (OTP code)",
-    "data_description_country": "The country where your Amazon account is registered.",
     "data_description_username": "The email address of your Amazon account.",
     "data_description_password": "The password of your Amazon account.",
-    "data_description_code": "The one-time password to log in to your account. Currently, only tokens from OTP applications are supported."
+    "data_description_code": "The one-time password to log in to your account. Currently, only tokens from OTP applications are supported.",
+    "device_id_description": "The ID of the device to send the command to."
   },
   "config": {
     "flow_title": "{username}",
     "step": {
       "user": {
         "data": {
-          "country": "[%key:common::config_flow::data::country%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "code": "[%key:component::alexa_devices::common::data_code%]"
         },
         "data_description": {
-          "country": "[%key:component::alexa_devices::common::data_description_country%]",
           "username": "[%key:component::alexa_devices::common::data_description_username%]",
           "password": "[%key:component::alexa_devices::common::data_description_password%]",
           "code": "[%key:component::alexa_devices::common::data_description_code%]"
         }
       },
       "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "code": "[%key:component::alexa_devices::common::data_code%]"
+        },
+        "data_description": {
+          "password": "[%key:component::alexa_devices::common::data_description_password%]",
+          "code": "[%key:component::alexa_devices::common::data_description_code%]"
+        }
+      },
+      "reconfigure": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "code": "[%key:component::alexa_devices::common::data_code%]"
@@ -39,37 +47,17 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "cannot_retrieve_data": "Unable to retrieve data from Amazon. Please try again later.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "wrong_country": "Wrong country selected. Please select the country where your Amazon account is registered.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "entity": {
-    "binary_sensor": {
-      "bluetooth": {
-        "name": "Bluetooth"
-      },
-      "baby_cry_detection": {
-        "name": "Baby crying"
-      },
-      "beeping_appliance_detection": {
-        "name": "Beeping appliance"
-      },
-      "cough_detection": {
-        "name": "Coughing"
-      },
-      "dog_bark_detection": {
-        "name": "Dog barking"
-      },
-      "water_sounds_detection": {
-        "name": "Water sounds"
-      }
-    },
     "notify": {
       "speak": {
         "name": "Speak"
@@ -84,12 +72,101 @@
       }
     }
   },
+  "services": {
+    "send_sound": {
+      "name": "Send sound",
+      "description": "Sends a sound to a device",
+      "fields": {
+        "device_id": {
+          "name": "Device",
+          "description": "[%key:component::alexa_devices::common::device_id_description%]"
+        },
+        "sound": {
+          "name": "Alexa Skill sound file",
+          "description": "The sound file to play."
+        }
+      }
+    },
+    "send_text_command": {
+      "name": "Send text command",
+      "description": "Sends a text command to a device",
+      "fields": {
+        "text_command": {
+          "name": "Alexa text command",
+          "description": "The text command to send."
+        },
+        "device_id": {
+          "name": "Device",
+          "description": "[%key:component::alexa_devices::common::device_id_description%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "sound": {
+      "options": {
+        "air_horn_03": "Air horn",
+        "amzn_sfx_cat_meow_1x_01": "Cat meow",
+        "amzn_sfx_church_bell_1x_02": "Church bell",
+        "amzn_sfx_crowd_applause_01": "Crowd applause",
+        "amzn_sfx_dog_med_bark_1x_02": "Dog bark",
+        "amzn_sfx_doorbell_01": "Doorbell 1",
+        "amzn_sfx_doorbell_chime_01": "Doorbell 2",
+        "amzn_sfx_doorbell_chime_02": "Doorbell 3",
+        "amzn_sfx_large_crowd_cheer_01": "Crowd cheers",
+        "amzn_sfx_lion_roar_02": "Lion roar",
+        "amzn_sfx_rooster_crow_01": "Rooster",
+        "amzn_sfx_scifi_alarm_01": "Sirens",
+        "amzn_sfx_scifi_alarm_04": "Red alert",
+        "amzn_sfx_scifi_engines_on_02": "Engines on",
+        "amzn_sfx_scifi_sheilds_up_01": "Shields up",
+        "amzn_sfx_trumpet_bugle_04": "Trumpet",
+        "amzn_sfx_wolf_howl_02": "Wolf howl",
+        "bell_02": "Bells",
+        "boing_01": "Boing 1",
+        "boing_03": "Boing 2",
+        "buzzers_pistols_01": "Buzzer",
+        "camera_01": "Camera",
+        "christmas_05": "Christmas bells",
+        "clock_01": "Ticking clock",
+        "futuristic_10": "Aircraft",
+        "halloween_bats": "Halloween bats",
+        "halloween_crows": "Halloween crows",
+        "halloween_footsteps": "Halloween spooky footsteps",
+        "halloween_wind": "Halloween wind",
+        "halloween_wolf": "Halloween wolf",
+        "holiday_halloween_ghost": "Halloween ghost",
+        "horror_10": "Halloween creepy door",
+        "med_system_alerts_minimal_dragon_short": "Friendly dragon",
+        "med_system_alerts_minimal_owl_short": "Happy owl",
+        "med_system_alerts_minimals_blue_wave_small": "Underwater World Sonata",
+        "med_system_alerts_minimals_galaxy_short": "Infinite Galaxy",
+        "med_system_alerts_minimals_panda_short": "Baby panda",
+        "med_system_alerts_minimals_tiger_short": "Playful tiger",
+        "med_ui_success_generic_1-1": "Success 1",
+        "squeaky_12": "Squeaky door",
+        "zap_01": "Zap"
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect_with_error": {
       "message": "Error connecting: {error}"
     },
     "cannot_retrieve_data_with_error": {
       "message": "Error retrieving data: {error}"
+    },
+    "device_serial_number_missing": {
+      "message": "Device serial number missing: {device_id}"
+    },
+    "invalid_device_id": {
+      "message": "Invalid device ID specified: {device_id}"
+    },
+    "invalid_sound_value": {
+      "message": "Invalid sound {sound} specified"
+    },
+    "entry_not_loaded": {
+      "message": "Entry not loaded: {entry}"
     }
   }
 }
