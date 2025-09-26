@@ -857,6 +857,40 @@ async def test_discovery_via_usb_zha_ignored_updates(hass: HomeAssistant) -> Non
     }
 
 
+async def test_discovery_via_usb_same_device_already_setup(hass: HomeAssistant) -> None:
+    """Test discovery aborting if ZHA is already setup."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_DEVICE: {CONF_DEVICE_PATH: "/dev/serial/by-id/usb-device123"}},
+    ).add_to_hass(hass)
+
+    # Discovery info with the same device but different path format
+    discovery_info = UsbServiceInfo(
+        device="/dev/ttyUSB0",
+        pid="AAAA",
+        vid="AAAA",
+        serial_number="1234",
+        description="zigbee radio",
+        manufacturer="test",
+    )
+
+    with patch(
+        "homeassistant.components.zha.config_flow.usb.get_serial_by_id",
+        return_value="/dev/serial/by-id/usb-device123",
+    ) as mock_get_serial_by_id:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
+        )
+        await hass.async_block_till_done()
+
+    # Verify get_serial_by_id was called to normalize the path
+    assert mock_get_serial_by_id.mock_calls == [call("/dev/ttyUSB0")]
+
+    # Should abort since it's the same device
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
 async def test_legacy_zeroconf_discovery_already_setup(hass: HomeAssistant) -> None:
@@ -888,6 +922,39 @@ async def test_legacy_zeroconf_discovery_already_setup(hass: HomeAssistant) -> N
     # When we have an existing config entry, we migrate
     assert confirm_result["type"] is FlowResultType.MENU
     assert confirm_result["step_id"] == "choose_migration_strategy"
+
+
+async def test_zeroconf_discovery_via_socket_already_setup_with_ip_match(
+    hass: HomeAssistant,
+) -> None:
+    """Test zeroconf discovery aborting when ZHA is already setup with socket and one IP matches."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_DEVICE: {CONF_DEVICE_PATH: "socket://192.168.1.101:6638"}},
+    ).add_to_hass(hass)
+
+    service_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.1.100"),
+        ip_addresses=[
+            ip_address("192.168.1.100"),
+            ip_address("192.168.1.101"),  # Matches config entry
+        ],
+        hostname="tube-zigbee-gw.local.",
+        name="mock_name",
+        port=6638,
+        properties={"name": "tube_123456"},
+        type="mock_type",
+    )
+
+    # Discovery should abort due to single instance check
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
+    )
+    await hass.async_block_till_done()
+
+    # Should abort since one of the advertised IPs matches existing socket path
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
 
 
 @patch(
@@ -2289,34 +2356,28 @@ async def test_config_flow_serial_resolution_oserror(
 ) -> None:
     """Test that OSError during serial port resolution is handled."""
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": "manual_pick_radio_type"},
-        data={CONF_RADIO_TYPE: RadioType.ezsp.description},
+    discovery_info = UsbServiceInfo(
+        device="/dev/ttyZIGBEE",
+        pid="AAAA",
+        vid="AAAA",
+        serial_number="1234",
+        description="zigbee radio",
+        manufacturer="test",
     )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"},
-    )
-
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "choose_setup_strategy"
 
     with (
         patch(
-            "homeassistant.components.usb.get_serial_by_id",
+            "homeassistant.components.zha.config_flow.usb.get_serial_by_id",
             side_effect=OSError("Test error"),
         ),
     ):
-        setup_result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"next_step_id": config_flow.SETUP_STRATEGY_RECOMMENDED},
+        result_init = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
         )
 
-    assert setup_result["type"] is FlowResultType.ABORT
-    assert setup_result["reason"] == "cannot_resolve_path"
-    assert setup_result["description_placeholders"] == {"path": "/dev/ttyUSB33"}
+    assert result_init["type"] is FlowResultType.ABORT
+    assert result_init["reason"] == "cannot_resolve_path"
+    assert result_init["description_placeholders"] == {"path": "/dev/ttyZIGBEE"}
 
 
 @patch("homeassistant.components.zha.radio_manager._allow_overwrite_ezsp_ieee")
