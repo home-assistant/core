@@ -429,7 +429,7 @@ async def library_payload(
                 )
             )
 
-    with contextlib.suppress(media_source.BrowseError):
+    with contextlib.suppress(BrowseError):
         browse = await media_source.async_browse_media(
             hass, None, content_filter=media_source_content_filter
         )

@@ -13,7 +13,7 @@ from music_assistant_client.exceptions import (
 from music_assistant_models.api import ServerInfoMessage
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
@@ -68,7 +68,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.server_info.server_id, raise_on_progress=False
                 )
                 self._abort_if_unique_id_configured(
-                    updates={CONF_URL: self.server_info.base_url},
+                    updates={CONF_URL: user_input[CONF_URL]},
                     reload_on_update=True,
                 )
             except CannotConnect:
@@ -82,7 +82,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=DEFAULT_TITLE,
                     data={
-                        CONF_URL: self.server_info.base_url,
+                        CONF_URL: user_input[CONF_URL],
                     },
                 )
 
@@ -103,14 +103,40 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         # abort if discovery info is not what we expect
         if "server_id" not in discovery_info.properties:
             return self.async_abort(reason="missing_server_id")
-        # abort if we already have exactly this server_id
-        # reload the integration if the host got updated
+
         self.server_info = ServerInfoMessage.from_dict(discovery_info.properties)
         await self.async_set_unique_id(self.server_info.server_id)
-        self._abort_if_unique_id_configured(
-            updates={CONF_URL: self.server_info.base_url},
-            reload_on_update=True,
+
+        # Check if we already have a config entry for this server_id
+        existing_entry = self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, self.server_info.server_id
         )
+
+        if existing_entry:
+            # If the entry was ignored or disabled, don't make any changes
+            if existing_entry.source == SOURCE_IGNORE or existing_entry.disabled_by:
+                return self.async_abort(reason="already_configured")
+
+            # Test connectivity to the current URL first
+            current_url = existing_entry.data[CONF_URL]
+            try:
+                await get_server_info(self.hass, current_url)
+                # Current URL is working, no need to update
+                return self.async_abort(reason="already_configured")
+            except CannotConnect:
+                # Current URL is not working, update to the discovered URL
+                # and continue to discovery confirm
+                self.hass.config_entries.async_update_entry(
+                    existing_entry,
+                    data={**existing_entry.data, CONF_URL: self.server_info.base_url},
+                )
+                # Schedule reload since URL changed
+                self.hass.config_entries.async_schedule_reload(existing_entry.entry_id)
+        else:
+            # No existing entry, proceed with normal flow
+            self._abort_if_unique_id_configured()
+
+        # Test connectivity to the discovered URL
         try:
             await get_server_info(self.hass, self.server_info.base_url)
         except CannotConnect:

@@ -252,6 +252,7 @@ def reolink_chime(reolink_host: MagicMock) -> None:
     }
     TEST_CHIME.remove = AsyncMock()
     TEST_CHIME.set_option = AsyncMock()
+    TEST_CHIME.update_enums()
 
     reolink_host.chime_list = [TEST_CHIME]
     reolink_host.chime.return_value = TEST_CHIME
