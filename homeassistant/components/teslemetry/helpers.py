@@ -10,16 +10,16 @@ from .const import DOMAIN, LOGGER
 
 
 def flatten(
-    data: dict[str, Any], parent: str | None = None, exceptions: list[str] | None = None
+    data: dict[str, Any], parent: str | None = None, skip_keys: list[str] | None = None
 ) -> dict[str, Any]:
     """Flatten the data structure."""
     result = {}
     for key, value in data.items():
-        exception = exceptions and key in exceptions
+        skip = skip_keys and key in skip_keys
         if parent:
             key = f"{parent}_{key}"
-        if isinstance(value, dict) and not exception:
-            result.update(flatten(value, key, exceptions))
+        if isinstance(value, dict) and not skip:
+            result.update(flatten(value, key, skip_keys))
         else:
             result[key] = value
     return result
