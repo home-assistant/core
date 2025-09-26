@@ -127,7 +127,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) ->
 
     async def _periodic_issue_check(_now: Any) -> None:
         """Periodically check for repair issues."""
-        del _now  # Required by async_track_time_interval interface
         await async_check_for_repair_issues(hass, entry)
 
     entry.async_on_unload(
@@ -146,5 +145,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: BackblazeConfigEntry) -
     would be handled here. In this case, the `async_on_state_change` listener
     handles the notification logic on unload.
     """
-    del hass, entry  # Required by interface but not used
     return True

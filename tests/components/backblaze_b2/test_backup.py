@@ -1,4 +1,4 @@
-"""Clean and organized Backblaze B2 backup agent tests."""
+"""Backblaze B2 backup agent tests."""
 
 import json
 import logging
@@ -39,7 +39,6 @@ from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
-# Simple test data factories
 def create_test_backup(backup_id="test_backup", name="test", size=1000, **kwargs):
     """Create a test backup with default values."""
     defaults = {
@@ -107,7 +106,6 @@ def create_mock_metadata_file(backup_id="test", valid=True):
     return mock_file
 
 
-# Test fixtures
 @pytest.fixture(autouse=True)
 async def setup_backup_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
@@ -130,7 +128,7 @@ def agent(hass: HomeAssistant, mock_config_entry: MockConfigEntry):
 
 
 class TestUtilityFunctions:
-    """Test utility functions and basic functionality."""
+    """Test utility functions."""
 
     def test_suggested_filename_generation(self):
         """Test filename generation from backup metadata."""
@@ -155,15 +153,12 @@ class TestUtilityFunctions:
             },
         }
 
-        # Valid metadata should parse successfully
         result = _parse_metadata(json.dumps(valid_metadata))
         assert result["backup_id"] == "test"
 
-        # Invalid JSON should raise ValueError
         with pytest.raises(ValueError, match="Invalid JSON format"):
             _parse_metadata("{invalid json")
 
-        # Non-dictionary JSON should raise TypeError
         with pytest.raises(TypeError, match="JSON content is not a dictionary"):
             _parse_metadata('["this", "is", "a", "list"]')
 
@@ -179,21 +174,13 @@ class TestUtilityFunctions:
 
     async def test_backup_agent_registration(self, hass: HomeAssistant):
         """Test backup agent registration and listeners."""
-        # Test getting backup agents
         agents = await async_get_backup_agents(hass)
         assert len(agents) >= 1
 
-        # Test listener registration and removal
         mock_listener = Mock()
         remove_fn = async_register_backup_agents_listener(hass, listener=mock_listener)
-
-        # Verify listener was added
         listeners_count = len(hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []))
-
-        # Remove listener
         remove_fn()
-
-        # Verify listener was removed
         new_count = len(hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []))
         assert new_count == listeners_count - 1
 
@@ -213,7 +200,6 @@ class TestBackupAgent:
         agent._invalidate_caches("backup123", "test.tar", "test.metadata.json")
         assert agent._all_files_cache_expiration <= time()
 
-        # Reset cache and test deletion invalidation (file removal-based)
         agent._all_files_cache = {"test.tar": "file1", "test.metadata.json": "file2"}
         agent._all_files_cache_expiration = time() + 300
         agent._backup_list_cache = {"backup123": "backup_obj"}
@@ -239,14 +225,12 @@ class TestBackupAgent:
 
     async def test_backup_list_cache_hit(self, agent, caplog):
         """Test cache hit scenarios for backup listing."""
-        # Test all files cache hit
         agent._all_files_cache = {"test.tar": Mock()}
         agent._all_files_cache_expiration = time() + 300
 
         cached_files = await agent._get_all_files_in_prefix()
         assert cached_files == agent._all_files_cache
 
-        # Test backup list cache hit
         mock_backup = Mock()
         mock_backup.backup_id = "cached_backup"
         agent._backup_list_cache = {"cached_backup": mock_backup}
@@ -255,7 +239,6 @@ class TestBackupAgent:
         backup_list = await agent.async_list_backups()
         assert mock_backup in backup_list
 
-        # Test individual backup cache hit with debug logging
         with caplog.at_level(logging.DEBUG):
             cached_backup = await agent.async_get_backup("cached_backup")
             assert cached_backup == mock_backup
@@ -278,14 +261,12 @@ class TestBackupAgent:
         remove1 = async_register_backup_agents_listener(hass, listener=listener1)
         remove2 = async_register_backup_agents_listener(hass, listener=listener2)
 
-        # Verify we have 2 listeners
         assert len(hass.data[DATA_BACKUP_AGENT_LISTENERS]) == 2
 
         # Remove both listeners
         remove1()
         remove2()
 
-        # Verify the data key was deleted when list became empty
         assert DATA_BACKUP_AGENT_LISTENERS not in hass.data
 
 
@@ -721,7 +702,7 @@ class TestWebSocketAPI:
 
 
 class TestEdgeCases:
-    """Additional tests to reach 100% coverage of edge cases."""
+    """Test edge cases for full coverage."""
 
     async def test_cleanup_failed_upload_exception(self, agent, caplog):
         """Test exception handling in cleanup failed upload."""

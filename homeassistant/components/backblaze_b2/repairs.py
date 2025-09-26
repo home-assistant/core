@@ -90,5 +90,4 @@ async def async_create_fix_flow(
     data: dict[str, str | int | float | None] | None,
 ) -> ConfirmRepairFlow:
     """Create a fix flow for Backblaze B2 issues."""
-    del hass, issue_id, data
     return ConfirmRepairFlow()

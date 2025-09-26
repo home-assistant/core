@@ -1,4 +1,4 @@
-"""Consolidated Backblaze B2 config flow tests - optimized for minimal lines with 100% coverage."""
+"""Backblaze B2 config flow tests."""
 
 from unittest.mock import patch
 
@@ -44,15 +44,11 @@ async def _async_start_flow(
     assert result.get("step_id") == "user"
     assert result.get("errors") == {}
 
-    return await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input,
-    )
+    return await hass.config_entries.flow.async_configure(result["flow_id"], user_input)
 
 
 async def test_basic_flows(hass: HomeAssistant, b2_fixture: BackblazeFixture) -> None:
-    """Test basic successful config flows and prefix handling."""
-    # Test successful flow
+    """Test basic successful config flows."""
     result = await _async_start_flow(
         hass, b2_fixture.key_id, b2_fixture.application_key
     )
@@ -65,7 +61,6 @@ async def test_prefix_normalization(
     hass: HomeAssistant, b2_fixture: BackblazeFixture
 ) -> None:
     """Test prefix normalization in config flow."""
-    # Test prefix normalization
     user_input = {**USER_INPUT, "prefix": "test-prefix/foo"}
     result = await _async_start_flow(
         hass, b2_fixture.key_id, b2_fixture.application_key, user_input
@@ -76,13 +71,12 @@ async def test_prefix_normalization(
 
 async def test_empty_prefix(hass: HomeAssistant, b2_fixture: BackblazeFixture) -> None:
     """Test empty prefix handling."""
-    # Test empty prefix (covers line 79)
     user_input_empty = {**USER_INPUT, "prefix": ""}
     result = await _async_start_flow(
         hass, b2_fixture.key_id, b2_fixture.application_key, user_input_empty
     )
     assert result.get("type") is FlowResultType.CREATE_ENTRY
-    assert result["data"]["prefix"] == ""  # Empty prefix should remain empty
+    assert result["data"]["prefix"] == ""
 
 
 async def test_already_configured(
@@ -171,7 +165,7 @@ async def test_config_flow_errors(
     expected_error: str,
     expected_field: str,
 ) -> None:
-    """Test various config flow error scenarios consolidated."""
+    """Test various config flow error scenarios."""
 
     if error_type == "invalid_auth":
         result = await _async_start_flow(hass, setup["key_id"], setup["app_key"])
@@ -208,7 +202,6 @@ async def test_config_flow_errors(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {expected_field: expected_error}
 
-    # Check description placeholders for specific errors
     if error_type == "restricted_bucket":
         assert result.get("description_placeholders") == {
             "brand_name": "Backblaze B2",
@@ -238,7 +231,7 @@ async def test_advanced_flows(
     flow_type: str,
     scenario: str,
 ) -> None:
-    """Test reauthentication and reconfiguration flows consolidated."""
+    """Test reauthentication and reconfiguration flows."""
     mock_config_entry.add_to_hass(hass)
 
     if flow_type == "reauth":
@@ -283,19 +276,18 @@ async def test_advanced_flows(
         assert result.get("step_id") == step_name
 
         if scenario == "success":
-            # Use the existing testBucket for reconfigure success
-            config = {
-                CONF_KEY_ID: b2_fixture.key_id,
-                CONF_APPLICATION_KEY: b2_fixture.application_key,
-                "bucket": "testBucket",  # Use existing bucket
-                "prefix": "new_prefix/",
-            }
-        elif scenario == "prefix_normalization":  # Covers lines 271-277
             config = {
                 CONF_KEY_ID: b2_fixture.key_id,
                 CONF_APPLICATION_KEY: b2_fixture.application_key,
                 "bucket": "testBucket",
-                "prefix": "no_slash_prefix",  # This will get "/" added
+                "prefix": "new_prefix/",
+            }
+        elif scenario == "prefix_normalization":
+            config = {
+                CONF_KEY_ID: b2_fixture.key_id,
+                CONF_APPLICATION_KEY: b2_fixture.application_key,
+                "bucket": "testBucket",
+                "prefix": "no_slash_prefix",
             }
         else:  # validation_error
             config = {

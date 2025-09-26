@@ -17,7 +17,6 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: BackblazeConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    del hass  # Required by interface but not used
     bucket = entry.runtime_data
 
     try:

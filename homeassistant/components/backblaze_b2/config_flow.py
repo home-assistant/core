@@ -191,7 +191,6 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauthentication flow."""
-        del entry_data  # Required by interface but not used
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
