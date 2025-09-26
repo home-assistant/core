@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.mealie.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_IGNORE, SOURCE_USER
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -388,25 +388,25 @@ async def test_hassio_success(
     assert result.get("step_id") == "hassio_confirm"
     assert result.get("description_placeholders") == {"addon": "Mealie"}
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_TOKEN: "token"}
     )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Mealie"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Mealie"
+    assert result["data"] == {
         CONF_HOST: "http://test:9090",
         CONF_API_TOKEN: "token",
         CONF_VERIFY_SSL: True,
     }
-    assert result2["result"].unique_id == "bf1c62fe-4941-4332-9886-e54e88dbdba0"
+    assert result["result"].unique_id == "bf1c62fe-4941-4332-9886-e54e88dbdba0"
 
 
-async def test_hassio_already_configured(hass: HomeAssistant) -> None:
+async def test_hassio_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test we only allow a single config flow."""
-    MockConfigEntry(
-        domain=DOMAIN, data={"host": "mock-mealie", "port": "9090"}
-    ).add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -428,10 +428,8 @@ async def test_hassio_already_configured(hass: HomeAssistant) -> None:
 
 
 async def test_hassio_ignored(hass: HomeAssistant) -> None:
-    """Test we supervisor discovered instance can be ignored."""
-    MockConfigEntry(domain=DOMAIN, source=config_entries.SOURCE_IGNORE).add_to_hass(
-        hass
-    )
+    """Test the supervisor discovered instance can be ignored."""
+    MockConfigEntry(domain=DOMAIN, source=SOURCE_IGNORE).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -445,7 +443,7 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
             slug="mealie",
             uuid="1234",
         ),
-        context={"source": config_entries.SOURCE_HASSIO},
+        context={"source": SOURCE_HASSIO},
     )
     assert result
     assert result["type"] is FlowResultType.ABORT
@@ -481,15 +479,21 @@ async def test_hassio_connection_error(
         context={"source": config_entries.SOURCE_HASSIO},
     )
 
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "hassio_confirm"
-    assert result.get("description_placeholders") == {"addon": "Mealie"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "hassio_confirm"
+    assert result["description_placeholders"] == {"addon": "Mealie"}
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_TOKEN: "token"}
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": error}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
 
     mock_mealie_client.get_user_info.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_TOKEN: "token"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
