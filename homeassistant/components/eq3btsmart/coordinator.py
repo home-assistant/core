@@ -6,17 +6,23 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from eq3btsmart import Eq3Event, Eq3StateException, Eq3TimeoutException, Schedule
+from eq3btsmart import (
+    Eq3Event,
+    Eq3StateException,
+    Eq3TimeoutException,
+    Schedule,
+    Thermostat,
+)
 from eq3btsmart.exceptions import Eq3Exception
 from eq3btsmart.models import DeviceData, Status
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEVICE_MODEL, MANUFACTURER, SCAN_INTERVAL
-from .models import Eq3ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,11 +30,16 @@ _LOGGER = logging.getLogger(__name__)
 class Eq3Coordinator(DataUpdateCoordinator[Status]):
     """Coordinator for the eq3btsmart integration."""
 
-    config_entry: Eq3ConfigEntry
+    config_entry: ConfigEntry
     _mac_address: str
+    _thermostat: Thermostat
 
     def __init__(
-        self, hass: HomeAssistant, entry: Eq3ConfigEntry, mac_address: str
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        mac_address: str,
+        thermostat: Thermostat,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -41,16 +52,15 @@ class Eq3Coordinator(DataUpdateCoordinator[Status]):
         )
 
         self._mac_address = mac_address
+        self._thermostat = thermostat
 
     async def _async_setup(self) -> None:
         """Connect to the thermostat."""
-        self.config_entry.runtime_data.thermostat.register_callback(
-            Eq3Event.CONNECTED, self._async_on_connected
-        )
-        self.config_entry.runtime_data.thermostat.register_callback(
+        self._thermostat.register_callback(Eq3Event.CONNECTED, self._async_on_connected)
+        self._thermostat.register_callback(
             Eq3Event.DISCONNECTED, self._async_on_disconnected
         )
-        self.config_entry.runtime_data.thermostat.register_callback(
+        self._thermostat.register_callback(
             Eq3Event.STATUS_RECEIVED, self._async_on_status_received
         )
 
@@ -62,13 +72,13 @@ class Eq3Coordinator(DataUpdateCoordinator[Status]):
             "[%s] Shutting down coordinator",
             self._mac_address,
         )
-        self.config_entry.runtime_data.thermostat.unregister_callback(
+        self._thermostat.unregister_callback(
             Eq3Event.CONNECTED, self._async_on_connected
         )
-        self.config_entry.runtime_data.thermostat.unregister_callback(
+        self._thermostat.unregister_callback(
             Eq3Event.DISCONNECTED, self._async_on_disconnected
         )
-        self.config_entry.runtime_data.thermostat.unregister_callback(
+        self._thermostat.unregister_callback(
             Eq3Event.STATUS_RECEIVED, self._async_on_status_received
         )
 
@@ -80,15 +90,15 @@ class Eq3Coordinator(DataUpdateCoordinator[Status]):
             "[%s] Requesting status update",
             self._mac_address,
         )
-        self.config_entry.runtime_data.thermostat.unregister_callback(
+        self._thermostat.unregister_callback(
             Eq3Event.STATUS_RECEIVED, self._async_on_status_received
         )
         try:
-            status = await self.config_entry.runtime_data.thermostat.async_get_status()
+            status = await self._thermostat.async_get_status()
         except Eq3Exception as ex:
             raise UpdateFailed(f"Error updating eQ-3 device: {ex}") from ex
         finally:
-            self.config_entry.runtime_data.thermostat.register_callback(
+            self._thermostat.register_callback(
                 Eq3Event.STATUS_RECEIVED, self._async_on_status_received
             )
 
@@ -106,11 +116,11 @@ class Eq3Coordinator(DataUpdateCoordinator[Status]):
                 self._mac_address,
             )
             try:
-                await self.config_entry.runtime_data.thermostat.async_connect()
+                await self._thermostat.async_connect()
             except Eq3TimeoutException:
                 # Thermostat might be in a bugged state, we need to set a temperature to fix it.
-                await self.config_entry.runtime_data.thermostat.async_disconnect()
-                await self.config_entry.runtime_data.thermostat.async_connect(
+                await self._thermostat.async_disconnect()
+                await self._thermostat.async_connect(
                     bugged_state_fix_value=self.data.target_temperature
                     if self.data
                     else 20.0

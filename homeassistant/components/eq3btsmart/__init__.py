@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Eq3ConfigEntry) -> bool:
         )
 
     thermostat = Thermostat(device)
-    coordinator = Eq3Coordinator(hass, entry, mac_address)
+    coordinator = Eq3Coordinator(hass, entry, mac_address, thermostat)
     entry.runtime_data = Eq3ConfigEntryData(thermostat, coordinator)
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
