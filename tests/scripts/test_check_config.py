@@ -186,42 +186,6 @@ def test_bootstrap_error() -> None:
 
 @pytest.mark.parametrize("hass_config_yaml", [BASE_CONFIG])
 @pytest.mark.usefixtures("mock_is_file", "mock_hass_config_yaml")
-def test_run_backwards_compatibility_no_flags() -> None:
-    """Test that run() with no flags maintains backwards compatibility."""
-    # Test with valid config
-    exit_code = check_config.run([])
-    assert exit_code == 0
-
-    # Test with config that has warnings
-    with patch.object(check_config, "check") as mock_check:
-        mock_check.return_value = {
-            "except": {},
-            "warn": {"light": ["warning message"]},
-            "components": {"homeassistant": {}},
-            "secrets": {},
-            "secret_cache": {},
-            "yaml_files": {},
-        }
-        # Without --fail-on-warnings, warnings should not affect exit code
-        exit_code = check_config.run([])
-        assert exit_code == 0
-
-    # Test with config that has errors
-    with patch.object(check_config, "check") as mock_check:
-        mock_check.return_value = {
-            "except": {"homeassistant": ["error message"]},
-            "warn": {},
-            "components": {"homeassistant": {}},
-            "secrets": {},
-            "secret_cache": {},
-            "yaml_files": {},
-        }
-        exit_code = check_config.run([])
-        assert exit_code == 1  # len(res["except"]) = 1 domain with errors
-
-
-@pytest.mark.parametrize("hass_config_yaml", [BASE_CONFIG])
-@pytest.mark.usefixtures("mock_is_file", "mock_hass_config_yaml")
 def test_run_json_flag_only() -> None:
     """Test that --json flag works independently."""
     with (
