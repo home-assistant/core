@@ -4,6 +4,7 @@ from http import HTTPStatus
 from unittest.mock import patch
 
 from pysqueezebox import Server
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.squeezebox.const import (
@@ -26,6 +27,30 @@ UUID = "test-uuid"
 UNKNOWN_ERROR = "1234"
 BROWSE_LIMIT = 10
 VOLUME_STEP = 1
+
+
+@pytest.fixture
+def mock_async_query():
+    """Fixture to patch Server.async_query with different behaviours."""
+
+    with patch("pysqueezebox.Server.async_query") as mock:
+
+        def _set_behavior(mode: str):
+            if mode == "uuid":
+                mock.return_value = {"uuid": UUID}
+                mock.side_effect = None
+            elif mode == "false":
+                mock.return_value = False
+                mock.side_effect = None
+            elif mode == "unauthorized":
+                # delegate to your existing helper
+                mock.side_effect = patch_async_query_unauthorized
+                mock.return_value = None
+            else:
+                raise ValueError(f"Unknown mode: {mode}")
+            return mock
+
+        yield _set_behavior
 
 
 async def mock_discover(_discovery_callback):
@@ -252,14 +277,11 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         }
 
 
-async def test_form_validate_exception(hass: HomeAssistant) -> None:
-    """Test we handle exception."""
+async def test_form_validate_exception(hass: HomeAssistant, mock_async_query) -> None:
+    """Test we handle exception and recover."""
 
+    mock_async_query("uuid")
     with (
-        patch(
-            "pysqueezebox.Server.async_query",
-            return_value={"uuid": UUID},
-        ),
         patch(
             "homeassistant.components.squeezebox.async_setup_entry",
             return_value=True,
@@ -272,27 +294,16 @@ async def test_form_validate_exception(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "edit"
 
-        with patch(
-            "homeassistant.components.squeezebox.config_flow.Server.async_query",
-            side_effect=Exception,
-        ):
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {
-                    CONF_HOST: HOST,
-                    CONF_PORT: PORT,
-                    CONF_USERNAME: "",
-                    CONF_PASSWORD: "",
-                },
-            )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "edit"
 
-            assert result["type"] is FlowResultType.FORM
-            assert result["errors"] == {"base": "unknown"}
-
-        result = await hass.config_entries.flow.async_configure(
+    # Force an exception on validation
+    with patch(
+        "homeassistant.components.squeezebox.config_flow.Server.async_query",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_HOST: HOST,
@@ -302,15 +313,32 @@ async def test_form_validate_exception(hass: HomeAssistant) -> None:
                 CONF_HTTPS: False,
             },
         )
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == HOST
-        assert result["data"] == {
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+    # Retry with normal behaviour
+    mock_async_query("uuid")
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
             CONF_HOST: HOST,
             CONF_PORT: PORT,
             CONF_USERNAME: "",
             CONF_PASSWORD: "",
             CONF_HTTPS: False,
-        }
+        },
+    )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == HOST
+    assert result3["data"] == {
+        CONF_HOST: HOST,
+        CONF_PORT: PORT,
+        CONF_USERNAME: "",
+        CONF_PASSWORD: "",
+        CONF_HTTPS: False,
+    }
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
