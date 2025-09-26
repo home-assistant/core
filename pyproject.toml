@@ -82,6 +82,9 @@ dependencies = [
   "webrtc-models==0.3.0",
   "zeroconf==0.147.0",
   "tqdm>=4.67.1",
+  "fastapi>=0.117.1",
+  "uvicorn>=0.37.0",
+  "websockets>=15.0.1",
 ]
 
 [project.urls]

@@ -15,7 +15,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from . import api
 from .const import (
@@ -160,18 +164,18 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class LevelLockEntity(LockEntity):
+class LevelLockEntity(CoordinatorEntity, LockEntity):
     """Representation of a Level Lock device as a lock entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: LevelLocksCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, LevelLockDevice]],
         client: LevelApiClient,
         lock_id: str,
     ) -> None:
-        self._coordinator = coordinator
+        super().__init__(coordinator)
         self._client = client
         self._lock_id = lock_id
         device = self._device
@@ -180,13 +184,13 @@ class LevelLockEntity(LockEntity):
 
     @property
     def _device(self) -> LevelLockDevice:
-        return self._coordinator.data[self._lock_id]
+        return self.coordinator.data[self._lock_id]
 
     @property
     def available(self) -> bool:
         return (
-            self._coordinator.last_update_success
-            and self._lock_id in self._coordinator.data
+            self.coordinator.last_update_success
+            and self._lock_id in self.coordinator.data
         )
 
     @property
@@ -204,7 +208,7 @@ class LevelLockEntity(LockEntity):
         )
 
     async def async_lock(self, **kwargs: Any) -> None:  # type: ignore[override]
-        await self._coordinator.async_send_command(self._lock_id, "lock")
+        await self.coordinator.async_send_command(self._lock_id, "lock")
 
     async def async_unlock(self, **kwargs: Any) -> None:  # type: ignore[override]
-        await self._coordinator.async_send_command(self._lock_id, "unlock")
+        await self.coordinator.async_send_command(self._lock_id, "unlock")

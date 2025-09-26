@@ -182,10 +182,13 @@ class LevelWebsocketManager:
             ws = self._sockets.get(lock_id)
             if ws is None or ws.closed:
                 # Give the connection loop a chance to connect
-                await asyncio.sleep(0.1)
-                ws = self._sockets.get(lock_id)
+                for _ in range(10):
+                    await asyncio.sleep(0.2)
+                    ws = self._sockets.get(lock_id)
+                    if ws is not None and not ws.closed:
+                        break
             if ws is None or ws.closed:
-                raise ConnectionError("WebSocket not connected for lock {lock_id}")
+                raise ConnectionError(f"WebSocket not connected for lock {lock_id}")
 
             message = WsOutgoingCommand(type="command", command=command)
             await ws.send_json(message.__dict__)
