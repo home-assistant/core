@@ -74,7 +74,7 @@ from homeassistant.components.modbus.const import (
     UDP,
     DataType,
 )
-from homeassistant.components.modbus.validators import (
+from homeassistant.components.modbus.schema_legacy import (
     check_config,
     duplicate_fan_mode_validator,
     duplicate_swing_mode_validator,

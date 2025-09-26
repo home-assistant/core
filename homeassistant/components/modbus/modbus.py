@@ -67,7 +67,7 @@ from .const import (
     TCP,
     UDP,
 )
-from .validators import check_config
+from .schema_legacy import check_config
 
 DATA_MODBUS_HUBS: HassKey[dict[str, ModbusHub]] = HassKey(DOMAIN)
 
