@@ -26,5 +26,23 @@
         "description": "Set up your Niko Home Control instance."
       }
     }
+  },
+  "entity": {
+    "climate": {
+      "nhc_thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "day": "Day",
+              "night": "Night",
+              "eco": "Eco",
+              "prog1": "Program 1",
+              "prog2": "Program 2",
+              "prog3": "Program 3"
+            }
+          }
+        }
+      }
+    }
   }
 }
