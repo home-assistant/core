@@ -2625,7 +2625,7 @@ rapt-ble==0.1.2
 raspyrfm-client==1.2.8
 
 # homeassistant.components.redgtech
-redgtech-api==0.1.37
+redgtech-api==0.1.38
 
 # homeassistant.components.refoss
 refoss-ha==1.2.5
