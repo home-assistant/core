@@ -121,7 +121,7 @@ async def test_options(
     ]
 
     state = hass.states.get(f"{platform}.my_derivative")
-    assert state.attributes["unit_of_measurement"] == "kdog/min"
+    assert state.attributes["unit_of_measurement"] == f"{unit_prefix_used}dog/min"
     hass.states.async_set("sensor.valid", 10, {"unit_of_measurement": "cat"})
     await hass.async_block_till_done()
 
