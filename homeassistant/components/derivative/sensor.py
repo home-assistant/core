@@ -233,7 +233,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             )
             if original_unit != self._attr_native_unit_of_measurement:
                 self._state_list = []
-                self._attr_native_value = Decimal("0.00")
+                self._attr_native_value = round(Decimal(0), self._round_digits)
 
     def _calc_derivative_from_state_list(self, current_time: datetime) -> Decimal:
         def calculate_weight(start: datetime, end: datetime, now: datetime) -> float:

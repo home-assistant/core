@@ -986,7 +986,7 @@ async def test_source_unit_change(
         hass.states.async_set(source_id, "12", {"unit_of_measurement": "dogs"})
         await hass.async_block_till_done()
         state = hass.states.get(entity_id)
-        assert state.state == "0.00"
+        assert state.state == "0.000"
         assert state.attributes.get("unit_of_measurement") == "dogs/s"
 
         # Fourth state update of the source, still dogs.

@@ -224,7 +224,7 @@ async def test_update_unit(hass: HomeAssistant) -> None:
 
         # Check the state after reconfigure.
         state = hass.states.get(derivative_id)
-        assert state.state == "0.00"
+        assert state.state == "0.0"
         assert state.attributes.get("unit_of_measurement") == "dogs/s"
 
         # Third state update of the source.
