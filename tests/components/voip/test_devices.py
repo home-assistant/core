@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from voip_utils import CallInfo
@@ -10,7 +10,7 @@ from voip_utils.sip import SipEndpoint
 
 from homeassistant.components.voip import DOMAIN
 from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
-from homeassistant.components.voip.store import DeviceContact
+from homeassistant.components.voip.store import VoipStore
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -108,10 +108,10 @@ async def test_device_load_contact(
 ) -> None:
     """Test loading contact endpoint from Store."""
     voip_id = call_info.caller_endpoint.uri
-    mock_store = AsyncMock()
-    mock_store.async_load.return_value = {
-        voip_id: DeviceContact("Test <sip:example.com:5061>")
-    }
+    mock_store = VoipStore(hass, "test")
+    mock_store.async_load = AsyncMock(
+        return_value={voip_id: {"contact": "Test <sip:example.com:5061>"}}
+    )
 
     config_entry.runtime_data = mock_store
 
@@ -126,14 +126,11 @@ async def test_device_load_contact(
         configuration_url=f"http://{call_info.caller_ip}",
     )
 
-    with patch(
-        "homeassistant.components.voip.devices.VoipStore", return_value=mock_store
-    ):
-        voip = VoIPDevices(hass, config_entry)
+    voip = VoIPDevices(hass, config_entry)
 
-        await voip.async_setup()
-        voip_device = voip.devices.get(voip_id)
-        assert voip_device.contact == SipEndpoint("Test <sip:example.com:5061>")
+    await voip.async_setup()
+    voip_device = voip.devices.get(voip_id)
+    assert voip_device.contact == SipEndpoint("Test <sip:example.com:5061>")
 
 
 async def test_remove_device_registry_entry(

@@ -98,9 +98,7 @@ class VoIPDevices:
             )
             if voip_id is None:
                 continue
-            devices_data: DeviceContacts = (
-                await self.device_store.async_load() or DeviceContacts()
-            )
+            devices_data: DeviceContacts = await self.device_store.async_load_devices()
             device_data: DeviceContact | None = devices_data.get(voip_id)
             self.devices[voip_id] = VoIPDevice(
                 voip_id=voip_id,
