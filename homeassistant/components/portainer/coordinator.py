@@ -135,3 +135,20 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
             )
 
         return mapped_endpoints
+
+    async def async_restart_container(
+        self, endpoint_id: int, container_id: str
+    ) -> None:
+        """Restarts a Docker container."""
+        await self.portainer.restart_container(endpoint_id, container_id)
+        await self.async_request_refresh()
+
+    async def async_stop_container(self, endpoint_id: int, container_id: str) -> None:
+        """Stops a Docker container."""
+        await self.portainer.stop_container(endpoint_id, container_id)
+        await self.async_request_refresh()
+
+    async def async_start_container(self, endpoint_id: int, container_id: str) -> None:
+        """Starts a Docker container."""
+        await self.portainer.start_container(endpoint_id, container_id)
+        await self.async_request_refresh()
