@@ -258,11 +258,6 @@ class MiroboVacuum(
             attrs[ATTR_TIMERS] = self.timers
         return attrs
 
-    @property
-    def segment_id_schema(self) -> vol.Schema:
-        """Return a schema for choosing corresponding segment IDs for an area."""
-        return vol.Schema(int)
-
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a vacuum command handling error messages."""
         try:
@@ -395,6 +390,10 @@ class MiroboVacuum(
             x_coord=x_coord,
             y_coord=y_coord,
         )
+
+    async def async_get_segments(self) -> dict[int, str]:
+        """Get the segments that can be cleaned."""
+        return {1: "Room 1", 2: "Room 2"}
 
     async def async_clean_segment(self, segments) -> None:
         """Clean the specified segments(s)."""
