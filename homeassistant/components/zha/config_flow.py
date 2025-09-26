@@ -662,13 +662,8 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         """Set the flow's unique ID and update the device path in an ignored flow."""
         current_entry = await self.async_set_unique_id(unique_id)
 
-        if not current_entry:
-            return
-
-        if current_entry.source != SOURCE_IGNORE:
-            self._abort_if_unique_id_configured()
-        else:
-            # Only update the current entry if it is an ignored discovery
+        # Only update the current entry if it is an ignored discovery
+        if current_entry and current_entry.source == SOURCE_IGNORE:
             self._abort_if_unique_id_configured(
                 updates={
                     CONF_DEVICE: {
