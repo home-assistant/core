@@ -43,6 +43,7 @@ from .util import (
     get_otbr_addon_manager,
     guess_firmware_info,
     guess_hardware_owners,
+    probe_silabs_firmware_info,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -207,6 +208,8 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         # Installing new firmware is only truly required if the wrong type is
         # installed: upgrading to the latest release of the current firmware type
         # isn't strictly necessary for functionality.
+        self._probed_firmware_info = await probe_silabs_firmware_info(self._device)
+
         firmware_install_required = self._probed_firmware_info is None or (
             self._probed_firmware_info.firmware_type != expected_installed_firmware_type
         )
