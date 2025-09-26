@@ -8,9 +8,9 @@ from dataclasses import dataclass
 from pyportainer.models.docker import DockerContainer
 
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    StateType,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -21,34 +21,26 @@ from .entity import PortainerContainerEntity, PortainerCoordinatorData
 
 @dataclass(frozen=True, kw_only=True)
 class PortainerSensorEntityDescription(SensorEntityDescription):
-    """Class to hold Portainer sensor description."""
+    """Class to hold Portainer sensor description.
 
-    value_fn: Callable[[DockerContainer], object]
+    value_fn must return a StateType (str | int | float | None or date/datetime/Decimal),
+    but for these container sensors we only return str | None.
+    """
+
+    value_fn: Callable[[DockerContainer], StateType]
 
 
 CONTAINER_SENSORS: tuple[PortainerSensorEntityDescription, ...] = (
     PortainerSensorEntityDescription(
-        key="container_name",
-        translation_key="container_name",
-        value_fn=lambda data: data.names,
-        state_class=None,
-    ),
-    PortainerSensorEntityDescription(
         key="image",
         translation_key="image",
-        value_fn=lambda data: data.image,
+        value_fn=lambda c: (c.image or None),
         state_class=None,
-    ),
-    PortainerSensorEntityDescription(
-        key="created",
-        translation_key="created",
-        value_fn=lambda data: data.created,
-        state_class=SensorDeviceClass.TIMESTAMP,
     ),
     PortainerSensorEntityDescription(
         key="status",
         translation_key="status",
-        value_fn=lambda data: data.status,
+        value_fn=lambda c: (c.status or None),
         state_class=None,
     ),
 )
@@ -94,11 +86,16 @@ class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
         self.entity_description = entity_description
         super().__init__(device_info, coordinator, via_device)
 
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
+        device_identifier = (
+            self._device_info.names[0].replace("/", " ").strip()
+            if self._device_info.names
+            else None
+        )
+
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_identifier}_{entity_description.key}"
 
     @property
-    def native_value(self):
-        # TODO: ERWIN continue here
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(
             self.coordinator.data[self.endpoint_id].containers[self.device_id]

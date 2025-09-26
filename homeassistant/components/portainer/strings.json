@@ -33,6 +33,14 @@
       "status": {
         "name": "Status"
       }
+    },
+    "sensor": {
+      "image": {
+        "name": "Image"
+      },
+      "status": {
+        "name": "Status"
+      }
     }
   },
   "exceptions": {

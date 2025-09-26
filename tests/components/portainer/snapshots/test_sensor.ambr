@@ -1,0 +1,481 @@
+# serializer version: 1
+# name: test_all_entities[sensor.focused_einstein_image-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.focused_einstein_image',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Image',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'image',
+    'unique_id': 'portainer_test_entry_123_focused_einstein_image',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.focused_einstein_image-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'focused_einstein Image',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.focused_einstein_image',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'docker.io/library/redis:7',
+  })
+# ---
+# name: test_all_entities[sensor.focused_einstein_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.focused_einstein_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'status',
+    'unique_id': 'portainer_test_entry_123_focused_einstein_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.focused_einstein_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'focused_einstein Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.focused_einstein_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Up 12 hours',
+  })
+# ---
+# name: test_all_entities[sensor.funny_chatelet_image-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.funny_chatelet_image',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Image',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'image',
+    'unique_id': 'portainer_test_entry_123_funny_chatelet_image',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.funny_chatelet_image-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'funny_chatelet Image',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.funny_chatelet_image',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'docker.io/library/ubuntu:latest',
+  })
+# ---
+# name: test_all_entities[sensor.funny_chatelet_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.funny_chatelet_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'status',
+    'unique_id': 'portainer_test_entry_123_funny_chatelet_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.funny_chatelet_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'funny_chatelet Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.funny_chatelet_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Up 4 days',
+  })
+# ---
+# name: test_all_entities[sensor.practical_morse_image-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.practical_morse_image',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Image',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'image',
+    'unique_id': 'portainer_test_entry_123_practical_morse_image',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.practical_morse_image-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'practical_morse Image',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.practical_morse_image',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'docker.io/library/python:3.13-slim',
+  })
+# ---
+# name: test_all_entities[sensor.practical_morse_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.practical_morse_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'status',
+    'unique_id': 'portainer_test_entry_123_practical_morse_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.practical_morse_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'practical_morse Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.practical_morse_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Up 6 hours',
+  })
+# ---
+# name: test_all_entities[sensor.serene_banach_image-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.serene_banach_image',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Image',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'image',
+    'unique_id': 'portainer_test_entry_123_serene_banach_image',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.serene_banach_image-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'serene_banach Image',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.serene_banach_image',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'docker.io/library/nginx:latest',
+  })
+# ---
+# name: test_all_entities[sensor.serene_banach_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.serene_banach_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'status',
+    'unique_id': 'portainer_test_entry_123_serene_banach_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.serene_banach_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'serene_banach Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.serene_banach_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Up 2 days',
+  })
+# ---
+# name: test_all_entities[sensor.stoic_turing_image-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.stoic_turing_image',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Image',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'image',
+    'unique_id': 'portainer_test_entry_123_stoic_turing_image',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.stoic_turing_image-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'stoic_turing Image',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stoic_turing_image',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'docker.io/library/postgres:15',
+  })
+# ---
+# name: test_all_entities[sensor.stoic_turing_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.stoic_turing_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'status',
+    'unique_id': 'portainer_test_entry_123_stoic_turing_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.stoic_turing_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'stoic_turing Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.stoic_turing_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Up 1 day',
+  })
+# ---
