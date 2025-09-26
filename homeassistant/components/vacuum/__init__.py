@@ -404,11 +404,6 @@ class StateVacuumEntity[SegmentIdType = Any](
         """Flag vacuum cleaner features that are supported."""
         return self._attr_supported_features
 
-    @property
-    def segment_id_schema(self) -> vol.Schema:
-        """Return a schema for choosing corresponding segment IDs for an area."""
-        raise NotImplementedError
-
     def stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
         raise NotImplementedError
@@ -441,6 +436,13 @@ class StateVacuumEntity[SegmentIdType = Any](
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(partial(self.clean_spot, **kwargs))
+
+    async def async_get_segments(self) -> Mapping[SegmentIdType, str]:
+        """Get the segments that can be cleaned.
+
+        Returns a mapping from segment ids to their names.
+        """
+        raise NotImplementedError
 
     @final
     async def async_internal_clean_area(
