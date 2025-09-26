@@ -27,6 +27,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    ATTR_OCCUPANCY,
     ATTR_UNOCCUPIED_COOLING_TARGET_TEMP,
     ATTR_UNOCCUPIED_HEATING_TARGET_TEMP,
 )
@@ -196,6 +197,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
+        occupancy = kwargs.get(ATTR_OCCUPANCY)
         target_hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
         target_temperature: float | None = kwargs.get(ATTR_TEMPERATURE)
         target_temperature_low: float | None = kwargs.get(ATTR_TARGET_TEMP_LOW)
@@ -206,6 +208,12 @@ class MatterClimate(MatterEntity, ClimateEntity):
         target_unoccupied_heating_temp: float | None = kwargs.get(
             ATTR_UNOCCUPIED_HEATING_TARGET_TEMP
         )
+
+        if occupancy is not None:
+            await self.write_attribute(
+                value=1 if occupancy else 0,
+                matter_attribute=clusters.Thermostat.Attributes.Occupancy,
+            )
 
         if target_hvac_mode is not None:
             await self.async_set_hvac_mode(target_hvac_mode)
@@ -410,6 +418,8 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_OFF
         )
+        if feature_map & ThermostatFeature.kOccupancy:
+            self._attr_supported_features |= ClimateEntityFeature.OCCUPANCY
         if feature_map & ThermostatFeature.kHeating:
             self._attr_hvac_modes.append(HVACMode.HEAT)
         if feature_map & ThermostatFeature.kCooling:
@@ -459,6 +469,7 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.ThermostatRunningMode,
             clusters.Thermostat.Attributes.ThermostatRunningState,
             clusters.Thermostat.Attributes.TemperatureSetpointHold,
+            clusters.Thermostat.Attributes.Occupancy,
             clusters.Thermostat.Attributes.UnoccupiedCoolingSetpoint,
             clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
             clusters.OnOff.Attributes.OnOff,
