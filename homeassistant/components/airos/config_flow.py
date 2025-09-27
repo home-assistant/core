@@ -78,7 +78,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _validate_and_get_device_info(
-        self, config_data: dict[str, Any], reauth: bool = False
+        self, config_data: dict[str, Any]
     ) -> dict[str, Any] | None:
         """Validate user input with the device API."""
         # By default airOS 8 comes with self-signed SSL certificates,
@@ -115,6 +115,8 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(airos_data.derived.mac)
             if not reauth:
                 self._abort_if_unique_id_configured()
+            else:
+                self._abort_if_unique_id_mismatch()
 
             return {"title": airos_data.host.hostname, "data": config_data}
 
@@ -125,26 +127,18 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input: Mapping[str, Any],
     ) -> ConfigFlowResult:
         """Perform reauthentication upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+        
+    async def async_step_reauth_confirm(
+        self,
+        user_input: Mapping[str, Any],
+    ) -> ConfigFlowResult:
+        """Perform reauthentication upon an API authentication error."""
         self.errors = {}
 
-        current_entry: ConfigEntry | None = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-
-        assert current_entry is not None
 
         if user_input:
-            validate_data = {
-                CONF_HOST: current_entry.data[CONF_HOST],
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
-                CONF_USERNAME: current_entry.data[CONF_USERNAME],
-                SECTION_ADVANCED_SETTINGS: {
-                    CONF_SSL: current_entry.data[SECTION_ADVANCED_SETTINGS][CONF_SSL],
-                    CONF_VERIFY_SSL: current_entry.data[SECTION_ADVANCED_SETTINGS][
-                        CONF_VERIFY_SSL
-                    ],
-                },
-            }
+            validate_data = {**self._get_reauth_entry().data, **user_input}
             if await self._validate_and_get_device_info(
                 config_data=validate_data, reauth=True
             ):
@@ -157,7 +151,10 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_PASSWORD): TextSelector(
+            			TextSelectorConfig(
+                			type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            		),
                 }
             ),
             errors=self.errors,

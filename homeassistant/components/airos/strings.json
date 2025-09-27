@@ -2,7 +2,7 @@
   "config": {
     "flow_title": "Ubiquiti airOS device",
     "step": {
-      "reauth": {
+      "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         },
