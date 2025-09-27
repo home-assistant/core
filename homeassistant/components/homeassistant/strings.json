@@ -68,6 +68,9 @@
     "orphaned_ignored_config_entry": {
       "title": "Orphaned ignored config entry for {domain}",
       "fix_flow": {
+        "abort": {
+          "issue_ignored": "Non-existent ignored integration {domain} ignored."
+        },
         "step": {
           "init": {
             "title": "[%key:component::homeassistant::issues::orphaned_ignored_config_entry::title%]",

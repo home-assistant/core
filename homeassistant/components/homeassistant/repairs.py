@@ -73,7 +73,7 @@ class OrphanedConfigEntryFlow(RepairsFlow):
     ) -> FlowResult:
         """Handle the confirm step of a fix flow."""
         await self.hass.config_entries.async_remove(self.entry_id)
-        return self.async_abort(reason="issue_fixed")
+        return self.async_create_entry(data={})
 
     async def async_step_ignore(
         self, user_input: dict[str, str] | None = None
