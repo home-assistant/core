@@ -94,13 +94,6 @@ async def test_binary_sensors(
     assert sensor.name == "Motion Aware Sensor 1"
     assert sensor.attributes["device_class"] == "motion"
 
-    # test convenience area motion sensor
-    sensor = hass.states.get("binary_sensor.motion_aware_sensor_1_convenience_motion")
-    assert sensor is not None
-    assert sensor.state == "off"
-    assert sensor.name == "Motion Aware Sensor 1 Convenience Motion"
-    assert sensor.attributes["device_class"] == "motion"
-
 
 async def test_binary_sensor_add_update(
     hass: HomeAssistant, mock_bridge_v2: Mock
@@ -158,7 +151,7 @@ async def test_grouped_motion_sensor(
     sensor = hass.states.get("binary_sensor.sensor_group_motion")
     assert sensor.state == "on"
 
-    # test disabled grouped motion sensor keeps last known state
+    # test disabled grouped motion sensor == state unknown
     disabled_sensor = {
         "id": "2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e",
         "type": "grouped_motion",
@@ -167,7 +160,7 @@ async def test_grouped_motion_sensor(
     mock_bridge_v2.api.emit_event("update", disabled_sensor)
     await hass.async_block_till_done()
     sensor = hass.states.get("binary_sensor.sensor_group_motion")
-    assert sensor.state == "off"
+    assert sensor.state == "unknown"
 
 
 async def test_motion_aware_sensor(
@@ -211,42 +204,3 @@ async def test_motion_aware_sensor(
     sensor = hass.states.get("binary_sensor.motion_aware_sensor_1")
     assert sensor is not None
     assert sensor.name == "Updated Motion Area"
-
-
-async def test_convenience_area_motion_sensor(
-    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
-) -> None:
-    """Test HueConvenienceAreaMotionSensor functionality."""
-
-    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
-    await setup_platform(hass, mock_bridge_v2, Platform.BINARY_SENSOR)
-
-    sensor = hass.states.get("binary_sensor.motion_aware_sensor_1_convenience_motion")
-    assert sensor is not None
-    assert sensor.state == "off"
-    assert sensor.attributes["device_class"] == "motion"
-
-    updated_sensor = {
-        "id": "4f317b69-9da0-4b4f-84f2-7ca07b9fe345",
-        "type": "convenience_area_motion",
-        "motion": {
-            "motion": True,
-            "motion_valid": True,
-            "motion_report": {"changed": "2023-09-23T08:13:42.394Z", "motion": True},
-        },
-    }
-    mock_bridge_v2.api.emit_event("update", updated_sensor)
-    await hass.async_block_till_done()
-    sensor = hass.states.get("binary_sensor.motion_aware_sensor_1_convenience_motion")
-    assert sensor.state == "on"
-
-    updated_config = {
-        "id": "5e6f7a8b-9c1d-4e2f-b3a4-5c6d7e8f9a0b",
-        "type": "motion_area_configuration",
-        "name": "Updated Motion Area",
-    }
-    mock_bridge_v2.api.emit_event("update", updated_config)
-    await hass.async_block_till_done()
-    sensor = hass.states.get("binary_sensor.motion_aware_sensor_1_convenience_motion")
-    assert sensor is not None
-    assert sensor.name == "Updated Motion Area Convenience Motion"
