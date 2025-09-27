@@ -15,7 +15,7 @@ from airos.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -25,6 +25,11 @@ from homeassistant.const import (
 )
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN, SECTION_ADVANCED_SETTINGS
 from .coordinator import AirOS8
@@ -113,10 +118,11 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             self.errors["base"] = "unknown"
         else:
             await self.async_set_unique_id(airos_data.derived.mac)
-            if not reauth:
-                self._abort_if_unique_id_configured()
-            else:
+
+            if self.source == "reauth":
                 self._abort_if_unique_id_mismatch()
+            else:
+                self._abort_if_unique_id_configured()
 
             return {"title": airos_data.host.hostname, "data": config_data}
 
@@ -127,8 +133,8 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input: Mapping[str, Any],
     ) -> ConfigFlowResult:
         """Perform reauthentication upon an API authentication error."""
-        return await self.async_step_reauth_confirm()
-        
+        return await self.async_step_reauth_confirm(user_input)
+
     async def async_step_reauth_confirm(
         self,
         user_input: Mapping[str, Any],
@@ -136,12 +142,9 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Perform reauthentication upon an API authentication error."""
         self.errors = {}
 
-
         if user_input:
             validate_data = {**self._get_reauth_entry().data, **user_input}
-            if await self._validate_and_get_device_info(
-                config_data=validate_data, reauth=True
-            ):
+            if await self._validate_and_get_device_info(config_data=validate_data):
                 return self.async_update_reload_and_abort(
                     self._get_reauth_entry(),
                     data_updates=validate_data,
@@ -152,9 +155,11 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_PASSWORD): TextSelector(
-            			TextSelectorConfig(
-                			type=TextSelectorType.PASSWORD, autocomplete="current-password"
-            		),
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD,
+                            autocomplete="current-password",
+                        )
+                    ),
                 }
             ),
             errors=self.errors,
