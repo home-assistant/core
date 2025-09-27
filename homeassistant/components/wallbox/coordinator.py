@@ -209,7 +209,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) from wallbox_connection_error
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Get new sensor data for Wallbox component. Set update interval to be 60 * #wallbox chargers configured, this is necessary due to rate limitations."""
+        """Get new sensor data for Wallbox component. Set update interval to be UPDATE_INTERVAL * #wallbox chargers configured, this is necessary due to rate limitations."""
 
         self.update_interval = timedelta(
             seconds=UPDATE_INTERVAL
