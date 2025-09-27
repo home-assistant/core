@@ -68,7 +68,6 @@ class SwitchBotSmartRadiatorThermostat(SwitchBotCloudEntity, WaterHeaterEntity):
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Async set operation mode."""
-        await self.coordinator.async_request_refresh()
         parameters = self.__mode_map_value(operation_mode)
         await self.send_api_command(
             command=SmartRadiatorThermostatCommands.SET_MODE,
