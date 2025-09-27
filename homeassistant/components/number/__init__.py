@@ -183,27 +183,6 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "native_value",
 }
 
-_MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_UNIT: dict[UnitOfTemperature, str] = {
-    UnitOfTemperature.CELSIUS: UnitOfTemperature.CELSIUS,
-    UnitOfTemperature.FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
-}
-_MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_DELTA_UNIT: dict[UnitOfTemperature, str] = {
-    UnitOfTemperature.CELSIUS: UnitOfTemperatureDelta.CELSIUS,
-    UnitOfTemperature.FAHRENHEIT: UnitOfTemperatureDelta.FAHRENHEIT,
-}
-_DEVICECLASS_NATIVE_CONFIG_TO_UOM: dict[
-    NumberDeviceClass | None, dict[str | None, dict[UnitOfTemperature, str]]
-] = {
-    NumberDeviceClass.TEMPERATURE: {
-        UnitOfTemperature.CELSIUS: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_UNIT,
-        UnitOfTemperature.FAHRENHEIT: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_UNIT,
-    },
-    NumberDeviceClass.TEMPERATURE_DELTA: {
-        UnitOfTemperatureDelta.CELSIUS: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_DELTA_UNIT,
-        UnitOfTemperatureDelta.FAHRENHEIT: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_DELTA_UNIT,
-    },
-}
-
 
 class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Number entity."""
@@ -415,14 +394,25 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return self._number_option_unit_of_measurement
 
         native_unit_of_measurement = self.__native_unit_of_measurement_compat
-        try:
-            return _DEVICECLASS_NATIVE_CONFIG_TO_UOM[self.device_class][
-                native_unit_of_measurement
-            ][self.hass.config.units.temperature_unit]
-        except KeyError:
-            # any unsupported device_class and/or unit conversion
-            # will silently be discarded
-            pass
+        # device_class is checked after native_unit_of_measurement since most
+        # of the time we can avoid the device_class check
+        if (
+            native_unit_of_measurement
+            in (UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT)
+            and self.device_class == NumberDeviceClass.TEMPERATURE
+        ):
+            return self.hass.config.units.temperature_unit
+        if (
+            native_unit_of_measurement
+            in (UnitOfTemperatureDelta.CELSIUS, UnitOfTemperatureDelta.FAHRENHEIT)
+            and self.device_class == NumberDeviceClass.TEMPERATURE_DELTA
+        ):
+            # UnitSystem.temperature_unit is either °F or °C so we need to map it
+            # to the corresponding delta unit
+            return {
+                UnitOfTemperature.CELSIUS: UnitOfTemperatureDelta.CELSIUS,
+                UnitOfTemperature.FAHRENHEIT: UnitOfTemperatureDelta.FAHRENHEIT,
+            }.get(self.hass.config.units.temperature_unit, native_unit_of_measurement)
 
         if (translation_key := self._unit_of_measurement_translation_key) and (
             unit_of_measurement
