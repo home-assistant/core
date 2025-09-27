@@ -68,55 +68,45 @@ async def patch_async_query_unauthorized(self, *args):
     return False
 
 
-async def test_user_form(hass: HomeAssistant) -> None:
+async def test_user_form(
+    hass: HomeAssistant,
+    mock_async_setup_entry,
+    mock_async_query,
+    mock_discover_success,
+) -> None:
     """Test user-initiated flow, including discovery and the edit step."""
-    with (
-        patch(
-            "pysqueezebox.Server.async_query",
-            return_value={"uuid": UUID},
-        ),
-        patch(
-            "homeassistant.components.squeezebox.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
-        patch(
-            "homeassistant.components.squeezebox.config_flow.async_discover",
-            mock_discover,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "edit"
-        assert CONF_HOST in result["data_schema"].schema
-        for key in result["data_schema"].schema:
-            if key == CONF_HOST:
-                assert key.description == {"suggested_value": HOST}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "edit"
+    assert CONF_HOST in result["data_schema"].schema
+    for key in result["data_schema"].schema:
+        if key == CONF_HOST:
+            assert key.description == {"suggested_value": HOST}
 
-        # test the edit step
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: HOST,
-                CONF_PORT: PORT,
-                CONF_USERNAME: "",
-                CONF_PASSWORD: "",
-                CONF_HTTPS: False,
-            },
-        )
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["title"] == HOST
-        assert result["data"] == {
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             CONF_HOST: HOST,
             CONF_PORT: PORT,
             CONF_USERNAME: "",
             CONF_PASSWORD: "",
             CONF_HTTPS: False,
-        }
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == HOST
+    assert result["data"] == {
+        CONF_HOST: HOST,
+        CONF_PORT: PORT,
+        CONF_USERNAME: "",
+        CONF_PASSWORD: "",
+        CONF_HTTPS: False,
+    }
 
-        await hass.async_block_till_done()
-        assert len(mock_setup_entry.mock_calls) == 1
+    await hass.async_block_till_done()
+    assert len(mock_async_setup_entry.mock_calls) == 1
 
 
 async def test_options_form(hass: HomeAssistant) -> None:
