@@ -114,7 +114,7 @@ class WanIpSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Get the current DNS IP address for hostname."""
-        if not self.resolver:
+        if self.resolver._closed:  # noqa: SLF001
             self.create_dns_resolver()
         try:
             async with asyncio.timeout(10):

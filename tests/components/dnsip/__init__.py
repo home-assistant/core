@@ -23,6 +23,7 @@ class RetrieveDNS:
             self.nameservers = nameservers
         self._nameservers = ["1.2.3.4"]
         self.error = error
+        self._closed = False
 
     async def query(self, hostname, qtype) -> list[QueryResult]:
         """Return information."""
@@ -50,3 +51,4 @@ class RetrieveDNS:
 
     async def close(self) -> None:
         """Close the resolver."""
+        self._closed = True
