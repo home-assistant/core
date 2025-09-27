@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Device is already configured",
-            "reauth_successful": "Re-authentication was successful",
-            "reconfigure_successful": "Reconfiguration noted. No changes were made."
+            "already_configured": "Device is already configured"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -11,20 +9,6 @@
             "unknown": "Unexpected error"
         },
         "step": {
-            "reauth_confirm": {
-                "data": {
-                    "password": "Password"
-                },
-                "data_description": {
-                    "password": "The updated password for your Autoskope account."
-                },
-                "description": "Authentication failed for Autoskope. Please re-enter your password.",
-                "title": "Authentication expired for {name}"
-            },
-            "reconfigure": {
-                "description": "To change the host or username ({username}@{host}), please remove this integration and add it again with the new details. Password changes can be done via the re-authentication flow if prompted.",
-                "title": "Reconfigure Autoskope"
-            },
             "user": {
                 "data": {
                     "host": "Host (optional)",

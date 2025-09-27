@@ -27,7 +27,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Autoskope device tracker entities."""
-    coordinator: AutoskopeDataUpdateCoordinator = entry.runtime_data.coordinator
+    coordinator: AutoskopeDataUpdateCoordinator = entry.runtime_data
     tracked_vehicles: set[str] = set()
 
     @callback

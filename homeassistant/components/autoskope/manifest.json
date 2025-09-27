@@ -7,6 +7,6 @@
   "documentation": "https://www.home-assistant.io/integrations/autoskope",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "quality_scale": "silver",
-  "requirements": ["autoskope_client==1.0.0"]
+  "quality_scale": "bronze",
+  "requirements": ["autoskope_client==1.2.0"]
 }

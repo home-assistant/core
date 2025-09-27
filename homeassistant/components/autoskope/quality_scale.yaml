@@ -63,7 +63,7 @@ rules:
   runtime-data:
     status: done
     comment: |
-      Coordinator/API instance stored in hass.data[DOMAIN] (__init__.py).
+      Coordinator stored in entry.runtime_data with proper typing (__init__.py:48, coordinator.py:20).
   test-before-configure:
     status: done
     comment: |
@@ -103,17 +103,17 @@ rules:
     comment: |
       Integration owner is specified in manifest.json.
   log-when-unavailable:
-    status: done
+    status: todo
     comment: |
-      Coordinator logs errors on update failures (coordinator.py).
+      Coordinator should log when devices become unavailable/available.
   parallel-updates:
     status: done
     comment: |
       `PARALLEL_UPDATES = 0` is set (device_tracker.py).
   reauthentication-flow:
-    status: done
+    status: todo
     comment: |
-      Implements `async_step_reauth` and `async_step_reauth_confirm` for UI reauthentication (config_flow.py).
+      Reauthentication flow removed for initial PR, will be added in follow-up.
   test-coverage:
     status: done
     comment: |
@@ -125,9 +125,9 @@ rules:
     comment: |
       Creates devices for vehicles via `DeviceInfo` (device_tracker.py).
   diagnostics:
-    status: done
+    status: todo
     comment: |
-      Implements `async_get_config_entry_diagnostics` (diagnostics.py).
+      Diagnostics not yet implemented.
   discovery-update-info:
     status: exempt
     comment: |
@@ -193,9 +193,9 @@ rules:
     comment: |
       Icons are set directly in code based on state; state translation keys are not used for icons (device_tracker.py).
   reconfiguration-flow:
-    status: done
+    status: todo
     comment: |
-      Reauthentication flow handles password updates; host/username changes require re-adding the integration (config_flow.py).
+      Reconfiguration flow removed for initial PR, will be added in follow-up.
   repair-issues:
     status: todo
     comment: |

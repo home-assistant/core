@@ -78,7 +78,12 @@ def mock_vehicles_list(mock_vehicle_with_position):
 
 @pytest.fixture
 def mock_autoskope_api():
-    """Return a mock Autoskope API."""
+    """Return a mock Autoskope API with context manager support."""
     api = AsyncMock()
     api.authenticate.return_value = True
+    api.connect.return_value = None
+    api.close.return_value = None
+    # Add context manager support
+    api.__aenter__.return_value = api
+    api.__aexit__.return_value = None
     return api

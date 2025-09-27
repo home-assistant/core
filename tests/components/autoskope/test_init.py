@@ -21,7 +21,8 @@ async def test_setup_entry_success(
 
     with patch("homeassistant.components.autoskope.AutoskopeApi") as mock_api_class:
         mock_api_instance = AsyncMock()
-        mock_api_instance.authenticate.return_value = True
+        mock_api_instance.connect.return_value = None
+        mock_api_instance.close.return_value = None
         mock_api_instance.get_vehicles.return_value = []  # Return list
         mock_api_class.return_value = mock_api_instance
 
@@ -38,8 +39,8 @@ async def test_setup_entry_success(
             password=mock_config_entry.data[CONF_PASSWORD],
         )
 
-        # Verify authentication was called
-        mock_api_instance.authenticate.assert_called_once()
+        # Verify connect was called
+        mock_api_instance.connect.assert_called_once()
 
 
 async def test_setup_entry_auth_failure(
@@ -51,32 +52,14 @@ async def test_setup_entry_auth_failure(
 
     with patch("homeassistant.components.autoskope.AutoskopeApi") as mock_api_class:
         mock_api_instance = AsyncMock()
-        mock_api_instance.authenticate.side_effect = InvalidAuth("Invalid credentials")
+        mock_api_instance.connect.side_effect = InvalidAuth("Invalid credentials")
         mock_api_class.return_value = mock_api_instance
 
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
         assert result is False
-        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_setup_entry_auth_returns_false(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test setup when authentication returns False."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.autoskope.AutoskopeApi") as mock_api_class:
-        mock_api_instance = AsyncMock()
-        mock_api_instance.authenticate.return_value = False
-        mock_api_class.return_value = mock_api_instance
-
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert result is False
+        # Auth failures cause SETUP_ERROR (ConfigEntryError) until reauth flow is implemented
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
@@ -89,7 +72,7 @@ async def test_setup_entry_connection_error(
 
     with patch("homeassistant.components.autoskope.AutoskopeApi") as mock_api_class:
         mock_api_instance = AsyncMock()
-        mock_api_instance.authenticate.side_effect = CannotConnect("Connection failed")
+        mock_api_instance.connect.side_effect = CannotConnect("Connection failed")
         mock_api_class.return_value = mock_api_instance
 
         result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -97,23 +80,7 @@ async def test_setup_entry_connection_error(
         assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_entry_unexpected_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test setup with unexpected error."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.autoskope.AutoskopeApi") as mock_api_class:
-        mock_api_instance = AsyncMock()
-        mock_api_instance.authenticate.side_effect = Exception("Unexpected error")
-        mock_api_class.return_value = mock_api_instance
-
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert result is False
-        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+# test_setup_entry_unexpected_error removed - bare exceptions no longer caught in async_setup_entry
 
 
 async def test_unload_entry(
@@ -125,7 +92,8 @@ async def test_unload_entry(
 
     with patch("homeassistant.components.autoskope.AutoskopeApi") as mock_api_class:
         mock_api_instance = AsyncMock()
-        mock_api_instance.authenticate.return_value = True
+        mock_api_instance.connect.return_value = None
+        mock_api_instance.close.return_value = None
         mock_api_instance.get_vehicles.return_value = []  # Return list
         mock_api_class.return_value = mock_api_instance
 

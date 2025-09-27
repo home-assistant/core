@@ -289,7 +289,7 @@ async def test_device_tracker_entity_availability(
         mock_get_vehicles.return_value = []
 
         # Trigger coordinator update
-        coordinator = mock_config_entry.runtime_data.coordinator
+        coordinator = mock_config_entry.runtime_data
         await coordinator.async_refresh()
         await hass.async_block_till_done()
 

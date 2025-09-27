@@ -44,7 +44,7 @@ async def test_form_success(hass: HomeAssistant, mock_autoskope_api: AsyncMock) 
         await hass.async_block_till_done()
 
         assert result2["type"] is FlowResultType.CREATE_ENTRY
-        assert result2["title"] == "Autoskope test_user"
+        assert result2["title"] == "Autoskope (test_user)"
         assert result2["data"] == {
             CONF_USERNAME: "test_user",
             CONF_PASSWORD: "test_password",
@@ -60,7 +60,7 @@ async def test_form_invalid_auth(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_autoskope_api.authenticate.side_effect = InvalidAuth("Invalid credentials")
+    mock_autoskope_api.__aenter__.side_effect = InvalidAuth("Invalid credentials")
 
     with patch(
         "homeassistant.components.autoskope.config_flow.AutoskopeApi"
@@ -88,7 +88,7 @@ async def test_form_cannot_connect(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_autoskope_api.authenticate.side_effect = CannotConnect("Connection failed")
+    mock_autoskope_api.__aenter__.side_effect = CannotConnect("Connection failed")
 
     with patch(
         "homeassistant.components.autoskope.config_flow.AutoskopeApi"
@@ -116,7 +116,7 @@ async def test_form_unexpected_error(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_autoskope_api.authenticate.side_effect = Exception("Unexpected error")
+    mock_autoskope_api.__aenter__.side_effect = Exception("Unexpected error")
 
     with patch(
         "homeassistant.components.autoskope.config_flow.AutoskopeApi"
@@ -166,126 +166,7 @@ async def test_form_already_configured(
         assert result2["reason"] == "already_configured"
 
 
-async def test_reauth_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test reauth flow."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-
-async def test_reauth_flow_success(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test successful reauth flow."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
-
-    with patch(
-        "homeassistant.components.autoskope.config_flow.AutoskopeApi"
-    ) as mock_api_class:
-        mock_api_instance = AsyncMock()
-        mock_api_instance.authenticate.return_value = True
-        mock_api_class.return_value = mock_api_instance
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PASSWORD: "new_password"},
-        )
-
-        assert result2["type"] is FlowResultType.ABORT
-        assert result2["reason"] == "reauth_successful"
-
-
-async def test_reauth_flow_invalid_auth(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test reauth flow with invalid authentication."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-        data=mock_config_entry.data,
-    )
-
-    with patch(
-        "homeassistant.components.autoskope.config_flow.AutoskopeApi"
-    ) as mock_api_class:
-        mock_api_instance = AsyncMock()
-        mock_api_instance.authenticate.side_effect = InvalidAuth("Invalid credentials")
-        mock_api_class.return_value = mock_api_instance
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PASSWORD: "wrong_password"},
-        )
-
-        assert result2["type"] is FlowResultType.FORM
-        assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_reconfigure_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test reconfigure flow."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-
-async def test_reconfigure_flow_success(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test successful reconfigure flow."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {},  # No changes made (information only)
-    )
-
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reconfigure_successful"
+# Reauth and reconfigure flow tests removed - will be added in follow-up PR
 
 
 async def test_form_with_custom_host(
@@ -319,31 +200,3 @@ async def test_form_with_custom_host(
             username="test_user",
             password="test_password",
         )
-
-
-async def test_form_auth_returns_false(
-    hass: HomeAssistant, mock_autoskope_api: AsyncMock
-) -> None:
-    """Test form when authentication returns False."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    mock_autoskope_api.authenticate.return_value = False
-
-    with patch(
-        "homeassistant.components.autoskope.config_flow.AutoskopeApi"
-    ) as mock_api_class:
-        mock_api_class.return_value = mock_autoskope_api
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: "test_user",
-                CONF_PASSWORD: "test_password",
-                CONF_HOST: DEFAULT_HOST,
-            },
-        )
-
-        assert result2["type"] is FlowResultType.FORM
-        assert result2["errors"] == {"base": "invalid_auth"}
