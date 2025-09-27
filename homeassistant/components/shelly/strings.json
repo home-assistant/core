@@ -145,12 +145,12 @@
         "state": {
           "charger_charging": "[%key:common::state::charging%]",
           "charger_end": "Charge completed",
-          "charger_fault": "Error while plugged in",
+          "charger_fault": "Error while charging",
           "charger_free": "[%key:component::binary_sensor::entity_component::plug::state::off%]",
-          "charger_free_fault": "Error while unplugged",
+          "charger_free_fault": "Can not release plug",
           "charger_insert": "[%key:component::binary_sensor::entity_component::plug::state::on%]",
-          "charger_pause": "Charging paused (manually)",
-          "charger_wait": "Charging paused (waiting for energy)"
+          "charger_pause": "Charging paused by charger",
+          "charger_wait": "Charging paused by vehicle"
         }
       },
       "detected_objects": {

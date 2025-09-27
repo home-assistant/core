@@ -1523,7 +1523,7 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=UnitOfTime.MINUTES,
         suggested_display_precision=0,
         device_class=SensorDeviceClass.DURATION,
-        role="energy_charge",
+        role="time_charge",
     ),
     "presence_num_objects": RpcSensorDescription(
         key="presence",
