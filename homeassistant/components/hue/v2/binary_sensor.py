@@ -150,7 +150,11 @@ class HueMotionSensor(HueBaseEntity, BinarySensorEntity):
         if not self.resource.enabled:
             # Force None (unknown) if the sensor is set to disabled in Hue
             return None
-        return self.resource.motion.value
+        if not (motion_feature := self.resource.motion):
+            return None
+        if motion_feature.motion_report is not None:
+            return motion_feature.motion_report.motion
+        return motion_feature.motion
 
 
 # pylint: disable-next=hass-enforce-class-module
