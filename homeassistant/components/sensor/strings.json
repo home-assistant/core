@@ -290,7 +290,7 @@
       "name": "Temperature"
     },
     "temperature_delta": {
-      "name": "Temperature interval"
+      "name": "Temperature delta"
     },
     "timestamp": {
       "name": "Timestamp"
