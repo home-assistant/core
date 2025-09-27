@@ -15,8 +15,6 @@ from . import WorkdayConfigEntry
 from .const import CONF_EXCLUDES, CONF_OFFSET, CONF_WORKDAYS
 from .entity import BaseWorkdayEntity
 
-CALENDAR_DAYS_AHEAD = 365
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
