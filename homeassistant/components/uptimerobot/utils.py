@@ -1,4 +1,4 @@
-"""The UptimeRobot integration."""
+"""Utility functions for the UptimeRobot integration."""
 
 from collections.abc import Callable
 
