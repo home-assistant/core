@@ -101,7 +101,6 @@ async def integration_fixture(
         "laundry_dryer",
         "leak_sensor",
         "light_sensor",
-        "matterbridge_thermostat",
         "mounted_dimmable_load_control_fixture",
         "multi_endpoint_light",
         "occupancy_sensor",
