@@ -394,7 +394,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
         "pysqueezebox.Server.async_query",
         return_value={"uuid": UUID},
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
                 CONF_HOST: HOST,
@@ -406,16 +406,16 @@ async def test_discovery(hass: HomeAssistant) -> None:
         )
 
     # Flow should now complete with a config entry
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == HOST
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == HOST
+    assert result["data"] == {
         CONF_HOST: HOST,
         CONF_PORT: PORT,
         CONF_USERNAME: "",
         CONF_PASSWORD: "",
         CONF_HTTPS: False,
     }
-    assert result2["context"]["unique_id"] == UUID
+    assert result["context"]["unique_id"] == UUID
 
 
 async def test_discovery_no_uuid(hass: HomeAssistant) -> None:
