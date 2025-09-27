@@ -53,13 +53,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
 
     if entry.version < 2:
         data = dict(entry.data)
-        # Only rename if old keys are present and new ones missing to avoid overwriting
-        if CONF_HOST in data and CONF_URL not in data:
-            data[CONF_URL] = data.pop(CONF_HOST)
-        if CONF_API_KEY in data and CONF_API_TOKEN not in data:
-            data[CONF_API_TOKEN] = data.pop(CONF_API_KEY)
-        # Ensure verify_ssl key exists; default True
-        data.setdefault(CONF_VERIFY_SSL, True)
+        data[CONF_URL] = data.pop(CONF_HOST)
+        data[CONF_API_TOKEN] = data.pop(CONF_API_KEY)
         hass.config_entries.async_update_entry(entry=entry, data=data, version=2)
 
     return True
