@@ -920,7 +920,6 @@ RPC_SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_registry_enabled_default=False,
         removal_condition=lambda _config, status, key: (
             status[key].get("ret_aenergy") is None
         ),
@@ -973,7 +972,6 @@ RPC_SENSORS: Final = {
         suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        entity_registry_enabled_default=False,
     ),
     "consumed_energy_pm1": RpcSensorDescription(
         key="pm1",
