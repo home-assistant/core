@@ -419,9 +419,12 @@ DISCOVERY_SCHEMAS = [
         optional_attributes=(
             clusters.Thermostat.Attributes.FeatureMap,
             clusters.Thermostat.Attributes.ControlSequenceOfOperation,
+            clusters.Thermostat.Attributes.NumberOfPresets,
             clusters.Thermostat.Attributes.Occupancy,
             clusters.Thermostat.Attributes.OccupiedCoolingSetpoint,
             clusters.Thermostat.Attributes.OccupiedHeatingSetpoint,
+            clusters.Thermostat.Attributes.PresetTypes,
+            clusters.Thermostat.Attributes.Presets,
             clusters.Thermostat.Attributes.SystemMode,
             clusters.Thermostat.Attributes.ThermostatRunningMode,
             clusters.Thermostat.Attributes.ThermostatRunningState,
