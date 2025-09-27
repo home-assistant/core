@@ -471,6 +471,9 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_OFF
         )
+        if feature_map & ThermostatFeature.kPresets:
+            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+
         if feature_map & ThermostatFeature.kHeating:
             self._attr_hvac_modes.append(HVACMode.HEAT)
         if feature_map & ThermostatFeature.kCooling:

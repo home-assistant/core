@@ -381,3 +381,18 @@ async def test_thermostat_presets(
     assert state.attributes["min_temp"] == 7
     assert state.attributes["max_temp"] == 32.0
     assert state.attributes["temperature"] is None
+
+    # test supported features correctly parsed
+    mask = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.PRESET_MODE
+    )
+    assert state.attributes["supported_features"] & mask == mask
+
+    # Test preset modes parsed correctly
+    assert state.attributes["preset_modes"] == [
+        "Preset1",
+        "Preset2",
+    ]
+    assert state.attributes["preset_mode"] is None
