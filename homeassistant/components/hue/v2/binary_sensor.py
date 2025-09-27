@@ -13,6 +13,7 @@ from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.sensors import (
     CameraMotionController,
     ContactController,
+    ConvenienceAreaMotionController,
     GroupedMotionController,
     MotionController,
     SecurityAreaMotionController,
@@ -20,6 +21,7 @@ from aiohue.v2.controllers.sensors import (
 )
 from aiohue.v2.models.camera_motion import CameraMotion
 from aiohue.v2.models.contact import Contact, ContactState
+from aiohue.v2.models.convenience_area_motion import ConvenienceAreaMotion
 from aiohue.v2.models.entertainment_configuration import EntertainmentStatus
 from aiohue.v2.models.grouped_motion import GroupedMotion
 from aiohue.v2.models.motion import Motion
@@ -49,6 +51,7 @@ type SensorType = (
     | Tamper
     | GroupedMotion
     | SecurityAreaMotion
+    | ConvenienceAreaMotion
 )
 type ControllerType = (
     CameraMotionController
@@ -58,6 +61,7 @@ type ControllerType = (
     | TamperController
     | GroupedMotionController
     | SecurityAreaMotionController
+    | ConvenienceAreaMotionController
 )
 
 
@@ -124,6 +128,7 @@ async def async_setup_entry(
     register_items(api.sensors.tamper, HueTamperSensor)
     register_items(api.sensors.grouped_motion, HueGroupedMotionSensor)
     register_items(api.sensors.security_area_motion, HueMotionAwareSensor)
+    register_items(api.sensors.convenience_area_motion, HueConvenienceAreaMotionSensor)
 
 
 # pylint: disable-next=hass-enforce-class-module
@@ -149,7 +154,36 @@ class HueMotionSensor(HueBaseEntity, BinarySensorEntity):
 
 
 # pylint: disable-next=hass-enforce-class-module
-class HueGroupedMotionSensor(HueMotionSensor):
+class HueAreaMotionSensor(HueBaseEntity, BinarySensorEntity):
+    """Representation of a Hue area-based motion sensor."""
+
+    controller: (
+        GroupedMotionController
+        | SecurityAreaMotionController
+        | ConvenienceAreaMotionController
+    )
+    resource: GroupedMotion | SecurityAreaMotion | ConvenienceAreaMotion
+
+    entity_description = BinarySensorEntityDescription(
+        key="motion_sensor",
+        device_class=BinarySensorDeviceClass.MOTION,
+        has_entity_name=True,
+    )
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the binary sensor is on."""
+        if getattr(self.resource, "enabled", True) is False:
+            return False
+        if not (motion_feature := self.resource.motion):
+            return None
+        if motion_feature.motion_report is not None:
+            return motion_feature.motion_report.motion
+        return motion_feature.motion
+
+
+# pylint: disable-next=hass-enforce-class-module
+class HueGroupedMotionSensor(HueAreaMotionSensor):
     """Representation of a Hue Grouped Motion sensor."""
 
     controller: GroupedMotionController
@@ -172,18 +206,11 @@ class HueGroupedMotionSensor(HueMotionSensor):
 
 
 # pylint: disable-next=hass-enforce-class-module
-class HueMotionAwareSensor(HueMotionSensor):
-    """Representation of a Motion sensor based on Hue Motion Aware.
+class HueMotionAreaConfigurationSensor(HueAreaMotionSensor):
+    """Base class for motion sensors linked to a motion area configuration."""
 
-    Note that we only create sensors for the SecurityAreaMotion resource
-    and not for the ConvenienceAreaMotion resource, because the latter
-    does not have a state when it's not directly controlling lights.
-    The SecurityAreaMotion resource is always available with a state, allowing
-    Home Assistant users to actually use it as a motion sensor in their HA automations.
-    """
-
-    controller: SecurityAreaMotionController
-    resource: SecurityAreaMotion
+    controller: SecurityAreaMotionController | ConvenienceAreaMotionController
+    resource: SecurityAreaMotion | ConvenienceAreaMotion
 
     entity_description = BinarySensorEntityDescription(
         key="motion_sensor",
@@ -191,20 +218,14 @@ class HueMotionAwareSensor(HueMotionSensor):
         has_entity_name=False,
     )
 
-    @property
-    def name(self) -> str:
-        """Return sensor name."""
-        return self.controller.get_motion_area_configuration(self.resource.id).name
-
     def __init__(
         self,
         bridge: HueBridge,
-        controller: SecurityAreaMotionController,
-        resource: SecurityAreaMotion,
+        controller: SecurityAreaMotionController | ConvenienceAreaMotionController,
+        resource: SecurityAreaMotion | ConvenienceAreaMotion,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(bridge, controller, resource)
-        # link the MotionAware sensor to the group the sensor is associated with
         self._motion_area_configuration = self.controller.get_motion_area_configuration(
             resource.id
         )
@@ -217,12 +238,37 @@ class HueMotionAwareSensor(HueMotionSensor):
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()
-        # subscribe to updates of the MotionAreaConfiguration to update the name
         self.async_on_remove(
             self.bridge.api.config.subscribe(
                 self._handle_event, self._motion_area_configuration.id
             )
         )
+
+
+# pylint: disable-next=hass-enforce-class-module
+class HueMotionAwareSensor(HueMotionAreaConfigurationSensor):
+    """Representation of a Motion sensor based on Hue Motion Aware."""
+
+    controller: SecurityAreaMotionController
+    resource: SecurityAreaMotion
+
+    @property
+    def name(self) -> str:
+        """Return sensor name."""
+        return self._motion_area_configuration.name
+
+
+# pylint: disable-next=hass-enforce-class-module
+class HueConvenienceAreaMotionSensor(HueMotionAreaConfigurationSensor):
+    """Representation of a Hue Convenience Area Motion sensor."""
+
+    controller: ConvenienceAreaMotionController
+    resource: ConvenienceAreaMotion
+
+    @property
+    def name(self) -> str:
+        """Return sensor name."""
+        return f"{self._motion_area_configuration.name} Convenience Motion"
 
 
 # pylint: disable-next=hass-enforce-class-module
