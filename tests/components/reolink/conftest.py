@@ -145,6 +145,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     # enums
     host_mock.whiteled_mode.return_value = 1
     host_mock.whiteled_mode_list.return_value = ["off", "auto"]
+    host_mock.whiteled_color_temperature.return_value = 3000
     host_mock.doorbell_led.return_value = "Off"
     host_mock.doorbell_led_list.return_value = ["stayoff", "auto"]
     host_mock.auto_track_method.return_value = 3
@@ -166,6 +167,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.baichuan.get_privacy_mode = AsyncMock()
     host_mock.baichuan.set_privacy_mode = AsyncMock()
     host_mock.baichuan.set_scene = AsyncMock()
+    host_mock.baichuan.set_floodlight = AsyncMock()
     host_mock.baichuan.mac_address.return_value = TEST_MAC_CAM
     host_mock.baichuan.privacy_mode.return_value = False
     host_mock.baichuan.day_night_state.return_value = "day"
@@ -250,6 +252,7 @@ def reolink_chime(reolink_host: MagicMock) -> None:
     }
     TEST_CHIME.remove = AsyncMock()
     TEST_CHIME.set_option = AsyncMock()
+    TEST_CHIME.update_enums()
 
     reolink_host.chime_list = [TEST_CHIME]
     reolink_host.chime.return_value = TEST_CHIME

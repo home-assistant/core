@@ -21,9 +21,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya scenes."""
-    hass_data = entry.runtime_data
-    scenes = await hass.async_add_executor_job(hass_data.manager.query_scenes)
-    async_add_entities(TuyaSceneEntity(hass_data.manager, scene) for scene in scenes)
+    manager = entry.runtime_data.manager
+    scenes = await hass.async_add_executor_job(manager.query_scenes)
+    async_add_entities(TuyaSceneEntity(manager, scene) for scene in scenes)
 
 
 class TuyaSceneEntity(Scene):
