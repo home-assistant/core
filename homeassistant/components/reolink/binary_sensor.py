@@ -87,6 +87,13 @@ BINARY_PUSH_SENSORS = (
         supported=lambda api, ch: api.ai_supported(ch, VEHICLE_DETECTION_TYPE),
     ),
     ReolinkBinarySensorEntityDescription(
+        key="non-motor_vehicle",
+        cmd_id=[600, 696],
+        translation_key="non-motor_vehicle",
+        value=lambda api, ch: api.ai_detected(ch, "non-motor vehicle"),
+        supported=lambda api, ch: api.supported(ch, "ai_non-motor vehicle"),
+    ),
+    ReolinkBinarySensorEntityDescription(
         key=PET_DETECTION_TYPE,
         cmd_id=[33, 600, 696],
         translation_key="pet",
