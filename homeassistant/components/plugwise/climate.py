@@ -131,7 +131,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         Connected to the HVACMode combination of AUTO-HEAT.
         """
 
-        return self.deviceget("thermostat", {}).get("setpoint")
+        return self.device.get("thermostat", {}).get("setpoint")
 
     @property
     def target_temperature_high(self) -> float | None:
@@ -139,7 +139,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
         Connected to the HVACMode combination of AUTO-HEAT_COOL.
         """
-        return self.deviceget("thermostat", {}).get("setpoint_high")
+        return self.device.get("thermostat", {}).get("setpoint_high")
 
     @property
     def target_temperature_low(self) -> float | None:
@@ -147,7 +147,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
         Connected to the HVACMode combination AUTO-HEAT_COOL.
         """
-        return self.deviceget("thermostat", {}).get("setpoint_low")
+        return self.device.get("thermostat", {}).get("setpoint_low")
 
     @property
     def hvac_mode(self) -> HVACMode:
