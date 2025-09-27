@@ -140,6 +140,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             options={**entry.options, CONF_SENSOR: data["entity_id"]},
         )
+        hass.config_entries.async_schedule_reload(entry.entry_id)
 
     entry.async_on_unload(
         async_track_entity_registry_updated_event(
