@@ -16,9 +16,11 @@ from tests.common import MockConfigEntry
 
 ENTRY_DATA: dict[str, Any] = {
     "slots": 5,
-    "headline_filter": ".*corona.*",
-    "area_filter": ".*",
     "regions": {"083350000000": "Aach, Stadt"},
+    "filters": {
+        "headline_filter": ".*corona.*",
+        "area_filter": ".*",
+    },
 }
 
 
@@ -45,6 +47,27 @@ async def test_config_migration(hass: HomeAssistant) -> None:
     old_entry_data: dict[str, Any] = {
         "slots": 5,
         "corona_filter": True,
+        "regions": {"083350000000": "Aach, Stadt"},
+    }
+
+    old_conf_entry: MockConfigEntry = MockConfigEntry(
+        domain=DOMAIN, title="NINA", data=old_entry_data
+    )
+
+    old_conf_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(old_conf_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert dict(old_conf_entry.data) == ENTRY_DATA
+
+
+async def test_config_migration_to_section(hass: HomeAssistant) -> None:
+    """Test the migration to a new configuration layout with sections."""
+    old_entry_data: dict[str, Any] = {
+        "slots": 5,
+        "headline_filter": ".*corona.*",
+        "area_filter": ".*",
         "regions": {"083350000000": "Aach, Stadt"},
     }
 

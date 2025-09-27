@@ -275,11 +275,11 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                     {
                         vol.Optional(
                             CONF_HEADLINE_FILTER,
-                            default=self.data[CONF_HEADLINE_FILTER],
+                            default=self.data[CONF_FILTERS][CONF_HEADLINE_FILTER],
                         ): cv.string,
                         vol.Optional(
                             CONF_AREA_FILTER,
-                            default=self.data[CONF_AREA_FILTER],
+                            default=self.data[CONF_FILTERS][CONF_AREA_FILTER],
                         ): cv.string,
                     }
                 )

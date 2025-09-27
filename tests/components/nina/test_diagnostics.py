@@ -16,8 +16,11 @@ from tests.typing import ClientSessionGenerator
 
 ENTRY_DATA: dict[str, Any] = {
     "slots": 5,
-    "corona_filter": True,
     "regions": {"083350000000": "Aach, Stadt"},
+    "filters": {
+        "headline_filter": ".*corona.*",
+        "area_filter": ".*",
+    },
 }
 
 
