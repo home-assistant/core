@@ -1176,7 +1176,7 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
         {
             vol.Optional("fields"): {
                 str: {
-                    vol.Required("selector"): dict,
+                    vol.Required("selector"): validate_selector,
                     vol.Optional("required"): bool,
                     vol.Optional("label"): str,
                 }
