@@ -1,6 +1,7 @@
 """Constants for the Matter integration."""
 
 import logging
+from typing import Final
 
 ADDON_SLUG = "core_matter_server"
 
@@ -15,3 +16,7 @@ ID_TYPE_DEVICE_ID = "deviceid"
 ID_TYPE_SERIAL = "serial"
 
 FEATUREMAP_ATTRIBUTE_ID = 65532
+
+ATTR_PRESETS: Final = "presets"
+
+SERVICE_SET_PRESETS = "service_set_presets"

@@ -5,6 +5,7 @@ from __future__ import annotations
 from enum import IntEnum
 from typing import Any
 
+# from .const import ATTR_PRESETS, SERVICE_SET_PRESETS
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
@@ -186,9 +187,17 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
     _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
     _attr_hvac_mode: HVACMode = HVACMode.OFF
+    _attr_presets: float | None = None
     _feature_map: int | None = None
 
     _platform_translation_key = "thermostat"
+
+    async def async_get_presets(self) -> None:
+        """Get presets."""
+        if presets_value := self.get_matter_attribute_value(
+            clusters.Thermostat.Attributes.Presets
+        ):
+            self._attr_presets = presets_value
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

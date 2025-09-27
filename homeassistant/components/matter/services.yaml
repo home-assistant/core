@@ -1,0 +1,12 @@
+set_presets:
+  target:
+    entity:
+      domain: climate
+      supported_features:
+        - climate.ClimateEntityFeature.PRESET_MODE
+  fields:
+    preset:
+      required: true
+      example: "away"
+      selector:
+        text:
