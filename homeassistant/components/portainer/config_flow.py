@@ -14,7 +14,13 @@ from pyportainer import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_TOKEN, CONF_URL
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_API_TOKEN,
+    CONF_HOST,
+    CONF_URL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -24,6 +30,9 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_API_KEY): str,
+        vol.Optional(CONF_VERIFY_SSL, default=True): bool,
         vol.Required(CONF_URL): str,
         vol.Required(CONF_API_TOKEN): str,
     }
@@ -36,7 +45,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     client = Portainer(
         api_url=data[CONF_URL],
         api_key=data[CONF_API_TOKEN],
-        session=async_get_clientsession(hass),
+        session=async_get_clientsession(hass=hass, verify_ssl=data[CONF_VERIFY_SSL]),
     )
     try:
         await client.get_endpoints()
