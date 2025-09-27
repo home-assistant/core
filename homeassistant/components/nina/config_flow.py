@@ -129,6 +129,9 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
                 if group_input := user_input.get(group):
                     user_input[CONF_REGIONS] += group_input
 
+            if not user_input[CONF_FILTERS][CONF_HEADLINE_FILTER]:
+                user_input[CONF_FILTERS][CONF_HEADLINE_FILTER] = NO_MATCH_REGEX
+
             if user_input[CONF_REGIONS]:
                 return self.async_create_entry(
                     title="NINA",
