@@ -176,18 +176,6 @@ async def test_uid_migrate_entry(
 
     updated_entity_entry = entity_registry.async_get(original_entity_id)
 
-    #    # Pre-populate entity registry with entity
-    #    entity_registry.async_get_or_create(
-    #        DOMAIN, BINARY_SENSOR_DOMAIN, old_unique_id, config_entry=entry
-    #    )
-    #    await hass.async_block_till_done()
-
-    #    await hass.config_entries.async_setup(entry.entry_id)
-    #    await hass.async_block_till_done()
-
-    #    entity_registry = er.async_get(hass)
-    #    await hass.async_block_till_done()
-
     assert entry.state is ConfigEntryState.LOADED
     assert entry.version == 1
     assert entry.minor_version == 3
