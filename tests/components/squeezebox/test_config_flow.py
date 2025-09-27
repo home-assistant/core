@@ -136,7 +136,8 @@ async def test_options_form(hass: HomeAssistant) -> None:
 
 
 async def test_user_form_timeout(hass: HomeAssistant) -> None:
-    """Test we handle server search timeout."""
+    """Test we handle server search timeout and allow manual entry."""
+    # First flow: simulate timeout
     with (
         patch(
             "homeassistant.components.squeezebox.config_flow.async_discover",
@@ -150,16 +151,46 @@ async def test_user_form_timeout(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "no_server_found"}
 
-        # simulate manual input of host
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: HOST2}
+    # Second flow: simulate successful discovery
+    with (
+        patch(
+            "homeassistant.components.squeezebox.config_flow.async_discover",
+            mock_discover,
+        ),
+        patch(
+            "pysqueezebox.Server.async_query",
+            return_value={"uuid": UUID},
+        ),
+        patch(
+            "homeassistant.components.squeezebox.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        assert result2["type"] is FlowResultType.FORM
-        assert result2["step_id"] == "edit"
-        assert CONF_HOST in result2["data_schema"].schema
-        for key in result2["data_schema"].schema:
-            if key == CONF_HOST:
-                assert key.description == {"suggested_value": HOST2}
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "edit"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_USERNAME: "",
+                CONF_PASSWORD: "",
+                CONF_HTTPS: False,
+            },
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == HOST
+        assert result["data"] == {
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+            CONF_HTTPS: False,
+        }
 
 
 async def test_user_form_duplicate(hass: HomeAssistant) -> None:
