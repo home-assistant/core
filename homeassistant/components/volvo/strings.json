@@ -1,4 +1,7 @@
 {
+  "common": {
+    "pressure": "Pressure"
+  },
   "config": {
     "step": {
       "pick_implementation": {
@@ -50,6 +53,140 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "brake_fluid_level_warning": {
+        "name": "Brake fluid"
+      },
+      "brake_light_center_warning": {
+        "name": "Brake light center"
+      },
+      "brake_light_left_warning": {
+        "name": "Brake light left"
+      },
+      "brake_light_right_warning": {
+        "name": "Brake light right"
+      },
+      "coolant_level_warning": {
+        "name": "Coolant level"
+      },
+      "daytime_running_light_left_warning": {
+        "name": "Daytime running light left"
+      },
+      "daytime_running_light_right_warning": {
+        "name": "Daytime running light right"
+      },
+      "door_front_left": {
+        "name": "Door front left"
+      },
+      "door_front_right": {
+        "name": "Door front right"
+      },
+      "door_rear_left": {
+        "name": "Door rear left"
+      },
+      "door_rear_right": {
+        "name": "Door rear right"
+      },
+      "engine_status": {
+        "name": "Engine status"
+      },
+      "fog_light_front_warning": {
+        "name": "Fog light front"
+      },
+      "fog_light_rear_warning": {
+        "name": "Fog light rear"
+      },
+      "hazard_lights_warning": {
+        "name": "Hazard lights"
+      },
+      "high_beam_left_warning": {
+        "name": "High beam left"
+      },
+      "high_beam_right_warning": {
+        "name": "High beam right"
+      },
+      "hood": {
+        "name": "Hood"
+      },
+      "low_beam_left_warning": {
+        "name": "Low beam left"
+      },
+      "low_beam_right_warning": {
+        "name": "Low beam right"
+      },
+      "oil_level_warning": {
+        "name": "Oil level"
+      },
+      "position_light_front_left_warning": {
+        "name": "Position light front left"
+      },
+      "position_light_front_right_warning": {
+        "name": "Position light front right"
+      },
+      "position_light_rear_left_warning": {
+        "name": "Position light rear left"
+      },
+      "position_light_rear_right_warning": {
+        "name": "Position light rear right"
+      },
+      "registration_plate_light_warning": {
+        "name": "Registration plate light"
+      },
+      "reverse_lights_warning": {
+        "name": "Reverse lights"
+      },
+      "side_mark_lights_warning": {
+        "name": "Side mark lights"
+      },
+      "sunroof": {
+        "name": "Sunroof"
+      },
+      "tailgate": {
+        "name": "Tailgate"
+      },
+      "tank_lid": {
+        "name": "Tank lid"
+      },
+      "turn_indication_front_left_warning": {
+        "name": "Turn indication front left"
+      },
+      "turn_indication_front_right_warning": {
+        "name": "Turn indication front right"
+      },
+      "turn_indication_rear_left_warning": {
+        "name": "Turn indication rear left"
+      },
+      "turn_indication_rear_right_warning": {
+        "name": "Turn indication rear right"
+      },
+      "tire_front_left": {
+        "name": "Tire front left"
+      },
+      "tire_front_right": {
+        "name": "Tire front right"
+      },
+      "tire_rear_left": {
+        "name": "Tire rear left"
+      },
+      "tire_rear_right": {
+        "name": "Tire rear right"
+      },
+      "washer_fluid_level_warning": {
+        "name": "Washer fluid"
+      },
+      "window_front_left": {
+        "name": "Window front left"
+      },
+      "window_front_right": {
+        "name": "Window front right"
+      },
+      "window_rear_left": {
+        "name": "Window rear left"
+      },
+      "window_rear_right": {
+        "name": "Window rear right"
+      }
+    },
     "sensor": {
       "availability": {
         "name": "Car connection",

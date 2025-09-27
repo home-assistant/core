@@ -407,6 +407,15 @@ async def test_image_stream(
     await close_future
 
 
+async def test_get_image_action(hass: HomeAssistant, mock_image_platform: None) -> None:
+    """Test get_image action."""
+    image_data = await image.async_get_image(hass, "image.test")
+    assert image_data == image.Image(content_type="image/jpeg", content=b"Test")
+
+    with pytest.raises(HomeAssistantError, match="not found"):
+        await image.async_get_image(hass, "image.unknown")
+
+
 async def test_snapshot_service(hass: HomeAssistant) -> None:
     """Test snapshot service."""
     mopen = mock_open()

@@ -2,8 +2,8 @@
 
 from unittest.mock import AsyncMock
 
-from aiocomelit.api import AlarmDataObject, ComelitVedoAreaObject, ComelitVedoZoneObject
-from aiocomelit.const import AlarmAreaState, AlarmZoneState
+from aiocomelit.api import AlarmDataObject, ComelitVedoAreaObject
+from aiocomelit.const import AlarmAreaState
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -21,7 +21,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .const import VEDO_PIN
+from .const import VEDO_PIN, ZONE0
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -74,13 +74,7 @@ async def test_entity_availability(
             )
         },
         alarm_zones={
-            0: ComelitVedoZoneObject(
-                index=0,
-                name="Zone0",
-                status_api="0x000",
-                status=0,
-                human_status=AlarmZoneState.REST,
-            )
+            0: ZONE0,
         },
     )
 

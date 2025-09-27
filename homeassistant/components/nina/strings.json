@@ -11,8 +11,8 @@
           "_r_to_u": "City/county (R-U)",
           "_v_to_z": "City/county (V-Z)",
           "slots": "Maximum warnings per city/county",
-          "headline_filter": "Blacklist regex to filter warning headlines",
-          "area_filter": "Whitelist regex to filter warnings based on affected areas"
+          "headline_filter": "Headline blocklist",
+          "area_filter": "Affected area filter"
         }
       }
     },
