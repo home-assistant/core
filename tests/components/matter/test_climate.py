@@ -366,3 +366,18 @@ async def test_room_airconditioner(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("climate.room_airconditioner")
     assert state.attributes["supported_features"] & ClimateEntityFeature.TURN_ON
+
+
+@pytest.mark.parametrize("node_fixture", ["thermostat_presets"])
+async def test_thermostat_presets(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test thermostat presets attributes and state updates."""
+    # test entity attributes
+    state = hass.states.get("climate.mock_thermostat")
+    assert state
+    assert state.attributes["min_temp"] == 7
+    assert state.attributes["max_temp"] == 32.0
+    assert state.attributes["temperature"] is None
