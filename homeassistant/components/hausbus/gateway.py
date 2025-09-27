@@ -324,16 +324,15 @@ class HausbusGateway(IBusDataListener):
                 LOGGER.debug("found delete device %s", hausBusDevice)
                 del self.devices[device_id]
                 del self.channels[device_id]
-                to_delete = [
+                if self.events:
+                  to_delete = [
                     objectIdInt
                     for objectIdInt, hausBusEntity in self.events.items()
                     if str(ObjectId(objectIdInt).getDeviceId()) == device_id
-                ]
-
-                for key in to_delete:
+                  ]
+                  for key in to_delete:
                     del self.events[key]
                 return True
-
         return True
 
     def resetDevice(self, device_id: str):
