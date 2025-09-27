@@ -65,6 +65,7 @@ CONF_IS_PH = "is_ph"
 CONF_IS_PM1 = "is_pm1"
 CONF_IS_PM10 = "is_pm10"
 CONF_IS_PM25 = "is_pm25"
+CONF_IS_PM4 = "is_pm4"
 CONF_IS_POWER = "is_power"
 CONF_IS_POWER_FACTOR = "is_power_factor"
 CONF_IS_PRECIPITATION = "is_precipitation"
@@ -127,6 +128,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.PM1: [{CONF_TYPE: CONF_IS_PM1}],
     SensorDeviceClass.PM10: [{CONF_TYPE: CONF_IS_PM10}],
     SensorDeviceClass.PM25: [{CONF_TYPE: CONF_IS_PM25}],
+    SensorDeviceClass.PM4: [{CONF_TYPE: CONF_IS_PM4}],
     SensorDeviceClass.PRECIPITATION: [{CONF_TYPE: CONF_IS_PRECIPITATION}],
     SensorDeviceClass.PRECIPITATION_INTENSITY: [
         {CONF_TYPE: CONF_IS_PRECIPITATION_INTENSITY}
@@ -197,6 +199,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_PM1,
                     CONF_IS_PM10,
                     CONF_IS_PM25,
+                    CONF_IS_PM4,
                     CONF_IS_PRECIPITATION,
                     CONF_IS_PRECIPITATION_INTENSITY,
                     CONF_IS_PRESSURE,

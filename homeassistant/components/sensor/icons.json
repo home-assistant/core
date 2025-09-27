@@ -172,6 +172,9 @@
     "volume": {
       "default": "mdi:car-coolant-level"
     },
+    "volume_flow_rate": {
+      "default": "mdi:pipe-valve"
+    },
     "volume_storage": {
       "default": "mdi:storage-tank"
     },

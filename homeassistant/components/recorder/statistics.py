@@ -46,6 +46,7 @@ from homeassistant.util.unit_conversion import (
     AreaConverter,
     BaseUnitConverter,
     BloodGlucoseConcentrationConverter,
+    CarbonMonoxideConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -204,6 +205,10 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     ),
     **dict.fromkeys(
         MassVolumeConcentrationConverter.VALID_UNITS, MassVolumeConcentrationConverter
+    ),
+    **dict.fromkeys(
+        CarbonMonoxideConcentrationConverter.VALID_UNITS,
+        CarbonMonoxideConcentrationConverter,
     ),
     **dict.fromkeys(ConductivityConverter.VALID_UNITS, ConductivityConverter),
     **dict.fromkeys(DataRateConverter.VALID_UNITS, DataRateConverter),

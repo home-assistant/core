@@ -29,7 +29,6 @@ from aioshelly.const import (
 )
 
 from homeassistant.components.number import NumberMode
-from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import UnitOfVolumeFlowRate
 
 DOMAIN: Final = "shelly"
@@ -232,6 +231,7 @@ class BLEScannerMode(StrEnum):
 
 
 BLE_SCANNER_MIN_FIRMWARE = "1.5.1"
+WALL_DISPLAY_MIN_FIRMWARE = "2.3.0"
 
 MAX_PUSH_UPDATE_FAILURES = 5
 PUSH_UPDATE_ISSUE_ID = "push_update_{unique}"
@@ -243,6 +243,9 @@ FIRMWARE_UNSUPPORTED_ISSUE_ID = "firmware_unsupported_{unique}"
 BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID = "ble_scanner_firmware_unsupported_{unique}"
 OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID = (
     "outbound_websocket_incorrectly_enabled_{unique}"
+)
+WALL_DISPLAY_FIRMWARE_UNSUPPORTED_ISSUE_ID = (
+    "wall_display_firmware_unsupported_{unique}"
 )
 
 GAS_VALVE_OPEN_STATES = ("opening", "opened")
@@ -265,9 +268,18 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
 
 CONF_GEN = "gen"
 
-VIRTUAL_COMPONENTS = ("boolean", "enum", "input", "number", "text")
+VIRTUAL_COMPONENTS = (
+    "boolean",
+    "button",
+    "enum",
+    "input",
+    "number",
+    "presencezone",
+    "text",
+)
 VIRTUAL_COMPONENTS_MAP = {
     "binary_sensor": {"types": ["boolean"], "modes": ["label"]},
+    "button": {"types": ["button"], "modes": ["button"]},
     "number": {"types": ["number"], "modes": ["field", "slider"]},
     "select": {"types": ["enum"], "modes": ["dropdown"]},
     "sensor": {"types": ["enum", "number", "text"], "modes": ["label"]},
@@ -284,14 +296,6 @@ VIRTUAL_NUMBER_MODE_MAP = {
 API_WS_URL = "/api/shelly/ws"
 
 COMPONENT_ID_PATTERN = re.compile(r"[a-z\d]+:\d+")
-
-ROLE_TO_DEVICE_CLASS_MAP = {
-    "current_humidity": SensorDeviceClass.HUMIDITY,
-    "current_temperature": SensorDeviceClass.TEMPERATURE,
-    "flow_rate": SensorDeviceClass.VOLUME_FLOW_RATE,
-    "water_pressure": SensorDeviceClass.PRESSURE,
-    "water_temperature": SensorDeviceClass.TEMPERATURE,
-}
 
 # Mapping for units that require conversion to a Home Assistant recognized unit
 # e.g. "m3/min" to "m³/min"

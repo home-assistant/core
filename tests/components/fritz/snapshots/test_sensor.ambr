@@ -855,7 +855,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'CPU Temperature',
+    'original_name': 'CPU temperature',
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -869,7 +869,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Mock Title CPU Temperature',
+      'friendly_name': 'Mock Title CPU temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),

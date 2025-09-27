@@ -28,6 +28,7 @@ from homeassistant.components.habitica.const import (
     ATTR_ALIAS,
     ATTR_CLEAR_DATE,
     ATTR_CLEAR_REMINDER,
+    ATTR_COLLAPSE_CHECKLIST,
     ATTR_CONFIG_ENTRY,
     ATTR_COST,
     ATTR_COUNTER_DOWN,
@@ -1498,6 +1499,18 @@ async def test_create_habit(
             },
             Task(alias="ALIAS"),
         ),
+        (
+            {
+                ATTR_COLLAPSE_CHECKLIST: "collapsed",
+            },
+            Task(collapseChecklist=True),
+        ),
+        (
+            {
+                ATTR_COLLAPSE_CHECKLIST: "expanded",
+            },
+            Task(collapseChecklist=False),
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_uuid4")
@@ -1595,6 +1608,20 @@ async def test_update_todo(
                 ATTR_ALIAS: "ALIAS",
             },
             Task(type=TaskType.TODO, text="TITLE", alias="ALIAS"),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_COLLAPSE_CHECKLIST: "collapsed",
+            },
+            Task(type=TaskType.TODO, text="TITLE", collapseChecklist=True),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_COLLAPSE_CHECKLIST: "expanded",
+            },
+            Task(type=TaskType.TODO, text="TITLE", collapseChecklist=False),
         ),
     ],
 )

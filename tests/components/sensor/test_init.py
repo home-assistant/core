@@ -2233,6 +2233,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.PM1,
         SensorDeviceClass.PM10,
         SensorDeviceClass.PM25,
+        SensorDeviceClass.PM4,
         SensorDeviceClass.POWER_FACTOR,
         SensorDeviceClass.POWER,
         SensorDeviceClass.PRECIPITATION_INTENSITY,
@@ -3083,7 +3084,6 @@ def test_device_class_converters_are_complete() -> None:
     no_converter_device_classes = {
         SensorDeviceClass.AQI,
         SensorDeviceClass.BATTERY,
-        SensorDeviceClass.CO,
         SensorDeviceClass.CO2,
         SensorDeviceClass.DATE,
         SensorDeviceClass.ENUM,
@@ -3101,6 +3101,7 @@ def test_device_class_converters_are_complete() -> None:
         SensorDeviceClass.PM1,
         SensorDeviceClass.PM10,
         SensorDeviceClass.PM25,
+        SensorDeviceClass.PM4,
         SensorDeviceClass.SIGNAL_STRENGTH,
         SensorDeviceClass.SOUND_PRESSURE,
         SensorDeviceClass.SULPHUR_DIOXIDE,

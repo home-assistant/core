@@ -131,6 +131,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'tts.test',
         'language': 'en_US',
         'tts_input': 'hello, how are you?',
@@ -365,6 +366,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'tts.test',
         'language': 'en_US',
         'tts_input': "hello, how are you? I'm doing well, thank you. What about you?!",
@@ -595,6 +597,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'tts.test',
         'language': 'en_US',
         'tts_input': "I'm doing well, thank you.",

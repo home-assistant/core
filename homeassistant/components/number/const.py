@@ -59,7 +59,6 @@ ATTR_VALUE = "value"
 ATTR_MIN = "min"
 ATTR_MAX = "max"
 ATTR_STEP = "step"
-ATTR_STEP_VALIDATION = "step_validation"
 
 DEFAULT_MIN_VALUE = 0.0
 DEFAULT_MAX_VALUE = 100.0
@@ -127,7 +126,7 @@ class NumberDeviceClass(StrEnum):
     CO = "carbon_monoxide"
     """Carbon Monoxide gas concentration.
 
-    Unit of measurement: `ppm` (parts per million)
+    Unit of measurement: `ppm` (parts per million), mg/m³
     """
 
     CO2 = "carbon_dioxide"
@@ -294,6 +293,12 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `μg/m³`
     """
 
+    PM4 = "pm4"
+    """Particulate matter <= 4 μm.
+
+    Unit of measurement: `μg/m³`
+    """
+
     POWER_FACTOR = "power_factor"
     """Power factor.
 
@@ -330,6 +335,7 @@ class NumberDeviceClass(StrEnum):
     - `Pa`, `hPa`, `kPa`
     - `inHg`
     - `psi`
+    - `inH₂O`
     """
 
     REACTIVE_ENERGY = "reactive_energy"
@@ -477,7 +483,10 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
     NumberDeviceClass.BATTERY: {PERCENTAGE},
     NumberDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: set(UnitOfBloodGlucoseConcentration),
-    NumberDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
+    NumberDeviceClass.CO: {
+        CONCENTRATION_PARTS_PER_MILLION,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    },
     NumberDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
     NumberDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),
     NumberDeviceClass.CURRENT: set(UnitOfElectricCurrent),
@@ -515,6 +524,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.PM1: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.PM10: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.PM4: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.POWER_FACTOR: {PERCENTAGE, None},
     NumberDeviceClass.POWER: {
         UnitOfPower.MILLIWATT,
