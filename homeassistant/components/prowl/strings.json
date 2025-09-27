@@ -21,7 +21,8 @@
       "bad_api_response": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "already_configured": "API key is already configured"
     }
   }
 }

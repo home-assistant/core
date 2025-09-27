@@ -30,6 +30,28 @@ async def test_flow_user(hass: HomeAssistant, mock_prowlpy: Mock) -> None:
     assert result["data"] == {CONF_API_KEY: CONF_INPUT[CONF_API_KEY]}
 
 
+async def test_flow_duplicate_api_key(hass: HomeAssistant, mock_prowlpy: Mock) -> None:
+    """Test user initialized flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONF_INPUT,
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONF_INPUT,
+    )
+    assert result["type"] is FlowResultType.ABORT
+
+
 async def test_flow_user_bad_key(hass: HomeAssistant, mock_prowlpy: Mock) -> None:
     """Test user submitting a bad API key."""
     mock_prowlpy.verify_key.side_effect = prowlpy.APIError("Invalid API key")
