@@ -24,8 +24,10 @@ from .api import VolvoAuth
 from .const import CONF_VIN, DOMAIN, PLATFORMS
 from .coordinator import (
     VolvoConfigEntry,
+    VolvoContext,
     VolvoFastIntervalCoordinator,
     VolvoMediumIntervalCoordinator,
+    VolvoRuntimeData,
     VolvoSlowIntervalCoordinator,
     VolvoVerySlowIntervalCoordinator,
 )
@@ -36,21 +38,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> boo
 
     api = await _async_auth_and_create_api(hass, entry)
     vehicle = await _async_load_vehicle(api)
+    context = VolvoContext(api, vehicle)
 
     # Order is important! Faster intervals must come first.
     # Different interval coordinators are in place to keep the number
     # of requests under 5000 per day. This lets users use the same
     # API key for two vehicles (as the limit is 10000 per day).
     coordinators = (
-        VolvoFastIntervalCoordinator(hass, entry, api, vehicle),
-        VolvoMediumIntervalCoordinator(hass, entry, api, vehicle),
-        VolvoSlowIntervalCoordinator(hass, entry, api, vehicle),
-        VolvoVerySlowIntervalCoordinator(hass, entry, api, vehicle),
+        VolvoFastIntervalCoordinator(hass, entry, context),
+        VolvoMediumIntervalCoordinator(hass, entry, context),
+        VolvoSlowIntervalCoordinator(hass, entry, context),
+        VolvoVerySlowIntervalCoordinator(hass, entry, context),
     )
 
     await asyncio.gather(*(c.async_config_entry_first_refresh() for c in coordinators))
 
-    entry.runtime_data = coordinators
+    entry.runtime_data = VolvoRuntimeData(coordinators)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
