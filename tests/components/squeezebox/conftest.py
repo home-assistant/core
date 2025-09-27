@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pysqueezebox import Server
 import pytest
 
 from homeassistant.components.media_player import MediaType
@@ -39,6 +40,9 @@ TEST_VOLUME_STEP = 10
 TEST_HOST = "1.2.3.4"
 TEST_PORT = "9000"
 TEST_USE_HTTPS = False
+UUID = "test-uuid"
+HOST = "1.1.1.1"
+PORT = 9000
 SERVER_UUIDS = [
     "12345678-1234-1234-1234-123456789012",
     "87654321-4321-4321-4321-210987654321",
@@ -102,6 +106,59 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.squeezebox.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+#        patch(
+#            "homeassistant.components.squeezebox.async_setup_entry",
+#            return_value=True,
+#        ) as mock_setup_entry,
+
+
+@pytest.fixture
+def mock_async_setup_entry():
+    """Fixture to mock async_setup_entry to always return True."""
+    with patch(
+        "homeassistant.components.squeezebox.async_setup_entry",
+        return_value=True,
+    ) as mock:
+        yield mock
+
+
+#        patch(
+#            "pysqueezebox.Server.async_query",
+#            return_value={"uuid": UUID},
+#        ),
+
+
+@pytest.fixture
+def mock_async_query():
+    """Fixture to mock Server.async_query returning a UUID."""
+    with patch(
+        "pysqueezebox.Server.async_query",
+        return_value={"uuid": UUID},
+    ):
+        yield
+
+
+#        patch(
+#            "homeassistant.components.squeezebox.config_flow.async_discover",
+#            mock_discover,
+#        ),
+
+
+async def mock_discover(_discovery_callback):
+    """Mock discovering a Logitech Media Server."""
+    _discovery_callback(Server(None, HOST, PORT, uuid=UUID))
+
+
+@pytest.fixture
+def mock_discover_success():
+    """Fixture to mock successful async_discover."""
+    with patch(
+        "homeassistant.components.squeezebox.config_flow.async_discover",
+        mock_discover,
+    ):
+        yield
 
 
 @pytest.fixture
