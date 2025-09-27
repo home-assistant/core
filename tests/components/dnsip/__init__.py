@@ -47,3 +47,6 @@ class RetrieveDNS:
     @nameservers.setter
     def nameservers(self, value: list[str]) -> None:
         self._nameservers = value
+
+    async def close(self) -> None:
+        """Close the resolver."""
