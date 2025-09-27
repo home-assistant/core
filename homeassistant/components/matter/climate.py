@@ -8,12 +8,11 @@ from typing import Any
 # from .const import ATTR_PRESETS, SERVICE_SET_PRESETS
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
+from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
-    # ATTR_PRESET_MODE,
-    # ATTR_PRESET_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_TEMP,
@@ -243,6 +242,20 @@ class MatterClimate(MatterEntity, ClimateEntity):
                     value=int(target_temperature_high * TEMPERATURE_SCALING_FACTOR),
                     matter_attribute=clusters.Thermostat.Attributes.OccupiedCoolingSetpoint,
                 )
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        mode = preset_mode
+        preset_handle = b"\x01"  # default to first preset
+        try:
+            await self.send_device_command(
+                clusters.Thermostat.Commands.SetActivePresetRequest(
+                    preset=preset_handle
+                )
+            )
+            self._update_from_device()
+        except MatterError as ex:
+            raise ValueError(f"Error setting preset mode {mode}: {ex}") from ex
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
