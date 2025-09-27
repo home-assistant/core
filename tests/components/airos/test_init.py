@@ -10,6 +10,7 @@ from homeassistant.components.airos.const import (
     DOMAIN,
     SECTION_ADVANCED_SETTINGS,
 )
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -19,6 +20,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -108,8 +110,10 @@ async def test_setup_entry_without_ssl(
     assert entry.data[SECTION_ADVANCED_SETTINGS][CONF_VERIFY_SSL] is False
 
 
-async def test_migrate_entry(hass: HomeAssistant, mock_airos_client: MagicMock) -> None:
-    """Test migrate entry unique id."""
+async def test_ssl_migrate_entry(
+    hass: HomeAssistant, mock_airos_client: MagicMock
+) -> None:
+    """Test migrate entry SSL options."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         source=SOURCE_USER,
@@ -125,8 +129,73 @@ async def test_migrate_entry(hass: HomeAssistant, mock_airos_client: MagicMock) 
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.version == 1
-    assert entry.minor_version == 2
+    assert entry.minor_version >= 2
     assert entry.data == MOCK_CONFIG_V1_2
+
+
+async def test_uid_migrate_entry(
+    hass: HomeAssistant,
+    mock_airos_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test migrate entry unique id."""
+    entity_registry = er.async_get(hass)
+
+    MOCK_MAC = dr.format_mac("01:23:45:67:89:AB")
+    MOCK_ID = "device_id_12345"
+    old_unique_id = f"{MOCK_ID}_port_forwarding"
+    new_unique_id = f"{MOCK_MAC}_port_forwarding"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=MOCK_CONFIG_V1_2,
+        entry_id="1",
+        unique_id=MOCK_ID,
+        version=1,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, MOCK_ID)},
+        connections={
+            (dr.CONNECTION_NETWORK_MAC, MOCK_MAC),
+        },
+    )
+    await hass.async_block_till_done()
+
+    old_entity_entry = entity_registry.async_get_or_create(
+        DOMAIN, BINARY_SENSOR_DOMAIN, old_unique_id, config_entry=entry
+    )
+    original_entity_id = old_entity_entry.entity_id
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    updated_entity_entry = entity_registry.async_get(original_entity_id)
+
+    #    # Pre-populate entity registry with entity
+    #    entity_registry.async_get_or_create(
+    #        DOMAIN, BINARY_SENSOR_DOMAIN, old_unique_id, config_entry=entry
+    #    )
+    #    await hass.async_block_till_done()
+
+    #    await hass.config_entries.async_setup(entry.entry_id)
+    #    await hass.async_block_till_done()
+
+    #    entity_registry = er.async_get(hass)
+    #    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 1
+    assert entry.minor_version == 3
+    assert (
+        entity_registry.async_get_entity_id(BINARY_SENSOR_DOMAIN, DOMAIN, old_unique_id)
+        is None
+    )
+    assert updated_entity_entry.unique_id == new_unique_id
 
 
 async def test_migrate_future_return(
@@ -140,7 +209,7 @@ async def test_migrate_future_return(
         data=MOCK_CONFIG_V1_2,
         entry_id="1",
         unique_id="airos_device",
-        version=2,
+        version=3,
     )
     entry.add_to_hass(hass)
 
