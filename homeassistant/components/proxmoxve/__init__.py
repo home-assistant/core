@@ -102,10 +102,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             client = ProxmoxClient(host, port, user, realm, password, verify_ssl)
             client.build_client()
-        except AuthenticationError:
-            _LOGGER.warning(
-                "Invalid credentials for proxmox instance %s:%d", host, port
-            )
+        except AuthenticationError as ex:
+            raise ConfigEntryAuthFailed("Invalid credentials") from ex
         except SSLError:
             _LOGGER.error(
                 "Unable to verify proxmox server SSL. Try using 'verify_ssl: false' for proxmox instance %s:%d",
