@@ -193,7 +193,7 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
             self.hass,
             DOMAIN,
             f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2025.11.0",  # Assuming this gets released in 2025.5?
+            breaks_in_ha_version="2025.11.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=IssueSeverity.WARNING,
