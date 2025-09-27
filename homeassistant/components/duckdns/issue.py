@@ -7,7 +7,7 @@ from .const import DOMAIN
 
 
 @callback
-def deprecate_yaml_issue(hass: HomeAssistant, import_success: bool) -> None:
+def deprecate_yaml_issue(hass: HomeAssistant, *, import_success: bool) -> None:
     """Deprecate yaml issue."""
     if import_success:
         async_create_issue(

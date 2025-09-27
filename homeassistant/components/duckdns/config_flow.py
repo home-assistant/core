@@ -72,8 +72,8 @@ class DuckDnsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         result = await self.async_step_user(import_info)
         if errors := result.get("errors"):
-            deprecate_yaml_issue(self.hass, False)
+            deprecate_yaml_issue(self.hass, import_success=False)
             return self.async_abort(reason=errors["base"])
 
-        deprecate_yaml_issue(self.hass, True)
+        deprecate_yaml_issue(self.hass, import_success=True)
         return result
