@@ -1,4 +1,4 @@
-"""Constants for the AWS S3 integration."""
+"""Constants for the IDrive e2 integration."""
 
 from collections.abc import Callable
 from typing import Final

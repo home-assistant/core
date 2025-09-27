@@ -73,3 +73,17 @@ async def test_setup_entry_head_bucket_error(
     )
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_entry_head_bucket_not_found_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test setup_entry error when head_bucket returns: Not Found."""
+    mock_client.head_bucket.side_effect = ClientError(
+        error_response={"Error": {"Code": "404", "Message": "Not Found"}},
+        operation_name="head_bucket",
+    )
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR

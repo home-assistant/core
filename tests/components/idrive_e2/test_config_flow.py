@@ -1,19 +1,70 @@
 """Test the IDrive e2 config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import boto3
 from botocore.exceptions import EndpointConnectionError
 from idrive_e2 import CannotConnect, InvalidAuth
 import pytest
 
-from homeassistant.components.idrive_e2.config_flow import IDriveE2ConfigFlow
-from homeassistant.components.idrive_e2.const import CONF_BUCKET, CONF_ENDPOINT_URL
+from homeassistant.components.idrive_e2 import ClientError
+from homeassistant.components.idrive_e2.config_flow import (
+    CONF_ACCESS_KEY_ID,
+    IDriveE2ConfigFlow,
+    _list_buckets,
+)
+from homeassistant.components.idrive_e2.const import (
+    CONF_BUCKET,
+    CONF_ENDPOINT_URL,
+    CONF_SECRET_ACCESS_KEY,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow, FlowResultType
 
 from .const import USER_INPUT
 
 from tests.common import MockConfigEntry
+
+
+def test_list_buckets_success() -> None:
+    """Test _list_buckets returns bucket names."""
+    mock_client = MagicMock()
+    mock_client.list_buckets.return_value = {
+        "Buckets": [{"Name": "bucket1"}, {"Name": "bucket2"}]
+    }
+    with patch.object(boto3.session.Session, "client", return_value=mock_client):
+        buckets = _list_buckets(
+            USER_INPUT[CONF_ENDPOINT_URL],
+            USER_INPUT[CONF_ACCESS_KEY_ID],
+            USER_INPUT[CONF_SECRET_ACCESS_KEY],
+        )
+        assert buckets == ["bucket1", "bucket2"]
+
+
+def test_list_buckets_empty() -> None:
+    """Test _list_buckets returns empty list if no buckets."""
+    mock_client = MagicMock()
+    mock_client.list_buckets.return_value = {"Buckets": []}
+    with patch.object(boto3.session.Session, "client", return_value=mock_client):
+        buckets = _list_buckets(
+            USER_INPUT[CONF_ENDPOINT_URL],
+            USER_INPUT[CONF_ACCESS_KEY_ID],
+            USER_INPUT[CONF_SECRET_ACCESS_KEY],
+        )
+        assert buckets == []
+
+
+def test_list_buckets_missing_name() -> None:
+    """Test _list_buckets skips buckets without Name."""
+    mock_client = MagicMock()
+    mock_client.list_buckets.return_value = {"Buckets": [{}]}
+    with patch.object(boto3.session.Session, "client", return_value=mock_client):
+        buckets = _list_buckets(
+            USER_INPUT[CONF_ENDPOINT_URL],
+            USER_INPUT[CONF_ACCESS_KEY_ID],
+            USER_INPUT[CONF_SECRET_ACCESS_KEY],
+        )
+        assert buckets == []
 
 
 async def _async_start_flow(
@@ -23,11 +74,15 @@ async def _async_start_flow(
     exception: Exception | None = None,
 ) -> FlowResultType:
     """Initialize the config flow with both user and bucket steps."""
-    if user_input is None:
-        user_input = USER_INPUT
+    # If user_input is None, test the initial form
+    if user_input is None and exception is None:
+        flow = IDriveE2ConfigFlow()
+        flow.hass = hass
+        return await flow.async_step_user()
 
     # Instantiate the flow directly
-
+    if user_input is None:
+        user_input = USER_INPUT
     flow = IDriveE2ConfigFlow()
     flow.hass = hass
     selected = bucket or user_input[CONF_BUCKET]
@@ -39,7 +94,7 @@ async def _async_start_flow(
         return_value=mock_session,
     ):
         is_bucket_exception = isinstance(
-            exception, (EndpointConnectionError, ValueError)
+            exception, (EndpointConnectionError, ValueError, ClientError)
         )
 
         # Patch the IDriveE2Client class instantiated by the flow for the endpoint URL
@@ -94,7 +149,7 @@ async def _async_start_flow(
 
 async def test_flow(hass: HomeAssistant) -> None:
     """Test config flow."""
-    result = await _async_start_flow(hass)
+    result = await _async_start_flow(hass, user_input=USER_INPUT)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test"
     assert result["data"] == USER_INPUT
@@ -103,6 +158,12 @@ async def test_flow(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("exception", "errors"),
     [
+        (
+            ClientError(
+                {"Error": {"Code": "403", "Message": "Forbidden"}}, "list_buckets"
+            ),
+            {"base": "invalid_credentials"},
+        ),
         (ValueError(), {"base": "invalid_endpoint_url"}),
         (
             EndpointConnectionError(endpoint_url="http://example.com"),
@@ -123,7 +184,7 @@ async def test_flow_bucket_step_errors(
     assert result["errors"] == errors
 
     # Fix and finish the test
-    result = await _async_start_flow(hass)
+    result = await _async_start_flow(hass, user_input=USER_INPUT)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test"
@@ -148,7 +209,7 @@ async def test_flow_get_region_endpoint_error(
     assert result["errors"] == {"base": expected_error}
 
     # Fix and finish the test
-    result = await _async_start_flow(hass)
+    result = await _async_start_flow(hass, user_input=USER_INPUT)
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test"
@@ -161,6 +222,15 @@ async def test_abort_if_already_configured(
 ) -> None:
     """Test we abort if the account is already configured."""
     mock_config_entry.add_to_hass(hass)
-    result = await _async_start_flow(hass)
+    result = await _async_start_flow(hass, user_input=USER_INPUT)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_async_step_user_initial_form(hass: HomeAssistant) -> None:
+    """Test that the initial user step shows the form with no errors and correct schema."""
+    result = await _async_start_flow(hass, user_input=None)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+    assert "data_schema" in result
