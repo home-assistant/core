@@ -116,15 +116,14 @@ class WanIpSensor(SensorEntity):
         """Get the current DNS IP address for hostname."""
         if self.resolver._closed:  # noqa: SLF001
             self.create_dns_resolver()
+        response = None
         try:
             async with asyncio.timeout(10):
                 response = await self.resolver.query(self.hostname, self.querytype)
         except TimeoutError:
             await self.resolver.close()
-            response = None
         except DNSError as err:
             _LOGGER.warning("Exception while resolving host: %s", err)
-            response = None
 
         if response:
             sorted_ips = sort_ips(
