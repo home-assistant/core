@@ -20,6 +20,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -110,10 +111,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 host,
                 port,
             )
-        except ConnectTimeout:
-            _LOGGER.warning("Connection to host %s timed out during setup", host)
-        except requests.exceptions.ConnectionError:
-            _LOGGER.warning("Host %s is not reachable", host)
+        except ConnectTimeout as ex:
+            raise ConfigEntryNotReady("Connection timed out") from ex
+        except requests.exceptions.ConnectionError as ex:
+            _LOGGER.warning("Host %s is not reachable: %s", host, ex)
         else:
             return client
         return None
