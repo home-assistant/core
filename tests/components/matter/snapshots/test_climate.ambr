@@ -269,7 +269,7 @@
     'state': 'cool',
   })
 # ---
-# name: test_climates[thermostat_presets][climate.test_product-entry]
+# name: test_climates[thermostat_presets][climate.mock_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -291,7 +291,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.test_product',
+    'entity_id': 'climate.mock_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -313,11 +313,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climates[thermostat_presets][climate.test_product-state]
+# name: test_climates[thermostat_presets][climate.mock_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': None,
-      'friendly_name': 'TEST_PRODUCT',
+      'friendly_name': 'Mock thermostat',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -332,7 +332,7 @@
       'temperature': None,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.test_product',
+    'entity_id': 'climate.mock_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
