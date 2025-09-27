@@ -39,6 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             options={**entry.options, CONF_INDOOR_HUMIDITY: source_entity_id},
         )
+        hass.config_entries.async_schedule_reload(entry.entry_id)
 
     entry.async_on_unload(
         # We use async_handle_source_entity_changes to track changes to the humidity
