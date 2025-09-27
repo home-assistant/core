@@ -248,6 +248,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         mode = preset_mode
         if self.matter_presets:
             for preset in self.matter_presets:
+                # find preset handle for the given preset name
                 name = preset.name
                 if not name:
                     # fallback to scenario name if no name is set
