@@ -139,10 +139,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(
-                seconds=UPDATE_INTERVAL
-                * len(hass.config_entries.async_loaded_entries(DOMAIN))
-            ),
+            update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
     def authenticate(self) -> None:
@@ -212,7 +209,12 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) from wallbox_connection_error
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Get new sensor data for Wallbox component."""
+        """Get new sensor data for Wallbox component. Set update interval to be 60 * #wallbox chargers configured, this is necessary due to rate limitations."""
+
+        self.update_interval = timedelta(
+            seconds=UPDATE_INTERVAL
+            * max(len(self.hass.config_entries.async_loaded_entries(DOMAIN)), 1)
+        )
         return await self.hass.async_add_executor_job(self._get_data)
 
     @_require_authentication
