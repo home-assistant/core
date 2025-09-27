@@ -37,6 +37,7 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.VACUUM,
+    Platform.WATER_HEATER,
 ]
 
 
@@ -59,6 +60,9 @@ class SwitchbotDevices:
     fans: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     lights: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     humidifiers: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
+    water_heaters: list[tuple[Device, SwitchBotCoordinator]] = field(
+        default_factory=list
+    )
 
 
 @dataclass
@@ -275,6 +279,12 @@ async def make_device_data(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.binary_sensors.append((device, coordinator))
+        devices_data.sensors.append((device, coordinator))
+    if isinstance(device, Device) and device.device_type == "Smart Radiator Thermostat":
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.water_heaters.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
 
 
