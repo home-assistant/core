@@ -75,13 +75,6 @@ async def async_setup_entry(
         "detectionState",
     )
 
-    async_add_entities(
-        AmazonBinarySensorEntity(coordinator, serial_num, sensor_desc)
-        for sensor_desc in BINARY_SENSORS
-        for serial_num in coordinator.data
-        if sensor_desc.is_supported(coordinator.data[serial_num], sensor_desc.key)
-    )
-
     known_devices: set[str] = set()
 
     def _check_device() -> None:
