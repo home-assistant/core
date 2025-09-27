@@ -246,11 +246,19 @@ class MatterClimate(MatterEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         mode = preset_mode
-        preset_handle = b"\x01"  # default to first preset
+        if self.matter_presets:
+            for preset in self.matter_presets:
+                name = preset.name
+                if not name:
+                    # fallback to scenario name if no name is set
+                    name = "Preset" + str(preset.presetHandle[0])
+                if name == mode:
+                    preset_handle = preset.presetHandle
+                    break
         try:
             await self.send_device_command(
                 clusters.Thermostat.Commands.SetActivePresetRequest(
-                    preset=preset_handle
+                    presetHandle=preset_handle
                 )
             )
             self._update_from_device()
@@ -473,7 +481,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         )
         if feature_map & ThermostatFeature.kPresets:
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
-
+        # determine supported hvac modes
         if feature_map & ThermostatFeature.kHeating:
             self._attr_hvac_modes.append(HVACMode.HEAT)
         if feature_map & ThermostatFeature.kCooling:

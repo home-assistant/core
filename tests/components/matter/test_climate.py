@@ -376,7 +376,8 @@ async def test_thermostat_presets(
 ) -> None:
     """Test thermostat presets attributes and state updates."""
     # test entity attributes
-    state = hass.states.get("climate.mock_thermostat")
+    entity_id = "climate.mock_thermostat"
+    state = hass.states.get(entity_id)
     assert state
     assert state.attributes["min_temp"] == 7
     assert state.attributes["max_temp"] == 32.0
@@ -396,3 +397,23 @@ async def test_thermostat_presets(
         "Preset2",
     ]
     assert state.attributes["preset_mode"] is None
+
+    # test return_to_base action
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {
+            "entity_id": entity_id,
+            "preset_mode": "Preset2",
+        },
+        blocking=True,
+    )
+    preset_handle = b"\x02"
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.Thermostat.Commands.SetActivePresetRequest(
+            presetHandle=preset_handle
+        ),
+    )
