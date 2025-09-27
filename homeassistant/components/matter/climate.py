@@ -305,6 +305,40 @@ class MatterClimate(MatterEntity, ClimateEntity):
         self.matter_presets = presets_value
         self._attr_preset_modes = presets
 
+        PresetTypeList = [
+            clusters.Thermostat.Structs.PresetTypeStruct(
+                presetScenario=clusters.Thermostat.Enums.PresetScenarioEnum.kOccupied,
+                numberOfPresets=1,
+                presetTypeFeatures=1,
+            ),
+            clusters.Thermostat.Structs.PresetTypeStruct(
+                presetScenario=clusters.Thermostat.Enums.PresetScenarioEnum.kUnoccupied,
+                numberOfPresets=1,
+                presetTypeFeatures=1,
+            ),
+            clusters.Thermostat.Structs.PresetTypeStruct(
+                presetScenario=clusters.Thermostat.Enums.PresetScenarioEnum.kSleep,
+                numberOfPresets=1,
+                presetTypeFeatures=2,
+            ),
+            clusters.Thermostat.Structs.PresetTypeStruct(
+                presetScenario=clusters.Thermostat.Enums.PresetScenarioEnum.kWake,
+                numberOfPresets=1,
+                presetTypeFeatures=2,
+            ),
+            clusters.Thermostat.Structs.PresetTypeStruct(
+                presetScenario=clusters.Thermostat.Enums.PresetScenarioEnum.kVacation,
+                numberOfPresets=1,
+                presetTypeFeatures=2,
+            ),
+            clusters.Thermostat.Structs.PresetTypeStruct(
+                presetScenario=clusters.Thermostat.Enums.PresetScenarioEnum.kUserDefined,
+                numberOfPresets=1,
+                presetTypeFeatures=2,
+            ),
+        ]
+        self.matter_presets_types = PresetTypeList
+
         self._attr_current_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.LocalTemperature
         )
