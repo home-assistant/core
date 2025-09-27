@@ -269,3 +269,73 @@
     'state': 'cool',
   })
 # ---
+# name: test_climates[thermostat_presets][climate.test_product-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 32.0,
+      'min_temp': 7.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.test_product',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 387>,
+    'translation_key': None,
+    'unique_id': '00000000000004D2-0000000000000083-MatterNodeDevice-1-MatterThermostat-513-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climates[thermostat_presets][climate.test_product-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': None,
+      'friendly_name': 'TEST_PRODUCT',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 32.0,
+      'min_temp': 7.0,
+      'supported_features': <ClimateEntityFeature: 387>,
+      'target_temp_high': 26.0,
+      'target_temp_low': 20.0,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_product',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
