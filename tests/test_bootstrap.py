@@ -1717,4 +1717,5 @@ async def test_recorder_not_promoted(hass: HomeAssistant) -> None:
         for domains in integrations_all_dependencies.values()
         for domain in domains
     )
+
     assert "recorder" not in all_integrations
