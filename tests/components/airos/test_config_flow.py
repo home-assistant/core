@@ -150,7 +150,7 @@ async def test_reauth_success(
     assert len(flows) == 1
 
     flow = flows[0]
-    assert flow["step_id"] == "reauth"
+    assert flow["step_id"] == "reauth_confirm"
 
     mock_airos_client.login.side_effect = None
 
