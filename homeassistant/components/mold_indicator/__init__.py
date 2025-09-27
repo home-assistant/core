@@ -79,6 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     entry,
                     options={**entry.options, temp_sensor: data["entity_id"]},
                 )
+                hass.config_entries.async_schedule_reload(entry.entry_id)
 
             return async_sensor_updated
 
