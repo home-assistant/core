@@ -648,10 +648,20 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
         ids.extend(
             k
             for k, v in config.items()
-            if k.startswith(comp_type) and v["meta"]["ui"]["view"] in component["modes"]
+            if k.startswith(comp_type)
+            # default to button view if not set, workaround for Wall Display
+            and v.get("meta", {"ui": {"view": "button"}})["ui"]["view"]
+            in component["modes"]
         )
 
     return ids
+
+
+def is_view_for_platform(config: dict[str, Any], key: str, platform: str) -> bool:
+    """Return true if the virtual component view match the platform."""
+    component = VIRTUAL_COMPONENTS_MAP[platform]
+    view = config[key]["meta"]["ui"]["view"]
+    return view in component["modes"]
 
 
 def get_virtual_component_unit(config: dict[str, Any]) -> str | None:
@@ -884,3 +894,32 @@ def remove_stale_blu_trv_devices(
 
         LOGGER.debug("Removing stale BLU TRV device %s", device.name)
         dev_reg.async_update_device(device.id, remove_config_entry_id=entry.entry_id)
+
+
+@callback
+def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove sub devices without entities."""
+    dev_reg = dr.async_get(hass)
+    entity_reg = er.async_get(hass)
+
+    devices = dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
+
+    for device in devices:
+        if not device.via_device_id:
+            # Device is not a sub-device, skip
+            continue
+
+        if er.async_entries_for_device(entity_reg, device.id, True):
+            # Device has entities, skip
+            continue
+
+        if any(identifier[0] == DOMAIN for identifier in device.identifiers):
+            LOGGER.debug("Removing empty sub-device %s", device.name)
+            dev_reg.async_update_device(
+                device.id, remove_config_entry_id=entry.entry_id
+            )
+
+
+def format_ble_addr(ble_addr: str) -> str:
+    """Format BLE address to use in unique_id."""
+    return ble_addr.replace(":", "").upper()

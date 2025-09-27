@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2025.10.0.dev0"
+version = "2025.11.0.dev0"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -27,7 +27,7 @@ dependencies = [
   # Integrations may depend on hassio integration without listing it to
   # change behavior based on presence of supervisor. Deprecated with #127228
   # Lib can be removed with 2025.11
-  "aiohasupervisor==0.3.2",
+  "aiohasupervisor==0.3.3b0",
   "aiohttp==3.12.15",
   "aiohttp_cors==0.8.1",
   "aiohttp-fast-zlib==0.3.0",
@@ -47,7 +47,7 @@ dependencies = [
   "fnv-hash-fast==1.5.0",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
-  "hass-nabucasa==1.1.1",
+  "hass-nabucasa==1.1.2",
   # When bumping httpx, please check the version pins of
   # httpcore, anyio, and h11 in gen_requirements_all
   "httpx==0.28.1",
@@ -448,6 +448,7 @@ testpaths = ["tests"]
 norecursedirs = [".git", "testing_config"]
 log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"
+asyncio_debug = true
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 filterwarnings = [
