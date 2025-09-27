@@ -697,6 +697,7 @@ class UnitOfFrequency(StrEnum):
 class UnitOfPressure(StrEnum):
     """Pressure units."""
 
+    MPA = "mPa"
     PA = "Pa"
     HPA = "hPa"
     KPA = "kPa"
