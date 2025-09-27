@@ -854,7 +854,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "rympro",
     "saj",
     "sanix",
-    "satel_integra",
     "schlage",
     "schluter",
     "scrape",
