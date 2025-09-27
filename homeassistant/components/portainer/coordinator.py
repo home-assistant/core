@@ -18,7 +18,7 @@ from pyportainer.models.portainer import Endpoint
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -66,7 +66,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
         try:
             await self.portainer.get_endpoints()
         except PortainerAuthenticationError as err:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
                 translation_placeholders={"error": repr(err)},
@@ -94,7 +94,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
             endpoints = await self.portainer.get_endpoints()
         except PortainerAuthenticationError as err:
             _LOGGER.error("Authentication error: %s", repr(err))
-            raise UpdateFailed(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
                 translation_placeholders={"error": repr(err)},
@@ -121,7 +121,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 ) from err
             except PortainerAuthenticationError as err:
                 _LOGGER.exception("Authentication error")
-                raise UpdateFailed(
+                raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="invalid_auth",
                     translation_placeholders={"error": repr(err)},
