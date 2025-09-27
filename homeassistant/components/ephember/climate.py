@@ -3,20 +3,19 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from enum import IntEnum
 import logging
 from typing import Any
-from enum import IntEnum
 
 from pyephember2.pyephember2 import (
     EphEmber,
     ZoneMode,
+    boiler_state,
     zone_current_temperature,
-    zone_is_active,
     zone_is_hotwater,
     zone_mode,
     zone_name,
     zone_target_temperature,
-    boiler_state
 )
 import voluptuous as vol
 
@@ -55,13 +54,14 @@ EPH_TO_HA_STATE = {
     "OFF": HVACMode.OFF,
 }
 
+
 class EPHBoilerStates(IntEnum):
-    """
-    Boiler states for a zone given by the api
-    """
+    """Boiler states for a zone given by the api."""
+
     FIXME = 0
     OFF = 1
     ON = 2
+
 
 HA_STATE_TO_EPH = {value: key for key, value in EPH_TO_HA_STATE.items()}
 
