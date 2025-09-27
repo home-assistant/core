@@ -2222,7 +2222,6 @@ class ConfigEntries:
             return
 
         for entry in remove_candidates:
-            _LOGGER.info("Checking ignored config entry %s for integration", entry)
             try:
                 await loader.async_get_integration(self.hass, entry.domain)
             except loader.IntegrationNotFound:
@@ -2235,8 +2234,8 @@ class ConfigEntries:
                     HOMEASSISTANT_DOMAIN,
                     issue_id=f"orphaned_ignored_entry.{entry.entry_id}",
                     is_fixable=True,
-                    is_persistent=True,  # For testing atm...
-                    severity=ir.IssueSeverity.ERROR,
+                    is_persistent=True,
+                    severity=ir.IssueSeverity.WARNING,
                     translation_key="orphaned_ignored_config_entry",
                     translation_placeholders={"domain": entry.domain},
                     data={
