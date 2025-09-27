@@ -97,17 +97,38 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Dialog that informs the user that reauth is required."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_API_TOKEN): str,
-                    }
-                ),
-            )
-        return await self.async_step_user()
+        """Handle reauth: ask for new API token and validate."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+        if user_input is not None:
+            try:
+                await _validate_input(
+                    self.hass,
+                    data={
+                        **reauth_entry.data,
+                        CONF_API_TOKEN: user_input[CONF_API_TOKEN],
+                    },
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except PortainerTimeout:
+                errors["base"] = "timeout_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_API_TOKEN: user_input[CONF_API_TOKEN]},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
+            errors=errors,
+        )
 
 
 class CannotConnect(HomeAssistantError):
