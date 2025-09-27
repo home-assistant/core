@@ -50,6 +50,44 @@ class IntegrationNotFoundFlow(RepairsFlow):
         )
 
 
+class OrphanedConfigEntryFlow(RepairsFlow):
+    """Handler for an issue fixing flow."""
+
+    def __init__(self, data: dict[str, str]) -> None:
+        """Initialize."""
+        self.entry_id = data["entry_id"]
+        self.description_placeholders: dict[str, str] = data
+
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
+        """Handle the first step of a fix flow."""
+        return self.async_show_menu(
+            step_id="init",
+            menu_options=["confirm", "ignore"],
+            description_placeholders=self.description_placeholders,
+        )
+
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
+        """Handle the confirm step of a fix flow."""
+        await self.hass.config_entries.async_remove(self.entry_id)
+        return self.async_abort(reason="issue_fixed")
+
+    async def async_step_ignore(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
+        """Handle the ignore step of a fix flow."""
+        ir.async_get(self.hass).async_ignore(
+            DOMAIN, f"orphaned_ignored_entry.{self.entry_id}", True
+        )
+        return self.async_abort(
+            reason="issue_ignored",
+            description_placeholders=self.description_placeholders,
+        )
+
+
 async def async_create_fix_flow(
     hass: HomeAssistant, issue_id: str, data: dict[str, str] | None
 ) -> RepairsFlow:
@@ -58,4 +96,7 @@ async def async_create_fix_flow(
     if issue_id.split(".")[0] == "integration_not_found":
         assert data
         return IntegrationNotFoundFlow(data)
+    if issue_id.split(".")[0] == "orphaned_ignored_entry":
+        assert data
+        return OrphanedConfigEntryFlow(data)
     return ConfirmRepairFlow()

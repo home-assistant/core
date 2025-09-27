@@ -65,6 +65,21 @@
         }
       }
     },
+    "orphaned_ignored_config_entry": {
+      "title": "Orphaned ignored config entry for {domain}",
+      "fix_flow": {
+        "step": {
+          "init": {
+            "title": "[%key:component::homeassistant::issues::orphaned_ignored_config_entry::title%]",
+            "description": "There is an ignored config entry for the `{domain}` integration. This can happen when an integration is removed, but the config entry is still present in Home Assistant.\n\nTo resolve this, press **Remove** to clean up the orphaned entry.",
+            "menu_options": {
+              "confirm": "Remove",
+              "ignore": "Ignore"
+            }
+          }
+        }
+      }
+    },
     "config_entry_reauth": {
       "title": "[%key:common::config_flow::title::reauth%]",
       "description": "Reauthentication is needed"

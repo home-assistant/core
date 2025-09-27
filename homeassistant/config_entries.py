@@ -2199,6 +2199,52 @@ class ConfigEntries:
         self._entries = entries
         self.async_update_issues()
 
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED, self._async_scan_orphan_ignored_entries
+        )
+
+    async def _async_scan_orphan_ignored_entries(self, event: Event) -> None:
+        """Scan for ignored entries that can be removed.
+
+        Orphaned ignored entries are entries that are in ignored state
+        for integrations that are no longer available.
+        """
+        remove_candidates = [
+            entry
+            for entry in self.async_entries(
+                include_ignore=True,
+                include_disabled=False,
+            )
+            if entry.source == SOURCE_IGNORE
+        ]
+
+        if not remove_candidates:
+            return
+
+        for entry in remove_candidates:
+            _LOGGER.info("Checking ignored config entry %s for integration", entry)
+            try:
+                await loader.async_get_integration(self.hass, entry.domain)
+            except loader.IntegrationNotFound:
+                _LOGGER.info(
+                    "Integration for ignored config entry %s not found. Creating repair issue",
+                    entry,
+                )
+                ir.async_create_issue(
+                    self.hass,
+                    HOMEASSISTANT_DOMAIN,
+                    issue_id=f"orphaned_ignored_entry.{entry.entry_id}",
+                    is_fixable=True,
+                    is_persistent=True,  # For testing atm...
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key="orphaned_ignored_config_entry",
+                    translation_placeholders={"domain": entry.domain},
+                    data={
+                        "domain": entry.domain,
+                        "entry_id": entry.entry_id,
+                    },
+                )
+
     async def async_setup(self, entry_id: str, _lock: bool = True) -> bool:
         """Set up a config entry.
 
