@@ -125,9 +125,9 @@ class PlugwiseBinarySensorEntity(PlugwiseEntity, BinarySensorEntity):
         self._attr_unique_id = f"{device_id}-{description.key}"
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self.device["binary_sensors"][self.entity_description.key]
+        return self.device.get(BINARY_SENSORS, {}).get(self.entity_description.key)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:

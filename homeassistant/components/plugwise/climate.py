@@ -98,11 +98,11 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
             self._attr_preset_modes = presets
 
-        self._attr_min_temp = self.device["thermostat"]["lower_bound"]
-        self._attr_max_temp = min(self.device["thermostat"]["upper_bound"], 35.0)
+        self._attr_max_temp = min(self.device.get("thermostat", {}).get("upper_bound", 35.0), 35.0)
+        self._attr_min_temp = self.device.get("thermostat", {}).get("lower_bound", 0.0)
         # Ensure we don't drop below 0.1
         self._attr_target_temperature_step = max(
-            self.device["thermostat"]["resolution"], 0.1
+            self.device.get("thermostat", {}).get("resolution", 0.5), 0.1
         )
 
     def _previous_action_mode(self, coordinator: PlugwiseDataUpdateCoordinator) -> None:
@@ -120,34 +120,34 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
                 self._previous_mode = mode
 
     @property
-    def current_temperature(self) -> float:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self.device["sensors"]["temperature"]
+        return self.device.get("sensors", {}).get("temperature")
 
     @property
-    def target_temperature(self) -> float:
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach.
 
         Connected to the HVACMode combination of AUTO-HEAT.
         """
 
-        return self.device["thermostat"]["setpoint"]
+        return self.deviceget("thermostat", {}).get("setpoint")
 
     @property
-    def target_temperature_high(self) -> float:
+    def target_temperature_high(self) -> float | None:
         """Return the temperature we try to reach in case of cooling.
 
         Connected to the HVACMode combination of AUTO-HEAT_COOL.
         """
-        return self.device["thermostat"]["setpoint_high"]
+        return self.deviceget("thermostat", {}).get("setpoint_high")
 
     @property
-    def target_temperature_low(self) -> float:
+    def target_temperature_low(self) -> float | None:
         """Return the heating temperature we try to reach in case of heating.
 
         Connected to the HVACMode combination AUTO-HEAT_COOL.
         """
-        return self.device["thermostat"]["setpoint_low"]
+        return self.deviceget("thermostat", {}).get("setpoint_low")
 
     @property
     def hvac_mode(self) -> HVACMode:

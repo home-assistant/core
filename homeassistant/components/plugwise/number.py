@@ -93,21 +93,22 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
         """Initiate Plugwise Number."""
         super().__init__(coordinator, device_id)
         self._attr_mode = NumberMode.BOX
-        self._attr_native_max_value = self.device[description.key]["upper_bound"]
-        self._attr_native_min_value = self.device[description.key]["lower_bound"]
+        ctrl = self.device.get(description.key, {})
+        self._attr_native_max_value = ctrl.get("upper_bound", 100.0)
+        self._attr_native_min_value = ctrl.get("lower_bound", 0.0)
         self._attr_unique_id = f"{device_id}-{description.key}"
         self.device_id = device_id
         self.entity_description = description
 
-        native_step = self.device[description.key]["resolution"]
+        native_step = ctrl.get("resolution", 0.5)
         if description.key != "temperature_offset":
             native_step = max(native_step, 0.5)
         self._attr_native_step = native_step
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the present setpoint value."""
-        return self.device[self.entity_description.key]["setpoint"]
+        return self.device.get(self.entity_description.key, {}).get("setpoint")
 
     @plugwise_command
     async def async_set_native_value(self, value: float) -> None:
