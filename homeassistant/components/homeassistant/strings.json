@@ -74,7 +74,7 @@
         "step": {
           "init": {
             "title": "[%key:component::homeassistant::issues::orphaned_ignored_config_entry::title%]",
-            "description": "There is an ignored config entry for the `{domain}` integration. This can happen when an integration is removed, but the config entry is still present in Home Assistant.\n\nTo resolve this, press **Remove** to clean up the orphaned entry.",
+            "description": "There is an ignored orphaned config entry for the `{domain}` integration. This can happen when an integration is removed, but the config entry is still present in Home Assistant.\n\nTo resolve this, press **Remove** to clean up the orphaned entry.",
             "menu_options": {
               "confirm": "Remove",
               "ignore": "Ignore"
