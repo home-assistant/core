@@ -42,6 +42,16 @@ async def async_get_service(
     )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the notify entities."""
+    prowl = entry.runtime_data
+    async_add_entities([prowl])
+
+
 class ProwlNotificationService(BaseNotificationService):
     """Implement the notification service for Prowl.
 
@@ -100,17 +110,6 @@ class ProwlNotificationEntity(NotifyEntity):
         self._attr_name = name
         self._attr_unique_id = name
 
-    async def async_verify_key(self) -> bool:
-        """Validate API key."""
-        try:
-            async with asyncio.timeout(10):
-                await self._hass.async_add_executor_job(self._prowl.verify_key)
-                return True
-        except prowlpy.APIError as ex:
-            if str(ex).startswith("Invalid API key"):
-                return False
-            raise
-
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send the message."""
         _LOGGER.debug("Sending Prowl notification from entity %s", self.name)
@@ -140,13 +139,3 @@ class ProwlNotificationEntity(NotifyEntity):
                 ) from ex
             _LOGGER.error("Unexpected error when calling Prowl API: %s", str(ex))
             raise HomeAssistantError("Unexpected error when calling Prowl API") from ex
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up the notify entities."""
-    prowl = entry.runtime_data
-    async_add_entities([prowl])

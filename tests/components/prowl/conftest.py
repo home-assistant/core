@@ -14,6 +14,8 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 TEST_NAME = "TestProwl"
+TEST_SERVICE = TEST_NAME.lower()
+ENTITY_ID = f"{NOTIFY_DOMAIN}.{TEST_SERVICE}"
 TEST_API_KEY = "f00f" * 10
 OTHER_API_KEY = "beef" * 10
 CONF_INPUT = {CONF_API_KEY: TEST_API_KEY, CONF_NAME: TEST_NAME}
@@ -70,22 +72,6 @@ def mock_prowlpy() -> Generator[Mock]:
 @pytest.fixture
 async def mock_prowlpy_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Fixture to create a mocked ConfigEntry."""
-    # Load the notify component as our initialization depends on it.
-    await async_setup_component(
-        hass,
-        NOTIFY_DOMAIN,
-        {
-            NOTIFY_DOMAIN: [
-                {
-                    "name": DOMAIN,
-                    "platform": DOMAIN,
-                    "api_key": TEST_API_KEY,
-                },
-            ]
-        },
-    )
-    await hass.async_block_till_done()
-
     return MockConfigEntry(
-        title="Mocked Prowl", domain=DOMAIN, data={CONF_API_KEY: TEST_API_KEY}
+        title=TEST_NAME, domain=DOMAIN, data={CONF_API_KEY: TEST_API_KEY}
     )

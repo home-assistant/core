@@ -11,7 +11,7 @@ from homeassistant.components.prowl.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import TEST_API_KEY
+from .conftest import ENTITY_ID, TEST_API_KEY
 
 from tests.common import MockConfigEntry
 
@@ -53,12 +53,12 @@ async def test_send_notification_entity_service(
     await hass.config_entries.async_setup(mock_prowlpy_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.services.has_service(notify.DOMAIN, DOMAIN)
+    assert hass.services.has_service(notify.DOMAIN, notify.SERVICE_SEND_MESSAGE)
     await hass.services.async_call(
         notify.DOMAIN,
         notify.SERVICE_SEND_MESSAGE,
         {
-            "entity_id": "notify.mocked_prowl",
+            "entity_id": ENTITY_ID,
             notify.ATTR_MESSAGE: SERVICE_DATA["message"],
             notify.ATTR_TITLE: SERVICE_DATA["title"],
         },
@@ -115,13 +115,13 @@ async def test_fail_send_notification_entity_service(
 
     mock_prowlpy.send.side_effect = prowlpy_side_effect
 
-    assert hass.services.has_service(notify.DOMAIN, DOMAIN)
+    assert hass.services.has_service(notify.DOMAIN, notify.SERVICE_SEND_MESSAGE)
     with pytest.raises(raised_exception, match=exception_message):
         await hass.services.async_call(
             notify.DOMAIN,
             notify.SERVICE_SEND_MESSAGE,
             {
-                "entity_id": "notify.mocked_prowl",
+                "entity_id": ENTITY_ID,
                 notify.ATTR_MESSAGE: SERVICE_DATA["message"],
                 notify.ATTR_TITLE: SERVICE_DATA["title"],
             },
