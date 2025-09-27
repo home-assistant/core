@@ -98,7 +98,9 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
             self._attr_preset_modes = presets
 
-        self._attr_max_temp = min(self.device.get("thermostat", {}).get("upper_bound", 35.0), 35.0)
+        self._attr_max_temp = min(
+            self.device.get("thermostat", {}).get("upper_bound", 35.0), 35.0
+        )
         self._attr_min_temp = self.device.get("thermostat", {}).get("lower_bound", 0.0)
         # Ensure we don't drop below 0.1
         self._attr_target_temperature_step = max(
