@@ -12,6 +12,8 @@ from matter_server.common.helpers.util import create_attribute_path_from_attribu
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    # ATTR_PRESET_MODE,
+    # ATTR_PRESET_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_TEMP,
@@ -187,17 +189,16 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
     _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
     _attr_hvac_mode: HVACMode = HVACMode.OFF
-    _attr_presets: float | None = None
+    matter_presets: list[clusters.Thermostat.Structs.PresetStruct] | None = None
+    _attr_preset_mode: str | None = None
+    _attr_preset_modes: list[str] | None = None
     _feature_map: int | None = None
 
     _platform_translation_key = "thermostat"
 
     async def async_get_presets(self) -> None:
         """Get presets."""
-        if presets_value := self.get_matter_attribute_value(
-            clusters.Thermostat.Attributes.Presets
-        ):
-            self._attr_presets = presets_value
+        # return self._attr_preset_modes
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -267,6 +268,43 @@ class MatterClimate(MatterEntity, ClimateEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
         self._calculate_features()
+        # Decode presets
+        # Value type: Optional[List[Thermostat.Structs.PresetStruct]]
+        # [{"0":"AQ==","1":1,"3":2500,"4":2100,"5":true},{"0":"Ag==","1":2,"3":2600,"4":2000,"5":true}]
+        presets_value = [
+            clusters.Thermostat.Structs.PresetStruct(
+                presetHandle=b"\x01",
+                presetScenario=(clusters.Thermostat.Enums.PresetScenarioEnum.kOccupied),
+                name=None,
+                coolingSetpoint=2500,
+                heatingSetpoint=2100,
+                builtIn=True,
+            ),
+            clusters.Thermostat.Structs.PresetStruct(
+                presetHandle=b"\x02",
+                presetScenario=(
+                    clusters.Thermostat.Enums.PresetScenarioEnum.kUnoccupied
+                ),
+                name=None,
+                coolingSetpoint=2600,
+                heatingSetpoint=2000,
+                builtIn=True,
+            ),
+        ]
+        presets = []
+        # Decode presets
+        i = 1
+        if presets_value:
+            for preset in presets_value:
+                name = preset.name
+                if not name:
+                    # fallback to scenario name if no name is set
+                    name = "Preset" + str(i)
+                presets.append(name)
+                i += 1
+        self.matter_presets = presets_value
+        self._attr_preset_modes = presets
+
         self._attr_current_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.LocalTemperature
         )
@@ -432,7 +470,7 @@ DISCOVERY_SCHEMAS = [
             clusters.Thermostat.Attributes.Occupancy,
             clusters.Thermostat.Attributes.OccupiedCoolingSetpoint,
             clusters.Thermostat.Attributes.OccupiedHeatingSetpoint,
-            clusters.Thermostat.Attributes.PresetTypes,
+            # clusters.Thermostat.Attributes.PresetTypes,
             clusters.Thermostat.Attributes.Presets,
             clusters.Thermostat.Attributes.SystemMode,
             clusters.Thermostat.Attributes.ThermostatRunningMode,
