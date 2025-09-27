@@ -15,7 +15,7 @@ from airos.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -119,7 +119,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             await self.async_set_unique_id(airos_data.derived.mac)
 
-            if self.source == "reauth":
+            if self.source == SOURCE_REAUTH:
                 self._abort_if_unique_id_mismatch()
             else:
                 self._abort_if_unique_id_configured()
