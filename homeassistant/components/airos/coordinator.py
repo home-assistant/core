@@ -14,7 +14,7 @@ from airos.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, SCAN_INTERVAL
@@ -47,9 +47,9 @@ class AirOSDataUpdateCoordinator(DataUpdateCoordinator[AirOS8Data]):
         try:
             await self.airos_device.login()
             return await self.airos_device.status()
-        except (AirOSConnectionAuthenticationError,) as err:
+        except AirOSConnectionAuthenticationError as err:
             _LOGGER.exception("Error authenticating with airOS device")
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except (
