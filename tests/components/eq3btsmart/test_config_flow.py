@@ -91,7 +91,7 @@ async def test_bluetooth_flow(
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {},
+            {CONF_MAC: MAC},
         )
         await hass.async_block_till_done()
 
@@ -107,9 +107,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_MAC: MAC,
-        },
+        data={},
         unique_id=format_mac(MAC),
     )
     entry.add_to_hass(hass)
@@ -124,9 +122,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_MAC: MAC,
-            },
+            {CONF_MAC: MAC},
         )
         await hass.async_block_till_done()
 

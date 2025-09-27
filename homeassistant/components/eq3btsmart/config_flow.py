@@ -83,7 +83,7 @@ class EQ3ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=slugify(self.mac_address),
-            data={CONF_MAC: self.mac_address},
+            data={},
         )
 
 
