@@ -36,6 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             options={**entry.options, CONF_ENTITY_ID: source_entity_id},
         )
+        hass.config_entries.async_schedule_reload(entry.entry_id)
 
     async def source_entity_removed() -> None:
         # The source entity has been removed, we remove the config entry because
