@@ -26,6 +26,7 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_AUTHENTICATION,
     ATTR_CALLBACK_QUERY_ID,
     ATTR_CAPTION,
+    ATTR_CHAT_ACTION,
     ATTR_CHAT_ID,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
@@ -48,6 +49,7 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_URL,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
+    CHAT_ACTION_TYPING,
     CONF_CONFIG_ENTRY_ID,
     DOMAIN,
     PARSER_PLAIN_TEXT,
@@ -60,6 +62,7 @@ from homeassistant.components.telegram_bot.const import (
     SERVICE_EDIT_REPLYMARKUP,
     SERVICE_LEAVE_CHAT,
     SERVICE_SEND_ANIMATION,
+    SERVICE_SEND_CHAT_ACTION,
     SERVICE_SEND_DOCUMENT,
     SERVICE_SEND_LOCATION,
     SERVICE_SEND_MESSAGE,
@@ -384,6 +387,37 @@ def _read_file_as_bytesio_mock(file_path):
     _file.seek(0)
 
     return _file
+
+
+async def test_send_chat_action(
+    hass: HomeAssistant,
+    webhook_platform,
+    mock_broadcast_config_entry: MockConfigEntry,
+) -> None:
+    """Test the send_chat_action service."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.send_chat_action",
+        AsyncMock(return_value=True),
+    ) as mock:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_CHAT_ACTION,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
+                ATTR_TARGET: [123456],
+                ATTR_CHAT_ACTION: CHAT_ACTION_TYPING,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    await hass.async_block_till_done()
+    mock.assert_called_once()
+    mock.assert_called_with(chat_id=123456, action=CHAT_ACTION_TYPING)
 
 
 @pytest.mark.parametrize(
