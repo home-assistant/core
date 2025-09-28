@@ -276,8 +276,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "derivative",
     "devialet",
     "device_sun_light_trigger",
-    "devolo_home_control",
-    "devolo_home_network",
     "dexcom",
     "dhcp",
     "dialogflow",
@@ -1266,11 +1264,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "derivative",
     "devialet",
     "device_sun_light_trigger",
-<<<<<<< HEAD
-    "devolo_home_control",
-=======
-    "devolo_home_network",
->>>>>>> 5be1be8d734 (Add quality scale for devolo Home Control)
     "dexcom",
     "dhcp",
     "dialogflow",
