@@ -54,4 +54,3 @@ MANUFACTURER_EDS = "Embedded Data Systems"
 
 READ_MODE_FLOAT = "float"
 READ_MODE_INT = "int"
-READ_MODE_STR = "str"

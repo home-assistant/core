@@ -35,9 +35,9 @@ class OneWireEntity(Entity):
         description: OneWireEntityDescription,
         device_id: str,
         device_info: DeviceInfo,
-        device_file: str | None,
+        device_file: str,
         owproxy: protocol._Proxy,
-        family: str | None = None,
+        #   family: str | None = None,
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
@@ -49,11 +49,9 @@ class OneWireEntity(Entity):
         self._value_raw: float | str | None = None
         self._owproxy = owproxy
 
-        if family == "01":
-            self._attr_name = "Serial Number"
-            self._attr_has_entity_name = False
-            self._attr_state = device_id
-            self._attr_should_poll = False
+    #   if family == "01":
+    #       self._attr_name = "Serial Number"
+    #       self._attr_has_entity_name = False
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -74,10 +72,7 @@ class OneWireEntity(Entity):
     def update(self) -> None:
         """Get the latest data from the device."""
         try:
-            if not self.should_poll:
-                self._value_raw = self._attr_state
-            else:
-                self._value_raw = float(self._read_value())
+            self._value_raw = float(self._read_value())
         except protocol.Error as exc:
             if self._last_update_success:
                 _LOGGER.error("Error fetching %s data: %s", self.name, exc)

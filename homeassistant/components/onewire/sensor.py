@@ -38,7 +38,6 @@ from .const import (
     PRECISION_MAPPING_FAMILY_28,
     READ_MODE_FLOAT,
     READ_MODE_INT,
-    READ_MODE_STR,
 )
 from .entity import OneWireEntity, OneWireEntityDescription
 from .onewirehub import (
@@ -90,16 +89,6 @@ _LOGGER = logging.getLogger(__name__)
 
 
 DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
-    "01": (
-        OneWireSensorEntityDescription(
-            key="DS2401/serial",
-            device_class=None,
-            entity_registry_enabled_default=False,
-            native_unit_of_measurement=None,
-            read_mode=READ_MODE_STR,
-            state_class=None,
-        ),
-    ),
     "10": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
     "12": (
         OneWireSensorEntityDescription(
@@ -467,13 +456,10 @@ def get_entities(
             override_key = None
             if description.override_key:
                 override_key = description.override_key(device_id, options)
-            if family == "01":
-                device_file = None
-            else:
-                device_file = os.path.join(
-                    os.path.split(device.path)[0],
-                    override_key or description.key,
-                )
+            device_file = os.path.join(
+                os.path.split(device.path)[0],
+                override_key or description.key,
+            )
             if family == "12":
                 # We need to check if there is TAI8570 plugged in
                 try:
@@ -485,16 +471,15 @@ def get_entities(
                         exc_info=err,
                     )
                     continue
-            entity = OneWireSensorEntity(
-                description=description,
-                device_id=device_id,
-                device_file=device_file,
-                device_info=device_info,
-                owproxy=onewire_hub.owproxy,
-                family=family,
+            entities.append(
+                OneWireSensorEntity(
+                    description=description,
+                    device_id=device_id,
+                    device_file=device_file,
+                    device_info=device_info,
+                    owproxy=onewire_hub.owproxy,
+                )
             )
-
-            entities.append(entity)
     return entities
 
 

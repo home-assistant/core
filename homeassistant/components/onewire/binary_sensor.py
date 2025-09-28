@@ -41,6 +41,14 @@ class OneWireBinarySensorEntityDescription(
 
 
 DEVICE_BINARY_SENSORS: dict[str, tuple[OneWireBinarySensorEntityDescription, ...]] = {
+    "01": (
+        OneWireBinarySensorEntityDescription(
+            key="family",
+            entity_registry_enabled_default=True,
+            translation_key="present",
+            device_class=BinarySensorDeviceClass.PRESENCE,
+        ),
+    ),
     "05": (
         OneWireBinarySensorEntityDescription(
             key="sensed",
@@ -164,7 +172,5 @@ class OneWireBinarySensorEntity(OneWireEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool | None:
-        """Return true if sensor is on."""
-        if self._state is None:
-            return None
-        return self._state == 1
+        """Return true if sensor is on (present)."""
+        return self._state == 1 if self._state is not None else None
