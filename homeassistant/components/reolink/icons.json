@@ -13,6 +13,12 @@
           "on": "mdi:car"
         }
       },
+      "non-motor_vehicle": {
+        "default": "mdi:motorbike-off",
+        "state": {
+          "on": "mdi:motorbike"
+        }
+      },
       "pet": {
         "default": "mdi:dog-side-off",
         "state": {
