@@ -57,8 +57,7 @@ class CityBikesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow initiated by the user."""
 
-        _LOGGER.debug("async_step_user data: %s", self._data)
-
+        errors: dict[str, str] = {}
         websession = async_get_clientsession(self.hass)
         self.city_bike_networks.session = websession
 
@@ -67,17 +66,20 @@ class CityBikesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             station_filter = self._data[CONF_STATION_FILTER]
             #  fork to different steps depending on mode chosen
             if isinstance(station_filter, list):
-                if (
-                    CONF_RADIUS in station_filter
-                    and self._data.get(CONF_LOCATION) is None
-                ):
-                    return await self.async_step_radius()
-                if (
-                    CONF_STATIONS_LIST in station_filter
-                    and self._data.get(CONF_STATIONS_LIST) is None
-                ):
-                    return await self.async_step_stations()
-            return await self.async_create()
+                if len(station_filter) == 0:
+                    errors[CONF_STATION_FILTER] = "no_station_filter_chosen"
+                else:
+                    if (
+                        CONF_RADIUS in station_filter
+                        and self._data.get(CONF_LOCATION) is None
+                    ):
+                        return await self.async_step_radius()
+                    if (
+                        CONF_STATIONS_LIST in station_filter
+                        and self._data.get(CONF_STATIONS_LIST) is None
+                    ):
+                        return await self.async_step_stations()
+                    return await self.async_create()
 
         try:
             await self.city_bike_networks.load_networks()
@@ -102,7 +104,7 @@ class CityBikesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     options=[
                         SelectOptionDict(
                             value=n[ATTR_ID],
-                            label=n.get(ATTR_NAME, n[ATTR_ID]),
+                            label=f"{n.get(ATTR_NAME, n[ATTR_ID])} ({n.get('location', {}).get('city', 'unknown city')}, {n.get('location', {}).get('country', 'unknown country')})",
                         )
                         for n in self.city_bike_networks.networks
                     ],
@@ -128,14 +130,14 @@ class CityBikesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_NAME, default=""): cv.string,
         }
 
-        return self.async_show_form(step_id="user", data_schema=vol.Schema(data_schema))
+        return self.async_show_form(
+            step_id="user", data_schema=vol.Schema(data_schema), errors=errors
+        )
 
     async def async_step_stations(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Handle an explicit list of stations flow."""
-
-        _LOGGER.debug("async_step_stations data: %s", self._data)
 
         network_id = self._data[CONF_NETWORK]
         if network_id is None:
@@ -191,10 +193,7 @@ class CityBikesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Handle a stations near me flow."""
 
-        _LOGGER.debug("async_step_radius data: %s", self._data)
-
         if user_input is not None:
-            _LOGGER.debug("Radius user input: %s", user_input[CONF_LOCATION])
             self._data.update(user_input)
             station_filter = self._data[CONF_STATION_FILTER]
             if (
@@ -228,13 +227,15 @@ class CityBikesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_create(self) -> config_entries.ConfigFlowResult:
         """Create the CityBikes entry entry."""
-        _LOGGER.debug("async_create data: %s", self._data)
-        title = self._data.get(CONF_NAME, self._data[CONF_NETWORK])
+        title = self._data.get(CONF_NAME)
         if title == "" or title is None:
-            return self.async_abort(reason="need_name")
+            title = self._data[CONF_NETWORK]
+            if title is None:
+                return self.async_abort(reason="need_name")
         network = self._data.get(CONF_LOCATION, {})
         if network is None:
             network = {}
+        _LOGGER.debug("Creating entry with title %s: %s", title, self._data)
         return self.async_create_entry(
             title=title,
             data={

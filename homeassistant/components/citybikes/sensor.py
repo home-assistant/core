@@ -37,6 +37,8 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_COUNTRY = "country"
+ATTR_CITY = "city"
 ATTR_EMPTY_SLOTS = "empty_slots"
 ATTR_EXTRA = "extra"
 ATTR_FREE_BIKES = "free_bikes"
@@ -76,6 +78,8 @@ NETWORK_SCHEMA = vol.Schema(
             {
                 vol.Required(ATTR_LATITUDE): cv.latitude,
                 vol.Required(ATTR_LONGITUDE): cv.longitude,
+                vol.Required(ATTR_CITY): cv.string,
+                vol.Required(ATTR_COUNTRY): cv.string,
             },
             extra=vol.REMOVE_EXTRA,
         ),
