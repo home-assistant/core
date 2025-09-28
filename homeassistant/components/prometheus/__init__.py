@@ -566,7 +566,7 @@ class PrometheusMetrics:
             self._labels(state),
         ).set(value)
 
-    def _handle_climate_temp(
+    def _temperature_metric(
         self, state: State, attr: str, metric_name: str, metric_description: str
     ) -> None:
         if (temp := state.attributes.get(attr)) is None:
@@ -584,25 +584,25 @@ class PrometheusMetrics:
         ).set(temp)
 
     def _handle_climate(self, state: State) -> None:
-        self._handle_climate_temp(
+        self._temperature_metric(
             state,
             ATTR_TEMPERATURE,
             "climate_target_temperature_celsius",
             "Target temperature in degrees Celsius",
         )
-        self._handle_climate_temp(
+        self._temperature_metric(
             state,
             ATTR_TARGET_TEMP_HIGH,
             "climate_target_temperature_high_celsius",
             "Target high temperature in degrees Celsius",
         )
-        self._handle_climate_temp(
+        self._temperature_metric(
             state,
             ATTR_TARGET_TEMP_LOW,
             "climate_target_temperature_low_celsius",
             "Target low temperature in degrees Celsius",
         )
-        self._handle_climate_temp(
+        self._temperature_metric(
             state,
             ATTR_CURRENT_TEMPERATURE,
             "climate_current_temperature_celsius",
@@ -682,37 +682,37 @@ class PrometheusMetrics:
 
     def _handle_water_heater(self, state: State) -> None:
         # Temperatures
-        self._handle_climate_temp(
+        self._temperature_metric(
             state,
             ATTR_TEMPERATURE,
             "water_heater_temperature_celsius",
             "Target temperature in degrees Celsius",
         )
-        self._handle_climate_temp(
+        self._temperature_metric(
             state,
             WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
             "water_heater_current_temperature_celsius",
             "Target temperature in degrees Celsius",
         )
-        self._handle_climate_temp(
+        self._temperature_metric(
             state,
             WATER_HEATER_ATTR_TARGET_TEMP_HIGH,
             "water_heater_target_temperature_high_celsius",
             "Target high temperature in degrees Celsius",
         )
-        self._handle_climate_temp(
+        self._temperature_metric(
             state,
             WATER_HEATER_ATTR_TARGET_TEMP_LOW,
             "water_heater_target_temperature_low_celsius",
             "Target low temperature in degrees Celsius",
         )
-        self._handle_climate_temp(
+        self._temperature_metric(
             state,
             WATER_HEATER_ATTR_MIN_TEMP,
             "water_heater_min_temperature_celsius",
             "Minimum allowed temperature in degrees Celsius",
         )
-        self._handle_climate_temp(
+        self._temperature_metric(
             state,
             WATER_HEATER_ATTR_MAX_TEMP,
             "water_heater_max_temperature_celsius",
