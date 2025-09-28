@@ -1,16 +1,22 @@
 """DataUpdateCoordinator for the aurora_abb_powerone integration."""
 
+import contextlib
 import logging
 from time import sleep
 
-from aurorapy.client import AuroraError, AuroraSerialClient, AuroraTimeoutError
+from aurorapy.client import (
+    AuroraError,
+    AuroraSerialClient,
+    AuroraTCPClient,
+    AuroraTimeoutError,
+)
 from serial import SerialException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, SCAN_INTERVAL
+from .const import DOMAIN, SCAN_INTERVAL, TRANSPORT_SERIAL, TRANSPORT_TCP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,18 +28,25 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
     """Class to manage fetching AuroraAbbPowerone data."""
 
     config_entry: AuroraAbbConfigEntry
+    client: AuroraSerialClient | AuroraTCPClient
 
     def __init__(
         self,
         hass: HomeAssistant,
         config_entry: AuroraAbbConfigEntry,
-        comport: str,
-        address: int,
+        inverter_serial_address: int,
+        transport: str,
+        serial_comport: str | None = None,
+        tcp_host: str | None = None,
+        tcp_port: int | None = None,
     ) -> None:
         """Initialize the data update coordinator."""
         self.available_prev = False
         self.available = False
-        self.client = AuroraSerialClient(address, comport, parity="N", timeout=1)
+        self.client = self._build_client(
+            inverter_serial_address, transport, serial_comport, tcp_host, tcp_port
+        )
+
         super().__init__(
             hass,
             _LOGGER,
@@ -41,6 +54,30 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
+
+    def _build_client(
+        self,
+        inverter_serial_address: int,
+        transport: str,
+        serial_comport: str | None,
+        tcp_host: str | None,
+        tcp_port: int | None,
+    ) -> AuroraSerialClient | AuroraTCPClient:
+        """Instantiate the proper aurorapy client for the selected transport."""
+        if transport == TRANSPORT_TCP:
+            if tcp_host is None or tcp_port is None:
+                raise UpdateFailed("TCP host/port not configured")
+            return AuroraTCPClient(
+                tcp_host, tcp_port, inverter_serial_address, timeout=1
+            )
+        if transport == TRANSPORT_SERIAL:
+            if serial_comport is None:
+                raise UpdateFailed("Serial port not configured")
+            return AuroraSerialClient(
+                inverter_serial_address, serial_comport, parity="N", timeout=1
+            )
+
+        raise UpdateFailed(f"Unsupported transport type: {transport}")
 
     def _update_data(self) -> dict[str, float]:
         """Fetch new state data for the sensors.
@@ -70,6 +107,7 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
                 _LOGGER.debug("No response from inverter (could be dark)")
                 retries = 0
             except (SerialException, AuroraError) as error:
+                # For TCP transports, SerialException shouldn't occur, but is harmless to catch.
                 self.available = False
                 retries -= 1
                 if retries <= 0:
@@ -102,9 +140,8 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
                             "Communication with %s lost",
                             self.name,
                         )
-                if self.client.serline.isOpen():
+                with contextlib.suppress(Exception):
                     self.client.close()
-
         return data
 
     async def _async_update_data(self) -> dict[str, float]:

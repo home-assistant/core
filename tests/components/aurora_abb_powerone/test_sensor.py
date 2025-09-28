@@ -10,24 +10,23 @@ from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_DEVICE_NAME,
     ATTR_FIRMWARE,
     ATTR_MODEL,
+    CONF_INVERTER_SERIAL_ADDRESS,
+    CONF_SERIAL_COMPORT,
+    CONF_TCP_HOST,
+    CONF_TCP_PORT,
+    CONF_TRANSPORT,
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
     SCAN_INTERVAL,
+    TRANSPORT_SERIAL,
+    TRANSPORT_TCP,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
+from homeassistant.const import ATTR_SERIAL_NUMBER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry, RegistryEntryDisabler
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-
-TEST_CONFIG = {
-    "sensor": {
-        "platform": "aurora_abb_powerone",
-        "device": "/dev/fakedevice0",
-        "address": 2,
-    }
-}
 
 
 def _simulated_returns(index, global_measure=None):
@@ -45,14 +44,15 @@ def _simulated_returns(index, global_measure=None):
     return returns[index]
 
 
-def _mock_config_entry():
+def _mock_config_entry_serial():
     return MockConfigEntry(
-        version=1,
+        version=2,
         domain=DOMAIN,
         title=DEFAULT_INTEGRATION_TITLE,
         data={
-            CONF_PORT: "/dev/usb999",
-            CONF_ADDRESS: 3,
+            CONF_INVERTER_SERIAL_ADDRESS: 3,
+            CONF_TRANSPORT: TRANSPORT_SERIAL,
+            CONF_SERIAL_COMPORT: "/dev/usb999",
             ATTR_DEVICE_NAME: "mydevicename",
             ATTR_MODEL: "mymodel",
             ATTR_SERIAL_NUMBER: "123456",
@@ -64,9 +64,103 @@ def _mock_config_entry():
     )
 
 
-async def test_sensors(hass: HomeAssistant, entity_registry: EntityRegistry) -> None:
+def _mock_config_entry_tcp():
+    """ConfigEntry für TCP-Transport."""
+    return MockConfigEntry(
+        version=2,
+        domain=DOMAIN,
+        title=DEFAULT_INTEGRATION_TITLE,
+        data={
+            CONF_TRANSPORT: TRANSPORT_TCP,
+            CONF_TCP_HOST: "192.168.1.50",
+            CONF_TCP_PORT: 8899,
+            CONF_INVERTER_SERIAL_ADDRESS: 5,
+            ATTR_DEVICE_NAME: "mydevicename_tcp",
+            ATTR_MODEL: "tcpmodel",
+            ATTR_SERIAL_NUMBER: "tcp-123456",
+            ATTR_FIRMWARE: "9.9.9",
+        },
+        source="dummysource",
+        entry_id="24680",
+        unique_id="tcp-unique-1",
+    )
+
+
+async def test_sensors_tcp(
+    hass: HomeAssistant, entity_registry: EntityRegistry
+) -> None:
+    """Test data coming back from inverter over TCP transport."""
+    mock_entry = _mock_config_entry_tcp()
+
+    with (
+        patch("aurorapy.client.AuroraTCPClient.connect", return_value=None),
+        patch(
+            "aurorapy.client.AuroraTCPClient.measure",
+            side_effect=_simulated_returns,
+        ),
+        patch("aurorapy.client.AuroraTCPClient.alarms", return_value=["No alarm"]),
+        patch("aurorapy.client.AuroraTCPClient.serial_number", return_value="1112223"),
+        patch("aurorapy.client.AuroraTCPClient.version", return_value="1.2.3.4"),
+        patch("aurorapy.client.AuroraTCPClient.pn", return_value="X.Y.Z"),
+        patch("aurorapy.client.AuroraTCPClient.firmware", return_value="0.999"),
+        patch(
+            "aurorapy.client.AuroraTCPClient.cumulated_energy",
+            side_effect=_simulated_returns,
+        ),
+    ):
+        mock_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+        power = hass.states.get("sensor.mydevicename_tcp_power_output")
+        assert power
+        assert power.state == "45.7"
+
+        temperature = hass.states.get("sensor.mydevicename_tcp_temperature")
+        assert temperature
+        assert temperature.state == "9.9"
+
+        energy = hass.states.get("sensor.mydevicename_tcp_total_energy")
+        assert energy
+        assert energy.state == "12.35"
+
+        # Test the 'disabled by default' sensors.
+        sensors = [
+            ("sensor.mydevicename_tcp_grid_voltage", "235.9"),
+            ("sensor.mydevicename_tcp_grid_current", "2.8"),
+            ("sensor.mydevicename_tcp_frequency", "50.8"),
+            ("sensor.mydevicename_tcp_dc_dc_leak_current", "1.2345"),
+            ("sensor.mydevicename_tcp_inverter_leak_current", "2.3456"),
+            ("sensor.mydevicename_tcp_isolation_resistance", "0.1234"),
+        ]
+        for entity_id, _ in sensors:
+            assert not hass.states.get(entity_id)
+            entry = entity_registry.async_get(entity_id)
+            assert entry, f"Entity registry entry for {entity_id} is missing"
+            assert entry.disabled
+            assert entry.disabled_by is RegistryEntryDisabler.INTEGRATION
+            entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+
+        # must reload the integration when enabling an entity
+        await hass.config_entries.async_unload(mock_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_entry.state is ConfigEntryState.NOT_LOADED
+
+        mock_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+        for entity_id, value in sensors:
+            item = hass.states.get(entity_id)
+            assert item
+            assert item.state == value
+
+
+async def test_sensors_serial(
+    hass: HomeAssistant, entity_registry: EntityRegistry
+) -> None:
     """Test data coming back from inverter."""
-    mock_entry = _mock_config_entry()
+    mock_entry = _mock_config_entry_serial()
 
     with (
         patch("aurorapy.client.AuroraSerialClient.connect", return_value=None),
@@ -148,7 +242,7 @@ async def test_sensors(hass: HomeAssistant, entity_registry: EntityRegistry) -> 
 
 async def test_sensor_dark(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Test that darkness (no comms) is handled correctly."""
-    mock_entry = _mock_config_entry()
+    mock_entry = _mock_config_entry_serial()
 
     # sun is up
     with (
@@ -248,7 +342,7 @@ async def test_sensor_unknown_error(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test other comms error is handled correctly."""
-    mock_entry = _mock_config_entry()
+    mock_entry = _mock_config_entry_serial()
 
     # sun is up
     with (
