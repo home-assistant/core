@@ -123,6 +123,30 @@ async def test_binary_sensor_add_update(
     test_entity = hass.states.get(test_entity_id)
     assert test_entity is not None
     assert test_entity.state == "on"
+    
+    # NEW: prefer motion_report.motion when present (should turn on even if plain motion is False)
+    updated_sensor = {
+        **FAKE_BINARY_SENSOR,
+        "motion": {
+            "motion": False,
+            "motion_report": {"changed": "2025-01-01T00:00:00Z", "motion": True},
+        },
+    }
+    mock_bridge_v2.api.emit_event("update", updated_sensor)
+    await hass.async_block_till_done()
+    assert hass.states.get(test_entity_id).state == "on"
+
+    # NEW: motion_report False should turn it off (even if plain motion is True)
+    updated_sensor = {
+        **FAKE_BINARY_SENSOR,
+        "motion": {
+            "motion": True,
+            "motion_report": {"changed": "2025-01-01T00:00:01Z", "motion": False},
+        },
+    }
+    mock_bridge_v2.api.emit_event("update", updated_sensor)
+    await hass.async_block_till_done()
+    assert hass.states.get(test_entity_id).state == "off"
 
 
 async def test_grouped_motion_sensor(
