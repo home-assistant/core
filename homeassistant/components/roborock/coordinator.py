@@ -351,13 +351,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
     def _set_current_map(self) -> None:
         if (
             self.roborock_device_info.props.status is not None
-            and self.roborock_device_info.props.status.map_status is not None
+            and self.roborock_device_info.props.status.current_map is not None
         ):
-            # The map status represents the map flag as flag * 4 + 3 -
-            # so we have to invert that in order to get the map flag that we can use to set the current map.
-            self.current_map = (
-                self.roborock_device_info.props.status.map_status - 3
-            ) // 4
+            self.current_map = self.roborock_device_info.props.status.current_map
 
     async def set_current_map_rooms(self) -> None:
         """Fetch all of the rooms for the current map and set on RoborockMapInfo."""
@@ -426,7 +422,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         for map_flag in map_flags:
             if map_flag != cur_map:
                 # Only change the map and sleep if we have multiple maps.
-                await self.api.load_multi_map(map_flag)
+                await self.cloud_api.load_multi_map(map_flag)
                 self.current_map = map_flag
                 # We cannot get the map until the roborock servers fully process the
                 # map change.
@@ -440,11 +436,11 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             # If either of these fail, we don't care, and we want to continue.
             await asyncio.gather(*tasks, return_exceptions=True)
 
-        if len(self.maps) != 1:
+        if len(self.maps) > 1:
             # Set the map back to the map the user previously had selected so that it
             # does not change the end user's app.
             # Only needs to happen when we changed maps above.
-            await self.api.load_multi_map(cur_map)
+            await self.cloud_api.load_multi_map(cur_map)
             self.current_map = cur_map
 
 

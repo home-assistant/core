@@ -21,6 +21,9 @@
     },
     "fetch": {
       "service": "mdi:email-sync-outline"
+    },
+    "fetch_part": {
+      "service": "mdi:email-sync-outline"
     }
   }
 }
