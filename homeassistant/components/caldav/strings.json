@@ -30,5 +30,17 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "read_only": "Read Only",
+          "scan_interval": "Scan Interval"
+        },
+        "title": "CalDAV Integration Options for Entry",
+        "description": "Entry Options"
+      }
+    }
   }
 }

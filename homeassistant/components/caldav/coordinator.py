@@ -11,11 +11,13 @@ from typing import TYPE_CHECKING
 import caldav
 
 from homeassistant.components.calendar import CalendarEvent, extract_offset
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .api import get_attr_value
+from .const import DEFAULT_SCAN_INTERVAL
 
 if TYPE_CHECKING:
     from . import CalDavConfigEntry
@@ -44,7 +46,11 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
             _LOGGER,
             config_entry=entry,
             name=f"CalDAV {calendar.name}",
-            update_interval=MIN_TIME_BETWEEN_UPDATES,
+            update_interval=timedelta(
+                seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+                if entry
+                else DEFAULT_SCAN_INTERVAL
+            ),
         )
         self.calendar = calendar
         self.days = days

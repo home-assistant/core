@@ -34,6 +34,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import CalDavConfigEntry
 from .api import async_get_calendars
+from .const import CONF_READ_ONLY
 from .coordinator import CalDavUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -164,6 +165,7 @@ async def async_setup_entry(
                     search=None,
                 ),
                 unique_id=f"{entry.entry_id}-{calendar.id}",
+                read_only=entry.data.get(CONF_READ_ONLY, False),
             )
             for calendar in calendars
             if calendar.name
@@ -182,6 +184,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         coordinator: CalDavUpdateCoordinator,
         unique_id: str | None = None,
         supports_offset: bool = False,
+        read_only: bool = False,
     ) -> None:
         """Create the WebDav Calendar Event Device."""
         super().__init__(coordinator)
@@ -191,6 +194,8 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         if unique_id is not None:
             self._attr_unique_id = unique_id
         self._supports_offset = supports_offset
+        if read_only:
+            self._attr_supported_features = 0
 
     @property
     def event(self) -> CalendarEvent | None:
