@@ -262,7 +262,7 @@ class TriggerActionRunnerType(Protocol):
         description: str,
         extra_trigger_payload: dict[str, Any],
         context: Context | None = None,
-    ) -> None:
+    ) -> asyncio.Future[Any] | None:
         """Define trigger action runner type."""
 
 
@@ -518,7 +518,7 @@ async def _async_attach_trigger_cls(
         description: str,
         extra_trigger_payload: dict[str, Any],
         context: Context | None = None,
-    ) -> None:
+    ) -> asyncio.Future[Any] | None:
         """Run action with trigger variables."""
 
         payload = {
@@ -530,7 +530,7 @@ async def _async_attach_trigger_cls(
             }
         }
 
-        hass.async_run_hass_job(job, payload, context)
+        return hass.async_run_hass_job(job, payload, context)
 
     trigger = trigger_cls(
         hass,
