@@ -52,6 +52,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
         [
             ha_type
             for ha_type, hive_type in PLATFORM_LOOKUP.items()
+            if devices.get(hive_type) == "parent"
+        ],
+    )
+
+    await hass.config_entries.async_forward_entry_setups(
+        entry,
+        [
+            ha_type
+            for ha_type, hive_type in PLATFORM_LOOKUP.items()
             if devices.get(hive_type)
         ],
     )

@@ -27,6 +27,7 @@ PLATFORM_LOOKUP = {
     Platform.SENSOR: "sensor",
     Platform.SWITCH: "switch",
     Platform.WATER_HEATER: "water_heater",
+    Platform.BINARY_SENSOR: "parent",
 }
 SERVICE_BOOST_HOT_WATER = "boost_hot_water"
 SERVICE_BOOST_HEATING_ON = "boost_heating_on"
