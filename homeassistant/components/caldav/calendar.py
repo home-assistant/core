@@ -226,13 +226,22 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         """Get all events in a specific time frame."""
         return await self.coordinator.async_get_events(hass, start_date, end_date)
 
+    async def _async_create_event(self, **kwargs: Any) -> caldav.Event:
+        """Add a new event to calendar."""
+
+        def save_event() -> caldav.Event:
+            return self.coordinator.calendar.save_event(**kwargs)
+
+        event = await self.hass.async_add_executor_job(save_event)
+
+        assert event is not None
+
+        return event
+
     async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""
 
-        def save_event() -> None:
-            self.coordinator.calendar.save_event(**kwargs)
-
-        await self.hass.async_add_executor_job(save_event)
+        await self._async_create_event(**kwargs)
 
         await self.async_update_ha_state(force_refresh=True)
 
