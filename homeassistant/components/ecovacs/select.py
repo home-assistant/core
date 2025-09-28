@@ -2,11 +2,12 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Generic
+from typing import Any
 
 from deebot_client.capabilities import CapabilitySetTypes
 from deebot_client.device import Device
 from deebot_client.events import WorkModeEvent
+from deebot_client.events.base import Event
 from deebot_client.events.water_info import WaterAmountEvent
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -15,15 +16,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcovacsConfigEntry
-from .entity import EcovacsCapabilityEntityDescription, EcovacsDescriptionEntity, EventT
+from .entity import EcovacsCapabilityEntityDescription, EcovacsDescriptionEntity
 from .util import get_name_key, get_supported_entities
 
 
 @dataclass(kw_only=True, frozen=True)
-class EcovacsSelectEntityDescription(
+class EcovacsSelectEntityDescription[EventT: Event](
     SelectEntityDescription,
     EcovacsCapabilityEntityDescription,
-    Generic[EventT],
 ):
     """Ecovacs select entity description."""
 
@@ -33,7 +33,11 @@ class EcovacsSelectEntityDescription(
 
 ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
     EcovacsSelectEntityDescription[WaterAmountEvent](
-        capability_fn=lambda caps: caps.water.amount if caps.water else None,
+        capability_fn=lambda caps: (
+            caps.water.amount
+            if caps.water and isinstance(caps.water.amount, CapabilitySetTypes)
+            else None
+        ),
         current_option_fn=lambda e: get_name_key(e.value),
         options_fn=lambda water: [get_name_key(amount) for amount in water.types],
         key="water_amount",
@@ -66,7 +70,7 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class EcovacsSelectEntity(
+class EcovacsSelectEntity[EventT: Event](
     EcovacsDescriptionEntity[CapabilitySetTypes[EventT, [str], str]],
     SelectEntity,
 ):

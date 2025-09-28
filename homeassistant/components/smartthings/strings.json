@@ -2,7 +2,13 @@
   "config": {
     "step": {
       "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
@@ -72,6 +78,21 @@
         "name": "[%key:common::action::stop%]"
       }
     },
+    "climate": {
+      "air_conditioner": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "wind_free": "WindFree",
+              "wind_free_sleep": "WindFree sleep",
+              "quiet": "Quiet",
+              "long_wind": "Long wind",
+              "smart": "Smart"
+            }
+          }
+        }
+      }
+    },
     "event": {
       "button": {
         "state": {
@@ -135,9 +156,9 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]",
-          "low": "Low",
+          "low": "[%key:common::state::low%]",
           "mid": "Mid",
-          "high": "High",
+          "high": "[%key:common::state::high%]",
           "extra_high": "Extra high"
         }
       },
@@ -188,7 +209,7 @@
         "state": {
           "none": "None",
           "heavy": "Heavy",
-          "normal": "Normal",
+          "normal": "[%key:common::state::normal%]",
           "light": "Light",
           "extra_light": "Extra light",
           "extra_heavy": "Extra heavy",
@@ -589,17 +610,26 @@
       },
       "water_consumption": {
         "name": "Water consumption"
+      },
+      "water_filter_usage": {
+        "name": "Water filter usage"
       }
     },
     "switch": {
       "bubble_soak": {
         "name": "Bubble Soak"
       },
+      "display_lighting": {
+        "name": "Display lighting"
+      },
       "wrinkle_prevent": {
         "name": "Wrinkle prevent"
       },
       "ice_maker": {
-        "name": "Ice maker"
+        "name": "Cubed ice"
+      },
+      "ice_maker_2": {
+        "name": "Ice Bites"
       },
       "sabbath_mode": {
         "name": "Sabbath mode"
@@ -611,22 +641,13 @@
         "name": "Power freeze"
       },
       "auto_cycle_link": {
-        "name": "Auto cycle link"
+        "name": "Auto Cycle Link"
       },
       "sanitize": {
         "name": "Sanitize"
       },
       "keep_fresh_mode": {
         "name": "Keep fresh mode"
-      }
-    },
-    "water_heater": {
-      "water_heater": {
-        "state": {
-          "standard": "Standard",
-          "force": "Forced",
-          "power": "Power"
-        }
       }
     }
   },

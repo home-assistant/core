@@ -20,7 +20,7 @@ DOWNLOAD_DIR = Path("build/translations-download").absolute()
 def run_download_docker():
     """Run the Docker image to download the translations."""
     print("Running Docker to download latest translations.")
-    run = subprocess.run(
+    result = subprocess.run(
         [
             "docker",
             "run",
@@ -52,7 +52,7 @@ def run_download_docker():
     )
     print()
 
-    if run.returncode != 0:
+    if result.returncode != 0:
         raise ExitApp("Failed to download translations")
 
 

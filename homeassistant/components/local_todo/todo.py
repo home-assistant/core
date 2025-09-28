@@ -134,7 +134,7 @@ class LocalTodoListEntity(TodoListEntity):
         self._store = store
         self._calendar = calendar
         self._calendar_lock = asyncio.Lock()
-        self._attr_name = name.capitalize()
+        self._attr_name = name
         self._attr_unique_id = unique_id
 
     def _new_todo_store(self) -> TodoStore:

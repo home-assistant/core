@@ -62,6 +62,10 @@
         }
       }
     },
+    "connection_error": {
+      "title": "No connection",
+      "description": "You do not have a connection to Home Assistant Cloud. Check your network."
+    },
     "no_subscription": {
       "title": "No subscription detected",
       "description": "You do not have a Home Assistant Cloud subscription. Subscribe at {account_url}."

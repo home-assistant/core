@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 from typing import Any
 
-from pysmarlaapi import Federwiege
 from pysmarlaapi.federwiege.classes import Property
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -11,15 +10,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FederwiegeConfigEntry
-from .entity import SmarlaBaseEntity
+from .entity import SmarlaBaseEntity, SmarlaEntityDescription
 
 
 @dataclass(frozen=True, kw_only=True)
-class SmarlaSwitchEntityDescription(SwitchEntityDescription):
+class SmarlaSwitchEntityDescription(SmarlaEntityDescription, SwitchEntityDescription):
     """Class describing Swing2Sleep Smarla switch entity."""
-
-    service: str
-    property: str
 
 
 SWITCHES: list[SmarlaSwitchEntityDescription] = [
@@ -55,19 +51,8 @@ class SmarlaSwitch(SmarlaBaseEntity, SwitchEntity):
 
     _property: Property[bool]
 
-    def __init__(
-        self,
-        federwiege: Federwiege,
-        desc: SmarlaSwitchEntityDescription,
-    ) -> None:
-        """Initialize a Smarla switch."""
-        prop = federwiege.get_property(desc.service, desc.property)
-        super().__init__(federwiege, prop)
-        self.entity_description = desc
-        self._attr_unique_id = f"{federwiege.serial_number}-{desc.key}"
-
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the entity value to represent the entity state."""
         return self._property.get()
 

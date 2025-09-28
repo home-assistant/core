@@ -4,7 +4,8 @@ import asyncio
 from collections.abc import Callable, Coroutine
 import itertools as it
 import logging
-from typing import TYPE_CHECKING, Any
+import struct
+from typing import Any
 
 import voluptuous as vol
 
@@ -16,6 +17,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    EVENT_HOMEASSISTANT_STARTED,
     RESTART_EXIT_CODE,
     SERVICE_RELOAD,
     SERVICE_SAVE_PERSISTENT_STATES,
@@ -24,6 +26,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import (
+    Event,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -38,15 +41,17 @@ from homeassistant.helpers import (
     restore_state,
 )
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
-    async_extract_referenced_entity_ids,
     async_register_admin_service,
 )
 from homeassistant.helpers.signal import KEY_HA_STOP
 from homeassistant.helpers.system_info import async_get_system_info
+from homeassistant.helpers.target import (
+    TargetSelectorData,
+    async_extract_referenced_entity_ids,
+)
 from homeassistant.helpers.template import async_load_custom_templates
 from homeassistant.helpers.typing import ConfigType
 
@@ -95,6 +100,11 @@ DEPRECATION_URL = (
 )
 
 
+def _is_32_bit() -> bool:
+    size = struct.calcsize("P")
+    return size * 8 == 32
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up general services related to Home Assistant."""
 
@@ -104,7 +114,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async def async_handle_turn_service(service: ServiceCall) -> None:
         """Handle calls to homeassistant.turn_on/off."""
-        referenced = async_extract_referenced_entity_ids(hass, service)
+        referenced = async_extract_referenced_entity_ids(
+            hass, TargetSelectorData(service.data)
+        )
         all_referenced = referenced.referenced | referenced.indirectly_referenced
 
         # Generic turn on/off method requires entity id
@@ -327,7 +339,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         reload_entries: set[str] = set()
         if ATTR_ENTRY_ID in call.data:
             reload_entries.add(call.data[ATTR_ENTRY_ID])
-        reload_entries.update(await async_extract_config_entry_ids(hass, call))
+        reload_entries.update(await async_extract_config_entry_ids(call))
         if not reload_entries:
             raise ValueError("There were no matching config entries to reload")
         await asyncio.gather(
@@ -399,82 +411,50 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     hass.data[DATA_EXPOSED_ENTITIES] = exposed_entities
     async_set_stop_handler(hass, _async_stop)
 
-    info = await async_get_system_info(hass)
+    async def _async_check_deprecation(event: Event) -> None:
+        """Check and create deprecation issues after startup."""
+        info = await async_get_system_info(hass)
 
-    installation_type = info["installation_type"][15:]
-    deprecated_method = installation_type in {
-        "Core",
-        "Supervised",
-    }
-    arch = info["arch"]
-    if arch == "armv7":
-        if installation_type == "OS":
-            # Local import to avoid circular dependencies
-            # We use the import helper because hassio
-            # may not be loaded yet and we don't want to
-            # do blocking I/O in the event loop to import it.
-            if TYPE_CHECKING:
-                # pylint: disable-next=import-outside-toplevel
-                from homeassistant.components import hassio
-            else:
-                hassio = await async_import_module(
-                    hass, "homeassistant.components.hassio"
+        installation_type = info["installation_type"][15:]
+        if installation_type in {"Core", "Container"}:
+            deprecated_method = installation_type == "Core"
+            bit32 = _is_32_bit()
+            arch = info["arch"]
+            if bit32 and installation_type == "Container":
+                arch = info.get("container_arch", arch)
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    "deprecated_container",
+                    learn_more_url=DEPRECATION_URL,
+                    is_fixable=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="deprecated_container",
+                    translation_placeholders={"arch": arch},
                 )
-            os_info = hassio.get_os_info(hass)
-            assert os_info is not None
-            issue_id = "deprecated_os_"
-            board = os_info.get("board")
-            if board in {"rpi3", "rpi4"}:
-                issue_id += "aarch64"
-            elif board in {"tinker", "odroid-xu4", "rpi2"}:
-                issue_id += "armv7"
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                issue_id,
-                breaks_in_ha_version="2025.12.0",
-                learn_more_url=DEPRECATION_URL,
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key=issue_id,
-                translation_placeholders={
-                    "installation_guide": "https://www.home-assistant.io/installation/",
-                },
-            )
-        elif installation_type == "Container":
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                "deprecated_container_armv7",
-                breaks_in_ha_version="2025.12.0",
-                learn_more_url=DEPRECATION_URL,
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_container_armv7",
-            )
-    deprecated_architecture = False
-    if arch in {"i386", "armhf"} or (arch == "armv7" and deprecated_method):
-        deprecated_architecture = True
-    if deprecated_method or deprecated_architecture:
-        issue_id = "deprecated"
-        if deprecated_method:
-            issue_id += "_method"
-        if deprecated_architecture:
-            issue_id += "_architecture"
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            issue_id,
-            breaks_in_ha_version="2025.12.0",
-            learn_more_url=DEPRECATION_URL,
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key=issue_id,
-            translation_placeholders={
-                "installation_type": installation_type,
-                "arch": arch,
-            },
-        )
+            deprecated_architecture = bit32 and installation_type != "Container"
+            if deprecated_method or deprecated_architecture:
+                issue_id = "deprecated"
+                if deprecated_method:
+                    issue_id += "_method"
+                if deprecated_architecture:
+                    issue_id += "_architecture"
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    issue_id,
+                    learn_more_url=DEPRECATION_URL,
+                    is_fixable=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key=issue_id,
+                    translation_placeholders={
+                        "installation_type": installation_type,
+                        "arch": arch,
+                    },
+                )
+
+    # Delay deprecation check to make sure installation method is determined correctly
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_check_deprecation)
 
     return True
 

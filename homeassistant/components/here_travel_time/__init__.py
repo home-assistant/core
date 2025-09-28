@@ -2,52 +2,34 @@
 
 from __future__ import annotations
 
+import logging
+
 from homeassistant.const import CONF_API_KEY, CONF_MODE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.start import async_at_started
-from homeassistant.util import dt as dt_util
-
-from .const import (
-    CONF_ARRIVAL_TIME,
-    CONF_DEPARTURE_TIME,
-    CONF_DESTINATION_ENTITY_ID,
-    CONF_DESTINATION_LATITUDE,
-    CONF_DESTINATION_LONGITUDE,
-    CONF_ORIGIN_ENTITY_ID,
-    CONF_ORIGIN_LATITUDE,
-    CONF_ORIGIN_LONGITUDE,
-    CONF_ROUTE_MODE,
-    TRAVEL_MODE_PUBLIC,
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
 )
+from homeassistant.helpers.start import async_at_started
+
+from .const import CONF_TRAFFIC_MODE, DOMAIN, TRAVEL_MODE_PUBLIC
 from .coordinator import (
     HereConfigEntry,
     HERERoutingDataUpdateCoordinator,
     HERETransitDataUpdateCoordinator,
 )
-from .model import HERETravelTimeConfig
 
 PLATFORMS = [Platform.SENSOR]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: HereConfigEntry) -> bool:
     """Set up HERE Travel Time from a config entry."""
     api_key = config_entry.data[CONF_API_KEY]
 
-    arrival = dt_util.parse_time(config_entry.options.get(CONF_ARRIVAL_TIME, ""))
-    departure = dt_util.parse_time(config_entry.options.get(CONF_DEPARTURE_TIME, ""))
-
-    here_travel_time_config = HERETravelTimeConfig(
-        destination_latitude=config_entry.data.get(CONF_DESTINATION_LATITUDE),
-        destination_longitude=config_entry.data.get(CONF_DESTINATION_LONGITUDE),
-        destination_entity_id=config_entry.data.get(CONF_DESTINATION_ENTITY_ID),
-        origin_latitude=config_entry.data.get(CONF_ORIGIN_LATITUDE),
-        origin_longitude=config_entry.data.get(CONF_ORIGIN_LONGITUDE),
-        origin_entity_id=config_entry.data.get(CONF_ORIGIN_ENTITY_ID),
-        travel_mode=config_entry.data[CONF_MODE],
-        route_mode=config_entry.options[CONF_ROUTE_MODE],
-        arrival=arrival,
-        departure=departure,
-    )
+    alert_for_multiple_entries(hass)
 
     cls: type[HERETransitDataUpdateCoordinator | HERERoutingDataUpdateCoordinator]
     if config_entry.data[CONF_MODE] in {TRAVEL_MODE_PUBLIC, "publicTransportTimeTable"}:
@@ -55,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: HereConfigEntry) 
     else:
         cls = HERERoutingDataUpdateCoordinator
 
-    data_coordinator = cls(hass, config_entry, api_key, here_travel_time_config)
+    data_coordinator = cls(hass, config_entry, api_key)
     config_entry.runtime_data = data_coordinator
 
     async def _async_update_at_start(_: HomeAssistant) -> None:
@@ -67,8 +49,56 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: HereConfigEntry) 
     return True
 
 
+def alert_for_multiple_entries(hass: HomeAssistant) -> None:
+    """Check if there are multiple entries for the same API key."""
+    if len(hass.config_entries.async_entries(DOMAIN)) > 1:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "multiple_here_travel_time_entries",
+            learn_more_url="https://www.home-assistant.io/integrations/here_travel_time/",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="multiple_here_travel_time_entries",
+            translation_placeholders={
+                "pricing_page": "https://www.here.com/get-started/pricing",
+            },
+        )
+    else:
+        async_delete_issue(
+            hass,
+            DOMAIN,
+            "multiple_here_travel_time_entries",
+        )
+
+
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: HereConfigEntry
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: HereConfigEntry
+) -> bool:
+    """Migrate an old config entry."""
+
+    if config_entry.version == 1 and config_entry.minor_version == 1:
+        _LOGGER.debug(
+            "Migrating from version %s.%s",
+            config_entry.version,
+            config_entry.minor_version,
+        )
+        options = dict(config_entry.options)
+        options[CONF_TRAFFIC_MODE] = True
+
+        hass.config_entries.async_update_entry(
+            config_entry, options=options, version=1, minor_version=2
+        )
+        _LOGGER.debug(
+            "Migration to version %s.%s successful",
+            config_entry.version,
+            config_entry.minor_version,
+        )
+    return True

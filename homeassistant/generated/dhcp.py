@@ -27,80 +27,8 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "E84F25*",
     },
     {
-        "domain": "amazon_devices",
-        "macaddress": "08A6BC*",
-    },
-    {
-        "domain": "amazon_devices",
-        "macaddress": "10BF67*",
-    },
-    {
-        "domain": "amazon_devices",
-        "macaddress": "440049*",
-    },
-    {
-        "domain": "amazon_devices",
-        "macaddress": "443D54*",
-    },
-    {
-        "domain": "amazon_devices",
-        "macaddress": "48B423*",
-    },
-    {
-        "domain": "amazon_devices",
-        "macaddress": "4C1744*",
-    },
-    {
-        "domain": "amazon_devices",
-        "macaddress": "50D45C*",
-    },
-    {
-        "domain": "amazon_devices",
-        "macaddress": "50DCE7*",
-    },
-    {
-        "domain": "amazon_devices",
-        "macaddress": "68F63B*",
-    },
-    {
-        "domain": "amazon_devices",
-        "macaddress": "74D637*",
-    },
-    {
-        "domain": "amazon_devices",
-        "macaddress": "7C6166*",
-    },
-    {
-        "domain": "amazon_devices",
-        "macaddress": "901195*",
-    },
-    {
-        "domain": "amazon_devices",
-        "macaddress": "943A91*",
-    },
-    {
-        "domain": "amazon_devices",
-        "macaddress": "98226E*",
-    },
-    {
-        "domain": "amazon_devices",
-        "macaddress": "9CC8E9*",
-    },
-    {
-        "domain": "amazon_devices",
-        "macaddress": "A8E621*",
-    },
-    {
-        "domain": "amazon_devices",
-        "macaddress": "C095CF*",
-    },
-    {
-        "domain": "amazon_devices",
-        "macaddress": "D8BE65*",
-    },
-    {
-        "domain": "amazon_devices",
-        "macaddress": "EC2BEB*",
+        "domain": "aladdin_connect",
+        "hostname": "gdocntl-*",
     },
     {
         "domain": "august",
@@ -359,12 +287,12 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "home_connect",
-        "hostname": "(bosch|siemens)-*",
+        "hostname": "(balay|bosch|neff|siemens)-*",
         "macaddress": "68A40E*",
     },
     {
         "domain": "home_connect",
-        "hostname": "siemens-*",
+        "hostname": "(bosch|neff|siemens)-*",
         "macaddress": "38B4D3*",
     },
     {
@@ -443,6 +371,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "lametric",
         "registered_devices": True,
+    },
+    {
+        "domain": "lg_thinq",
+        "macaddress": "34E6E6*",
     },
     {
         "domain": "lifx",
@@ -534,6 +466,106 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "palazzetti",
         "registered_devices": True,
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "AC8995*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "1C98C1*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "5C843C*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "605BB4*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "8060B7*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "78C881*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "00D9D1*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "00E421*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "0CFE45*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "2CCC44*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "BC60A7*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "C863F1*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "F8461C*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "70662A*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "09E29*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "B40AD8*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "A8474A*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "280DFC*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "D44B5E*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "F8D0AC*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "E86E3A*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "FC0FE6*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "9C37CB*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "84E657*",
+    },
+    {
+        "domain": "pooldose",
+        "hostname": "kommspot",
     },
     {
         "domain": "powerwall",

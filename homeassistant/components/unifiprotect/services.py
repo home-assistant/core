@@ -26,7 +26,10 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.service import async_extract_referenced_entity_ids
+from homeassistant.helpers.target import (
+    TargetSelectorData,
+    async_extract_referenced_entity_ids,
+)
 from homeassistant.util.json import JsonValueType
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
@@ -57,43 +60,31 @@ ALL_GLOBAL_SERIVCES = [
     SERVICE_GET_USER_KEYRING_INFO,
 ]
 
-DOORBELL_TEXT_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            **cv.ENTITY_SERVICE_FIELDS,
-            vol.Required(ATTR_MESSAGE): cv.string,
-        },
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+DOORBELL_TEXT_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): str,
+        vol.Required(ATTR_MESSAGE): cv.string,
+    },
 )
 
-CHIME_PAIRED_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            **cv.ENTITY_SERVICE_FIELDS,
-            "doorbells": cv.TARGET_SERVICE_FIELDS,
-        },
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+CHIME_PAIRED_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): str,
+        "doorbells": cv.ENTITY_SERVICE_FIELDS,
+    },
 )
 
-REMOVE_PRIVACY_ZONE_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            **cv.ENTITY_SERVICE_FIELDS,
-            vol.Required(ATTR_NAME): cv.string,
-        },
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+REMOVE_PRIVACY_ZONE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): str,
+        vol.Required(ATTR_NAME): cv.string,
+    },
 )
 
-GET_USER_KEYRING_INFO_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            **cv.ENTITY_SERVICE_FIELDS,
-        },
-    ),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+GET_USER_KEYRING_INFO_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): str,
+    },
 )
 
 
@@ -115,7 +106,7 @@ def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectApiCl
 
 @callback
 def _async_get_ufp_camera(call: ServiceCall) -> Camera:
-    ref = async_extract_referenced_entity_ids(call.hass, call)
+    ref = async_extract_referenced_entity_ids(call.hass, TargetSelectorData(call.data))
     entity_registry = er.async_get(call.hass)
 
     entity_id = ref.indirectly_referenced.pop()
@@ -133,7 +124,7 @@ def _async_get_protect_from_call(call: ServiceCall) -> set[ProtectApiClient]:
     return {
         _async_get_ufp_instance(call.hass, device_id)
         for device_id in async_extract_referenced_entity_ids(
-            call.hass, call
+            call.hass, TargetSelectorData(call.data)
         ).referenced_devices
     }
 
@@ -196,7 +187,7 @@ def _async_unique_id_to_mac(unique_id: str) -> str:
 
 async def set_chime_paired_doorbells(call: ServiceCall) -> None:
     """Set paired doorbells on chime."""
-    ref = async_extract_referenced_entity_ids(call.hass, call)
+    ref = async_extract_referenced_entity_ids(call.hass, TargetSelectorData(call.data))
     entity_registry = er.async_get(call.hass)
 
     entity_id = ref.indirectly_referenced.pop()
@@ -211,7 +202,9 @@ async def set_chime_paired_doorbells(call: ServiceCall) -> None:
     assert chime is not None
 
     call.data = ReadOnlyDict(call.data.get("doorbells") or {})
-    doorbell_refs = async_extract_referenced_entity_ids(call.hass, call)
+    doorbell_refs = async_extract_referenced_entity_ids(
+        call.hass, TargetSelectorData(call.data)
+    )
     doorbell_ids: set[str] = set()
     for camera_id in doorbell_refs.referenced | doorbell_refs.indirectly_referenced:
         doorbell_sensor = entity_registry.async_get(camera_id)
@@ -303,6 +296,7 @@ SERVICES = [
 ]
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the global UniFi Protect services."""
 
