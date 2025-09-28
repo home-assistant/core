@@ -184,6 +184,17 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.baichuan.smart_ai_index.return_value = 1
     host_mock.baichuan.smart_ai_name.return_value = "zone1"
 
+    def ai_detect_type(channel: int, object_type: str):
+        if object_type == "people":
+            return "man"
+        if object_type == "dog_cat":
+            return "dog"
+        if object_type == "vehicle":
+            return "motorcycle"
+        return None
+
+    host_mock.baichuan.ai_detect_type = ai_detect_type
+
 
 @pytest.fixture
 def reolink_host_class() -> Generator[MagicMock]:
