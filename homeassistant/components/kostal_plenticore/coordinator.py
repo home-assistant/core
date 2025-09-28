@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 import logging
@@ -189,10 +189,16 @@ class PlenticoreUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         )
         # data ids to poll
         self._fetch: dict[str, list[str]] = defaultdict(list)
+        # counter for registered data ids to avoid duplicate fetches
+        self._registered_entities = Counter[tuple[str, str]]()
         self._plenticore = plenticore
 
     def start_fetch_data(self, module_id: str, data_id: str) -> CALLBACK_TYPE:
         """Start fetching the given data (module-id and data-id)."""
+        self._registered_entities[(module_id, data_id)] += 1
+        if self._registered_entities[(module_id, data_id)] > 1:
+            return lambda: None
+
         self._fetch[module_id].append(data_id)
 
         # Force an update of all data. Multiple refresh calls
@@ -204,6 +210,10 @@ class PlenticoreUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
     def stop_fetch_data(self, module_id: str, data_id: str) -> None:
         """Stop fetching the given data (module-id and data-id)."""
+        self._registered_entities[(module_id, data_id)] -= 1
+        if self._registered_entities[(module_id, data_id)] > 0:
+            return
+
         self._fetch[module_id].remove(data_id)
 
 
