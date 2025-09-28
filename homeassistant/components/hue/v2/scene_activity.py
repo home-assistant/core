@@ -41,6 +41,7 @@ class GroupSceneState:
     active_scene_mode: str | None = None  # static | dynamic_palette
     active_scene_last_recall: datetime | None = None
     active_scene_speed: float | None = None  # 0.0 - 1.0 when dynamic palette active
+    active_scene_brightness: float | None = None  # 0.0 - 100.0
 
     # Smart scene state
     active_smart_scene_entity_id: str | None = None
@@ -129,6 +130,11 @@ class HueSceneActivityManager:
                 group_state.active_scene_mode = scene.status.active.value
                 group_state.active_scene_last_recall = scene.status.last_recall
                 group_state.active_scene_speed = scene.speed
+                group_state.active_scene_brightness = next(
+                    action.action.dimming.brightness
+                    for action in scene.actions
+                    if action.action.dimming is not None
+                )
                 return True
             if group_state.active_scene_entity_id == entity_id:
                 group_state.active_scene_entity_id = None
@@ -136,6 +142,7 @@ class HueSceneActivityManager:
                 group_state.active_scene_mode = None
                 group_state.active_scene_last_recall = None
                 group_state.active_scene_speed = None
+                group_state.active_scene_brightness = None
                 return True
             return False
 

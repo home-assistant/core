@@ -24,6 +24,7 @@ from .const import (
     ATTR_DYNAMIC,
     ATTR_GROUP_NAME,
     ATTR_GROUPS,
+    ATTR_SCENE_BRIGHTNESS,
     ATTR_SCENE_ENTITY_ID,
     ATTR_SCENE_MODE,
     ATTR_SCENE_NAME,
@@ -36,6 +37,7 @@ from .const import (
     SERVICE_RESTORE_GROUP_SCENE,
 )
 from .scene import (
+    ATTR_BRIGHTNESS as SCENE_ATTR_BRIGHTNESS,
     ATTR_DYNAMIC as SCENE_ATTR_DYNAMIC,
     ATTR_SPEED as SCENE_ATTR_SPEED,
     SERVICE_ACTIVATE_SCENE as SCENE_ENTITY_SERVICE_ACTIVATE,
@@ -273,6 +275,8 @@ async def capture_group_scene(call: ServiceCall) -> dict[str, Any]:
             scene_state[ATTR_SCENE_MODE] = group_state.active_scene_mode
         if group_state.active_scene_speed:
             scene_state[ATTR_SCENE_SPEED] = group_state.active_scene_speed
+        if group_state.active_scene_brightness:
+            scene_state[ATTR_SCENE_BRIGHTNESS] = group_state.active_scene_brightness
         if group_state.active_smart_scene_entity_id:
             scene_state[ATTR_SMART_SCENE_ENTITY_ID] = (
                 group_state.active_smart_scene_entity_id
@@ -318,6 +322,8 @@ async def restore_group_scene(call: ServiceCall) -> bool:
             if speed := scene_state.get(ATTR_SCENE_SPEED):
                 # 'activate_scene' speed accepts 0-100 range instead of a float
                 service_data[SCENE_ATTR_SPEED] = speed * 100
+            if brightness := scene_state.get(ATTR_SCENE_BRIGHTNESS):
+                service_data[SCENE_ATTR_BRIGHTNESS] = brightness
 
         if service_data is None:
             continue
