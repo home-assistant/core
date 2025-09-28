@@ -62,6 +62,13 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
+        _LOGGER.info(
+            "Getting events between %s and %s from %s (%s)",
+            start_date,
+            end_date,
+            self.calendar.name,
+            self.calendar.url,
+        )
         # Get event list from the current calendar
         vevent_list = await hass.async_add_executor_job(
             partial(
@@ -93,9 +100,16 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         return event_list
 
     async def _async_update_data(self) -> CalendarEvent | None:
-        """Get the latest data."""
+        """Get the latest data.
+
+        Note: currently this only updates the Calendar Entity to indicate currently active calendar events.
+        It would be nice to implement some caching and pre-fetching of events between today and a given horizon, based on sync-tokens.
+        """
+
         start_of_today = dt_util.start_of_local_day()
         start_of_tomorrow = dt_util.start_of_local_day() + timedelta(days=self.days)
+
+        _LOGGER.debug("Updating CalDav data for calendar %s", self.calendar.name)
 
         # We have to retrieve the results for the whole day as the server
         # won't return events that have already started
@@ -213,10 +227,14 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         )
 
     @staticmethod
-    def to_datetime(obj):
+    def to_datetime(obj: datetime | date) -> datetime:
         """Return a datetime."""
         if isinstance(obj, datetime):
-            return CalDavUpdateCoordinator.to_local(obj)
+            dt = CalDavUpdateCoordinator.to_local(obj)
+            # from a quick peek at the code of to_local we know we'll get a datetime backwhen we provide a datetime. Apparently mypy doesn't know that.
+            # this assertion will mypy help understand
+            assert isinstance(dt, datetime)
+            return dt
         return datetime.combine(obj, time.min).replace(
             tzinfo=dt_util.get_default_time_zone()
         )

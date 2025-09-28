@@ -51,6 +51,10 @@ CONFIG_ENTRY_DEFAULT_DAYS = 7
 # Only allow VCALENDARs that support this component type
 SUPPORTED_COMPONENT = "VEVENT"
 
+# Platform configuration is out-dated in my understanding, the lines below will
+# eventually be removed. Config entries are used instead.
+# Keep them here for reference until then.
+# -------------------------------------------------
 PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_URL): vol.Url(),
@@ -152,7 +156,7 @@ async def async_setup_entry(
     """Set up the CalDav calendar platform for a config entry."""
     calendars = await async_get_calendars(hass, entry.runtime_data, SUPPORTED_COMPONENT)
     async_add_entities(
-        (
+        new_entities=(
             WebDavCalendarEntity(
                 f"{entry.data[CONF_USERNAME].capitalize()} {calendar.name}",  # default entity name is USERNAME calendar.name so the user can better distinguish between calendars.
                 async_generate_entity_id(
@@ -174,7 +178,7 @@ async def async_setup_entry(
             for calendar in calendars
             if calendar.name
         ),
-        True,
+        update_before_add=True,
     )
 
 
