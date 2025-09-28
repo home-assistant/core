@@ -34,6 +34,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
@@ -58,6 +59,7 @@ from .const import (
     CONF_DEFAULT_VALUE,
     CONF_PRIV_KEY,
     CONF_PRIV_PROTOCOL,
+    CONF_RETAIN_STATE,
     CONF_VERSION,
     DEFAULT_AUTH_PROTOCOL,
     DEFAULT_COMMUNITY,
@@ -108,6 +110,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL): vol.In(
             MAP_PRIV_PROTOCOLS
         ),
+        vol.Optional(CONF_RETAIN_STATE, default=False): cv.boolean,
     }
 ).extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema)
 
@@ -131,14 +134,19 @@ async def async_setup_platform(
     privproto = config[CONF_PRIV_PROTOCOL]
     accept_errors = config.get(CONF_ACCEPT_ERRORS)
     default_value = config.get(CONF_DEFAULT_VALUE)
+    retain_state = config.get(CONF_RETAIN_STATE, False)
 
     try:
         # Try IPv4 first.
-        target = await UdpTransportTarget.create((host, port), timeout=DEFAULT_TIMEOUT)
+        target = await UdpTransportTarget.create(
+            (host, port), timeout=DEFAULT_TIMEOUT, retries=2
+        )
     except PySnmpError:
         # Then try IPv6.
         try:
-            target = Udp6TransportTarget((host, port), timeout=DEFAULT_TIMEOUT)
+            target = Udp6TransportTarget(
+                (host, port), timeout=DEFAULT_TIMEOUT, retries=2
+            )
         except PySnmpError as err:
             _LOGGER.error("Invalid SNMP host: %s", err)
             return
@@ -179,7 +187,9 @@ async def async_setup_platform(
     value_template: ValueTemplate | None = config.get(CONF_VALUE_TEMPLATE)
 
     data = SnmpData(request_args, baseoid, accept_errors, default_value)
-    async_add_entities([SnmpSensor(hass, data, trigger_entity_config, value_template)])
+    async_add_entities(
+        [SnmpSensor(hass, data, trigger_entity_config, value_template, retain_state)]
+    )
 
 
 class SnmpSensor(ManualTriggerSensorEntity):
@@ -193,12 +203,14 @@ class SnmpSensor(ManualTriggerSensorEntity):
         data: SnmpData,
         config: ConfigType,
         value_template: ValueTemplate | None,
+        retain_state: bool,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(hass, config)
         self.data = data
         self._state = None
         self._value_template = value_template
+        self._retain_state = retain_state
 
     async def async_added_to_hass(self) -> None:
         """Handle adding to Home Assistant."""
@@ -210,6 +222,13 @@ class SnmpSensor(ManualTriggerSensorEntity):
         await self.data.async_update()
 
         variables = self._template_variables_with_value(self.data.value)
+
+        if (
+            self.data.value in [STATE_UNKNOWN, STATE_UNAVAILABLE, None]
+            and self._retain_state
+        ):
+            return
+
         if (value := self.data.value) is None:
             value = STATE_UNKNOWN
         elif self._value_template is not None:
