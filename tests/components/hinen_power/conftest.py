@@ -30,7 +30,7 @@ TOKEN_URL = (
     "https://global.iot-api.celinksmart.com/iot-global/open-platforms/auth/token"
 )
 REDIRECTION_URL = "https://example.com/auth/hinen/callback"
-REGION_CODE = "CN"
+REGION_CODE = "region_code"
 HOST = "https://dev-iot-api.celinksmart.cn"
 TITLE = "Test Hinen Device"
 TOKEN = "homeassistant.components.hinen_power.api.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid"
@@ -95,6 +95,19 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
                 "client_secret": "test_client_secret",
                 "region_code": "CN",
             }
+        },
+    )
+
+    # Mock country list API
+    aioclient_mock.get(
+        "https://global.knowledge.celinksmart.com/prod-api/iot-global/app-api/countries",
+        json={
+            "data": [
+                {"code": "CN", "name": "中国"},
+                {"code": "US", "name": "United States"},
+                {"code": "JP", "name": "日本"},
+                {"code": "GB", "name": "United Kingdom"},
+            ]
         },
     )
 
