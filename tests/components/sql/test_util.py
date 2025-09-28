@@ -27,33 +27,40 @@ async def test_resolve_db_url_when_configured(hass: HomeAssistant) -> None:
     assert resolved_url == db_url
 
 
-async def test_invalid_query(hass: HomeAssistant) -> None:
-    """Test invalid query."""
-    with pytest.raises(vol.Invalid, match="Only SELECT queries allowed"):
-        validate_sql_select("DROP TABLE *")
-
-    with pytest.raises(vol.Invalid, match="Invalid SQL query"):
-        validate_sql_select("SELECT5 as value")
-
-    with pytest.raises(vol.Invalid, match="Invalid SQL query"):
-        validate_sql_select(";;")
-
-
-async def test_query_no_read_only(hass: HomeAssistant) -> None:
-    """Test query no read only."""
-    with pytest.raises(vol.Invalid, match="Only SELECT queries allowed"):
-        validate_sql_select("UPDATE states SET state = 999999 WHERE state_id = 11125")
-
-
-async def test_query_no_read_only_cte(hass: HomeAssistant) -> None:
-    """Test query no read only CTE."""
-    with pytest.raises(vol.Invalid, match="Only SELECT queries allowed"):
-        validate_sql_select(
-            "WITH test AS (SELECT state FROM states) UPDATE states SET states.state = test.state;"
-        )
-
-
-async def test_multiple_queries(hass: HomeAssistant) -> None:
-    """Test multiple queries."""
-    with pytest.raises(vol.Invalid, match="Multiple SQL queries are not supported"):
-        validate_sql_select("SELECT 5 as value; UPDATE states SET state = 10;")
+@pytest.mark.parametrize(
+    ("sql_query", "expected_error_message"),
+    [
+        (
+            "DROP TABLE *",
+            "Only SELECT queries allowed",
+        ),
+        (
+            "SELECT5 as value",
+            "Invalid SQL query",
+        ),
+        (
+            ";;",
+            "Invalid SQL query",
+        ),
+        (
+            "UPDATE states SET state = 999999 WHERE state_id = 11125",
+            "Only SELECT queries allowed",
+        ),
+        (
+            "WITH test AS (SELECT state FROM states) UPDATE states SET states.state = test.state;",
+            "Only SELECT queries allowed",
+        ),
+        (
+            "SELECT 5 as value; UPDATE states SET state = 10;",
+            "Multiple SQL queries are not supported",
+        ),
+    ],
+)
+async def test_invalid_sql_queries(
+    hass: HomeAssistant,
+    sql_query: str,
+    expected_error_message: str,
+) -> None:
+    """Test that various invalid or disallowed SQL queries raise the correct exception."""
+    with pytest.raises(vol.Invalid, match=expected_error_message):
+        validate_sql_select(sql_query)
