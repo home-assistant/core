@@ -1,13 +1,11 @@
 """Mocks for tests."""
 
 from datetime import UTC
-from functools import lru_cache
 from typing import Any
 from unittest.mock import MagicMock
 
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
-from devolo_home_control_api.mydevolo import Mydevolo
 from devolo_home_control_api.properties.binary_sensor_property import (
     BinarySensorProperty,
 )
@@ -427,30 +425,3 @@ class HomeControlMockSwitch(HomeControlMock):
         self.devices = {"Test": SwitchMock()}
         self.publisher = Publisher(self.devices.keys())
         self.publisher.unregister = MagicMock()
-
-
-class MydevoloMock(Mydevolo):
-    """Mydevolo mock."""
-
-    def __init__(self) -> None:
-        """Initialize the mock."""
-        super().__init__()
-        self.valid_credentials = True
-        self.in_maintenance = False
-
-    def credentials_valid(self) -> bool:
-        """Return True to simulate valid credentials."""
-        return self.valid_credentials
-
-    def maintenance(self) -> bool:
-        """Return False to simulate no maintenance."""
-        return self.in_maintenance
-
-    def get_gateway_ids(self) -> list[str]:
-        """Return a list of gateway IDs."""
-        return ["1400000000000001", "1400000000000002"]
-
-    @lru_cache(maxsize=1)
-    def uuid(self) -> str:
-        """Return a mock UUID."""
-        return "123456"

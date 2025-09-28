@@ -1,6 +1,6 @@
 """Tests for the devolo Home Control integration."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from devolo_home_control_api.exceptions.gateway import GatewayOfflineError
 
@@ -13,7 +13,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import configure_integration
-from .mocks import HomeControlMock, HomeControlMockBinarySensor, MydevoloMock
+from .mocks import HomeControlMock, HomeControlMockBinarySensor
 
 from tests.typing import WebSocketGenerator
 
@@ -27,20 +27,20 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
 
 
 async def test_setup_entry_credentials_invalid(
-    hass: HomeAssistant, mydevolo: MydevoloMock
+    hass: HomeAssistant, mydevolo: MagicMock
 ) -> None:
     """Test setup entry fails if credentials are invalid."""
-    mydevolo.valid_credentials = False
+    mydevolo.credentials_valid.return_value = False
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_setup_entry_maintenance(
-    hass: HomeAssistant, mydevolo: MydevoloMock
+    hass: HomeAssistant, mydevolo: MagicMock
 ) -> None:
     """Test setup entry fails if mydevolo is in maintenance mode."""
-    mydevolo.in_maintenance = True
+    mydevolo.maintenance.return_value = True
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
