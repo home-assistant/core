@@ -46,6 +46,9 @@ async def async_get_config_entry_diagnostics(
                 }
                 for _, device in avm_wrapper.devices.items()
             ],
+            "cpu_temperatures": await hass.async_add_executor_job(
+                avm_wrapper.fritz_status.get_cpu_temperatures
+            ),
             "wan_link_properties": await avm_wrapper.async_get_wan_link_properties(),
         },
     }
