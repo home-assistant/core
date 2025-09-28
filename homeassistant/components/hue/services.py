@@ -303,23 +303,22 @@ async def restore_group_scene(call: ServiceCall) -> bool:
             or entity_entry.platform != DOMAIN
         ):
             continue
+
         # Prefer smart scene over regular scene when both are present
-        scene_entity_id = scene_state.get(
-            ATTR_SMART_SCENE_ENTITY_ID
-        ) or scene_state.get(ATTR_SCENE_ENTITY_ID)
-        if not scene_entity_id:
+        if smart_scene_entity_id := scene_state.get(ATTR_SMART_SCENE_ENTITY_ID):
+            service_data = {ATTR_ENTITY_ID: smart_scene_entity_id}
+        elif regular_scene_entity_id := scene_state.get(ATTR_SCENE_ENTITY_ID):
+            service_data = {ATTR_ENTITY_ID: regular_scene_entity_id}
+            if scene_state.get(ATTR_SCENE_MODE) == "dynamic_palette":
+                service_data[SCENE_ENTITY_SERVICE_ACTIVATE_ATTR_DYNAMIC] = True
+
+        if service_data is None:
             continue
-        # Call the entity service on the scene entity itself, enabling dynamic if original mode was dynamic_palette
+
         await hass.services.async_call(
             DOMAIN,
             SCENE_ENTITY_SERVICE_ACTIVATE,
-            {
-                ATTR_ENTITY_ID: scene_entity_id,
-                SCENE_ENTITY_SERVICE_ACTIVATE_ATTR_DYNAMIC: scene_state.get(
-                    ATTR_SCENE_MODE
-                )
-                == "dynamic_palette",
-            },
+            service_data,
             blocking=True,
         )
     return True
