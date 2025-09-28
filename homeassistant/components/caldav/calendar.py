@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime, time, timedelta
 import logging
 from typing import Any
 
 import caldav
+from ical.types import Range
+from icalendar import vDDDTypes
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
+    EVENT_RRULE,
+    EVENT_START,
     PLATFORM_SCHEMA as CALENDAR_PLATFORM_SCHEMA,
     CalendarEntity,
     CalendarEntityFeature,
@@ -33,6 +37,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from . import CalDavConfigEntry
 from .api import async_get_calendars
@@ -187,7 +192,9 @@ async def async_setup_entry(
 class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarEntity):
     """A device for getting the next Task from a WebDav Calendar."""
 
-    _attr_supported_features = CalendarEntityFeature.CREATE_EVENT
+    _attr_supported_features = (
+        CalendarEntityFeature.CREATE_EVENT | CalendarEntityFeature.DELETE_EVENT
+    )
 
     def __init__(
         self,
@@ -230,6 +237,131 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
 
         await self.async_update_ha_state(force_refresh=True)
 
+    async def async_delete_event(
+        self,
+        uid: str,
+        recurrence_id: str | None = None,
+        recurrence_range: str | None = None,
+    ) -> None:
+        """Delete an event on the calendar.
+
+        Supports deleting
+        - a single event,
+        - a recurring event,
+        - a single occurrence of a recurring event,
+        - an occurrence and all future occurrences of a recurring event.
+        """
+
+        # Home Assistant currently supportsyonly THIS_AND_FUTURE. In this case we need to delete the event specified by the recurrence_id and all future events in the series
+        # We'll realiize this by updating the RRULE attribute UNTIL attribute to the datetime of the given recurrence.
+        # With nextcloud the recurrence_id is already a date or datetime so we can use this directly as the cutoff date(-time) for the RRULE.
+        if recurrence_range == Range.THIS_AND_FUTURE:
+            # Get the master event of the series by uid
+            master_event = await self.coordinator.async_get_event(self.hass, uid)
+            if master_event is None:
+                _LOGGER.error("Event with uid %s not found", uid)
+                return
+
+            assert hasattr(master_event, "icalendar_component")  # for mypy
+
+            # Validate recurrence_id is provided
+            if not recurrence_id:
+                _LOGGER.error(
+                    "The recurrence_id must be provided when recurrence_range is THIS_AND_FUTURE"
+                )
+                return
+
+            # Parse recurrence_id
+            recurrence_datetime = self.parse_recurrence_id(recurrence_id)
+
+            # Get the start date of the master event
+            start_master = master_event.icalendar_component[EVENT_START].dt
+
+            # If the start is a date, convert it to a datetime at midnight
+            if isinstance(start_master, date) and not isinstance(
+                start_master, datetime
+            ):
+                start_master = datetime.combine(start_master, time())
+
+            # 2 possible ways to go from here:
+            # If the recurrence_datetime is the same as the start of the master event, delete the entire series
+            if recurrence_datetime <= start_master:
+                _LOGGER.debug(
+                    "The recurrence_id %s is the same or before the start of the master event %s. Deleting the entire series",
+                    recurrence_datetime,
+                    start_master,
+                )
+
+                def delete_event() -> None:
+                    assert master_event is not None  # Mypy sucks. OK, probably my fault
+                    master_event.delete()
+
+                # Delete the master event, which will delete the entire series
+                await self.hass.async_add_executor_job(delete_event)
+
+            # Otherwise, modify the RRULE of the master event to set the UNTIL
+            # attribute to before the recurrence_datetime to only delete the
+            # given recurerence and all following recurrences
+            else:
+                _LOGGER.debug(
+                    "The recurrence_id %s is after the start of the master event %s. Updating the RRULE to set the UNTIL attribute to before the recurrence_id to delete this and all future events",
+                    recurrence_datetime,
+                    start_master,
+                )
+                # Get the RRULE of the master event
+                rrule = master_event.icalendar_component.get(EVENT_RRULE)
+                if not rrule:
+                    _LOGGER.error("The event with uid %s is not a recurring event", uid)
+                    return
+                # Change the UNTIL attribute to the recurrence_datetime - 1 day to exclude the recurrence itself
+                rrule["until"] = recurrence_datetime - timedelta(days=1)
+                rrule.pop("count")  # Remove COUNT if present
+                master_event.icalendar_component[EVENT_RRULE] = rrule
+
+                def update_event() -> None:
+                    assert master_event is not None  # Mypy sucks. OK, probably my fault
+                    master_event.save()
+
+                # Write updated master event back to the calendar
+                await self.hass.async_add_executor_job(update_event)
+
+        # Delete only the specified occurrence of the series
+        # This is done by adding an EXDATE to the master event
+        elif recurrence_id is not None:
+            # Get the master event of the series by uid
+            master_event = await self.coordinator.async_get_event(self.hass, uid)
+            if not master_event:
+                _LOGGER.error("Event with uid %s not found", uid)
+                return
+
+            assert hasattr(master_event, "icalendar_component")  # for mypy
+
+            # Create an Exception date (EXDATE) for the given recurrence_id
+            master_event.icalendar_component.add(
+                "EXDATE", vDDDTypes(self.parse_recurrence_id(recurrence_id))
+            )
+
+            def update_master_event() -> None:
+                master_event.save()
+
+            # Delete the event by updating the master event with the newly added EXDATE
+            await self.hass.async_add_executor_job(update_master_event)
+
+        # No recurrence, delete the event by uid
+        else:
+            event = await self.coordinator.async_get_event(self.hass, uid)
+            if not event:
+                _LOGGER.error("Event with uid %s not found", uid)
+                return
+
+            def delete_event() -> None:
+                event.delete()
+
+            # Delete the event
+            await self.hass.async_add_executor_job(delete_event)
+
+        await self.async_update_ha_state(force_refresh=True)
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update event data."""
@@ -249,3 +381,11 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         """When entity is added to hass update state from existing coordinator data."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
+
+    @staticmethod
+    def parse_recurrence_id(recurrence_id: str) -> datetime | date:
+        """Convert a recurrence_id string to a datetime or date object."""
+        dt = dt_util.parse_datetime(recurrence_id) or dt_util.parse_date(recurrence_id)
+        if not dt:
+            raise ValueError("Unable to parse recurrence_id %s")
+        return dt

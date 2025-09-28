@@ -9,6 +9,7 @@ import re
 from typing import TYPE_CHECKING
 
 import caldav
+from caldav.lib.error import NotFoundError
 
 from homeassistant.components.calendar import CalendarEvent, extract_offset
 from homeassistant.const import CONF_SCAN_INTERVAL
@@ -57,6 +58,20 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         self.include_all_day = include_all_day
         self.search = search
         self.offset: timedelta | None = None
+
+    async def async_get_event(
+        self, hass: HomeAssistant, uid: str
+    ) -> caldav.Event | None:
+        """Get a single event by its unique identifier."""
+        try:
+            event = await hass.async_add_executor_job(self.calendar.event_by_uid, uid)
+        except NotFoundError:
+            _LOGGER.debug("No event found with uid=%s", uid)
+            return None
+        if event is None or not hasattr(event.instance, "vevent"):
+            return None
+        assert isinstance(event, caldav.Event)
+        return event
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
