@@ -114,7 +114,7 @@ class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
 
         is_open_wdr = None
         is_open_hdr = None
-        reserve3 = product_info.get("reserve3")
+        reserve3 = product_info.get("reserve4")
         reserve3_int = int(reserve3) if reserve3 is not None else 0
         supports_wdr_adjustment_val = bool(int(reserve3_int & 256))
         supports_hdr_adjustment_val = bool(int(reserve3_int & 128))

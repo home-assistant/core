@@ -32,194 +32,55 @@ def handle_ir_turn_off(session: FoscamCamera) -> None:
 
 def handle_pet_detect_turn_on(session: FoscamCamera) -> None:
     """Turns on pet detection."""
-
-    session.set_motion_detect_config(
-        {
-            "isEnable": 1,
-            "linkage": 654,
-            "snapInterval": 5,
-            "sensitivity": 3,
-            "triggerInterval": 15,
-            "schedule0": 281474976710655,
-            "schedule1": 281474976710655,
-            "schedule2": 281474976710655,
-            "schedule3": 281474976710655,
-            "schedule4": 281474976710655,
-            "schedule5": 281474976710655,
-            "schedule6": 281474976710655,
-            "area0": 1023,
-            "area1": 1023,
-            "area2": 1023,
-            "area3": 1023,
-            "area4": 1023,
-            "area5": 1023,
-            "area6": 1023,
-            "area7": 1023,
-            "area8": 1023,
-            "area9": 1023,
-            "petEnable": "1",
-        }
-    )
+    ret, config = session.get_motion_detect_config()
+    if not ret:
+        config["petEnable"] = 1
+        session.set_motion_detect_config(config)
 
 
 def handle_pet_detect_turn_off(session: FoscamCamera) -> None:
     """Turns off pet detection."""
 
-    session.set_motion_detect_config(
-        {
-            "isEnable": 1,
-            "linkage": 654,
-            "snapInterval": 5,
-            "sensitivity": 3,
-            "triggerInterval": 15,
-            "schedule0": 281474976710655,
-            "schedule1": 281474976710655,
-            "schedule2": 281474976710655,
-            "schedule3": 281474976710655,
-            "schedule4": 281474976710655,
-            "schedule5": 281474976710655,
-            "schedule6": 281474976710655,
-            "area0": 1023,
-            "area1": 1023,
-            "area2": 1023,
-            "area3": 1023,
-            "area4": 1023,
-            "area5": 1023,
-            "area6": 1023,
-            "area7": 1023,
-            "area8": 1023,
-            "area9": 1023,
-            "petEnable": "0",
-        }
-    )
+    ret, config = session.get_motion_detect_config()
+    if not ret:
+        config["petEnable"] = 0
+        session.set_motion_detect_config(config)
 
 
 def handle_car_detect_turn_on(session: FoscamCamera) -> None:
     """Turns on vehicle detection."""
 
-    session.set_motion_detect_config(
-        {
-            "isEnable": 1,
-            "linkage": 654,
-            "snapInterval": 5,
-            "sensitivity": 3,
-            "triggerInterval": 15,
-            "schedule0": 281474976710655,
-            "schedule1": 281474976710655,
-            "schedule2": 281474976710655,
-            "schedule3": 281474976710655,
-            "schedule4": 281474976710655,
-            "schedule5": 281474976710655,
-            "schedule6": 281474976710655,
-            "area0": 1023,
-            "area1": 1023,
-            "area2": 1023,
-            "area3": 1023,
-            "area4": 1023,
-            "area5": 1023,
-            "area6": 1023,
-            "area7": 1023,
-            "area8": 1023,
-            "area9": 1023,
-            "carEnable": "1",
-        }
-    )
+    ret, config = session.get_motion_detect_config()
+    if not ret:
+        config["carEnable"] = 1
+        session.set_motion_detect_config(config)
 
 
 def handle_car_detect_turn_off(session: FoscamCamera) -> None:
     """Turns off vehicle detection."""
 
-    session.set_motion_detect_config(
-        {
-            "isEnable": 1,
-            "linkage": 654,
-            "snapInterval": 5,
-            "sensitivity": 3,
-            "triggerInterval": 15,
-            "schedule0": 281474976710655,
-            "schedule1": 281474976710655,
-            "schedule2": 281474976710655,
-            "schedule3": 281474976710655,
-            "schedule4": 281474976710655,
-            "schedule5": 281474976710655,
-            "schedule6": 281474976710655,
-            "area0": 1023,
-            "area1": 1023,
-            "area2": 1023,
-            "area3": 1023,
-            "area4": 1023,
-            "area5": 1023,
-            "area6": 1023,
-            "area7": 1023,
-            "area8": 1023,
-            "area9": 1023,
-            "carEnable": "0",
-        }
-    )
+    ret, config = session.get_motion_detect_config()
+    if not ret:
+        config["carEnable"] = 0
+        session.set_motion_detect_config(config)
 
 
 def handle_human_detect_turn_on(session: FoscamCamera) -> None:
     """Turns on human detection."""
 
-    session.set_motion_detect_config(
-        {
-            "isEnable": 1,
-            "linkage": 654,
-            "snapInterval": 5,
-            "sensitivity": 3,
-            "triggerInterval": 15,
-            "schedule0": 281474976710655,
-            "schedule1": 281474976710655,
-            "schedule2": 281474976710655,
-            "schedule3": 281474976710655,
-            "schedule4": 281474976710655,
-            "schedule5": 281474976710655,
-            "schedule6": 281474976710655,
-            "area0": 1023,
-            "area1": 1023,
-            "area2": 1023,
-            "area3": 1023,
-            "area4": 1023,
-            "area5": 1023,
-            "area6": 1023,
-            "area7": 1023,
-            "area8": 1023,
-            "area9": 1023,
-            "humanEnable": "1",
-        }
-    )
+    ret, config = session.get_motion_detect_config()
+    if not ret:
+        config["humanEnable"] = 1
+        session.set_motion_detect_config(config)
 
 
 def handle_human_detect_turn_off(session: FoscamCamera) -> None:
     """Turns off human detection."""
 
-    session.set_motion_detect_config(
-        {
-            "isEnable": 1,
-            "linkage": 654,
-            "snapInterval": 5,
-            "sensitivity": 3,
-            "triggerInterval": 15,
-            "schedule0": 281474976710655,
-            "schedule1": 281474976710655,
-            "schedule2": 281474976710655,
-            "schedule3": 281474976710655,
-            "schedule4": 281474976710655,
-            "schedule5": 281474976710655,
-            "schedule6": 281474976710655,
-            "area0": 1023,
-            "area1": 1023,
-            "area2": 1023,
-            "area3": 1023,
-            "area4": 1023,
-            "area5": 1023,
-            "area6": 1023,
-            "area7": 1023,
-            "area8": 1023,
-            "area9": 1023,
-            "humanEnable": "0",
-        }
-    )
+    ret, config = session.get_motion_detect_config()
+    if not ret:
+        config["humanEnable"] = 0
+        session.set_motion_detect_config(config)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -343,7 +204,7 @@ async def async_setup_entry(
     async_add_entities(
         FoscamGenericSwitch(coordinator, description)
         for description in SWITCH_DESCRIPTIONS
-        if description.exists_fn is None or description.exists_fn(coordinator)
+        if description.exists_fn(coordinator)
     )
 
 
