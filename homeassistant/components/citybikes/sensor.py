@@ -10,11 +10,7 @@ import typing
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
-    SensorEntity,
-)
+from homeassistant.components.sensor import ENTITY_ID_FORMAT, SensorEntity
 from homeassistant.const import (
     ATTR_ID,
     ATTR_LATITUDE,
@@ -72,22 +68,6 @@ CITYBIKES_ATTRIBUTION = (
 
 CITYBIKES_NETWORKS = "citybikes_networks"
 
-PLATFORM_SCHEMA = vol.All(
-    cv.has_at_least_one_key(CONF_RADIUS, CONF_STATIONS_LIST),
-    SENSOR_PLATFORM_SCHEMA.extend(
-        {
-            vol.Optional(CONF_NAME, default=""): cv.string,
-            vol.Optional(CONF_NETWORK): cv.string,
-            vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
-            vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
-            vol.Optional(CONF_RADIUS, "station_filter"): cv.positive_int,
-            vol.Optional(CONF_STATIONS_LIST, "station_filter"): vol.All(
-                cv.ensure_list, vol.Length(min=1), [cv.string]
-            ),
-        }
-    ),
-)
-
 NETWORK_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ID): cv.string,
@@ -136,10 +116,16 @@ class CityBikesRequestError(Exception):
     """Error to indicate a CityBikes API request has failed."""
 
 
-async def async_citybikes_request(hass: HomeAssistant, uri: str, schema: vol.Schema):
+async def async_citybikes_request(
+    hass: HomeAssistant,
+    uri: str,
+    schema: vol.Schema,
+    session: aiohttp.ClientSession | None = None,
+):
     """Perform a request to CityBikes API endpoint, and parse the response."""
     try:
-        session = async_get_clientsession(hass)
+        if session is None:
+            session = async_get_clientsession(hass)
 
         async with asyncio.timeout(REQUEST_TIMEOUT):
             req = await session.get(DEFAULT_ENDPOINT.format(uri=uri))
@@ -221,34 +207,43 @@ class CityBikesNetworks:
         self.hass = hass
         self.networks = None
         self.networks_loading = asyncio.Condition()
+        self.session: aiohttp.ClientSession | None = None
 
-    async def get_closest_network_id(self, latitude, longitude):
-        """Return the id of the network closest to provided location."""
+    async def load_networks(self, session: aiohttp.ClientSession | None = None):
+        """Load the list of networks from the CityBikes API."""
         try:
             await self.networks_loading.acquire()
             if self.networks is None:
                 networks = await async_citybikes_request(
-                    self.hass, NETWORKS_URI, NETWORKS_RESPONSE_SCHEMA
+                    self.hass,
+                    NETWORKS_URI,
+                    NETWORKS_RESPONSE_SCHEMA,
+                    session=session or self.session,
                 )
                 self.networks = networks[ATTR_NETWORKS_LIST]
         except CityBikesRequestError as err:
             raise PlatformNotReady from err
-        else:
-            result = None
-            minimum_dist = None
-            for network in self.networks:
-                network_latitude = network[ATTR_LOCATION][ATTR_LATITUDE]
-                network_longitude = network[ATTR_LOCATION][ATTR_LONGITUDE]
-                dist = location_util.distance(
-                    latitude, longitude, network_latitude, network_longitude
-                )
-                if dist is not None and (minimum_dist is None or dist < minimum_dist):
-                    minimum_dist = dist
-                    result = network[ATTR_ID]
-
-            return result
         finally:
             self.networks_loading.release()
+        return self.networks
+
+    async def get_closest_network_id(self, latitude, longitude):
+        """Return the id of the network closest to provided location."""
+        await self.load_networks()
+        if self.networks is None:
+            raise PlatformNotReady
+        result = None
+        minimum_dist = None
+        for network in self.networks:
+            network_latitude = network[ATTR_LOCATION][ATTR_LATITUDE]
+            network_longitude = network[ATTR_LOCATION][ATTR_LONGITUDE]
+            dist = location_util.distance(
+                latitude, longitude, network_latitude, network_longitude
+            )
+            if dist is not None and (minimum_dist is None or dist < minimum_dist):
+                minimum_dist = dist
+                result = network[ATTR_ID]
+        return result
 
 
 class CityBikesNetwork:
