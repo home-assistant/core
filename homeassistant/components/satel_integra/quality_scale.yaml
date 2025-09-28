@@ -1,22 +1,28 @@
 rules:
   # Bronze
-  action-setup: todo
-  appropriate-polling: todo
-  brands: todo
+  action-setup: 
+    status: exempt
+    comment: This integration does not provide any service actions.
+  appropriate-polling: 
+    status: exempt
+    comment: This integration does not poll.
+  brands: done
   common-modules: todo
   config-flow-test-coverage: todo
   config-flow: todo
   dependency-transparency: todo
-  docs-actions: todo
+  docs-actions: 
+    status: exempt
+    comment: This integration does not provide any service actions.
   docs-high-level-description: todo
   docs-installation-instructions: todo
   docs-removal-instructions: todo
   entity-event-setup: todo
   entity-unique-id: todo
   has-entity-name: todo
-  runtime-data: todo
-  test-before-configure: todo
-  test-before-setup: todo
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
   unique-config-entry: todo
 
   # Silver
