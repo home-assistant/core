@@ -9,6 +9,18 @@
           "url": "The remote MCP server URL for the SSE endpoint, for example http://example/sse"
         }
       },
+      "credentials_choice": {
+        "title": "Choose how to authenticate with the MCP server",
+        "description": "You can either use existing credentials from another integration or set up new credentials.",
+        "menu_options": {
+          "new_credentials": "Set up new credentials",
+          "pick_implementation": "Use existing credentials"
+        },
+        "menu_option_descriptions": {
+          "new_credentials": "You will be guided through setting up a new OAuth Client ID and secret.",
+          "pick_implementation": "You may use previously entered OAuth credentials."
+        }
+      },
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
         "data": {
