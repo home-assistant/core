@@ -194,7 +194,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         to find the OAuth medata then run the OAuth authentication flow.
         """
         try:
-            oauth_confing = await async_discover_oauth_config(
+            oauth_config = await async_discover_oauth_config(
                 self.hass, self.data[CONF_URL]
             )
         except TimeoutConnectError:
@@ -205,13 +205,13 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
         else:
-            _LOGGER.info("OAuth configuration: %s", oauth_confing)
-            self.oauth_config = oauth_confing
+            _LOGGER.info("OAuth configuration: %s", oauth_config)
+            self.oauth_config = oauth_config
             self.data.update(
                 {
-                    CONF_AUTHORIZATION_URL: oauth_confing.authorization_server.authorize_url,
-                    CONF_TOKEN_URL: oauth_confing.authorization_server.token_url,
-                    CONF_SCOPE: oauth_confing.scopes,
+                    CONF_AUTHORIZATION_URL: oauth_config.authorization_server.authorize_url,
+                    CONF_TOKEN_URL: oauth_config.authorization_server.token_url,
+                    CONF_SCOPE: oauth_config.scopes,
                 }
             )
             return await self.async_step_credentials_choice()
