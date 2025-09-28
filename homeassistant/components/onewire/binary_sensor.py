@@ -173,4 +173,6 @@ class OneWireBinarySensorEntity(OneWireEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if sensor is on (present)."""
-        return self._state == 1 if self._state is not None else None
+        if self._state is None:
+            return None
+        return self._state == 1
