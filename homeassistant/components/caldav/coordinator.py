@@ -80,6 +80,64 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         assert isinstance(event, caldav.Event)
         return event
 
+    async def async_get_event_recurrence(
+        self, hass: HomeAssistant, uid: str, recurrence_id: str | None = None
+    ) -> caldav.Event | None:
+        """Get a single event by its unique identifier and recurrence id."""
+        if not recurrence_id:
+            return await self.async_get_event(hass, uid)
+
+        d = self.parse_recurrence_id(recurrence_id)
+
+        event_list_from_server = await hass.async_add_executor_job(
+            partial(
+                self.calendar.search,
+                uid=uid,
+                start=d,
+                end=d + timedelta(seconds=1),
+                event=True,
+                expand=True,
+            )
+        )
+
+        # Unfortunately, event_list_from_server may contain more than one object.
+        # As of 28.09.2025, Nextcloud seems to ignore the UID filter when specifying a search interval.
+        # So we have to search for the UID manually.
+        event_list = []
+        for event in event_list_from_server:
+            if not hasattr(event.instance, "vevent"):
+                _LOGGER.warning("Skipped event with missing 'vevent' property")
+                continue
+            vevent = event.instance.vevent
+            if not self.is_matching(vevent, self.search):
+                continue
+            assert isinstance(event, caldav.Event)
+            assert hasattr(event, "icalendar_component")  # for mypy
+            # Skip if not the UID we're looking for
+            if event.icalendar_component["uid"] != uid:
+                continue
+            event_list.append(event)
+
+        if len(event_list) == 0:
+            _LOGGER.error(
+                "No event recurrences found with uid=%s and recurrence-id=%s",
+                uid,
+                recurrence_id,
+            )
+            return None
+
+        event = event_list[0]
+
+        if len(event_list) > 1:
+            _LOGGER.warning(
+                "More than one event recurrence found with uid=%s and recurrence-id=%s. Continuing with first event in list: %s",
+                uid,
+                recurrence_id,
+                event,
+            )
+
+        return event
+
     def vevent_to_hass_event(self, vevent) -> CalendarEvent:
         """Convert a VEVENT to a Home Assistant CalendarEvent."""
         # recurrence-id needs some special treatment
