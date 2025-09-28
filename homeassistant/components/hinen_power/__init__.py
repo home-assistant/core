@@ -20,7 +20,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import application_credentials
 from .auth_config import AsyncConfigEntryAuth
-from .const import AUTH, CLIENT_ID, COORDINATOR, DOMAIN
+from .const import AUTH, CLIENT_ID, CLIENT_SECRET, COORDINATOR, DOMAIN
 from .coordinator import HinenDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -30,19 +30,15 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: HinenIntegrationConfigEntry
 ) -> bool:
     """Set up the Hinen Auth component."""
-    credential: ClientCredential = ClientCredential(CLIENT_ID, "")
-
     hinen_auth_impl: AbstractOAuth2Implementation = (
         await application_credentials.async_get_auth_implementation(
-            hass, DOMAIN, credential
+            hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
         )
     )
-
     async_register_implementation(hass, DOMAIN, hinen_auth_impl)
-
     implementation = await async_get_config_entry_implementation(hass, entry)
-    session = OAuth2Session(hass, entry, implementation)
-    auth = AsyncConfigEntryAuth(hass, session)
+    auth = AsyncConfigEntryAuth(hass, OAuth2Session(hass, entry, implementation))
+
     try:
         await auth.check_and_refresh_token()
     except ClientResponseError as err:
@@ -53,20 +49,16 @@ async def async_setup_entry(
         raise ConfigEntryNotReady from err
     except ClientError as err:
         raise ConfigEntryNotReady from err
+
     coordinator = HinenDataUpdateCoordinator(hass, entry, auth)
-
     await coordinator.async_config_entry_first_refresh()
-
     await delete_devices(hass, entry, coordinator)
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         COORDINATOR: coordinator,
         AUTH: auth,
     }
 
-    client = HinenClient()
-    entry.runtime_data = client
-
+    entry.runtime_data = HinenClient()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -74,7 +66,6 @@ async def async_setup_entry(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok

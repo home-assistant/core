@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 from hinen_open_api import HinenOpen
-from hinen_open_api.exceptions import ForbiddenError
+from hinen_open_api.exceptions import ForbiddenError, HinenAPIError
 import voluptuous as vol
 
 from homeassistant.components.application_credentials import ClientCredential
@@ -28,11 +28,11 @@ from homeassistant.helpers.selector import (
 )
 
 from . import application_credentials
-from .auth_config import HinenOAuth2AuthorizeCallbackView
 from .const import (
     ATTR_AUTH_LANGUAGE,
-    ATTR_REDIRECTION_URL,
+    ATTR_REGION_CODE,
     CLIENT_ID,
+    CLIENT_SECRET,
     CONF_DEVICES,
     DOMAIN,
     HOST,
@@ -70,29 +70,37 @@ class OAuth2FlowHandler(
         """Handle a flow start."""
         if user_input is not None:
             self.hass.data[ATTR_AUTH_LANGUAGE] = user_input[ATTR_AUTH_LANGUAGE]
-            self.hass.data[ATTR_REDIRECTION_URL] = user_input[ATTR_REDIRECTION_URL]
-            credential: ClientCredential = ClientCredential(CLIENT_ID, "")
-            self.hass.http.register_view(HinenOAuth2AuthorizeCallbackView())
-            hinen_auth_impl: config_entry_oauth2_flow.AbstractOAuth2Implementation = (
+            self.hass.data[ATTR_REGION_CODE] = user_input[ATTR_REGION_CODE]
+            credential: ClientCredential = ClientCredential(CLIENT_ID, CLIENT_SECRET)
+
+            self.flow_impl = (
                 await application_credentials.async_get_auth_implementation(
                     self.hass, DOMAIN, credential
                 )
             )
-
-            self.flow_impl = hinen_auth_impl
             config_entry_oauth2_flow.async_register_implementation(
-                self.hass, DOMAIN, hinen_auth_impl
+                self.hass, DOMAIN, self.flow_impl
             )
             return await super().async_step_auth()
+
+        default_language = SUPPORTED_LANGUAGES[0][0]
+
+        try:
+            country_options = await self._get_country_list()
+        except HinenAPIError as ex:
+            LOGGER.error("Unknown error occurred: %s", ex.args)
+            country_options = []
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(ATTR_AUTH_LANGUAGE): vol.In(dict(SUPPORTED_LANGUAGES)),
-                    vol.Required(
-                        ATTR_REDIRECTION_URL, default="http://127.0.0.1:8123"
-                    ): str,
+                    vol.Required(ATTR_AUTH_LANGUAGE, default=default_language): vol.In(
+                        dict(SUPPORTED_LANGUAGES)
+                    ),
+                    vol.Required(ATTR_REGION_CODE): SelectSelector(
+                        SelectSelectorConfig(options=country_options)
+                    ),
                 }
             ),
         )
@@ -193,6 +201,21 @@ class OAuth2FlowHandler(
                 }
             ),
         )
+
+    async def _get_country_list(self) -> list[SelectOptionDict]:
+        """Fetch the list of countries from the external API."""
+        url = "https://global.knowledge.celinksmart.com/prod-api/iot-global/app-api/countries"
+        language = "zh_CN" if self.hass.config.language.startswith("zh") else "en_US"
+        headers = {"accept-language": language}
+        session = async_get_clientsession(self.hass)
+        async with session.get(url, headers=headers) as response:
+            if response.status == 200:
+                data = await response.json()
+                return [
+                    SelectOptionDict(value=country["code"], label=country["name"])
+                    for country in data.get("data", [])
+                ]
+            return []
 
 
 class HinenOpenFlowHandler(OptionsFlow):
