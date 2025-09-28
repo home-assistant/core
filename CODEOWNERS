@@ -1105,8 +1105,8 @@ build.json @home-assistant/supervisor
 /tests/components/ondilo_ico/ @JeromeHXP
 /homeassistant/components/onedrive/ @zweckj
 /tests/components/onedrive/ @zweckj
-/homeassistant/components/onewire/ @garbled1 @epenet @szczukot
-/tests/components/onewire/ @garbled1 @epenet @szczukot
+/homeassistant/components/onewire/ @garbled1 @epenet
+/tests/components/onewire/ @garbled1 @epenet
 /homeassistant/components/onkyo/ @arturpragacz @eclair4151
 /tests/components/onkyo/ @arturpragacz @eclair4151
 /homeassistant/components/onvif/ @hunterjm @jterrace

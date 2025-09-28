@@ -37,7 +37,6 @@ class OneWireEntity(Entity):
         device_info: DeviceInfo,
         device_file: str,
         owproxy: protocol._Proxy,
-        #   family: str | None = None,
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
@@ -45,13 +44,9 @@ class OneWireEntity(Entity):
         self._attr_unique_id = f"/{device_id}/{description.key}"
         self._attr_device_info = device_info
         self._device_file = device_file
-        self._state: int | float | str | None = None
-        self._value_raw: float | str | None = None
+        self._state: int | float | None = None
+        self._value_raw: float | None = None
         self._owproxy = owproxy
-
-    #   if family == "01":
-    #       self._attr_name = "Serial Number"
-    #       self._attr_has_entity_name = False
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -83,7 +78,6 @@ class OneWireEntity(Entity):
                 self._last_update_success = True
                 _LOGGER.debug("Fetching %s data recovered", self.name)
             if self.entity_description.read_mode == READ_MODE_INT:
-                if isinstance(self._value_raw, (int, float)):
-                    self._state = int(self._value_raw)
+                self._state = int(self._value_raw)
             else:
                 self._state = self._value_raw
