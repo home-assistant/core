@@ -40,6 +40,7 @@ class GroupSceneState:
     active_scene_name: str | None = None
     active_scene_mode: str | None = None  # static | dynamic_palette
     active_scene_last_recall: datetime | None = None
+    active_scene_speed: float | None = None  # 0.0 - 1.0 when dynamic palette active
 
     # Smart scene state
     active_smart_scene_entity_id: str | None = None
@@ -127,12 +128,14 @@ class HueSceneActivityManager:
                 group_state.active_scene_name = scene.metadata.name
                 group_state.active_scene_mode = scene.status.active.value
                 group_state.active_scene_last_recall = scene.status.last_recall
+                group_state.active_scene_speed = scene.speed
                 return True
             if group_state.active_scene_entity_id == entity_id:
                 group_state.active_scene_entity_id = None
                 group_state.active_scene_name = None
                 group_state.active_scene_mode = None
                 group_state.active_scene_last_recall = None
+                group_state.active_scene_speed = None
                 return True
             return False
 
