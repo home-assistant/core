@@ -22,12 +22,11 @@ class MeteoLtUpdateCoordinator(DataUpdateCoordinator[MeteoLtForecast]):
     def __init__(
         self,
         hass: HomeAssistant,
-        client: MeteoLtAPI,
         place_code: str,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
-        self.client = client
+        self.client = MeteoLtAPI()
         self.place_code = place_code
 
         super().__init__(
@@ -53,10 +52,8 @@ class MeteoLtUpdateCoordinator(DataUpdateCoordinator[MeteoLtForecast]):
 
         # Check if forecast data is available
         if not forecast.forecast_timestamps:
-            _LOGGER.warning(
-                "No forecast data available for %s - API returned empty timestamps",
-                self.place_code,
+            raise UpdateFailed(
+                f"No forecast data available for {self.place_code} - API returned empty timestamps"
             )
-            raise UpdateFailed("No forecast data available")
 
         return forecast

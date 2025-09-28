@@ -62,7 +62,7 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
         super().__init__(coordinator)
 
         self._place_code = coordinator.place_code
-        self._attr_unique_id = f"{self._place_code}_weather"
+        self._attr_unique_id = f"{self._place_code}"
 
         device_name = entry.title
         self._attr_device_info = DeviceInfo(
