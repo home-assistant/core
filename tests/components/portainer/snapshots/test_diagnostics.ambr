@@ -99,8 +99,65 @@
       'unique_id': None,
       'version': 2,
     }),
-    'coordinator_data': dict({
-      '__type': "<class 'homeassistant.components.portainer.coordinator.PortainerCoordinator'>",
+    'coordinator': dict({
+      'endpoints': list([
+        dict({
+          'containers': list([
+            dict({
+              'id': 'aa86eacfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
+              'image': 'docker.io/library/ubuntu:latest',
+              'names': list([
+                '/funny_chatelet',
+              ]),
+              'state': 'running',
+              'status': 'Up 4 days',
+            }),
+            dict({
+              'id': 'bb97facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
+              'image': 'docker.io/library/nginx:latest',
+              'names': list([
+                '/serene_banach',
+              ]),
+              'state': 'running',
+              'status': 'Up 2 days',
+            }),
+            dict({
+              'id': 'cc08facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
+              'image': 'docker.io/library/postgres:15',
+              'names': list([
+                '/stoic_turing',
+              ]),
+              'state': 'running',
+              'status': 'Up 1 day',
+            }),
+            dict({
+              'id': 'dd19facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
+              'image': 'docker.io/library/redis:7',
+              'names': list([
+                '/focused_einstein',
+              ]),
+              'state': 'running',
+              'status': 'Up 12 hours',
+            }),
+            dict({
+              'id': 'ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf',
+              'image': 'docker.io/library/python:3.13-slim',
+              'names': list([
+                '/practical_morse',
+              ]),
+              'state': 'running',
+              'status': 'Up 6 hours',
+            }),
+          ]),
+          'endpoint': dict({
+            'public_url': 'docker.mydomain.tld:2375',
+            'status': 1,
+            'url': 'docker.mydomain.tld:2375',
+          }),
+          'id': 1,
+          'name': 'my-environment',
+        }),
+      ]),
     }),
   })
 # ---
