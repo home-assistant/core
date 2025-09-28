@@ -73,56 +73,50 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
             name=device_name,
         )
 
-    def _get_current_forecast_attr(self, attr_name: str) -> Any:
-        """Get attribute from current forecast data."""
-        if self.coordinator.data and self.coordinator.data.current_conditions:
-            return getattr(self.coordinator.data.current_conditions, attr_name)
-        return None
-
     @property
     def native_temperature(self) -> float | None:
         """Return the temperature."""
-        return self._get_current_forecast_attr("temperature")
+        return self.coordinator.data.current_conditions.temperature
 
     @property
     def native_apparent_temperature(self) -> float | None:
         """Return the apparent temperature."""
-        return self._get_current_forecast_attr("apparent_temperature")
+        return self.coordinator.data.current_conditions.apparent_temperature
 
     @property
     def humidity(self) -> int | None:
         """Return the humidity."""
-        return self._get_current_forecast_attr("humidity")
+        return self.coordinator.data.current_conditions.humidity
 
     @property
     def native_pressure(self) -> float | None:
         """Return the pressure."""
-        return self._get_current_forecast_attr("pressure")
+        return self.coordinator.data.current_conditions.pressure
 
     @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
-        return self._get_current_forecast_attr("wind_speed")
+        return self.coordinator.data.current_conditions.wind_speed
 
     @property
     def wind_bearing(self) -> int | None:
         """Return the wind bearing."""
-        return self._get_current_forecast_attr("wind_bearing")
+        return self.coordinator.data.current_conditions.wind_bearing
 
     @property
     def native_wind_gust_speed(self) -> float | None:
         """Return the wind gust speed."""
-        return self._get_current_forecast_attr("wind_gust_speed")
+        return self.coordinator.data.current_conditions.wind_gust_speed
 
     @property
     def cloud_coverage(self) -> int | None:
         """Return the cloud coverage."""
-        return self._get_current_forecast_attr("cloud_coverage")
+        return self.coordinator.data.current_conditions.cloud_coverage
 
     @property
     def condition(self) -> str | None:
         """Return the current condition."""
-        return self._get_current_forecast_attr("condition")
+        return self.coordinator.data.current_conditions.condition
 
     def _convert_forecast_data(
         self, forecast_data: Any, include_templow: bool = False
@@ -131,9 +125,7 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
         return Forecast(
             datetime=forecast_data.datetime,
             native_temperature=forecast_data.temperature,
-            native_templow=getattr(forecast_data, "temperature_low", None)
-            if include_templow
-            else None,
+            native_templow=forecast_data.temperature_low if include_templow else None,
             native_apparent_temperature=forecast_data.apparent_temperature,
             condition=forecast_data.condition,
             native_precipitation=forecast_data.precipitation,
@@ -204,4 +196,3 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
             self._convert_forecast_data(forecast_data)
             for forecast_data in self.coordinator.data.forecast_timestamps[:24]
         ]
-
