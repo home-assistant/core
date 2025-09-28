@@ -715,7 +715,7 @@ SENSOR_ENTITY_CATEGORY_SELECTOR = SelectSelector(
         sort=True,
     )
 )
-SENSOR_STATE_CLASS_SELECTOR = SensorStateClassSelector(SensorStateClassSelector())
+SENSOR_STATE_CLASS_SELECTOR = SensorStateClassSelector(SensorStateClassSelectorConfig())
 SUPPORTED_COLOR_MODES_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=[platform.value for platform in VALID_COLOR_MODES],

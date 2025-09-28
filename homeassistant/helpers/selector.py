@@ -134,13 +134,6 @@ def make_selector_config_schema(schema_dict: dict | None = None) -> vol.Schema:
         )
     )
 
-CLASS_CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
-    {
-        vol.Optional("multiple", default=False): cv.boolean,
-        vol.Optional("no_sort", default=False): cv.boolean,
-    }
-)
-
 
 class BaseSelectorConfig(TypedDict, total=False):
     """Class to common options of all selectors."""
@@ -1453,11 +1446,13 @@ class SensorDeviceClassSelector(DeviceClassSelector):
 
     selector_type = "sensor_device_class"
 
-    CONFIG_SCHEMA = CLASS_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
+            vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("no_sort", default=False): cv.boolean,
             vol.Optional(
                 "device_classes",
-            ): [vol.All(vol.Any([str], [StrEnum]))]
+            ): [vol.All(vol.Any([str], [StrEnum]))],
         }
     )
 
@@ -1476,7 +1471,7 @@ class SensorStateClassSelector(Selector[SensorStateClassSelectorConfig]):
 
     selector_type = "sensor_state_class"
 
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+    CONFIG_SCHEMA = make_selector_config_schema(
         {
             vol.Optional("state_classes"): [str],
             vol.Optional("multiple", default=False): cv.boolean,
