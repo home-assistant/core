@@ -1273,6 +1273,7 @@ class SelectSelectorConfig(BaseSelectorConfig, total=False):
     custom_value: bool
     mode: SelectSelectorMode
     translation_key: str
+    translation_domain: str
     sort: bool
 
 
@@ -1291,6 +1292,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
                 vol.Coerce(SelectSelectorMode), lambda val: val.value
             ),
             vol.Optional("translation_key"): cv.string,
+            vol.Optional("translation_domain"): cv.string,
             vol.Optional("sort", default=False): cv.boolean,
         }
     )

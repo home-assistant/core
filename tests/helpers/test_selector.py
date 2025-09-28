@@ -721,6 +721,7 @@ def test_text_selector_schema(schema, valid_selections, invalid_selections) -> N
             {
                 "options": ["red", "green", "blue"],
                 "translation_key": "color",
+                "translation_domain": "homeassistant",
             },
             ("red", "green", "blue"),
             ("cat", 0, None, ["red"]),

@@ -6,9 +6,14 @@ from datetime import date, datetime
 import logging
 
 from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.util import dt as dt_util
 
-from . import SensorDeviceClass
+from . import DOMAIN, SensorDeviceClass, SensorStateClass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,3 +42,31 @@ def async_parse_date_datetime(
 
     _LOGGER.warning("%s rendered invalid date %s", entity_id, value)
     return None
+
+
+@callback
+def create_sensor_device_class_select_selector() -> SelectSelector:
+    """Create sensor device class select selector."""
+    return SelectSelector(
+        SelectSelectorConfig(
+            options=[device_class.value for device_class in SensorDeviceClass],
+            mode=SelectSelectorMode.DROPDOWN,
+            translation_key="device_class",
+            translation_domain=DOMAIN,
+            sort=True,
+        )
+    )
+
+
+@callback
+def create_sensor_state_class_select_selector() -> SelectSelector:
+    """Create sensor state class select selector."""
+    return SelectSelector(
+        SelectSelectorConfig(
+            options=[device_class.value for device_class in SensorStateClass],
+            mode=SelectSelectorMode.DROPDOWN,
+            translation_key="state_class",
+            translation_domain=DOMAIN,
+            sort=True,
+        )
+    )
