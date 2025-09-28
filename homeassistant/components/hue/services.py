@@ -283,7 +283,7 @@ async def capture_group_scene(call: ServiceCall) -> dict[str, Any]:
     return {ATTR_GROUPS: grouped_lights}
 
 
-async def restore_group_scene(call: ServiceCall) -> dict[str, Any]:
+async def restore_group_scene(call: ServiceCall) -> bool:
     """Restore grouped light scenes state."""
     hass = call.hass
     grouped_lights = call.data.get(ATTR_GROUPS)
@@ -293,7 +293,6 @@ async def restore_group_scene(call: ServiceCall) -> dict[str, Any]:
         )
     entity_reg = er.async_get(hass)
 
-    results: dict[str, Any] = {}
     for entity_id, scene_state in grouped_lights.items():
         if not isinstance(scene_state, dict):
             continue
@@ -323,12 +322,4 @@ async def restore_group_scene(call: ServiceCall) -> dict[str, Any]:
             },
             blocking=True,
         )
-        results[entity_id] = {
-            ATTR_SCENE_ENTITY_ID: scene_entity_id,
-            ATTR_DYNAMIC: scene_state.get(ATTR_SCENE_MODE) == "dynamic_palette",
-        }
-    if not results:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN, translation_key="no_scene_to_restore"
-        )
-    return {"restored": results}
+    return True
