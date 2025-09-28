@@ -120,6 +120,8 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+
             valid = await self.test_connection(
                 user_input[CONF_HOST], user_input[CONF_PORT]
             )
