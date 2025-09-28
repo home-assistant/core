@@ -16,7 +16,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.network import NoURLAvailableError
 
 from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 from tests.typing import ClientSessionGenerator
 
 TEST_DOMAIN = "oauth2_test"
@@ -539,6 +539,188 @@ async def test_abort_if_oauth_token_error(
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == error_reason
     assert error_log in caplog.text
+
+
+# @Erwin: I am keeping this in, to be sure the rest of the tests still work. THe focus should be later on on the backoff.
+@pytest.mark.parametrize(
+    ("status_code", "error_body", "error_reason", "error_log"),
+    [
+        (
+            HTTPStatus.UNAUTHORIZED,
+            {},
+            "oauth_unauthorized",
+            "Token request for oauth2_test failed (unknown): unknown",
+        ),
+        (
+            HTTPStatus.NOT_FOUND,
+            {},
+            "oauth_failed",
+            "Token request for oauth2_test failed (unknown): unknown",
+        ),
+        (
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            {},
+            "oauth_failed",
+            "Token request for oauth2_test failed (unknown): unknown",
+        ),
+        (HTTPStatus.TOO_MANY_REQUESTS, {}, "oauth_failed", "Rate limit exceeded"),
+        (
+            HTTPStatus.BAD_REQUEST,
+            {
+                "error": "invalid_request",
+                "error_description": "Request was missing the 'redirect_uri' parameter.",
+                "error_uri": "See the full API docs at https://authorization-server.com/docs/access_token",
+            },
+            "oauth_failed",
+            "Token request for oauth2_test failed (invalid_request): Request was missing the",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_abort_if_oauth_token_error_backoff(
+    hass: HomeAssistant,
+    flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    status_code: HTTPStatus,
+    error_body: dict[str, Any],
+    error_reason: str,
+    error_log: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Check error when obtaining an oauth token."""
+    flow_handler.async_register_implementation(hass, local_impl)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, MockOAuth2Implementation()
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "pick_implementation"
+
+    # Pick implementation
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"implementation": TEST_DOMAIN}
+    )
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
+    assert result["url"] == (
+        f"{AUTHORIZE_URL}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}&scope=read+write"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        status=status_code,
+        json=error_body,
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == error_reason
+    assert error_log in caplog.text
+
+
+# @Erwin: I can add in more tests to be thorough, but the main thing is to test that the backoff/retry works. It can be expanded upon. :)
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_token_request_retries_then_succeeds_after_three_429(
+    hass: HomeAssistant,
+    flow_handler: type[config_entry_oauth2_flow.AbstractOAuth2FlowHandler],
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Perform a few retries and then succeed."""
+    flow_handler.async_register_implementation(hass, local_impl)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, MockOAuth2Implementation()
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "pick_implementation"
+
+    # Pick implementation
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"implementation": TEST_DOMAIN}
+    )
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+
+    # The idea of the test is to test three times a 429, then succeed. The side_effect should stop, once the 200 is returned.
+    # A later test can do more variations, but this demonstrates the backoff/retry works! :)
+    attempt = 0
+
+    async def token_side_effect(
+        method: str, url: str, data: dict[str, str]
+    ) -> aiohttp.ClientResponse:
+        nonlocal attempt
+        attempt += 1
+        if attempt <= 3:
+            return AiohttpClientMockResponse(
+                method=method,
+                url=url,
+                status=HTTPStatus.TOO_MANY_REQUESTS,
+                json={},
+            )
+        return AiohttpClientMockResponse(
+            method=method,
+            url=url,
+            status=HTTPStatus.OK,
+            json={
+                "access_token": "ok",
+                "refresh_token": "refresh_time",
+                "expires_in": 3600,
+            },
+        )
+
+    aioclient_mock.post(TOKEN_URL, side_effect=token_side_effect)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"]["token"]["access_token"] == "ok"
+
+    # OK, here I couldn't find a better way to validate the number of attempts, other than just looping through the mock calls. If it has a total of 4 attempts, it means 3 retries + 1 success. Thus, hooray, the backoff worked! :)
+    attempts = sum(
+        1
+        for method, url, *_ in aioclient_mock.mock_calls
+        if method.lower() == "post"
+        and str(url) == TOKEN_URL  # The method is always lowercase in the mock_calls
+    )
+    assert attempts == 4
 
 
 @pytest.mark.usefixtures("current_request_with_host")
