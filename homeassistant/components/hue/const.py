@@ -25,6 +25,7 @@ ATTR_SCENE_MODE = "scene_mode"
 ATTR_SCENE_ENTITY_ID = "scene_entity_id"
 ATTR_SMART_SCENE_ENTITY_ID = "smart_scene_entity_id"
 ATTR_SCENE_SPEED = "scene_speed"
+ATTR_SCENE_BRIGHTNESS = "scene_brightness"
 
 
 # V1 API SPECIFIC CONSTANTS ##################
