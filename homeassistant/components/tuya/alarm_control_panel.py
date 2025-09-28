@@ -19,9 +19,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
 from .models import EnumTypeData
+from .util import get_dpcode
 
 
 @dataclass(frozen=True)
@@ -56,12 +57,8 @@ STATE_MAPPING: dict[str, AlarmControlPanelState] = {
 }
 
 
-# All descriptions can be found here:
-# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-ALARM: dict[str, tuple[TuyaAlarmControlPanelEntityDescription, ...]] = {
-    # Alarm Host
-    # https://developer.tuya.com/en/docs/iot/categorymal?id=Kaiuz33clqxaf
-    "mal": (
+ALARM: dict[DeviceCategory, tuple[TuyaAlarmControlPanelEntityDescription, ...]] = {
+    DeviceCategory.MAL: (
         TuyaAlarmControlPanelEntityDescription(
             key=DPCode.MASTER_MODE,
             master_state=DPCode.MASTER_STATE,
@@ -78,23 +75,23 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya alarm dynamically through Tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya siren."""
         entities: list[TuyaAlarmEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
+            device = manager.device_map[device_id]
             if descriptions := ALARM.get(device.category):
                 entities.extend(
-                    TuyaAlarmEntity(device, hass_data.manager, description)
+                    TuyaAlarmEntity(device, manager, description)
                     for description in descriptions
                     if description.key in device.status
                 )
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -140,7 +137,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
             self._master_state = enum_type
 
         # Determine alarm message
-        if dp_code := self.find_dpcode(description.alarm_msg, prefer_function=True):
+        if dp_code := get_dpcode(self.device, description.alarm_msg):
             self._alarm_msg_dpcode = dp_code
 
     @property

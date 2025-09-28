@@ -261,7 +261,7 @@ def correct_db_schema_precision(
         from ..migration import _modify_columns  # noqa: PLC0415
 
         precision_columns = _get_precision_column_types(table_object)
-        # Attempt to convert timestamp columns to µs precision
+        # Attempt to convert timestamp columns to μs precision
         session_maker = instance.get_session
         engine = instance.engine
         assert engine is not None, "Engine should be set"

@@ -11,7 +11,6 @@
     'entry_type': <DeviceEntryType.SERVICE: 'service'>,
     'hw_version': None,
     'id': <ANY>,
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'OpenAI',
@@ -21,7 +20,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -38,7 +36,6 @@
     'entry_type': <DeviceEntryType.SERVICE: 'service'>,
     'hw_version': None,
     'id': <ANY>,
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'OpenAI',
@@ -48,7 +45,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
