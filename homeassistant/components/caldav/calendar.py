@@ -154,8 +154,12 @@ async def async_setup_entry(
     async_add_entities(
         (
             WebDavCalendarEntity(
-                calendar.name,
-                async_generate_entity_id(ENTITY_ID_FORMAT, calendar.name, hass=hass),
+                f"{entry.data[CONF_USERNAME].capitalize()} {calendar.name}",  # default entity name is USERNAME calendar.name so the user can better distinguish between calendars.
+                async_generate_entity_id(
+                    ENTITY_ID_FORMAT,
+                    f"{entry.data[CONF_URL]} {entry.data[CONF_USERNAME]} {calendar.name}",  # entity_id based on URL, USERNAME and calendarname to identify a calendar uniquely
+                    hass=hass,
+                ),
                 CalDavUpdateCoordinator(
                     hass,
                     entry,
