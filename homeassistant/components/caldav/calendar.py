@@ -37,7 +37,6 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 
 from . import CalDavConfigEntry
 from .api import async_get_calendars
@@ -272,7 +271,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
                 return
 
             # Parse recurrence_id
-            recurrence_datetime = self.parse_recurrence_id(recurrence_id)
+            recurrence_datetime = self.coordinator.parse_recurrence_id(recurrence_id)
 
             # Get the start date of the master event
             start_master = master_event.icalendar_component[EVENT_START].dt
@@ -338,7 +337,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
 
             # Create an Exception date (EXDATE) for the given recurrence_id
             master_event.icalendar_component.add(
-                "EXDATE", vDDDTypes(self.parse_recurrence_id(recurrence_id))
+                "EXDATE", vDDDTypes(self.coordinator.parse_recurrence_id(recurrence_id))
             )
 
             def update_master_event() -> None:
@@ -381,11 +380,3 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         """When entity is added to hass update state from existing coordinator data."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
-
-    @staticmethod
-    def parse_recurrence_id(recurrence_id: str) -> datetime | date:
-        """Convert a recurrence_id string to a datetime or date object."""
-        dt = dt_util.parse_datetime(recurrence_id) or dt_util.parse_date(recurrence_id)
-        if not dt:
-            raise ValueError("Unable to parse recurrence_id %s")
-        return dt

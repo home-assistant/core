@@ -242,6 +242,14 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         )
 
     @staticmethod
+    def parse_recurrence_id(recurrence_id: str) -> datetime | date:
+        """Convert a recurrence_id string to a datetime or date object."""
+        dt = dt_util.parse_datetime(recurrence_id) or dt_util.parse_date(recurrence_id)
+        if not dt:
+            raise ValueError("Unable to parse recurrence_id %s")
+        return dt
+
+    @staticmethod
     def to_datetime(obj: datetime | date) -> datetime:
         """Return a datetime."""
         if isinstance(obj, datetime):
