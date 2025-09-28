@@ -24,7 +24,7 @@ from homeassistant.components.sql.const import (
     CONF_QUERY,
     DOMAIN,
 )
-from homeassistant.components.sql.sensor import _generate_lambda_stmt
+from homeassistant.components.sql.util import generate_lambda_stmt
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -229,7 +229,7 @@ async def test_invalid_url_setup(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.sql.sensor.sqlalchemy.create_engine",
+        "homeassistant.components.sql.util.sqlalchemy.create_engine",
         side_effect=SQLAlchemyError(url),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -260,7 +260,7 @@ async def test_invalid_url_on_update(
             raise SQLAlchemyError("sqlite://homeassistant:hunter2@homeassistant.local")
 
     with patch(
-        "homeassistant.components.sql.sensor.scoped_session",
+        "homeassistant.components.sql.util.scoped_session",
         return_value=MockSession,
     ):
         await init_integration(hass, title="count_tables", options=options)
@@ -402,7 +402,7 @@ async def test_invalid_url_setup_from_yaml(
     }
 
     with patch(
-        "homeassistant.components.sql.sensor.sqlalchemy.create_engine",
+        "homeassistant.components.sql.util.sqlalchemy.create_engine",
         side_effect=SQLAlchemyError(url),
     ):
         assert await async_setup_component(hass, DOMAIN, config)
@@ -648,7 +648,7 @@ async def test_query_recover_from_rollback(
     with patch.object(
         sql_entity,
         "_lambda_stmt",
-        _generate_lambda_stmt("Faulty syntax create operational issue"),
+        generate_lambda_stmt("Faulty syntax create operational issue"),
     ):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
