@@ -205,23 +205,3 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
             for forecast_data in self.coordinator.data.forecast_timestamps[:24]
         ]
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return additional state attributes."""
-        if not self.coordinator.data:
-            return None
-        place = self.coordinator.data.place
-        current = self.coordinator.data.current_conditions
-
-        attributes = {
-            "place_code": place.code,
-            "place_name": place.name,
-            "administrative_division": place.administrative_division,
-            "country": place.country,
-            "forecast_creation_time": self.coordinator.data.forecast_created,
-        }
-
-        if current:
-            attributes["forecast_time"] = current.datetime
-
-        return attributes
