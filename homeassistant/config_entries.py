@@ -2968,6 +2968,8 @@ class ConfigFlow(ConfigEntryBaseFlow):
         if entry.source == SOURCE_IGNORE and self.source == SOURCE_USER:
             return
         if should_reload:
+            if entry.update_listeners:
+                raise ValueError("Cannot update entry with update listeners")
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
         raise data_entry_flow.AbortFlow(error, description_placeholders)
 
