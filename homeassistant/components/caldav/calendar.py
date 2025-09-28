@@ -8,11 +8,12 @@ from typing import Any
 
 import caldav
 from ical.types import Range
-from icalendar import vDDDTypes
+from icalendar import vDDDTypes, vRecur
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
+    EVENT_END,
     EVENT_RRULE,
     EVENT_START,
     PLATFORM_SCHEMA as CALENDAR_PLATFORM_SCHEMA,
@@ -192,7 +193,9 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
     """A device for getting the next Task from a WebDav Calendar."""
 
     _attr_supported_features = (
-        CalendarEntityFeature.CREATE_EVENT | CalendarEntityFeature.DELETE_EVENT
+        CalendarEntityFeature.CREATE_EVENT
+        | CalendarEntityFeature.DELETE_EVENT
+        | CalendarEntityFeature.UPDATE_EVENT
     )
 
     def __init__(
@@ -232,11 +235,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         def save_event() -> caldav.Event:
             return self.coordinator.calendar.save_event(**kwargs)
 
-        event = await self.hass.async_add_executor_job(save_event)
-
-        assert event is not None
-
-        return event
+        return await self.hass.async_add_executor_job(save_event)
 
     async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""
@@ -369,6 +368,235 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
             await self.hass.async_add_executor_job(delete_event)
 
         await self.async_update_ha_state(force_refresh=True)
+
+    async def async_update_event(  # noqa: C901
+        self,
+        uid: str,
+        event: dict[str, Any],
+        recurrence_id: str | None = None,
+        recurrence_range: str | None = None,
+    ) -> None:
+        """Update an existing event on the calendar.
+
+        Supports updating
+        - a single event,
+        - a recurring event,
+        - a single occurrence of a recurring event (in that case, the RRULE can not be changed),
+        - an ocurrrence and all future occurrences of a recurring event (here, the RRULE may differ).
+
+        In the last case, we try to mimic the behavior of Nextcloud and split the series in two recurring events:
+        - the original recurring event is modified to end just before the updated occurrence.
+        - a new recurring event is created in place of the occurrence to be updated.
+        """
+
+        _LOGGER.debug(
+            "async_update_event called with uid=%s, recurrence_id=%s and recurrence_range=%s",
+            uid,
+            recurrence_id,
+            recurrence_range,
+        )
+
+        # Home Assistant currently supports only THIS_AND_FUTURE.
+        # For updating, we support only updating the entire series or a single occurrence.
+        # If THIS_AND_FUTURE is specified, we update the master event (which updates the entire series), no matter which recurrence_id is specified.
+        if recurrence_range == Range.THIS_AND_FUTURE:
+            # Get the master event of the series by uid
+            master_event = await self.coordinator.async_get_event(self.hass, uid)
+            if not master_event:
+                _LOGGER.error("Event with uid %s not found", uid)
+                return
+
+            # Validate recurrence_id is provided
+            if not recurrence_id:
+                _LOGGER.error(
+                    "The recurrence_id must be provided when recurrence_range is THIS_AND_FUTURE"
+                )
+                return
+
+            assert hasattr(master_event, "icalendar_component")  # for mypy
+            assert hasattr(master_event.vobject_instance, "vevent")  # for mypy
+
+            # Parse recurrence_id
+            recurrence_datetime = self.coordinator.to_local(
+                self.coordinator.parse_recurrence_id(recurrence_id)
+            )
+
+            # Get the start date of the master event
+            start_master = self.coordinator.to_datetime(
+                master_event.icalendar_component[EVENT_START].dt
+            )
+
+            # If the recurrence_datetime is after the start of the master event,
+            # we need to split the series in two by updating the RRULE of the master event
+            # to set the UNTIL attribute to before the recurrence_datetime and
+            # create a new recurrence for the specified recurrence_id with the updated attributes.
+            if recurrence_datetime > start_master:
+                _LOGGER.debug(
+                    "The recurrence_id %s is after the start of the master event %s. Original series will be updated to end before the recurrence_id and a new recurring event will be created in place of the new event",
+                    recurrence_datetime,
+                    start_master,
+                )
+                # Remove COUNT from master_event's RRULE if present
+                # and set UNTIL to the day before the recurrence_datetime
+                master_event.icalendar_component[EVENT_RRULE].pop(
+                    "count", None
+                )  # use pop to avoid KeyError
+                until = recurrence_datetime - timedelta(days=1)
+                master_event.icalendar_component[EVENT_RRULE]["until"] = until
+
+                # Create a new event in the calendar and retrieve its uid
+                new_event = await self._async_create_event(**event)
+                if not isinstance(new_event, caldav.Event):
+                    _LOGGER.error(
+                        "Failed to create new event in calendar while updating event with uid=%s and recurrence_id=%s",
+                        uid,
+                        recurrence_id,
+                    )
+                    return
+
+                assert hasattr(new_event, "icalendar_component")  # for mypy
+
+                # Get the uid of the newly created event
+                new_event_uid = new_event.icalendar_component["uid"]
+
+                # Link the new event to the master event as a sibling
+                # Note: set_relation will save the event automatically,
+                # so no need to call new_event.save() afterwards
+                # But we need to use async_add_executor_job here because set_relation
+                # is not async and we don't want to block the event loop
+                def update_event_relations(
+                    this: caldav.CalendarObjectResource,
+                    that: caldav.CalendarObjectResource,
+                ) -> None:
+                    this.set_relation(that, reltype="SIBLING", set_reverse=True)  # type: ignore[attr-defined]
+
+                # Add relation between master event and new event.
+                # Note: this will also save the changes to the master_event's RRULE.
+                await self.hass.async_add_executor_job(
+                    update_event_relations, new_event, master_event
+                )
+
+                # If the master event has related-to links, we need to update those events as well
+                if hasattr(master_event.vobject_instance.vevent, "related-to"):
+                    # UIDs of related events
+                    related_uids = master_event.icalendar_component["related-to"]
+                    missing_uids = []
+                    for related_uid in related_uids:
+                        if related_uid == new_event_uid:
+                            continue
+
+                        # Get related event from server
+                        related_event = await self.coordinator.async_get_event(
+                            self.hass, related_uid
+                        )
+
+                        # It might seem that when an event is deleted, the related-to links in the other events are not (reliably? at all?) updated.
+                        # Todo1: check if this is a bug in nextcloud or in the caldav library.
+                        # Todo2: provide an option to clean up related-to links that point to non-existing events.
+                        # For now, we just log a message and skip the missing event.
+                        if not related_event:
+                            _LOGGER.info(
+                                "Event with uid=%s could not be found while searching for related events of event with uid=%s",
+                                related_uid,
+                                master_event.icalendar_component["uid"],
+                            )
+                            missing_uids.append(related_uid)
+                            continue
+
+                        await self.hass.async_add_executor_job(
+                            update_event_relations, new_event, related_event
+                        )
+
+                # Reminder: no need to save the new_event, it was already saved by set_relation
+
+            else:
+                # Update all attributes of the master event with the values from the event dict
+                for a, v in event.items():
+                    if a in (EVENT_START, EVENT_END):
+                        master_event.icalendar_component[a] = vDDDTypes(
+                            self.coordinator.to_local(v)
+                        )
+                    elif a == EVENT_RRULE:
+                        master_event.icalendar_component[a] = vRecur.from_ical(v)
+                    else:
+                        master_event.icalendar_component[a] = v
+
+                # If the RRULE is empty, remove it from the event to make it a non-recurring event
+                if EVENT_RRULE not in event:
+                    master_event.icalendar_component.pop(EVENT_RRULE, None)
+
+                def update_event() -> None:
+                    master_event.save()
+
+                # Update the master event, which will update the entire series
+                await self.hass.async_add_executor_job(update_event)
+
+        elif recurrence_id is not None:
+            # Update only the specified occurrence of the series
+            recurrence = await self.coordinator.async_get_event_recurrence(
+                self.hass, uid, recurrence_id
+            )
+
+            if not recurrence:
+                _LOGGER.error(
+                    "Recurrence with uid %s and recurrence_id %s not found",
+                    uid,
+                    recurrence_id,
+                )
+                return
+
+            assert hasattr(recurrence, "icalendar_component")  # for mypy
+
+            # Update all attributes of the event with the values from the event dict
+            for a, v in event.items():
+                if a in (EVENT_START, EVENT_END):
+                    recurrence.icalendar_component[a] = vDDDTypes(
+                        self.coordinator.to_local(v)
+                    )
+                elif a == EVENT_RRULE:
+                    # RRULE cannot be updated for a single occurrence
+                    # Normally, it is expected that Home Assistant takes car of this
+                    # and does not try to update the RRULE of a single occurrence.
+                    _LOGGER.warning(
+                        "RRULE cannot be updated for a single occurrence. Ignoring RRULE update for event with uid=%s and recurrence_id=%s",
+                        uid,
+                        recurrence_id,
+                    )
+                else:
+                    recurrence.icalendar_component[a] = v
+
+            def update_event() -> None:
+                recurrence.save()
+
+            # Save changes to the event
+            await self.hass.async_add_executor_job(update_event)
+
+        else:
+            # Update a non-recurring event by uid
+            non_recurring_event = await self.coordinator.async_get_event(self.hass, uid)
+
+            if not non_recurring_event:
+                _LOGGER.error("Event with uid %s not found", uid)
+                return
+
+            assert hasattr(non_recurring_event, "icalendar_component")  # for mypy
+
+            # Update all attributes of the event with the values from the event dict
+            for a, v in event.items():
+                if a in (EVENT_START, EVENT_END):
+                    non_recurring_event.icalendar_component[a] = vDDDTypes(
+                        self.coordinator.to_local(v)
+                    )
+                elif a == EVENT_RRULE:
+                    non_recurring_event.icalendar_component[a] = vRecur.from_ical(v)
+                else:
+                    non_recurring_event.icalendar_component[a] = v
+
+            def update_event() -> None:
+                non_recurring_event.save()
+
+            # Save changes to the event
+            await self.hass.async_add_executor_job(update_event)
 
     @callback
     def _handle_coordinator_update(self) -> None:
