@@ -2,14 +2,19 @@
 
 from __future__ import annotations
 
+import contextlib
+import copy
 from datetime import date, datetime, time, timedelta
 from functools import partial
 import logging
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, TypeVar
 
 import caldav
+from caldav import CalendarObjectResource
 from caldav.lib.error import NotFoundError
+import dateutil
+import icalendar
 
 from homeassistant.components.calendar import CalendarEvent, extract_offset
 from homeassistant.const import CONF_SCAN_INTERVAL
@@ -19,6 +24,8 @@ from homeassistant.util import dt as dt_util
 
 from .api import get_attr_value
 from .const import DEFAULT_SCAN_INTERVAL
+
+_CC = TypeVar("_CC", bound="CalendarObjectResource")
 
 if TYPE_CHECKING:
     from . import CalDavConfigEntry
@@ -73,6 +80,23 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         assert isinstance(event, caldav.Event)
         return event
 
+    def vevent_to_hass_event(self, vevent) -> CalendarEvent:
+        """Convert a VEVENT to a Home Assistant CalendarEvent."""
+        # recurrence-id needs some special treatment
+        recurrence_id = get_attr_value(vevent, "recurrence-id")
+        if recurrence_id is not None:
+            recurrence_id = str(recurrence_id)
+        return CalendarEvent(
+            uid=get_attr_value(vevent, "uid"),
+            recurrence_id=recurrence_id,
+            rrule=get_attr_value(vevent, "rrule"),
+            summary=(get_attr_value(vevent, "summary") or ""),
+            start=self.to_local(vevent.dtstart.value),
+            end=self.to_local(self.get_end_date(vevent)),
+            location=get_attr_value(vevent, "location"),
+            description=get_attr_value(vevent, "description") or "",
+        )
+
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
@@ -87,32 +111,156 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         # Get event list from the current calendar
         vevent_list = await hass.async_add_executor_job(
             partial(
-                self.calendar.search,
+                self.search_calendar_events,  # use our own version that better handles recurring events
                 start=start_date,
                 end=end_date,
                 event=True,
-                expand=True,
+                expand="client",  # Recurring events should be expanded, see https://developers.home-assistant.io/docs/core/entity/calendar/#get-events
             )
         )
-        event_list = []
-        for event in vevent_list:
-            if not hasattr(event.instance, "vevent"):
-                _LOGGER.warning("Skipped event with missing 'vevent' property")
-                continue
-            vevent = event.instance.vevent
-            if not self.is_matching(vevent, self.search):
-                continue
-            event_list.append(
-                CalendarEvent(
-                    summary=get_attr_value(vevent, "summary") or "",
-                    start=self.to_local(vevent.dtstart.value),
-                    end=self.to_local(self.get_end_date(vevent)),
-                    location=get_attr_value(vevent, "location"),
-                    description=get_attr_value(vevent, "description"),
-                )
-            )
 
-        return event_list
+        # I see consistently hass complaining about a blocking call when executing `if not hasattr(event.instance, "vevent"):`
+        # Therefore use the executor.
+        def get_vevent_list() -> list[CalendarEvent]:
+            event_list = []
+            for event in vevent_list:
+                if not hasattr(event.instance, "vevent"):
+                    _LOGGER.warning("Skipped event with missing 'vevent' property")
+                    continue
+                vevent = event.instance.vevent
+                if not self.is_matching(vevent, self.search):
+                    continue
+
+                event_list.append(self.vevent_to_hass_event(vevent))
+
+            return event_list
+
+        return await self.hass.async_add_executor_job(get_vevent_list)
+
+    ################################################################################
+    # The following code is mostly copied from caldav/collection.py to work around
+    # some limitations in the caldav library (1.6.0).
+    # It has been modified to better handle recurring events. Expanding recurring
+    # events on the server side is not always possible, so we do it on the client
+    # side.
+    ################################################################################
+    def search_calendar_events(
+        self,
+        expand: bool | Literal["server", "client"] = False,
+        split_expanded: bool = True,
+        include_completed: bool = False,
+        **kwargs,
+    ) -> list[_CC]:
+        """Creates an XML query, does a REPORT request towards the server and returns objects found.
+
+        It uses caldav.collection.search() to search for events.
+        However, if expand="client" is requested, the recurrence properties
+        of the master event are copied to the expanded recurrence events.
+        If the master event has a rrule with COUNT, then the COUNT of the
+        expanded evets will be decremented to indicate the number of remaining events.
+        """
+
+        objects = self.calendar.search(expand=(expand and expand == "server"), **kwargs)
+
+        if expand and expand != "server":  # pylint: disable=too-many-nested-blocks
+            ## expand can only be used together with start and end (and not
+            ## with xml).  Error checking has already been done in
+            ## build_search_xml_query above.
+            start = kwargs["start"]
+            end = kwargs["end"]
+
+            ## Verify that any recurring objects returned are already expanded
+            for o in objects:
+                component = o.icalendar_component
+                if component is None:
+                    continue
+
+                _LOGGER.debug("Processing event: %s", o.icalendar_instance)
+
+                # Check for recurrence properties
+                recurrence_properties = ["exdate", "exrule", "rdate", "rrule"]
+                # Here starts our code: we need to collect all the recurrence property values
+                recurrence_property_values = {}
+                # Go through all recurrence properties and collect their values
+                for key in recurrence_properties:
+                    if key in component:
+                        if key in ["exrule", "rdate"]:
+                            _LOGGER.info(
+                                "%s property found in calendar object. This is not fully supported and may lead to incorrect results",
+                                key,
+                            )
+                        recurrence_property_values[key] = component[key]
+                # Expand recurrence rule(s); next two line from caldav library
+                if any(key in component for key in recurrence_properties):
+                    o.expand_rrule(start, end, include_completed=include_completed)
+                    # Our code from here...
+                    # Create a rrule objectthat will help us to count the number of previous occurrences
+                    rrule = None
+                    master_count = None
+                    if "rrule" in recurrence_property_values:
+                        vrrule = recurrence_property_values["rrule"]
+                        if "count" in vrrule:
+                            # note: we don't have to consider exdates here because we want those dates to be counted.
+                            # note2: this applies only to our use-case where we use ex-date to delete single occurrences.
+                            master_count = vrrule["count"][0]
+                            rrule = dateutil.rrule.rrulestr(
+                                vrrule.to_ical().decode("utf-8"),
+                                dtstart=icalendar.tools.to_datetime(
+                                    o.icalendar_component["dtstart"].dt
+                                ),
+                            )
+
+                    # Restore the recurrence properties
+                    for sc in o.icalendar_instance.subcomponents:
+                        if sc.name != "VEVENT":
+                            continue
+                        for key, value in recurrence_property_values.items():
+                            sc[key] = copy.deepcopy(
+                                value
+                            )  # it is important here to make a copy of the original rrule because otherwise we can't edit it further down
+                            if (
+                                key == "rrule"
+                                and rrule is not None
+                                and master_count is not None
+                            ):
+                                # Special handling for RRULE with COUNT. We subtract the number of previous occurrences
+                                # so that for the current occurrence only the number of remaining recurrences
+                                # (including the current one) is displayed as COUNT.
+                                # This mimics the behavior of Nextcloud, which I personally find preferable because
+                                # this when editing number of recurrences in the home assistant UI we will get the
+                                # expected behavior that changing the COUNT e.g. from 4 to 8 will result in 4 more recurrences (and not 8).
+                                recurrences_up_to_now = rrule.between(
+                                    after=icalendar.tools.to_datetime(
+                                        o.icalendar_component["dtstart"].dt
+                                    ),
+                                    before=icalendar.tools.to_datetime(
+                                        sc["dtstart"].dt
+                                    ),
+                                    inc=True,
+                                )
+                                if len(recurrences_up_to_now) > 0:
+                                    sc["rrule"]["count"] = [
+                                        master_count - (len(recurrences_up_to_now) - 1)
+                                    ]
+
+            ## An expanded recurring object comes as one Event() with
+            ## icalendar data containing multiple objects.  The caller may
+            ## expect multiple Event()s.  This code splits events into
+            ## separate objects:
+        if expand and split_expanded:
+            objects_ = objects
+            objects = []
+            for o in objects_:
+                objects.extend(o.split_expanded())
+
+        ## Code for sorting removed because so far unused.
+
+        ## partial workaround for https://github.com/python-caldav/caldav/issues/201
+        for obj in objects:
+            with contextlib.suppress(Exception):
+                obj.load(only_if_unloaded=True)
+
+        return objects
 
     async def _async_update_data(self) -> CalendarEvent | None:
         """Get the latest data.
