@@ -782,7 +782,7 @@ decora-wifi==1.4
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==14.0.0
+deebot-client==15.0.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -2701,7 +2701,7 @@ renault-api==0.4.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.15.2
+reolink-aio==0.16.0
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1

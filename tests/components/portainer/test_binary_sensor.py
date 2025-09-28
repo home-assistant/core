@@ -49,14 +49,14 @@ async def test_all_entities(
         PortainerTimeoutError("timeout"),
     ],
 )
-async def test_refresh_exceptions(
+async def test_refresh_endpoints_exceptions(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     exception: Exception,
 ) -> None:
-    """Test entities go unavailable after coordinator refresh failures."""
+    """Test entities go unavailable after coordinator refresh failures, for the endpoint fetch."""
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -69,8 +69,26 @@ async def test_refresh_exceptions(
     state = hass.states.get("binary_sensor.practical_morse_status")
     assert state.state == STATE_UNAVAILABLE
 
-    # Reset endpoints; fail on containers fetch
-    mock_portainer_client.get_endpoints.side_effect = None
+
+@pytest.mark.parametrize(
+    ("exception"),
+    [
+        PortainerAuthenticationError("bad creds"),
+        PortainerConnectionError("cannot connect"),
+        PortainerTimeoutError("timeout"),
+    ],
+)
+async def test_refresh_containers_exceptions(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+) -> None:
+    """Test entities go unavailable after coordinator refresh failures, for the container fetch."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
     mock_portainer_client.get_containers.side_effect = exception
 
     freezer.tick(DEFAULT_SCAN_INTERVAL)
