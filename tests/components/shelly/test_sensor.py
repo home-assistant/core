@@ -1672,6 +1672,74 @@ async def test_rpc_switch_no_returned_energy_sensor(
     assert hass.states.get("sensor.test_name_test_switch_0_returned_energy") is None
 
 
+async def test_rpc_shelly_ev_sensors(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test Shelly EV sensors."""
+    config = deepcopy(mock_rpc_device.config)
+    config["number:200"] = {
+        "name": "Charger state",
+        "meta": {
+            "ui": {
+                "titles": {
+                    "charger_charging": "Charging",
+                    "charger_end": "End",
+                    "charger_fault": "Fault",
+                    "charger_free": "Free",
+                    "charger_free_fault": "Free fault",
+                    "charger_insert": "Insert",
+                    "charger_pause": "Pause",
+                    "charger_wait": "Wait",
+                },
+                "view": "label",
+            }
+        },
+        "options": [
+            "charger_free",
+            "charger_insert",
+            "charger_free_fault",
+            "charger_wait",
+            "charger_charging",
+            "charger_pause",
+            "charger_end",
+            "charger_fault",
+        ],
+        "role": "work_state",
+    }
+    config["number:201"] = {
+        "name": "Session energy",
+        "meta": {"ui": {"unit": "Wh", "view": "label"}},
+        "role": "energy_charge",
+    }
+    config["number:202"] = {
+        "name": "Session duration",
+        "meta": {"ui": {"unit": "min", "view": "label"}},
+        "role": "time_charge",
+    }
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["number:200"] = {"value": "charger_charging"}
+    status["number:201"] = {"value": 5000}
+    status["number:202"] = {"value": 60}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    for entity in ("charger_state", "session_energy", "session_duration"):
+        entity_id = f"{SENSOR_DOMAIN}.test_name_{entity}"
+
+        state = hass.states.get(entity_id)
+        assert state == snapshot(name=f"{entity_id}-state")
+
+        entry = entity_registry.async_get(entity_id)
+        assert entry == snapshot(name=f"{entity_id}-entry")
+
+
 async def test_block_friendly_name_sleeping_sensor(
     hass: HomeAssistant,
     mock_block_device: Mock,
