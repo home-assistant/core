@@ -238,30 +238,25 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
                         )
                     continue
 
-        # Collect file descriptor counts only for monitored processes
+        # Collect file descriptor counts only for selected processes
         process_fds: dict[str, int] = {}
-        if (
-            (self.update_subscribers[("processes", "")] or self._initial_update)
-            and self._monitor_processes
-            and processes
-        ):
-            for proc in processes:
-                try:
-                    process_name = proc.name()
-                    # Only collect FD data for processes we're monitoring
-                    if process_name in self._monitor_processes:
-                        process_fds[process_name] = proc.num_fds()
-                except (NoSuchProcess, AccessDenied):
-                    _LOGGER.warning(
-                        "Failed to get file descriptor count for process %s: access denied or process not found",
-                        proc.pid,
-                    )
-                except OSError as err:
-                    _LOGGER.warning(
-                        "OS error getting file descriptor count for process %s: %s",
-                        proc.pid,
-                        err,
-                    )
+        for proc in selected_processes:
+            try:
+                process_name = proc.name()
+                # Only collect FD data for processes we're monitoring
+                if process_name in self._monitor_processes:
+                    process_fds[process_name] = proc.num_fds()
+            except (NoSuchProcess, AccessDenied):
+                _LOGGER.warning(
+                    "Failed to get file descriptor count for process %s: access denied or process not found",
+                    proc.pid,
+                )
+            except OSError as err:
+                _LOGGER.warning(
+                    "OS error getting file descriptor count for process %s: %s",
+                    proc.pid,
+                    err,
+                )
 
         temps: dict[str, list[shwtemp]] = {}
         if self.update_subscribers[("temperatures", "")] or self._initial_update:
