@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -39,7 +39,7 @@ async def validate_input(hass: HomeAssistant) -> bool:
         return True
 
 
-class LondonUndergroundOptionsFlow(OptionsFlow):
+class LondonUndergroundOptionsFlow(OptionsFlowWithReload):
     """Handle options."""
 
     async def async_step_init(
