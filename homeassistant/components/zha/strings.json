@@ -15,6 +15,18 @@
       "confirm_hardware": {
         "description": "Do you want to set up {name}?"
       },
+      "create_radio_entry": {
+        "title": "Configuring Zigbee network"
+      },
+      "detect_radio_type": {
+        "title": "Configuring Zigbee network"
+      },
+      "form_new_network": {
+        "title": "Configuring Zigbee network"
+      },
+      "load_network_settings": {
+        "title": "Configuring Zigbee network"
+      },
       "manual_pick_radio_type": {
         "title": "Select a radio type",
         "description": "Pick your Zigbee radio type",
@@ -65,8 +77,7 @@
         }
       },
       "maybe_reset_old_radio": {
-        "title": "Resetting old adapter",
-        "description": "A backup was created earlier and your old adapter is being reset as part of the migration."
+        "title": "Configuring Zigbee network"
       },
       "choose_formation_strategy": {
         "title": "Network formation",
@@ -100,12 +111,15 @@
           "uploaded_backup_file": "Upload a file"
         }
       },
-      "maybe_confirm_ezsp_restore": {
+      "confirm_ezsp_restore": {
         "title": "Overwrite radio IEEE address",
         "description": "Your backup has a different IEEE address than your radio. For your network to function properly, the IEEE address of your radio should also be changed.\n\nThis is a permanent operation.",
         "data": {
           "overwrite_coordinator_ieee": "Permanently replace the radio IEEE address"
         }
+      },
+      "try_ezsp_restore": {
+        "title": "Configuring Zigbee network"
       }
     },
     "error": {
@@ -122,14 +136,37 @@
       "cannot_restore_backup": "The adapter you are restoring to does not properly support backup restoration. Please upgrade the firmware.\n\nError: {error}",
       "cannot_restore_backup_no_ieee_confirm": "The adapter you are restoring to has outdated firmware and cannot write the adapter IEEE address multiple times. Please upgrade the firmware or confirm permanent overwrite in the previous step.",
       "reconfigure_successful": "ZHA has successfully migrated from your old adapter to the new one. Give your Zigbee network a few minutes to stabilize.\n\nIf you no longer need the old adapter, you can now unplug it."
+    },
+    "progress": {
+      "create_radio_entry": "Finalizing configuration",
+      "detect_radio_type": "Detecting the radio type",
+      "form_new_network": "Creating a new Zigbee network",
+      "load_network_settings": "Loading the current network settings from the radio",
+      "maybe_reset_old_radio": "Resetting your old radio",
+      "try_ezsp_restore": "Restoring the network settings to your radio"
     }
   },
   "options": {
     "flow_title": "[%key:component::zha::config::flow_title%]",
     "step": {
+      "create_radio_entry": {
+        "title": "[%key:component::zha::config::step::create_radio_entry::title%]"
+      },
+      "detect_radio_type": {
+        "title": "[%key:component::zha::config::step::detect_radio_type::title%]"
+      },
+      "form_new_network": {
+        "title": "[%key:component::zha::config::step::form_new_network::title%]"
+      },
       "init": {
         "title": "Reconfigure ZHA",
         "description": "A backup will be performed and ZHA will be stopped. Do you wish to continue?"
+      },
+      "load_network_settings": {
+        "title": "[%key:component::zha::config::step::load_network_settings::title%]"
+      },
+      "maybe_reset_old_radio": {
+        "title": "[%key:component::zha::config::step::maybe_reset_old_radio::title%]"
       },
       "prompt_migrate_or_reconfigure": {
         "title": "Migrate or re-configure",
@@ -142,6 +179,9 @@
           "intent_migrate": "This will help you migrate your Zigbee network from your old adapter to a new one.",
           "intent_reconfigure": "This will let you change the serial port for your current Zigbee adapter."
         }
+      },
+      "try_ezsp_restore": {
+        "title": "[%key:component::zha::config::step::try_ezsp_restore::title%]"
       },
       "intent_migrate": {
         "title": "[%key:component::zha::options::step::prompt_migrate_or_reconfigure::menu_options::intent_migrate%]",
@@ -222,11 +262,11 @@
           "uploaded_backup_file": "[%key:component::zha::config::step::upload_manual_backup::data::uploaded_backup_file%]"
         }
       },
-      "maybe_confirm_ezsp_restore": {
-        "title": "[%key:component::zha::config::step::maybe_confirm_ezsp_restore::title%]",
-        "description": "[%key:component::zha::config::step::maybe_confirm_ezsp_restore::description%]",
+      "confirm_ezsp_restore": {
+        "title": "[%key:component::zha::config::step::confirm_ezsp_restore::title%]",
+        "description": "[%key:component::zha::config::step::confirm_ezsp_restore::description%]",
         "data": {
-          "overwrite_coordinator_ieee": "[%key:component::zha::config::step::maybe_confirm_ezsp_restore::data::overwrite_coordinator_ieee%]"
+          "overwrite_coordinator_ieee": "[%key:component::zha::config::step::confirm_ezsp_restore::data::overwrite_coordinator_ieee%]"
         }
       }
     },
@@ -241,6 +281,14 @@
       "wrong_firmware_installed": "[%key:component::zha::config::abort::wrong_firmware_installed%]",
       "cannot_restore_backup": "[%key:component::zha::config::abort::cannot_restore_backup%]",
       "cannot_restore_backup_no_ieee_confirm": "[%key:component::zha::config::abort::cannot_restore_backup_no_ieee_confirm%]"
+    },
+    "progress": {
+      "create_radio_entry": "[%key:component::zha::config::progress::create_radio_entry%]",
+      "detect_radio_type": "[%key:component::zha::config::progress::detect_radio_type%]",
+      "form_new_network": "[%key:component::zha::config::progress::form_new_network%]",
+      "load_network_settings": "[%key:component::zha::config::progress::load_network_settings%]",
+      "maybe_reset_old_radio": "[%key:component::zha::config::progress::maybe_reset_old_radio%]",
+      "try_ezsp_restore": "[%key:component::zha::config::progress::try_ezsp_restore%]"
     }
   },
   "config_panel": {
