@@ -89,8 +89,6 @@ class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):
         self._name = name
         # Add unique_id for proper entity registry
         self._attr_unique_id = f"tube_{name.lower().replace(' ', '_')}"
-        # Add translation key for proper entity naming
-        self._attr_translation_key = "line_status"
 
     @property
     def device_info(self) -> DeviceInfo:
