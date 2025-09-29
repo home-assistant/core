@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 from ipaddress import IPv4Address, IPv6Address
 import logging
@@ -88,8 +89,8 @@ class WanIpSensor(SensorEntity):
         self._attr_name = "IPv6" if ipv6 else None
         self._attr_unique_id = f"{hostname}_{ipv6}"
         self.hostname = hostname
-        self.resolver = aiodns.DNSResolver(tcp_port=port, udp_port=port)
-        self.resolver.nameservers = [resolver]
+        self.port = port
+        self._resolver = resolver
         self.querytype: Literal["A", "AAAA"] = "AAAA" if ipv6 else "A"
         self._retries = DEFAULT_RETRIES
         self._attr_extra_state_attributes = {
@@ -103,14 +104,26 @@ class WanIpSensor(SensorEntity):
             model=aiodns.__version__,
             name=name,
         )
+        self.resolver: aiodns.DNSResolver
+        self.create_dns_resolver()
+
+    def create_dns_resolver(self) -> None:
+        """Create the DNS resolver."""
+        self.resolver = aiodns.DNSResolver(tcp_port=self.port, udp_port=self.port)
+        self.resolver.nameservers = [self._resolver]
 
     async def async_update(self) -> None:
         """Get the current DNS IP address for hostname."""
+        if self.resolver._closed:  # noqa: SLF001
+            self.create_dns_resolver()
+        response = None
         try:
-            response = await self.resolver.query(self.hostname, self.querytype)
+            async with asyncio.timeout(10):
+                response = await self.resolver.query(self.hostname, self.querytype)
+        except TimeoutError:
+            await self.resolver.close()
         except DNSError as err:
             _LOGGER.warning("Exception while resolving host: %s", err)
-            response = None
 
         if response:
             sorted_ips = sort_ips(
