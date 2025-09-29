@@ -30,17 +30,30 @@ async def async_setup_entry(
 ) -> None:
     """Set up the UptimeRobot switches."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        UptimeRobotSwitch(
-            coordinator,
-            SwitchEntityDescription(
-                key=str(monitor.id),
-                device_class=SwitchDeviceClass.SWITCH,
-            ),
-            monitor=monitor,
-        )
-        for monitor in coordinator.data
-    )
+
+    known_devices: set[int] = set()
+
+    def _check_device() -> None:
+        entities: list[UptimeRobotSwitch] = []
+        for monitor in coordinator.data:
+            if monitor.id in known_devices:
+                continue
+            known_devices.add(monitor.id)
+            entities.append(
+                UptimeRobotSwitch(
+                    coordinator,
+                    SwitchEntityDescription(
+                        key=str(monitor.id),
+                        device_class=SwitchDeviceClass.SWITCH,
+                    ),
+                    monitor=monitor,
+                )
+            )
+        if entities:
+            async_add_entities(entities)
+
+    _check_device()
+    entry.async_on_unload(coordinator.async_add_listener(_check_device))
 
 
 class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):

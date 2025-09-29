@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from holidays import HolidayBase
 
@@ -14,8 +14,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import WorkdayConfigEntry
 from .const import CONF_EXCLUDES, CONF_OFFSET, CONF_WORKDAYS
 from .entity import BaseWorkdayEntity
-
-CALENDAR_DAYS_AHEAD = 365
 
 
 async def async_setup_entry(
@@ -73,8 +71,10 @@ class WorkdayCalendarEntity(BaseWorkdayEntity, CalendarEntity):
     def update_data(self, now: datetime) -> None:
         """Update data."""
         event_list = []
-        for i in range(CALENDAR_DAYS_AHEAD):
-            future_date = now.date() + timedelta(days=i)
+        start_date = date(now.year, 1, 1)
+        end_number_of_days = date(now.year + 1, 12, 31) - start_date
+        for i in range(end_number_of_days.days + 1):
+            future_date = start_date + timedelta(days=i)
             if self.date_is_workday(future_date):
                 event = CalendarEvent(
                     summary=self._name,
