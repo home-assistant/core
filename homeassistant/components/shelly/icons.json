@@ -23,6 +23,9 @@
       "charger_state": {
         "default": "mdi:ev-station"
       },
+      "cury_perfume": {
+        "default": "mdi:scent"
+      },
       "detected_objects": {
         "default": "mdi:account-group"
       },
