@@ -162,6 +162,40 @@ async def test_thermostat_base(
     assert state.attributes["temperature"] == 20
 
 
+@pytest.mark.parametrize("node_fixture", ["tado_smart_radiator_thermostat_x"])
+async def test_thermostat_humidity(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test thermostat humidity attribute and state updates."""
+    # test entity attributes
+    state = hass.states.get("climate.smart_radiator_thermostat_x")
+    assert state
+    assert state.attributes["current_humidity"] is not None
+
+    # test current humidity update from device
+    set_node_attribute(matter_node, 1, 1029, 0, 4567)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.smart_radiator_thermostat_x")
+    assert state
+    assert state.attributes["current_humidity"] == 45.67
+
+    # test current humidity update from device with zero value
+    set_node_attribute(matter_node, 1, 1029, 0, 0)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.smart_radiator_thermostat_x")
+    assert state
+    assert state.attributes["current_humidity"] == 0.0
+
+    # test current humidity update from device with None value
+    set_node_attribute(matter_node, 1, 1029, 0, None)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("climate.smart_radiator_thermostat_x")
+    assert state
+    assert state.attributes.get("current_humidity") is None
+
+
 @pytest.mark.parametrize("node_fixture", ["thermostat"])
 async def test_thermostat_service_calls(
     hass: HomeAssistant,
