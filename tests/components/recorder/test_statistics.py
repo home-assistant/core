@@ -3743,7 +3743,9 @@ async def test_get_statistics_service_missing_mandatory_keys(
         )
 
 
-@pytest.mark.parametrize("uom", STATISTIC_UNIT_TO_UNIT_CONVERTER.keys())
+# The STATISTIC_UNIT_TO_UNIT_CONVERTER keys are sorted to ensure that pytest runs are
+# consistent and avoid `different tests were collected between gw0 and gw1`
+@pytest.mark.parametrize("uom", sorted(STATISTIC_UNIT_TO_UNIT_CONVERTER))
 def test_STATISTIC_UNIT_TO_UNIT_CONVERTER(uom: str) -> None:
     """Ensure unit does not belong to multiple converters."""
     unit_converter = STATISTIC_UNIT_TO_UNIT_CONVERTER[uom]
