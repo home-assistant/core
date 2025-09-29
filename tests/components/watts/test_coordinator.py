@@ -81,11 +81,8 @@ async def test_async_config_entry_first_refresh_failure(
     """Test failed initial device discovery."""
     mock_client.discover_devices.side_effect = ConnectionError("API error")
 
-    try:
+    with pytest.raises(UpdateFailed):
         await coordinator.async_config_entry_first_refresh()
-        pytest.fail("Expected UpdateFailed to be raised")
-    except UpdateFailed:
-        pass
 
     assert coordinator._is_initialized is False
     assert coordinator._devices == {}
