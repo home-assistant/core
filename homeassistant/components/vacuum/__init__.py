@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 import logging
@@ -437,10 +438,10 @@ class StateVacuumEntity[SegmentIdType = Any](
         """
         await self.hass.async_add_executor_job(partial(self.clean_spot, **kwargs))
 
-    async def async_get_segments(self) -> Mapping[SegmentIdType, str]:
+    async def async_get_segments(self) -> list[Segment[SegmentIdType]]:
         """Get the segments that can be cleaned.
 
-        Returns a mapping from segment ids to their names.
+        Returns a list of segments containing their ids and names.
         """
         raise NotImplementedError
 
@@ -551,6 +552,12 @@ class StateVacuumEntity[SegmentIdType = Any](
         This method must be run in the event loop.
         """
         await self.hass.async_add_executor_job(self.pause)
+
+
+@dataclass
+class Segment[SegmentIdType]:
+    id: SegmentIdType
+    name: str
 
 
 # As we import deprecated constants from the const module, we need to add these two functions
