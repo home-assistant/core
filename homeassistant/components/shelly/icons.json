@@ -61,6 +61,13 @@
           "off": "mdi:valve-closed",
           "on": "mdi:valve-open"
         }
+      },
+      "cury_slot": {
+        "default": "mdi:scent",
+        "state": {
+          "off": "mdi:scent-off",
+          "on": "mdi:scent"
+        }
       }
     }
   }
