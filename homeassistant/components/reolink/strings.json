@@ -206,6 +206,13 @@
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
+      "non-motor_vehicle": {
+        "name": "Bicycle",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
       "pet": {
         "name": "Pet",
         "state": {

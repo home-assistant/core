@@ -1195,7 +1195,7 @@ async def test_devices_payload_with_entities(
     # Entity from a different integration
     entity_registry.async_get_or_create(
         domain="light",
-        platform="roomba",
+        platform="shelly",
         unique_id="1",
         device_id=device_entry.id,
         has_entity_name=True,
@@ -1232,34 +1232,25 @@ async def test_devices_payload_with_entities(
                         "entities": [
                             {
                                 "assumed_state": None,
-                                "capabilities": {
-                                    "min_color_temp_kelvin": 2000,
-                                    "max_color_temp_kelvin": 6535,
-                                },
                                 "domain": "light",
                                 "entity_category": None,
                                 "has_entity_name": True,
-                                "modified_by_integration": None,
                                 "original_device_class": None,
                                 "unit_of_measurement": None,
                             },
                             {
                                 "assumed_state": False,
-                                "capabilities": None,
                                 "domain": "number",
                                 "entity_category": "config",
                                 "has_entity_name": True,
-                                "modified_by_integration": None,
                                 "original_device_class": "temperature",
                                 "unit_of_measurement": None,
                             },
                             {
                                 "assumed_state": True,
-                                "capabilities": None,
                                 "domain": "light",
                                 "entity_category": None,
                                 "has_entity_name": True,
-                                "modified_by_integration": None,
                                 "original_device_class": None,
                                 "unit_of_measurement": None,
                             },
@@ -1277,11 +1268,9 @@ async def test_devices_payload_with_entities(
                         "entities": [
                             {
                                 "assumed_state": None,
-                                "capabilities": None,
                                 "domain": "light",
                                 "entity_category": None,
                                 "has_entity_name": False,
-                                "modified_by_integration": None,
                                 "original_device_class": None,
                                 "unit_of_measurement": None,
                             },
@@ -1299,26 +1288,22 @@ async def test_devices_payload_with_entities(
                 "entities": [
                     {
                         "assumed_state": None,
-                        "capabilities": {"state_class": "measurement"},
                         "domain": "sensor",
                         "entity_category": None,
                         "has_entity_name": False,
-                        "modified_by_integration": None,
                         "original_device_class": "temperature",
                         "unit_of_measurement": "°C",
                     },
                 ],
             },
-            "roomba": {
+            "shelly": {
                 "devices": [],
                 "entities": [
                     {
                         "assumed_state": None,
-                        "capabilities": None,
                         "domain": "light",
                         "entity_category": None,
                         "has_entity_name": True,
-                        "modified_by_integration": None,
                         "original_device_class": None,
                         "unit_of_measurement": None,
                     },
@@ -1427,11 +1412,9 @@ async def test_analytics_platforms(
                 "entities": [
                     {
                         "assumed_state": None,
-                        "capabilities": {"options": 2},
                         "domain": "sensor",
                         "entity_category": None,
                         "has_entity_name": False,
-                        "modified_by_integration": ["capabilities"],
                         "original_device_class": None,
                         "unit_of_measurement": None,
                     },
