@@ -103,8 +103,6 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
-                errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
                     title="London Underground",
