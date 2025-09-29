@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import VolvoBaseCoordinator, VolvoConfigEntry
 from .entity import VolvoEntity, VolvoEntityDescription
 
@@ -133,7 +134,9 @@ class VolvoCarsButton(VolvoEntity, ButtonEntity):
 
         except VolvoApiException as ex:
             _LOGGER.debug("Command %s error", self.entity_description.api_command)
-            raise HomeAssistantError from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="command_error"
+            ) from ex
 
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
         """Update the state of the entity."""
