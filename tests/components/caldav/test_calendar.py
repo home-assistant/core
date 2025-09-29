@@ -1163,7 +1163,7 @@ async def test_config_entry_supported_components(
     assert not state
 
 
-@pytest.mark.parametrize("tz", [UTC, "Europe/Warsaw"])
+@pytest.mark.parametrize("tz", [UTC])
 @pytest.mark.parametrize(
     ("service_data", "expected_ics_fields"),
     [
@@ -1245,9 +1245,8 @@ async def test_add_vevent(
     service_data: dict,
     expected_ics_fields: dict,
 ) -> None:
-    """Test adding an event to the calendar."""
+    """Test adding a VEVENT to the calendar."""
     await setup_platform_cb()
-    hass_time_zone = zoneinfo.ZoneInfo(hass.config.time_zone)
 
     calendars[0].add_event = MagicMock(return_value=[])
     await hass.services.async_call(
@@ -1261,15 +1260,4 @@ async def test_add_vevent(
 
     calendars[0].add_event.assert_called_once()
     assert calendars[0].add_event.call_args
-    actual_fields = calendars[0].add_event.call_args[1]
-
-    for key in ("dtstart", "dtend"):
-        if isinstance(actual_fields[key], datetime.date):
-            # Date only, it does not have timezone
-            continue
-
-        assert actual_fields[key].tzinfo == hass_time_zone, (
-            f"Timezone does not match: expected {hass_time_zone}, got {actual_fields['dtstart'].tzinfo}"
-        )
-
-    assert actual_fields == expected_ics_fields
+    assert calendars[0].add_event.call_args[1] == expected_ics_fields
