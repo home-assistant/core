@@ -7,11 +7,20 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      Stale docstring and test name: `test_form_home` and reusing result.
+      Extract `async_setup_entry` into own fixture.
+      Avoid importing `config_flow` in tests.
+      Test reauth with errors
   config-flow:
     status: todo
     comment: |
       The config flow misses data descriptions.
+      Remove URLs from data descriptions, they should be replaced with placeholders.
+      Make use of Electricity Maps zone keys in country code as dropdown.
+      Make use of location selector for coordinates.
   dependency-transparency: done
   docs-actions:
     status: exempt
@@ -47,7 +56,11 @@ rules:
   log-when-unavailable: done
   parallel-updates: todo
   reauthentication-flow: done
-  test-coverage: done
+  test-coverage:
+    status: todo
+    comment: |
+      Use `hass.config_entries.async_setup` instead of assert await `async_setup_component(hass, DOMAIN, {})`
+      `test_sensor` could use `snapshot_platform`
 
   # Gold
   devices: done
@@ -76,10 +89,7 @@ rules:
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
-  icon-translations:
-    status: exempt
-    comment: |
-      The integration does not provide any additional icons.
+  icon-translations: todo
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
