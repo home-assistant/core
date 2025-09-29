@@ -16,11 +16,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    entity_registry as er,
-    issue_registry as ir,
-)
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
@@ -96,20 +92,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Check if already configured
     existing_entries = hass.config_entries.async_entries(DOMAIN)
     if existing_entries:
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"yaml_duplicate_{yaml_config[CONF_HOST]}_{yaml_config.get(CONF_PORT, DEFAULT_PORT)}",
-            is_fixable=False,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="yaml_config_duplicate",
-            translation_placeholders={
-                "host": yaml_config[CONF_HOST],
-                "port": str(yaml_config.get(CONF_PORT, DEFAULT_PORT)),
-                "yaml_example": f"ness_alarm:\n  host: {yaml_config[CONF_HOST]}\n  port: {yaml_config.get(CONF_PORT, DEFAULT_PORT)}",
-            },
-        )
         return True
 
     # No existing entry, proceed with import
