@@ -171,14 +171,12 @@ async def test_reauth_flow_scenario(
 @pytest.mark.parametrize(
     ("reauth_exception", "expected_error"),
     [
-        (None, None),
         (AirOSConnectionAuthenticationError, "invalid_auth"),
         (AirOSDeviceConnectionError, "cannot_connect"),
         (AirOSKeyDataMissingError, "key_data_missing"),
         (Exception, "unknown"),
     ],
     ids=[
-        "reauth_succes",
         "invalid_auth",
         "cannot_connect",
         "key_data_missing",
@@ -211,19 +209,16 @@ async def test_reauth_flow_scenarios(
         user_input={CONF_PASSWORD: NEW_PASSWORD},
     )
 
-    if expected_error:
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == REAUTH_STEP
-        assert result["errors"] == {"base": expected_error}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == REAUTH_STEP
+    assert result["errors"] == {"base": expected_error}
 
-        # Retry
-        mock_airos_client.login.side_effect = None
-        result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"],
-            user_input={CONF_PASSWORD: NEW_PASSWORD},
-        )
+    mock_airos_client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"],
+        user_input={CONF_PASSWORD: NEW_PASSWORD},
+    )
 
-    # Always test resolution
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
