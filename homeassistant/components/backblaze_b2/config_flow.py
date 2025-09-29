@@ -122,16 +122,17 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
 
             allowed = b2_api.account_info.get_allowed()
 
-            if (
-                allowed is None
-                or not allowed.get("capabilities")
-                or not REQUIRED_CAPABILITIES.issubset(set(allowed["capabilities"]))
-            ):
-                # Check which required capabilities are missing
-                missing_caps = REQUIRED_CAPABILITIES - set(
-                    allowed.get("capabilities", [])
+            # Check if allowed info is available
+            if allowed is None or not allowed.get("capabilities"):
+                errors["base"] = "invalid_capability"
+                placeholders["missing_capabilities"] = ", ".join(
+                    sorted(REQUIRED_CAPABILITIES)
                 )
-                if missing_caps:
+            else:
+                # Check if all required capabilities are present
+                current_caps = set(allowed["capabilities"])
+                if not REQUIRED_CAPABILITIES.issubset(current_caps):
+                    missing_caps = REQUIRED_CAPABILITIES - current_caps
                     _LOGGER.warning(
                         "Missing required Backblaze B2 capabilities for Key ID '%s': %s",
                         user_input[CONF_KEY_ID],
@@ -141,13 +142,16 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                     placeholders["missing_capabilities"] = ", ".join(
                         sorted(missing_caps)
                     )
-
-            configured_prefix: str = user_input[CONF_PREFIX]
-            allowed_prefix = allowed.get("namePrefix") or ""
-            # Ensure configured prefix starts with Backblaze B2's allowed prefix
-            if allowed_prefix and not configured_prefix.startswith(allowed_prefix):
-                errors[CONF_PREFIX] = "invalid_prefix"
-                placeholders["allowed_prefix"] = allowed_prefix
+                else:
+                    # Only check prefix if capabilities are valid
+                    configured_prefix: str = user_input[CONF_PREFIX]
+                    allowed_prefix = allowed.get("namePrefix") or ""
+                    # Ensure configured prefix starts with Backblaze B2's allowed prefix
+                    if allowed_prefix and not configured_prefix.startswith(
+                        allowed_prefix
+                    ):
+                        errors[CONF_PREFIX] = "invalid_prefix"
+                        placeholders["allowed_prefix"] = allowed_prefix
 
         except exception.Unauthorized:
             _LOGGER.debug(

@@ -20,6 +20,3 @@ METADATA_FILE_SUFFIX = ".metadata.json"
 METADATA_VERSION = "1"
 
 BACKBLAZE_REALM = "production"
-
-# Safety limits
-MAX_BACKUP_SIZE = 10 * 1024 * 1024 * 1024  # 10GB - reasonable backup size limit

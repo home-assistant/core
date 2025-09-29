@@ -20,7 +20,6 @@ from homeassistant.components.backblaze_b2.backup import (
 from homeassistant.components.backblaze_b2.const import (
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
-    MAX_BACKUP_SIZE,
     METADATA_VERSION,
 )
 from homeassistant.components.backup import (
@@ -289,14 +288,6 @@ class TestBackupOperations:
             mock_bucket.upload_unbound_stream.assert_called_once()
             mock_bucket.upload_bytes.assert_called_once()
 
-    async def test_upload_backup_size_limit_exceeded(self, agent):
-        """Test upload rejection when backup exceeds size limit."""
-        huge_backup = create_test_backup(size=MAX_BACKUP_SIZE + 1)
-        stream = create_mock_stream()
-
-        with pytest.raises(BackupAgentError, match="exceeds maximum allowed size"):
-            await agent.async_upload_backup(open_stream=stream, backup=huge_backup)
-
     async def test_download_backup(self, agent):
         """Test backup download functionality."""
         mock_file = Mock()
@@ -389,9 +380,7 @@ class TestErrorHandling:
                 agent, "_upload_backup_file", side_effect=B2Error("B2 API error")
             ),
             patch.object(agent, "_cleanup_failed_upload") as mock_cleanup,
-            pytest.raises(
-                BackupAgentError, match="Failed to upload backup to Backblaze B2"
-            ),
+            pytest.raises(BackupAgentError, match="Failed during async_upload_backup"),
         ):
             await agent.async_upload_backup(open_stream=stream, backup=backup)
 
@@ -470,7 +459,7 @@ class TestErrorHandling:
 
         with (
             patch.object(agent, "_bucket", mock_bucket),
-            pytest.raises(BackupAgentError, match="An unexpected error occurred"),
+            pytest.raises(RuntimeError, match="Unexpected error"),
         ):
             await agent.async_upload_backup(open_stream=stream, backup=backup)
 

@@ -144,6 +144,18 @@ async def test_already_configured(
             "invalid_capability",
             "base",
         ),
+        (
+            "no_allowed_info",
+            {"mock_allowed": None},
+            "invalid_capability",
+            "base",
+        ),
+        (
+            "no_capabilities",
+            {"mock_allowed": {}},
+            "invalid_capability",
+            "base",
+        ),
         ("invalid_prefix", {"mock_prefix": "test/"}, "invalid_prefix", "prefix"),
         (
             "unknown_error",
@@ -183,6 +195,14 @@ async def test_config_flow_errors(
         with patch(
             "b2sdk.v2.RawSimulator.account_info.get_allowed",
             return_value={"capabilities": setup["mock_capabilities"]},
+        ):
+            result = await _async_start_flow(
+                hass, b2_fixture.key_id, b2_fixture.application_key
+            )
+    elif "mock_allowed" in setup:
+        with patch(
+            "b2sdk.v2.RawSimulator.account_info.get_allowed",
+            return_value=setup["mock_allowed"],
         ):
             result = await _async_start_flow(
                 hass, b2_fixture.key_id, b2_fixture.application_key
