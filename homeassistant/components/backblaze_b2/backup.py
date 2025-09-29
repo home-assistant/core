@@ -19,6 +19,8 @@ from homeassistant.components.backup import (
     BackupNotFound,
     suggested_filename,
 )
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.backup.util import AsyncIteratorReader
 from homeassistant.core import HomeAssistant, callback
 
