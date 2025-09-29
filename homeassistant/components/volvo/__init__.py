@@ -23,6 +23,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from .api import VolvoAuth
 from .const import CONF_VIN, DOMAIN, PLATFORMS
 from .coordinator import (
+    VolvoCommandCoordinator,
     VolvoConfigEntry,
     VolvoContext,
     VolvoFastIntervalCoordinator,
@@ -50,10 +51,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> boo
         VolvoSlowIntervalCoordinator(hass, entry, context),
         VolvoVerySlowIntervalCoordinator(hass, entry, context),
     )
+    command_coordinator = VolvoCommandCoordinator(hass, entry, context)
 
-    await asyncio.gather(*(c.async_config_entry_first_refresh() for c in coordinators))
+    await asyncio.gather(
+        *(
+            c.async_config_entry_first_refresh()
+            for c in (*coordinators, command_coordinator)
+        )
+    )
 
-    entry.runtime_data = VolvoRuntimeData(coordinators)
+    entry.runtime_data = VolvoRuntimeData(coordinators, command_coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

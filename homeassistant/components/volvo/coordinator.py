@@ -48,6 +48,7 @@ class VolvoRuntimeData:
     """Volvo runtime data."""
 
     interval_coordinators: tuple[VolvoBaseIntervalCoordinator, ...]
+    command_coordinator: VolvoCommandCoordinator
 
 
 type VolvoConfigEntry = ConfigEntry[VolvoRuntimeData]
@@ -380,3 +381,32 @@ class VolvoFastIntervalCoordinator(VolvoBaseIntervalCoordinator):
             api.async_get_doors_status,
             api.async_get_window_states,
         ]
+
+
+class VolvoCommandCoordinator(VolvoBaseCoordinator):
+    """Volvo coordinator responsible for commands."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: VolvoConfigEntry,
+        context: VolvoContext,
+    ) -> None:
+        """Initialize the coordinator."""
+
+        super().__init__(
+            hass,
+            entry,
+            context,
+            None,
+            "Volvo command coordinator",
+        )
+
+        self.commands: list[str] = []
+
+    async def _async_setup(self) -> None:
+        commands = await self.context.api.async_get_commands()
+        self.commands = [c.command for c in commands if c is not None]
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        return {}

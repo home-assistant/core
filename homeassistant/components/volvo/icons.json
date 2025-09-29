@@ -260,6 +260,29 @@
         }
       }
     },
+    "button": {
+      "climatization_start": {
+        "default": "mdi:air-conditioner"
+      },
+      "climatization_stop": {
+        "default": "mdi:air-conditioner"
+      },
+      "engine_start": {
+        "default": "mdi:engine"
+      },
+      "engine_stop": {
+        "default": "mdi:engine-off"
+      },
+      "flash": {
+        "default": "mdi:alarm-light-outline"
+      },
+      "honk": {
+        "default": "mdi:trumpet"
+      },
+      "honk_flash": {
+        "default": "mdi:alarm-light"
+      }
+    },
     "sensor": {
       "availability": {
         "default": "mdi:car-connected"

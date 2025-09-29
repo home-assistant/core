@@ -29,7 +29,7 @@ def value_to_translation_key(value: str) -> str:
 class VolvoEntityDescription(EntityDescription):
     """Describes a Volvo entity."""
 
-    api_field: str
+    api_field: str | None = None
 
 
 class VolvoEntity(CoordinatorEntity[VolvoBaseCoordinator]):
@@ -81,8 +81,13 @@ class VolvoEntity(CoordinatorEntity[VolvoBaseCoordinator]):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        api_field = self.coordinator.get_api_field(self.entity_description.api_field)
-        return super().available and api_field is not None
+        if self.entity_description.api_field:
+            api_field = self.coordinator.get_api_field(
+                self.entity_description.api_field
+            )
+            return super().available and api_field is not None
+
+        return super().available
 
     @abstractmethod
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
