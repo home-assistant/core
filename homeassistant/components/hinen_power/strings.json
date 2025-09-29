@@ -18,15 +18,19 @@
     },
     "step": {
       "user": {
-        "title": "Authentication jump settings",
-        "description": "1. Your Hinen user information and device information will be stored in your Home Assistant system. Hinen cannot guarantee the security of the Home Assistant storage mechanism. You are responsible for preventing your information from being stolen. \r\n2. This integration is maintained by the open source community and may have stability issues or other issues. When you encounter related issues with this integration, you should seek help from the open source community rather than contact Hinen customer service. \r\n3. You need to have some technical capabilities to maintain your local operating environment, and this integration is not friendly to novice users. \r\n4. Please read README carefully before using this integration. \r\n5. In order for users to use the integration stably and avoid interface abuse, this integration is only allowed in Home Assistant. Please refer to LICENSE for details.",
+        "title": "Add Hinen Power integration settings",
+        "description": "",
         "data": {
           "page_language": "Certification page language",
-          "region_code": "Region"
+          "region_code": "Region",
+          "client_id": "OAuth Client ID",
+          "client_secret": "OAuth Client Secret"
         },
         "data_description": {
           "page_language": "",
-          "region_code": ""
+          "region_code": "",
+          "client_id": "",
+          "client_secret": ""
         }
       },
       "devices": {
