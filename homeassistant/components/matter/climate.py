@@ -263,12 +263,16 @@ class MatterClimate(MatterEntity, ClimateEntity):
             clusters.Thermostat.Attributes.LocalTemperature
         )
 
-        if raw_measured_humidity := self.get_matter_attribute_value(
-            clusters.RelativeHumidityMeasurement.Attributes.MeasuredValue
-        ):
-            self._attr_current_humidity = (
-                int(raw_measured_humidity) / HUMIDITY_SCALING_FACTOR
+        self._attr_current_humidity = (
+            int(raw_measured_humidity) / HUMIDITY_SCALING_FACTOR
+            if (
+                raw_measured_humidity := self.get_matter_attribute_value(
+                    clusters.RelativeHumidityMeasurement.Attributes.MeasuredValue
+                )
             )
+            is not None
+            else None
+        )
 
         if self.get_matter_attribute_value(clusters.OnOff.Attributes.OnOff) is False:
             # special case: the appliance has a dedicated Power switch on the OnOff cluster
