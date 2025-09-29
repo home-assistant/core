@@ -156,7 +156,7 @@ async def async_setup_entry(
 class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Connect ZBT-2 firmware update entity."""
 
-    bootloader_reset_type = None
+    bootloader_reset_type = "rts_dtr"
 
     def __init__(
         self,
