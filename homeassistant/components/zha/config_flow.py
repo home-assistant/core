@@ -23,6 +23,7 @@ from homeassistant.components.homeassistant_hardware import silabs_multiprotocol
 from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
+    SOURCE_ZEROCONF,
     ConfigEntry,
     ConfigEntryBaseFlow,
     ConfigEntryState,
@@ -183,27 +184,17 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self._hass = hass
         self._radio_mgr.hass = hass
 
-    async def _get_config_entry_data(self) -> dict:
+    def _get_config_entry_data(self) -> dict[str, Any]:
         """Extract ZHA config entry data from the radio manager."""
         assert self._radio_mgr.radio_type is not None
         assert self._radio_mgr.device_path is not None
         assert self._radio_mgr.device_settings is not None
 
-        try:
-            device_path = await self.hass.async_add_executor_job(
-                usb.get_serial_by_id, self._radio_mgr.device_path
-            )
-        except OSError as error:
-            raise AbortFlow(
-                reason="cannot_resolve_path",
-                description_placeholders={"path": self._radio_mgr.device_path},
-            ) from error
-
         return {
             CONF_DEVICE: DEVICE_SCHEMA(
                 {
                     **self._radio_mgr.device_settings,
-                    CONF_DEVICE_PATH: device_path,
+                    CONF_DEVICE_PATH: self._radio_mgr.device_path,
                 }
             ),
             CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,
@@ -662,13 +653,8 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         """Set the flow's unique ID and update the device path in an ignored flow."""
         current_entry = await self.async_set_unique_id(unique_id)
 
-        if not current_entry:
-            return
-
-        if current_entry.source != SOURCE_IGNORE:
-            self._abort_if_unique_id_configured()
-        else:
-            # Only update the current entry if it is an ignored discovery
+        # Only update the current entry if it is an ignored discovery
+        if current_entry and current_entry.source == SOURCE_IGNORE:
             self._abort_if_unique_id_configured(
                 updates={
                     CONF_DEVICE: {
@@ -702,6 +688,36 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         zha_config_entries = self.hass.config_entries.async_entries(
             DOMAIN, include_ignore=False
         )
+
+        if self._radio_mgr.device_path is not None:
+            # Ensure the radio manager device path is unique and will match ZHA's
+            try:
+                self._radio_mgr.device_path = await self.hass.async_add_executor_job(
+                    usb.get_serial_by_id, self._radio_mgr.device_path
+                )
+            except OSError as error:
+                raise AbortFlow(
+                    reason="cannot_resolve_path",
+                    description_placeholders={"path": self._radio_mgr.device_path},
+                ) from error
+
+            # mDNS discovery can advertise the same adapter on multiple IPs or via a
+            # hostname, which should be considered a duplicate
+            current_device_paths = {self._radio_mgr.device_path}
+
+            if self.source == SOURCE_ZEROCONF:
+                discovery_info = self.init_data
+                current_device_paths |= {
+                    f"socket://{ip}:{discovery_info.port}"
+                    for ip in discovery_info.ip_addresses
+                }
+
+            for entry in zha_config_entries:
+                path = entry.data.get(CONF_DEVICE, {}).get(CONF_DEVICE_PATH)
+
+                # Abort discovery if the device path is already configured
+                if path is not None and path in current_device_paths:
+                    return self.async_abort(reason="single_instance_allowed")
 
         # Without confirmation, discovery can automatically progress into parts of the
         # config flow logic that interacts with hardware.
@@ -873,7 +889,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         zha_config_entries = self.hass.config_entries.async_entries(
             DOMAIN, include_ignore=False
         )
-        data = await self._get_config_entry_data()
+        data = self._get_config_entry_data()
 
         if len(zha_config_entries) == 1:
             return self.async_update_reload_and_abort(
@@ -976,7 +992,7 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
         # Avoid creating both `.options` and `.data` by directly writing `data` here
         self.hass.config_entries.async_update_entry(
             entry=self.config_entry,
-            data=await self._get_config_entry_data(),
+            data=self._get_config_entry_data(),
             options=self.config_entry.options,
         )
 
