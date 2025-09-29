@@ -92,11 +92,11 @@ _FLUID_OUNCE_TO_CUBIC_METER = _GALLON_TO_CUBIC_METER / 128  # 128 fl. oz. in a U
 _CUBIC_FOOT_TO_CUBIC_METER = pow(_FOOT_TO_M, 3)
 
 # Gas concentration conversion constants
-_IDEAL_GAS_CONSTANT = 8.31446261815324  # m3⋅Pa⋅K−1⋅mol−1
+_IDEAL_GAS_CONSTANT = 8.31446261815324  # m3⋅Pa⋅K⁻¹⋅mol⁻¹
 # Standard Ambient Temperature and Pressure constants
 _SATP_TEMPERATURE = 298.15  # K (25 °C)
 _SATP_PRESSURE = 101325  # Pa (1 atm)
-_SATP_IDEAL_GAS_MOLAR_VOLUME = (  # m3⋅mol-1
+_SATP_IDEAL_GAS_MOLAR_VOLUME = (  # m3⋅mol⁻¹
     _IDEAL_GAS_CONSTANT * _SATP_TEMPERATURE / _SATP_PRESSURE
 )
 # Molar masses in g/mol
