@@ -292,7 +292,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==0.10.2
+aiomealie==0.11.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
