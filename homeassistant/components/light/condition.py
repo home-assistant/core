@@ -1,29 +1,27 @@
 """Provides conditions for lights."""
 
-from typing import Final, override
+from typing import Any, Final, override
 
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_CONDITION,
+    CONF_OPTIONS,
     CONF_STATE,
     CONF_TARGET,
     STATE_OFF,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, split_entity_id
-from homeassistant.helpers import config_validation as cv, selector, target
+from homeassistant.helpers import config_validation as cv, target
 from homeassistant.helpers.condition import (
     Condition,
     ConditionCheckerType,
+    ConditionConfig,
     trace_condition_function,
 )
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .const import DOMAIN
-
-# remove when #151314 is merged
-CONF_OPTIONS: Final = "options"
 
 ATTR_BEHAVIOR: Final = "behavior"
 BEHAVIOR_ONE: Final = "one"
@@ -31,28 +29,32 @@ BEHAVIOR_ANY: Final = "any"
 BEHAVIOR_ALL: Final = "all"
 
 STATE_CONDITION_TYPE: Final = "state"
+
+STATE_CONDITION_OPTIONS_SCHEMA: dict[vol.Marker, Any] = {
+    vol.Required(CONF_STATE): vol.In([STATE_ON, STATE_OFF]),
+    vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
+        [BEHAVIOR_ONE, BEHAVIOR_ANY, BEHAVIOR_ALL]
+    ),
+}
 STATE_CONDITION_SCHEMA = vol.Schema(
     {
-        **cv.CONDITION_BASE_SCHEMA,
-        vol.Required(CONF_CONDITION): f"{DOMAIN}.{STATE_CONDITION_TYPE}",
-        vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_STATE): vol.In([STATE_ON, STATE_OFF]),
-            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                [BEHAVIOR_ONE, BEHAVIOR_ANY, BEHAVIOR_ALL]
-            ),
-        },
-        vol.Required(CONF_TARGET): selector.TargetSelector.TARGET_SELECTION_SCHEMA,
-    },
+        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+        CONF_OPTIONS: STATE_CONDITION_OPTIONS_SCHEMA,
+    }
 )
 
 
 class StateCondition(Condition):
     """State condition."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize condition."""
         self._hass = hass
-        self._config = config
+        assert config.target
+        self._target = config.target
+        assert config.options
+        self._state = config.options[CONF_STATE]
+        self._behavior = config.options[ATTR_BEHAVIOR]
 
     @override
     @classmethod
@@ -65,14 +67,11 @@ class StateCondition(Condition):
     @override
     async def async_get_checker(self) -> ConditionCheckerType:
         """Wrap action method with zone based condition."""
-        options_config = self._config[CONF_OPTIONS]
-        state = options_config[CONF_STATE]
-        behavior = options_config[ATTR_BEHAVIOR]
 
         def check_any_match_state(entity_ids: set[str]) -> bool:
             """Test if any entity match the state."""
             return any(
-                entity_state.state == state
+                entity_state.state == self._state
                 for entity_id in entity_ids
                 if (entity_state := self._hass.states.get(entity_id))
                 is not None  # Ignore unavailable entities
@@ -81,7 +80,7 @@ class StateCondition(Condition):
         def check_all_match_state(entity_ids: set[str]) -> bool:
             """Test if all entities match the state."""
             return all(
-                entity_state.state == state
+                entity_state.state == self._state
                 for entity_id in entity_ids
                 if (entity_state := self._hass.states.get(entity_id))
                 is not None  # Ignore unavailable entities
@@ -94,26 +93,24 @@ class StateCondition(Condition):
                 # Ignore unavailable entities
                 if (entity_state := self._hass.states.get(entity_id)) is None:
                     continue
-                if entity_state.state != state:
+                if entity_state.state != self._state:
                     continue
                 if matched:
                     return False
                 matched = True
             return matched
 
-        if behavior == BEHAVIOR_ANY:
+        if self._behavior == BEHAVIOR_ANY:
             matcher = check_any_match_state
-        elif behavior == BEHAVIOR_ALL:
+        elif self._behavior == BEHAVIOR_ALL:
             matcher = check_all_match_state
-        elif behavior == BEHAVIOR_ONE:
+        elif self._behavior == BEHAVIOR_ONE:
             matcher = check_one_match_state
-
-        target_config = self._config.get(CONF_TARGET, {})
 
         @trace_condition_function
         def test_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
             """Test state condition."""
-            selector_data = target.TargetSelectorData(target_config)
+            selector_data = target.TargetSelectorData(self._target)
             targeted_entities = target.async_extract_referenced_entity_ids(
                 hass, selector_data, expand_group=False
             )
