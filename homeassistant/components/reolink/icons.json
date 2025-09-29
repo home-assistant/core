@@ -462,6 +462,15 @@
       },
       "sd_storage": {
         "default": "mdi:micro-sd"
+      },
+      "person_type": {
+        "default": "mdi:account"
+      },
+      "vehicle_type": {
+        "default": "mdi:car"
+      },
+      "animal_type": {
+        "default": "mdi:paw"
       }
     },
     "siren": {

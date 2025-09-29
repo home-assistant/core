@@ -930,6 +930,29 @@
       },
       "sd_storage": {
         "name": "SD {hdd_index} storage"
+      },
+      "person_type": {
+        "name": "Person type",
+        "state": {
+          "man": "Man",
+          "woman": "Woman"
+        }
+      },
+      "vehicle_type": {
+        "name": "Vehicle type",
+        "state": {
+          "sedan": "Sedan",
+          "suv": "SUV",
+          "pickup_truck": "Pickup truck",
+          "motorcycle": "Motorcycle"
+        }
+      },
+      "animal_type": {
+        "name": "Animal type",
+        "state": {
+          "dog": "Dog",
+          "cat": "Cat"
+        }
       }
     },
     "siren": {
