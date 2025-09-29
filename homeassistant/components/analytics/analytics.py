@@ -551,7 +551,7 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
         for domain, integration_info in integration_inputs.items()
         if (integration := integrations.get(domain)) is not None
         and integration.is_built_in
-        and integration.integration_type in ("device", "hub")
+        and integration.manifest.get("integration_type") in ("device", "hub")
     }
 
     # Call integrations that implement the analytics platform
