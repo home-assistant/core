@@ -15,7 +15,7 @@
       },
       "auth_and_claim": {
         "title": "Claim device in EnergyID",
-        "description": "This Home Assistant connection needs to be claimed in your EnergyID portal before it can send data.\n\n1. Go to: {claim_url}\n2. Enter code: **{claim_code}**\n3. (Code expires: {valid_until})\n\nAfter successfully claiming the device in EnergyID, click **Submit** below to continue."
+        "description": "This Home Assistant connection needs to be claimed in your EnergyID portal before it can send data.\n\n1. Go to: {claim_url}\n2. Enter code: **{claim_code}**\n3. (Code expires: {valid_until})\n\nAfter successfully claiming the device in EnergyID, select **Submit** below to continue."
       },
       "reauth_confirm": {
         "title": "Reauthenticate EnergyID",
