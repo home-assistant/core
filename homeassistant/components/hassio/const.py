@@ -68,6 +68,7 @@ EVENT_HEALTH_CHANGED = "health_changed"
 EVENT_SUPPORTED_CHANGED = "supported_changed"
 EVENT_ISSUE_CHANGED = "issue_changed"
 EVENT_ISSUE_REMOVED = "issue_removed"
+EVENT_JOB = "job"
 
 UPDATE_KEY_SUPERVISOR = "supervisor"
 
