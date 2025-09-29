@@ -6,7 +6,10 @@ rules:
       This integration does not provide additional actions.
   appropriate-polling: done
   brands: done
-  common-modules: done
+  common-modules:
+    status: exempt
+    comment: |
+      This integration has only one platform which uses a coordinator.
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
