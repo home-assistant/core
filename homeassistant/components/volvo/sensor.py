@@ -354,13 +354,19 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors."""
-    coordinators = entry.runtime_data
-    async_add_entities(
-        VolvoSensor(coordinator, description)
-        for coordinator in coordinators
-        for description in _DESCRIPTIONS
-        if description.api_field in coordinator.data
-    )
+
+    entities: dict[str, VolvoSensor] = {}
+    coordinators = entry.runtime_data.interval_coordinators
+
+    for coordinator in coordinators:
+        for description in _DESCRIPTIONS:
+            if description.key in entities:
+                continue
+
+            if description.api_field in coordinator.data:
+                entities[description.key] = VolvoSensor(coordinator, description)
+
+    async_add_entities(entities.values())
 
 
 class VolvoSensor(VolvoEntity, SensorEntity):
