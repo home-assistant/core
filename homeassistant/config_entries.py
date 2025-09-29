@@ -3192,13 +3192,13 @@ class ConfigFlow(ConfigEntryBaseFlow):
         self,
         entry: ConfigEntry,
         *,
-        unique_id: str | None | UndefinedType = UNDEFINED,
-        title: str | UndefinedType = UNDEFINED,
-        data: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        options: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        unique_id: str | None | UndefinedType,
+        title: str | UndefinedType,
+        data: Mapping[str, Any] | UndefinedType,
+        data_updates: Mapping[str, Any] | UndefinedType,
+        options: Mapping[str, Any] | UndefinedType,
     ) -> bool:
-        """Update config subentry and return result.
+        """Update config entry and return result.
 
         Internal to be used by update_and_abort and update_reload_and_abort methods only.
         """
