@@ -6736,7 +6736,7 @@ async def test_update_entry_without_reload(
     calls_entry_load_unload: tuple[int, int],
     raises: type[Exception] | None,
 ) -> None:
-    """Test updating an entry and reloading."""
+    """Test updating an entry without reloading."""
     entry = MockConfigEntry(
         domain="comp",
         unique_id="1234",

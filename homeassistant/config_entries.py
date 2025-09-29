@@ -3230,7 +3230,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Update config entry and finish config flow.
 
         Args:
-            entry: config entry to update and reload
+            entry: config entry to update
             unique_id: replace the unique_id of the entry
             title: replace the title of the entry
             data: replace the entry data with new data
