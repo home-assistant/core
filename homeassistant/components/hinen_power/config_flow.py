@@ -31,8 +31,8 @@ from . import application_credentials
 from .const import (
     ATTR_AUTH_LANGUAGE,
     ATTR_REGION_CODE,
-    CLIENT_ID,
-    CLIENT_SECRET,
+    # CLIENT_ID,
+    # CLIENT_SECRET,
     CONF_DEVICES,
     DOMAIN,
     HOST,
@@ -71,7 +71,9 @@ class OAuth2FlowHandler(
         if user_input is not None:
             self.hass.data[ATTR_AUTH_LANGUAGE] = user_input[ATTR_AUTH_LANGUAGE]
             self.hass.data[ATTR_REGION_CODE] = user_input[ATTR_REGION_CODE]
-            credential: ClientCredential = ClientCredential(CLIENT_ID, CLIENT_SECRET)
+            credential: ClientCredential = ClientCredential(
+                user_input["client_id"], user_input["client_secret"]
+            )
 
             self.flow_impl = (
                 await application_credentials.async_get_auth_implementation(
@@ -101,6 +103,8 @@ class OAuth2FlowHandler(
                     vol.Required(ATTR_REGION_CODE): SelectSelector(
                         SelectSelectorConfig(options=country_options)
                     ),
+                    vol.Required("client_id", default=""): str,
+                    vol.Required("client_secret", default=""): str,
                 }
             ),
         )

@@ -73,6 +73,7 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
                 "host": "https://dev-iot-api.celinksmart.cn",
                 "client_secret": "test_client_secret",
                 "region_code": "CN",
+                "client_id": "6liMmES7",
             },
         },
         options={"devices": ["device_12345"]},

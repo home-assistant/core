@@ -36,6 +36,8 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         user_input={
             ATTR_AUTH_LANGUAGE: PAGE_LANGUAGE,
             ATTR_REGION_CODE: "CN",
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
         },
     )
 
@@ -115,6 +117,8 @@ async def test_reauth_update_entry(
         user_input={
             ATTR_AUTH_LANGUAGE: PAGE_LANGUAGE,
             ATTR_REGION_CODE: "CN",
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
         },
     )
 
@@ -204,6 +208,8 @@ async def test_no_device(
         user_input={
             ATTR_AUTH_LANGUAGE: PAGE_LANGUAGE,
             ATTR_REGION_CODE: "CN",
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
         },
     )
 
@@ -245,6 +251,8 @@ async def test_forbidden_error(
         user_input={
             ATTR_AUTH_LANGUAGE: PAGE_LANGUAGE,
             ATTR_REGION_CODE: "CN",
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
         },
     )
 
@@ -286,6 +294,8 @@ async def test_unknown_error(
         user_input={
             ATTR_AUTH_LANGUAGE: PAGE_LANGUAGE,
             ATTR_REGION_CODE: "CN",
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
         },
     )
     # Mock Hinen service that raises an unknown error
@@ -366,6 +376,8 @@ async def test_device_selection_flow(
         user_input={
             ATTR_AUTH_LANGUAGE: PAGE_LANGUAGE,
             ATTR_REGION_CODE: "CN",
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
         },
     )
 

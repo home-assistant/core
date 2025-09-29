@@ -11,7 +11,11 @@ from hinen_open_api.utils import RespUtil
 import jwt
 from yarl import URL
 
-from homeassistant.components.application_credentials import AuthImplementation
+from homeassistant.components.application_credentials import (
+    AuthImplementation,
+    AuthorizationServer,
+    ClientCredential,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -60,6 +64,23 @@ class AsyncConfigEntryAuth:
 
 class HinenImplementation(AuthImplementation):
     """Hinen implementation of LocalOAuth2Implementation."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        domain: str,
+        client_credential: ClientCredential,
+        authorization_server: AuthorizationServer,
+    ) -> None:
+        """Set up Electric Kiwi oauth."""
+        super().__init__(
+            hass=hass,
+            auth_domain=domain,
+            credential=client_credential,
+            authorization_server=authorization_server,
+        )
+
+        self._name = client_credential.name
 
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
@@ -129,6 +150,8 @@ class HinenImplementation(AuthImplementation):
         custom_token = cast(dict[str, Any], await resp.json()).get("data", {})
         custom_token.update(
             {
+                "clientId": self.client_id,
+                "clientSecret": self.client_secret,
                 REGION_CODE: data.get(REGION_CODE),
             }
         )

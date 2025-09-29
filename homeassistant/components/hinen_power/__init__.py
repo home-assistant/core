@@ -20,7 +20,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import application_credentials
 from .auth_config import AsyncConfigEntryAuth
-from .const import AUTH, CLIENT_ID, CLIENT_SECRET, COORDINATOR, DOMAIN
+from .const import AUTH, COORDINATOR, DOMAIN
 from .coordinator import HinenDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -32,7 +32,11 @@ async def async_setup_entry(
     """Set up the Hinen Auth component."""
     hinen_auth_impl: AbstractOAuth2Implementation = (
         await application_credentials.async_get_auth_implementation(
-            hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
+            hass,
+            DOMAIN,
+            ClientCredential(
+                entry.data["token"]["client_id"], entry.data["token"]["client_secret"]
+            ),
         )
     )
     async_register_implementation(hass, DOMAIN, hinen_auth_impl)
