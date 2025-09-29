@@ -123,7 +123,6 @@ async def test_binary_sensor_add_update(
     test_entity = hass.states.get(test_entity_id)
     assert test_entity is not None
     assert test_entity.state == "on"
-    
     # NEW: prefer motion_report.motion when present (should turn on even if plain motion is False)
     updated_sensor = {
         **FAKE_BINARY_SENSOR,
