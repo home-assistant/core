@@ -3153,7 +3153,7 @@ whois==0.9.27
 wiffi==1.1.2
 
 # homeassistant.components.wiim
-wiim==0.0.3
+wiim==0.0.5
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.8.1

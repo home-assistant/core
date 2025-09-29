@@ -8,6 +8,6 @@
   "iot_class": "local_push",
   "loggers": ["wiim.sdk", "async_upnp_client"],
   "quality_scale": "bronze",
-  "requirements": ["wiim==0.0.3"],
+  "requirements": ["wiim==0.0.5"],
   "zeroconf": ["_linkplay._tcp.local."]
 }

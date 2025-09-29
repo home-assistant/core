@@ -46,8 +46,11 @@
   },
   "entity": {
     "button": {
-      "timesync": {
+      "sync_time": {
         "name": "Sync time"
+      },
+      "reboot_device": {
+        "name": "Reboot device"
       }
     }
   },

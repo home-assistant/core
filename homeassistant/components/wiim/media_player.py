@@ -43,6 +43,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
     RepeatMode,
+    async_process_play_media_url,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -206,7 +207,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         #     if modes_flag & mode.value:
         #         source_list.append(mode.display_name)  # type: ignore[attr-defined]
         # return source_list
-        return [mode.display_name for mode in InputMode if modes_flag & mode.value]
+        return [mode.display_name for mode in InputMode if modes_flag & mode.value]  # type: ignore[attr-defined]
 
     def _generate_output_list(self) -> list[str] | None:
         """Generate the list of available audio output modes based on model."""
@@ -223,7 +224,9 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         #         output_list.append(mode.display_name)  # type: ignore[attr-defined]
         # return output_list
         return [
-            mode.display_name for mode in AudioOutputHwMode if modes_flag & mode.value
+            mode.display_name  # type: ignore[attr-defined]
+            for mode in AudioOutputHwMode
+            if modes_flag & mode.value
         ]
 
     @callback
@@ -353,7 +356,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                         self.unique_id,
                         self._device.play_mode,
                     )
-                    self._attr_source = InputMode.WIFI.display_name
+                    self._attr_source = InputMode.WIFI.display_name  # type: ignore[attr-defined]
 
             # Repeat and Shuffle modes
             current_loop_mode = self._device.loop_mode
@@ -586,13 +589,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 output_mode = int(hardware_output_mode["hardware"])
                 source_mode = int(hardware_output_mode["source"])
                 if source_mode == 1:
-                    self._attr_sound_mode = AudioOutputHwMode.OTHER_OUT.display_name
+                    self._attr_sound_mode = AudioOutputHwMode.OTHER_OUT.display_name  # type: ignore[attr-defined]
                 elif (
                     self._attr_unique_id
                     and any(key in self._attr_unique_id for key in AUDIO_AUX_MODE_IDS)
                     and output_mode == 2
                 ):
-                    self._attr_sound_mode = AudioOutputHwMode.SPEAKER_OUT.display_name
+                    self._attr_sound_mode = AudioOutputHwMode.SPEAKER_OUT.display_name  # type: ignore[attr-defined]
                 else:
 
                     def get_output_mode_display_name_by_cmd(
@@ -600,15 +603,15 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     ) -> str:
                         mode = CMD_TO_MODE_MAP.get(cmd)
                         if mode:
-                            return mode.display_name
-                        return AudioOutputHwMode.OTHER_OUT.display_name
+                            return mode.display_name  # type: ignore[attr-defined]
+                        return AudioOutputHwMode.OTHER_OUT.display_name  # type: ignore[attr-defined]
 
                     try:
                         self._attr_sound_mode = get_output_mode_display_name_by_cmd(
                             output_mode
                         )
                     except ValueError:
-                        self._attr_sound_mode = AudioOutputHwMode.OTHER_OUT.display_name
+                        self._attr_sound_mode = AudioOutputHwMode.OTHER_OUT.display_name  # type: ignore[attr-defined]
                         SDK_LOGGER.debug("Output mode is out range.")
             except WiimRequestException as e:
                 SDK_LOGGER.error(
@@ -783,8 +786,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             playMedium = PlayMediumToInputMode.get(
                 event_data["PlaybackStorageMedium"], 1
             )
-            new_mode = InputMode(playMedium)
-            self._device.play_mode = new_mode.display_name
+            new_mode = InputMode(playMedium)  # type: ignore[call-arg]
+            self._device.play_mode = new_mode.display_name  # type: ignore[attr-defined]
 
         # Prioritize AVTransportURIMetaData for media metadata if available, otherwise fallback to CurrentTrackMetaData
         media_metadata_key = None
@@ -1078,7 +1081,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             if category == "bluetooth":
                 connected = body.get("connected")
                 if connected == 1:
-                    self._attr_sound_mode = AudioOutputHwMode.OTHER_OUT.display_name
+                    self._attr_sound_mode = AudioOutputHwMode.OTHER_OUT.display_name  # type: ignore[attr-defined]
 
             elif category == "hardware":
                 output_mode_val = body.get("output_mode")
@@ -1093,7 +1096,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                             and output_mode_val == "AUDIO_OUTPUT_AUX_MODE"
                         ):
                             self._attr_sound_mode = (
-                                AudioOutputHwMode.SPEAKER_OUT.display_name
+                                AudioOutputHwMode.SPEAKER_OUT.display_name  # type: ignore[attr-defined]
                             )
                         else:
                             self._attr_sound_mode = (
@@ -1116,8 +1119,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         """Helper to get display name from command string for AudioOutputHwMode."""
         for mode in AudioOutputHwMode:
             if hasattr(mode, "command_str") and mode.command_str == command_str:
-                return mode.display_name
-        return AudioOutputHwMode.OTHER_OUT.display_name
+                return mode.display_name  # type: ignore[attr-defined]
+        return AudioOutputHwMode.OTHER_OUT.display_name  # type: ignore[attr-defined]
 
     @callback
     def _handle_sdk_play_queue_event(
@@ -2049,6 +2052,32 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 raise HomeAssistantError(
                     f"Invalid media_id: {media_id}. Expected a valid track index."
                 ) from None
+        elif media_source.is_media_source_id(media_id):
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
+            media_id = play_item.url
+
+            url = async_process_play_media_url(self.hass, media_id)
+            SDK_LOGGER.warning("media_type for play_media: %s", url)
+
+            try:
+                if not self._device._http_api:  # noqa: SLF001
+                    raise HomeAssistantError(
+                        f"HTTP API not available for {self._device.name} to play preset."
+                    )
+                await self._device._http_command_ok(  # noqa: SLF001
+                    WiimHttpCommand.PLAY, url
+                )
+                self._attr_state = MediaPlayerState.PLAYING
+            except ValueError:
+                SDK_LOGGER.error(
+                    "Invalid media_id for playlist/library: %s. Expected integer preset number.",
+                    media_id,
+                )
+                raise HomeAssistantError(
+                    f"Invalid media_id: {media_id}. Expected a valid preset number."
+                ) from None
         else:
             SDK_LOGGER.warning("Unsupported media_type for play_media: %s", media_type)
             raise ServiceValidationError(f"Unsupported media type: {media_type}")
@@ -2101,7 +2130,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         # await self._device.async_set_output_mode(sound_mode)
 
         try:
-            if sound_mode == AudioOutputHwMode.OTHER_OUT.display_name:
+            if sound_mode == AudioOutputHwMode.OTHER_OUT.display_name:  # type: ignore[attr-defined]
                 if self.hass and self.entity_id:
                     self.async_write_ha_state()
                 return
@@ -2129,8 +2158,54 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             media_content_id,
         )
 
+        if media_content_id is not None and "media-source" in media_content_id:
+            return await media_source.async_browse_media(
+                self.hass,
+                media_content_id,
+                # This allows filtering content. In this case it will only show audio sources.
+                content_filter=lambda item: item.media_content_type.startswith(
+                    "audio/"
+                ),
+            )
+
         # Root browse
         if media_content_id is None or media_content_id == MEDIA_CONTENT_ID_ROOT:
+            children: list[BrowseMedia] = []
+            children.append(
+                BrowseMedia(
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_id=MEDIA_CONTENT_ID_FAVORITES,
+                    media_content_type=MediaType.PLAYLIST,
+                    title="Presets",
+                    can_play=False,
+                    can_expand=True,
+                    thumbnail=None,
+                ),
+            )
+            children.append(
+                BrowseMedia(
+                    media_class=MediaClass.DIRECTORY,
+                    media_content_id=MEDIA_CONTENT_ID_PLAYLISTS,
+                    media_content_type=MediaType.PLAYLIST,
+                    title="Queue",
+                    can_play=False,
+                    can_expand=True,
+                    thumbnail=None,
+                ),
+            )
+            media_sources_item = await media_source.async_browse_media(
+                self.hass,
+                media_content_id,
+                # This allows filtering content. In this case it will only show audio sources.
+                content_filter=lambda item: item.media_content_type.startswith(
+                    "audio/"
+                ),
+            )
+            # return media_sources_item
+
+            if media_sources_item.children:
+                children.extend(media_sources_item.children)
+
             return BrowseMedia(
                 media_class=MediaClass.DIRECTORY,
                 media_content_id=MEDIA_CONTENT_ID_ROOT,
@@ -2138,26 +2213,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 title=self._device.name,
                 can_play=False,
                 can_expand=True,
-                children=[
-                    BrowseMedia(
-                        media_class=MediaClass.DIRECTORY,
-                        media_content_id=MEDIA_CONTENT_ID_FAVORITES,
-                        media_content_type=MediaType.PLAYLIST,
-                        title="Presets",
-                        can_play=False,
-                        can_expand=True,
-                        thumbnail=None,
-                    ),
-                    BrowseMedia(
-                        media_class=MediaClass.DIRECTORY,
-                        media_content_id=MEDIA_CONTENT_ID_PLAYLISTS,
-                        media_content_type=MediaType.PLAYLIST,
-                        title="Queue",
-                        can_play=False,
-                        can_expand=True,
-                        thumbnail=None,
-                    ),
-                ],
+                children=children,
             )
 
         # Browsing Favorites
