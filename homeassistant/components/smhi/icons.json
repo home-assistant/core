@@ -1,11 +1,38 @@
 {
   "entity": {
     "sensor": {
+      "bui": {
+        "default": "mdi:grass"
+      },
+      "dc": {
+        "default": "mdi:grass"
+      },
+      "dmc": {
+        "default": "mdi:grass"
+      },
+      "ffmc": {
+        "default": "mdi:grass"
+      },
+      "forestdry": {
+        "default": "mdi:forest"
+      },
       "frozen_precipitation": {
         "default": "mdi:weather-snowy-rainy"
       },
+      "fwi": {
+        "default": "mdi:pine-tree-fire"
+      },
+      "fwiindex": {
+        "default": "mdi:pine-tree-fire"
+      },
+      "grassfire": {
+        "default": "mdi:fire-circle"
+      },
       "high_cloud": {
         "default": "mdi:cloud-arrow-up"
+      },
+      "isi": {
+        "default": "mdi:grass"
       },
       "low_cloud": {
         "default": "mdi:cloud-arrow-down"
@@ -15,6 +42,9 @@
       },
       "precipitation_category": {
         "default": "mdi:weather-pouring"
+      },
+      "rn": {
+        "default": "mdi:grass"
       },
       "thunder": {
         "default": "mdi:weather-lightning"

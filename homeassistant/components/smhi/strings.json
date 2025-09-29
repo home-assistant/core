@@ -26,11 +26,62 @@
   },
   "entity": {
     "sensor": {
+      "bui": {
+        "name": "Build Up Index"
+      },
+      "dc": {
+        "name": "Drought Code"
+      },
+      "dmc": {
+        "name": "Duff Moisture Code"
+      },
+      "ffmc": {
+        "name": "Fine Fuel Moisture Code"
+      },
+      "forestdry": {
+        "name": "Fuel drying",
+        "state": {
+          "1": "Very wet",
+          "2": "Wet",
+          "3": "Moderate wet",
+          "4": "Dry",
+          "5": "Very dry",
+          "6": "Extemely dry"
+        }
+      },
       "frozen_precipitation": {
         "name": "Frozen precipitation"
       },
+      "fwi": {
+        "name": "Fire Weather Index"
+      },
+      "fwiindex": {
+        "name": "FWI-index",
+        "state": {
+          "1": "Very low risk",
+          "2": "Low risk",
+          "3": "Moderate risk",
+          "4": "High risk",
+          "5": "Very high risk",
+          "6": "Extremely high risk"
+        }
+      },
+      "grassfire": {
+        "name": "Highest grass fire risk",
+        "state": {
+          "1": "Snow cover",
+          "2": "Grass fire season over",
+          "3": "Low",
+          "4": "Moderate",
+          "5": "High",
+          "6": "Very high"
+        }
+      },
       "high_cloud": {
         "name": "High cloud coverage"
+      },
+      "isi": {
+        "name": "Initial Spread Index"
       },
       "low_cloud": {
         "name": "Low cloud coverage"
@@ -49,6 +100,9 @@
           "5": "Freezing rain",
           "6": "Freezing drizzle"
         }
+      },
+      "rn": {
+        "name": "Potential rate of spread"
       },
       "thunder": {
         "name": "Thunder probability"
