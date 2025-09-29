@@ -124,7 +124,7 @@ class NumberDeviceClass(StrEnum):
     CO = "carbon_monoxide"
     """Carbon Monoxide gas concentration.
 
-    Unit of measurement: `ppm` (parts per million), mg/m³
+    Unit of measurement: `ppm` (parts per million)
     """
 
     CO2 = "carbon_dioxide"
@@ -287,6 +287,12 @@ class NumberDeviceClass(StrEnum):
 
     PM25 = "pm25"
     """Particulate matter <= 2.5 μm.
+
+    Unit of measurement: `μg/m³`
+    """
+
+    PM4 = "pm4"
+    """Particulate matter <= 4 μm.
 
     Unit of measurement: `μg/m³`
     """
@@ -469,10 +475,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
     NumberDeviceClass.BATTERY: {PERCENTAGE},
     NumberDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: set(UnitOfBloodGlucoseConcentration),
-    NumberDeviceClass.CO: {
-        CONCENTRATION_PARTS_PER_MILLION,
-        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
-    },
+    NumberDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
     NumberDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
     NumberDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),
     NumberDeviceClass.CURRENT: set(UnitOfElectricCurrent),
@@ -510,6 +513,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.PM1: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.PM10: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.PM4: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.POWER_FACTOR: {PERCENTAGE, None},
     NumberDeviceClass.POWER: {
         UnitOfPower.MILLIWATT,
