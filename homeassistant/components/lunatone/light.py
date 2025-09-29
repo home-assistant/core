@@ -30,9 +30,9 @@ async def async_setup_entry(
     async_add_entities(
         [
             LunatoneLight(
-                coordinator_devices, device.id, coordinator_info.data.device.serial
+                coordinator_devices, device_id, coordinator_info.data.device.serial
             )
-            for device in coordinator_devices.data.devices
+            for device_id in coordinator_devices.data
         ]
     )
 
@@ -58,7 +58,7 @@ class LunatoneLight(
         super().__init__(coordinator=coordinator)
         self._device_id = device_id
         self._interface_serial_number = interface_serial_number
-        self._device = self.coordinator.device_mapping.get(self._device_id)
+        self._device = self.coordinator.data.get(self._device_id)
         self._attr_unique_id = f"{interface_serial_number}-device{device_id}"
 
     @property
@@ -85,7 +85,7 @@ class LunatoneLight(
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._device = self.coordinator.device_mapping.get(self._device_id)
+        self._device = self.coordinator.data.get(self._device_id)
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
