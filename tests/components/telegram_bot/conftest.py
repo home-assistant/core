@@ -243,6 +243,55 @@ def update_callback_query():
 
 
 @pytest.fixture
+def update_message_attachment():
+    """Fixture for mocking an incoming update of type message/attachment."""
+    return {
+        "update_id": 1,
+        "message": {
+            "message_id": 1,
+            "date": 1441645532,
+            "from": {
+                "id": 12345678,
+                "is_bot": False,
+                "last_name": "Test Lastname",
+                "first_name": "Test Firstname",
+                "username": "Testusername",
+            },
+            "chat": {
+                "last_name": "Test Lastname",
+                "id": 1111111,
+                "type": "private",
+                "first_name": "Test Firstname",
+                "username": "Testusername",
+            },
+            "photo": [
+                {
+                    "file_id": "AgACAgUAAxkBAAIBUWJ5aXl6Y3h5bXl6Y3h5bXl6Y3gAAJxvMRtP7nG4Fq7m0m0vBAAMCAAN5AAMjBA",
+                    "file_unique_id": "AQADcbzEbT-5xuBa",
+                    "file_size": 1234,
+                    "width": 90,
+                    "height": 90,
+                },
+                {
+                    "file_id": "AgACAgUAAxkBAAIBUWJ5aXl6Y3h5bXl6Y3h5bXl6Y3gAAJxvMRtP7nG4Fq7m0m0vBAAMCAAN5AAMjBA",
+                    "file_unique_id": "AQADcbzEbT-5xuBa",
+                    "file_size": 12345,
+                    "width": 320,
+                    "height": 320,
+                },
+                {
+                    "file_id": "AgACAgUAAxkBAAIBUWJ5aXl6Y3h5bXl6Y3h5bXl6Y3gAAJxvMRtP7nG4Fq7m0m0vBAAMCAAN5AAMjBA",
+                    "file_unique_id": "AQADcbzEbT-5xuBa",
+                    "file_size": 123456,
+                    "width": 800,
+                    "height": 800,
+                },
+            ],
+        },
+    }
+
+
+@pytest.fixture
 def mock_broadcast_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(

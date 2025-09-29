@@ -50,6 +50,7 @@ from .const import (
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
     ATTR_FILE,
+    ATTR_FILE_ID,
     ATTR_FROM_FIRST,
     ATTR_FROM_LAST,
     ATTR_KEYBOARD,
@@ -78,6 +79,7 @@ from .const import (
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     DOMAIN,
+    EVENT_TELEGRAM_ATTACHMENT,
     EVENT_TELEGRAM_CALLBACK,
     EVENT_TELEGRAM_COMMAND,
     EVENT_TELEGRAM_SENT,
@@ -175,6 +177,10 @@ class BaseTelegramBot:
             # This is a command message - set event type to command and split data into command and args
             event_type = EVENT_TELEGRAM_COMMAND
             event_data.update(self._get_command_event_data(message.text))
+        elif filters.ATTACHMENT.filter(message):
+            event_type = EVENT_TELEGRAM_ATTACHMENT
+            event_data[ATTR_TEXT] = message.caption
+            event_data.update(self._get_file_id_event_data(message))
         else:
             event_type = EVENT_TELEGRAM_TEXT
             event_data[ATTR_TEXT] = message.text
@@ -183,6 +189,17 @@ class BaseTelegramBot:
             event_data.update(self._get_user_event_data(message.from_user))
 
         return event_type, event_data
+
+    def _get_file_id_event_data(self, message: Message) -> dict[str, Any]:
+        """Extract file_id from a message attachment, if any."""
+        event_data: dict[str, Any] = {}
+        file_id = None
+        if filters.PHOTO.filter(message):
+            file_id = message.effective_attachment[-1].file_id  # type: ignore[index,union-attr]
+        elif hasattr(message.effective_attachment, "file_id"):
+            file_id = message.effective_attachment.file_id  # type: ignore[union-attr]
+        event_data[ATTR_FILE_ID] = file_id
+        return event_data
 
     def _get_user_event_data(self, user: User) -> dict[str, Any]:
         return {
