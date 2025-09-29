@@ -415,7 +415,7 @@ class PrometheusMetrics:
             )
         return labels | extra_labels
 
-    def _battery(self, state: State) -> None:
+    def _battery_metric(self, state: State) -> None:
         if (battery_level := state.attributes.get(ATTR_BATTERY_LEVEL)) is None:
             return
 
@@ -758,7 +758,7 @@ class PrometheusMetrics:
                 self._labels(state),
             ).set(value)
 
-        self._battery(state)
+        self._battery_metric(state)
 
     def _sensor_default_metric(self, state: State, unit: str | None) -> str | None:
         """Get default metric."""
@@ -818,28 +818,14 @@ class PrometheusMetrics:
         return units.get(unit, default)
 
     def _handle_switch(self, state: State) -> None:
-        if (value := self.state_as_number(state)) is not None:
-            self._metric(
-                "switch_state",
-                prometheus_client.Gauge,
-                "State of the switch (0/1)",
-                self._labels(state),
-            ).set(value)
-
+        self._numeric_metric(state, "switch", "switch")
         self._handle_attributes(state)
 
     def _handle_fan(self, state: State) -> None:
         self._numeric_metric(state, "fan", "fan")
-
-        fan_speed_percent = state.attributes.get(ATTR_PERCENTAGE)
-        if fan_speed_percent is not None:
-            self._metric(
-                "fan_speed_percent",
-                prometheus_client.Gauge,
-                "Fan speed percent (0-100)",
-                self._labels(state),
-            ).set(float(fan_speed_percent))
-
+        self._float_metric(
+            state, ATTR_PERCENTAGE, "fan_speed_percent", "Fan speed percent (0-100)"
+        )
         self._bool_metric(
             state,
             ATTR_OSCILLATING,
@@ -867,7 +853,7 @@ class PrometheusMetrics:
             )
 
     def _handle_zwave(self, state: State) -> None:
-        self._battery(state)
+        self._battery_metric(state)
 
     def _handle_automation(self, state: State) -> None:
         self._metric(
@@ -889,15 +875,7 @@ class PrometheusMetrics:
         ).set(value)
 
     def _handle_update(self, state: State) -> None:
-        if (value := self.state_as_number(state)) is None:
-            return
-
-        self._metric(
-            "update_state",
-            prometheus_client.Gauge,
-            "Update state, indicating if an update is available (0/1)",
-            self._labels(state),
-        ).set(value)
+        self._numeric_metric(state, "update", "update")
 
     def _handle_alarm_control_panel(self, state: State) -> None:
         self._enum_metric(
