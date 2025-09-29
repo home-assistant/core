@@ -213,7 +213,7 @@
         },
         "max_ring_seconds": {
           "name": "Maximum ring duration",
-          "description": "The maximum number of seconds to ring after dialing. Note that the actual ring duration might be shorter depending on the receivers phone settings."
+          "description": "The maximum number of seconds to ring after dialing. Note that the actual ring duration might be shorter depending on the receiver's phone settings."
         }
       }
     }
