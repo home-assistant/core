@@ -456,7 +456,7 @@ airly==1.1.0
 airos==0.5.3
 
 # homeassistant.components.airthings_ble
-airthings-ble==1.1.0
+airthings-ble==1.1.1
 
 # homeassistant.components.airthings
 airthings-cloud==0.2.0
