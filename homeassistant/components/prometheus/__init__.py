@@ -731,6 +731,76 @@ class PrometheusMetrics:
             {STATE_ON},
         )
 
+    def _handle_switch(self, state: State) -> None:
+        self._numeric_metric(state, "switch", "switch")
+        self._handle_attributes(state)
+
+    def _handle_fan(self, state: State) -> None:
+        self._numeric_metric(state, "fan", "fan")
+        self._float_metric(
+            state, ATTR_PERCENTAGE, "fan_speed_percent", "Fan speed percent (0-100)"
+        )
+        self._bool_metric(
+            state,
+            ATTR_OSCILLATING,
+            "fan_is_oscillating",
+            "Whether the fan is oscillating (0/1)",
+        )
+
+        self._enum_metric(
+            state,
+            state.attributes.get(ATTR_PRESET_MODE),
+            state.attributes.get(ATTR_PRESET_MODES),
+            "fan_preset_mode",
+            "Fan preset mode enum",
+            "mode",
+        )
+
+        fan_direction = state.attributes.get(ATTR_DIRECTION)
+        if fan_direction in {DIRECTION_FORWARD, DIRECTION_REVERSE}:
+            self._bool_metric(
+                state,
+                ATTR_DIRECTION,
+                "fan_direction_reversed",
+                "Fan direction reversed (bool)",
+                {DIRECTION_REVERSE},
+            )
+
+    def _handle_zwave(self, state: State) -> None:
+        self._battery_metric(state)
+
+    def _handle_automation(self, state: State) -> None:
+        self._metric(
+            "automation_triggered_count",
+            prometheus_client.Counter,
+            "Count of times an automation has been triggered",
+            self._labels(state),
+        ).inc()
+
+    def _handle_counter(self, state: State) -> None:
+        if (value := self.state_as_number(state)) is None:
+            return
+
+        self._metric(
+            "counter_value",
+            prometheus_client.Gauge,
+            "Value of counter entities",
+            self._labels(state),
+        ).set(value)
+
+    def _handle_update(self, state: State) -> None:
+        self._numeric_metric(state, "update", "update")
+
+    def _handle_alarm_control_panel(self, state: State) -> None:
+        self._enum_metric(
+            state,
+            state.state,
+            [alarm_state.value for alarm_state in AlarmControlPanelState],
+            "alarm_control_panel_state",
+            "State of the alarm control panel (0/1)",
+            "state",
+        )
+
     def _handle_sensor(self, state: State) -> None:
         unit = self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
 
@@ -816,76 +886,6 @@ class PrometheusMetrics:
         default = default.replace("\u03bc", "\u00b5")
         default = default.lower()
         return units.get(unit, default)
-
-    def _handle_switch(self, state: State) -> None:
-        self._numeric_metric(state, "switch", "switch")
-        self._handle_attributes(state)
-
-    def _handle_fan(self, state: State) -> None:
-        self._numeric_metric(state, "fan", "fan")
-        self._float_metric(
-            state, ATTR_PERCENTAGE, "fan_speed_percent", "Fan speed percent (0-100)"
-        )
-        self._bool_metric(
-            state,
-            ATTR_OSCILLATING,
-            "fan_is_oscillating",
-            "Whether the fan is oscillating (0/1)",
-        )
-
-        self._enum_metric(
-            state,
-            state.attributes.get(ATTR_PRESET_MODE),
-            state.attributes.get(ATTR_PRESET_MODES),
-            "fan_preset_mode",
-            "Fan preset mode enum",
-            "mode",
-        )
-
-        fan_direction = state.attributes.get(ATTR_DIRECTION)
-        if fan_direction in {DIRECTION_FORWARD, DIRECTION_REVERSE}:
-            self._bool_metric(
-                state,
-                ATTR_DIRECTION,
-                "fan_direction_reversed",
-                "Fan direction reversed (bool)",
-                {DIRECTION_REVERSE},
-            )
-
-    def _handle_zwave(self, state: State) -> None:
-        self._battery_metric(state)
-
-    def _handle_automation(self, state: State) -> None:
-        self._metric(
-            "automation_triggered_count",
-            prometheus_client.Counter,
-            "Count of times an automation has been triggered",
-            self._labels(state),
-        ).inc()
-
-    def _handle_counter(self, state: State) -> None:
-        if (value := self.state_as_number(state)) is None:
-            return
-
-        self._metric(
-            "counter_value",
-            prometheus_client.Gauge,
-            "Value of counter entities",
-            self._labels(state),
-        ).set(value)
-
-    def _handle_update(self, state: State) -> None:
-        self._numeric_metric(state, "update", "update")
-
-    def _handle_alarm_control_panel(self, state: State) -> None:
-        self._enum_metric(
-            state,
-            state.state,
-            [alarm_state.value for alarm_state in AlarmControlPanelState],
-            "alarm_control_panel_state",
-            "State of the alarm control panel (0/1)",
-            "state",
-        )
 
 
 class PrometheusView(HomeAssistantView):
