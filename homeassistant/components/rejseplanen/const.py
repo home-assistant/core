@@ -2,7 +2,7 @@
 
 DOMAIN = "rejseplanen"
 
-CONF_API_KEY = "authentication"
+CONF_API_KEY = "api_key"
 CONF_STOP_ID = "stop_id"
 CONF_ROUTE = "route"
 CONF_DIRECTION = "direction"

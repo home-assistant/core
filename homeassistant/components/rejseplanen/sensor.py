@@ -16,10 +16,11 @@ from py_rejseplan.dataclasses.departure import Departure
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_DUE_AT,
@@ -76,19 +77,9 @@ async def async_setup_entry(
             config_subentry_id=subentry_id,
         )
 
-    await coordinator.async_refresh()
-
-
-def _service_device_info(entry_id: str) -> DeviceInfo:
-    """Device representing the Rejseplanen service."""
-    return DeviceInfo(
-        identifiers={(DOMAIN, entry_id)},
-        name="Rejseplanen",
-        manufacturer="Rejseplanen",
-        model="Public transport API",
-        entry_type=DeviceEntryType.SERVICE,
-        configuration_url="https://www.rejseplanen.dk/",
-    )
+    await (
+        coordinator.async_refresh()
+    )  # otherwise it will take approx 5 minutes to get data from API
 
 
 def _stop_device_info(entry_id: str, stop_id: int, stop_name: str | None) -> DeviceInfo:
@@ -96,15 +87,18 @@ def _stop_device_info(entry_id: str, stop_id: int, stop_name: str | None) -> Dev
     return DeviceInfo(
         identifiers={(DOMAIN, f"{entry_id}-stop-{stop_id}")},
         name=stop_name or f"Stop {stop_id}",
-        via_device=(DOMAIN, entry_id),  # Parent = service device
     )
 
 
-class RejseplanenTransportSensor(SensorEntity):
+class RejseplanenTransportSensor(  # pyright: ignore[reportIncompatibleVariableOverride]
+    CoordinatorEntity[RejseplanenDataUpdateCoordinator], SensorEntity
+):
     """Implementation of Rejseplanen transport sensor."""
 
     _attr_attribution = "Data provided by rejseplanen.dk"
     _attr_icon = "mdi:bus"
+    _attr_has_entity_name = True
+    _attr_native_unit_of_measurement = "min"
 
     def __init__(
         self,
@@ -117,25 +111,24 @@ class RejseplanenTransportSensor(SensorEntity):
         name: str | None,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__()
-        self.coordinator: RejseplanenDataUpdateCoordinator = coordinator
+        super().__init__(coordinator)
+        # self.coordinator: RejseplanenDataUpdateCoordinator = coordinator
         self._stop_id: int = stop_id
         self._route: list[str] = route
         self._direction: list[str] = direction
         self._departure_type: list[str] = departure_type
         self._attr_name: str | None = name
-        self.coordinator.add_stop_id(stop_id)
         self._unsub_interval: Callable[[], None] | None = None
-        self._attr_unique_id = f"{stop_id}_{name}_{departure_type}"
+        self.coordinator.add_stop_id(stop_id)
         self._attr_device_info = _stop_device_info(entry_id, stop_id, name)
 
+        _bf = self.coordinator.api.calculate_departure_type_bitflag(departure_type)
         self._departure_type_bitflag = (
-            self.coordinator.api.calculate_departure_type_bitflag(departure_type)
+            _bf if _bf else 0b111111  # Default to all types if none specified
         )
-
-        """Initialize the sensor's state."""
-        # self._attr_native_unit_of_measurement = const.UnitOfTime.MINUTES
-        # self._attr_native_value = self._compute_native_value()
+        self._attr_native_value = self._compute_native_value()
+        self._attr_extra_state_attributes = self._compute_extra_state_attributes()
+        self._attr_unique_id = f"{stop_id}_stop_{self._departure_type_bitflag}"
 
     def _compute_native_value(self) -> StateType:
         """Return the state of the sensor."""
@@ -181,23 +174,17 @@ class RejseplanenTransportSensor(SensorEntity):
         """Register callbacks when entity is added to hass."""
         await super().async_added_to_hass()
         self._unsub_interval = async_track_time_interval(
-            self.hass,
-            self._handle_minute_tick,
-            timedelta(minutes=1),
-            name=f"rejseplanen_{self._attr_unique_id}_minute_tick",
+            self.hass, self._handle_minute_tick, timedelta(minutes=1)
         )
-        self.coordinator.async_add_listener(self._handle_coordinator_update)
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal of the sensor from Home Assistant."""
+        await super().async_will_remove_from_hass()
         _LOGGER.debug("Removing sensor %s from coordinator", self._attr_unique_id)
         self.coordinator.remove_stop_id(self._stop_id)
         if self._unsub_interval:
             self._unsub_interval()
             self._unsub_interval = None
-            _LOGGER.debug(
-                "Unsubscribed from minute tick for sensor %s", self._attr_unique_id
-            )
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -212,17 +199,15 @@ class RejseplanenTransportSensor(SensorEntity):
         )
         self._attr_native_value = self._compute_native_value()
         self._attr_extra_state_attributes = self._compute_extra_state_attributes()
-        self.async_write_ha_state()
+        super()._handle_coordinator_update()
 
     @callback
     def _handle_minute_tick(self, now):
         """Call every minute to update the state."""
-        _LOGGER.debug(
-            "Minute tick callback triggered for sensor %s at %s",
-            self._attr_unique_id,
-            now.isoformat(),
-        )
-        self.async_write_ha_state()
+        if self.coordinator.last_update_success:
+            self._attr_native_value = self._compute_native_value()
+            self._attr_extra_state_attributes = self._compute_extra_state_attributes()
+            self.async_write_ha_state()
 
     def _get_filtered_departures(self) -> list[Departure]:
         """Get filtered departures based on the configured parameters."""
@@ -246,8 +231,8 @@ class RejseplanenTransportSensor(SensorEntity):
                 ATTR_STOP_NAME: departure.name,
                 ATTR_FINAL_STOP: departure.direction,
                 ATTR_DUE_IN: RejseplanenTransportSensor.due_in(
-                    departure.rtTime or departure.time,
                     departure.rtDate or departure.date,
+                    departure.rtTime or departure.time,
                 ),
                 ATTR_DUE_AT: datetime.combine(
                     departure.date, departure.time
@@ -265,7 +250,7 @@ class RejseplanenTransportSensor(SensorEntity):
         return parsed_departures
 
     @staticmethod
-    def due_in(time: Time, date: Date) -> int:
+    def due_in(date: Date, time: Time) -> int:
         """Calculate the due in time in minutes."""
         tz = zoneinfo.ZoneInfo("Europe/Copenhagen")
         now = datetime.now(tz)

@@ -2308,7 +2308,7 @@ pyrate-limiter==3.9.0
 pyrecswitch==1.0.2
 
 # homeassistant.components.rejseplanen
-pyrejseplan==1.0.2
+pyrejseplan==1.0.4
 
 # homeassistant.components.repetier
 pyrepetierng==0.1.0

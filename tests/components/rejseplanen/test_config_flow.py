@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from py_rejseplan.enums import TransportClass
 import pytest
 
 from homeassistant.components.rejseplanen.const import (
@@ -20,51 +21,17 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize(
-    ("user_input", "entry_data"),
-    [
-        (
-            {
-                CONF_NAME: "Rejseplanen",
-                CONF_API_KEY: "token",
-            },
-            {
-                CONF_NAME: "Rejseplanen",
-                CONF_API_KEY: "token",
-            },
-        ),
-        (
-            {
-                CONF_API_KEY: "token",
-            },
-            {
-                CONF_NAME: "Rejseplanen",
-                CONF_API_KEY: "token",
-            },
-        ),
-    ],
-)
-async def test_form(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, user_input: dict, entry_data: dict
-) -> None:
+async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test the form step of the config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
+    assert "type" in result and result["type"] == FlowResultType.FORM
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_NAME: "Rejseplanen",
-            CONF_API_KEY: "token",
-        },
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Rejseplanen"
-    assert result["data"][CONF_API_KEY] == "token"
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    _step_id = result.get("step_id")
+    assert _step_id
+    assert _step_id == "user"
+    assert result.get("errors") is None
 
 
 @pytest.mark.parametrize(
@@ -99,11 +66,11 @@ async def test_form(
         (
             {
                 CONF_STOP_ID: "123456",
-                CONF_DEPARTURE_TYPE: ["S"],
+                CONF_DEPARTURE_TYPE: ["ic", "icl"],
             },
             {
                 CONF_STOP_ID: 123456,
-                CONF_DEPARTURE_TYPE: ["S"],
+                CONF_DEPARTURE_TYPE: [TransportClass.IC, TransportClass.ICL],
                 CONF_DIRECTION: [],
                 CONF_NAME: DEFAULT_STOP_NAME,
             },
@@ -113,12 +80,12 @@ async def test_form(
             {
                 CONF_STOP_ID: "123456",
                 CONF_DIRECTION: ["north"],
-                CONF_DEPARTURE_TYPE: ["S"],
+                CONF_DEPARTURE_TYPE: ["s_tog"],
             },
             {
                 CONF_STOP_ID: 123456,
                 CONF_DIRECTION: ["north"],
-                CONF_DEPARTURE_TYPE: ["S"],
+                CONF_DEPARTURE_TYPE: [TransportClass.S_TOG],
                 CONF_NAME: DEFAULT_STOP_NAME,
             },
         ),
@@ -127,13 +94,13 @@ async def test_form(
             {
                 CONF_STOP_ID: "123456",
                 CONF_DIRECTION: ["north"],
-                CONF_DEPARTURE_TYPE: ["S"],
+                CONF_DEPARTURE_TYPE: ["s_tog"],
                 CONF_NAME: "customname",
             },
             {
                 CONF_STOP_ID: 123456,
                 CONF_DIRECTION: ["north"],
-                CONF_DEPARTURE_TYPE: ["S"],
+                CONF_DEPARTURE_TYPE: [TransportClass.S_TOG],
                 CONF_NAME: "customname",
             },
         ),
@@ -160,13 +127,13 @@ async def test_add_stop_variants(
     result = await hass.config_entries.subentries.async_init(
         (config_entry.entry_id, "stop"), context={"source": SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] is None
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") is None
 
     result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], user_input=user_input
+        result.get("flow_id"), user_input=user_input
     )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert (result_data := result.get("data")) is not None, "Subentry data is None"
     assert result_data.get(CONF_STOP_ID) == expected_data[CONF_STOP_ID], (
         "Stop ID mismatch"

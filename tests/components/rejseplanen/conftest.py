@@ -24,8 +24,8 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.rejseplanen.async_setup_entry", return_value=True
-    ):
-        yield mock_setup_entry
+    ) as mock_async_setup_entry:
+        yield mock_async_setup_entry
 
 
 @pytest.fixture
@@ -49,7 +49,6 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="rejseplanen",
         data={
-            CONF_NAME: "Rejseplanen",
             CONF_API_KEY: "token",
         },
         entry_id="123456789",
@@ -62,10 +61,9 @@ def mock_config_entry() -> MockConfigEntry:
                     CONF_DIRECTION: "mydirection",
                     CONF_DEPARTURE_TYPE: "departure",
                 },
-                subentry_id="ABCDEF",
-                subentry_type="topic",
+                subentry_type="ABCDEF",
                 title="mytopic",
-                unique_id="mytopic",
+                unique_id="ABDCDEF-123456",
             )
         ],
     )

@@ -30,7 +30,7 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard | No
     ) -> None:
         """Initialize."""
 
-        self.api = DeparturesAPIClient(auth_key=config_entry.data["authentication"])
+        self.api = DeparturesAPIClient(auth_key=config_entry.data["api_key"])
         self._stop_ids: set[int] = set()
         self.last_update_success_time: datetime | None = None
 
@@ -75,6 +75,19 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard | No
                 else None
             ),
         }
+
+    @property
+    def available(self) -> bool:
+        """Return if the coordinator is available.
+
+        The coordinator is considered available if it has been updated successfully
+        at least once and the last update was successful.
+        """
+        return (
+            self.last_update_success_time is not None
+            and self.update_interval is not None
+            and self.last_update_success_time > (dt_util.now() - self.update_interval)
+        )
 
     def due_in_minutes(self, timestamp) -> int:
         """Get the time in minutes from a timestamp.
@@ -134,7 +147,7 @@ class RejseplanenDataUpdateCoordinator(DataUpdateCoordinator[DepartureBoard | No
 
         if departure_type_filter:
             filtered_data = [
-                d for d in filtered_data if (d.product.cls & departure_type_filter)
+                d for d in filtered_data if (d.product.cls_id & departure_type_filter)
             ]
 
         # Sort by due_in time
