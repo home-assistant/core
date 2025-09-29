@@ -492,5 +492,22 @@
         }
       }
     }
+  },
+  "triggers": {
+    "state": {
+      "name": "State",
+      "description": "When the state of a light changes, such as turning on or off.",
+      "description_configured": "When the state of a light changes",
+      "fields": {
+        "state": {
+          "name": "State",
+          "description": "The state to trigger on."
+        },
+        "behavior": {
+          "name": "Behavior",
+          "description": "The behavior of the targeted entities to trigger on."
+        }
+      }
+    }
   }
 }
