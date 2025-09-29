@@ -20,7 +20,7 @@ rules:
   entity-event-setup:
     status: exempt
     comment: |
-      No events are registered by the integration.
+      No events are explicitly registered by the integration.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
