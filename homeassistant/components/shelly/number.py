@@ -72,6 +72,7 @@ class RpcNumberDescription(RpcEntityDescription, NumberEntityDescription):
     min_fn: Callable[[dict], float] | None = None
     step_fn: Callable[[dict], float] | None = None
     mode_fn: Callable[[dict], NumberMode] | None = None
+    slot: str | None = None
     method: str
 
 
@@ -119,6 +120,32 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
             assert method is not None
 
         await method(self._id, value)
+
+
+class RpcCureIntensityNumber(RpcNumber):
+    """Represent a RPC Cure Intensity entity."""
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcNumberDescription,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, key, attribute, description)
+
+        self._slot = description.slot
+
+    @rpc_call
+    async def async_set_native_value(self, value: float) -> None:
+        """Change the value."""
+        method = getattr(self.coordinator.device, self.entity_description.method)
+
+        if TYPE_CHECKING:
+            assert method is not None
+
+        await method(self._id, slot=self._slot, value=value)
 
 
 class RpcBluTrvNumber(RpcNumber):
@@ -273,6 +300,36 @@ RPC_NUMBERS: Final = {
         removal_condition=lambda config, _status, key: config[key].get("enable", True)
         is True,
         entity_class=RpcBluTrvNumber,
+    ),
+    "left_slot_intensity": RpcNumberDescription(
+        key="cury",
+        sub_key="slots",
+        name="Left slot intensity",
+        value=lambda status, _: status["left"]["intensity"],
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
+        mode=NumberMode.SLIDER,
+        native_unit_of_measurement=PERCENTAGE,
+        method="cury_set",
+        slot="left",
+        available=lambda status: status["left"]["vial"]["level"] != -1,
+        entity_class=RpcCureIntensityNumber,
+    ),
+    "right_slot_intensity": RpcNumberDescription(
+        key="cury",
+        sub_key="slots",
+        name="Right slot intensity",
+        value=lambda status, _: status["right"]["intensity"],
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
+        mode=NumberMode.SLIDER,
+        native_unit_of_measurement=PERCENTAGE,
+        method="cury_set",
+        slot="right",
+        available=lambda status: status["right"]["vial"]["level"] != -1,
+        entity_class=RpcCureIntensityNumber,
     ),
 }
 
