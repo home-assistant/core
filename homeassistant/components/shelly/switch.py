@@ -230,6 +230,26 @@ RPC_SWITCHES = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
+    "cury_left": RpcSwitchDescription(
+        key="cury",
+        sub_key="slots",
+        name="Left slot",
+        is_on=lambda status: bool(status["slots"]["left"]["on"]),
+        method_on="Cury.Set",
+        method_off="Cury.Set",
+        method_params_fn=lambda id, value: {"id": id, "slot": "left", "on": value},
+        entity_registry_enabled_default=True,
+    ),
+    "cury_right": RpcSwitchDescription(
+        key="cury",
+        sub_key="slots",
+        name="Right slot",
+        is_on=lambda status: bool(status["slots"]["right"]["on"]),
+        method_on="Cury.Set",
+        method_off="Cury.Set",
+        method_params_fn=lambda id, value: {"id": id, "slot": "right", "on": value},
+        entity_registry_enabled_default=True,
+    ),
 }
 
 
