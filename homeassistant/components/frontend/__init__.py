@@ -459,7 +459,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "developer-tools",
         require_admin=True,
         sidebar_title="developer_tools",
-        sidebar_icon="hass:hammer",
+        sidebar_icon="mdi:hammer",
     )
 
     @callback

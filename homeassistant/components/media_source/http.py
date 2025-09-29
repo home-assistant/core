@@ -25,7 +25,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_browse_media)
     websocket_api.async_register_command(hass, websocket_resolve_media)
     frontend.async_register_built_in_panel(
-        hass, "media-browser", "media_browser", "hass:play-box-multiple"
+        hass, "media-browser", "media_browser", "mdi:play-box-multiple"
     )
 
 
