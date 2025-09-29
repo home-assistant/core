@@ -341,12 +341,12 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     def process_update(self, message: status.Known) -> None:
         """Process update."""
         match message:
-            case status.Power(status.Power.Param.ON):
+            case status.Power(param=status.Power.Param.ON):
                 self._attr_state = MediaPlayerState.ON
-            case status.Power(status.Power.Param.STANDBY):
+            case status.Power(param=status.Power.Param.STANDBY):
                 self._attr_state = MediaPlayerState.OFF
 
-            case status.Volume(volume):
+            case status.Volume(param=volume):
                 if not self._supports_volume:
                     self._attr_supported_features |= SUPPORTED_FEATURES_VOLUME
                     self._supports_volume = True
@@ -356,10 +356,10 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 )
                 self._attr_volume_level = min(1, volume_level)
 
-            case status.Muting(muting):
+            case status.Muting(param=muting):
                 self._attr_is_volume_muted = bool(muting == status.Muting.Param.ON)
 
-            case status.InputSource(source):
+            case status.InputSource(param=source):
                 if source in self._source_mapping:
                     self._attr_source = self._source_mapping[source]
                 else:
@@ -373,7 +373,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
                 self._query_av_info_delayed()
 
-            case status.ListeningMode(sound_mode):
+            case status.ListeningMode(param=sound_mode):
                 if not self._supports_sound_mode:
                     self._attr_supported_features |= (
                         MediaPlayerEntityFeature.SELECT_SOUND_MODE
@@ -393,13 +393,13 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
                 self._query_av_info_delayed()
 
-            case status.HDMIOutput(hdmi_output):
+            case status.HDMIOutput(param=hdmi_output):
                 self._attr_extra_state_attributes[ATTR_VIDEO_OUT] = (
                     self._hdmi_output_mapping[hdmi_output]
                 )
                 self._query_av_info_delayed()
 
-            case status.TunerPreset(preset):
+            case status.TunerPreset(param=preset):
                 self._attr_extra_state_attributes[ATTR_PRESET] = preset
 
             case status.AudioInformation():
@@ -427,11 +427,11 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             case status.FLDisplay():
                 self._query_av_info_delayed()
 
-            case status.NotAvailable(Kind.AUDIO_INFORMATION):
+            case status.NotAvailable(kind=Kind.AUDIO_INFORMATION):
                 # Not available right now, but still supported
                 self._supports_audio_info = True
 
-            case status.NotAvailable(Kind.VIDEO_INFORMATION):
+            case status.NotAvailable(kind=Kind.VIDEO_INFORMATION):
                 # Not available right now, but still supported
                 self._supports_video_info = True
 
