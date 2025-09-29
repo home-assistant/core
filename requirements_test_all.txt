@@ -2594,7 +2594,7 @@ watergate-local-api==2024.4.1
 weatherflow4py==1.4.1
 
 # homeassistant.components.nasweb
-webio-api==0.1.11
+webio-api==0.1.12
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.2
