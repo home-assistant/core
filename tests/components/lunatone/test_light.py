@@ -76,14 +76,12 @@ async def test_coordinator_update_handling(
     """Test the coordinator update handling."""
     await setup_integration(hass, mock_config_entry)
 
-    coordinator_devices = mock_config_entry.runtime_data.coordinator_devices
-
-    coordinator_devices.devices_api._data.devices[0].features.switchable.status = True
+    mock_lunatone_devices._data.devices[0].features.switchable.status = True
     entity = hass.data["light"].get_entity(TEST_ENTITY_ID)
     entity._handle_coordinator_update()
     assert entity.is_on
 
-    coordinator_devices.devices_api._data.devices[0].features.switchable.status = False
+    mock_lunatone_devices._data.devices[0].features.switchable.status = False
     entity = hass.data["light"].get_entity(TEST_ENTITY_ID)
     entity._handle_coordinator_update()
     assert not entity.is_on
