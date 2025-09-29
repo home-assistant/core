@@ -1,7 +1,5 @@
 """Backup platform for the Backblaze B2 integration."""
 
-# pylint: disable=hass-component-root-import
-
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
 import functools
