@@ -72,7 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
     )
 
-    entry.async_create_background_task(hass, register_webhook(), "ccl_register_webhook")
+    await register_webhook()
 
     @callback
     def push_update_callback(data) -> None:
