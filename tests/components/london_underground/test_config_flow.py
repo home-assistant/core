@@ -97,23 +97,6 @@ async def test_form_errors(
     assert result2["errors"] == {"base": error}
 
 
-async def test_already_configured(hass: HomeAssistant) -> None:
-    """Test we handle already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        options={CONF_LINE: DEFAULT_LINES},
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
-
-
 async def test_validate_input_connection_error(hass: HomeAssistant) -> None:
     """Test validation with connection error."""
     with patch(
