@@ -33,7 +33,8 @@
     "error": {
       "cannot_connect": "Failed to connect to EnergyID API.",
       "unknown_auth_error": "Unexpected error occurred during authentication.",
-      "claim_failed_or_timed_out": "Claiming the device failed or the code expired."
+      "claim_failed_or_timed_out": "Claiming the device failed or the code expired.",
+      "invalid_auth": "Invalid provisioning key or secret."
     },
     "abort": {
       "already_configured": "This EnergyID site is already configured.",

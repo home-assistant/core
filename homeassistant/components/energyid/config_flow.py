@@ -5,7 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientResponseError
 from energyid_webhooks.client_v2 import WebhookClient
 import voluptuous as vol
 
@@ -58,7 +58,14 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             is_claimed = await client.authenticate()
-            _LOGGER.debug("Authentication successful, claimed: %s", is_claimed)
+        except ClientResponseError as err:
+            if err.status == 401:
+                _LOGGER.error("Invalid provisioning key or secret")
+                return "invalid_auth"
+            _LOGGER.error(
+                "Client response error during EnergyID authentication: %s", err
+            )
+            return "cannot_connect"
         except ClientError as err:
             _LOGGER.error(
                 "Failed to connect to EnergyID during authentication: %s", err
@@ -67,6 +74,8 @@ class EnergyIDConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:
             _LOGGER.exception("Unexpected error during EnergyID authentication")
             return "unknown_auth_error"
+        else:
+            _LOGGER.debug("Authentication successful, claimed: %s", is_claimed)
 
         if is_claimed:
             self._flow_data["record_number"] = client.recordNumber
