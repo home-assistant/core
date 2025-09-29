@@ -3,10 +3,7 @@
 import asyncio
 from unittest.mock import AsyncMock, patch
 
-import pytest
-
 from homeassistant import config_entries
-from homeassistant.components.london_underground.config_flow import CannotConnect
 from homeassistant.components.london_underground.const import (
     CONF_LINE,
     DEFAULT_LINES,
@@ -69,34 +66,6 @@ async def test_options(hass: HomeAssistant) -> None:
     }
 
 
-@pytest.mark.parametrize(
-    ("side_effect", "error"),
-    [
-        (CannotConnect, "cannot_connect"),
-        (Exception, "unknown"),
-    ],
-)
-async def test_form_errors(
-    hass: HomeAssistant, side_effect: Exception, error: str
-) -> None:
-    """Test we handle errors."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.london_underground.config_flow.validate_input",
-        side_effect=side_effect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {},
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": error}
-
-
 async def test_validate_input_connection_error(hass: HomeAssistant) -> None:
     """Test validation with connection error."""
     with patch(
@@ -119,6 +88,22 @@ async def test_validate_input_connection_error(hass: HomeAssistant) -> None:
 
         assert result2["type"] == FlowResultType.FORM
         assert result2["errors"]["base"] == "cannot_connect"
+
+    # confirm that we can recover from the error
+    with patch(
+        "homeassistant.components.london_underground.config_flow.validate_input",
+        return_value=True,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "London Underground"
+    assert result3["data"] == {}
+    assert result3["options"] == {CONF_LINE: DEFAULT_LINES}
 
 
 async def test_validate_input_timeout(hass: HomeAssistant) -> None:
@@ -143,6 +128,22 @@ async def test_validate_input_timeout(hass: HomeAssistant) -> None:
 
         assert result2["type"] == FlowResultType.FORM
         assert result2["errors"]["base"] == "cannot_connect"
+
+    # confirm that we can recover from the error
+    with patch(
+        "homeassistant.components.london_underground.config_flow.validate_input",
+        return_value=True,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "London Underground"
+    assert result3["data"] == {}
+    assert result3["options"] == {CONF_LINE: DEFAULT_LINES}
 
 
 async def test_validate_input_success(hass: HomeAssistant) -> None:
