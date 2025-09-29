@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import traceback
 from collections.abc import AsyncGenerator
 from typing import Any, Final, Literal
 
@@ -12,7 +13,7 @@ from xknx.exceptions.exception import (
     InvalidSecureConfiguration,
     XKNXException,
 )
-from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
+from xknx.io import ConnectionConfig, ConnectionType, DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor, GatewayScanner
 from xknx.io.self_description import request_description
 from xknx.io.util import validate_ip as xknx_validate_ip
@@ -454,6 +455,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
             selected_tunneling_type = user_input[CONF_KNX_TUNNELING_TYPE]
             if not errors:
                 try:
+                    print(f"RK ****************: request_description() {self._selected_tunnel = }")
                     self._selected_tunnel = await request_description(
                         gateway_ip=_host_ip,
                         gateway_port=user_input[CONF_PORT],
@@ -461,6 +463,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                         route_back=user_input[CONF_KNX_ROUTE_BACK],
                     )
                 except CommunicationError:
+                    print("RK ****************: CommunicationError")
                     # If we cannot get the gateway capabilities, just go on with
                     # what the user asked, since this request_description might
                     # not be possible because of some network configuration.
@@ -488,14 +491,55 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
                 if selected_tunneling_type == CONF_KNX_TUNNELING_TCP_SECURE:
-                    return await self.async_step_secure_key_source_menu_tunnel()
-                self.new_title = (
-                    "Tunneling "
-                    f"{'UDP' if selected_tunneling_type == CONF_KNX_TUNNELING else 'TCP'} "
-                    f"@ {_host}"
-                )
-                return self.finish_flow()
+                    # If it is compatible with the request_description(), go on.
+                    if self._selected_tunnel:
+                        return await self.async_step_secure_key_source_menu_tunnel()
+                    else:
+                        # Otherwise, materialize the postponed error:
+                        errors["base"] = "cannot_connect"
 
+                if not self._selected_tunnel:
+                    print(f"RK ****************: XKNX(connection_config=ConnectionConfig) {user_input[CONF_PORT] = }")
+
+                    # The previous request_description() has failed with a
+                    # CommunicationError, so check that the manual tunnel can
+                    # actually work to avoid later failure.
+                    tunnel = XKNX(connection_config=ConnectionConfig(
+                        connection_type=ConnectionType.TUNNELING_TCP,
+                        gateway_ip=_host_ip,
+                        gateway_port=user_input[CONF_PORT],
+                        local_ip=_local_ip,
+                        route_back=user_input[CONF_KNX_ROUTE_BACK],
+                        auto_reconnect=False,
+                        threaded=True
+                    ))
+                    async def safe_close():
+                        try:
+                            await tunnel.stop()
+                        except Exception as e:
+                            errors["base"] = "cannot_connect"
+                            print(f"RK ****************: cannot_close {e = }")
+                            traceback.print_exc()
+
+                    try:
+                        await tunnel.start()
+                    except Exception as e:
+                        errors["base"] = "cannot_connect"
+                        print(f"RK ****************: cannot_start {e = }")
+                        traceback.print_exc()
+                        await safe_close()
+                    else:
+                        await safe_close()
+
+                if not errors:
+                    self.new_title = (
+                        "Tunneling "
+                        f"{'UDP' if selected_tunneling_type == CONF_KNX_TUNNELING else 'TCP'} "
+                        f"@ {_host}"
+                    )
+                    return self.finish_flow()
+
+        print(f"RK reconfiguring_existing_tunnel****************")
         _reconfiguring_existing_tunnel = (
             self.initial_data.get(CONF_KNX_CONNECTION_TYPE)
             in CONF_KNX_TUNNELING_TYPE_LABELS
@@ -551,6 +595,7 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if not self._found_tunnels and not errors.get("base"):
             errors["base"] = "no_tunnel_discovered"
+        print(f"RK ****************: {errors = } {fields = }")
         return self.async_show_form(
             step_id="manual_tunnel", data_schema=vol.Schema(fields), errors=errors
         )
