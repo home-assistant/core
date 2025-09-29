@@ -59,6 +59,8 @@ def mock_config_entry() -> MockConfigEntry:
         data=MOCK_CONFIG_DATA,
         options=MOCK_CONFIG_OPTIONS,
         entry_id="SATEL_INTEGRA_CONFIG_ENTRY_1",
+        version=1,
+        minor_version=1,
     )
 
 
