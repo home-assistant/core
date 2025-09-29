@@ -52,7 +52,11 @@ async def async_setup_entry(
         async_add_entities(
             [
                 SatelIntegraAlarmPanel(
-                    controller, zone_name, arm_home_mode, partition_num
+                    controller,
+                    zone_name,
+                    arm_home_mode,
+                    partition_num,
+                    config_entry.entry_id,
                 )
             ],
             config_subentry_id=subentry.subentry_id,
@@ -69,10 +73,12 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
 
-    def __init__(self, controller, name, arm_home_mode, partition_id) -> None:
+    def __init__(
+        self, controller, name, arm_home_mode, partition_id, config_entry_id
+    ) -> None:
         """Initialize the alarm panel."""
         self._attr_name = name
-        self._attr_unique_id = f"satel_alarm_panel_{partition_id}"
+        self._attr_unique_id = f"{config_entry_id}_alarm_panel_{partition_id}"
         self._arm_home_mode = arm_home_mode
         self._partition_id = partition_id
         self._satel = controller

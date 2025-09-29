@@ -17,7 +17,11 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
@@ -245,3 +249,41 @@ async def async_unload_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> bo
 async def update_listener(hass: HomeAssistant, entry: SatelConfigEntry) -> None:
     """Handle options update."""
     hass.config_entries.async_schedule_reload(entry.entry_id)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: SatelConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if config_entry.version == 1 and config_entry.minor_version == 1:
+        entity_registry = er.async_get(hass)
+        entity_entries = er.async_entries_for_config_entry(
+            entity_registry, config_entry_id=config_entry.entry_id
+        )
+
+        for ent in entity_entries:
+            # Previously unique_id was prefixed with "satel", as YAML only allowed 1 alarm system to be configured
+            entity_registry.async_update_entity(
+                ent.entity_id,
+                new_unique_id=ent.unique_id.replace("satel", config_entry.entry_id),
+            )
+
+        hass.config_entries.async_update_entry(config_entry, minor_version=2)
+
+    _LOGGER.debug(
+        "Migration to configuration version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    return True
