@@ -3,7 +3,7 @@
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -42,7 +42,7 @@ async def test_sensor_state(
         for entity in er.async_entries_for_config_entry(
             entity_registry, config_entry.entry_id
         )
-        if entity.domain == SENSOR_DOMAIN
+        if entity.domain == BINARY_SENSOR_DOMAIN
     ]
     assert entities == snapshot(name="entities")
 
