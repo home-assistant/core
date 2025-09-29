@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -620,9 +621,14 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             self.fritz_guest_wifi.set_password, password, length
         )
 
-    async def async_trigger_dial(self, number: str) -> None:
+    async def async_trigger_dial(
+        self, number: str, max_ring_seconds: float | None = None
+    ) -> None:
         """Trigger service to dial a number."""
         await self.hass.async_add_executor_job(self.fritz_call.dial, number)
+        if max_ring_seconds is not None:
+            await asyncio.sleep(max_ring_seconds)
+            await self.hass.async_add_executor_job(self.fritz_call.hangup)
 
     async def async_trigger_cleanup(self) -> None:
         """Trigger device trackers cleanup."""

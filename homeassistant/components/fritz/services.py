@@ -33,6 +33,9 @@ SERVICE_SCHEMA_DIAL = vol.Schema(
     {
         vol.Required("device_id"): str,
         vol.Required("number"): str,
+        vol.Optional("max_ring_seconds"): vol.All(
+            vol.Coerce(float), vol.Range(min=0.1, max=360.0)
+        ),
     }
 )
 
@@ -94,7 +97,10 @@ async def _async_dial(service_call: ServiceCall) -> None:
         _LOGGER.debug("Executing service %s", service_call.service)
         avm_wrapper = target_entry.runtime_data
         try:
-            await avm_wrapper.async_trigger_dial(service_call.data.get("number"))
+            await avm_wrapper.async_trigger_dial(
+                service_call.data.get("number"),
+                max_ring_seconds=service_call.data.get("max_ring_seconds"),
+            )
         except (FritzServiceError, FritzActionError) as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="service_parameter_unknown"

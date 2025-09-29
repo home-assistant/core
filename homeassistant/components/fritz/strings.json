@@ -210,6 +210,10 @@
         "number": {
           "name": "Phone number",
           "description": "The phone number to dial."
+        },
+        "max_ring_seconds": {
+          "name": "Maximum ring duration",
+          "description": "The maximum number of seconds to ring after dialing. Note that the actual ring duration might be shorter depending on the receivers phone settings."
         }
       }
     }

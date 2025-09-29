@@ -8,6 +8,7 @@ from fritzconnection.core.exceptions import (
     FritzActionFailedError,
 )
 import pytest
+from voluptuous import MultipleInvalid
 
 from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.components.fritz.services import (
@@ -167,6 +168,19 @@ async def test_service_dial(
             DOMAIN, SERVICE_DIAL, {"device_id": device.id, "number": "1234567890"}
         )
         assert mock_async_trigger_dial.called
+        assert mock_async_trigger_dial.call_args.kwargs == {"max_ring_seconds": None}
+        assert mock_async_trigger_dial.call_args.args == ("1234567890",)
+    with patch(
+        "homeassistant.components.fritz.coordinator.AvmWrapper.async_trigger_dial"
+    ) as mock_async_trigger_dial:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_DIAL,
+            {"device_id": device.id, "number": "1234567890", "max_ring_seconds": 10.0},
+        )
+        assert mock_async_trigger_dial.called
+        assert mock_async_trigger_dial.call_args.kwargs == {"max_ring_seconds": 10.0}
+        assert mock_async_trigger_dial.call_args.args == ("1234567890",)
 
 
 async def test_service_dial_unknown_parameter(
@@ -197,6 +211,55 @@ async def test_service_dial_unknown_parameter(
         )
         assert mock_async_trigger_dial.called
         assert "HomeAssistantError: Action or parameter unknown" in caplog.text
+
+
+async def test_service_dial_wrong_parameter(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    fc_class_mock,
+    fh_class_mock,
+) -> None:
+    """Test service dial with unknown parameters."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "1C:ED:6F:12:34:11")}
+    )
+    assert device
+
+    with patch(
+        "homeassistant.components.fritz.coordinator.AvmWrapper.async_trigger_dial",
+    ) as mock_async_trigger_dial:
+        with pytest.raises(MultipleInvalid):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_DIAL,
+                {
+                    "device_id": device.id,
+                    "number": "1234567890",
+                    "max_ring_seconds": "",
+                },
+            )
+        assert not mock_async_trigger_dial.called
+    with patch(
+        "homeassistant.components.fritz.coordinator.AvmWrapper.async_trigger_dial",
+    ) as mock_async_trigger_dial:
+        with pytest.raises(MultipleInvalid):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_DIAL,
+                {
+                    "device_id": device.id,
+                    "number": "1234567890",
+                    "max_ring_seconds": 0.0,
+                },
+            )
+        assert not mock_async_trigger_dial.called
 
 
 async def test_service_dial_service_not_supported(
@@ -257,7 +320,7 @@ async def test_service_dial_failed(
         )
         assert mock_async_trigger_dial.called
         assert (
-            "HomeAssistantError: Failed to dial, check if the dial-help of the Fritz!Box is activated"
+            "HomeAssistantError: Failed to dial, check if the dial-help service of the Fritz!Box is activated"
             in caplog.text
         )
 
