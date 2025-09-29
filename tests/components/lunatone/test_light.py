@@ -1,17 +1,28 @@
 """Tests for the Lunatone integration."""
 
-from unittest.mock import AsyncMock
+from datetime import timedelta
+from unittest.mock import AsyncMock, PropertyMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
+from lunatone_rest_api_client import Device, Devices
+from lunatone_rest_api_client.models import ControlData
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import DEVICE_DATA_LIST, setup_integration
+from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 TEST_ENTITY_ID = "light.device_1"
 
@@ -28,14 +39,11 @@ async def test_setup(
     """Test the Lunatone configuration entry loading/unloading."""
     await setup_integration(hass, mock_config_entry)
 
-    for device_data in DEVICE_DATA_LIST:
-        entity_id = f"light.device_{device_data.id}"
-
-        entry = entity_registry.async_get(entity_id)
-        assert entry == snapshot
-
-        device_entry = device_registry.async_get(entry.device_id)
-        assert device_entry == snapshot
+    entities = hass.states.async_all(Platform.LIGHT)
+    for entity_state in entities:
+        entity_entry = entity_registry.async_get(entity_state.entity_id)
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert entity_state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
 async def test_turn_on_off(
@@ -45,26 +53,44 @@ async def test_turn_on_off(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the light can be turned on and off."""
-    await setup_integration(hass, mock_config_entry)
 
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
-        blocking=True,
-    )
+    def fake_control(device: Device, control_data: ControlData):
+        if control_data.switchable is not None:
+            device._data.features.switchable.status = control_data.switchable
 
-    assert mock_lunatone_devices.devices[0].is_on
+    device_list = [
+        Device(mock_lunatone_devices._auth, d)
+        for d in mock_lunatone_devices._data.devices
+    ]
+    for dev in device_list:
+        dev.async_control = AsyncMock(
+            side_effect=lambda data, d=dev: fake_control(d, data)
+        )
+        dev.async_update = AsyncMock()
 
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
-        blocking=True,
-    )
+    with patch.object(Devices, "devices", new_callable=PropertyMock) as mock_prop:
+        mock_prop.return_value = device_list
 
-    assert not mock_lunatone_devices.devices[0].is_on
-    assert mock_lunatone_devices.devices[0].async_control.call_count == 2
+        await setup_integration(hass, mock_config_entry)
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+            blocking=True,
+        )
+
+        assert mock_lunatone_devices.devices[0].is_on
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+            blocking=True,
+        )
+
+        assert not mock_lunatone_devices.devices[0].is_on
+        assert mock_lunatone_devices.devices[0].async_control.call_count == 2
 
 
 async def test_coordinator_update_handling(
@@ -72,16 +98,29 @@ async def test_coordinator_update_handling(
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_info: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the coordinator update handling."""
+
+    async def fake_update():
+        new_device = mock_lunatone_devices._data.devices[0].model_copy(deep=True)
+        new_device.features.switchable.status = (
+            not new_device.features.switchable.status
+        )
+        mock_lunatone_devices._data.devices[0] = new_device
+
     await setup_integration(hass, mock_config_entry)
 
-    mock_lunatone_devices._data.devices[0].features.switchable.status = True
-    entity = hass.data["light"].get_entity(TEST_ENTITY_ID)
-    entity._handle_coordinator_update()
-    assert entity.is_on
+    mock_lunatone_devices.async_update.side_effect = fake_update
 
-    mock_lunatone_devices._data.devices[0].features.switchable.status = False
-    entity = hass.data["light"].get_entity(TEST_ENTITY_ID)
-    entity._handle_coordinator_update()
-    assert not entity.is_on
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_ON
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF

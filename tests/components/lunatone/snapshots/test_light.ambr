@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup
+# name: test_setup[light.device_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -38,38 +38,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup.1
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
+# name: test_setup[light.device_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'color_mode': None,
+      'friendly_name': 'Device 1',
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
     }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'lunatone',
-        '12345-device1',
-      ),
-    }),
-    'labels': set({
-    }),
-    'manufacturer': None,
-    'model': None,
-    'model_id': None,
-    'name': 'Device 1',
-    'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
-    'sw_version': None,
-    'via_device_id': <ANY>,
+    'context': <ANY>,
+    'entity_id': 'light.device_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
-# name: test_setup.2
+# name: test_setup[light.device_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -108,34 +95,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup.3
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
+# name: test_setup[light.device_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'color_mode': None,
+      'friendly_name': 'Device 2',
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
     }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'lunatone',
-        '12345-device2',
-      ),
-    }),
-    'labels': set({
-    }),
-    'manufacturer': None,
-    'model': None,
-    'model_id': None,
-    'name': 'Device 2',
-    'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
-    'sw_version': None,
-    'via_device_id': <ANY>,
+    'context': <ANY>,
+    'entity_id': 'light.device_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
