@@ -1279,7 +1279,6 @@ async def test_hardware_flow_strategy_advanced(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_HARDWARE}, data=data
         )
 
-    # } discovery
     assert result_hardware["type"] is FlowResultType.FORM
     assert result_hardware["step_id"] == "confirm"
 
