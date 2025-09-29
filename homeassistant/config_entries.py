@@ -3227,7 +3227,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         reason: str | UndefinedType = UNDEFINED,
     ) -> ConfigFlowResult:
-        """Update config entry, reload config entry and finish config flow.
+        """Update config entry and finish config flow.
 
         Args:
             entry: config entry to update and reload
@@ -3239,8 +3239,6 @@ class ConfigFlow(ConfigEntryBaseFlow):
             options: replace the entry options with new options
             reason: set the reason for the abort, defaults to
                 `reauth_successful` or `reconfigure_successful` based on flow source
-            reload_even_if_entry_is_unchanged: set this to `False` if the entry
-                should not be reloaded if it is unchanged
 
         Returns:
             ConfigFlowResult: The result of the config flow.
