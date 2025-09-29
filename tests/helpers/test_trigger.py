@@ -19,6 +19,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import trigger
+from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.trigger import (
     DATA_PLUGGABLE_ACTIONS,
     PluggableAction,
@@ -29,7 +30,6 @@ from homeassistant.helpers.trigger import (
     _async_get_trigger_platform,
     async_initialize_triggers,
     async_validate_trigger_config,
-    move_top_level_schema_fields_to_options,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
@@ -56,14 +56,10 @@ async def test_trigger_subtype(hass: HomeAssistant) -> None:
         assert integration_mock.call_args == call(hass, "test")
 
 
-async def test_trigger_variables(hass: HomeAssistant) -> None:
-    """Test trigger variables."""
-
-
-async def test_if_fires_on_event(
+async def test_trigger_variables(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
-    """Test the firing of events."""
+    """Test trigger variables."""
     assert await async_setup_component(
         hass,
         "automation",
@@ -451,76 +447,6 @@ async def test_pluggable_action(
     remove_attach_2()
     assert not hass.data[DATA_PLUGGABLE_ACTIONS]
     assert not plug_2
-
-
-@pytest.mark.parametrize(
-    ("config", "schema_dict", "expected_config"),
-    [
-        (
-            {
-                "platform": "test",
-                "entity": "sensor.test",
-                "from": "open",
-                "to": "closed",
-                "for": {"hours": 1},
-                "attribute": "state",
-                "value_template": "{{ value_json.val }}",
-                "extra_field": "extra_value",
-            },
-            {},
-            {
-                "platform": "test",
-                "entity": "sensor.test",
-                "from": "open",
-                "to": "closed",
-                "for": {"hours": 1},
-                "attribute": "state",
-                "value_template": "{{ value_json.val }}",
-                "extra_field": "extra_value",
-                "options": {},
-            },
-        ),
-        (
-            {
-                "platform": "test",
-                "entity": "sensor.test",
-                "from": "open",
-                "to": "closed",
-                "for": {"hours": 1},
-                "attribute": "state",
-                "value_template": "{{ value_json.val }}",
-                "extra_field": "extra_value",
-            },
-            {
-                vol.Required("entity"): str,
-                vol.Optional("from"): str,
-                vol.Optional("to"): str,
-                vol.Optional("for"): dict,
-                vol.Optional("attribute"): str,
-                vol.Optional("value_template"): str,
-            },
-            {
-                "platform": "test",
-                "extra_field": "extra_value",
-                "options": {
-                    "entity": "sensor.test",
-                    "from": "open",
-                    "to": "closed",
-                    "for": {"hours": 1},
-                    "attribute": "state",
-                    "value_template": "{{ value_json.val }}",
-                },
-            },
-        ),
-    ],
-)
-async def test_move_schema_fields_to_options(
-    config, schema_dict, expected_config
-) -> None:
-    """Test moving schema fields to options."""
-    assert (
-        move_top_level_schema_fields_to_options(config, schema_dict) == expected_config
-    )
 
 
 async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:

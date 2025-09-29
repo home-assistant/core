@@ -65,6 +65,10 @@
         }
       }
     },
+    "dump_sockets": {
+      "name": "Dump used sockets",
+      "description": "Logs information about all currently used sockets."
+    },
     "stop_log_object_sources": {
       "name": "Stop logging object sources",
       "description": "Stops logging sources of new objects in memory."

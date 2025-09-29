@@ -171,6 +171,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.baichuan.mac_address.return_value = TEST_MAC_CAM
     host_mock.baichuan.privacy_mode.return_value = False
     host_mock.baichuan.day_night_state.return_value = "day"
+    host_mock.baichuan.siren_state.return_value = True
     host_mock.baichuan.subscribe_events.side_effect = ReolinkError("Test error")
     host_mock.baichuan.active_scene = "off"
     host_mock.baichuan.scene_names = ["off", "home"]
@@ -252,6 +253,7 @@ def reolink_chime(reolink_host: MagicMock) -> None:
     }
     TEST_CHIME.remove = AsyncMock()
     TEST_CHIME.set_option = AsyncMock()
+    TEST_CHIME.update_enums()
 
     reolink_host.chime_list = [TEST_CHIME]
     reolink_host.chime.return_value = TEST_CHIME
