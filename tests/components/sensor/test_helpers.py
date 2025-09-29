@@ -1,9 +1,13 @@
-"""The test for sensor helpers."""
+"""Tests for sensor helpers."""
 
 import pytest
 
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.sensor.helpers import async_parse_date_datetime
+from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor.helpers import (
+    async_parse_date_datetime,
+    create_sensor_device_class_select_selector,
+    create_sensor_state_class_select_selector,
+)
 
 
 def test_async_parse_datetime(caplog: pytest.LogCaptureFixture) -> None:
@@ -39,3 +43,23 @@ def test_async_parse_datetime(caplog: pytest.LogCaptureFixture) -> None:
     # Invalid date
     assert async_parse_date_datetime("December 12th", entity_id, device_class) is None
     assert "sensor.timestamp rendered invalid date December 12th" in caplog.text
+
+
+def test_create_sensor_device_class_select_selector() -> None:
+    "Test Create sensor state class select selector helper."
+    selector = create_sensor_device_class_select_selector()
+    assert selector.config["options"] == list(SensorDeviceClass)
+    assert selector.config["translation_domain"] == DOMAIN
+    assert selector.config["translation_key"] == "device_class"
+    assert selector.config["sort"]
+    assert not selector.config["custom_value"]
+
+
+def test_create_sensor_state_class_select_selector() -> None:
+    "Test Create sensor state class select selector helper."
+    selector = create_sensor_state_class_select_selector()
+    assert selector.config["options"] == list(SensorStateClass)
+    assert selector.config["translation_domain"] == DOMAIN
+    assert selector.config["translation_key"] == "state_class"
+    assert selector.config["sort"]
+    assert not selector.config["custom_value"]
