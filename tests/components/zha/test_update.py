@@ -47,6 +47,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .common import find_entity_id, update_attribute_cache
@@ -156,7 +157,6 @@ async def setup_test_data(
         )
     )
     zha_device_proxy: ZHADeviceProxy = gateway_proxy.get_device_proxy(zigpy_device.ieee)
-    zha_device_proxy.device.async_update_sw_build_id(installed_fw_version)
 
     return zha_device_proxy, cluster, fw_image, installed_fw_version
 
@@ -643,3 +643,26 @@ async def test_update_release_notes(
         assert "Some lengthy release notes" in result["result"]
         assert OTA_MESSAGE_RELIABILITY in result["result"]
         assert OTA_MESSAGE_BATTERY_POWERED in result["result"]
+
+
+async def test_update_version_sync_device_registry(
+    hass: HomeAssistant,
+    setup_zha,
+    zigpy_device_mock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test firmware version syncing between the ZHA device and Home Assistant."""
+    await setup_zha()
+    zha_device, _, _, _ = await setup_test_data(hass, zigpy_device_mock)
+
+    zha_device.device.async_update_firmware_version("0x12345678")
+    reg_device = device_registry.async_get_device(
+        identifiers={("zha", str(zha_device.device.ieee))}
+    )
+    assert reg_device.sw_version == "0x12345678"
+
+    zha_device.device.async_update_firmware_version("0xabcd1234")
+    reg_device = device_registry.async_get_device(
+        identifiers={("zha", str(zha_device.device.ieee))}
+    )
+    assert reg_device.sw_version == "0xabcd1234"

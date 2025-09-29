@@ -61,7 +61,7 @@ class DeviceCondition(Condition):
         self._hass = hass
 
     @classmethod
-    async def async_validate_condition_config(
+    async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate device condition config."""
@@ -69,7 +69,7 @@ class DeviceCondition(Condition):
             hass, config, cv.DEVICE_CONDITION_SCHEMA, DeviceAutomationType.CONDITION
         )
 
-    async def async_condition_from_config(self) -> condition.ConditionCheckerType:
+    async def async_get_checker(self) -> condition.ConditionCheckerType:
         """Test a device condition."""
         platform = await async_get_device_automation_platform(
             self._hass, self._config[CONF_DOMAIN], DeviceAutomationType.CONDITION
@@ -80,7 +80,7 @@ class DeviceCondition(Condition):
 
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "device": DeviceCondition,
+    "_device": DeviceCondition,
 }
 
 

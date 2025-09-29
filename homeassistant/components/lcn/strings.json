@@ -70,7 +70,7 @@
     },
     "abort": {
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "already_configured": "PCHK connection using the same ip address/port is already configured."
+      "already_configured": "PCHK connection using the same IP address/port is already configured."
     }
   },
   "issues": {
@@ -156,7 +156,7 @@
     },
     "relays": {
       "name": "Relays",
-      "description": "Sets the relays status.",
+      "description": "Sets the relay states.",
       "fields": {
         "device_id": {
           "name": "[%key:common::config_flow::data::device%]",
@@ -168,7 +168,7 @@
         },
         "state": {
           "name": "State",
-          "description": "Relays states as string (1=on, 2=off, t=toggle, -=no change)."
+          "description": "Relay states as string (1=on, 2=off, t=toggle, -=no change)."
         }
       }
     },
@@ -322,7 +322,7 @@
     },
     "lock_keys": {
       "name": "Lock keys",
-      "description": "Locks keys.",
+      "description": "Sets the key lock states.",
       "fields": {
         "device_id": {
           "name": "[%key:common::config_flow::data::device%]",

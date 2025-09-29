@@ -48,23 +48,25 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
-from .const import CONF_AVAILABILITY_TEMPLATE
 from .helpers import (
     async_setup_template_entry,
     async_setup_template_platform,
     async_setup_template_preview,
 )
-from .template_entity import (
+from .schemas import (
+    TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    TEMPLATE_ENTITY_COMMON_SCHEMA,
-    TemplateEntity,
+    make_template_entity_common_modern_attributes_schema,
 )
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
+
+DEFAULT_NAME = "Template Binary Sensor"
 
 CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"
 CONF_AUTO_OFF = "auto_off"
-CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 
 LEGACY_FIELDS = {
     CONF_FRIENDLY_NAME_TEMPLATE: CONF_NAME,
@@ -83,7 +85,9 @@ BINARY_SENSOR_COMMON_SCHEMA = vol.Schema(
 )
 
 BINARY_SENSOR_YAML_SCHEMA = BINARY_SENSOR_COMMON_SCHEMA.extend(
-    TEMPLATE_ENTITY_COMMON_SCHEMA.schema
+    make_template_entity_common_modern_attributes_schema(
+        BINARY_SENSOR_DOMAIN, DEFAULT_NAME
+    ).schema
 )
 
 BINARY_SENSOR_CONFIG_ENTRY_SCHEMA = BINARY_SENSOR_COMMON_SCHEMA.extend(
@@ -97,10 +101,6 @@ BINARY_SENSOR_LEGACY_YAML_SCHEMA = vol.All(
             vol.Required(CONF_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_ICON_TEMPLATE): cv.template,
             vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
-            vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
-            vol.Optional(CONF_ATTRIBUTE_TEMPLATES): vol.Schema(
-                {cv.string: cv.template}
-            ),
             vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
             vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
             vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
@@ -108,7 +108,9 @@ BINARY_SENSOR_LEGACY_YAML_SCHEMA = vol.All(
             vol.Optional(CONF_DELAY_OFF): vol.Any(cv.positive_time_period, cv.template),
             vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
-    ),
+    )
+    .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY.schema)
+    .extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema),
 )
 
 
@@ -182,7 +184,7 @@ class StateBinarySensorEntity(TemplateEntity, BinarySensorEntity, RestoreEntity)
         TemplateEntity.__init__(self, hass, config, unique_id)
 
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-        self._template = config[CONF_STATE]
+        self._template: template.Template = config[CONF_STATE]
         self._delay_cancel = None
         self._delay_on = None
         self._delay_on_raw = config.get(CONF_DELAY_ON)
@@ -370,7 +372,6 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
     def _set_state(self, state, _=None):
         """Set up auto off."""
         self._attr_is_on = state
-        self.async_set_context(self.coordinator.data["context"])
         self.async_write_ha_state()
 
         if not state:
