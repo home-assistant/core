@@ -185,7 +185,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.1
 
 # homeassistant.components.alexa_devices
-aioamazondevices==6.2.6
+aioamazondevices==6.2.7
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -310,7 +310,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==0.10.2
+aiomealie==0.11.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -453,7 +453,7 @@ airgradient==0.9.2
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.5.1
+airos==0.5.3
 
 # homeassistant.components.airthings_ble
 airthings-ble==0.9.2
@@ -782,7 +782,7 @@ decora-wifi==1.4
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==14.0.0
+deebot-client==15.0.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1186,7 +1186,7 @@ hole==0.9.0
 holidays==0.81
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250925.1
+home-assistant-frontend==20250926.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.9.24
@@ -1545,7 +1545,7 @@ nextdns==4.1.0
 nhc==0.4.12
 
 # homeassistant.components.nibe_heatpump
-nibe==2.18.0
+nibe==2.19.0
 
 # homeassistant.components.nice_go
 nice-go==1.0.1
@@ -2701,7 +2701,7 @@ renault-api==0.4.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.15.2
+reolink-aio==0.16.0
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
