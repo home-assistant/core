@@ -4,7 +4,7 @@
 
 # Home Assistant Core
 aiodns==3.5.0
-aiohasupervisor==0.3.2
+aiohasupervisor==0.3.3b0
 aiohttp==3.12.15
 aiohttp_cors==0.8.1
 aiohttp-fast-zlib==0.3.0
@@ -22,7 +22,7 @@ certifi>=2021.5.30
 ciso8601==2.3.3
 cronsim==2.6
 fnv-hash-fast==1.5.0
-hass-nabucasa==1.1.0
+hass-nabucasa==1.1.2
 httpx==0.28.1
 home-assistant-bluetooth==1.13.1
 ifaddr==0.2.0

@@ -8,6 +8,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from reolink_aio.api import Host
+from reolink_aio.const import YOLO_DETECT_TYPES
 from reolink_aio.enums import BatteryEnum
 
 from homeassistant.components.sensor import (
@@ -135,11 +136,45 @@ SENSORS = (
         value=lambda api, ch: api.wifi_signal(ch),
         supported=lambda api, ch: api.supported(ch, "wifi"),
     ),
+    ReolinkSensorEntityDescription(
+        key="person_type",
+        cmd_id=696,
+        translation_key="person_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=YOLO_DETECT_TYPES["people"],
+        value=lambda api, ch: api.baichuan.ai_detect_type(ch, "person"),
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_yolo_type") and api.supported(ch, "ai_people")
+        ),
+    ),
+    ReolinkSensorEntityDescription(
+        key="vehicle_type",
+        cmd_id=696,
+        translation_key="vehicle_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=YOLO_DETECT_TYPES["vehicle"],
+        value=lambda api, ch: api.baichuan.ai_detect_type(ch, "vehicle"),
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_yolo_type") and api.supported(ch, "ai_vehicle")
+        ),
+    ),
+    ReolinkSensorEntityDescription(
+        key="animal_type",
+        cmd_id=696,
+        translation_key="animal_type",
+        device_class=SensorDeviceClass.ENUM,
+        options=YOLO_DETECT_TYPES["dog_cat"],
+        value=lambda api, ch: api.baichuan.ai_detect_type(ch, "dog_cat"),
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_yolo_type") and api.supported(ch, "ai_dog_cat")
+        ),
+    ),
 )
 
 HOST_SENSORS = (
     ReolinkHostSensorEntityDescription(
         key="wifi_signal",
+        cmd_id=464,
         cmd_key="115",
         translation_key="wifi_signal",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
