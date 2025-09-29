@@ -2416,7 +2416,7 @@ pythinkingcleaner==0.0.3
 python-MotionMount==2.3.0
 
 # homeassistant.components.aidot
-python-aidot==0.3.43
+python-aidot==0.3.44
 
 # homeassistant.components.awair
 python-awair==0.2.4
