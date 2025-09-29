@@ -61,6 +61,7 @@ from .common import (
 
 from tests.common import MockPlatform, MockUser, mock_platform
 from tests.typing import RecorderInstanceContextManager, WebSocketGenerator
+from tests.util.test_unit_conversion import _ALL_CONVERTERS
 
 
 @pytest.fixture
@@ -3739,4 +3740,21 @@ async def test_get_statistics_service_missing_mandatory_keys(
             service_args,
             return_response=True,
             blocking=True,
+        )
+
+
+@pytest.mark.parametrize("uom", STATISTIC_UNIT_TO_UNIT_CONVERTER.keys())
+def test_STATISTIC_UNIT_TO_UNIT_CONVERTER(uom: str) -> None:
+    """Ensure unit does not belong to multiple converters."""
+    unit_converter = STATISTIC_UNIT_TO_UNIT_CONVERTER[uom]
+    if other := next(
+        (
+            c
+            for c in _ALL_CONVERTERS
+            if unit_converter is not c and uom in c.VALID_UNITS
+        ),
+        None,
+    ):
+        pytest.fail(
+            f"{uom} is present in both {other.__name__} and {unit_converter.__name__}"
         )
