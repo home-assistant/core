@@ -6,7 +6,7 @@ from aiohttp import ClientError, ClientResponseError
 from visionpluspython import WattsVisionClient
 from visionpluspython.auth import WattsVisionAuth
 
-from homeassistant.components.watts import async_unload_entry
+from homeassistant.components.watts import WattsVisionRuntimeData, async_unload_entry
 from homeassistant.components.watts.coordinator import WattsVisionCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -234,70 +234,8 @@ async def test_setup_entry_coordinator_update_failed(hass: HomeAssistant) -> Non
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry_client_error(hass: HomeAssistant) -> None:
-    """Test unload when client close raises OSError."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-    )
-    config_entry.add_to_hass(hass)
-
-    # Mock the runtime data
-    mock_client = AsyncMock(spec=WattsVisionClient)
-    mock_client.close.side_effect = OSError("Connection error")
-    mock_auth = AsyncMock(spec=WattsVisionAuth)
-    mock_coordinator = AsyncMock(spec=WattsVisionCoordinator)
-
-    config_entry.runtime_data = {
-        "client": mock_client,
-        "auth": mock_auth,
-        "coordinator": mock_coordinator,
-    }
-
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
-        return_value=True,
-    ):
-        result = await async_unload_entry(hass, config_entry)
-
-        assert result is True
-        mock_client.close.assert_called_once()
-        mock_auth.close.assert_called_once()
-
-
-async def test_unload_entry_auth_error(hass: HomeAssistant) -> None:
-    """Test unload when auth close raises OSError."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-    )
-    config_entry.add_to_hass(hass)
-
-    # Mock the runtime data
-    mock_client = AsyncMock(spec=WattsVisionClient)
-    mock_auth = AsyncMock(spec=WattsVisionAuth)
-    mock_auth.close.side_effect = OSError("Auth error")
-    mock_coordinator = AsyncMock(spec=WattsVisionCoordinator)
-
-    config_entry.runtime_data = {
-        "client": mock_client,
-        "auth": mock_auth,
-        "coordinator": mock_coordinator,
-    }
-
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
-        return_value=True,
-    ):
-        result = await async_unload_entry(hass, config_entry)
-
-        assert result is True
-        mock_client.close.assert_called_once()
-        mock_auth.close.assert_called_once()
-
-
-async def test_unload_entry_coordinator_error(hass: HomeAssistant) -> None:
-    """Test unload when coordinator close raises OSError."""
+async def test_unload_entry_success(hass: HomeAssistant) -> None:
+    """Test successful unload of entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={},
@@ -308,13 +246,12 @@ async def test_unload_entry_coordinator_error(hass: HomeAssistant) -> None:
     mock_client = AsyncMock(spec=WattsVisionClient)
     mock_auth = AsyncMock(spec=WattsVisionAuth)
     mock_coordinator = AsyncMock(spec=WattsVisionCoordinator)
-    mock_coordinator.async_shutdown.side_effect = OSError("Coordinator error")
 
-    config_entry.runtime_data = {
-        "client": mock_client,
-        "auth": mock_auth,
-        "coordinator": mock_coordinator,
-    }
+    config_entry.runtime_data = WattsVisionRuntimeData(
+        client=mock_client,
+        auth=mock_auth,
+        coordinator=mock_coordinator,
+    )
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
@@ -323,8 +260,6 @@ async def test_unload_entry_coordinator_error(hass: HomeAssistant) -> None:
         result = await async_unload_entry(hass, config_entry)
 
         assert result is True
-        mock_client.close.assert_called_once()
-        mock_auth.close.assert_called_once()
 
 
 async def test_unload_entry_platform_unload_fails(hass: HomeAssistant) -> None:
@@ -340,11 +275,11 @@ async def test_unload_entry_platform_unload_fails(hass: HomeAssistant) -> None:
     mock_auth = AsyncMock(spec=WattsVisionAuth)
     mock_coordinator = AsyncMock(spec=WattsVisionCoordinator)
 
-    config_entry.runtime_data = {
-        "client": mock_client,
-        "auth": mock_auth,
-        "coordinator": mock_coordinator,
-    }
+    config_entry.runtime_data = WattsVisionRuntimeData(
+        client=mock_client,
+        auth=mock_auth,
+        coordinator=mock_coordinator,
+    )
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
@@ -353,5 +288,3 @@ async def test_unload_entry_platform_unload_fails(hass: HomeAssistant) -> None:
         result = await async_unload_entry(hass, config_entry)
 
         assert result is False
-        mock_client.close.assert_called_once()
-        mock_auth.close.assert_called_once()

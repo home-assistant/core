@@ -6,6 +6,7 @@ import pytest
 from visionpluspython.models import SwitchDevice, ThermostatDevice, ThermostatMode
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.watts import WattsVisionRuntimeData
 from homeassistant.components.watts.climate import WattsVisionClimate, async_setup_entry
 from homeassistant.components.watts.coordinator import WattsVisionCoordinator
 from homeassistant.config_entries import ConfigEntry
@@ -447,7 +448,11 @@ async def test_async_setup_entry_with_thermostat_devices(
     coordinator.data = {"thermostat_1": thermostat_device}
 
     entry = MagicMock(spec=ConfigEntry)
-    entry.runtime_data = {"coordinator": coordinator}
+    entry.runtime_data = WattsVisionRuntimeData(
+        coordinator=coordinator,
+        auth=MagicMock(),
+        client=MagicMock(),
+    )
 
     await async_setup_entry(mock_hass, entry, async_add_entities)
 
@@ -470,7 +475,11 @@ async def test_async_setup_entry_no_thermostat_devices(
     coordinator.data = {"switch_1": mock_switch_device}
 
     entry = MagicMock(spec=ConfigEntry)
-    entry.runtime_data = {"coordinator": coordinator}
+    entry.runtime_data = WattsVisionRuntimeData(
+        coordinator=coordinator,
+        auth=MagicMock(),
+        client=MagicMock(),
+    )
 
     await async_setup_entry(mock_hass, entry, async_add_entities)
 
@@ -486,7 +495,11 @@ async def test_async_setup_entry_empty_data(mock_hass, mock_config_entry) -> Non
     coordinator.data = {}
 
     entry = MagicMock(spec=ConfigEntry)
-    entry.runtime_data = {"coordinator": coordinator}
+    entry.runtime_data = WattsVisionRuntimeData(
+        coordinator=coordinator,
+        auth=MagicMock(),
+        client=MagicMock(),
+    )
 
     await async_setup_entry(mock_hass, entry, async_add_entities)
 
@@ -513,7 +526,11 @@ async def test_async_setup_entry_multiple_thermostat_devices(
     coordinator.data = {"thermostat_1": thermostat1, "thermostat_2": thermostat2}
 
     entry = MagicMock(spec=ConfigEntry)
-    entry.runtime_data = {"coordinator": coordinator}
+    entry.runtime_data = WattsVisionRuntimeData(
+        coordinator=coordinator,
+        auth=MagicMock(),
+        client=MagicMock(),
+    )
 
     await async_setup_entry(mock_hass, entry, async_add_entities)
 
@@ -544,7 +561,11 @@ async def test_async_setup_entry_mixed_devices(
     }
 
     entry = MagicMock(spec=ConfigEntry)
-    entry.runtime_data = {"coordinator": coordinator}
+    entry.runtime_data = WattsVisionRuntimeData(
+        coordinator=coordinator,
+        auth=MagicMock(),
+        client=MagicMock(),
+    )
 
     with patch(
         "homeassistant.helpers.entity_platform.AddEntitiesCallback", new=AsyncMock

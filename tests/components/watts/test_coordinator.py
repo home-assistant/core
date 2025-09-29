@@ -7,6 +7,7 @@ from visionpluspython.client import WattsVisionClient
 from visionpluspython.models import Device
 
 from homeassistant.components.watts.coordinator import WattsVisionCoordinator
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -18,6 +19,12 @@ UPDATE_INTERVAL = 30
 def mock_hass():
     """Mock HomeAssistant instance."""
     return MagicMock(spec=HomeAssistant)
+
+
+@pytest.fixture
+def mock_config_entry():
+    """Mock ConfigEntry instance."""
+    return MagicMock(spec=ConfigEntry)
 
 
 @pytest.fixture
@@ -40,9 +47,9 @@ def mock_device():
 
 
 @pytest.fixture
-def coordinator(mock_hass, mock_client):
+def coordinator(mock_hass, mock_client, mock_config_entry):
     """Create a WattsVisionCoordinator instance."""
-    return WattsVisionCoordinator(mock_hass, mock_client)
+    return WattsVisionCoordinator(mock_hass, mock_client, mock_config_entry)
 
 
 async def test_coordinator_initialization(coordinator, mock_hass, mock_client) -> None:

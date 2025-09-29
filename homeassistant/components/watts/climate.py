@@ -36,7 +36,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Watts Vision climate entities from a config entry."""
 
-    coordinator: WattsVisionCoordinator = entry.runtime_data["coordinator"]
+    coordinator: WattsVisionCoordinator = entry.runtime_data.coordinator
 
     entities = []
     for device in coordinator.data.values():

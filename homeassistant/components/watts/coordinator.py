@@ -8,6 +8,7 @@ import logging
 from visionpluspython.client import WattsVisionClient
 from visionpluspython.models import Device
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -19,13 +20,16 @@ _LOGGER = logging.getLogger(__name__)
 class WattsVisionCoordinator(DataUpdateCoordinator):
     """Class to fetch Watts Vision+ data."""
 
-    def __init__(self, hass: HomeAssistant, client: WattsVisionClient) -> None:
+    def __init__(
+        self, hass: HomeAssistant, client: WattsVisionClient, config_entry: ConfigEntry
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
+            config_entry=config_entry,
         )
         self.client = client
         self._devices: dict[str, Device] = {}

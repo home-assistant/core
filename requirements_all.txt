@@ -3095,7 +3095,7 @@ victron-vrm==0.1.7
 vilfo-api-client==0.5.0
 
 # homeassistant.components.watts
-visionpluspython==1.0.0
+visionpluspython==1.0.1
 
 # homeassistant.components.voip
 voip-utils==0.3.4

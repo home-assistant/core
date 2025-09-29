@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from http import HTTPStatus
 import logging
-from typing import TypedDict
 
 from aiohttp import ClientError, ClientResponseError
 from visionpluspython.auth import WattsVisionAuth
@@ -24,7 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
 
-class WattsVisionRuntimeData(TypedDict):
+@dataclass
+class WattsVisionRuntimeData:
     """Runtime data for Watts Vision integration."""
 
     auth: WattsVisionAuth
@@ -57,13 +58,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) 
     except ClientError as err:
         raise ConfigEntryNotReady("Network issue during OAuth setup") from err
 
+    session = aiohttp_client.async_get_clientsession(hass)
     auth = WattsVisionAuth(
         oauth_session=oauth_session,
-        session=aiohttp_client.async_get_clientsession(hass),
+        session=session,
     )
 
     client = WattsVisionClient(auth)
-    coordinator = WattsVisionCoordinator(hass, client)
+    coordinator = WattsVisionCoordinator(hass, client, entry)
 
     try:
         await coordinator.async_config_entry_first_refresh()
@@ -87,31 +89,6 @@ async def async_unload_entry(
     """Unload a config entry."""
 
     _LOGGER.debug("Unloading Watts Vision + integration")
-    runtime_data = entry.runtime_data
-
-    client = runtime_data["client"]
-    if client:
-        try:
-            await client.close()
-            _LOGGER.debug("Client closed successfully")
-        except OSError as err:
-            _LOGGER.warning("Error closing client: %s", err)
-
-    auth = runtime_data["auth"]
-    if auth:
-        try:
-            await auth.close()
-            _LOGGER.debug("Auth closed successfully")
-        except OSError as err:
-            _LOGGER.warning("Error closing auth: %s", err)
-
-    coordinator = runtime_data["coordinator"]
-    if coordinator:
-        try:
-            await coordinator.async_shutdown()
-            _LOGGER.debug("Coordinator closed successfully")
-        except (OSError, AttributeError) as err:
-            _LOGGER.warning("Error closing coordinator: %s", err)
 
     unload_result = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
