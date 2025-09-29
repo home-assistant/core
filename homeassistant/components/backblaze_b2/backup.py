@@ -480,42 +480,46 @@ class BackblazeBackupAgent(BackupAgent):
         """
         try:
             download_response = file_version.download().response
-            try:
-                metadata_content = _parse_metadata(
-                    download_response.content.decode("utf-8")
-                )
-            except ValueError:
-                return None, None
-
-            if metadata_content["backup_id"] == target_backup_id:
-                found_backup_file = _find_backup_file_for_metadata(
-                    file_name, all_files_in_prefix, self._prefix
-                )
-                if found_backup_file:
-                    _LOGGER.debug(
-                        "Found backup file %s and metadata file %s for ID %s",
-                        found_backup_file.file_name,
-                        file_name,
-                        target_backup_id,
-                    )
-                    return found_backup_file, file_version
-                _LOGGER.warning(
-                    "Found metadata file %s for backup ID %s, but no corresponding backup file",
-                    file_name,
-                    target_backup_id,
-                )
-            _LOGGER.debug(
-                "Metadata file %s does not match target backup ID %s",
-                file_name,
-                target_backup_id,
-            )
         except B2Error as err:
             _LOGGER.warning(
                 "Failed to download metadata file %s during ID search: %s",
                 file_name,
                 err,
             )
-        return None, None
+            return None, None
+
+        try:
+            metadata_content = _parse_metadata(
+                download_response.content.decode("utf-8")
+            )
+        except ValueError:
+            return None, None
+
+        if metadata_content["backup_id"] != target_backup_id:
+            _LOGGER.debug(
+                "Metadata file %s does not match target backup ID %s",
+                file_name,
+                target_backup_id,
+            )
+            return None, None
+
+        if not (found_backup_file := _find_backup_file_for_metadata(
+            file_name, all_files_in_prefix, self._prefix
+        )):
+            _LOGGER.warning(
+                "Found metadata file %s for backup ID %s, but no corresponding backup file",
+                file_name,
+                target_backup_id,
+            )
+            return None, None
+
+        _LOGGER.debug(
+            "Found backup file %s and metadata file %s for ID %s",
+            found_backup_file.file_name,
+            file_name,
+            target_backup_id,
+        )
+        return found_backup_file, file_version
 
     async def _get_all_files_in_prefix(self) -> dict[str, FileVersion]:
         """Get all file versions in the configured prefix from Backblaze B2.
