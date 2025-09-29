@@ -1,6 +1,6 @@
 """Constants for the Level Lock integration."""
 
-DOMAIN = "level_lock"
+DOMAIN = "levelhome"
 
 # Config keys
 CONF_OAUTH2_BASE_URL = "oauth2_base_url"

@@ -15,11 +15,11 @@ Authentication:
   value to require a specific token.
 
 Usage:
-  uvicorn homeassistant.components.level_lock.simulator_server:app \
+  uvicorn homeassistant.components.levelhome.simulator_server:app \
     --reload --port 8081
 
 This server is intentionally minimal and designed to match the message formats
-expected in `homeassistant/components/level_lock/ws.py`.
+expected in `homeassistant/components/levelhome/ws.py`.
 """
 
 from __future__ import annotations

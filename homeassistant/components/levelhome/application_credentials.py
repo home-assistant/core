@@ -28,7 +28,7 @@ async def async_get_authorization_server(hass: HomeAssistant) -> AuthorizationSe
 
     The OAuth2 and partner server base URLs may be provided via configuration.yaml:
 
-    level_lock:
+    levelhome:
       oauth2_base_url: https://oauth2.example.com
       partner_base_url: https://partner.example.com
     """

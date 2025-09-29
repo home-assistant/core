@@ -208,7 +208,8 @@ class UserOnboardingView(_BaseOnboardingStepView):
             area_registry = ar.async_get(hass)
 
             for area in DEFAULT_AREAS:
-                name = translations[f"component.onboarding.area.{area}"]
+                #name = translations[f"component.onboarding.area.{area}"]
+                name = translations.get(f"component.onboarding.area.{area}", area)
                 # Guard because area might have been created by an automatically
                 # set up integration.
                 if not area_registry.async_get_area_by_name(name):

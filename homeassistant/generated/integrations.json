@@ -3448,7 +3448,7 @@
         "zwave"
       ]
     },
-    "level_lock": {
+    "levelhome": {
       "name": "Level Lock",
       "integration_type": "hub",
       "config_flow": true,
