@@ -180,7 +180,7 @@ class BaseUnitConverter:
 
 
 class CarbonMonoxideConcentrationConverter(BaseUnitConverter):
-    """Convert carbon monoxide mass ratio to mass per volume.
+    """Convert carbon monoxide ratio to mass per volume.
 
     Using SATP (Standard Ambient Temperature and Pressure) conditions.
     """
