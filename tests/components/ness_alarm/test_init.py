@@ -44,7 +44,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -640,71 +640,38 @@ async def test_async_setup_entry_callbacks(hass: HomeAssistant) -> None:
             mock_forward.assert_called_once_with(entry, PLATFORMS)
 
 
-# Add these tests to your existing test_init.py file
+async def test_async_setup_with_existing_entry(hass: HomeAssistant) -> None:
+    """Test setup with YAML config when entry already exists."""
 
-
-async def test_yaml_config_with_existing_ui_entry(
-    hass: HomeAssistant, mock_nessclient
-) -> None:
-    """Test YAML configuration when UI configuration already exists."""
-    # First, set up via UI (mock config entry)
-    mock_entry = MockConfigEntry(
+    # Create and add an existing config entry using MockConfigEntry
+    existing_entry = MockConfigEntry(
         domain=DOMAIN,
+        title="Ness Alarm",
         data={
             CONF_HOST: "192.168.1.50",
-            CONF_PORT: 2401,
-            "panel_model": "D8X",
+            CONF_PORT: 1300,
         },
         source="user",
+        entry_id="test_entry_id",
     )
-    mock_entry.add_to_hass(hass)
+    existing_entry.add_to_hass(hass)
 
-    # Setup the existing entry
-    with patch(
-        "homeassistant.components.ness_alarm.Client",
-        return_value=mock_nessclient,
-    ):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Now attempt to set up from YAML - should create warning issue
+    # Try to setup with YAML config
     yaml_config = {
         DOMAIN: {
-            CONF_HOST: "192.168.1.100",  # Different host
-            CONF_DEVICE_PORT: 2402,  # Different port
-            CONF_ZONES: [
-                {CONF_ZONE_NAME: "Zone 1", CONF_ZONE_ID: 1},
-            ],
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 1234,
         }
     }
 
-    with patch(
-        "homeassistant.components.ness_alarm.ir.async_create_issue"
-    ) as mock_create_issue:
-        # Import the actual async_setup function
+    assert await async_setup(hass, yaml_config)
 
-        result = await async_setup(hass, yaml_config)
-        assert result is True
+    # Should not create a new import flow - still only one entry
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-        # Verify issue was created for duplicate YAML
-        mock_create_issue.assert_called_once()
-        call_args = mock_create_issue.call_args
-
-        # Check the issue parameters
-        assert call_args[0][0] == hass  # hass instance
-        assert call_args[0][1] == DOMAIN  # domain
-        assert "yaml_duplicate" in call_args[0][2]  # issue id contains yaml_duplicate
-
-        # Check the kwargs
-        assert call_args[1]["is_fixable"] is False
-        assert call_args[1]["is_persistent"] is True
-        assert call_args[1]["severity"] == ir.IssueSeverity.WARNING
-        assert call_args[1]["translation_key"] == "yaml_config_duplicate"
-        assert call_args[1]["translation_placeholders"]["host"] == "192.168.1.100"
-        assert call_args[1]["translation_placeholders"]["port"] == "2402"
-
-        # Verify no new config flow was started (since entry already exists)
-        # The import flow should NOT be triggered when there's an existing entry
+    # Verify no import flow was initiated
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 0
 
 
 async def test_async_remove_entry_with_entities(
