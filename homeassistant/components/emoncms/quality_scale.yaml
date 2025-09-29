@@ -1,4 +1,6 @@
 rules:
+  # todo : add get_feed_list to the library
+  # todo : see if we can drop some extra attributes
   # Bronze
   action-setup:
     status: exempt
@@ -7,6 +9,9 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
+  # todo : test_reconfigure_api_error should use a mock config entry fixture
+  # todo : test_user_flow_failure should use a mock config entry fixture
+  # todo : move test_user_flow_* to the top of the file
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
@@ -38,6 +43,7 @@ rules:
   log-when-unavailable: done
   parallel-updates: todo
   reauthentication-flow: todo
+  # todo : test the entry state in test_failure
   test-coverage: done
 
   # Gold
@@ -57,6 +63,7 @@ rules:
   docs-use-cases: todo
   dynamic-devices: todo
   entity-category: todo
+  # todo : change device_class=SensorDeviceClass.SIGNAL_STRENGTH to SOUND_PRESSURE
   entity-device-class: done
   entity-disabled-by-default: todo
   entity-translations: done
