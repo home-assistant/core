@@ -59,8 +59,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
 
     if entry.version < 3:
         data = dict(entry.data)
-        # Verify SSL was never set, so at first set it to False
-        data[CONF_VERIFY_SSL] = False
+        data[CONF_VERIFY_SSL] = True
         hass.config_entries.async_update_entry(entry=entry, data=data, version=3)
 
     return True
