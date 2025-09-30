@@ -62,9 +62,15 @@ async def test_with_service_calls(hass: HomeAssistant) -> None:
     """Test function with actual service call events in database."""
     user_id = str(uuid.uuid4())
 
+    hass.states.async_set("light.living_room", "off")
+    hass.states.async_set("light.kitchen", "off")
+    hass.states.async_set("climate.thermostat", "off")
+    hass.states.async_set("light.bedroom", "off")
+    hass.states.async_set("lock.front_door", "locked")
+
     # Create service call events at different times of day
     # Morning events - use separate service calls to get around context deduplication
-    with freeze_time("2023-07-01 07:00:00+00:00"):  # Morning
+    with freeze_time("2023-07-01 07:00:00"):  # Morning
         hass.bus.async_fire(
             EVENT_CALL_SERVICE,
             {
@@ -77,7 +83,7 @@ async def test_with_service_calls(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     # Afternoon events
-    with freeze_time("2023-07-01 14:00:00+00:00"):  # Afternoon
+    with freeze_time("2023-07-01 14:00:00"):  # Afternoon
         hass.bus.async_fire(
             EVENT_CALL_SERVICE,
             {
@@ -90,7 +96,7 @@ async def test_with_service_calls(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     # Evening events
-    with freeze_time("2023-07-01 19:00:00+00:00"):  # Evening
+    with freeze_time("2023-07-01 19:00:00"):  # Evening
         hass.bus.async_fire(
             EVENT_CALL_SERVICE,
             {
@@ -103,7 +109,7 @@ async def test_with_service_calls(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     # Night events
-    with freeze_time("2023-07-01 23:00:00+00:00"):  # Night
+    with freeze_time("2023-07-01 23:00:00"):  # Night
         hass.bus.async_fire(
             EVENT_CALL_SERVICE,
             {
@@ -119,7 +125,7 @@ async def test_with_service_calls(hass: HomeAssistant) -> None:
     await async_wait_recording_done(hass)
 
     # Get predictions - make sure we're still in a reasonable timeframe
-    with freeze_time("2023-07-02 10:00:00+00:00"):  # Next day, so events are recent
+    with freeze_time("2023-07-02 10:00:00"):  # Next day, so events are recent
         results = await async_predict_common_control(hass, user_id)
 
     # Verify results contain the expected entities in the correct time periods
@@ -151,7 +157,12 @@ async def test_multiple_entities_in_one_call(hass: HomeAssistant) -> None:
         suggested_object_id="kitchen",
     )
 
-    with freeze_time("2023-07-01 10:00:00+00:00"):  # Morning
+    hass.states.async_set("light.living_room", "off")
+    hass.states.async_set("light.kitchen", "off")
+    hass.states.async_set("light.hallway", "off")
+    hass.states.async_set("not_allowed.domain", "off")
+
+    with freeze_time("2023-07-01 10:00:00"):  # Morning
         hass.bus.async_fire(
             EVENT_CALL_SERVICE,
             {
@@ -163,6 +174,7 @@ async def test_multiple_entities_in_one_call(hass: HomeAssistant) -> None:
                         "light.kitchen",
                         "light.hallway",
                         "not_allowed.domain",
+                        "light.not_in_state_machine",
                     ]
                 },
             },
@@ -172,7 +184,7 @@ async def test_multiple_entities_in_one_call(hass: HomeAssistant) -> None:
 
     await async_wait_recording_done(hass)
 
-    with freeze_time("2023-07-02 10:00:00+00:00"):  # Next day, so events are recent
+    with freeze_time("2023-07-02 10:00:00"):  # Next day, so events are recent
         results = await async_predict_common_control(hass, user_id)
 
     # Two lights should be counted (10:00 UTC = 02:00 local = night)
@@ -189,7 +201,10 @@ async def test_context_deduplication(hass: HomeAssistant) -> None:
     user_id = str(uuid.uuid4())
     context = Context(user_id=user_id)
 
-    with freeze_time("2023-07-01 10:00:00+00:00"):  # Morning
+    hass.states.async_set("light.living_room", "off")
+    hass.states.async_set("switch.coffee_maker", "off")
+
+    with freeze_time("2023-07-01 10:00:00"):  # Morning
         # Fire multiple events with the same context
         hass.bus.async_fire(
             EVENT_CALL_SERVICE,
@@ -215,7 +230,7 @@ async def test_context_deduplication(hass: HomeAssistant) -> None:
 
     await async_wait_recording_done(hass)
 
-    with freeze_time("2023-07-02 10:00:00+00:00"):  # Next day, so events are recent
+    with freeze_time("2023-07-02 10:00:00"):  # Next day, so events are recent
         results = await async_predict_common_control(hass, user_id)
 
     # Only the first event should be processed (10:00 UTC = 02:00 local = night)
@@ -232,8 +247,11 @@ async def test_old_events_excluded(hass: HomeAssistant) -> None:
     """Test that events older than 30 days are excluded."""
     user_id = str(uuid.uuid4())
 
+    hass.states.async_set("light.old_event", "off")
+    hass.states.async_set("light.recent_event", "off")
+
     # Create an old event (35 days ago)
-    with freeze_time("2023-05-27 10:00:00+00:00"):  # 35 days before July 1st
+    with freeze_time("2023-05-27 10:00:00"):  # 35 days before July 1st
         hass.bus.async_fire(
             EVENT_CALL_SERVICE,
             {
@@ -246,7 +264,7 @@ async def test_old_events_excluded(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     # Create a recent event (5 days ago)
-    with freeze_time("2023-06-26 10:00:00+00:00"):  # 5 days before July 1st
+    with freeze_time("2023-06-26 10:00:00"):  # 5 days before July 1st
         hass.bus.async_fire(
             EVENT_CALL_SERVICE,
             {
@@ -261,7 +279,7 @@ async def test_old_events_excluded(hass: HomeAssistant) -> None:
     await async_wait_recording_done(hass)
 
     # Query with current time
-    with freeze_time("2023-07-01 10:00:00+00:00"):
+    with freeze_time("2023-07-01 10:00:00"):
         results = await async_predict_common_control(hass, user_id)
 
     # Only recent event should be included (10:00 UTC = 02:00 local = night)
@@ -278,8 +296,16 @@ async def test_entities_limit(hass: HomeAssistant) -> None:
     """Test that only top entities are returned per time category."""
     user_id = str(uuid.uuid4())
 
+    hass.states.async_set("light.most_used", "off")
+    hass.states.async_set("light.second", "off")
+    hass.states.async_set("light.third", "off")
+    hass.states.async_set("light.fourth", "off")
+    hass.states.async_set("light.fifth", "off")
+    hass.states.async_set("light.sixth", "off")
+    hass.states.async_set("light.seventh", "off")
+
     # Create more than 5 different entities in morning
-    with freeze_time("2023-07-01 08:00:00+00:00"):
+    with freeze_time("2023-07-01 08:00:00"):
         # Create entities with different frequencies
         entities_with_counts = [
             ("light.most_used", 10),
@@ -308,7 +334,7 @@ async def test_entities_limit(hass: HomeAssistant) -> None:
     await async_wait_recording_done(hass)
 
     with (
-        freeze_time("2023-07-02 10:00:00+00:00"),
+        freeze_time("2023-07-02 10:00:00"),
         patch(
             "homeassistant.components.usage_prediction.common_control.RESULTS_TO_INCLUDE",
             5,
@@ -335,7 +361,10 @@ async def test_different_users_separated(hass: HomeAssistant) -> None:
     user_id_1 = str(uuid.uuid4())
     user_id_2 = str(uuid.uuid4())
 
-    with freeze_time("2023-07-01 10:00:00+00:00"):
+    hass.states.async_set("light.user1_light", "off")
+    hass.states.async_set("light.user2_light", "off")
+
+    with freeze_time("2023-07-01 10:00:00"):
         # User 1 events
         hass.bus.async_fire(
             EVENT_CALL_SERVICE,
@@ -363,7 +392,7 @@ async def test_different_users_separated(hass: HomeAssistant) -> None:
     await async_wait_recording_done(hass)
 
     # Get results for each user
-    with freeze_time("2023-07-02 10:00:00+00:00"):  # Next day, so events are recent
+    with freeze_time("2023-07-02 10:00:00"):  # Next day, so events are recent
         results_user1 = await async_predict_common_control(hass, user_id_1)
         results_user2 = await async_predict_common_control(hass, user_id_2)
 

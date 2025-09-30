@@ -90,7 +90,7 @@ async def test_cover_set_position(
 
     response = result.response
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert response.speech["plain"]["speech"] == "Opened"
+    assert response.speech["plain"]["speech"] == "Opening"
     assert len(calls) == 1
     call = calls[0]
     assert call.data == {"entity_id": entity_id}
@@ -104,7 +104,7 @@ async def test_cover_set_position(
 
     response = result.response
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert response.speech["plain"]["speech"] == "Closed"
+    assert response.speech["plain"]["speech"] == "Closing"
     assert len(calls) == 1
     call = calls[0]
     assert call.data == {"entity_id": entity_id}
@@ -146,7 +146,7 @@ async def test_cover_device_class(
 
     response = result.response
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert response.speech["plain"]["speech"] == "Opened the garage"
+    assert response.speech["plain"]["speech"] == "Opening the garage"
     assert len(calls) == 1
     call = calls[0]
     assert call.data == {"entity_id": entity_id}
@@ -170,7 +170,7 @@ async def test_valve_intents(
 
     response = result.response
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert response.speech["plain"]["speech"] == "Opened"
+    assert response.speech["plain"]["speech"] == "Opening"
     assert len(calls) == 1
     call = calls[0]
     assert call.data == {"entity_id": entity_id}
@@ -184,7 +184,7 @@ async def test_valve_intents(
 
     response = result.response
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert response.speech["plain"]["speech"] == "Closed"
+    assert response.speech["plain"]["speech"] == "Closing"
     assert len(calls) == 1
     call = calls[0]
     assert call.data == {"entity_id": entity_id}
