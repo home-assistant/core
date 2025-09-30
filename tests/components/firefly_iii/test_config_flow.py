@@ -90,7 +90,6 @@ async def test_form_exceptions(
         result["flow_id"],
         user_input=MOCK_USER_SETUP,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": reason}
@@ -106,8 +105,6 @@ async def test_form_exceptions(
         result["flow_id"],
         user_input=MOCK_USER_SETUP,
     )
-
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "https://127.0.0.1:8080/"
