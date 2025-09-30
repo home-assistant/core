@@ -75,8 +75,23 @@ class SupervisorJobs:
         return list(self._jobs.values())
 
     def subscribe(self, subscription: JobSubscription) -> CALLBACK_TYPE:
-        """Subscribe to updates for job. Return callback is used to unsubscribe."""
+        """Subscribe to updates for job. Return callback is used to unsubscribe.
+
+        If any jobs match the subscription at the time this is called, creates
+        tasks to run their callback on it.
+        """
         self._subscriptions.add(subscription)
+
+        # As these are callbacks they are safe to run in the event loop
+        # We wrap these in an asyncio task so subscribing does not wait on the logic
+        if matches := [job for job in self._jobs.values() if subscription.matches(job)]:
+
+            async def event_callback_async(job: Job) -> Any:
+                return subscription.event_callback(job)
+
+            for match in matches:
+                self._hass.async_create_task(event_callback_async(match))
+
         return partial(self._subscriptions.discard, subscription)
 
     async def refresh_data(self, first_update: bool = False) -> None:
@@ -84,7 +99,7 @@ class SupervisorJobs:
         job_data = await self._supervisor_client.jobs.info()
         job_queue: list[Job] = job_data.jobs.copy()
         new_jobs: dict[UUID, Job] = {}
-        changed_jobs: set[Job] = set()
+        changed_jobs: list[Job] = []
 
         # Rebuild our job cache from new info and compare to find changes
         while job_queue:
@@ -93,17 +108,19 @@ class SupervisorJobs:
             job = replace(job, child_jobs=[])
 
             if job.uuid not in self._jobs or job != self._jobs[job.uuid]:
-                changed_jobs.add(job)
+                changed_jobs.append(job)
                 new_jobs[job.uuid] = replace(job, child_jobs=[])
 
         # For any jobs that disappeared which weren't done, tell subscribers they
         # changed to done. We don't know what else happened to them so leave the
         # rest of their state as is rather then guessing
-        changed_jobs |= {
-            replace(job, done=True)
-            for uuid, job in self._jobs.items()
-            if uuid not in new_jobs and job.done is False
-        }
+        changed_jobs.extend(
+            [
+                replace(job, done=True)
+                for uuid, job in self._jobs.items()
+                if uuid not in new_jobs and job.done is False
+            ]
+        )
 
         # Replace our cache and inform subscribers of all changes
         self._jobs = new_jobs

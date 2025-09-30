@@ -166,6 +166,7 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         else:
             self._attr_in_progress = False
             self._attr_update_percentage = None
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to progress updates."""
@@ -318,6 +319,7 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
         else:
             self._attr_in_progress = False
             self._attr_update_percentage = None
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to progress updates."""
