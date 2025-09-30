@@ -1,7 +1,9 @@
 """Tests for the Alexa Devices switch platform."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
+from aioamazondevices.api import AmazonDeviceSensor
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -23,9 +25,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .conftest import TEST_DEVICE_1_SN
+from .conftest import TEST_DEVICE_1, TEST_DEVICE_1_SN
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+ENTITY_ID = "switch.echo_test_do_not_disturb"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -52,48 +56,59 @@ async def test_switch_dnd(
     """Test switching DND."""
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "switch.echo_test_do_not_disturb"
-
-    assert (state := hass.states.get(entity_id))
+    assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_OFF
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
+        {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
     assert mock_amazon_devices_client.set_do_not_disturb.call_count == 1
 
-    mock_amazon_devices_client.get_devices_data.return_value[
-        TEST_DEVICE_1_SN
-    ].do_not_disturb = True
+    device_data = deepcopy(TEST_DEVICE_1)
+    device_data.sensors = {
+        "dnd": AmazonDeviceSensor(name="dnd", value=True, error=False, scale=None),
+        "temperature": AmazonDeviceSensor(
+            name="temperature", value="22.5", error=False, scale="CELSIUS"
+        ),
+    }
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_1_SN: device_data
+    }
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(entity_id))
+    assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_ON
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
+        {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
 
-    mock_amazon_devices_client.get_devices_data.return_value[
-        TEST_DEVICE_1_SN
-    ].do_not_disturb = False
+    device_data.sensors = {
+        "dnd": AmazonDeviceSensor(name="dnd", value=False, error=False, scale=None),
+        "temperature": AmazonDeviceSensor(
+            name="temperature", value="22.5", error=False, scale="CELSIUS"
+        ),
+    }
+    mock_amazon_devices_client.get_devices_data.return_value = {
+        TEST_DEVICE_1_SN: device_data
+    }
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert mock_amazon_devices_client.set_do_not_disturb.call_count == 2
-    assert (state := hass.states.get(entity_id))
+    assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_OFF
 
 
@@ -104,16 +119,13 @@ async def test_offline_device(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test offline device handling."""
-
-    entity_id = "switch.echo_test_do_not_disturb"
-
     mock_amazon_devices_client.get_devices_data.return_value[
         TEST_DEVICE_1_SN
     ].online = False
 
     await setup_integration(hass, mock_config_entry)
 
-    assert (state := hass.states.get(entity_id))
+    assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_UNAVAILABLE
 
     mock_amazon_devices_client.get_devices_data.return_value[
@@ -124,5 +136,5 @@ async def test_offline_device(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(entity_id))
+    assert (state := hass.states.get(ENTITY_ID))
     assert state.state != STATE_UNAVAILABLE

@@ -21,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.trigger import (
     Trigger,
@@ -28,7 +29,6 @@ from homeassistant.helpers.trigger import (
     TriggerConfig,
     TriggerData,
     TriggerInfo,
-    move_top_level_schema_fields_to_options,
 )
 from homeassistant.helpers.typing import ConfigType
 

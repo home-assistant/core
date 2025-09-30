@@ -171,6 +171,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.baichuan.mac_address.return_value = TEST_MAC_CAM
     host_mock.baichuan.privacy_mode.return_value = False
     host_mock.baichuan.day_night_state.return_value = "day"
+    host_mock.baichuan.siren_state.return_value = True
     host_mock.baichuan.subscribe_events.side_effect = ReolinkError("Test error")
     host_mock.baichuan.active_scene = "off"
     host_mock.baichuan.scene_names = ["off", "home"]
@@ -183,6 +184,17 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.baichuan.smart_ai_type_list.return_value = ["people"]
     host_mock.baichuan.smart_ai_index.return_value = 1
     host_mock.baichuan.smart_ai_name.return_value = "zone1"
+
+    def ai_detect_type(channel: int, object_type: str) -> str | None:
+        if object_type == "people":
+            return "man"
+        if object_type == "dog_cat":
+            return "dog"
+        if object_type == "vehicle":
+            return "motorcycle"
+        return None
+
+    host_mock.baichuan.ai_detect_type = ai_detect_type
 
 
 @pytest.fixture

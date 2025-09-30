@@ -152,7 +152,7 @@ async def test_no_maps(
             return_value=prop,
         ),
         patch(
-            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_multi_maps_list",
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.get_multi_maps_list",
             return_value=MultiMapsList(
                 max_multi_map=1, max_bak_map=1, multi_map_count=0, map_info=[]
             ),

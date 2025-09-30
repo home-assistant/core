@@ -123,6 +123,8 @@ async def test_dynamic_device(
     assert (state := hass.states.get(entity_id_1))
     assert state.state == STATE_ON
 
+    assert not hass.states.get(entity_id_2)
+
     mock_amazon_devices_client.get_devices_data.return_value = {
         TEST_DEVICE_1_SN: TEST_DEVICE_1,
         TEST_DEVICE_2_SN: TEST_DEVICE_2,

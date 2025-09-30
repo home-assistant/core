@@ -142,7 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     )
 
     coordinators = LaMarzoccoRuntimeData(
-        LaMarzoccoConfigUpdateCoordinator(hass, entry, device),
+        LaMarzoccoConfigUpdateCoordinator(hass, entry, device, cloud_client),
         LaMarzoccoSettingsUpdateCoordinator(hass, entry, device),
         LaMarzoccoScheduleUpdateCoordinator(hass, entry, device),
         LaMarzoccoStatisticsUpdateCoordinator(hass, entry, device),

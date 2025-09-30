@@ -13,20 +13,19 @@ TEST_DEVICE_1 = AmazonDevice(
     capabilities=["AUDIO_PLAYER", "MICROPHONE"],
     device_family="mine",
     device_type="echo",
+    household_device=False,
     device_owner_customer_id="amazon_ower_id",
     device_cluster_members=[TEST_DEVICE_1_SN],
     online=True,
     serial_number=TEST_DEVICE_1_SN,
     software_version="echo_test_software_version",
-    do_not_disturb=False,
-    response_style=None,
-    bluetooth_state=True,
     entity_id="11111111-2222-3333-4444-555555555555",
-    appliance_id="G1234567890123456789012345678A",
+    endpoint_id="G1234567890123456789012345678A",
     sensors={
+        "dnd": AmazonDeviceSensor(name="dnd", value=False, error=False, scale=None),
         "temperature": AmazonDeviceSensor(
-            name="temperature", value="22.5", scale="CELSIUS"
-        )
+            name="temperature", value="22.5", error=False, scale="CELSIUS"
+        ),
     },
 )
 
@@ -37,19 +36,17 @@ TEST_DEVICE_2 = AmazonDevice(
     capabilities=["AUDIO_PLAYER", "MICROPHONE"],
     device_family="mine",
     device_type="echo",
+    household_device=True,
     device_owner_customer_id="amazon_ower_id",
     device_cluster_members=[TEST_DEVICE_2_SN],
     online=True,
     serial_number=TEST_DEVICE_2_SN,
     software_version="echo_test_2_software_version",
-    do_not_disturb=False,
-    response_style=None,
-    bluetooth_state=True,
     entity_id="11111111-2222-3333-4444-555555555555",
-    appliance_id="G1234567890123456789012345678A",
+    endpoint_id="G1234567890123456789012345678A",
     sensors={
         "temperature": AmazonDeviceSensor(
-            name="temperature", value="22.5", scale="CELSIUS"
+            name="temperature", value="22.5", error=False, scale="CELSIUS"
         )
     },
 )

@@ -90,8 +90,8 @@
         'null': 2,
       }),
       'GetAiAlarm': dict({
-        '0': 5,
-        'null': 5,
+        '0': 6,
+        'null': 6,
       }),
       'GetAiCfg': dict({
         '0': 2,

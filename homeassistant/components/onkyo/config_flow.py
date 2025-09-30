@@ -109,24 +109,22 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Config flow manual: %s", host)
             try:
                 info = await async_interview(host)
+            except TimeoutError:
+                _LOGGER.warning("Timed out interviewing: %s", host)
+                errors["base"] = "cannot_connect"
             except OSError:
-                _LOGGER.exception("Unexpected exception")
+                _LOGGER.exception("Unexpected exception interviewing: %s", host)
                 errors["base"] = "unknown"
             else:
-                if info is None:
-                    errors["base"] = "cannot_connect"
+                self._receiver_info = info
+
+                await self.async_set_unique_id(info.identifier, raise_on_progress=False)
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
                 else:
-                    self._receiver_info = info
+                    self._abort_if_unique_id_configured()
 
-                    await self.async_set_unique_id(
-                        info.identifier, raise_on_progress=False
-                    )
-                    if self.source == SOURCE_RECONFIGURE:
-                        self._abort_if_unique_id_mismatch()
-                    else:
-                        self._abort_if_unique_id_configured()
-
-                    return await self.async_step_configure_receiver()
+                return await self.async_step_configure_receiver()
 
         suggested_values = user_input
         if suggested_values is None and self.source == SOURCE_RECONFIGURE:
@@ -214,13 +212,12 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             info = await async_interview(host)
-        except OSError:
-            _LOGGER.exception("Unexpected exception interviewing host %s", host)
-            return self.async_abort(reason="unknown")
-
-        if info is None:
-            _LOGGER.debug("SSDP eiscp is None: %s", host)
+        except TimeoutError:
+            _LOGGER.warning("Timed out interviewing: %s", host)
             return self.async_abort(reason="cannot_connect")
+        except OSError:
+            _LOGGER.exception("Unexpected exception interviewing: %s", host)
+            return self.async_abort(reason="unknown")
 
         await self.async_set_unique_id(info.identifier)
         self._abort_if_unique_id_configured(updates={CONF_HOST: info.host})

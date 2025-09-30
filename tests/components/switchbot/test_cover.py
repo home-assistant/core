@@ -30,6 +30,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 
 from . import (
+    GARAGE_DOOR_OPENER_SERVICE_INFO,
     ROLLER_SHADE_SERVICE_INFO,
     WOBLINDTILT_SERVICE_INFO,
     WOCURTAIN3_SERVICE_INFO,
@@ -648,3 +649,41 @@ async def test_exception_handling_cover_service(
                 {**service_data, ATTR_ENTITY_ID: entity_id},
                 blocking=True,
             )
+
+
+@pytest.mark.parametrize(
+    ("service", "mock_method"),
+    [
+        (SERVICE_OPEN_COVER, "open"),
+        (SERVICE_CLOSE_COVER, "close"),
+    ],
+)
+async def test_garage_door_opener_controlling(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    mock_method: str,
+) -> None:
+    """Test Garage Door Opener controlling."""
+    inject_bluetooth_service_info(hass, GARAGE_DOOR_OPENER_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="garage_door_opener")
+    entry.add_to_hass(hass)
+    entity_id = "cover.test_name"
+
+    mocked_instance = AsyncMock(return_value=True)
+    with patch.multiple(
+        "homeassistant.components.switchbot.cover.switchbot.SwitchbotGarageDoorOpener",
+        update=AsyncMock(),
+        **{mock_method: mocked_instance},
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        mocked_instance.assert_awaited_once()

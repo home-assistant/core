@@ -139,7 +139,11 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
             raise DeviceNotFound("Unable to find device")
 
         try:
-            client = await Client.connect(device, self._notify_callback)
+            client = await Client.connect(
+                device,
+                self._notify_callback,
+                disconnected_callback=self._disconnected_callback,
+            )
         except BleakError as exc:
             self.logger.debug("Connection failed", exc_info=True)
             raise DeviceNotFound("Unable to connect to device") from exc
@@ -169,9 +173,6 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         self.client = None
 
     async def _get_connected_client(self) -> Client:
-        if self.client and not self.client.is_connected:
-            await self.client.disconnect()
-            self.client = None
         if self.client:
             return self.client
 
@@ -196,6 +197,12 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
 
     async def _async_update_data(self) -> dict[tuple[int, int | None], Packet]:
         """Poll the device."""
+        if self.client and not self.client.is_connected:
+            await self.client.disconnect()
+            self.client = None
+            self._async_request_refresh_soon()
+            raise DeviceFailed("Device was disconnected")
+
         client = await self._get_connected_client()
         try:
             await client.request(PacketA0Notify)
@@ -207,11 +214,22 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         return self.data
 
     @callback
+    def _async_request_refresh_soon(self) -> None:
+        self.config_entry.async_create_task(
+            self.hass, self.async_request_refresh(), eager_start=False
+        )
+
+    @callback
+    def _disconnected_callback(self) -> None:
+        """Handle Bluetooth device being disconnected."""
+        self._async_request_refresh_soon()
+
+    @callback
     def _async_handle_bluetooth_event(
         self,
         service_info: BluetoothServiceInfoBleak,
         change: BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
-        if not self.client and isinstance(self.last_exception, DeviceNotFound):
-            self.hass.async_create_task(self.async_refresh())
+        if isinstance(self.last_exception, DeviceNotFound):
+            self._async_request_refresh_soon()

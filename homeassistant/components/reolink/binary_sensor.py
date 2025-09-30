@@ -74,21 +74,28 @@ BINARY_PUSH_SENSORS = (
     ),
     ReolinkBinarySensorEntityDescription(
         key=PERSON_DETECTION_TYPE,
-        cmd_id=[33, 600],
+        cmd_id=[33, 600, 696],
         translation_key="person",
         value=lambda api, ch: api.ai_detected(ch, PERSON_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, PERSON_DETECTION_TYPE),
     ),
     ReolinkBinarySensorEntityDescription(
         key=VEHICLE_DETECTION_TYPE,
-        cmd_id=[33, 600],
+        cmd_id=[33, 600, 696],
         translation_key="vehicle",
         value=lambda api, ch: api.ai_detected(ch, VEHICLE_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, VEHICLE_DETECTION_TYPE),
     ),
     ReolinkBinarySensorEntityDescription(
+        key="non-motor_vehicle",
+        cmd_id=[600, 696],
+        translation_key="non-motor_vehicle",
+        value=lambda api, ch: api.ai_detected(ch, "non-motor vehicle"),
+        supported=lambda api, ch: api.supported(ch, "ai_non-motor vehicle"),
+    ),
+    ReolinkBinarySensorEntityDescription(
         key=PET_DETECTION_TYPE,
-        cmd_id=[33, 600],
+        cmd_id=[33, 600, 696],
         translation_key="pet",
         value=lambda api, ch: api.ai_detected(ch, PET_DETECTION_TYPE),
         supported=lambda api, ch: (
@@ -98,14 +105,14 @@ BINARY_PUSH_SENSORS = (
     ),
     ReolinkBinarySensorEntityDescription(
         key=PET_DETECTION_TYPE,
-        cmd_id=[33, 600],
+        cmd_id=[33, 600, 696],
         translation_key="animal",
         value=lambda api, ch: api.ai_detected(ch, PET_DETECTION_TYPE),
         supported=lambda api, ch: api.supported(ch, "ai_animal"),
     ),
     ReolinkBinarySensorEntityDescription(
         key=PACKAGE_DETECTION_TYPE,
-        cmd_id=[33, 600],
+        cmd_id=[33, 600, 696],
         translation_key="package",
         value=lambda api, ch: api.ai_detected(ch, PACKAGE_DETECTION_TYPE),
         supported=lambda api, ch: api.ai_supported(ch, PACKAGE_DETECTION_TYPE),
@@ -120,7 +127,7 @@ BINARY_PUSH_SENSORS = (
     ),
     ReolinkBinarySensorEntityDescription(
         key="cry",
-        cmd_id=[33, 600],
+        cmd_id=[33],
         translation_key="cry",
         value=lambda api, ch: api.ai_detected(ch, "cry"),
         supported=lambda api, ch: api.ai_supported(ch, "cry"),

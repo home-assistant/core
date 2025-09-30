@@ -1195,7 +1195,7 @@ async def test_devices_payload_with_entities(
     # Entity from a different integration
     entity_registry.async_get_or_create(
         domain="light",
-        platform="roomba",
+        platform="shelly",
         unique_id="1",
         device_id=device_entry.id,
         has_entity_name=True,
@@ -1296,7 +1296,7 @@ async def test_devices_payload_with_entities(
                     },
                 ],
             },
-            "roomba": {
+            "shelly": {
                 "devices": [],
                 "entities": [
                     {
