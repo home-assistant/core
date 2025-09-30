@@ -1,20 +1,18 @@
 # serializer version: 1
-# name: test_all_entities[sensor.firefly_iii_test_credit_card-entry]
+# name: test_all_entities[sensor.firefly_iii_test_defaultasset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
-    'disabled_by': None,
+    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
     'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.firefly_iii_test_credit_card',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.firefly_iii_test_defaultasset',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,89 +22,16 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
-    'original_icon': 'mdi:hand-coin',
-    'original_name': 'Credit Card',
-    'platform': 'firefly_iii',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'account',
-    'unique_id': 'None_account_type_4',
-    'unit_of_measurement': 'AMS',
-  })
-# ---
-# name: test_all_entities[sensor.firefly_iii_test_credit_card-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'account_role': 'creditCard',
-      'account_type': 'liability',
-      'current_balance': '-250.00',
-      'device_class': 'monetary',
-      'friendly_name': 'Firefly III test Credit Card',
-      'icon': 'mdi:hand-coin',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'AMS',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.firefly_iii_test_credit_card',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '-250.00',
-  })
-# ---
-# name: test_all_entities[sensor.firefly_iii_test_lunch-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.firefly_iii_test_lunch',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Lunch',
+    'original_name': 'defaultAsset',
     'platform': 'firefly_iii',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'category',
-    'unique_id': 'None_category_2',
-    'unit_of_measurement': 'AMS',
-  })
-# ---
-# name: test_all_entities[sensor.firefly_iii_test_lunch-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'monetary',
-      'friendly_name': 'Firefly III test Lunch',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'AMS',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.firefly_iii_test_lunch',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '-12300.0',
+    'translation_key': 'account_role',
+    'unique_id': 'None_2_account_role',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.firefly_iii_test_my_checking_account-entry]
@@ -141,17 +66,14 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'account',
-    'unique_id': 'None_account_type_2',
+    'translation_key': 'account_balance',
+    'unique_id': 'None_2_account_balance',
     'unit_of_measurement': 'AMS',
   })
 # ---
 # name: test_all_entities[sensor.firefly_iii_test_my_checking_account-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'account_role': 'defaultAsset',
-      'account_type': 'asset',
-      'current_balance': '123.45',
       'device_class': 'monetary',
       'friendly_name': 'Firefly III test My checking account',
       'icon': 'mdi:account-cash',
@@ -164,62 +86,5 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '123.45',
-  })
-# ---
-# name: test_all_entities[sensor.firefly_iii_test_savings_account-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.firefly_iii_test_savings_account',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
-    'original_icon': 'mdi:cash-minus',
-    'original_name': 'Savings Account',
-    'platform': 'firefly_iii',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'account',
-    'unique_id': 'None_account_type_3',
-    'unit_of_measurement': 'AMS',
-  })
-# ---
-# name: test_all_entities[sensor.firefly_iii_test_savings_account-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'account_role': 'savingsAsset',
-      'account_type': 'expense',
-      'current_balance': '5000.00',
-      'device_class': 'monetary',
-      'friendly_name': 'Firefly III test Savings Account',
-      'icon': 'mdi:cash-minus',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'AMS',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.firefly_iii_test_savings_account',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '5000.00',
   })
 # ---

@@ -38,3 +38,27 @@ class FireflyBaseEntity(CoordinatorEntity[FireflyDataUpdateCoordinator]):
                 )
             },
         )
+
+
+class FireflyAccountBaseEntity(FireflyBaseEntity):
+    """Base class for Firefly III account entity."""
+
+    def __init__(
+        self,
+        coordinator: FireflyDataUpdateCoordinator,
+        entity_description: EntityDescription,
+        account_id: int,
+    ) -> None:
+        """Initialize a Firefly account entity."""
+        super().__init__(coordinator, entity_description)
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer=MANUFACTURER,
+            configuration_url=URL(coordinator.config_entry.data[CONF_URL]),
+            identifiers={
+                (
+                    DOMAIN,
+                    f"{coordinator.config_entry.entry_id}_{account_id}",
+                )
+            },
+        )
