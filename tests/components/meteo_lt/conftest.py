@@ -1,6 +1,7 @@
 """Fixtures for Meteo.lt integration tests."""
 
 from collections.abc import Generator
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 from meteo_lt import Forecast, MeteoLtAPI, Place
@@ -34,44 +35,21 @@ def mock_meteo_lt_api() -> Generator[AsyncMock]:
         places_data = load_json_array_fixture("places.json", DOMAIN)
         forecast_data = load_json_object_fixture("forecast.json", DOMAIN)
 
+        # MeteoLtAPI filters out forecast timestamps older than current hour, so
+        # update the fixture data to ensure tests don't fail as time passes.
+        now = datetime.now(UTC).replace(minute=0, second=0, microsecond=0)
+        forecast_data["forecastCreationTimeUtc"] = now.strftime("%Y-%m-%d %H:%M:%S")
+
+        # Update all forecast timestamps to be current hour and next 2 hours
+        for i, timestamp in enumerate(forecast_data.get("forecastTimestamps", [])):
+            future_time = (now + timedelta(hours=i)).strftime("%Y-%m-%d %H:%M:%S")
+            timestamp["forecastTimeUtc"] = future_time
+
         mock_places = [Place.from_dict(place_data) for place_data in places_data]
         mock_api.places = mock_places
         mock_api.fetch_places.return_value = None
 
-        # Create mock forecast with proper structure
-        mock_forecast = AsyncMock(spec=Forecast)
-
-        # Parse forecast timestamps from the fixture data
-        forecast_timestamps = []
-        for ts_data in forecast_data.get("forecastTimestamps", []):
-            timestamp = AsyncMock()
-            timestamp.datetime = (
-                ts_data.get("forecastTimeUtc", "").replace(" ", "T") + ":00"
-            )
-            timestamp.temperature = ts_data.get("airTemperature")
-            timestamp.temperature_low = None  # Not provided in hourly data
-            timestamp.apparent_temperature = ts_data.get("feelsLikeTemperature")
-            timestamp.humidity = ts_data.get("relativeHumidity")
-            timestamp.pressure = ts_data.get("seaLevelPressure")
-            timestamp.wind_speed = ts_data.get("windSpeed")
-            timestamp.wind_bearing = ts_data.get("windDirection")
-            timestamp.wind_gust_speed = ts_data.get("windGust")
-            timestamp.cloud_coverage = ts_data.get("cloudCover")
-            timestamp.condition = ts_data.get("conditionCode")
-            timestamp.precipitation = ts_data.get("totalPrecipitation")
-            forecast_timestamps.append(timestamp)
-
-        mock_forecast.forecast_timestamps = forecast_timestamps
-        mock_forecast.current_conditions = AsyncMock()
-        mock_forecast.current_conditions.temperature = 10.9
-        mock_forecast.current_conditions.apparent_temperature = 10.9
-        mock_forecast.current_conditions.humidity = 71
-        mock_forecast.current_conditions.pressure = 1033
-        mock_forecast.current_conditions.wind_speed = 2
-        mock_forecast.current_conditions.wind_bearing = 20
-        mock_forecast.current_conditions.wind_gust_speed = 6
-        mock_forecast.current_conditions.cloud_coverage = 1
-        mock_forecast.current_conditions.condition = "clear"
+        mock_forecast = Forecast.from_dict(forecast_data)
 
         mock_api.get_forecast.return_value = mock_forecast
 
