@@ -342,7 +342,8 @@ async def test_send_sticker_error(hass: HomeAssistant, webhook_platform) -> None
     await hass.async_block_till_done()
 
     mock_bot.assert_called_once()
-    assert err.value.args[0] == "Action failed. mock network error"
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "action_failed"
 
 
 async def test_send_message_with_invalid_inline_keyboard(
