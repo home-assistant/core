@@ -64,14 +64,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the London Underground sensor from config entry."""
-    session = async_get_clientsession(hass)
-    data = TubeData(session)
-    coordinator = LondonTubeCoordinator(hass, data)
-
-    await coordinator.async_config_entry_first_refresh()
 
     async_add_entities(
-        LondonTubeSensor(coordinator, line)
+        LondonTubeSensor(entry.runtime_data, line)
         for line in entry.options.get(CONF_LINE, DEFAULT_LINES)
     )
 
