@@ -422,7 +422,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '123456789ABC_reboot',
+    'unique_id': '123456789ABC-reboot',
     'unit_of_measurement': None,
   })
 # ---
@@ -540,65 +540,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_current',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_shelly_2pm_gen3_cover[sensor.test_name_energy-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_name_energy',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '123456789ABC-cover:0-energy',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_shelly_2pm_gen3_cover[sensor.test_name_energy-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_name_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -824,6 +765,65 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '36.4',
+  })
+# ---
+# name: test_shelly_2pm_gen3_cover[sensor.test_name_total_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_name_total_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Total energy',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-cover:0-energy',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_shelly_2pm_gen3_cover[sensor.test_name_total_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Test name Total energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_name_total_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_shelly_2pm_gen3_cover[sensor.test_name_uptime-entry]
@@ -1672,7 +1672,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '123456789ABC_reboot',
+    'unique_id': '123456789ABC-reboot',
     'unit_of_measurement': None,
   })
 # ---
@@ -1743,6 +1743,65 @@
     'state': '-52',
   })
 # ---
+# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_0_consumed_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_name_switch_0_consumed_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Consumed energy',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-switch:0-consumed_energy_switch',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_0_consumed_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Test name Switch 0 Consumed energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_name_switch_0_consumed_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_0_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1793,65 +1852,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_switch_0_current',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_0_energy-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_name_switch_0_energy',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '123456789ABC-switch:0-energy',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_0_energy-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Switch 0 Energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_name_switch_0_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2085,6 +2085,65 @@
     'state': '40.6',
   })
 # ---
+# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_0_total_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_name_switch_0_total_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Total energy',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-switch:0-energy',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_0_total_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Test name Switch 0 Total energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_name_switch_0_total_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_0_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2141,6 +2200,65 @@
     'state': '216.2',
   })
 # ---
+# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_1_consumed_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_name_switch_1_consumed_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Consumed energy',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-switch:1-consumed_energy_switch',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_1_consumed_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Test name Switch 1 Consumed energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_name_switch_1_consumed_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_1_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2191,65 +2309,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_name_switch_1_current',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_1_energy-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_name_switch_1_energy',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '123456789ABC-switch:1-energy',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_1_energy-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test name Switch 1 Energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_name_switch_1_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2481,6 +2540,65 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40.6',
+  })
+# ---
+# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_1_total_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_name_switch_1_total_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Total energy',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-switch:1-energy',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_1_total_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Test name Switch 1 Total energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_name_switch_1_total_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_1_voltage-entry]
@@ -2935,7 +3053,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '123456789ABC_reboot',
+    'unique_id': '123456789ABC-reboot',
     'unit_of_measurement': None,
   })
 # ---

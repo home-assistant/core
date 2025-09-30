@@ -22,8 +22,7 @@
       "name": "AccuWeather",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "cloud_polling",
-      "single_config_entry": true
+      "iot_class": "cloud_polling"
     },
     "acer_projector": {
       "name": "Acer Projector",
@@ -1090,6 +1089,12 @@
       "config_flow": false,
       "iot_class": "calculated"
     },
+    "compit": {
+      "name": "Compit",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "concord232": {
       "name": "Concord232",
       "integration_type": "hub",
@@ -1157,6 +1162,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
+    },
+    "cync": {
+      "name": "Cync",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "dacia": {
       "name": "Dacia",
@@ -1441,6 +1452,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "droplet": {
+      "name": "Droplet",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "dsmr": {
       "name": "DSMR Smart Meter",
       "integration_type": "hub",
@@ -1598,6 +1615,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "ekeybionyx": {
+      "name": "ekey bionyx",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "electrasmart": {
       "name": "Electra Smart",
       "integration_type": "hub",
@@ -1650,6 +1673,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "eltako": {
+      "name": "Eltako",
+      "iot_standards": [
+        "matter"
+      ]
     },
     "elv": {
       "name": "ELV PCA",
@@ -2391,17 +2420,11 @@
           "iot_class": "cloud_polling",
           "name": "Google Drive"
         },
-        "google_gemini": {
-          "integration_type": "virtual",
-          "config_flow": false,
-          "supported_by": "google_generative_ai_conversation",
-          "name": "Google Gemini"
-        },
         "google_generative_ai_conversation": {
           "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
-          "name": "Google Generative AI"
+          "name": "Google Gemini"
         },
         "google_mail": {
           "integration_type": "service",
@@ -2711,6 +2734,11 @@
       "name": "Legrand Home+ Control",
       "integration_type": "virtual",
       "supported_by": "netatmo"
+    },
+    "homeassistant_connect_zbt2": {
+      "name": "Home Assistant Connect ZBT-2",
+      "integration_type": "hardware",
+      "config_flow": true
     },
     "homeassistant_green": {
       "name": "Home Assistant Green",
@@ -3108,6 +3136,11 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "irm_kmi": {
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "iron_os": {
       "name": "IronOS",
       "integration_type": "hub",
@@ -3319,10 +3352,21 @@
       "iot_class": "local_push"
     },
     "konnected": {
-      "name": "Konnected.io",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
+      "name": "Konnected",
+      "integrations": {
+        "konnected": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "Konnected.io (Legacy)"
+        },
+        "konnected_esphome": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "esphome",
+          "name": "Konnected"
+        }
+      }
     },
     "kostal_plenticore": {
       "name": "Kostal Plenticore Solar Inverter",
@@ -3448,6 +3492,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
+    },
+    "level": {
+      "name": "Level",
+      "iot_standards": [
+        "matter"
+      ]
     },
     "leviton": {
       "name": "Leviton",
@@ -4147,7 +4197,7 @@
           "name": "Manual MQTT Alarm Control Panel"
         },
         "mqtt": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "MQTT"
@@ -4276,14 +4326,19 @@
     },
     "nederlandse_spoorwegen": {
       "name": "Nederlandse Spoorwegen (NS)",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "neff": {
       "name": "Neff",
       "integration_type": "virtual",
       "supported_by": "home_connect"
+    },
+    "neo": {
+      "name": "Neo",
+      "integration_type": "virtual",
+      "supported_by": "shelly"
     },
     "ness_alarm": {
       "name": "Ness Alarm",
@@ -4736,7 +4791,7 @@
       }
     },
     "opnsense": {
-      "name": "OPNSense",
+      "name": "OPNsense",
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
@@ -5061,6 +5116,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "portainer": {
+      "name": "Portainer",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "portlandgeneral": {
       "name": "Portland General Electric (PGE)",
       "integration_type": "virtual",
@@ -5121,7 +5182,7 @@
     },
     "prowl": {
       "name": "Prowl",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_push"
     },
@@ -5605,6 +5666,12 @@
         }
       }
     },
+    "route_b_smart_meter": {
+      "name": "Smart Meter B Route",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "rova": {
       "name": "ROVA",
       "integration_type": "hub",
@@ -5718,8 +5785,9 @@
     "satel_integra": {
       "name": "Satel Integra",
       "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_push"
+      "config_flow": true,
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "schlage": {
       "name": "Schlage",
@@ -5869,6 +5937,12 @@
     "sfr_box": {
       "name": "SFR Box",
       "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "sftp_storage": {
+      "name": "SFTP Storage",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -6756,7 +6830,8 @@
       "name": "Thread",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_polling",
+      "single_config_entry": true
     },
     "tibber": {
       "name": "Tibber",
@@ -7232,6 +7307,12 @@
     "vicare": {
       "name": "Viessmann ViCare",
       "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "victron_remote_monitoring": {
+      "name": "Victron Remote Monitoring",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -7940,6 +8021,7 @@
     "input_select",
     "input_text",
     "integration",
+    "irm_kmi",
     "islamic_prayer_times",
     "local_calendar",
     "local_ip",
