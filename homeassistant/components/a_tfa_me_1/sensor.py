@@ -81,6 +81,9 @@ async def async_setup_entry(
         if new_sensors_txt:
             async_add_entities(new_sensors_txt)
 
+    # Attach it to the coordinator itself ?
+    # coordinator.async_discover_new_entities = async_discover_new_entities
+
     # Save function in Home Assistant so that it can be called as service
     hass.data[DOMAIN][
         entry.entry_id
@@ -119,7 +122,7 @@ class TFAmeSensorEntity(CoordinatorEntity, SensorEntity):
                     (
                         DOMAIN,
                         ids_str,
-                    )  # this IDs are used to ground entities tom sensors
+                    )  # this IDs are used to ground entities from sensors
                 },  # Unique ID for device/sensor
                 "name": self.format_string_tfa_id(
                     self.sensor_id, self.gateway_id, self.multiple_entities

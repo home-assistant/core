@@ -228,7 +228,7 @@ class TFAmeTextEntity(TextEntity):
             timeout_val = 0
         return timeout_val
 
-    # ----  ----
+    # ----  Get an update ----
     async def async_update(self) -> None:
         """Manual Updating."""
         await self.coordinator.async_request_refresh()

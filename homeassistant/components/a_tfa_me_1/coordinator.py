@@ -1,10 +1,18 @@
 """TFA.me station integration: coordinator.py."""
 
-import asyncio
 import logging
 import socket
 
-from homeassistant.components.hassio import async_get_clientsession
+from tfa_me_ha_local.client import (
+    TFAmeClient,
+    TFAmeConnectionError,
+    TFAmeException,
+    TFAmeHTTPError,
+    TFAmeJSONError,
+    TFAmeTimeoutError,
+)
+from tfa_me_ha_local.data import TFAmeDataForHA
+
 from homeassistant.components.sensor import timedelta
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -28,15 +36,17 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
         multiple_entities: bool,
     ) -> None:
         """Initialize data update coordinator."""
-        self.host = host  # config_entry.data[CONF_IP_ADDRESS]  # host
+        self.host = host  # config_entry.data[CONF_IP_ADDRESS]
         self.first_init = 0
         self.ha = hass
         self.config_entry = config_entry
         self.sensor_entity_list: list[str] = []  # [Entity ID strings]
         self.reset_rain_sensors = False
-        self.multiple_entities = multiple_entities  # config_entry.data[CONF_MULTIPLE_ENTITIES]  #  multiple_entities
+        self.multiple_entities = (
+            multiple_entities  # from config_entry.data[CONF_MULTIPLE_ENTITIES]
+        )
         self.gateway_id = ""
-        self.poll_interval = interval  # config_entry.data[CONF_INTERVAL]  # interval
+        self.poll_interval = interval  # from config_entry.data[CONF_INTERVAL]
 
         super().__init__(
             hass,
@@ -60,182 +70,60 @@ class TFAmeDataCoordinator(DataUpdateCoordinator):
         else:
             resolved_host = self.host
 
-        # Build the URL to the device and request all available sensors
-        url = f"http://{resolved_host}/sensors"
-        msg: str = "Request URL " + url
-        _LOGGER.info(msg)
+        # Try to update data from station URL: e.g. "http://192.168.1.38/sensors"
         try:
-            session = async_get_clientsession(self.hass)  # HA session
-            async with asyncio.timeout(5):  # 5 seconds timeout
-                async with session.get(url) as response:
-                    if response.status != 200:
-                        raise UpdateFailed(f"HTTP Error {response.status}")  # noqa: TRY301
+            # New TFA.me client
+            tfa_me_client = TFAmeClient(resolved_host, "sensors", log_level=1)
 
-                    if response.status == 200:
-                        # Get JSON reply from response
-                        json_data = await response.json()
+            # Fetch all available sensors as JSON from TFA.me station
+            json_data = await tfa_me_client.async_get_sensors()
 
-                        # Parse JSON data
-                        gateway_id: str = json_data.get("gateway_id", "tfame")
-                        gateway_id = gateway_id.lower()
-                        self.gateway_id = gateway_id
+            # New TFA.me data structure
+            tfa_me_data = TFAmeDataForHA(multiple_entities=self.multiple_entities)
+            # Convert JSON to TFA.me data for HA
+            parsed_data = tfa_me_data.json_to_entities(json_data=json_data)
+            self.gateway_id = tfa_me_data.get_gateway_id()
 
-                        for sensor in json_data.get("sensors", []):
-                            sensor_id = sensor["sensor_id"]
-
-                            for measurement, values in sensor.get(
-                                "measurements", {}
-                            ).items():
-                                if self.multiple_entities:
-                                    entity_id = f"sensor.{gateway_id}_{sensor_id}_{measurement}"  # Entity ID
-                                else:
-                                    entity_id = (
-                                        f"sensor.{sensor_id}_{measurement}"  # Entity ID
-                                    )
-
-                                parsed_data[entity_id] = {
-                                    "sensor_id": sensor_id,
-                                    "gateway_id": gateway_id,
-                                    "sensor_name": sensor["name"],
-                                    "measurement": measurement,
-                                    "value": values["value"],
-                                    "unit": values["unit"],
-                                    "timestamp": sensor.get(
-                                        "timestamp", "unknown"
-                                    ),  # datetime.utcnow()
-                                    "ts": sensor["ts"],
-                                    "info": "",
-                                }
-
-                                if measurement == "lowbatt":
-                                    parsed_data[entity_id]["unit"] = ""  # remove "unit"
-                                    entity_id_lowbatt2 = f"{entity_id}_txt"
-                                    # lowbatt as direction as text
-                                    parsed_data[entity_id_lowbatt2] = {
-                                        "sensor_id": sensor_id,
-                                        "gateway_id": gateway_id,
-                                        "sensor_name": f"{sensor['name']}",
-                                        "measurement": "lowbatt_text",
-                                        "value": values["value"],
-                                        "text": values["unit"],
-                                        "uint": "",
-                                        "timestamp": sensor.get("timestamp", "unknown"),
-                                        "ts": sensor["ts"],
-                                    }
-
-                                if measurement == "wind_direction":
-                                    entity_id_wind2 = (
-                                        f"{entity_id}_deg"  # Entity ID for degrees
-                                    )
-                                    entity_id_wind3 = (
-                                        f"{entity_id}_txt"  # Entity ID for text
-                                    )
-                                    uint_str = "-"
-                                    val = int(values["value"])
-                                    if 0 <= val <= 15:
-                                        direction = [
-                                            "N",
-                                            "NNE",
-                                            "NE",
-                                            "ENE",
-                                            "E",
-                                            "ESE",
-                                            "SE",
-                                            "SSE",
-                                            "S",
-                                            "SSW",
-                                            "SW",
-                                            "WSW",
-                                            "W",
-                                            "WNW",
-                                            "NW",
-                                            "NNW",
-                                            "N",
-                                        ]
-                                        uint_str = direction[val]
-
-                                    # wind direction in degrees
-                                    parsed_data[entity_id_wind2] = {
-                                        "sensor_id": sensor_id,
-                                        "gateway_id": gateway_id,
-                                        "sensor_name": f"{sensor['name']}",
-                                        "measurement": f"{measurement}_deg",
-                                        "value": values["value"],
-                                        "unit": "°",
-                                        "timestamp": sensor.get("timestamp", "unknown"),
-                                        "ts": sensor["ts"],
-                                    }
-                                    # wind direction as text
-                                    parsed_data[entity_id_wind3] = {
-                                        "sensor_id": sensor_id,
-                                        "gateway_id": gateway_id,
-                                        "sensor_name": f"{sensor['name']}",
-                                        "measurement": "wind_direction_text",
-                                        "value": values["value"],
-                                        "text": "?",
-                                        "uint": "",
-                                        "timestamp": sensor.get("timestamp", "unknown"),
-                                        "ts": sensor["ts"],
-                                    }
-                                    parsed_data[entity_id_wind3]["text"] = uint_str
-
-                                if measurement == "rain":
-                                    entity_id_2 = f"{entity_id}_rel"  # Entity ID
-                                    parsed_data[entity_id_2] = {
-                                        "sensor_id": sensor_id,
-                                        "gateway_id": gateway_id,
-                                        "sensor_name": f"{sensor['name']}",
-                                        "measurement": f"{measurement}_relative",
-                                        "value": values["value"],
-                                        "unit": values["unit"],
-                                        "timestamp": sensor.get(
-                                            "timestamp", "unknown"
-                                        ),  # datetime.utcnow()
-                                        "ts": sensor["ts"],
-                                        "reset_rain": self.reset_rain_sensors,
-                                    }
-                                    # rain last hour
-                                    entity_id_3 = f"{entity_id}_hour"  # Entity ID
-                                    parsed_data[entity_id_3] = {
-                                        "sensor_id": sensor_id,
-                                        "gateway_id": gateway_id,
-                                        "sensor_name": f"{sensor['name']}",
-                                        "measurement": f"{measurement}_1_hour",
-                                        "value": values["value"],
-                                        "unit": values["unit"],
-                                        "timestamp": sensor.get(
-                                            "timestamp", "unknown"
-                                        ),  # datetime.utcnow()
-                                        "ts": sensor["ts"],
-                                        "reset_rain": self.reset_rain_sensors,
-                                    }
-                                    # rain last 24 hours
-                                    entity_id_4 = f"{entity_id}_24hours"  # Entity ID
-                                    parsed_data[entity_id_4] = {
-                                        "sensor_id": sensor_id,
-                                        "gateway_id": gateway_id,
-                                        "sensor_name": f"{sensor['name']}",
-                                        "measurement": f"{measurement}_24_hours",
-                                        "value": values["value"],
-                                        "unit": values["unit"],
-                                        "timestamp": sensor.get(
-                                            "timestamp", "unknown"
-                                        ),  # datetime.utcnow()
-                                        "ts": sensor["ts"],
-                                        "reset_rain": self.reset_rain_sensors,
-                                    }
-
-                        self.reset_rain_sensors = False
-                        if self.first_init < 2:
-                            self.first_init += 1
-                        return parsed_data  # values are available with self.coordinator.data[self.entity_id]["keyword"]
-
-        except Exception as error:
-            msg: str = "Exception requesting data: " + str(error.__doc__)
+        # --- Specific error mapping ---
+        except (TFAmeTimeoutError, TFAmeConnectionError) as err:
+            # Device not reachable → after first start "NotReady", then "UpdateFailed"
+            msg: str = "Timeout general connection error: " + str(err.__doc__)
             _LOGGER.error(msg)
             if self.first_init == 0:
-                raise ConfigEntryNotReady(msg) from error  # Never updated
-            raise UpdateFailed(msg) from error  # After first update
+                raise ConfigEntryNotReady(
+                    f"Cannot reach {resolved_host}: {err}"
+                ) from err
+            raise UpdateFailed(f"Connection problem: {err}") from err
+
+        except (TFAmeHTTPError, TFAmeJSONError) as err:
+            # Device responding but data invalid
+            msg: str = "HTTP or invalid response error: " + str(err.__doc__)
+            _LOGGER.error(msg)
+            raise UpdateFailed(f"Invalid response: {err}") from err
+
+        except TFAmeException as err:
+            # All other client errors
+            msg: str = "All other client errors: " + str(err.__doc__)
+            _LOGGER.error(msg)
+            if self.first_init == 0:
+                raise ConfigEntryNotReady(f"TFA.me client error: {err}") from err
+            raise UpdateFailed(f"TFA.me client error: {err}") from err
+
+        except Exception as err:
+            # Fallback for unexpected errors
+            msg: str = "Fallback for unexpected errors: " + str(err.__doc__)
+            _LOGGER.error(msg)
+            if self.first_init == 0:
+                raise ConfigEntryNotReady(f"Unexpected error: {err}") from err
+            raise UpdateFailed(f"Unexpected error: {err}") from err
+
+        else:
+            self.reset_rain_sensors = False
+            if self.first_init < 2:
+                self.first_init += 1
+
+            # values are available with self.coordinator.data[self.entity_id]["keyword"]
+            return parsed_data
 
     # ---- Try to resolve host name ----
     async def resolve_mdns(self, host_str: str) -> str:

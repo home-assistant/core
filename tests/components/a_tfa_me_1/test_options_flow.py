@@ -316,36 +316,82 @@ async def test_setup_entry_and_menu_interval(
 
 
 @pytest.mark.asyncio
-async def test_setup_entry_and_menu_discover_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test a successful setup."""
+async def test_discover_sensors_via_options_flow_xxx(hass: HomeAssistant) -> None:
+    """Test discover_sensors via options flow."""
 
-    # simulate dummy reply from gateway
+    # 1) Create a mock up entry
+    entry = create_default_mock_entry(hass)
+
     now = datetime.now().timestamp()
-    aioclient_mock.get(
-        "http://127.0.0.1/sensors",
-        json={
-            "gateway_id": "017654321",
-            "sensors": [
-                {
-                    "sensor_id": "a21234567",
-                    "name": "A21234567",
-                    "timestamp": "2025-09-04T12:21:41Z",
-                    "ts": int(now),
-                    "measurements": {
-                        "rssi": {"value": "221", "unit": "/255"},
-                        "lowbatt": {"value": "0", "unit": "No"},
-                        "wind_direction": {"value": "8", "unit": ""},
-                        "wind_speed": {"value": "0.0", "unit": "m/s"},
-                        "wind_gust": {"value": "0.0", "unit": "m/s"},
-                    },
+
+    # 2) Patch Client: fake simple JSON reply from gateway
+    dummy_json = {
+        "gateway_id": "017654321",
+        "sensors": [
+            {
+                "sensor_id": "a01234567",
+                "name": "A01234567",
+                "ts": int(now),
+                "measurements": {
+                    "temperature": {"value": 21.5, "unit": "°C", "ts": 123}
                 },
-            ],
-        },
+            }
+        ],
+    }
+
+    # 3) Patch Converter: entities like in coordinator.data
+    dummy_entity_map = {
+        "sensor.a01234567_temperature": {
+            "sensor_id": "a01234567",
+            "gateway_id": "017654321",
+            "sensor_name": "A01234567",
+            "measurement": "temperature",
+            "value": 21.5,
+            "unit": "°C",
+            "timestamp": "2025-01-01T00:00:00Z",
+            "ts": int(now),
+        }
+    }
+
+    # Patch dummy data
+    with (
+        patch(
+            "homeassistant.components.a_tfa_me_1.coordinator.TFAmeClient.async_get_sensors",
+            new=AsyncMock(return_value=dummy_json),
+        ),
+        patch(
+            "homeassistant.components.a_tfa_me_1.coordinator.TFAmeDataForHA.json_to_entities",
+            return_value=dummy_entity_map,
+        ),
+    ):
+        ok = await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert ok
+    assert entry.state == ConfigEntryState.LOADED
+
+    # 4) sensor.async_setup_entry was called, function attached to coordinator
+    coord = entry.runtime_data
+    assert hasattr(coord, "async_discover_new_entities"), (
+        "sensor.async_setup_entry did not attach the function"
     )
 
-    # fake_json = {
+    # 5) Register dummy service in case of OptionsFlow calls it
+    hass.services.async_register("homeassistant", "update_entity", lambda call: None)
+
+    # 6) Trigger Options-Flow
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id,
+        context={"source": "user"},
+        data={"select_option": "discover_sensors"},
+    )
+
+    # 7) Asserts
+    assert result["type"] == "create_entry"
+    assert result["title"] == "discover_sensors"
+
+    # Fake JSON reply from gateway
+    # dummy_json = {
     #    "gateway_id": "017654321",
     #    "sensors": [
     #        {
@@ -363,35 +409,6 @@ async def test_setup_entry_and_menu_discover_sensors(
     #        },
     #    ],
     # }
-
-    cfg_entry_x = create_default_mock_entry(hass)
-
-    # with patch(
-    #    "homeassistant.components.a_tfa_me_1.coordinator.TFAmeDataCoordinator._async_update_data",
-    #    new=AsyncMock(return_value=fake_json),
-    # ):
-    result = await hass.config_entries.async_setup(cfg_entry_x.entry_id)
-    await hass.async_block_till_done()
-
-    assert result is True
-    assert cfg_entry_x.state == ConfigEntryState.LOADED
-    # setup ready now call an action
-
-    # Register dummy service in case of OptionsFlow calls it
-    hass.services.async_register(
-        "homeassistant", "reload_config_entry", lambda call: None
-    )
-
-    # Start OptionsFlow via HA API (not manually!)
-    result = await hass.config_entries.options.async_init(
-        cfg_entry_x.entry_id,
-        context={"source": "user"},
-        data={"select_option": "discover_sensors"},
-    )
-
-    # Test result
-    assert result["type"] == "create_entry"
-    assert result["title"] == "discover_sensors"
 
 
 @pytest.mark.asyncio

@@ -1165,3 +1165,26 @@ pytest ./tests/components/my_integration \
   --cov=homeassistant.components.my_integration \
   --cov-report term-missing
 ```
+
+# Copilot Instructions for py_tfa_me
+
+-   The package `py_tfa_me` is a Python Project located in the folder `py_tfa_me-folder`.
+-   You need to call the `Get Python Environment Information` tool on the `py_tfa_me` path to get the Python executable details.
+-   Substitute the Python executable you get from the `Get Python Environment Information` tool anywhere you see `<python>` in these instructions.
+    -   Run command for `py_tfa_me`: `<python> -m py_tfa_me`
+    -   Command to run tests for `py_tfa_me`: `<python> -m pytest py_tfa_me/tests`
+-   To run an editable install for the package `py_tfa_me`, use the `Install Python Package` tool with the `py_tfa_me-folder` path and arguments `['-e', '.']`.
+-   In the workspace `launch.json` file, configurations related to this package have the prefix `py_tfa_me`.
+-   The package `py_tfa_me` has a defined `pyproject.toml` file that you should use and keep up to date.
+
+
+# Copilot Instructions for tfa_me_py
+
+-   The package `tfa_me_py` is a Python Project located in the folder `tfa_me_py-folder`.
+-   You need to call the `Get Python Environment Information` tool on the `tfa_me_py` path to get the Python executable details.
+-   Substitute the Python executable you get from the `Get Python Environment Information` tool anywhere you see `<python>` in these instructions.
+    -   Run command for `tfa_me_py`: `<python> -m tfa_me_py`
+    -   Command to run tests for `tfa_me_py`: `<python> -m pytest tfa_me_py/tests`
+-   To run an editable install for the package `tfa_me_py`, use the `Install Python Package` tool with the `tfa_me_py-folder` path and arguments `['-e', '.']`.
+-   In the workspace `launch.json` file, configurations related to this package have the prefix `tfa_me_py`.
+-   The package `tfa_me_py` has a defined `pyproject.toml` file that you should use and keep up to date.
