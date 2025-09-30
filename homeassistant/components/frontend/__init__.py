@@ -452,19 +452,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
+    async_register_built_in_panel(hass, "light")
+    async_register_built_in_panel(hass, "security")
+    async_register_built_in_panel(hass, "climate")
+
     async_register_built_in_panel(hass, "profile")
-
-    async_register_built_in_panel(
-        hass, "lights", sidebar_icon="mdi:lamps", sidebar_title="lights"
-    )
-
-    async_register_built_in_panel(
-        hass, "security", sidebar_icon="mdi:security", sidebar_title="security"
-    )
-
-    async_register_built_in_panel(
-        hass, "climate", sidebar_icon="mdi:home-thermometer", sidebar_title="climate"
-    )
 
     async_register_built_in_panel(
         hass,
