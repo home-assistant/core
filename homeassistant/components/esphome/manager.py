@@ -44,12 +44,18 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, TemplateError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotFound,
+    ServiceValidationError,
+    TemplateError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
+    json,
     template,
 )
 from homeassistant.helpers.device_registry import format_mac
@@ -268,11 +274,26 @@ class ESPHomeManager:
         elif self.entry.options.get(
             CONF_ALLOW_SERVICE_CALLS, DEFAULT_ALLOW_SERVICE_CALLS
         ):
-            hass.async_create_task(
-                hass.services.async_call(
-                    domain, service_name, service_data, blocking=True
+            # Check if this service call expects a response (has call_id > 0)
+            call_id = service.call_id
+            if call_id:
+                # Service call with response expected
+                hass.async_create_task(
+                    self._handle_service_call_with_response(
+                        domain,
+                        service_name,
+                        service_data,
+                        call_id,
+                        service.response_template,
+                    )
                 )
-            )
+            else:
+                # Regular service call without response
+                hass.async_create_task(
+                    hass.services.async_call(
+                        domain, service_name, service_data, blocking=True
+                    )
+                )
         else:
             device_info = self.entry_data.device_info
             assert device_info is not None
@@ -297,6 +318,81 @@ class ESPHomeManager:
                 service_name,
                 service_data,
             )
+
+    async def _handle_service_call_with_response(
+        self,
+        domain: str,
+        service_name: str,
+        service_data: dict,
+        call_id: int,
+        response_template: str | None = None,
+    ) -> None:
+        """Handle service call that expects a response and send response back to ESPHome."""
+        try:
+            # Call the service with response capture enabled
+            action_response = await self.hass.services.async_call(
+                domain=domain,
+                service=service_name,
+                service_data=service_data,
+                blocking=True,
+                return_response=True,
+            )
+
+            if response_template:
+                try:
+                    # Render response template
+                    tmpl = Template(response_template, self.hass)
+                    response = template.render_complex(
+                        tmpl, {"response": action_response}
+                    )
+                    response_dict = {"response": response}
+
+                except TemplateError as ex:
+                    raise HomeAssistantError(
+                        f"Error rendering response template: {ex}"
+                    ) from ex
+            else:
+                response_dict = {"response": action_response}
+
+            # JSON encode response data for ESPHome
+            response_data = json.json_dumps(response_dict)
+
+        except (
+            ServiceNotFound,
+            ServiceValidationError,
+            vol.Invalid,
+            HomeAssistantError,
+        ) as ex:
+            await self._send_service_call_response(
+                call_id, success=False, error_message=str(ex), response_data=""
+            )
+
+        else:
+            # Send success response back to ESPHome
+            await self._send_service_call_response(
+                call_id=call_id,
+                success=True,
+                error_message="",
+                response_data=response_data,
+            )
+
+    async def _send_service_call_response(
+        self, call_id: int, success: bool, error_message: str, response_data: str
+    ) -> None:
+        """Send service call response back to ESPHome device."""
+        _LOGGER.debug(
+            "Service call response for call_id %s: success=%s, error=%s, data=%s",
+            call_id,
+            success,
+            error_message,
+            response_data,
+        )
+        await self.cli.send_homeassistant_action_response(
+            call_id,
+            response_data,
+            success,
+            error_message,
+        )
 
     @callback
     def _send_home_assistant_state(
