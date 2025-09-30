@@ -97,22 +97,6 @@ class WaitingAddonManager(AddonManager):
         await self.async_schedule_start_addon()
         await self.async_wait_until_addon_state(AddonState.RUNNING)
 
-    async def async_restart_addon_waiting(self) -> None:
-        """Restart an add-on."""
-        await self.async_schedule_restart_addon()
-
-        # Wait for the addon to stop running (could be instant)
-        await self.async_wait_until_addon_state(
-            *(
-                state
-                for state in AddonState.__members__.values()
-                if state is not AddonState.RUNNING
-            )
-        )
-
-        # And then for it to start running
-        await self.async_wait_until_addon_state(AddonState.RUNNING)
-
     async def async_install_addon_waiting(self) -> None:
         """Install an add-on."""
         await self.async_schedule_install_addon()
