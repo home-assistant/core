@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from yarl import URL
 
 from homeassistant.const import CONF_URL
@@ -27,8 +25,6 @@ class FireflyBaseEntity(CoordinatorEntity[FireflyDataUpdateCoordinator]):
     ) -> None:
         """Initialize a Firefly entity."""
         super().__init__(coordinator)
-        if TYPE_CHECKING:
-            assert coordinator.config_entry
 
         self.entity_description = entity_description
         self._attr_device_info = DeviceInfo(

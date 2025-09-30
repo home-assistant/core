@@ -64,9 +64,9 @@ def mock_firefly_client() -> Generator[AsyncMock]:
                 load_json_value_fixture("category.json", DOMAIN)
             )
         )
-        client.get_currency_native = AsyncMock(
+        client.get_currency_primary = AsyncMock(
             return_value=Currency.from_dict(
-                load_json_value_fixture("native_currency.json", DOMAIN)
+                load_json_value_fixture("primary_currency.json", DOMAIN)
             )
         )
         client.get_budgets = AsyncMock(
