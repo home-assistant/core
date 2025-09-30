@@ -7,11 +7,15 @@
           "description": "You can use your {model} for a Zigbee or Thread network. Please check what type of devices you want to add to Home Assistant. You can always change this later.",
           "menu_options": {
             "pick_firmware_zigbee": "Use as Zigbee adapter",
-            "pick_firmware_thread": "Use as Thread adapter"
+            "pick_firmware_thread": "Use as Thread adapter",
+            "pick_firmware_zigbee_migrate": "Migrate Zigbee to a new adapter",
+            "pick_firmware_thread_migrate": "Migrate Thread to a new adapter"
           },
           "menu_option_descriptions": {
             "pick_firmware_zigbee": "Most common protocol.",
-            "pick_firmware_thread": "Often used for Matter over Thread devices."
+            "pick_firmware_thread": "Often used for Matter over Thread devices.",
+            "pick_firmware_zigbee_migrate": "This will move your Zigbee network to the new adapter.",
+            "pick_firmware_thread_migrate": "This will migrate your Thread Border Router to the new adapter."
           }
         },
         "confirm_zigbee": {
@@ -19,12 +23,16 @@
           "description": "Your {model} is now a Zigbee coordinator and will be shown as discovered by the Zigbee Home Automation integration."
         },
         "install_otbr_addon": {
-          "title": "Installing OpenThread Border Router add-on",
-          "description": "The OpenThread Border Router (OTBR) add-on is being installed."
+          "title": "Configuring Thread"
+        },
+        "install_thread_firmware": {
+          "title": "Updating adapter"
+        },
+        "install_zigbee_firmware": {
+          "title": "Updating adapter"
         },
         "start_otbr_addon": {
-          "title": "Starting OpenThread Border Router add-on",
-          "description": "The OpenThread Border Router (OTBR) add-on is now starting."
+          "title": "Configuring Thread"
         },
         "otbr_failed": {
           "title": "Failed to set up OpenThread Border Router",
@@ -68,7 +76,9 @@
         "fw_install_failed": "{firmware_name} firmware failed to install, check Home Assistant logs for more information."
       },
       "progress": {
-        "install_firmware": "Please wait while {firmware_name} firmware is installed to your {model}, this will take a few minutes. Do not make any changes to your hardware or software until this finishes."
+        "install_firmware": "Installing {firmware_name} firmware.\n\nDo not make any changes to your hardware or software until this finishes.",
+        "install_otbr_addon": "Installing add-on",
+        "start_otbr_addon": "Starting add-on"
       }
     }
   },
