@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-import dynamicdns
+from dynamicdns import PROVIDERS, Provider
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_URL
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -23,13 +24,13 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             SelectSelectorConfig(
                 options=[
                     SelectOptionDict(
-                        value=provider.value,
-                        label=provider_conf.name,
+                        value=key.value,
+                        label=conf.name,
                     )
-                    for provider, provider_conf in dynamicdns.providers.items()
+                    for key, conf in PROVIDERS.items()
                 ],
                 mode=SelectSelectorMode.DROPDOWN,
-                sort=True,
+                translation_key="providers",
             )
         )
     }
@@ -39,7 +40,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class DynamicDnsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Dynamic DNS."""
 
-    provider: dynamicdns.Provider
+    provider: Provider
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -47,10 +48,13 @@ class DynamicDnsConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
 
         if user_input is not None:
-            self.provider = dynamicdns.Provider(user_input[CONF_PROVIDER])
+            self.provider = Provider(user_input[CONF_PROVIDER])
             return self.async_show_form(
                 step_id="params",
-                data_schema=dynamicdns.providers[user_input[CONF_PROVIDER]].schema,
+                data_schema=PROVIDERS[user_input[CONF_PROVIDER]].schema,
+                description_placeholders={
+                    CONF_PROVIDER: PROVIDERS[self.provider].name,
+                },
             )
 
         return self.async_show_form(
@@ -66,7 +70,11 @@ class DynamicDnsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._async_abort_entries_match(user_input)
-            title = dynamicdns.providers[self.provider].name
+            title = (
+                user_input[CONF_URL]
+                if self.provider is Provider.CUSTOM
+                else PROVIDERS[self.provider].name
+            )
             return self.async_create_entry(
                 title=title, data={CONF_PROVIDER: self.provider.value, **user_input}
             )
@@ -74,7 +82,10 @@ class DynamicDnsConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="params",
             data_schema=self.add_suggested_values_to_schema(
-                data_schema=dynamicdns.providers[self.provider].schema,
+                data_schema=PROVIDERS[self.provider].schema,
                 suggested_values=user_input,
             ),
+            description_placeholders={
+                CONF_PROVIDER: PROVIDERS[self.provider].name,
+            },
         )
