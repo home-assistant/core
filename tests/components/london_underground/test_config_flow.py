@@ -18,14 +18,14 @@ from tests.common import MockConfigEntry
 async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
     with patch(
-        "homeassistant.components.london_underground.config_flow.validate_input",
-        return_value=True,
+        "homeassistant.components.london_underground.config_flow.TubeData.update",
+        return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -90,9 +90,11 @@ async def test_validate_input_connection_error(hass: HomeAssistant) -> None:
 
     # confirm that we can recover from the error
     with patch(
-        "homeassistant.components.london_underground.config_flow.validate_input",
-        return_value=True,
-    ):
+        "homeassistant.components.london_underground.config_flow.TubeData"
+    ) as mock_tube_data:
+        mock_tube_data_instance = mock_tube_data.return_value
+        mock_tube_data_instance.update = AsyncMock()
+
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
@@ -126,13 +128,14 @@ async def test_validate_input_timeout(hass: HomeAssistant) -> None:
             )
 
         assert result2["type"] == FlowResultType.FORM
-        assert result2["errors"]["base"] == "cannot_connect"
+        assert result2["errors"]["base"] == "timeout_connect"
 
     # confirm that we can recover from the error
     with patch(
-        "homeassistant.components.london_underground.config_flow.validate_input",
-        return_value=True,
-    ):
+        "homeassistant.components.london_underground.config_flow.TubeData"
+    ) as mock_tube_data:
+        mock_tube_data_instance = mock_tube_data.return_value
+        mock_tube_data_instance.update = AsyncMock()
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},

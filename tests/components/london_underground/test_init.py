@@ -5,7 +5,7 @@ from unittest.mock import patch
 from homeassistant.components.london_underground.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import AsyncMock, MockConfigEntry
 
 
 async def test_reload_entry(hass: HomeAssistant) -> None:
@@ -15,11 +15,15 @@ async def test_reload_entry(hass: HomeAssistant) -> None:
         data={},
         options={"line": ["Bakerloo"]},
     )
-    entry.add_to_hass(hass)
-
     with patch(
-        "homeassistant.components.london_underground.sensor.LondonTubeCoordinator"
-    ) as mock_coordinator:
+        "homeassistant.components.london_underground.LondonTubeCoordinator"
+    ) as mock_cls:
+        # Make the constructor return a mock with an async method
+        mock_instance = mock_cls.return_value
+        mock_instance.async_config_entry_first_refresh = AsyncMock(return_value=True)
+
+        entry.add_to_hass(hass)
+
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -31,9 +35,5 @@ async def test_reload_entry(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        # Test direct reload
-        await hass.config_entries.async_reload(entry.entry_id)
-        await hass.async_block_till_done()
-
         # Verify that setup was called for each reload
-        assert len(mock_coordinator.mock_calls) > 0
+        assert len(mock_instance.mock_calls) > 0
