@@ -75,7 +75,7 @@ class FireflyConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-
+            else:
                 return self.async_create_entry(
                     title=user_input[CONF_URL], data=user_input
                 )
