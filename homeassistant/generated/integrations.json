@@ -3476,6 +3476,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "level": {
+      "name": "Level",
+      "iot_standards": [
+        "matter"
+      ]
+    },
     "leviton": {
       "name": "Leviton",
       "iot_standards": [
