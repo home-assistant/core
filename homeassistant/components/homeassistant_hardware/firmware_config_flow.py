@@ -308,7 +308,10 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                 },
             ) from err
 
-        await otbr_manager.async_start_addon_waiting()
+        if addon_info.state == AddonState.RUNNING:
+            await otbr_manager.async_restart_addon_waiting()
+        else:
+            await otbr_manager.async_start_addon_waiting()
 
     async def async_step_firmware_download_failed(
         self, user_input: dict[str, Any] | None = None
@@ -420,9 +423,6 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
         if addon_info.state == AddonState.NOT_INSTALLED:
             return await self.async_step_install_otbr_addon()
-
-        if addon_info.state == AddonState.RUNNING:
-            await otbr_manager.async_stop_addon()
 
         return await self.async_step_start_otbr_addon()
 
