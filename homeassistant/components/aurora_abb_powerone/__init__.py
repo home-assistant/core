@@ -67,19 +67,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: AuroraAbbConfigEntry) ->
     transport = entry.data[CONF_TRANSPORT]
     inverter_serial_address = entry.data[CONF_INVERTER_SERIAL_ADDRESS]
 
-    if transport == TRANSPORT_SERIAL:
+    def transport_handler_serial() -> AuroraAbbDataUpdateCoordinator:
         serial_comport = entry.data[CONF_SERIAL_COMPORT]
-        coordinator = AuroraAbbDataUpdateCoordinator(
+        return AuroraAbbDataUpdateCoordinator(
             hass,
             entry,
             inverter_serial_address,
             transport,
             serial_comport=serial_comport,
         )
-    elif transport == TRANSPORT_TCP:
+
+    def transport_handler_tcp() -> AuroraAbbDataUpdateCoordinator:
         tcp_host = entry.data[CONF_TCP_HOST]
         tcp_port = entry.data[CONF_TCP_PORT]
-        coordinator = AuroraAbbDataUpdateCoordinator(
+        return AuroraAbbDataUpdateCoordinator(
             hass,
             entry,
             inverter_serial_address,
@@ -87,8 +88,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: AuroraAbbConfigEntry) ->
             tcp_host=tcp_host,
             tcp_port=tcp_port,
         )
-    else:
+
+    transport_handler = {
+        TRANSPORT_SERIAL: transport_handler_serial,
+        TRANSPORT_TCP: transport_handler_tcp,
+    }
+
+    if transport not in transport_handler:
         raise ValueError(f"Unsupported transport type: {transport}")
+
+    coordinator = transport_handler[transport]()
 
     await coordinator.async_config_entry_first_refresh()
 

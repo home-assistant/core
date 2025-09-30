@@ -1,8 +1,13 @@
 """Pytest modules for Aurora ABB Powerone PV inverter sensor integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.aurora_abb_powerone import async_migrate_entry
+import pytest
+
+from homeassistant.components.aurora_abb_powerone import (
+    async_migrate_entry,
+    async_setup_entry,
+)
 from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_FIRMWARE,
     ATTR_MODEL,
@@ -22,6 +27,94 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 CURRENT_VERSION = 2
+
+
+@pytest.mark.parametrize(
+    ("data", "expected_kwargs"),
+    [
+        (
+            {
+                CONF_TRANSPORT: TRANSPORT_SERIAL,
+                CONF_SERIAL_COMPORT: "/dev/ttyUSB7",
+                CONF_INVERTER_SERIAL_ADDRESS: 2,
+            },
+            {CONF_SERIAL_COMPORT: "/dev/ttyUSB7"},
+        ),
+        (
+            {
+                CONF_TRANSPORT: TRANSPORT_TCP,
+                CONF_TCP_HOST: "192.168.1.10",
+                CONF_TCP_PORT: 8899,
+                CONF_INVERTER_SERIAL_ADDRESS: 2,
+            },
+            {CONF_TCP_HOST: "192.168.1.10", CONF_TCP_PORT: 8899},
+        ),
+    ],
+)
+async def test_async_setup_entry_creates_coordinator_and_forwards_platforms(
+    hass: HomeAssistant, data, expected_kwargs
+) -> None:
+    """Creates the appropriate coordinator, refreshes, sets runtime_data, forwards platforms."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, title="Aurora", data=data, version=CURRENT_VERSION
+    )
+    entry.add_to_hass(hass)
+
+    mock_coordinator = MagicMock()
+    mock_coordinator.async_config_entry_first_refresh = AsyncMock(return_value=None)
+
+    with (
+        patch(
+            "homeassistant.components.aurora_abb_powerone.AuroraAbbDataUpdateCoordinator",
+            return_value=mock_coordinator,
+        ) as coord_cls,
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            new=AsyncMock(return_value=None),
+        ) as forward_mock,
+    ):
+        assert await async_setup_entry(hass, entry) is True
+
+        assert coord_cls.call_count == 1
+        args, kwargs = coord_cls.call_args
+        assert args[0] is hass
+        assert args[1] is entry
+        assert args[2] == data[CONF_INVERTER_SERIAL_ADDRESS]
+        assert args[3] == data[CONF_TRANSPORT]
+        for k, v in expected_kwargs.items():
+            assert kwargs[k] == v
+        assert set(kwargs.keys()) == set(expected_kwargs.keys())
+
+        mock_coordinator.async_config_entry_first_refresh.assert_awaited_once()
+
+        assert entry.runtime_data is mock_coordinator
+
+        forward_mock.assert_awaited_once()
+        f_args, _ = forward_mock.call_args
+        assert f_args[0] is entry
+        assert f_args[1] is not None
+
+
+async def test_async_setup_entry_unsupported_transport_raises(
+    hass: HomeAssistant,
+) -> None:
+    """Unknown transport leads to ValueError."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Aurora Bad Transport",
+        data={
+            CONF_TRANSPORT: "bluetooth",
+            CONF_INVERTER_SERIAL_ADDRESS: 1,
+        },
+        version=CURRENT_VERSION,
+    )
+    entry.add_to_hass(hass)
+
+    with pytest.raises(ValueError, match="Unsupported transport type: bluetooth"):
+        await async_setup_entry(hass, entry)
 
 
 async def test_migrate_entry_v1_to_v2_serial(hass: HomeAssistant) -> None:
