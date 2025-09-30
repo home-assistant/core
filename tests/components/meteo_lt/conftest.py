@@ -15,21 +15,10 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 @pytest.fixture(autouse=True)
 def mock_meteo_lt_api():
     """Mock MeteoLtAPI with fixture data."""
-    with (
-        patch("meteo_lt.MeteoLtAPI", autospec=True) as mock_api_class,
-        patch(
-            "homeassistant.components.meteo_lt.coordinator.MeteoLtAPI", autospec=True
-        ) as mock_coord_api_class,
-        patch(
-            "homeassistant.components.meteo_lt.MeteoLtAPI", autospec=True
-        ) as mock_init_api_class,
-    ):
+    with patch("meteo_lt.MeteoLtAPI", autospec=True) as mock_api_class:
         mock_api = AsyncMock(spec=MeteoLtAPI)
         mock_api_class.return_value = mock_api
-        mock_coord_api_class.return_value = mock_api
-        mock_init_api_class.return_value = mock_api
 
-        # Load fixture data
         fixture_path = Path(__file__).parent / "fixtures"
 
         with open(fixture_path / "places.json", encoding="utf-8") as f:
