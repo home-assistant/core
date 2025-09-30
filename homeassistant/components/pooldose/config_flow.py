@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
@@ -38,9 +39,9 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _validate_host(
         self, host: str
-    ) -> tuple[str | None, dict[str, str] | None, dict[str, str] | None]:
+    ) -> tuple[str | None, Any | None, dict[str, str] | None]:
         """Validate the host and return (serial_number, api_versions, errors)."""
-        client = PooldoseClient(host)
+        client = PooldoseClient(host, websession=async_get_clientsession(self.hass))
         client_status = await client.connect()
         if client_status == RequestStatus.HOST_UNREACHABLE:
             return None, None, {"base": "cannot_connect"}
