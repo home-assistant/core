@@ -47,7 +47,7 @@ async def test_setup_exceptions(
 
 
 async def test_migrations(hass: HomeAssistant) -> None:
-    """Test migration from v1 to v2 config entry."""
+    """Test migration from v1 config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
