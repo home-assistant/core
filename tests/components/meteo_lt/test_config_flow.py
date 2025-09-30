@@ -100,3 +100,20 @@ async def test_no_places_found(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_places_found"
+
+
+async def test_invalid_place_code(
+    hass: HomeAssistant, mock_meteo_lt_api: AsyncMock
+) -> None:
+    """Test error shown when user submits invalid place code."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_PLACE_CODE: "nonexistent_place"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_location"}
