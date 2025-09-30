@@ -1,6 +1,5 @@
 {
   "domain": "konnected",
   "name": "Konnected",
-  "integrations": ["konnected"],
-  "iot_standards": ["matter"]
+  "integrations": ["konnected", "konnected_esphome"]
 }

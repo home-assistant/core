@@ -3353,11 +3353,14 @@
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Konnected.io (Legacy)"
+        },
+        "konnected_esphome": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "esphome",
+          "name": "Konnected"
         }
-      },
-      "iot_standards": [
-        "matter"
-      ]
+      }
     },
     "kostal_plenticore": {
       "name": "Kostal Plenticore Solar Inverter",
