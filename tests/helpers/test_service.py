@@ -1419,7 +1419,7 @@ async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -
         mock_entities["light.bedroom"],
     ]
     actual = [call[0][0] for call in test_service_mock.call_args_list]
-    assert all(entity in actual for entity in expected)
+    assert actual == unordered(expected)
 
     # Test we raise if we target entity ID that does not support the service
     test_service_mock.reset_mock()
@@ -1479,7 +1479,7 @@ async def test_call_with_one_of_required_features(
         mock_entities["light.bathroom"],
     ]
     actual = [call[0][0] for call in test_service_mock.call_args_list]
-    assert all(entity in actual for entity in expected)
+    assert actual == unordered(expected)
 
 
 @pytest.mark.parametrize(
