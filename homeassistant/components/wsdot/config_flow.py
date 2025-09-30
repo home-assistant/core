@@ -44,9 +44,7 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            wsdot_travel_times = wsdot_api.WsdotTravelTimes(
-                user_input[CONF_API_KEY]
-            )
+            wsdot_travel_times = wsdot_api.WsdotTravelTimes(user_input[CONF_API_KEY])
             try:
                 await wsdot_travel_times.get_all_travel_times()
             except wsdot_api.WsdotTravelError as ws_error:
