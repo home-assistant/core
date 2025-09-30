@@ -31,12 +31,6 @@ class MeteoLtConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        return await self.async_step_manual(user_input)
-
-    async def async_step_manual(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the manual location selection step."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -52,10 +46,11 @@ class MeteoLtConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._places:
             try:
                 await self._api.fetch_places()
-                self._places = self._api.places
             except (aiohttp.ClientError, TimeoutError) as err:
                 _LOGGER.error("Error fetching places: %s", err)
                 errors["base"] = "cannot_connect"
+            else:
+                self._places = self._api.places
 
         if not self._places:
             return self.async_abort(reason="no_places_found")
@@ -72,7 +67,7 @@ class MeteoLtConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="manual",
+            step_id="user",
             data_schema=data_schema,
             errors=errors,
         )

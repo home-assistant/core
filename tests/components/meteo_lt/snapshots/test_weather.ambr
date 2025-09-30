@@ -30,24 +30,18 @@
     'suggested_object_id': None,
     'supported_features': <WeatherEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': 'vilnius_weather',
+    'unique_id': 'vilnius',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_weather_entity[weather.vilnius-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'administrative_division': 'Vilniaus miesto savivaldybė',
       'apparent_temperature': 10.9,
       'attribution': 'Data provided by Lithuanian Hydrometeorological Service (LHMT)',
       'cloud_coverage': 1,
-      'country': 'Lietuva',
-      'forecast_creation_time': '2025-09-25T08:01:29+00:00',
-      'forecast_time': '2025-09-25T10:00:00+00:00',
       'friendly_name': 'Vilnius',
       'humidity': 71,
-      'place_code': 'vilnius',
-      'place_name': 'Vilnius',
       'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
       'pressure': 1033.0,
       'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
@@ -65,6 +59,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'sunny',
+    'state': 'clear',
   })
 # ---

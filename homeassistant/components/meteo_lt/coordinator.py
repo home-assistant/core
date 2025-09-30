@@ -15,6 +15,8 @@ from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type MeteoLtConfigEntry = ConfigEntry[MeteoLtUpdateCoordinator]
+
 
 class MeteoLtUpdateCoordinator(DataUpdateCoordinator[MeteoLtForecast]):
     """Class to manage fetching Meteo.lt data."""
@@ -23,7 +25,7 @@ class MeteoLtUpdateCoordinator(DataUpdateCoordinator[MeteoLtForecast]):
         self,
         hass: HomeAssistant,
         place_code: str,
-        config_entry: ConfigEntry,
+        config_entry: MeteoLtConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         self.client = MeteoLtAPI()
