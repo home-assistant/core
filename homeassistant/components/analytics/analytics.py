@@ -502,10 +502,11 @@ def _domains_from_yaml_config(yaml_configuration: dict[str, Any]) -> set[str]:
 
 DEFAULT_ANALYTICS_CONFIG = AnalyticsModifications()
 DEFAULT_DEVICE_ANALYTICS_CONFIG = DeviceAnalyticsModifications()
+REMOVE_DEVICE_ANALYTICS_CONFIG = DeviceAnalyticsModifications(remove=True)
 DEFAULT_ENTITY_ANALYTICS_CONFIG = EntityAnalyticsModifications()
 
 
-async def async_devices_payload(hass: HomeAssistant) -> dict:
+async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
     """Return detailed information about entities and devices."""
     dev_reg = dr.async_get(hass)
     ent_reg = er.async_get(hass)
@@ -591,7 +592,7 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
     # We need to refer to other devices, for example in `via_device` field.
     # We don't however send the original device ids outside of Home Assistant,
     # instead we refer to devices by (integration_domain, index_in_integration_device_list).
-    device_id_mapping: dict[str, tuple[str, int]] = {}
+    device_id_mapping: dict[str, tuple[str, int] | None] = {}
 
     # Fill out information about devices
     for integration_domain, integration_input in integration_inputs.items():
@@ -609,14 +610,19 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
         devices_info = integration_info["devices"]
 
         for device_id in integration_input[0]:
-            device_config = DEFAULT_DEVICE_ANALYTICS_CONFIG
+            device_entry = dev_reg.devices[device_id]
+
+            if device_entry.entry_type is dr.DeviceEntryType.SERVICE:
+                device_config = REMOVE_DEVICE_ANALYTICS_CONFIG
+            else:
+                device_config = DEFAULT_DEVICE_ANALYTICS_CONFIG
+
             if integration_config.devices is not None:
                 device_config = integration_config.devices.get(device_id, device_config)
 
             if device_config.remove:
+                device_id_mapping[device_entry.id] = None
                 continue
-
-            device_entry = dev_reg.devices[device_id]
 
             device_id_mapping[device_entry.id] = (integration_domain, len(devices_info))
 
@@ -690,15 +696,20 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
                 "unit_of_measurement": entity_entry.unit_of_measurement,
             }
 
-            if (
-                ((device_id_ := entity_entry.device_id) is not None)
-                and ((new_device_id := device_id_mapping.get(device_id_)) is not None)
-                and (new_device_id[0] == integration_domain)
+            if ((device_id_ := entity_entry.device_id) is not None) and (
+                (new_device_id := device_id_mapping.get(device_id_, UNDEFINED))
+                is not UNDEFINED
             ):
-                device_info = devices_info[new_device_id[1]]
-                device_info["entities"].append(entity_info)
-            else:
-                entities_info.append(entity_info)
+                if new_device_id is None:
+                    # The device was removed, so we remove the entity too
+                    continue
+
+                if new_device_id[0] == integration_domain:
+                    device_info = devices_info[new_device_id[1]]
+                    device_info["entities"].append(entity_info)
+                    continue
+
+            entities_info.append(entity_info)
 
     return {
         "version": "home-assistant:1",
