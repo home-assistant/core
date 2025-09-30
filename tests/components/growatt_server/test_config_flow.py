@@ -179,62 +179,47 @@ async def test_password_auth_incorrect_login(hass: HomeAssistant) -> None:
     assert result["data"][CONF_AUTH_TYPE] == AUTH_PASSWORD
 
 
-@pytest.mark.parametrize(
-    ("auth_type", "user_input", "mock_patches", "expected_result"),
-    [
-        # No plants scenarios
-        (
-            "password_auth",
-            FIXTURE_USER_INPUT_PASSWORD,
-            [
-                ("growattServer.GrowattApi.login", GROWATT_LOGIN_RESPONSE),
-                ("growattServer.GrowattApi.plant_list", {"data": []}),
-            ],
-            {"type": FlowResultType.ABORT, "reason": ABORT_NO_PLANTS},
-        ),
-        (
-            "token_auth",
-            FIXTURE_USER_INPUT_TOKEN,
-            [("growattServer.OpenApiV1.plant_list", {"plants": []})],
-            {"type": FlowResultType.ABORT, "reason": ABORT_NO_PLANTS},
-        ),
-    ],
-)
-async def test_auth_no_plants(
-    hass: HomeAssistant,
-    auth_type: str,
-    user_input: dict,
-    mock_patches: list,
-    expected_result: dict,
-) -> None:
-    """Test authentication with no plants."""
+async def test_password_auth_no_plants(hass: HomeAssistant) -> None:
+    """Test password authentication with no plants."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    # Select authentication method
+    # Select password authentication
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": auth_type}
+        result["flow_id"], {"next_step_id": "password_auth"}
     )
 
-    patch_contexts = [
-        patch(patch_target, return_value=patch_value)
-        for patch_target, patch_value in mock_patches
-    ]
+    with (
+        patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE),
+        patch("growattServer.GrowattApi.plant_list", return_value={"data": []}),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+        )
 
-    if len(patch_contexts) == 1:
-        with patch_contexts[0]:
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input
-            )
-    else:
-        with patch_contexts[0], patch_contexts[1]:
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input
-            )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == ABORT_NO_PLANTS
 
-    assert result["type"] is expected_result["type"]
-    assert result["reason"] == expected_result["reason"]
+
+async def test_token_auth_no_plants(hass: HomeAssistant) -> None:
+    """Test token authentication with no plants."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Select token authentication
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "token_auth"}
+    )
+
+    with patch("growattServer.OpenApiV1.plant_list", return_value={"plants": []}):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT_TOKEN
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == ABORT_NO_PLANTS
 
 
 async def test_password_auth_single_plant(hass: HomeAssistant) -> None:
@@ -540,31 +525,8 @@ async def test_token_auth_multiple_plants(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "789012"
 
 
-@pytest.mark.parametrize(
-    ("auth_type", "user_input", "mock_patches"),
-    [
-        (
-            "password_auth",
-            FIXTURE_USER_INPUT_PASSWORD,
-            [
-                ("growattServer.GrowattApi.login", GROWATT_LOGIN_RESPONSE),
-                ("growattServer.GrowattApi.plant_list", GROWATT_PLANT_LIST_RESPONSE),
-            ],
-        ),
-        (
-            "token_auth",
-            FIXTURE_USER_INPUT_TOKEN,
-            [("growattServer.OpenApiV1.plant_list", GROWATT_V1_PLANT_LIST_RESPONSE)],
-        ),
-    ],
-)
-async def test_existing_plant_configured(
-    hass: HomeAssistant,
-    auth_type: str,
-    user_input: dict,
-    mock_patches: list,
-) -> None:
-    """Test entering an existing plant_id."""
+async def test_password_auth_existing_plant_configured(hass: HomeAssistant) -> None:
+    """Test password authentication with existing plant_id."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id="123456")
     entry.add_to_hass(hass)
 
@@ -572,26 +534,47 @@ async def test_existing_plant_configured(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    # Select authentication method
+    # Select password authentication
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": auth_type}
+        result["flow_id"], {"next_step_id": "password_auth"}
     )
 
-    patch_contexts = [
-        patch(patch_target, return_value=patch_value)
-        for patch_target, patch_value in mock_patches
-    ]
+    with (
+        patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE),
+        patch(
+            "growattServer.GrowattApi.plant_list",
+            return_value=GROWATT_PLANT_LIST_RESPONSE,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+        )
 
-    if len(patch_contexts) == 1:
-        with patch_contexts[0]:
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input
-            )
-    else:
-        with patch_contexts[0], patch_contexts[1]:
-            result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], user_input
-            )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_token_auth_existing_plant_configured(hass: HomeAssistant) -> None:
+    """Test token authentication with existing plant_id."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="123456")
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Select token authentication
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "token_auth"}
+    )
+
+    with patch(
+        "growattServer.OpenApiV1.plant_list",
+        return_value=GROWATT_V1_PLANT_LIST_RESPONSE,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT_TOKEN
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
