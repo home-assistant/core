@@ -374,7 +374,6 @@ class TelegramNotificationService:
                         )
             else:
                 raise ServiceValidationError(
-                    "Invalid value for inline keyboard. Only strings or lists are accepted.",
                     translation_domain=DOMAIN,
                     translation_key="invalid_inline_keyboard",
                 )
@@ -524,7 +523,6 @@ class TelegramNotificationService:
         except TelegramError as exc:
             if not suppress_error:
                 raise HomeAssistantError(
-                    f"Action failed. {exc!s}",
                     translation_domain=DOMAIN,
                     translation_key="action_failed",
                     translation_placeholders={"error": str(exc)},
