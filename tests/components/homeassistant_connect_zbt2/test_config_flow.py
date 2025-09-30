@@ -34,6 +34,16 @@ def mock_supervisor_fixture() -> Generator[None]:
         yield
 
 
+@pytest.fixture(name="setup_entry", autouse=True)
+def setup_entry_fixture() -> Generator[AsyncMock]:
+    """Mock entry setup."""
+    with patch(
+        "homeassistant.components.homeassistant_connect_zbt2.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
 async def test_config_flow_zigbee(
     hass: HomeAssistant,
 ) -> None:
@@ -177,19 +187,12 @@ async def test_config_flow_thread(
         # Make sure the flow continues when the progress task is done.
         await hass.async_block_till_done()
 
-        confirm_result = await hass.config_entries.flow.async_configure(
+        create_result = await hass.config_entries.flow.async_configure(
             result["flow_id"]
         )
 
-        assert start_addon.call_count == 1
-        assert start_addon.call_args == call("core_openthread_border_router")
-        assert confirm_result["type"] is FlowResultType.FORM
-        assert confirm_result["step_id"] == "confirm_otbr"
-
-        create_result = await hass.config_entries.flow.async_configure(
-            confirm_result["flow_id"], user_input={}
-        )
-
+    assert start_addon.call_count == 1
+    assert start_addon.call_args == call("core_openthread_border_router")
     assert create_result["type"] is FlowResultType.CREATE_ENTRY
     config_entry = create_result["result"]
     assert config_entry.data == {
