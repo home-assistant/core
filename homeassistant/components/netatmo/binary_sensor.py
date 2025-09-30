@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Final
+from typing import Final, cast
 
 from pyatmo.modules import Module
 from pyatmo.modules.device_types import DeviceCategory as NetatmoDeviceCategory
@@ -18,6 +18,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import (
     ATTR_EVENT_TYPE,
@@ -36,25 +37,82 @@ from .entity import NetatmoModuleEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-def process_opening_status(module: Module) -> bool | None:
-    """Process opening Module status and return bool."""
-    status = module.status  # type: ignore[attr-defined]
-
+def process_opening_status_string(status: StateType) -> bool | None:
+    """Process opening status and return bool."""
+    _LOGGER.debug(
+        "Translated opening status: %s",
+        status,
+    )
+    if status == "no_news":
+        return None
+    if status == "calibrating":
+        return None
+    if status == "undefined":
+        return None
     if status == "closed":
         return False
     if status == "open":
         return True
+    if status == "calibration_failed":
+        return None
+    if status == "maintenance":
+        return None
+    if status == "weak_signal":
+        return None
     return None
 
 
-def process_opening_category(netatmo_device: NetatmoDevice) -> BinarySensorDeviceClass:
-    """Helper function to map Netatmo category to Home Assistant device class."""
+def process_opening_status(module: Module, netatmo_name: str) -> bool | None:
+    """Process opening Module status and return bool."""
+    status = getattr(module, netatmo_name)
+    value = process_opening_status_string(status)
+
+    _LOGGER.debug(
+        "Opening status (%s) translating from '%s' to '%s' for module '%s'",
+        netatmo_name,
+        status,
+        value,
+        module.name,
+    )
+    return process_opening_status_string(status)
+
+
+def process_opening_category_string(
+    category: StateType,
+) -> BinarySensorDeviceClass | None:
+    """Helper function to map Netatmo opening category to Home Assistant device class."""
+    _LOGGER.debug(
+        "Translated opening category: %s",
+        category,
+    )
+
+    # Use a specific device class if we have a match
+    if category == "door":
+        return BinarySensorDeviceClass.DOOR
+    if category == "window":
+        return BinarySensorDeviceClass.WINDOW
+    if category == "garage":
+        return BinarySensorDeviceClass.GARAGE_DOOR
+    if category == "gate":
+        return BinarySensorDeviceClass.OPENING
+    if category == "furniture":
+        return BinarySensorDeviceClass.OPENING
+    if category == "other":
+        return BinarySensorDeviceClass.OPENING
+    return None
+
+
+def get_opening_category(netatmo_device: NetatmoDevice) -> str | None:
+    """Helper function to get opening category from Netatmo API raw data."""
 
     # First, get the unique ID of the device we are processing.
     device_id_to_find = netatmo_device.device.entity_id
 
     # Get the raw data containing the full list of homes and modules.
     raw_data = netatmo_device.data_handler.account.raw_data
+
+    # Initialize category as None
+    category: str | None = None
 
     # Iterate through each home in the raw data.
     for home in raw_data["homes"]:
@@ -64,44 +122,74 @@ def process_opening_category(netatmo_device: NetatmoDevice) -> BinarySensorDevic
             for module in home["modules"]:
                 if module["id"] == device_id_to_find:
                     # We found the matching device. Get its category.
-                    category = module.get("category")
+                    if module.get("category") is not None:
+                        category = module["category"]
 
-                    _LOGGER.debug(
-                        "Processing category '%s' for device '%s'",
-                        category,
-                        netatmo_device.device.name,
-                    )
+    if category is not None:
+        _LOGGER.debug(
+            "Found category '%s' for device '%s'",
+            category,
+            netatmo_device.device.name,
+        )
+    else:
+        _LOGGER.warning(
+            "Category not found for device_id: %s in raw data",
+            netatmo_device.device.name,
+        )
 
-                    # Use a specific device class if we have a match
-                    if category == "door":
-                        return BinarySensorDeviceClass.DOOR
-                    if category == "window":
-                        return BinarySensorDeviceClass.WINDOW
-                    if category == "garage":
-                        return BinarySensorDeviceClass.GARAGE_DOOR
-                    if category == "gate":
-                        return BinarySensorDeviceClass.OPENING
-                    if category == "furniture":
-                        return BinarySensorDeviceClass.OPENING
-                    if category == "other":
-                        return BinarySensorDeviceClass.OPENING
+    return category
 
-    # Return None if the device or category is not found in the raw data.
-    _LOGGER.warning(
-        "Category not found for device_id: %s in raw data",
+
+def process_opening_category(netatmo_device: NetatmoDevice) -> BinarySensorDeviceClass:
+    """Helper function to map Netatmo device opening category to Home Assistant device class."""
+    category: str | None = get_opening_category(netatmo_device)
+    module_binary_sensor_class: BinarySensorDeviceClass | None = (
+        process_opening_category_string(category)
+    )
+
+    if module_binary_sensor_class is None:
+        module_binary_sensor_class = BinarySensorDeviceClass.OPENING
+
+    _LOGGER.debug(
+        "Opening category translated from '%s' to '%s' for module '%s'",
+        category,
+        module_binary_sensor_class,
         netatmo_device.device.name,
     )
-    return BinarySensorDeviceClass.OPENING
+
+    return module_binary_sensor_class
+
+
+# Assuming a Module object with the following attributes:
+# {'battery_level': 5780,
+#  'battery_percent': None,
+#  'battery_state': 'full',
+#  'bridge': '70:ee:50:31:5a:29',
+#  'device_category': <DeviceCategory.opening: 'opening'>,
+#  'device_type': <DeviceType.NACamDoorTag: 'NACamDoorTag'>,
+#  'entity_id': '70:ee:50:61:1c:b1',
+#  'features': {'status', 'battery', 'rf_strength', 'reachable'},
+#  'firmware_name': None,
+#  'firmware_revision': 58,
+#  'history_features': set(),
+#  'history_features_values': {},
+#  'home': <pyatmo.home.Home object at 0x790e5c3ea660>,
+#  'modules': None,
+#  'name': 'A East Shade',
+#  'reachable': True,
+#  'rf_strength': 74,
+#  'room_id': '344597214',
+#  'status': 'open'}
 
 
 @dataclass(frozen=True, kw_only=True)
 class NetatmoBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Netatmo binary sensor entity."""
 
-    category_fn: Callable[[NetatmoDevice], BinarySensorDeviceClass] | None = None
-    netatmo_name: str | None = None
-    publisher_name: str | None = None
-    value_fn: Callable[[Module], bool | None] = lambda device: None
+    device_class_fn: Callable[[NetatmoDevice], BinarySensorDeviceClass] | None = None
+    netatmo_name: str  # The name used by Netatmo API for this sensor
+    feature_name: str | None = None  # The feature key in the Module's features set
+    value_fn: Callable[[Module, str], bool | None] | None = None
 
 
 NETATMO_BINARY_SENSOR_DESCRIPTIONS: Final[
@@ -111,10 +199,10 @@ NETATMO_BINARY_SENSOR_DESCRIPTIONS: Final[
         key="reachable",
         translation_key="Reachability",
         netatmo_name="reachable",
+        feature_name="reachable",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        value_fn=lambda module: module.reachable,
         icon="mdi:signal",
     ),
 ]
@@ -123,12 +211,13 @@ OPENING_BINARY_SENSOR_DESCRIPTIONS: Final[
     list[NetatmoBinarySensorEntityDescription]
 ] = [
     NetatmoBinarySensorEntityDescription(
-        key="open_status",
+        key="opening",
         translation_key="Opening",
         device_class=BinarySensorDeviceClass.OPENING,
         netatmo_name="status",
+        feature_name="status",
         value_fn=process_opening_status,
-        category_fn=process_opening_category,
+        device_class_fn=process_opening_category,
     ),
 ]
 
@@ -195,10 +284,14 @@ async def async_setup_entry(
 
         # Create binary sensors for module
         for description in descriptions_to_add:
-            if description.netatmo_name in netatmo_device.device.features:
+            if description.feature_name is None:
+                feature_check = description.key
+            else:
+                feature_check = description.feature_name
+            if feature_check in netatmo_device.device.features:
                 _LOGGER.debug(
                     "Adding %s binary sensor for device %s",
-                    description.netatmo_name,
+                    feature_check,
                     netatmo_device.device.name,
                 )
                 entities.append(
@@ -210,8 +303,8 @@ async def async_setup_entry(
             else:
                 _LOGGER.warning(
                     "Failed to add %s (%s) binary sensor for device %s",
+                    feature_check,
                     description.netatmo_name,
-                    description.key,
                     netatmo_device.device.name,
                 )
 
@@ -251,8 +344,8 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         if not isinstance(netatmo_device.device, Module):
             return
 
-        if description.category_fn:
-            self._attr_device_class = description.category_fn(netatmo_device)
+        if description.device_class_fn:
+            self._attr_device_class = description.device_class_fn(netatmo_device)
         else:
             self._attr_device_class = description.device_class
         if self._attr_device_class is None:
@@ -277,7 +370,7 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         super().__init__(netatmo_device)
         self.entity_description = description
 
-        publisher_name = self.entity_description.publisher_name or HOME
+        publisher_name = HOME
         self._publishers.extend(
             [
                 {
@@ -319,22 +412,56 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         value = None
         module = self.device
 
-        if not module or not module.reachable:
+        if not module:
+            return
+
+        if not module.reachable:
             if self.available:
                 self._attr_available = False
             self.async_write_ha_state()
             return
 
-        value = self.entity_description.value_fn(module)
+        raw_value = getattr(module, self.entity_description.netatmo_name, None)
+        value = None
+
+        if raw_value is not None:
+            if self.entity_description.value_fn is None:
+                value = cast(bool, raw_value)
+
+                _LOGGER.debug(
+                    "%s (%s) translated from '%s' to '%s' for module '%s'",
+                    self.entity_description.translation_key,
+                    self.entity_description.netatmo_name,
+                    raw_value,
+                    value,
+                    module.name,
+                )
+            else:
+                value = self.entity_description.value_fn(
+                    module, self.entity_description.netatmo_name
+                )
+        else:
+            _LOGGER.warning(
+                "No value can be found for %s (%s) for module '%s'",
+                self.entity_description.translation_key,
+                self.entity_description.netatmo_name,
+                module.name,
+            )
+
         _LOGGER.debug(
             "Updating sensor '%s' for module '%s' with status: %s",
-            self.entity_description.netatmo_name,
+            self.entity_description.key,
             module.name,
             value,
         )
 
-        self._attr_available = True
-        self._attr_is_on = value
+        if value is None:
+            self._attr_available = False
+            self._attr_is_on = False
+        else:
+            self._attr_available = True
+            self._attr_is_on = value
+
         self.async_write_ha_state()
 
     def handle_event(self, event: dict) -> None:

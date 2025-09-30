@@ -117,11 +117,86 @@ def process_wifi(strength: StateType) -> str | None:
     return "Full"
 
 
+def process_rf_strength_string(rf_strength: StateType) -> str | None:
+    """Process RF strength and return string for display."""
+    _LOGGER.debug(
+        "Translated RF strength: %s",
+        rf_strength,
+    )
+
+    if not isinstance(rf_strength, int):
+        return None
+    if rf_strength >= 90:
+        return "Low"
+    if rf_strength >= 76:
+        return "Medium"
+    if rf_strength >= 60:
+        return "High"
+    return "Full"
+
+
+# Note: Cannot use this function till full refactoring of sensor is done
+def process_rf_strength(module: Module, netatmo_name: str) -> str | None:
+    """Process Module rf_strength for display."""
+    rf_strength = getattr(module, netatmo_name)
+    value = process_rf_strength_string(rf_strength)
+
+    _LOGGER.debug(
+        "RF strength (%s) translated from '%s' to '%s' for module '%s'",
+        netatmo_name,
+        rf_strength,
+        value,
+        module.name,
+    )
+
+    return value
+
+
+def process_battery_state_string(battery_state: StateType) -> int | None:
+    """Process battery state string and return percent (int) for display."""
+    _LOGGER.debug(
+        "Translated battery state: %s",
+        battery_state,
+    )
+
+    if not isinstance(battery_state, str):
+        return None
+    mapping = {
+        "max": 100,
+        "full": 90,
+        "high": 75,
+        "medium": 50,
+        "low": 25,
+        "very_low": 10,
+    }
+    if battery_state not in mapping:
+        return None
+    return mapping[battery_state]
+
+
+# Note: Cannot use this function till full refactoring of sensor is done
+def process_battery_state(module: Module, netatmo_name: str) -> int | None:
+    """Process Module battery status for display."""
+    status = getattr(module, netatmo_name)
+    value = process_battery_state_string(status)
+
+    _LOGGER.debug(
+        "Battery state (%s) translated from '%s' to '%s' for module '%s'",
+        netatmo_name,
+        status,
+        value,
+        module.name,
+    )
+
+    return value
+
+
 @dataclass(frozen=True, kw_only=True)
 class NetatmoSensorEntityDescription(SensorEntityDescription):
     """Describes Netatmo sensor entity."""
 
     netatmo_name: str
+    feature_name: str | None = None
     value_fn: Callable[[StateType], StateType] = lambda x: x
 
 
@@ -393,9 +468,11 @@ BATTERY_SENSOR_DESCRIPTION = NetatmoSensorEntityDescription(
 NETATMO_SENSOR_DESCRIPTIONS: Final[list[NetatmoSensorEntityDescription]] = [
     NetatmoSensorEntityDescription(
         key="battery",
-        netatmo_name="battery",
+        netatmo_name="battery_state",
+        feature_name="battery",
         translation_key="Battery",
         entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=process_battery_state_string,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
@@ -403,10 +480,11 @@ NETATMO_SENSOR_DESCRIPTIONS: Final[list[NetatmoSensorEntityDescription]] = [
     NetatmoSensorEntityDescription(
         key="rf_status",
         netatmo_name="rf_strength",
+        feature_name="rf_strength",
         translation_key="RF strength",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=process_rf,
+        value_fn=process_rf_strength_string,
         icon="mdi:signal",
     ),
 ]
@@ -468,27 +546,50 @@ class NetatmoCommonSensor(NetatmoModuleEntity, SensorEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        if not self.device.reachable:
+        value = None
+        module = self.device
+
+        if not module or not module.reachable:
             if self.available:
                 self._attr_available = False
             self._async_write_ha_state()
             return
 
-        self._attr_available = True
-        value = cast(
-            StateType, getattr(self.device, self.entity_description.netatmo_name)
-        )
+        raw_value = getattr(module, self.entity_description.netatmo_name, None)
+        value = None
+
+        if raw_value is not None:
+            _LOGGER.debug(
+                "%s (%s) has been found as '%s' for module '%s'",
+                self.entity_description.translation_key,
+                self.entity_description.netatmo_name,
+                value,
+                module.name,
+            )
+
+            value = self.entity_description.value_fn(raw_value)
+        else:
+            _LOGGER.warning(
+                "No value can be found for %s (%s) for module '%s'",
+                self.entity_description.translation_key,
+                self.entity_description.netatmo_name,
+                module.name,
+            )
 
         _LOGGER.debug(
             "Updating sensor '%s' for module '%s' with status: %s",
-            self.entity_description.netatmo_name,
+            self.entity_description.key,
             self.device.name,
             value,
         )
 
         if value is not None:
-            value = self.entity_description.value_fn(value)
-        self._attr_native_value = value
+            self._attr_available = True
+            self._attr_native_value = value
+        else:
+            self._attr_available = False
+            self._attr_native_value = None
+
         self._async_write_ha_state()
         return
 
@@ -544,7 +645,7 @@ async def async_setup_entry(
             )
             return
 
-        # Check if the device category is in the DEVICE_CATEGORY_SENSORS (skip if is - means new device)
+        # Check if the device category is in the DEVICE_CATEGORY_SENSORS (skip if is - means refactored device)
         if netatmo_device.device.device_category in DEVICE_CATEGORY_SENSORS:
             return
 
@@ -675,10 +776,15 @@ async def async_setup_entry(
 
         # Create sensors for module
         for description in descriptions_to_add:
-            if description.netatmo_name in netatmo_device.device.features:
+            if description.feature_name is None:
+                feature_check = description.key
+            else:
+                feature_check = description.feature_name
+
+            if feature_check in netatmo_device.device.features:
                 _LOGGER.debug(
                     "Adding %s sensor for device %s",
-                    description.netatmo_name,
+                    feature_check,
                     netatmo_device.device.name,
                 )
                 entities.append(
@@ -690,8 +796,8 @@ async def async_setup_entry(
             else:
                 _LOGGER.warning(
                     "Failed to add %s (%s) sensor for device %s",
+                    feature_check,
                     description.netatmo_name,
-                    description.key,
                     netatmo_device.device.name,
                 )
 
