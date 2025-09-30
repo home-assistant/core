@@ -7,17 +7,19 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.satel_integra.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from . import (
     MOCK_CONFIG_DATA,
     MOCK_CONFIG_OPTIONS,
+    MOCK_ENTRY_ID,
     MOCK_OUTPUT_SUBENTRY,
     MOCK_PARTITION_SUBENTRY,
     MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
     MOCK_ZONE_SUBENTRY,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_registry
 
 
 @pytest.fixture
@@ -58,10 +60,16 @@ def mock_config_entry() -> MockConfigEntry:
         title="192.168.0.2",
         data=MOCK_CONFIG_DATA,
         options=MOCK_CONFIG_OPTIONS,
-        entry_id="SATEL_INTEGRA_CONFIG_ENTRY_1",
+        entry_id=MOCK_ENTRY_ID,
         version=1,
         minor_version=1,
     )
+
+
+@pytest.fixture
+def entity_reg(hass: HomeAssistant):
+    """Return an empty, loaded, registry."""
+    return mock_registry(hass)
 
 
 @pytest.fixture

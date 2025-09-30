@@ -2,70 +2,51 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
+
+from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_PANEL_DOMAIN
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.satel_integra.const import DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_registry import EntityRegistry
 
-from tests.common import MockConfigEntry, RegistryEntryWithDefaults, mock_registry
+from . import MOCK_ENTRY_ID
 
-ENTITY_PARTITION = "alarm_panel.home"
-ENTITY_ZONE = "binary_sensor.zone"
-ENTITY_OUTPUT = "binary_sensor.output"
-ENTITY_SWITCHABLE_OUTPUT = "switch.siren"
+from tests.common import MockConfigEntry
 
 
+@pytest.mark.parametrize(
+    ("platform", "old_id", "new_id"),
+    [
+        (ALARM_PANEL_DOMAIN, "satel_alarm_panel_1", f"{MOCK_ENTRY_ID}_alarm_panel_1"),
+        (BINARY_SENSOR_DOMAIN, "satel_zone_1", f"{MOCK_ENTRY_ID}_zone_1"),
+        (BINARY_SENSOR_DOMAIN, "satel_output_1", f"{MOCK_ENTRY_ID}_output_1"),
+        (SWITCH_DOMAIN, "satel_switch_1", f"{MOCK_ENTRY_ID}_switch_1"),
+    ],
+)
 async def test_unique_id_migration_from_single_config(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_satel: AsyncMock,
+    entity_reg: EntityRegistry,
+    platform: str,
+    old_id: str,
+    new_id: str,
 ) -> None:
-    """Test that the unique ID for a sleep switch is migrated to the new format."""
+    """Test that the unique ID is migrated to the new format."""
 
     mock_config_entry.add_to_hass(hass)
 
-    mock_registry(
-        hass,
-        {
-            ENTITY_PARTITION: RegistryEntryWithDefaults(
-                entity_id=ENTITY_PARTITION,
-                unique_id="satel_alarm_panel_1",
-                platform=DOMAIN,
-                config_entry_id=mock_config_entry.entry_id,
-            ),
-            ENTITY_ZONE: RegistryEntryWithDefaults(
-                entity_id=ENTITY_ZONE,
-                unique_id="satel_zone_1",
-                platform=DOMAIN,
-                config_entry_id=mock_config_entry.entry_id,
-            ),
-            ENTITY_OUTPUT: RegistryEntryWithDefaults(
-                entity_id=ENTITY_OUTPUT,
-                unique_id="satel_output_1",
-                platform=DOMAIN,
-                config_entry_id=mock_config_entry.entry_id,
-            ),
-            ENTITY_SWITCHABLE_OUTPUT: RegistryEntryWithDefaults(
-                entity_id=ENTITY_SWITCHABLE_OUTPUT,
-                unique_id="satel_switch_1",
-                platform=DOMAIN,
-                config_entry_id=mock_config_entry.entry_id,
-            ),
-        },
+    entity = entity_reg.async_get_or_create(
+        platform,
+        DOMAIN,
+        old_id,
+        config_entry=mock_config_entry,
     )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
-
-    partition = ent_reg.async_get(ENTITY_PARTITION)
-    assert partition.unique_id == f"{mock_config_entry.entry_id}_alarm_panel_1"
-
-    zone = ent_reg.async_get(ENTITY_ZONE)
-    assert zone.unique_id == f"{mock_config_entry.entry_id}_zone_1"
-
-    output = ent_reg.async_get(ENTITY_OUTPUT)
-    assert output.unique_id == f"{mock_config_entry.entry_id}_output_1"
-
-    switchable_output = ent_reg.async_get(ENTITY_SWITCHABLE_OUTPUT)
-    assert switchable_output.unique_id == f"{mock_config_entry.entry_id}_switch_1"
+    entity = entity_reg.async_get(entity.entity_id)
+    assert entity.unique_id == new_id
