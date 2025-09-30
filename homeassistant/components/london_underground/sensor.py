@@ -5,18 +5,15 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from london_tube_status import TubeData
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -43,18 +40,14 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Tube sensor."""
 
-    session = async_get_clientsession(hass)
-
-    data = TubeData(session)
-    coordinator = LondonTubeCoordinator(hass, data)
-
-    await coordinator.async_refresh()
-
-    if not coordinator.last_update_success:
-        raise PlatformNotReady
-
-    async_add_entities(
-        LondonTubeSensor(coordinator, line) for line in config[CONF_LINE]
+    # No config entry exists and configuration.yaml config exists, trigger the import flow.
+    if not hass.config_entries.async_entries(DOMAIN):
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+    _LOGGER.warning(
+        "Loading London Underground via platform (YAML) config is deprecated; The configuration"
+        " has been migrated to a config entry and can be safely removed"
     )
 
 

@@ -18,6 +18,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_LINE, DEFAULT_LINES, DOMAIN, TUBE_LINES
 
@@ -80,6 +81,16 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_import(self, import_data: ConfigType) -> ConfigFlowResult:
+        """Handle import from configuration.yaml."""
+        _LOGGER.warning(
+            "Importing London Underground config from configuration.yaml: %s",
+            import_data,
+        )
+        # Extract lines from the sensor platform config
+        lines = import_data.get(CONF_LINE, DEFAULT_LINES)
+        return await self.async_step_user({CONF_LINE: lines})
 
 
 class LondonUndergroundOptionsFlow(OptionsFlowWithReload):
