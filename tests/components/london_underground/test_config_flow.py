@@ -15,7 +15,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_options(hass: HomeAssistant) -> None:
+async def test_options(hass: HomeAssistant, mock_setup_entry) -> None:
     """Test updating options."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -42,7 +42,9 @@ async def test_options(hass: HomeAssistant) -> None:
     }
 
 
-async def test_validate_input_connection_error(hass: HomeAssistant) -> None:
+async def test_validate_input_connection_error(
+    hass: HomeAssistant, mock_setup_entry
+) -> None:
     """Test validation with connection error."""
     with patch(
         "homeassistant.components.london_underground.config_flow.TubeData"
@@ -84,7 +86,7 @@ async def test_validate_input_connection_error(hass: HomeAssistant) -> None:
     assert result["options"] == {CONF_LINE: DEFAULT_LINES}
 
 
-async def test_validate_input_timeout(hass: HomeAssistant) -> None:
+async def test_validate_input_timeout(hass: HomeAssistant, mock_setup_entry) -> None:
     """Test validate_input times out."""
     with patch(
         "homeassistant.components.london_underground.config_flow.TubeData"
@@ -125,7 +127,7 @@ async def test_validate_input_timeout(hass: HomeAssistant) -> None:
     assert result["options"] == {CONF_LINE: DEFAULT_LINES}
 
 
-async def test_validate_input_success(hass: HomeAssistant) -> None:
+async def test_validate_input_success(hass: HomeAssistant, mock_setup_entry) -> None:
     """Test successful validation of TfL API."""
     with patch(
         "homeassistant.components.london_underground.config_flow.TubeData"
