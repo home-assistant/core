@@ -8,15 +8,17 @@ from datetime import date, datetime, time, timedelta
 from functools import partial
 import logging
 import re
-from typing import TYPE_CHECKING, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import caldav
 from caldav import CalendarObjectResource
 from caldav.lib.error import NotFoundError
 import dateutil
+from dateutil.rrule import rrulestr
 import icalendar
+import voluptuous as vol
 
-from homeassistant.components.calendar import CalendarEvent, extract_offset
+from homeassistant.components.calendar import VALID_FREQS, CalendarEvent, extract_offset
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -138,17 +140,56 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
 
         return event
 
+    # from core/homeassistant/components/calenda/__init__.py
+    @staticmethod
+    def _validate_rrule(value: Any) -> str:
+        """Validate a recurrence rule string."""
+        if value is None:
+            raise vol.Invalid("rrule value is None")
+
+        if not isinstance(value, str):
+            raise vol.Invalid("rrule value expected a string")
+
+        try:
+            rrulestr(value)
+        except ValueError as err:
+            raise vol.Invalid(f"Invalid rrule '{value}': {err}") from err
+
+        # Example format: FREQ=DAILY;UNTIL=...
+        rule_parts = dict(s.split("=", 1) for s in value.split(";"))
+        if not (freq := rule_parts.get("FREQ")):
+            raise vol.Invalid("rrule did not contain FREQ")
+
+        if freq not in VALID_FREQS:
+            raise vol.Invalid(f"Invalid frequency for rule: {value}")
+
+        return str(value)
+
     def vevent_to_hass_event(self, vevent) -> CalendarEvent:
         """Convert a VEVENT to a Home Assistant CalendarEvent."""
         # recurrence-id needs some special treatment
         recurrence_id = get_attr_value(vevent, "recurrence-id")
         if recurrence_id is not None:
             recurrence_id = str(recurrence_id)
+
+        try:
+            rrule = get_attr_value(vevent, "rrule")
+            # Validate rrule if present
+            if rrule is not None:
+                self._validate_rrule(str(rrule))
+        except vol.Invalid as err:
+            _LOGGER.error(
+                "Invalid rrule in event %s will be discarded: %s",
+                get_attr_value(vevent, "uid"),
+                err,
+            )
+            rrule = None
+
         return CalendarEvent(
             uid=get_attr_value(vevent, "uid"),
             recurrence_id=recurrence_id,
-            rrule=get_attr_value(vevent, "rrule"),
-            summary=(get_attr_value(vevent, "summary") or ""),
+            rrule=rrule,
+            summary=get_attr_value(vevent, "summary") or "",
             start=self.to_local(vevent.dtstart.value),
             end=self.to_local(self.get_end_date(vevent)),
             location=get_attr_value(vevent, "location"),
