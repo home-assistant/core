@@ -45,33 +45,9 @@ def mock_lunatone_auth() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_lunatone_devices(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]:
     """Mock a Lunatone devices object."""
-
-    # def fake_control(device: Device, control_data: ControlData):
-    #     if control_data.switchable is not None:
-    #         device._data.features.switchable.status = control_data.switchable
-
     devices = Devices(mock_lunatone_auth)
     devices._data = DEVICES_DATA
     devices.async_update = AsyncMock()
-
-    # device_list = [Device(devices._auth, d) for d in devices._data.devices]
-    # for dev in device_list:
-    #     dev.async_control = AsyncMock(
-    #         side_effect=lambda data, d=dev: fake_control(d, data)
-    #     )
-    #     dev.async_update = AsyncMock()
-    # devices.devices = device_list
-
-    # for i, device in enumerate(devices.devices):
-    #     devices.devices[i].async_update = AsyncMock()
-    #     devices.devices[i].async_control = AsyncMock(
-    #         side_effect=lambda data, d=devices.devices[i]: fake_control(d, data)
-    #     )
-    # devices.devices[0].async_control = AsyncMock(
-    #     side_effect=lambda data, d=devices.devices[0]: fake_control(d, data)
-    # )
-
-    # type(devices).devices = PropertyMock(return_value=device_list)
 
     with patch("homeassistant.components.lunatone.Devices", return_value=devices):
         yield devices
