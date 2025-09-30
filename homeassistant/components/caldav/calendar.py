@@ -137,9 +137,13 @@ async def async_setup_platform(
         # Create a default calendar if there was no custom one for all calendars
         # that support events.
         if not config[CONF_CUSTOM_CALENDARS]:
-            name = calendar.name
-            device_id = calendar.name
-            entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
+            name = f"{username.capitalize() + ' ' if username else ''}{calendar.name}"  # default entity name is USERNAME calendar.name so the user can better distinguish between calendars.
+            device_id = f"{username} {calendar.name}"
+            entity_id = async_generate_entity_id(
+                ENTITY_ID_FORMAT,
+                f"{url + ' ' if url else ''}{username + ' ' if username else ''}{calendar.name}",  # entity_id based on URL, USERNAME and calendarname to identify a calendar uniquely
+                hass=hass,
+            )
             coordinator = CalDavUpdateCoordinator(
                 hass,
                 None,
