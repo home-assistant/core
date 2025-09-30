@@ -393,7 +393,7 @@ async def test_cannot_create_same_subentry(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_one_config_allowed(
+async def test_same_host_config_disallowed(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that only one Satel Integra configuration is allowed."""
@@ -403,5 +403,14 @@ async def test_one_config_allowed(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_CONFIG_DATA,
+    )
+
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"
