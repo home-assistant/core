@@ -1,0 +1,25 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Select station",
+        "data": {
+          "place_code": "Station"
+        },
+        "data_description": {
+          "place_code": "Weather station to get data from"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Meteo.lt API",
+      "invalid_location": "Selected station is invalid",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "Station is already configured",
+      "cannot_connect": "Failed to connect to Meteo.lt API",
+      "no_places_found": "No stations found from the API"
+    }
+  }
+}

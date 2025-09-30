@@ -3920,6 +3920,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "meteo_lt": {
+      "name": "Meteo.lt",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "meteoalarm": {
       "name": "MeteoAlarm",
       "integration_type": "hub",
