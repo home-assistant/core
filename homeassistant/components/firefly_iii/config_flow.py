@@ -63,6 +63,7 @@ class FireflyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
             try:
                 await _validate_input(self.hass, user_input)
             except CannotConnect:
@@ -74,8 +75,7 @@ class FireflyConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-            else:
-                self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
+
                 return self.async_create_entry(
                     title=user_input[CONF_URL], data=user_input
                 )
