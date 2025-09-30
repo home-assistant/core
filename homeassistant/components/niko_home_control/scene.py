@@ -23,7 +23,7 @@ async def async_setup_entry(
     controller = entry.runtime_data
 
     async_add_entities(
-        (NikoHomeControlScene)(scene, controller, entry.entry_id)
+        NikoHomeControlScene(scene, controller, entry.entry_id)
         for scene in controller.scenes
     )
 
