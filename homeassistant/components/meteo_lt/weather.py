@@ -11,7 +11,6 @@ from homeassistant.components.weather import (
     WeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -35,7 +34,7 @@ async def async_setup_entry(
     """Set up the weather platform."""
     coordinator = entry.runtime_data
 
-    async_add_entities([MeteoLtWeatherEntity(coordinator, entry)])
+    async_add_entities([MeteoLtWeatherEntity(coordinator)])
 
 
 class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherEntity):
@@ -52,11 +51,7 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
         WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
     )
 
-    def __init__(
-        self,
-        coordinator: MeteoLtUpdateCoordinator,
-        entry: ConfigEntry,
-    ) -> None:
+    def __init__(self, coordinator: MeteoLtUpdateCoordinator) -> None:
         """Initialize the weather entity."""
         super().__init__(coordinator)
 

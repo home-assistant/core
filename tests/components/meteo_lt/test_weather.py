@@ -20,6 +20,7 @@ def override_platforms() -> Generator[None]:
         yield
 
 
+@pytest.mark.freeze_time("2025-09-25 10:00:00")
 async def test_weather_entity(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
