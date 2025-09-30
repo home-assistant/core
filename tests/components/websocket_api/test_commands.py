@@ -746,7 +746,7 @@ async def test_get_services(
     assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is old_cache
 
     # Set up an integration with legacy translations in services.yaml
-    def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
+    def _load_services_file(integration: Integration) -> JSON_TYPE:
         return {
             "set_default_level": {
                 "description": "Translated description",

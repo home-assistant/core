@@ -50,7 +50,7 @@
           "protocol": "Protocol"
         },
         "data_description": {
-          "protocol": "Streaming protocol to use for the camera entities. RTSP supports 4K streams (h265 encoding) while RTMP and FLV do not. FLV is the least demanding on the camera."
+          "protocol": "Streaming protocol to use for the camera entities. RTSP supports 4K streams (H.265 encoding) while RTMP and FLV do not. FLV is the least demanding on the camera."
         }
       }
     }
@@ -201,6 +201,13 @@
       },
       "vehicle": {
         "name": "Vehicle",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "non-motor_vehicle": {
+        "name": "Bicycle",
         "state": {
           "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
@@ -571,6 +578,9 @@
       "ai_vehicle_sensitivity": {
         "name": "AI vehicle sensitivity"
       },
+      "ai_non_motor_vehicle_sensitivity": {
+        "name": "AI bicycle sensitivity"
+      },
       "ai_package_sensitivity": {
         "name": "AI package sensitivity"
       },
@@ -606,6 +616,9 @@
       },
       "ai_vehicle_delay": {
         "name": "AI vehicle delay"
+      },
+      "ai_non_motor_vehicle_delay": {
+        "name": "AI bicycle delay"
       },
       "ai_package_delay": {
         "name": "AI package delay"
@@ -923,6 +936,29 @@
       },
       "sd_storage": {
         "name": "SD {hdd_index} storage"
+      },
+      "person_type": {
+        "name": "Person type",
+        "state": {
+          "man": "Man",
+          "woman": "Woman"
+        }
+      },
+      "vehicle_type": {
+        "name": "Vehicle type",
+        "state": {
+          "sedan": "Sedan",
+          "suv": "SUV",
+          "pickup_truck": "Pickup truck",
+          "motorcycle": "Motorcycle"
+        }
+      },
+      "animal_type": {
+        "name": "Animal type",
+        "state": {
+          "dog": "Dog",
+          "cat": "Cat"
+        }
       }
     },
     "siren": {
