@@ -55,4 +55,5 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PASSWORD: "adminadmin",
             CONF_VERIFY_SSL: False,
         },
+        entry_id="01K6E7464PTQKDE24VAJQZPTH2",
     )
