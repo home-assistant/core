@@ -9,7 +9,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, NAME
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import FireflyDataUpdateCoordinator
 
 
@@ -30,7 +30,11 @@ class FireflyBaseEntity(CoordinatorEntity[FireflyDataUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
-            model=NAME,
             configuration_url=URL(coordinator.config_entry.data[CONF_URL]),
-            identifiers={(DOMAIN, entity_description.key)},
+            identifiers={
+                (
+                    DOMAIN,
+                    f"{coordinator.config_entry.entry_id}_{self.entity_description.key}",
+                )
+            },
         )
