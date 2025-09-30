@@ -364,14 +364,24 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                                 # This mimics the behavior of Nextcloud, which I personally find preferable because
                                 # this when editing number of recurrences in the home assistant UI we will get the
                                 # expected behavior that changing the COUNT e.g. from 4 to 8 will result in 4 more recurrences (and not 8).
-                                recurrences_up_to_now = rrule.between(
-                                    after=icalendar.tools.to_datetime(
-                                        o.icalendar_component["dtstart"].dt
-                                    ),
-                                    before=icalendar.tools.to_datetime(
-                                        sc["dtstart"].dt
-                                    ),
-                                    inc=True,
+                                recurrences_up_to_now = (
+                                    rrule.between(  # tz aware
+                                        after=self.to_datetime(
+                                            o.icalendar_component["dtstart"].dt
+                                        ),
+                                        before=self.to_datetime(sc["dtstart"].dt),
+                                        inc=True,
+                                    )
+                                    if dtstart.tzinfo
+                                    else rrule.between(  # tz naive
+                                        after=icalendar.tools.to_datetime(
+                                            o.icalendar_component["dtstart"].dt
+                                        ),
+                                        before=icalendar.tools.to_datetime(
+                                            sc["dtstart"].dt
+                                        ),
+                                        inc=True,
+                                    )
                                 )
                                 if len(recurrences_up_to_now) > 0:
                                     sc["rrule"]["count"] = [
