@@ -167,6 +167,27 @@ UNKNOWN_SERVICE_INFO = BluetoothServiceInfoBleak(
     tx_power=0,
 )
 
+UNKNOWN_AIRTHINGS_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="unknown",
+    address="00:cc:cc:cc:cc:cc",
+    rssi=-61,
+    manufacturer_data={820: b"\xe4/\xa5\xae\t\x00"},
+    service_data={},
+    service_uuids=[],
+    source="local",
+    device=generate_ble_device(
+        "cc:cc:cc:cc:cc:cc",
+        "unknown",
+    ),
+    advertisement=generate_advertisement_data(
+        manufacturer_data={},
+        service_uuids=[],
+    ),
+    connectable=True,
+    time=0,
+    tx_power=0,
+)
+
 WAVE_DEVICE_INFO = AirthingsDevice(
     manufacturer="Airthings AS",
     hw_version="REV A",
