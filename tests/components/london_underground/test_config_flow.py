@@ -15,29 +15,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant) -> None:
-    """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert not result["errors"]
-
-    with patch(
-        "homeassistant.components.london_underground.config_flow.TubeData.update",
-        return_value=None,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {},
-        )
-
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "London Underground"
-    assert result2["data"] == {}
-    assert result2["options"] == {CONF_LINE: DEFAULT_LINES}
-
-
 async def test_options(hass: HomeAssistant) -> None:
     """Test updating options."""
     entry = MockConfigEntry(
@@ -52,15 +29,15 @@ async def test_options(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    result2 = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
             CONF_LINE: ["Bakerloo", "Central"],
         },
     )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
         CONF_LINE: ["Bakerloo", "Central"],
     }
 
@@ -80,13 +57,13 @@ async def test_validate_input_connection_error(hass: HomeAssistant) -> None:
         with patch(
             "homeassistant.components.london_underground.config_flow.async_get_clientsession",
         ):
-            result2 = await hass.config_entries.flow.async_configure(
+            result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 {CONF_LINE: ["Bakerloo", "Central"]},
             )
 
-        assert result2["type"] == FlowResultType.FORM
-        assert result2["errors"]["base"] == "cannot_connect"
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"]["base"] == "cannot_connect"
 
     # confirm that we can recover from the error
     with patch(
@@ -95,16 +72,16 @@ async def test_validate_input_connection_error(hass: HomeAssistant) -> None:
         mock_tube_data_instance = mock_tube_data.return_value
         mock_tube_data_instance.update = AsyncMock()
 
-        result3 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "London Underground"
-    assert result3["data"] == {}
-    assert result3["options"] == {CONF_LINE: DEFAULT_LINES}
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "London Underground"
+    assert result["data"] == {}
+    assert result["options"] == {CONF_LINE: DEFAULT_LINES}
 
 
 async def test_validate_input_timeout(hass: HomeAssistant) -> None:
@@ -122,13 +99,13 @@ async def test_validate_input_timeout(hass: HomeAssistant) -> None:
         with patch(
             "homeassistant.components.london_underground.config_flow.async_get_clientsession",
         ):
-            result2 = await hass.config_entries.flow.async_configure(
+            result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 {CONF_LINE: ["Bakerloo", "Central"]},
             )
 
-        assert result2["type"] == FlowResultType.FORM
-        assert result2["errors"]["base"] == "timeout_connect"
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"]["base"] == "timeout_connect"
 
     # confirm that we can recover from the error
     with patch(
@@ -136,16 +113,16 @@ async def test_validate_input_timeout(hass: HomeAssistant) -> None:
     ) as mock_tube_data:
         mock_tube_data_instance = mock_tube_data.return_value
         mock_tube_data_instance.update = AsyncMock()
-        result3 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {},
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "London Underground"
-    assert result3["data"] == {}
-    assert result3["options"] == {CONF_LINE: DEFAULT_LINES}
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "London Underground"
+    assert result["data"] == {}
+    assert result["options"] == {CONF_LINE: DEFAULT_LINES}
 
 
 async def test_validate_input_success(hass: HomeAssistant) -> None:
@@ -160,13 +137,13 @@ async def test_validate_input_success(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_LINE: ["Bakerloo", "Central"]},
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == FlowResultType.CREATE_ENTRY
-        assert result2["title"] == "London Underground"
-        assert result2["data"] == {}
-        assert result2["options"] == {CONF_LINE: ["Bakerloo", "Central"]}
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == "London Underground"
+        assert result["data"] == {}
+        assert result["options"] == {CONF_LINE: ["Bakerloo", "Central"]}
