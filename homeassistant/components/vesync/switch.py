@@ -56,6 +56,16 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
         on_fn=lambda device: device.toggle_display(True),
         off_fn=lambda device: device.toggle_display(False),
     ),
+    VeSyncSwitchEntityDescription(
+        key="oscillation",
+        is_on=lambda device: device.state.oscillation_status == "on",
+        exists_fn=(
+            lambda device: rgetattr(device, "state.oscillation_status") is not None
+        ),
+        translation_key="oscillation",
+        on_fn=lambda device: device.toggle_oscillation(True),
+        off_fn=lambda device: device.toggle_oscillation(False),
+    ),
 )
 
 
