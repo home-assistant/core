@@ -578,6 +578,9 @@
       "ai_vehicle_sensitivity": {
         "name": "AI vehicle sensitivity"
       },
+      "ai_non_motor_vehicle_sensitivity": {
+        "name": "AI bicycle sensitivity"
+      },
       "ai_package_sensitivity": {
         "name": "AI package sensitivity"
       },
@@ -613,6 +616,9 @@
       },
       "ai_vehicle_delay": {
         "name": "AI vehicle delay"
+      },
+      "ai_non_motor_vehicle_delay": {
+        "name": "AI bicycle delay"
       },
       "ai_package_delay": {
         "name": "AI package delay"
