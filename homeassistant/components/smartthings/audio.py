@@ -189,6 +189,7 @@ class SmartThingsAudioManager(HomeAssistantView):
         try:
             with wave.open(wav_io) as wav_in:
                 frame_rate = wav_in.getframerate()
+                frames = wav_in.getnframes()
                 channels = wav_in.getnchannels()
                 sample_width = wav_in.getsampwidth()
                 if (
@@ -211,7 +212,7 @@ class SmartThingsAudioManager(HomeAssistantView):
                 "Unable to convert audio to PCM for SmartThings"
             ) from err
 
-        duration = len(stdout) / BYTES_PER_SECOND
+        duration = frames / frame_rate if frame_rate else 0
         return stdout, duration
 
     def _cleanup(self, now: float) -> None:

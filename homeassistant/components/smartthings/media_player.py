@@ -267,12 +267,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         except SmartThingsAudioError as err:
             raise HomeAssistantError(str(err)) from err
 
-        try:
-            command = Command("playTrackAndResume")
-        except ValueError as err:
-            raise HomeAssistantError(
-                "Installed SmartThings library lacks playTrackAndResume support"
-            ) from err
+        command = Command("playTrackAndResume")
 
         await self.execute_device_command(
             Capability.AUDIO_NOTIFICATION,
