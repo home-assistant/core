@@ -15,12 +15,6 @@ from .const import CONF_PLACE_CODE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PLACE_CODE): str,
-    }
-)
-
 
 class MeteoLtConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Meteo.lt."""
