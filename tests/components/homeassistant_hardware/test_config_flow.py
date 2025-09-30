@@ -299,7 +299,7 @@ def mock_firmware_info(
         device: str,
         fw_data: bytes,
         expected_installed_firmware_type: ApplicationType,
-        bootloader_reset_type: str | None = None,
+        bootloader_reset_type: tuple[str, ...] = (),
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> FirmwareInfo:
         await asyncio.sleep(0)

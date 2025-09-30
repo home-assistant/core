@@ -81,7 +81,7 @@ class BaseFirmwareUpdateEntity(
 
     # Subclasses provide the mapping between firmware types and entity descriptions
     entity_description: FirmwareUpdateEntityDescription
-    bootloader_reset_type: str | None = None
+    bootloader_reset_type: tuple[str, ...] = ()
 
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
