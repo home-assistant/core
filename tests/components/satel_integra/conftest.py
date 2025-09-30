@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.satel_integra.const import DOMAIN
-from homeassistant.core import HomeAssistant
 
 from . import (
     MOCK_CONFIG_DATA,
@@ -19,7 +18,7 @@ from . import (
     MOCK_ZONE_SUBENTRY,
 )
 
-from tests.common import MockConfigEntry, mock_registry
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -64,12 +63,6 @@ def mock_config_entry() -> MockConfigEntry:
         version=1,
         minor_version=1,
     )
-
-
-@pytest.fixture
-def entity_reg(hass: HomeAssistant):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture

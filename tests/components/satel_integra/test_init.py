@@ -29,7 +29,7 @@ async def test_unique_id_migration_from_single_config(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_satel: AsyncMock,
-    entity_reg: EntityRegistry,
+    entity_registry: EntityRegistry,
     platform: str,
     old_id: str,
     new_id: str,
@@ -38,7 +38,7 @@ async def test_unique_id_migration_from_single_config(
 
     mock_config_entry.add_to_hass(hass)
 
-    entity = entity_reg.async_get_or_create(
+    entity = entity_registry.async_get_or_create(
         platform,
         DOMAIN,
         old_id,
@@ -48,5 +48,5 @@ async def test_unique_id_migration_from_single_config(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity = entity_reg.async_get(entity.entity_id)
+    entity = entity_registry.async_get(entity.entity_id)
     assert entity.unique_id == new_id
