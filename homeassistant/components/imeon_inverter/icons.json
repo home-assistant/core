@@ -169,6 +169,12 @@
       },
       "energy_battery_consumed": {
         "default": "mdi:battery-arrow-down-outline"
+      },
+      "forecast_cons_remaining_today": {
+        "default": "mdi:chart-line"
+      },
+      "forecast_prod_remaining_today": {
+        "default": "mdi:chart-line"
       }
     },
     "select": {
