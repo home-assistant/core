@@ -60,9 +60,7 @@ def get_device_list_classic(
             ) from ex
         if not plant_info or "data" not in plant_info or not plant_info["data"]:
             raise ConfigEntryError("No plants found for this account.")
-        plant_id = plant_info["data"][0].get("plantId")
-        if not plant_id:
-            raise ConfigEntryError("Plant ID missing in plant info.")
+        plant_id = plant_info["data"][0]["plantId"]
 
     # Get a list of devices for specified plant to add sensors for.
     try:

@@ -174,14 +174,10 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason=ABORT_NO_PLANTS)
 
             # Create dictionary of plant_id -> name
-            plant_dict = {}
-            for plant in self.plants:
-                plant_id = plant.get("plant_id")
-                if plant_id:
-                    plant_dict[str(plant_id)] = plant.get("name", "Unknown Plant")
-
-            if not plant_dict:
-                return self.async_abort(reason=ABORT_NO_PLANTS)
+            plant_dict = {
+                str(plant["plant_id"]): plant.get("name", "Unknown Plant")
+                for plant in self.plants
+            }
 
             if user_input is None and len(plant_dict) > 1:
                 data_schema = vol.Schema(
