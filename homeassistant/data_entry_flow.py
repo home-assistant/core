@@ -799,14 +799,15 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         without using async_show_progress_done.
         If no next step is set, abort the flow.
         """
-        if self._progress_step_data["next_step_result"] is None:
+        if (next_step_result := self._progress_step_data["next_step_result"]) is None:
             return self.async_abort(
                 reason=self._progress_step_data["abort_reason"],
                 description_placeholders=self._progress_step_data[
                     "abort_description_placeholders"
                 ],
             )
-        return self._progress_step_data["next_step_result"]
+        self._progress_step_data["next_step_result"] = None
+        return next_step_result
 
     @callback
     def async_external_step(
@@ -1044,7 +1045,7 @@ def progress_step[
 
             # Task is done or this is a subsequent call
             try:
-                self._progress_step_data["next_step_result"] = await progress_task
+                progress_task_result = await progress_task
             except AbortFlow as err:
                 self._progress_step_data["abort_reason"] = err.reason
                 self._progress_step_data["abort_description_placeholders"] = (
@@ -1056,6 +1057,9 @@ def progress_step[
             finally:
                 # Clean up task reference
                 self._progress_step_data["tasks"].pop(step_id, None)
+
+            if progress_task_result["type"] != FlowResultType.SHOW_PROGRESS_DONE:
+                self._progress_step_data["next_step_result"] = progress_task_result
 
             return self.async_show_progress_done(
                 next_step_id="_progress_step_progress_done"
