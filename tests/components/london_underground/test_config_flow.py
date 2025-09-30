@@ -31,7 +31,6 @@ async def test_form(hass: HomeAssistant) -> None:
             result["flow_id"],
             {},
         )
-        await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "London Underground"
