@@ -24,7 +24,8 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "wrong_account": "You are authenticated with a different account than the one set up. Please authenticate with the configured account."
+      "wrong_account": "You are authenticated with a different account than the one set up. Please authenticate with the configured account.",
+      "cloud_not_enabled": "Please make sure you run Home Assistant with `{default_config}` enabled in your configuration.yaml."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
