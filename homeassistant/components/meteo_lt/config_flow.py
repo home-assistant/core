@@ -66,17 +66,19 @@ class MeteoLtConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._places:
             return self.async_abort(reason="no_places_found")
 
+        places_options = {
+            place.code: f"{place.name} ({place.administrative_division})"
+            for place in self._places
+        }
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_PLACE_CODE): vol.In(places_options),
+            }
+        )
+
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(
-                DATA_SCHEMA,
-                {CONF_PLACE_CODE: self._places[0].code},
-            ),
-            description_placeholders={
-                "places": ", ".join(
-                    f"{place.name} ({place.administrative_division})"
-                    for place in self._places
-                )
-            },
+            data_schema=data_schema,
             errors=errors,
         )
