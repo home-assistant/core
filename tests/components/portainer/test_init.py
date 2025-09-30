@@ -68,4 +68,4 @@ async def test_migrations(hass: HomeAssistant) -> None:
     assert CONF_API_KEY not in entry.data
     assert entry.data[CONF_URL] == "http://test_host"
     assert entry.data[CONF_API_TOKEN] == "test_key"
-    assert entry.data[CONF_VERIFY_SSL] is False
+    assert entry.data[CONF_VERIFY_SSL] is True
