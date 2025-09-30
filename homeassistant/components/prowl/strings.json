@@ -7,12 +7,6 @@
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "name": "[%key:common::config_flow::data::name%]"
         }
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        }
       }
     },
     "error": {
@@ -21,7 +15,6 @@
       "bad_api_response": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "already_configured": "API key is already configured"
     }
   }

@@ -5,11 +5,12 @@ from unittest.mock import Mock
 import prowlpy
 import pytest
 
+from homeassistant.components import notify
 from homeassistant.components.prowl.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import TEST_API_KEY
+from .conftest import ENTITY_ID, TEST_API_KEY
 
 from tests.common import MockConfigEntry
 
@@ -69,3 +70,22 @@ async def test_config_entry_failures(
 
     assert mock_prowlpy_config_entry.state is expected_config_state
     assert mock_prowlpy.verify_key.call_count > 0
+
+
+@pytest.mark.usefixtures("configure_prowl_through_yaml")
+async def test_both_yaml_and_config_entry(
+    hass: HomeAssistant,
+    mock_prowlpy_config_entry: MockConfigEntry,
+) -> None:
+    """Test having both YAML config and a config entry works."""
+    mock_prowlpy_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_prowlpy_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_prowlpy_config_entry.state is ConfigEntryState.LOADED
+
+    # Ensure we have the YAML entity service
+    assert hass.services.has_service(notify.DOMAIN, DOMAIN)
+
+    # Ensure we have the config entry entity service
+    assert hass.states.get(ENTITY_ID) is not None

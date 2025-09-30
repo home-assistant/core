@@ -22,28 +22,25 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self.api_key = ""
-        self.name = "Prowl"
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle user configuration."""
         errors = {}
+        api_key = ""
+        name = "Prowl"
 
         if user_input and user_input[CONF_API_KEY]:
-            self.api_key = user_input[CONF_API_KEY]
-            self.name = user_input[CONF_NAME]
-            self._async_abort_entries_match({CONF_API_KEY: self.api_key})
+            api_key = user_input[CONF_API_KEY]
+            name = user_input[CONF_NAME]
+            self._async_abort_entries_match({CONF_API_KEY: api_key})
 
-            errors = await self._validate_api_key(self.api_key)
+            errors = await self._validate_api_key(api_key)
             if not errors:
                 return self.async_create_entry(
-                    title=self.name,
+                    title=name,
                     data={
-                        CONF_API_KEY: self.api_key,
+                        CONF_API_KEY: api_key,
                     },
                 )
 
