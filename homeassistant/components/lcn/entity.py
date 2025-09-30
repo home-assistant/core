@@ -85,8 +85,5 @@ class LcnEntity(Entity):
         """Return the name of the device."""
         return self._name
 
-    async def async_update(self) -> None:
-        """Update the state of the entity."""
-
     def input_received(self, input_obj: InputType) -> None:
         """Set state/value when LCN input object (command) is received."""
