@@ -26,12 +26,12 @@ MOCK_USER_SETUP = {
 }
 
 
-async def test_form(
+async def test_form_and_flow(
     hass: HomeAssistant,
     mock_firefly_client: MagicMock,
     mock_setup_entry: MagicMock,
 ) -> None:
-    """Test we get the form."""
+    """Test we get the form and can complete the flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
