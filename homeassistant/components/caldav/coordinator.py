@@ -294,23 +294,56 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                         recurrence_property_values[key] = component[key]
                 # Expand recurrence rule(s); next two line from caldav library
                 if any(key in component for key in recurrence_properties):
-                    o.expand_rrule(start, end, include_completed=include_completed)
+                    # Save dtstart - if start and end are outside the recurrence range of o, then o will have no subcomponents and o.icalendar_component cannot be used
+                    dtstart = o.icalendar_component["dtstart"]
                     # Our code from here...
-                    # Create a rrule objectthat will help us to count the number of previous occurrences
+                    # Create a rrule object that will help us to count the number of previous occurrences
                     rrule = None
                     master_count = None
-                    if "rrule" in recurrence_property_values:
+                    if "rrule" in recurrence_property_values and dtstart:
+                        dtstart = dtstart.dt
                         vrrule = recurrence_property_values["rrule"]
                         if "count" in vrrule:
                             # note: we don't have to consider exdates here because we want those dates to be counted.
                             # note2: this applies only to our use-case where we use ex-date to delete single occurrences.
                             master_count = vrrule["count"][0]
-                            rrule = dateutil.rrule.rrulestr(
-                                vrrule.to_ical().decode("utf-8"),
-                                dtstart=icalendar.tools.to_datetime(
-                                    o.icalendar_component["dtstart"].dt
-                                ),
-                            )
+                            if not isinstance(dtstart, datetime):
+                                dtstart = self.to_datetime(dtstart)
+                        elif "until" in vrrule:
+                            dtuntil = vrrule["until"]
+                            if isinstance(dtuntil, list):
+                                dtuntil = dtuntil[0]
+                            if isinstance(dtuntil, datetime):
+                                # if rrule until is naive, make dtstart naive
+                                if dtuntil.tzinfo is None:
+                                    dtstart = self.to_tznaive_utc(dtstart)
+                        # create rrule
+                        rrule = dateutil.rrule.rrulestr(
+                            vrrule.to_ical().decode("utf-8"),
+                            dtstart=dtstart,
+                        )
+
+                    # If there is no rrule then we don't need to expand the rrule
+                    if not rrule:
+                        continue
+
+                    # get the recurrences that are between start and end
+                    recurrences = (
+                        rrule.between(start, end, inc=True)
+                        if dtstart.tzinfo
+                        else rrule.between(
+                            start.astimezone(timezone.utc).replace(tzinfo=None),  # noqa: UP017
+                            end.astimezone(timezone.utc).replace(tzinfo=None),  # noqa: UP017
+                            inc=True,
+                        )
+                    )
+
+                    # If there are no recurrences between start and end we don't expand the event
+                    if not recurrences:
+                        continue
+
+                    # Expand rrule
+                    o.expand_rrule(start, end, include_completed=include_completed)
 
                     # Restore the recurrence properties
                     for sc in o.icalendar_instance.subcomponents:
