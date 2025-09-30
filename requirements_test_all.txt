@@ -1689,6 +1689,9 @@ pyfibaro==0.8.3
 # homeassistant.components.fido
 pyfido==2.1.2
 
+# homeassistant.components.firefly_iii
+pyfirefly==0.1.5
+
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.46
 
