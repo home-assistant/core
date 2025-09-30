@@ -1472,7 +1472,6 @@ async def test_start_timer_with_conversation_command(
         assert mock_converse.call_args.args[1] == test_command
 
 
-@pytest.mark.usefixtures("init_components")
 async def test_start_timer_with_invalid_conversation_command(
     hass: HomeAssistant, init_components
 ) -> None:
