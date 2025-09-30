@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import copy
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 from functools import partial
 import logging
 import re
@@ -523,6 +523,20 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         if isinstance(obj, datetime):
             return dt_util.as_local(obj)
         return obj
+
+    @staticmethod
+    def to_tznaive_utc(obj: datetime | date) -> datetime:
+        """Return a datetime without tzinfo.
+
+        If obj is a date, it is converted to a datetime with the default timezone.
+        If obj has a timezone, then it is connverted to UTC before the timezone info is removed.
+        """
+        if not isinstance(obj, datetime):
+            obj = datetime.combine(obj, time.min).replace(
+                tzinfo=dt_util.get_default_time_zone()
+            )
+
+        return obj.astimezone(timezone.utc).replace(tzinfo=None)  # noqa: UP017
 
     @staticmethod
     def get_end_date(obj):
