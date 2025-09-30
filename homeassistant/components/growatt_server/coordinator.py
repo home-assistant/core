@@ -110,14 +110,15 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 min_details = self.api.min_detail(self.device_id)
                 min_settings = self.api.min_settings(self.device_id)
                 min_energy = self.api.min_energy(self.device_id)
-                min_info = {**min_details, **min_settings, **min_energy}
-                self.data = min_info
-                _LOGGER.debug("min_info for device %s: %r", self.device_id, min_info)
             except growattServer.GrowattV1ApiError as err:
                 _LOGGER.error(
                     "Error fetching min device data for %s: %s", self.device_id, err
                 )
                 raise UpdateFailed(f"Error fetching min device data: {err}") from err
+
+            min_info = {**min_details, **min_settings, **min_energy}
+            self.data = min_info
+            _LOGGER.debug("min_info for device %s: %r", self.device_id, min_info)
         elif self.device_type == "tlx":
             tlx_info = self.api.tlx_detail(self.device_id)
             self.data = tlx_info["data"]

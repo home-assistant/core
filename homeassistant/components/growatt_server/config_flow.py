@@ -162,9 +162,6 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="token_auth",
             data_schema=data_schema,
             errors=errors,
-            description_placeholders={
-                "note": "Token authentication only supports MIN/TLX devices. For other device types, please use username/password authentication."
-            },
         )
 
     async def async_step_plant(

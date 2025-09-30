@@ -5,11 +5,14 @@ import logging
 
 import growattServer
 
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 
 from .const import (
+    AUTH_API_TOKEN,
+    AUTH_PASSWORD,
+    CONF_AUTH_TYPE,
     CONF_PLANT_ID,
     DEFAULT_PLANT_ID,
     DEFAULT_URL,
@@ -136,11 +139,11 @@ async def async_setup_entry(
         hass.config_entries.async_update_entry(config_entry, data=new_data)
 
     # Determine API version
-    if config.get("auth_type") == "api_token":
+    if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
         api_version = "v1"
-        token = config["token"]
+        token = config[CONF_TOKEN]
         api = growattServer.OpenApiV1(token=token)
-    elif config.get("auth_type") == "password":
+    elif config.get(CONF_AUTH_TYPE) == AUTH_PASSWORD:
         api_version = "classic"
         username = config[CONF_USERNAME]
         api = growattServer.GrowattApi(
