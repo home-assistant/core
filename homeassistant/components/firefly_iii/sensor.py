@@ -10,11 +10,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.components.sensor.const import SensorDeviceClass
-from homeassistant.components.todo import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import FireflyDataUpdateCoordinator
+from .coordinator import FireflyConfigEntry, FireflyDataUpdateCoordinator
 from .entity import FireflyBaseEntity
 
 ACCOUNT_SENSORS: tuple[SensorEntityDescription, ...] = (
@@ -38,7 +37,7 @@ CATEGORY_SENSORS: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: FireflyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Firefly III sensor platform."""

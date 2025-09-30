@@ -63,6 +63,6 @@ rules:
   stale-devices: todo
 
   # Platinum
-  async-dependency: todo
-  inject-websession: todo
-  strict-typing: todo
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
