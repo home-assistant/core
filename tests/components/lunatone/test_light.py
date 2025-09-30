@@ -103,11 +103,8 @@ async def test_coordinator_update_handling(
     """Test the coordinator update handling."""
 
     async def fake_update():
-        new_device = mock_lunatone_devices._data.devices[0].model_copy(deep=True)
-        new_device.features.switchable.status = (
-            not new_device.features.switchable.status
-        )
-        mock_lunatone_devices._data.devices[0] = new_device
+        device = mock_lunatone_devices._data.devices[0]
+        device.features.switchable.status = not device.features.switchable.status
 
     await setup_integration(hass, mock_config_entry)
 
