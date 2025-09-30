@@ -175,6 +175,7 @@ async def test_config_flow_thread(
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "pick_firmware"
     description_placeholders = result["description_placeholders"]
+    assert description_placeholders is not None
     assert description_placeholders["model"] == model
 
     async def mock_install_firmware_step(
