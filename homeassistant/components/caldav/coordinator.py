@@ -223,9 +223,12 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         def get_vevent_list() -> list[CalendarEvent]:
             event_list = []
             for event in vevent_list:
+                if not event.instance:
+                    continue
                 if not hasattr(event.instance, "vevent"):
                     _LOGGER.warning("Skipped event with missing 'vevent' property")
                     continue
+                assert hasattr(event.instance, "vevent")  # <3 mypi
                 vevent = event.instance.vevent
                 if not self.is_matching(vevent, self.search):
                     continue
