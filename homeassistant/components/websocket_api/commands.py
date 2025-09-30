@@ -647,9 +647,14 @@ async def handle_manifest_list(
         hass, msg.get("integrations") or async_get_loaded_integrations(hass)
     )
     manifest_json_fragments: list[json_fragment] = []
-    for int_or_exc in ints_or_excs.values():
+    for domain, int_or_exc in ints_or_excs.items():
         if isinstance(int_or_exc, Exception):
-            raise int_or_exc
+            _LOGGER.error(
+                "Unable to get manifest for integration %s: %s",
+                domain,
+                int_or_exc,
+            )
+            continue
         manifest_json_fragments.append(int_or_exc.manifest_json_fragment)
     connection.send_result(msg["id"], manifest_json_fragments)
 
