@@ -455,6 +455,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_register_built_in_panel(hass, "profile")
 
     async_register_built_in_panel(
+        hass, "lights", sidebar_icon="mdi:lamps", sidebar_title="lights"
+    )
+
+    async_register_built_in_panel(
+        hass, "security", sidebar_icon="mdi:security", sidebar_title="security"
+    )
+
+    async_register_built_in_panel(
+        hass, "climate", sidebar_icon="mdi:home-thermometer", sidebar_title="climate"
+    )
+
+    async_register_built_in_panel(
         hass,
         "developer-tools",
         require_admin=True,
