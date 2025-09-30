@@ -180,6 +180,28 @@ def get_suggested(schema, key):
 @pytest.mark.usefixtures(
     "addon_store_info", "addon_info", "install_addon", "uninstall_addon"
 )
+async def test_restart_addon_waiting(hass: HomeAssistant) -> None:
+    """Test the synchronous addon restart helper."""
+
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
+    multipan_manager.async_get_addon_info = AsyncMock()
+    multipan_manager.async_restart_addon = AsyncMock(
+        wraps=multipan_manager.async_restart_addon
+    )
+
+    # Test restarting the addon with state transitions
+    multipan_manager.async_get_addon_info.side_effect = [
+        # After restart is scheduled, addon is stopping
+        Mock(state=AddonState.NOT_RUNNING),
+        # Then it's running again
+        Mock(state=AddonState.RUNNING),
+    ]
+    await multipan_manager.async_restart_addon_waiting()
+    assert multipan_manager.async_restart_addon.call_count == 1
+
+
 async def test_uninstall_addon_waiting(hass: HomeAssistant) -> None:
     """Test the synchronous addon uninstall helper."""
 

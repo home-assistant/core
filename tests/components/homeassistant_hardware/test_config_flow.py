@@ -6,7 +6,7 @@ import contextlib
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
-from aiohasupervisor.models import AddonsOptions
+from aiohasupervisor.models import AddonsOptions, AddonState
 from aiohttp import ClientError
 from ha_silabs_firmware_client import (
     FirmwareManifest,
@@ -881,6 +881,89 @@ async def test_config_flow_thread_addon_already_installed(
         "device": TEST_DEVICE,
         "hardware": TEST_HARDWARE_NAME,
     }
+
+
+async def test_config_flow_thread_addon_already_running(
+    hass: HomeAssistant,
+    set_addon_options: AsyncMock,
+    addon_store_info: AsyncMock,
+    addon_info: AsyncMock,
+) -> None:
+    """Test the Thread config flow, addon is already running."""
+    # Set up addon as running
+    addon_store_info.return_value.available = True
+    addon_store_info.return_value.installed = True
+    addon_info.return_value.available = True
+    addon_info.return_value.hostname = "core-test-addon"
+    addon_info.return_value.version = "1.0.0"
+    addon_info.return_value.state = AddonState.STARTED
+
+    restart_addon_waiting = AsyncMock()
+
+    init_result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": "hardware"}
+    )
+
+    assert init_result["type"] is FlowResultType.MENU
+    assert init_result["step_id"] == "pick_firmware"
+
+    with (
+        mock_firmware_info(
+            probe_app_type=ApplicationType.EZSP,
+            flash_app_type=ApplicationType.SPINEL,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon.WaitingAddonManager.async_restart_addon_waiting",
+            restart_addon_waiting,
+        ),
+    ):
+        # Pick the menu option
+        pick_result = await hass.config_entries.flow.async_configure(
+            init_result["flow_id"],
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
+        )
+
+        assert pick_result["type"] is FlowResultType.SHOW_PROGRESS
+        assert pick_result["progress_action"] == "install_firmware"
+        assert pick_result["step_id"] == "install_thread_firmware"
+
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Progress the flow, it is now installing firmware
+        create_result = await consume_progress_flow(
+            hass,
+            flow_id=pick_result["flow_id"],
+            valid_step_ids=(
+                "pick_firmware_thread",
+                "install_thread_firmware",
+                "start_otbr_addon",
+            ),
+        )
+
+        # Installation will conclude with the config entry being created
+        assert create_result["type"] is FlowResultType.CREATE_ENTRY
+
+        config_entry = create_result["result"]
+        assert config_entry.data == {
+            "firmware": "spinel",
+            "device": TEST_DEVICE,
+            "hardware": TEST_HARDWARE_NAME,
+        }
+
+        # Verify addon options were set
+        assert set_addon_options.call_args == call(
+            "core_openthread_border_router",
+            AddonsOptions(
+                config={
+                    "device": "/dev/SomeDevice123",
+                    "baudrate": 460800,
+                    "flow_control": True,
+                    "autoflash_firmware": False,
+                },
+            ),
+        )
+        # Verify restart was called instead of start
+        restart_addon_waiting.assert_called_once()
 
 
 @pytest.mark.usefixtures("addon_not_installed")
