@@ -1,32 +1,6 @@
 {
   "config": {
     "step": {
-      "user": {
-        "title": "Choose setup method",
-        "menu_options": {
-          "coordinates": "Use coordinates to find closest station",
-          "manual": "Pick station manually from list"
-        }
-      },
-      "coordinates": {
-        "title": "Enter coordinates",
-        "data": {
-          "latitude": "Latitude",
-          "longitude": "Longitude"
-        },
-        "data_description": {
-          "latitude": "Latitude coordinate",
-          "longitude": "Longitude coordinate"
-        }
-      },
-      "location_from_coordinates": {
-        "title": "Found station",
-        "description": "**{location_name}** ({distance} km away)",
-        "menu_options": {
-          "use_location": "Use this station",
-          "find_manual": "Find station manually"
-        }
-      },
       "manual": {
         "title": "Select station",
         "data": {
@@ -39,7 +13,6 @@
     },
     "error": {
       "cannot_connect": "Failed to connect to Meteo.lt API",
-      "no_location_found": "No weather station found near coordinates",
       "invalid_location": "Selected station is invalid",
       "unknown": "Unexpected error occurred"
     },
