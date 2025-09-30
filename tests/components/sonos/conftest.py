@@ -664,6 +664,9 @@ def music_library_fixture(
     music_library.browse_by_idstring = Mock(side_effect=mock_browse_by_idstring)
     music_library.get_music_library_information = mock_get_music_library_information
     music_library.browse = Mock(return_value=music_library_browse_categories)
+    music_library.build_album_art_full_uri = Mock(
+        return_value="build_album_art_full_uri.jpg"
+    )
     return music_library
 
 
@@ -736,6 +739,22 @@ def current_track_info_empty_fixture():
         "playlist_position": "1",
         "duration": "NOT_IMPLEMENTED",
         "uri": "",
+        "metadata": "NOT_IMPLEMENTED",
+    }
+
+
+@pytest.fixture(name="current_track_info")
+def current_track_info_fixture():
+    """Create current_track_info fixture."""
+    return {
+        "title": "Something",
+        "artist": "The Beatles",
+        "album": "Abbey Road",
+        "album_art": "http://example.com/albumart.jpg",
+        "position": "00:00:42",
+        "playlist_position": "5",
+        "duration": "00:02:36",
+        "uri": "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3",
         "metadata": "NOT_IMPLEMENTED",
     }
 
@@ -815,6 +834,48 @@ def tv_event_fixture(soco):
             "resources": [],
             "desc": None,
         },
+        "next_track_uri": "",
+        "next_track_meta_data": "",
+        "enqueued_transport_uri": "",
+        "enqueued_transport_uri_meta_data": "",
+        "playback_storage_medium": "NETWORK",
+        "av_transport_uri": f"x-sonos-htastream:{soco.uid}:spdif",
+        "av_transport_uri_meta_data": {
+            "title": soco.uid,
+            "parent_id": "0",
+            "item_id": "spdif-input",
+            "restricted": False,
+            "resources": [],
+            "desc": None,
+        },
+        "current_transport_actions": "Set, Play",
+        "current_valid_play_modes": "",
+    }
+    return SonosMockEvent(soco, soco.avTransport, variables)
+
+
+@pytest.fixture(name="media_event")
+def media_event_fixture(soco):
+    """Create media event fixture."""
+    variables = {
+        "transport_state": "PLAYING",
+        "current_play_mode": "NORMAL",
+        "current_crossfade_mode": "0",
+        "number_of_tracks": "1",
+        "current_track": "1",
+        "current_section": "0",
+        "current_track_uri": "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3",
+        "current_track_duration": "360",
+        "current_track_meta_data": DidlMusicTrack(
+            album="Abbey Road",
+            title="Something",
+            parent_id="-1",
+            item_id="-1",
+            restricted=True,
+            resources=[],
+            desc=None,
+            album_art_uri="http://example.com/albumart.jpg",
+        ),
         "next_track_uri": "",
         "next_track_meta_data": "",
         "enqueued_transport_uri": "",
