@@ -177,7 +177,7 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     _LOGGER.error(
                         "Unable to communicate with Aurora ABB Inverter at %s: %s %s",
-                        user_input.get(CONF_SERIAL_COMPORT),
+                        user_input[CONF_SERIAL_COMPORT],
                         type(error),
                         error,
                     )
