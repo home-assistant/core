@@ -17,7 +17,7 @@
       "tcp": {
         "description": "Please enter the TCP host and port of the Ethernet / RS485 gateway that connects to the inverter and the inverter's serial address as configured on the LCD panel.",
         "data": {
-          "tcp_host": "Gateway ip address or hostname",
+          "tcp_host": "Gateway IP address or hostname",
           "tcp_port": "Gateway TCP port",
           "inverter_serial_address": "Inverter serial address"
         }
