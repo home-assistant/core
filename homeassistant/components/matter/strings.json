@@ -193,10 +193,13 @@
         "name": "Altitude above sea level"
       },
       "cook_time": {
-        "name": "Cook time"
+        "name": "Cooking time"
       },
       "pump_setpoint": {
         "name": "Setpoint"
+      },
+      "user_code_temporary_disable_time": {
+        "name": "User code temporary disable time"
       },
       "temperature_offset": {
         "name": "Temperature offset"
@@ -218,6 +221,9 @@
       },
       "valve_configuration_and_control_default_open_duration": {
         "name": "Default open duration"
+      },
+      "wrong_code_entry_limit": {
+        "name": "Wrong code limit"
       }
     },
     "light": {
@@ -485,6 +491,9 @@
       "apparent_current": {
         "name": "Apparent current"
       },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
       "reactive_current": {
         "name": "Reactive current"
       },
@@ -510,6 +519,9 @@
       },
       "evse_charging_switch": {
         "name": "Enable charging"
+      },
+      "privacy_mode_button": {
+        "name": "Privacy mode button"
       }
     },
     "vacuum": {

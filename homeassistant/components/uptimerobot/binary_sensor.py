@@ -24,17 +24,30 @@ async def async_setup_entry(
 ) -> None:
     """Set up the UptimeRobot binary_sensors."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        UptimeRobotBinarySensor(
-            coordinator,
-            BinarySensorEntityDescription(
-                key=str(monitor.id),
-                device_class=BinarySensorDeviceClass.CONNECTIVITY,
-            ),
-            monitor=monitor,
-        )
-        for monitor in coordinator.data
-    )
+
+    known_devices: set[int] = set()
+
+    def _check_device() -> None:
+        entities: list[UptimeRobotBinarySensor] = []
+        for monitor in coordinator.data:
+            if monitor.id in known_devices:
+                continue
+            known_devices.add(monitor.id)
+            entities.append(
+                UptimeRobotBinarySensor(
+                    coordinator,
+                    BinarySensorEntityDescription(
+                        key=str(monitor.id),
+                        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+                    ),
+                    monitor=monitor,
+                )
+            )
+        if entities:
+            async_add_entities(entities)
+
+    _check_device()
+    entry.async_on_unload(coordinator.async_add_listener(_check_device))
 
 
 class UptimeRobotBinarySensor(UptimeRobotEntity, BinarySensorEntity):
