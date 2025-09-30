@@ -1984,6 +1984,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "firefly_iii": {
+      "name": "Firefly III",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "fireservicerota": {
       "name": "FireServiceRota",
       "integration_type": "hub",
