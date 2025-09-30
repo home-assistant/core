@@ -445,7 +445,9 @@ class HabiticaPartySensor(HabiticaPartyBase, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the device."""
 
-        return self.entity_description.value_fn(self.coordinator.data, self.content)
+        return self.entity_description.value_fn(
+            self.coordinator.data.party, self.content
+        )
 
     @property
     def entity_picture(self) -> str | None:
@@ -453,7 +455,9 @@ class HabiticaPartySensor(HabiticaPartyBase, SensorEntity):
         pic = self.entity_description.entity_picture
 
         entity_picture = (
-            pic if isinstance(pic, str) or pic is None else pic(self.coordinator.data)
+            pic
+            if isinstance(pic, str) or pic is None
+            else pic(self.coordinator.data.party)
         )
 
         return (
@@ -468,5 +472,5 @@ class HabiticaPartySensor(HabiticaPartyBase, SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return entity specific state attributes."""
         if func := self.entity_description.attributes_fn:
-            return func(self.coordinator.data, self.content)
+            return func(self.coordinator.data.party, self.content)
         return None

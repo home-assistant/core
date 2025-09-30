@@ -264,6 +264,14 @@
         "name": "[%key:component::habitica::common::quest_name%]"
       }
     },
+    "notify": {
+      "party_chat": {
+        "name": "Party chat"
+      },
+      "private_message": {
+        "name": "Private message: {name}"
+      }
+    },
     "sensor": {
       "display_name": {
         "name": "Display name",
@@ -572,6 +580,12 @@
     },
     "frequency_not_monthly": {
       "message": "Unable to update task, monthly repeat settings apply only to monthly recurring dailies."
+    },
+    "send_message_forbidden": {
+      "message": "You are not allowed to send messages to {name}. ({reason})"
+    },
+    "send_message_not_found": {
+      "message": "Unable to send message, {name} not found. ({reason})"
     }
   },
   "issues": {
