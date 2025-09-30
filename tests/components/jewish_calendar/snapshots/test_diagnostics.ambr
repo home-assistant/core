@@ -30,7 +30,7 @@
         'zmanim': dict({
           'candle_lighting_offset': 40,
           'date': dict({
-            '__type': "<class 'freezegun.api.FakeDate'>",
+            '__type': "<class 'datetime.date'>",
             'isoformat': '2025-05-19',
           }),
           'havdalah_offset': 0,
@@ -86,7 +86,7 @@
         'zmanim': dict({
           'candle_lighting_offset': 18,
           'date': dict({
-            '__type': "<class 'freezegun.api.FakeDate'>",
+            '__type': "<class 'datetime.date'>",
             'isoformat': '2025-05-19',
           }),
           'havdalah_offset': 0,
@@ -142,7 +142,7 @@
         'zmanim': dict({
           'candle_lighting_offset': 18,
           'date': dict({
-            '__type': "<class 'freezegun.api.FakeDate'>",
+            '__type': "<class 'datetime.date'>",
             'isoformat': '2025-05-19',
           }),
           'havdalah_offset': 0,
