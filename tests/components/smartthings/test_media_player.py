@@ -1,6 +1,33 @@
 """Test for the SmartThings media player platform."""
 
-from unittest.mock import AsyncMock
+import sys
+import types
+from unittest.mock import AsyncMock, patch
+
+if "haffmpeg" not in sys.modules:
+    haffmpeg_module = types.ModuleType("haffmpeg")
+    haffmpeg_core_module = types.ModuleType("haffmpeg.core")
+    haffmpeg_tools_module = types.ModuleType("haffmpeg.tools")
+
+    class _StubHAFFmpeg:  # minimal stub to satisfy imports
+        ...
+
+    haffmpeg_core_module.HAFFmpeg = _StubHAFFmpeg
+    haffmpeg_tools_module.IMAGE_JPEG = b""
+
+    class _StubFFVersion:  # minimal stub used by ffmpeg integration
+        ...
+
+    class _StubImageFrame:  # minimal stub used by ffmpeg integration
+        ...
+
+    haffmpeg_tools_module.FFVersion = _StubFFVersion
+    haffmpeg_tools_module.ImageFrame = _StubImageFrame
+    haffmpeg_module.core = haffmpeg_core_module
+    haffmpeg_module.tools = haffmpeg_tools_module
+    sys.modules["haffmpeg"] = haffmpeg_module
+    sys.modules["haffmpeg.core"] = haffmpeg_core_module
+    sys.modules["haffmpeg.tools"] = haffmpeg_tools_module
 
 from pysmartthings import Attribute, Capability, Command, Status
 from pysmartthings.models import HealthStatus
@@ -9,12 +36,16 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
+    MediaType,
     RepeatMode,
 )
 from homeassistant.components.smartthings.const import MAIN
@@ -195,6 +226,50 @@ async def test_volume_down(
         Capability.AUDIO_VOLUME,
         Command.VOLUME_DOWN,
         MAIN,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["hw_q80r_soundbar"])
+async def test_play_media_notification(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test playing media via SmartThings audio notification."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    manager = AsyncMock()
+    manager.async_prepare_notification.return_value = "https://example.com/audio.pcm"
+
+    with (
+        patch(
+            "homeassistant.components.smartthings.media_player.async_get_audio_manager",
+            AsyncMock(return_value=manager),
+        ),
+        patch(
+            "homeassistant.components.smartthings.media_player.async_process_play_media_url",
+            return_value="https://example.com/source.mp3",
+        ),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.soundbar",
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: "https://example.com/source.mp3",
+            },
+            blocking=True,
+        )
+
+    expected_command = Command("playTrackAndResume")
+    devices.execute_device_command.assert_called_once_with(
+        "afcf3b91-0000-1111-2222-ddff2a0a6577",
+        Capability.AUDIO_NOTIFICATION,
+        expected_command,
+        MAIN,
+        argument=["https://example.com/audio.pcm"],
     )
 
 

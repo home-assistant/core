@@ -6,17 +6,22 @@ from typing import Any
 
 from pysmartthings import Attribute, Capability, Category, Command, SmartThings
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
+    MediaType,
     RepeatMode,
+    async_process_play_media_url,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
+from .audio import SmartThingsAudioError, async_get_audio_manager
 from .const import MAIN
 from .entity import SmartThingsEntity
 
@@ -84,6 +89,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
                 Capability.AUDIO_MUTE,
                 Capability.AUDIO_TRACK_DATA,
                 Capability.AUDIO_VOLUME,
+                Capability.AUDIO_NOTIFICATION,
                 Capability.MEDIA_INPUT_SOURCE,
                 Capability.MEDIA_PLAYBACK,
                 Capability.MEDIA_PLAYBACK_REPEAT,
@@ -128,6 +134,8 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             flags |= MediaPlayerEntityFeature.SHUFFLE_SET
         if self.supports_capability(Capability.MEDIA_PLAYBACK_REPEAT):
             flags |= MediaPlayerEntityFeature.REPEAT_SET
+        if self.supports_capability(Capability.AUDIO_NOTIFICATION):
+            flags |= MediaPlayerEntityFeature.PLAY_MEDIA
         return flags
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -231,6 +239,45 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             Capability.MEDIA_PLAYBACK_REPEAT,
             Command.SET_PLAYBACK_REPEAT_MODE,
             argument=HA_REPEAT_MODE_TO_SMARTTHINGS[repeat],
+        )
+
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
+        """Play media using SmartThings audio notifications."""
+        if not self.supports_capability(Capability.AUDIO_NOTIFICATION):
+            raise HomeAssistantError("Device does not support audio notifications")
+
+        if media_type not in (MediaType.MUSIC,):
+            raise HomeAssistantError(
+                "Unsupported media type for SmartThings audio notification"
+            )
+
+        if media_source.is_media_source_id(media_id):
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
+            media_id = async_process_play_media_url(self.hass, play_item.url)
+        else:
+            media_id = async_process_play_media_url(self.hass, media_id)
+
+        audio_manager = await async_get_audio_manager(self.hass)
+        try:
+            proxy_url = await audio_manager.async_prepare_notification(media_id)
+        except SmartThingsAudioError as err:
+            raise HomeAssistantError(str(err)) from err
+
+        try:
+            command = Command("playTrackAndResume")
+        except ValueError as err:
+            raise HomeAssistantError(
+                "Installed SmartThings library lacks playTrackAndResume support"
+            ) from err
+
+        await self.execute_device_command(
+            Capability.AUDIO_NOTIFICATION,
+            command,
+            argument=[proxy_url],
         )
 
     @property
