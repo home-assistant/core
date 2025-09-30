@@ -29,6 +29,7 @@ MOCK_USER_SETUP = {
 async def test_form(
     hass: HomeAssistant,
     mock_firefly_client: MagicMock,
+    mock_setup_entry: MagicMock,
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -41,8 +42,6 @@ async def test_form(
         result["flow_id"],
         user_input=MOCK_USER_SETUP,
     )
-
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "https://127.0.0.1:8080/"
@@ -73,6 +72,7 @@ async def test_form(
 async def test_form_exceptions(
     hass: HomeAssistant,
     mock_firefly_client: AsyncMock,
+    mock_setup_entry: MagicMock,
     exception: Exception,
     reason: str,
 ) -> None:
@@ -114,18 +114,10 @@ async def test_form_exceptions(
 async def test_duplicate_entry(
     hass: HomeAssistant,
     mock_firefly_client: AsyncMock,
-    mock_setup_entry: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we handle duplicate entries."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_URL: "https://127.0.0.1:8080/",
-            CONF_API_KEY: "test_api_key",
-        },
-        unique_id="test_api_key",
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -137,7 +129,6 @@ async def test_duplicate_entry(
         result["flow_id"],
         user_input=MOCK_USER_SETUP,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
