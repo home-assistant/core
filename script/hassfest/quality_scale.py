@@ -249,7 +249,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "cloud",
     "cloudflare",
     "cmus",
-    "co2signal",
     "coinbase",
     "color_extractor",
     "comed_hourly_pricing",
