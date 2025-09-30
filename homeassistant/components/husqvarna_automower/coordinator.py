@@ -39,7 +39,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
     """Class to manage fetching Husqvarna data."""
 
     config_entry: AutomowerConfigEntry
-    _reconnecting: bool = False
 
     def __init__(
         self,
@@ -64,7 +63,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self.websocket_alive: bool = False
         self.websocket_callbacks: list[Callable[[bool], None]] = []
         self._watchdog_task: asyncio.Task | None = None
-        self._proactive_reconnect_task: asyncio.Task | None = None
 
     @override
     @callback
@@ -168,21 +166,11 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         entry: AutomowerConfigEntry,
         automower_client: AutomowerSession,
     ) -> None:
-        """Listen with the client, reconnecting proactively and on errors."""
+        """Listen with the client."""
         try:
             await automower_client.auth.websocket_connect()
+            # Reset reconnect time after successful connection
             self.reconnect_time = DEFAULT_RECONNECT_TIME
-            if (
-                self._proactive_reconnect_task is None
-                or self._proactive_reconnect_task.done()
-            ):
-                _LOGGER.debug("Starting proactive reconnect task")
-                self._proactive_reconnect_task = entry.async_create_background_task(
-                    hass,
-                    self._proactive_reconnect(automower_client),
-                    name="proactive_reconnect_task",
-                )
-
             await automower_client.start_listening()
         except (HusqvarnaWSServerHandshakeError, HusqvarnaWSClientError) as err:
             _LOGGER.debug(
@@ -203,41 +191,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                 "reconnect_task",
             )
 
-    async def _proactive_reconnect(self, automower_client: AutomowerSession) -> None:
-        """Proactive reconnect: first after 1h59min30s, then every 1h59min58s."""
-        try:
-            # Wait 1h59min30s to unsync with _pong_watchdog
-            await asyncio.sleep(7167)
-            while True:
-                _LOGGER.debug("Proactive reconnect triggered")
-                self._reconnecting = True
-                try:
-                    old_ws_close_task = asyncio.create_task(
-                        automower_client.auth.websocket_close()
-                    )
-                    new_ws_task = asyncio.create_task(
-                        automower_client.auth.websocket_connect()
-                    )
-                    await old_ws_close_task
-                    await new_ws_task
-                    _LOGGER.debug(
-                        "Proactive reconnect completed: WS switched without downtime"
-                    )
-                except (ApiError, OSError, RuntimeError) as err:
-                    _LOGGER.warning(
-                        "Proactive reconnect failed, watchdog will take over: %s", err
-                    )
-                    if self.update_interval is None:
-                        self.update_interval = SCAN_INTERVAL
-                        self.hass.async_create_task(self.async_request_refresh())
-                finally:
-                    self._reconnecting = False
-
-                # Wait 1h59min57s to to reconnect
-                await asyncio.sleep(7197)
-        except asyncio.CancelledError:
-            _LOGGER.debug("Proactive reconnect task cancelled")
-
     def _should_poll(self) -> bool:
         """Return True if at least one mower is connected and at least one is not OFF."""
         return any(mower.metadata.connected for mower in self.data.values()) and any(
@@ -245,31 +198,25 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         )
 
     async def _pong_watchdog(self) -> None:
-        """Watchdog: ping WebSocket periodically and restart polling if necessary."""
+        """Watchdog to check for pong messages."""
         _LOGGER.debug("Watchdog started")
         try:
             while True:
-                if self._reconnecting:
-                    _LOGGER.debug("Skipping ping: proactive reconnect in progress")
-                else:
-                    _LOGGER.debug("Sending ping")
-                    is_alive = await self.api.send_empty_message()
-                    _LOGGER.debug("Ping result: %s", is_alive)
-
-                    # Nur bei Statusänderung Callbacks feuern
-                    if self.websocket_alive != is_alive:
-                        self.websocket_alive = is_alive
-                        for ws_callback in self.websocket_callbacks:
-                            ws_callback(is_alive)
-
-                    # Polling wieder aktivieren, falls WebSocket tot
-                    if not self.websocket_alive and self.update_interval is None:
-                        _LOGGER.debug("No pong received → restart polling")
-                        self.update_interval = SCAN_INTERVAL
-                        await self.async_request_refresh()
+                _LOGGER.debug("Sending ping")
+                is_alive = await self.api.send_empty_message()
+                _LOGGER.debug("Ping result: %s", is_alive)
+                if self.websocket_alive != is_alive:
+                    self.websocket_alive = is_alive
+                    for ws_callback in self.websocket_callbacks:
+                        ws_callback(is_alive)
 
                 await asyncio.sleep(PING_INTERVAL)
                 _LOGGER.debug("Websocket alive %s", self.websocket_alive)
+                if not self.websocket_alive:
+                    _LOGGER.debug("No pong received → restart polling")
+                    if self.update_interval is None:
+                        self.update_interval = SCAN_INTERVAL
+                        await self.async_request_refresh()
         except asyncio.CancelledError:
             _LOGGER.debug("Watchdog cancelled")
 
