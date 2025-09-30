@@ -308,20 +308,34 @@ class BayesianBinarySensor(BinarySensorEntity):
         self._attr_name = name
         self._attr_unique_id = unique_id and f"bayesian-{unique_id}"
 
-        self._observations = [
-            Observation(
-                entity_id=observation.get(CONF_ENTITY_ID),
-                platform=observation[CONF_PLATFORM],
-                prob_given_false=observation[CONF_P_GIVEN_F],
-                prob_given_true=observation[CONF_P_GIVEN_T],
-                observed=None,
-                to_state=observation.get(CONF_TO_STATE),
-                above=observation.get(CONF_ABOVE),
-                below=observation.get(CONF_BELOW),
-                value_template=observation.get(CONF_VALUE_TEMPLATE),
+        self._observations: list[Observation] = []
+        for observation in observations:
+            template: Template | None = None
+            if observation.get(CONF_VALUE_TEMPLATE) is not None:
+                if isinstance(observation[CONF_VALUE_TEMPLATE], str):
+                    template = Template(
+                        observation[CONF_VALUE_TEMPLATE],
+                        self.hass,
+                    )
+                if isinstance(observation[CONF_VALUE_TEMPLATE], Template):
+                    template = Template(
+                        observation[CONF_VALUE_TEMPLATE].template,
+                        self.hass,
+                    )
+            self._observations.append(
+                Observation(
+                    entity_id=observation.get(CONF_ENTITY_ID),
+                    platform=observation[CONF_PLATFORM],
+                    prob_given_false=observation[CONF_P_GIVEN_F],
+                    prob_given_true=observation[CONF_P_GIVEN_T],
+                    observed=None,
+                    to_state=observation.get(CONF_TO_STATE),
+                    above=observation.get(CONF_ABOVE),
+                    below=observation.get(CONF_BELOW),
+                    value_template=template,
+                )
             )
-            for observation in observations
-        ]
+
         self._probability_threshold = probability_threshold
         self._attr_device_class = device_class
         self._attr_is_on = False
