@@ -761,6 +761,8 @@ async def entity_service_call(
     func: str | HassJob,
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
+    *,
+    entity_device_classes: Iterable[str | None] | None = None,
 ) -> EntityServiceResponse | None:
     """Handle an entity service call.
 
@@ -821,6 +823,17 @@ async def entity_service_call(
     entities: list[Entity] = []
     for entity in entity_candidates:
         if not entity.available:
+            continue
+
+        # Skip entities that don't have the required device class.
+        if entity_device_classes is not None and not any(
+            entity.device_class == device_class
+            for device_class in entity_device_classes
+        ):
+            # If entity explicitly referenced, raise an error
+            if referenced is not None and entity.entity_id in referenced.referenced:
+                raise ServiceNotSupported(call.domain, call.service, entity.entity_id)
+
             continue
 
         # Skip entities that don't have the required feature.
@@ -1134,6 +1147,7 @@ def async_register_entity_service(
     domain: str,
     name: str,
     *,
+    entity_device_classes: Iterable[str | None] | None = None,
     entities: dict[str, Entity],
     func: str | Callable[..., Any],
     job_type: HassJobType | None,
@@ -1160,6 +1174,7 @@ def async_register_entity_service(
             hass,
             entities,
             service_func,
+            entity_device_classes=entity_device_classes,
             required_features=required_features,
         ),
         schema,
@@ -1174,6 +1189,7 @@ def async_register_platform_entity_service(
     service_domain: str,
     service_name: str,
     *,
+    entity_device_classes: Iterable[str | None] | None = None,
     entity_domain: str,
     func: str | Callable[..., Any],
     required_features: Iterable[int] | None = None,
@@ -1204,6 +1220,7 @@ def async_register_platform_entity_service(
             hass,
             get_entities,
             service_func,
+            entity_device_classes=entity_device_classes,
             required_features=required_features,
         ),
         schema,
