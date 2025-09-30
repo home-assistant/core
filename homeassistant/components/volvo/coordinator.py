@@ -22,7 +22,7 @@ from volvocarsapi.models import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DATA_BATTERY_CAPACITY, DOMAIN
@@ -122,7 +122,14 @@ class VolvoBaseIntervalCoordinator(VolvoBaseCoordinator[CoordinatorData]):
         self._api_calls: list[Callable[[], Coroutine[Any, Any, Any]]] = []
 
     async def _async_setup(self) -> None:
-        self._api_calls = await self._async_determine_api_calls()
+        try:
+            self._api_calls = await self._async_determine_api_calls()
+        except VolvoAuthException as err:
+            raise ConfigEntryAuthFailed(
+                f"Authentication failed. {err.message}"
+            ) from err
+        except VolvoApiException as err:
+            raise ConfigEntryNotReady from err
 
         if not self._api_calls:
             self.update_interval = None
@@ -273,14 +280,17 @@ class VolvoSlowIntervalCoordinator(VolvoBaseIntervalCoordinator):
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
         api = self.context.api
+        api_calls: list[Any] = [api.async_get_command_accessibility]
+
+        location = await api.async_get_location()
+
+        if location.get("location") is not None:
+            api_calls.append(api.async_get_location)
 
         if self.context.vehicle.has_combustion_engine():
-            return [
-                api.async_get_command_accessibility,
-                api.async_get_fuel_status,
-            ]
+            api_calls.append(api.async_get_fuel_status)
 
-        return [api.async_get_command_accessibility]
+        return api_calls
 
 
 class VolvoMediumIntervalCoordinator(VolvoBaseIntervalCoordinator):
