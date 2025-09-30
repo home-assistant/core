@@ -1524,7 +1524,7 @@ async def test_call_with_device_class(
     assert test_service_mock.call_count == len(expected_entities)
     expected = [mock_entities[expected_entity] for expected_entity in expected_entities]
     actual = [call[0][0] for call in test_service_mock.call_args_list]
-    assert all(entity in actual for entity in expected)
+    assert actual == unordered(expected)
 
     # Test we raise if we target entity ID that does not support the service
     test_service_mock.reset_mock()

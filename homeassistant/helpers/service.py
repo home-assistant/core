@@ -826,9 +826,9 @@ async def entity_service_call(
             continue
 
         # Skip entities that don't have the required device class.
-        if entity_device_classes is not None and not any(
-            entity.device_class == device_class
-            for device_class in entity_device_classes
+        if (
+            entity_device_classes is not None
+            and entity.device_class not in entity_device_classes
         ):
             # If entity explicitly referenced, raise an error
             if referenced is not None and entity.entity_id in referenced.referenced:
