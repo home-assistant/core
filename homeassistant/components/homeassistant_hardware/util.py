@@ -42,9 +42,9 @@ class ApplicationType(StrEnum):
     """Application type running on a device."""
 
     GECKO_BOOTLOADER = "bootloader"
-    CPC = "cpc"
     EZSP = "ezsp"
     SPINEL = "spinel"
+    CPC = "cpc"
     ROUTER = "router"
 
     @classmethod
