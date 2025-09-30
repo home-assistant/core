@@ -40,7 +40,7 @@ rules:
       No reauthentication flow is defined. It will be done in a next iteration.
   test-coverage: done
   # Gold
-  devices: todo
+  devices: done
   diagnostics: todo
   discovery-update-info: todo
   discovery: todo
