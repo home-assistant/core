@@ -61,6 +61,13 @@ class PickedFirmwareType(StrEnum):
     ZIGBEE = "zigbee"
 
 
+class ZigbeeFlowStrategy(StrEnum):
+    """Zigbee setup strategies that can be picked."""
+
+    ADVANCED = "advanced"
+    RECOMMENDED = "recommended"
+
+
 class ZigbeeIntegration(StrEnum):
     """Zigbee integrations that can be picked."""
 
@@ -73,6 +80,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
 
     ZIGBEE_BAUDRATE = 115200  # Default, subclasses may override
     _picked_firmware_type: PickedFirmwareType
+    _zigbee_flow_strategy: ZigbeeFlowStrategy = ZigbeeFlowStrategy.RECOMMENDED
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Instantiate base flow."""
@@ -354,12 +362,14 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     ) -> ConfigFlowResult:
         """Select recommended installation type."""
         self._zigbee_integration = ZigbeeIntegration.ZHA
+        self._zigbee_flow_strategy = ZigbeeFlowStrategy.RECOMMENDED
         return await self._async_continue_picked_firmware()
 
     async def async_step_zigbee_intent_custom(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Select custom installation type."""
+        self._zigbee_flow_strategy = ZigbeeFlowStrategy.ADVANCED
         return await self.async_step_zigbee_integration()
 
     async def async_step_zigbee_integration(
@@ -464,6 +474,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
                     "flow_control": "hardware",
                 },
                 "radio_type": "ezsp",
+                "flow_strategy": self._zigbee_flow_strategy,
             },
         )
         return self._continue_zha_flow(result)

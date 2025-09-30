@@ -376,10 +376,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         new_addon_config = addon_config | config_updates
 
-        if not new_addon_config[CONF_ADDON_DEVICE]:
-            new_addon_config.pop(CONF_ADDON_DEVICE)
-        if not new_addon_config[CONF_ADDON_SOCKET]:
-            new_addon_config.pop(CONF_ADDON_SOCKET)
+        if new_addon_config.get(CONF_ADDON_DEVICE) is None:
+            new_addon_config.pop(CONF_ADDON_DEVICE, None)
+        if new_addon_config.get(CONF_ADDON_SOCKET) is None:
+            new_addon_config.pop(CONF_ADDON_SOCKET, None)
 
         if new_addon_config == addon_config:
             return
@@ -1470,14 +1470,33 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if not is_hassio(self.hass):
             return self.async_abort(reason="not_hassio")
 
-        if discovery_info.zwave_home_id:
-            await self.async_set_unique_id(str(discovery_info.zwave_home_id))
-            self._abort_if_unique_id_configured(
-                {
-                    CONF_USB_PATH: None,
-                    CONF_SOCKET_PATH: discovery_info.socket_path,
-                }
+        if (
+            discovery_info.zwave_home_id
+            and (
+                current_config_entries := self._async_current_entries(
+                    include_ignore=False
+                )
             )
+            and (home_id := str(discovery_info.zwave_home_id))
+            and (
+                existing_entry := next(
+                    (
+                        entry
+                        for entry in current_config_entries
+                        if entry.unique_id == home_id
+                    ),
+                    None,
+                )
+            )
+            # Only update existing entries that are configured via sockets
+            and existing_entry.data.get(CONF_SOCKET_PATH)
+        ):
+            await self._async_set_addon_config(
+                {CONF_ADDON_SOCKET: discovery_info.socket_path}
+            )
+            # Reloading will sync add-on options to config entry data
+            self.hass.config_entries.async_schedule_reload(existing_entry.entry_id)
+            return self.async_abort(reason="already_configured")
 
         self.socket_path = discovery_info.socket_path
         self.context["title_placeholders"] = {

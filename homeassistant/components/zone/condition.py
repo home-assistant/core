@@ -30,12 +30,9 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import in_zone
 
-_OPTIONS_SCHEMA_DICT = {
+_OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
     vol.Required(CONF_ENTITY_ID): cv.entity_ids,
     vol.Required("zone"): cv.entity_ids,
-    # To support use_trigger_value in automation
-    # Deprecated 2016/04/25
-    vol.Optional("event"): vol.Any("enter", "leave"),
 }
 _CONDITION_SCHEMA = vol.Schema({CONF_OPTIONS: _OPTIONS_SCHEMA_DICT})
 
