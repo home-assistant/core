@@ -904,10 +904,8 @@ class StartTimerIntentHandler(intent.IntentHandler):
         )
 
         recognize_result = await conversation_agent.async_recognize_intent(test_input)
-        if recognize_result is None:
-            return False
 
-        return True
+        return recognize_result is not None
 
 
 class CancelTimerIntentHandler(intent.IntentHandler):
