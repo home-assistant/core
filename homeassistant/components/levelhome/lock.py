@@ -43,6 +43,7 @@ class LevelLockDevice:
     lock_id: str
     name: str
     is_locked: bool | None
+    state: str | None = None  # Raw state from API for transitional states
 
 
 class LevelApiClient:
@@ -83,11 +84,13 @@ class LevelApiClient:
         # Expected shape: { "locks": [ {"id": "...", "name": "...", "state": "locked"|"unlocked"} ] }
         devices: list[LevelLockDevice] = []
         for item in data.get("locks", []):
+            state = item.get("state")
             devices.append(
                 LevelLockDevice(
                     lock_id=str(item.get("id")),
                     name=str(item.get("name") or item.get("id") or "Level Lock"),
-                    is_locked=_coerce_is_locked(item.get("state")),
+                    is_locked=_coerce_is_locked(state),
+                    state=str(state) if state is not None else None,
                 )
             )
         return devices
@@ -115,6 +118,9 @@ def _coerce_is_locked(state: Any) -> bool | None:
             return True
         if lowered in ("unlocked", "unlock", "unsecure"):
             return False
+        # Transitional states should return None for is_locked
+        if lowered in ("locking", "unlocking"):
+            return None
     if isinstance(state, bool):
         return state
     return None
@@ -198,6 +204,22 @@ class LevelLockEntity(CoordinatorEntity, LockEntity):
         return self._device.is_locked
 
     @property
+    def is_locking(self) -> bool:
+        """Return true if lock is locking."""
+        state = self._device.state
+        if state is None:
+            return False
+        return state.lower() == "locking"
+
+    @property
+    def is_unlocking(self) -> bool:
+        """Return true if lock is unlocking."""
+        state = self._device.state
+        if state is None:
+            return False
+        return state.lower() == "unlocking"
+
+    @property
     def device_info(self) -> DeviceInfo:
         device = self._device
         return DeviceInfo(
@@ -208,7 +230,58 @@ class LevelLockEntity(CoordinatorEntity, LockEntity):
         )
 
     async def async_lock(self, **kwargs: Any) -> None:  # type: ignore[override]
-        await self.coordinator.async_send_command(self._lock_id, "lock")
+        # Prevent command if already in a transitional state
+        if self.is_locking or self.is_unlocking:
+            _LOGGER.debug(
+                "Lock %s is already in transitional state, ignoring lock command",
+                self._lock_id,
+            )
+            return
+
+        # Optimistically set transitional state immediately for UI responsiveness
+        self._set_optimistic_state("locking")
+        try:
+            # Send command - actual state will come back via WebSocket push
+            await self.coordinator.async_send_command(self._lock_id, "lock")
+            # Note: We do NOT update to "locked" here - wait for WebSocket confirmation
+        except Exception:
+            # Revert optimistic state on failure
+            await self.coordinator.async_request_refresh()
+            raise
 
     async def async_unlock(self, **kwargs: Any) -> None:  # type: ignore[override]
-        await self.coordinator.async_send_command(self._lock_id, "unlock")
+        # Prevent command if already in a transitional state
+        if self.is_locking or self.is_unlocking:
+            _LOGGER.debug(
+                "Lock %s is already in transitional state, ignoring unlock command",
+                self._lock_id,
+            )
+            return
+
+        # Optimistically set transitional state immediately for UI responsiveness
+        self._set_optimistic_state("unlocking")
+        try:
+            # Send command - actual state will come back via WebSocket push
+            await self.coordinator.async_send_command(self._lock_id, "unlock")
+            # Note: We do NOT update to "unlocked" here - wait for WebSocket confirmation
+        except Exception:
+            # Revert optimistic state on failure
+            await self.coordinator.async_request_refresh()
+            raise
+
+    def _set_optimistic_state(self, state: str) -> None:
+        """Optimistically update the lock state before receiving confirmation.
+        
+        This sets the transitional state ("locking" or "unlocking") immediately
+        for UI responsiveness. The actual final state will be received via 
+        WebSocket push updates.
+        """
+        if self._lock_id in self.coordinator.data:
+            # Create a copy of the data to update
+            current_data = dict(self.coordinator.data)
+            device = current_data[self._lock_id]
+            # Update the device state to transitional state
+            device.state = state
+            device.is_locked = None  # Transitional states have None for is_locked
+            # Update coordinator data without triggering a refresh
+            self.coordinator.async_set_updated_data(current_data)

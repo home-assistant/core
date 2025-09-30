@@ -152,6 +152,7 @@ class OAuth2FlowHandler(
 
         # Trigger OTP delivery via partner server
         partner_otp_start = f"{self._partner_base_url}{PARTNER_OTP_START_PATH}"
+        self.logger.warning("Partner OTP Start URL: %s", partner_otp_start)
         try:
             async with session.post(
                 partner_otp_start,
@@ -186,6 +187,7 @@ class OAuth2FlowHandler(
 
         # Confirm OTP
         otp_confirm_url = f"{self._oauth2_base_url}{OAUTH2_OTP_CONFIRM_PATH}"
+        self.logger.warning("OTP Confirm URL: %s", otp_confirm_url)
         try:
             async with session.post(
                 otp_confirm_url,
@@ -212,6 +214,7 @@ class OAuth2FlowHandler(
         # Accept grant permissions
         grant_url = f"{self._oauth2_base_url}{OAUTH2_GRANT_PERMISSIONS_ACCEPT_PATH}"
         redirect_uri_from_grant: str | None = None
+        self.logger.warning("Grant URL: %s", grant_url)
         try:
             async with session.post(
                 grant_url, json={"request_uuid": self._request_uuid}
@@ -241,6 +244,7 @@ class OAuth2FlowHandler(
 
         # Exchange code for token (PKCE: include code_verifier; include client_secret if available)
         token_url = f"{self._oauth2_base_url}{OAUTH2_TOKEN_EXCHANGE_PATH}"
+        self.logger.warning("Token Exchange URL: %s", token_url)
         payload: dict[str, Any] = {
             "grant_type": "authorization_code",
             "code": authorization_code,

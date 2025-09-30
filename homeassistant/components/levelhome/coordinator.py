@@ -33,6 +33,7 @@ class LevelLockDevice:
     lock_id: str
     name: str
     is_locked: bool | None
+    state: str | None = None  # Raw state from API for transitional states
 
 
 class LevelApiClient:
@@ -71,11 +72,13 @@ class LevelApiClient:
         data = await self._request("GET", API_LOCKS_LIST_PATH)
         devices: list[LevelLockDevice] = []
         for item in data.get("locks", []):
+            state = item.get("state")
             devices.append(
                 LevelLockDevice(
                     lock_id=str(item.get("id")),
                     name=str(item.get("name") or item.get("id") or "Level Lock"),
-                    is_locked=_coerce_is_locked(item.get("state")),
+                    is_locked=_coerce_is_locked(state),
+                    state=str(state) if state is not None else None,
                 )
             )
         return devices
@@ -102,6 +105,9 @@ def _coerce_is_locked(state: Any) -> bool | None:
             return True
         if lowered in ("unlocked", "unlock", "unsecure"):
             return False
+        # Transitional states should return None for is_locked
+        if lowered in ("locking", "unlocking"):
+            return None
     if isinstance(state, bool):
         return state
     return None
@@ -166,8 +172,13 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
             except Exception:  # noqa: BLE001
                 LOGGER.debug("Push update for unknown lock %s", lock_id)
                 return
-        if device is not None and is_locked is not None:
-            device.is_locked = is_locked
+        if device is not None:
+            if is_locked is not None:
+                device.is_locked = is_locked
+            # Update the raw state from payload if available
+            if payload is not None and "state" in payload:
+                state = payload.get("state")
+                device.state = str(state) if state is not None else None
         self.async_set_updated_data(current)
 
     async def async_send_command(self, lock_id: str, command: str) -> None:
