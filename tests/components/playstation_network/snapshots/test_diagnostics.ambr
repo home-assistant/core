@@ -21,7 +21,6 @@
           'title_name': "Assassin's Creed® III Liberation",
         }),
       }),
-      'availability': 'availableToPlay',
       'presence': dict({
         'basicPresence': dict({
           'availability': 'availableToPlay',

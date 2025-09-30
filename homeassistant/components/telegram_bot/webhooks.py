@@ -77,7 +77,7 @@ class PushBot(BaseTelegramBot):
         # Dumb Application that just gets our updates to our handler callback (self.handle_update)
         self.application = ApplicationBuilder().bot(bot).updater(None).build()
         self.application.add_handler(TypeHandler(Update, self.handle_update))
-        super().__init__(hass, config)
+        super().__init__(hass, config, bot)
 
         self.base_url = config.data.get(CONF_URL) or get_url(
             hass, require_ssl=True, allow_internal=False

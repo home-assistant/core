@@ -180,5 +180,16 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "rate_limit_reached": {
+      "message": "You have reached the rate limit for the Tankerkoenig API. Please try to increase the poll interval and reduce the requests."
+    },
+    "invalid_api_key": {
+      "message": "The provided API key is invalid. Please check your API key."
+    },
+    "station_update_failed": {
+      "message": "Failed to update station data for station(s) {station_ids}. Please check your network connection."
+    }
   }
 }

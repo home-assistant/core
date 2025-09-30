@@ -32,8 +32,6 @@
     'coordinators': dict({
       '**REDACTED-0**': dict({
         'api': dict({
-          'misc_info': dict({
-          }),
         }),
         'roborock_device_info': dict({
           'device': dict({
@@ -319,8 +317,6 @@
       }),
       '**REDACTED-1**': dict({
         'api': dict({
-          'misc_info': dict({
-          }),
         }),
         'roborock_device_info': dict({
           'device': dict({
@@ -606,8 +602,6 @@
       }),
       '**REDACTED-2**': dict({
         'api': dict({
-          'misc_info': dict({
-          }),
         }),
         'roborock_device_info': dict({
           'device': dict({
@@ -969,8 +963,6 @@
       }),
       '**REDACTED-3**': dict({
         'api': dict({
-          'misc_info': dict({
-          }),
         }),
         'roborock_device_info': dict({
           'device': dict({

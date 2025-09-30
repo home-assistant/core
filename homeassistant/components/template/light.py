@@ -27,6 +27,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
     filter_supported_color_modes,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EFFECT,
     CONF_ENTITY_ID,
@@ -43,20 +44,28 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
 
 from . import TriggerUpdateCoordinator
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
-from .helpers import async_setup_template_platform
-from .template_entity import (
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
+)
+from .schemas import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    TemplateEntity,
     make_template_entity_common_modern_schema,
 )
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -135,6 +144,8 @@ LIGHT_COMMON_SCHEMA = vol.Schema(
         vol.Optional(CONF_MIN_MIREDS): cv.template,
         vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_RGB_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_RGB): cv.template,
         vol.Optional(CONF_RGBW_ACTION): cv.SCRIPT_SCHEMA,
@@ -150,7 +161,7 @@ LIGHT_COMMON_SCHEMA = vol.Schema(
 
 LIGHT_YAML_SCHEMA = LIGHT_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
-).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
+).extend(make_template_entity_common_modern_schema(LIGHT_DOMAIN, DEFAULT_NAME).schema)
 
 LIGHT_LEGACY_YAML_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
@@ -195,6 +206,10 @@ PLATFORM_SCHEMA = vol.All(
     ),
 )
 
+LIGHT_CONFIG_ENTRY_SCHEMA = LIGHT_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
+)
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -213,6 +228,37 @@ async def async_setup_platform(
         discovery_info,
         LEGACY_FIELDS,
         legacy_key=CONF_LIGHTS,
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateLightEntity,
+        LIGHT_CONFIG_ENTRY_SCHEMA,
+        True,
+    )
+
+
+@callback
+def async_create_preview_light(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> StateLightEntity:
+    """Create a preview."""
+    return async_setup_template_preview(
+        hass,
+        name,
+        config,
+        StateLightEntity,
+        LIGHT_CONFIG_ENTRY_SCHEMA,
+        True,
     )
 
 

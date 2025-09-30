@@ -1,4 +1,62 @@
 # serializer version: 1
+# name: test_numbers[aqara_motion_p2][number.aqara_motion_and_light_sensor_p2_hold_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.aqara_motion_and_light_sensor_p2_hold_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hold time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hold_time',
+    'unique_id': '00000000000004D2-0000000000000053-MatterNodeDevice-1-OccupancySensingHoldTime-1030-3',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[aqara_motion_p2][number.aqara_motion_and_light_sensor_p2_hold_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aqara Motion and Light Sensor P2 Hold time',
+      'max': 65534,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.aqara_motion_and_light_sensor_p2_hold_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30',
+  })
+# ---
 # name: test_numbers[color_temperature_light][number.mock_color_temperature_light_on_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -460,6 +518,121 @@
     'state': '60',
   })
 # ---
+# name: test_numbers[door_lock][number.mock_door_lock_user_code_temporary_disable_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_door_lock_user_code_temporary_disable_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'User code temporary disable time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'user_code_temporary_disable_time',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[door_lock][number.mock_door_lock_user_code_temporary_disable_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock User code temporary disable time',
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_door_lock_user_code_temporary_disable_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_numbers[door_lock][number.mock_door_lock_wrong_code_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_door_lock_wrong_code_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wrong code limit',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wrong_code_entry_limit',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[door_lock][number.mock_door_lock_wrong_code_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock Wrong code limit',
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_door_lock_wrong_code_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_autorelock_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -516,6 +689,121 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60',
+  })
+# ---
+# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_user_code_temporary_disable_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_door_lock_user_code_temporary_disable_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'User code temporary disable time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'user_code_temporary_disable_time',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_user_code_temporary_disable_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock User code temporary disable time',
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_door_lock_user_code_temporary_disable_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_wrong_code_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_door_lock_wrong_code_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wrong code limit',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wrong_code_entry_limit',
+    'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_wrong_code_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Door Lock Wrong code limit',
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_door_lock_wrong_code_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
   })
 # ---
 # name: test_numbers[eve_thermo][number.eve_thermo_temperature_offset-entry]
@@ -693,7 +981,7 @@
     'state': '255',
   })
 # ---
-# name: test_numbers[microwave_oven][number.microwave_oven_cook_time-entry]
+# name: test_numbers[microwave_oven][number.microwave_oven_cooking_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -711,7 +999,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.microwave_oven_cook_time',
+    'entity_id': 'number.microwave_oven_cooking_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -723,7 +1011,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Cook time',
+    'original_name': 'Cooking time',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -733,11 +1021,11 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[microwave_oven][number.microwave_oven_cook_time-state]
+# name: test_numbers[microwave_oven][number.microwave_oven_cooking_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Microwave Oven Cook time',
+      'friendly_name': 'Microwave Oven Cooking time',
       'max': 86400,
       'min': 1,
       'mode': <NumberMode.SLIDER: 'slider'>,
@@ -745,7 +1033,7 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.microwave_oven_cook_time',
+    'entity_id': 'number.microwave_oven_cooking_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2189,7 +2477,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '127.0',
+    'state': '100.0',
   })
 # ---
 # name: test_numbers[silabs_laundrywasher][number.laundrywasher_temperature_setpoint-entry]
@@ -2364,5 +2652,63 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4.0',
+  })
+# ---
+# name: test_numbers[valve][number.valve_default_open_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.valve_default_open_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Default open duration',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'valve_configuration_and_control_default_open_duration',
+    'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-1-ValveConfigurationAndControlDefaultOpenDuration-129-1',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[valve][number.valve_default_open_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Valve Default open duration',
+      'max': 65534,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.valve_default_open_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---

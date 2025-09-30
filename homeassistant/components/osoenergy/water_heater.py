@@ -26,6 +26,7 @@ from homeassistant.util.json import JsonValueType
 from .const import DOMAIN
 from .entity import OSOEnergyEntity
 
+ATTR_DURATION_DAYS = "duration_days"
 ATTR_UNTIL_TEMP_LIMIT = "until_temp_limit"
 ATTR_V40MIN = "v40_min"
 CURRENT_OPERATION_MAP: dict[str, Any] = {
@@ -44,6 +45,7 @@ CURRENT_OPERATION_MAP: dict[str, Any] = {
 SERVICE_GET_PROFILE = "get_profile"
 SERVICE_SET_PROFILE = "set_profile"
 SERVICE_SET_V40MIN = "set_v40_min"
+SERVICE_TURN_AWAY_MODE_ON = "turn_away_mode_on"
 SERVICE_TURN_OFF = "turn_off"
 SERVICE_TURN_ON = "turn_on"
 
@@ -67,6 +69,16 @@ async def async_setup_entry(
         {},
         OSOEnergyWaterHeater.async_get_profile.__name__,
         supports_response=SupportsResponse.ONLY,
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_TURN_AWAY_MODE_ON,
+        {
+            vol.Required(ATTR_DURATION_DAYS): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=365)
+            ),
+        },
+        OSOEnergyWaterHeater.async_oso_turn_away_mode_on.__name__,
     )
 
     service_set_profile_schema = cv.make_entity_service_schema(
@@ -279,6 +291,12 @@ class OSOEnergyWaterHeater(
     async def async_set_v40_min(self, v40_min) -> None:
         """Handle the service call."""
         await self.osoenergy.hotwater.set_v40_min(self.entity_data, v40_min)
+
+    async def async_oso_turn_away_mode_on(self, duration_days: int) -> None:
+        """Enable away mode with duration."""
+        await self.osoenergy.hotwater.enable_holiday_mode(
+            self.entity_data, duration_days
+        )
 
     async def async_oso_turn_off(self, until_temp_limit) -> None:
         """Handle the service call."""

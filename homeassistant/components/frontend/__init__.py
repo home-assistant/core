@@ -38,6 +38,8 @@ from homeassistant.util.hass_dict import HassKey
 
 from .storage import async_setup_frontend_storage
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = "frontend"
 CONF_THEMES = "themes"
 CONF_THEMES_MODES = "modes"
@@ -50,7 +52,7 @@ CONF_EXTRA_JS_URL_ES5 = "extra_js_url_es5"
 CONF_FRONTEND_REPO = "development_repo"
 CONF_JS_VERSION = "javascript_version"
 
-DEFAULT_THEME_COLOR = "#03A9F4"
+DEFAULT_THEME_COLOR = "#2980b9"
 
 
 DATA_PANELS: HassKey[dict[str, Panel]] = HassKey("frontend_panels")
@@ -73,9 +75,11 @@ VALUE_NO_THEME = "none"
 
 PRIMARY_COLOR = "primary-color"
 
-_LOGGER = logging.getLogger(__name__)
 
-EXTENDED_THEME_SCHEMA = vol.Schema(
+LEGACY_THEME_SCHEMA = vol.Any(
+    # Legacy theme scheme
+    {cv.string: cv.string},
+    # New extended schema with mode support
     {
         # Theme variables that apply to all modes
         cv.string: cv.string,
@@ -86,28 +90,46 @@ EXTENDED_THEME_SCHEMA = vol.Schema(
                 vol.Optional(CONF_THEMES_DARK): vol.Schema({cv.string: cv.string}),
             }
         ),
-    }
+    },
 )
 
 THEME_SCHEMA = vol.Schema(
     {
-        cv.string: (
-            vol.Any(
-                # Legacy theme scheme
-                {cv.string: cv.string},
-                # New extended schema with mode support
-                EXTENDED_THEME_SCHEMA,
-            )
-        )
+        # Theme variables that apply to all modes
+        cv.string: cv.string,
+        # Mode specific theme variables
+        vol.Optional(CONF_THEMES_MODES): vol.All(
+            {
+                vol.Optional(CONF_THEMES_LIGHT): vol.Schema({cv.string: cv.string}),
+                vol.Optional(CONF_THEMES_DARK): vol.Schema({cv.string: cv.string}),
+            },
+            cv.has_at_least_one_key(CONF_THEMES_LIGHT, CONF_THEMES_DARK),
+        ),
     }
 )
+
+
+def _validate_themes(themes: dict) -> dict[str, Any]:
+    """Validate themes."""
+    validated_themes = {}
+    for theme_name, theme in themes.items():
+        theme_name = cv.string(theme_name)
+        LEGACY_THEME_SCHEMA(theme)
+
+        try:
+            validated_themes[theme_name] = THEME_SCHEMA(theme)
+        except vol.Invalid as err:
+            _LOGGER.error("Theme %s is invalid: %s", theme_name, err)
+
+    return validated_themes
+
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
-                vol.Optional(CONF_THEMES): THEME_SCHEMA,
+                vol.Optional(CONF_THEMES): vol.All(dict, _validate_themes),
                 vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
@@ -437,7 +459,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "developer-tools",
         require_admin=True,
         sidebar_title="developer_tools",
-        sidebar_icon="hass:hammer",
+        sidebar_icon="mdi:hammer",
     )
 
     @callback
@@ -546,7 +568,7 @@ async def _async_setup_themes(
         new_themes = config.get(DOMAIN, {}).get(CONF_THEMES, {})
 
         try:
-            THEME_SCHEMA(new_themes)
+            new_themes = _validate_themes(new_themes)
         except vol.Invalid as err:
             raise HomeAssistantError(f"Failed to reload themes: {err}") from err
 

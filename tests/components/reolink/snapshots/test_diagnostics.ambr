@@ -38,7 +38,7 @@
     'ONVIF enabled': True,
     'RTMP enabled': True,
     'RTSP enabled': True,
-    'WiFi connection': False,
+    'WiFi connection': True,
     'WiFi signal': -45,
     'abilities': dict({
       'abilityChn': list([
@@ -81,25 +81,29 @@
         '0': 1,
         'null': 1,
       }),
+      '609': dict({
+        '0': 1,
+        'null': 1,
+      }),
       'DingDongOpt': dict({
         '0': 2,
         'null': 2,
       }),
       'GetAiAlarm': dict({
-        '0': 5,
-        'null': 5,
+        '0': 6,
+        'null': 6,
       }),
       'GetAiCfg': dict({
-        '0': 4,
-        'null': 4,
+        '0': 2,
+        'null': 2,
       }),
       'GetAudioAlarm': dict({
         '0': 1,
         'null': 1,
       }),
       'GetAudioCfg': dict({
-        '0': 2,
-        'null': 2,
+        '0': 4,
+        'null': 4,
       }),
       'GetAutoFocus': dict({
         '0': 1,
@@ -174,10 +178,6 @@
         'null': 2,
       }),
       'GetPtzGuard': dict({
-        '0': 2,
-        'null': 2,
-      }),
-      'GetPtzTraceSection': dict({
         '0': 2,
         'null': 2,
       }),

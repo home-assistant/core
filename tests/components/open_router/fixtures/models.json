@@ -85,6 +85,7 @@
         "logit_bias",
         "logprobs",
         "top_logprobs",
+        "structured_outputs",
         "response_format"
       ]
     }

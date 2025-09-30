@@ -18,7 +18,8 @@ send_message:
     target:
       example: "[12345, 67890] or 12345"
       selector:
-        object:
+        text:
+          multiple: true
     parse_mode:
       selector:
         select:
@@ -43,7 +44,8 @@ send_message:
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
-        object:
+        text:
+          multiple: true
     inline_keyboard:
       example:
         '["/button1, /button2", "/button3"] or ["Text button1:/button1, Text
@@ -59,6 +61,38 @@ send_message:
       selector:
         number:
           mode: box
+    message_thread_id:
+      selector:
+        number:
+          mode: box
+
+send_chat_action:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
+    chat_action:
+      selector:
+        select:
+          options:
+            - "typing"
+            - "upload_photo"
+            - "record_video"
+            - "upload_video"
+            - "record_voice"
+            - "upload_voice"
+            - "upload_document"
+            - "choose_sticker"
+            - "find_location"
+            - "record_video_note"
+            - "upload_video_note"
+          translation_key: "chat_action"
+    target:
+      example: "[12345, 67890] or 12345"
+      selector:
+        text:
+          multiple: true
     message_thread_id:
       selector:
         number:
@@ -98,10 +132,12 @@ send_photo:
       example: myuser_pwd
       selector:
         text:
+          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
-        object:
+        text:
+          multiple: true
     parse_mode:
       selector:
         select:
@@ -126,7 +162,8 @@ send_photo:
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
-        object:
+        text:
+          multiple: true
     inline_keyboard:
       example:
         '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
@@ -180,10 +217,12 @@ send_sticker:
       example: myuser_pwd
       selector:
         text:
+          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
-        object:
+        text:
+          multiple: true
     disable_notification:
       selector:
         boolean:
@@ -199,7 +238,8 @@ send_sticker:
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
-        object:
+        text:
+          multiple: true
     inline_keyboard:
       example:
         '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
@@ -253,10 +293,12 @@ send_animation:
       example: myuser_pwd
       selector:
         text:
+          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
-        object:
+        text:
+          multiple: true
     parse_mode:
       selector:
         select:
@@ -281,7 +323,8 @@ send_animation:
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
-        object:
+        text:
+          multiple: true
     inline_keyboard:
       example:
         '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
@@ -335,10 +378,12 @@ send_video:
       example: myuser_pwd
       selector:
         text:
+          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
-        object:
+        text:
+          multiple: true
     parse_mode:
       selector:
         select:
@@ -363,7 +408,8 @@ send_video:
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
-        object:
+        text:
+          multiple: true
     inline_keyboard:
       example:
         '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
@@ -417,10 +463,12 @@ send_voice:
       example: myuser_pwd
       selector:
         text:
+          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
-        object:
+        text:
+          multiple: true
     disable_notification:
       selector:
         boolean:
@@ -436,7 +484,8 @@ send_voice:
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
-        object:
+        text:
+          multiple: true
     inline_keyboard:
       example:
         '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
@@ -490,10 +539,12 @@ send_document:
       example: myuser_pwd
       selector:
         text:
+          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
-        object:
+        text:
+          multiple: true
     parse_mode:
       selector:
         select:
@@ -518,7 +569,8 @@ send_document:
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
-        object:
+        text:
+          multiple: true
     inline_keyboard:
       example:
         '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
@@ -563,7 +615,8 @@ send_location:
     target:
       example: "[12345, 67890] or 12345"
       selector:
-        object:
+        text:
+          multiple: true
     disable_notification:
       selector:
         boolean:
@@ -576,7 +629,8 @@ send_location:
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
-        object:
+        text:
+          multiple: true
     inline_keyboard:
       example:
         '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
@@ -605,7 +659,8 @@ send_poll:
     target:
       example: "[12345, 67890] or 12345"
       selector:
-        object:
+        text:
+          multiple: true
     question:
       required: true
       selector:

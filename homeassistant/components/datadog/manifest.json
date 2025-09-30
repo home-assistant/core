@@ -7,5 +7,5 @@
   "iot_class": "local_push",
   "loggers": ["datadog"],
   "quality_scale": "legacy",
-  "requirements": ["datadog==0.15.0"]
+  "requirements": ["datadog==0.52.0"]
 }
