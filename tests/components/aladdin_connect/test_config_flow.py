@@ -400,7 +400,7 @@ async def test_reauthentication_no_cloud(
     aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test SmartThings reauthentication without cloud."""
+    """Test Aladdin Connect reauthentication without cloud."""
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reauth_flow(hass)
