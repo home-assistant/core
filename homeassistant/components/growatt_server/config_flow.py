@@ -4,6 +4,7 @@ import logging
 from typing import Any
 
 import growattServer
+import requests
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -17,12 +18,15 @@ from homeassistant.const import (
 from homeassistant.core import callback
 
 from .const import (
+    ABORT_NO_PLANTS,
     AUTH_API_TOKEN,
     AUTH_PASSWORD,
     CONF_AUTH_TYPE,
     CONF_PLANT_ID,
     DEFAULT_URL,
     DOMAIN,
+    ERROR_CANNOT_CONNECT,
+    ERROR_INVALID_AUTH,
     LOGIN_INVALID_AUTH_CODE,
     SERVER_URLS,
 )
@@ -67,15 +71,23 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
             add_random_user_id=True, agent_identifier=user_input[CONF_USERNAME]
         )
         self.api.server_url = user_input[CONF_URL]
-        login_response = await self.hass.async_add_executor_job(
-            self.api.login, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-        )
+
+        try:
+            login_response = await self.hass.async_add_executor_job(
+                self.api.login, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+            )
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.error("Network error during Growatt API login: %s", ex)
+            return self._async_show_password_form({"base": ERROR_CANNOT_CONNECT})
+        except (ValueError, KeyError, TypeError, AttributeError) as ex:
+            _LOGGER.error("Invalid response format during login: %s", ex)
+            return self._async_show_password_form({"base": ERROR_CANNOT_CONNECT})
 
         if (
             not login_response["success"]
             and login_response["msg"] == LOGIN_INVALID_AUTH_CODE
         ):
-            return self._async_show_password_form({"base": "invalid_auth"})
+            return self._async_show_password_form({"base": ERROR_INVALID_AUTH})
 
         self.user_id = login_response["user"]["id"]
         self.data = user_input
@@ -98,13 +110,22 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         # Verify token by fetching plant list
         try:
             plant_response = await self.hass.async_add_executor_job(self.api.plant_list)
+            self.plants = plant_response.get("plants", [])
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.error("Network error during Growatt V1 API plant list: %s", ex)
+            return self._async_show_token_form({"base": ERROR_CANNOT_CONNECT})
         except growattServer.GrowattV1ApiError as e:
-            # Log for debugging
-            _LOGGER.error("Growatt V1 API authentication failed: %s", e)
-            # Show generic error
-            return self._async_show_token_form({"base": "invalid_auth"})
-
-        self.plants = plant_response.get("plants", [])
+            _LOGGER.error(
+                "Growatt V1 API error: %s (Code: %s)",
+                e.error_msg or str(e),
+                getattr(e, "error_code", None),
+            )
+            return self._async_show_token_form({"base": ERROR_INVALID_AUTH})
+        except (ValueError, KeyError, TypeError, AttributeError) as ex:
+            _LOGGER.error(
+                "Invalid response format during Growatt V1 API plant list: %s", ex
+            )
+            return self._async_show_token_form({"base": ERROR_CANNOT_CONNECT})
         self.data = user_input
         self.data[CONF_AUTH_TYPE] = self.auth_type
         return await self.async_step_plant()
@@ -153,15 +174,17 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.auth_type == AUTH_API_TOKEN:
             # Using V1 API with token
             if not self.plants:
-                return self.async_abort(reason="no_plants")
+                return self.async_abort(reason=ABORT_NO_PLANTS)
 
             # Create dictionary of plant_id -> name
             plant_dict = {}
             for plant in self.plants:
-                plant_id = str(plant.get("plant_id", ""))
-                plant_name = plant.get("name", "Unknown Plant")
+                plant_id = plant.get("plant_id")
                 if plant_id:
-                    plant_dict[plant_id] = plant_name
+                    plant_dict[str(plant_id)] = plant.get("name", "Unknown Plant")
+
+            if not plant_dict:
+                return self.async_abort(reason=ABORT_NO_PLANTS)
 
             if user_input is None and len(plant_dict) > 1:
                 data_schema = vol.Schema(
@@ -177,24 +200,35 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         else:
             # Traditional API
-            plant_info = await self.hass.async_add_executor_job(
-                self.api.plant_list, self.user_id
-            )
+            try:
+                plant_info = await self.hass.async_add_executor_job(
+                    self.api.plant_list, self.user_id
+                )
+            except requests.exceptions.RequestException as ex:
+                _LOGGER.error("Network error during Growatt API plant list: %s", ex)
+                return self.async_abort(reason=ERROR_CANNOT_CONNECT)
 
-            if not plant_info["data"]:
-                return self.async_abort(reason="no_plants")
+            # Access plant_info["data"] - validate response structure
+            if not isinstance(plant_info, dict) or "data" not in plant_info:
+                _LOGGER.error(
+                    "Invalid response format during plant list: missing 'data' key"
+                )
+                return self.async_abort(reason=ERROR_CANNOT_CONNECT)
 
-            plants = {
-                plant["plantId"]: plant["plantName"] for plant in plant_info["data"]
-            }
+            plant_data = plant_info["data"]
 
-            if user_input is None and len(plant_info["data"]) > 1:
+            if not plant_data:
+                return self.async_abort(reason=ABORT_NO_PLANTS)
+
+            plants = {plant["plantId"]: plant["plantName"] for plant in plant_data}
+
+            if user_input is None and len(plant_data) > 1:
                 data_schema = vol.Schema({vol.Required(CONF_PLANT_ID): vol.In(plants)})
                 return self.async_show_form(step_id="plant", data_schema=data_schema)
 
             if user_input is None:
                 # single plant => mark it as selected
-                user_input = {CONF_PLANT_ID: plant_info["data"][0]["plantId"]}
+                user_input = {CONF_PLANT_ID: plant_data[0]["plantId"]}
 
             user_input[CONF_NAME] = plants[user_input[CONF_PLANT_ID]]
 

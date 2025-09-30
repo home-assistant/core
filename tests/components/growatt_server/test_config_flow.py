@@ -4,15 +4,19 @@ from copy import deepcopy
 from unittest.mock import patch
 
 import growattServer
+import requests
 
 from homeassistant import config_entries
 from homeassistant.components.growatt_server.const import (
+    ABORT_NO_PLANTS,
     AUTH_API_TOKEN,
     AUTH_PASSWORD,
     CONF_AUTH_TYPE,
     CONF_PLANT_ID,
     DEFAULT_URL,
     DOMAIN,
+    ERROR_CANNOT_CONNECT,
+    ERROR_INVALID_AUTH,
     LOGIN_INVALID_AUTH_CODE,
 )
 from homeassistant.const import (
@@ -141,7 +145,7 @@ async def test_password_auth_incorrect_login(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "password_auth"
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": ERROR_INVALID_AUTH}
 
 
 async def test_password_auth_no_plants(hass: HomeAssistant) -> None:
@@ -167,7 +171,7 @@ async def test_password_auth_no_plants(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_plants"
+    assert result["reason"] == ABORT_NO_PLANTS
 
 
 async def test_password_auth_single_plant(hass: HomeAssistant) -> None:
@@ -202,6 +206,7 @@ async def test_password_auth_single_plant(hass: HomeAssistant) -> None:
     assert result["data"][CONF_PLANT_ID] == "123456"
     assert result["data"][CONF_AUTH_TYPE] == AUTH_PASSWORD
     assert result["data"][CONF_NAME] == "Plant name"
+    assert result["result"].unique_id == "123456"
 
 
 async def test_password_auth_multiple_plants(hass: HomeAssistant) -> None:
@@ -256,6 +261,7 @@ async def test_password_auth_multiple_plants(hass: HomeAssistant) -> None:
     assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT_PASSWORD[CONF_PASSWORD]
     assert result["data"][CONF_PLANT_ID] == "123456"
     assert result["data"][CONF_AUTH_TYPE] == AUTH_PASSWORD
+    assert result["result"].unique_id == "123456"
 
 
 async def test_existing_plant_configured_password_auth(hass: HomeAssistant) -> None:
@@ -305,7 +311,7 @@ async def test_token_auth_form_display(hass: HomeAssistant) -> None:
 
 
 async def test_token_auth_api_error(hass: HomeAssistant) -> None:
-    """Test token authentication with any API error."""
+    """Test token authentication with API error."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -315,8 +321,9 @@ async def test_token_auth_api_error(hass: HomeAssistant) -> None:
         result["flow_id"], {"next_step_id": "token_auth"}
     )
 
-    # Any GrowattV1ApiError should result in generic error
-    error = growattServer.GrowattV1ApiError("Any API error")
+    # Any GrowattV1ApiError during token verification should result in invalid_auth
+    error = growattServer.GrowattV1ApiError("API error")
+    error.error_code = 100
 
     with patch("growattServer.OpenApiV1.plant_list", side_effect=error):
         result = await hass.config_entries.flow.async_configure(
@@ -325,7 +332,55 @@ async def test_token_auth_api_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "token_auth"
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": ERROR_INVALID_AUTH}
+
+
+async def test_token_auth_connection_error(hass: HomeAssistant) -> None:
+    """Test token authentication with network error."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "token_auth"}
+    )
+
+    with patch(
+        "growattServer.OpenApiV1.plant_list",
+        side_effect=requests.exceptions.ConnectionError("Network error"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT_TOKEN
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "token_auth"
+    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
+
+
+async def test_token_auth_invalid_response(hass: HomeAssistant) -> None:
+    """Test token authentication with invalid response format."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "token_auth"}
+    )
+
+    with patch(
+        "growattServer.OpenApiV1.plant_list",
+        return_value=None,  # Invalid response format
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT_TOKEN
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "token_auth"
+    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
 
 
 async def test_token_auth_no_plants(hass: HomeAssistant) -> None:
@@ -348,7 +403,7 @@ async def test_token_auth_no_plants(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_plants"
+    assert result["reason"] == ABORT_NO_PLANTS
 
 
 async def test_token_auth_single_plant(hass: HomeAssistant) -> None:
@@ -381,6 +436,7 @@ async def test_token_auth_single_plant(hass: HomeAssistant) -> None:
     assert result["data"][CONF_PLANT_ID] == "123456"
     assert result["data"][CONF_AUTH_TYPE] == AUTH_API_TOKEN
     assert result["data"][CONF_NAME] == "Test Plant V1"
+    assert result["result"].unique_id == "123456"
 
 
 async def test_token_auth_multiple_plants(hass: HomeAssistant) -> None:
@@ -424,3 +480,232 @@ async def test_token_auth_multiple_plants(hass: HomeAssistant) -> None:
     assert result["data"][CONF_PLANT_ID] == "789012"
     assert result["data"][CONF_AUTH_TYPE] == AUTH_API_TOKEN
     assert result["data"][CONF_NAME] == "Test Plant 2"
+    assert result["result"].unique_id == "789012"
+
+
+async def test_token_auth_plants_missing_plant_id(hass: HomeAssistant) -> None:
+    """Test token authentication with plants that have missing plant_id."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Select token authentication
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "token_auth"}
+    )
+
+    # Response with plants missing plant_id field
+    plants_response = {
+        "plants": [
+            {
+                "name": "Plant Without ID",
+                "plant_uid": "test_uid_123",
+                # plant_id missing
+            },
+            {
+                "plant_id": None,  # plant_id is None
+                "name": "Plant With None ID",
+                "plant_uid": "test_uid_456",
+            },
+            {
+                "plant_id": 789012,  # Valid plant_id
+                "name": "Valid Plant",
+                "plant_uid": "test_uid_789",
+            },
+        ]
+    }
+
+    with (
+        patch(
+            "growattServer.OpenApiV1.plant_list",
+            return_value=plants_response,
+        ),
+        patch(
+            "homeassistant.components.growatt_server.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT_TOKEN
+        )
+
+    # Should succeed with the valid plant (only valid plant_id is added to plant_dict)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_TOKEN] == FIXTURE_USER_INPUT_TOKEN[CONF_TOKEN]
+    assert result["data"][CONF_PLANT_ID] == "789012"
+    assert result["data"][CONF_AUTH_TYPE] == AUTH_API_TOKEN
+    assert result["data"][CONF_NAME] == "Valid Plant"
+    assert result["result"].unique_id == "789012"
+
+
+async def test_token_auth_all_plants_missing_plant_id(hass: HomeAssistant) -> None:
+    """Test token authentication when all plants have missing/invalid plant_id."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Select token authentication
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "token_auth"}
+    )
+
+    # Response with all plants having missing or invalid plant_id
+    plants_response = {
+        "plants": [
+            {
+                "name": "Plant Without ID",
+                "plant_uid": "test_uid_123",
+                # plant_id missing
+            },
+            {
+                "plant_id": None,  # plant_id is None
+                "name": "Plant With None ID",
+                "plant_uid": "test_uid_456",
+            },
+            {
+                "plant_id": "",  # plant_id is empty string
+                "name": "Plant With Empty ID",
+                "plant_uid": "test_uid_789",
+            },
+        ]
+    }
+
+    with patch(
+        "growattServer.OpenApiV1.plant_list",
+        return_value=plants_response,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT_TOKEN
+        )
+
+    # Should abort since no valid plant_ids found
+    # Note: This test may expose a bug where empty plant_dict causes IndexError
+    # instead of properly aborting with "no_plants"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == ABORT_NO_PLANTS
+
+
+async def test_existing_plant_configured_token_auth(hass: HomeAssistant) -> None:
+    """Test entering an existing plant_id with token auth."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="123456")
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Select token authentication
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "token_auth"}
+    )
+
+    with patch(
+        "growattServer.OpenApiV1.plant_list",
+        return_value=GROWATT_V1_PLANT_LIST_RESPONSE,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT_TOKEN
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_password_auth_connection_error(hass: HomeAssistant) -> None:
+    """Test password authentication with connection error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Select password authentication
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "password_auth"}
+    )
+
+    with patch(
+        "growattServer.GrowattApi.login",
+        side_effect=requests.exceptions.ConnectionError("Connection failed"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "password_auth"
+    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
+
+
+async def test_password_auth_invalid_response(hass: HomeAssistant) -> None:
+    """Test password authentication with invalid response format."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Select password authentication
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "password_auth"}
+    )
+
+    with patch(
+        "growattServer.GrowattApi.login",
+        side_effect=ValueError("Invalid JSON response"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "password_auth"
+    assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
+
+
+async def test_password_auth_plant_list_error(hass: HomeAssistant) -> None:
+    """Test password authentication with plant list connection error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Select password authentication
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "password_auth"}
+    )
+
+    with (
+        patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE),
+        patch(
+            "growattServer.GrowattApi.plant_list",
+            side_effect=requests.exceptions.ConnectionError("Connection failed"),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == ERROR_CANNOT_CONNECT
+
+
+async def test_password_auth_plant_list_invalid_format(hass: HomeAssistant) -> None:
+    """Test password authentication with invalid plant list format."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Select password authentication
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "password_auth"}
+    )
+
+    with (
+        patch("growattServer.GrowattApi.login", return_value=GROWATT_LOGIN_RESPONSE),
+        patch(
+            "growattServer.GrowattApi.plant_list",
+            return_value={"invalid": "format"},  # Missing "data" key
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], FIXTURE_USER_INPUT_PASSWORD
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == ERROR_CANNOT_CONNECT

@@ -39,3 +39,10 @@ DOMAIN = "growatt_server"
 PLATFORMS = [Platform.SENSOR]
 
 LOGIN_INVALID_AUTH_CODE = "502"
+
+# Config flow error types (also used as abort reasons)
+ERROR_CANNOT_CONNECT = "cannot_connect"  # Used for both form errors and aborts
+ERROR_INVALID_AUTH = "invalid_auth"
+
+# Config flow abort reasons
+ABORT_NO_PLANTS = "no_plants"
