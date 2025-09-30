@@ -18,6 +18,7 @@
     },
     "abort": {
       "already_configured": "Station is already configured",
+      "cannot_connect": "Failed to connect to Meteo.lt API",
       "no_places_found": "No stations found from the API"
     }
   }

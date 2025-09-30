@@ -46,11 +46,10 @@ class MeteoLtConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._places:
             try:
                 await self._api.fetch_places()
+                self._places = self._api.places
             except (aiohttp.ClientError, TimeoutError) as err:
                 _LOGGER.error("Error fetching places: %s", err)
-                errors["base"] = "cannot_connect"
-            else:
-                self._places = self._api.places
+                return self.async_abort(reason="cannot_connect")
 
         if not self._places:
             return self.async_abort(reason="no_places_found")
