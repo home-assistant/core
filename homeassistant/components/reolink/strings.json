@@ -542,8 +542,17 @@
       "floodlight_brightness": {
         "name": "Floodlight turn on brightness"
       },
+      "floodlight_event_brightness": {
+        "name": "Floodlight event brightness"
+      },
       "ir_brightness": {
         "name": "Infrared light brightness"
+      },
+      "floodlight_event_on_time": {
+        "name": "Floodlight event on time"
+      },
+      "floodlight_event_flash_time": {
+        "name": "Floodlight event flash time"
       },
       "volume": {
         "name": "Volume"
@@ -694,6 +703,14 @@
           "schedule": "Schedule",
           "adaptive": "Adaptive",
           "autoadaptive": "Auto adaptive"
+        }
+      },
+      "floodlight_event_mode": {
+        "name": "Floodlight event mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "flash": "Flash"
         }
       },
       "day_night_mode": {

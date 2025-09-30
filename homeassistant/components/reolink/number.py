@@ -126,6 +126,22 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_whiteled(ch, brightness=int(value)),
     ),
     ReolinkNumberEntityDescription(
+        key="floodlight_event_brightness",
+        cmd_key="GetWhiteLed",
+        cmd_id=[289, 438],
+        translation_key="floodlight_event_brightness",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_min_value=1,
+        native_max_value=100,
+        supported=lambda api, ch: api.supported(ch, "floodlight_event"),
+        value=lambda api, ch: api.whiteled_event_brightness(ch),
+        method=lambda api, ch, value: (
+            api.baichuan.set_floodlight(ch, event_brightness=int(value))
+        ),
+    ),
+    ReolinkNumberEntityDescription(
         key="ir_brightness",
         cmd_key="208",
         translation_key="ir_brightness",
@@ -137,6 +153,42 @@ NUMBER_ENTITIES = (
         value=lambda api, ch: api.baichuan.ir_brightness(ch),
         method=lambda api, ch, value: (
             api.baichuan.set_status_led(ch, ir_brightness=int(value))
+        ),
+    ),
+    ReolinkNumberEntityDescription(
+        key="floodlight_event_on_time",
+        cmd_key="GetWhiteLed",
+        cmd_id=[289, 438],
+        translation_key="floodlight_event_on_time",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=30,
+        native_max_value=900,
+        supported=lambda api, ch: api.supported(ch, "floodlight_event"),
+        value=lambda api, ch: api.whiteled_event_on_time(ch),
+        method=lambda api, ch, value: (
+            api.baichuan.set_floodlight(ch, event_on_time=int(value))
+        ),
+    ),
+    ReolinkNumberEntityDescription(
+        key="floodlight_event_flash_time",
+        cmd_key="GetWhiteLed",
+        cmd_id=[289, 438],
+        translation_key="floodlight_event_flash_time",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=10,
+        native_max_value=30,
+        supported=lambda api, ch: api.supported(ch, "floodlight_event"),
+        value=lambda api, ch: api.whiteled_event_flash_time(ch),
+        method=lambda api, ch, value: (
+            api.baichuan.set_floodlight(ch, event_flash_time=int(value))
         ),
     ),
     ReolinkNumberEntityDescription(

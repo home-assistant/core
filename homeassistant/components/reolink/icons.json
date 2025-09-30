@@ -178,8 +178,17 @@
       "floodlight_brightness": {
         "default": "mdi:spotlight-beam"
       },
+      "floodlight_event_brightness": {
+        "default": "mdi:spotlight-beam"
+      },
       "ir_brightness": {
         "default": "mdi:led-off"
+      },
+      "floodlight_event_on_time": {
+        "default": "mdi:spotlight-beam"
+      },
+      "floodlight_event_flash_time": {
+        "default": "mdi:spotlight-beam"
       },
       "volume": {
         "default": "mdi:volume-high",
@@ -337,6 +346,9 @@
     },
     "select": {
       "floodlight_mode": {
+        "default": "mdi:spotlight-beam"
+      },
+      "floodlight_event_mode": {
         "default": "mdi:spotlight-beam"
       },
       "day_night_mode": {
