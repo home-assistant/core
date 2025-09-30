@@ -109,7 +109,10 @@ async def test_forecast_with_no_data(
     # Should log empty data warning
     caplog.clear()
     await coordinator.async_refresh()
-    assert "No forecast data available for vilnius" in caplog.text
+    assert (
+        "No forecast data available for vilnius - API returned empty timestamps"
+        in caplog.text
+    )
 
     state = hass.states.get("weather.vilnius")
     assert state is not None
