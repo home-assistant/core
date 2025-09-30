@@ -1,4 +1,4 @@
-"""Support for LED selects."""
+"""Support for WLED select entities (with 'Custom' palette handling)."""
 
 from __future__ import annotations
 
@@ -80,7 +80,7 @@ class WLEDPresetSelect(WLEDEntity, SelectEntity):
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_preset"
         sorted_values = sorted(
-            coordinator.data.presets.values(), key=lambda preset: preset.name
+            self.coordinator.data.presets.values(), key=lambda preset: preset.name
         )
         self._attr_options = [preset.name for preset in sorted_values]
 
@@ -144,7 +144,7 @@ class WLEDPlaylistSelect(WLEDEntity, SelectEntity):
 
 
 class WLEDPaletteSelect(WLEDEntity, SelectEntity):
-    """Defines a WLED Palette select."""
+    """Define a WLED Palette select (segment-scoped)."""
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "color_palette"
@@ -161,10 +161,14 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
             self._attr_translation_placeholders = {"segment": str(segment)}
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_palette_{segment}"
+        # Options are all known palette names from the device, plus a 'Custom' catch‑all
         sorted_values = sorted(
             coordinator.data.palettes.values(), key=lambda palette: palette.name
         )
         self._attr_options = [palette.name for palette in sorted_values]
+        if "Custom" not in self._attr_options:
+            self._attr_options.append("Custom")
+
         self._segment = segment
 
     @property
@@ -174,20 +178,25 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
             self.coordinator.data.state.segments[self._segment]
         except KeyError:
             return False
-
         return super().available
 
     @property
     def current_option(self) -> str | None:
-        """Return the current selected color palette."""
-        return self.coordinator.data.palettes[
-            int(self.coordinator.data.state.segments[self._segment].palette_id)
-        ].name
+        """Return the current selected color palette name or 'Custom'."""
+        seg = self.coordinator.data.state.segments[self._segment]
+        palette_id = int(getattr(seg, "palette_id", 0))
+        palette = self.coordinator.data.palettes.get(palette_id)
+        if palette is not None:
+            return palette.name
+        # Anything unmapped (including 255) shows as 'Custom'
+        return "Custom"
 
     @wled_exception_handler
     async def async_select_option(self, option: str) -> None:
         """Set WLED segment to the selected color palette."""
-        await self.coordinator.wled.segment(segment_id=self._segment, palette=option)
+        # If user selects 'Custom', send the sentinel 255. Otherwise send the name.
+        value = 255 if option == "Custom" else option
+        await self.coordinator.wled.segment(segment_id=self._segment, palette=value)
 
 
 @callback
@@ -196,7 +205,7 @@ def async_update_segments(
     current_ids: set[int],
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Update segments."""
+    """Update segment-scoped palette selects based on current segments."""
     segment_ids = {
         segment.segment_id
         for segment in coordinator.data.state.segments.values()
@@ -210,4 +219,5 @@ def async_update_segments(
         current_ids.add(segment_id)
         new_entities.append(WLEDPaletteSelect(coordinator, segment_id))
 
-    async_add_entities(new_entities)
+    if new_entities:
+        async_add_entities(new_entities)
