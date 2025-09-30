@@ -19,8 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 class MeteoLtConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Meteo.lt."""
 
-    VERSION = 1
-
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._api = MeteoLtAPI()
@@ -40,7 +38,15 @@ class MeteoLtConfigFlow(ConfigFlow, domain=DOMAIN):
                 None,
             )
             if self._selected_place:
-                return await self._create_config_entry()
+                await self.async_set_unique_id(self._selected_place.code)
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title=self._selected_place.name,
+                    data={
+                        CONF_PLACE_CODE: self._selected_place.code,
+                    },
+                )
             errors["base"] = "invalid_location"
 
         if not self._places:
@@ -69,19 +75,4 @@ class MeteoLtConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=data_schema,
             errors=errors,
-        )
-
-    async def _create_config_entry(self) -> ConfigFlowResult:
-        """Create config entry with selected place."""
-        if not self._selected_place:
-            return await self.async_step_user()
-
-        await self.async_set_unique_id(self._selected_place.code)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=self._selected_place.name,
-            data={
-                CONF_PLACE_CODE: self._selected_place.code,
-            },
         )

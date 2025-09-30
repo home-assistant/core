@@ -10,9 +10,8 @@ from .coordinator import MeteoLtConfigEntry, MeteoLtUpdateCoordinator
 
 async def async_setup_entry(hass: HomeAssistant, entry: MeteoLtConfigEntry) -> bool:
     """Set up Meteo.lt from a config entry."""
-    place_code = entry.data[CONF_PLACE_CODE]
 
-    coordinator = MeteoLtUpdateCoordinator(hass, place_code, entry)
+    coordinator = MeteoLtUpdateCoordinator(hass, entry.data[CONF_PLACE_CODE], entry)
 
     await coordinator.async_config_entry_first_refresh()
 
