@@ -52,6 +52,7 @@ from .const import (
     ATTR_FILE,
     ATTR_FILE_ID,
     ATTR_FILE_MIME_TYPE,
+    ATTR_FILE_NAME,
     ATTR_FROM_FIRST,
     ATTR_FROM_LAST,
     ATTR_KEYBOARD,
@@ -196,14 +197,17 @@ class BaseTelegramBot:
         event_data: dict[str, Any] = {}
         file_id = None
         mime_type = None
+        file_name = None
         if filters.PHOTO.filter(message):
             file_id = message.effective_attachment[-1].file_id  # type: ignore[index,union-attr]
             mime_type = "image/jpeg"  # telegram always uses jpeg for photos
         elif hasattr(message.effective_attachment, "file_id"):
             file_id = message.effective_attachment.file_id  # type: ignore[union-attr]
             mime_type = message.effective_attachment.mime_type  # type: ignore[union-attr]
+            file_name = message.effective_attachment.file_name  # type: ignore[union-attr]
         event_data[ATTR_FILE_ID] = file_id
         event_data[ATTR_FILE_MIME_TYPE] = mime_type
+        event_data[ATTR_FILE_NAME] = file_name
         return event_data
 
     def _get_user_event_data(self, user: User) -> dict[str, Any]:
