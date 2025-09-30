@@ -64,6 +64,8 @@
           'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
         ]),
         'media_content_type': 'music',
+        'repeat': 'off',
+        'shuffle': False,
         'sound_mode': 'Test Listening Mode (123)',
         'sound_mode_list': list([
           'Test Listening Mode (123)',
