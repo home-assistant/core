@@ -594,7 +594,7 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
             device="/dev/ttyUSB0",
             fw_data=b"firmware contents",
             expected_installed_firmware_type=ApplicationType.SPINEL,
-            bootloader_reset_type=(),
+            bootloader_reset_methods=(),
             progress_callback=progress_callback,
         )
 
@@ -657,7 +657,7 @@ async def test_async_flash_silabs_firmware_flash_failure(hass: HomeAssistant) ->
             device="/dev/ttyUSB0",
             fw_data=b"firmware contents",
             expected_installed_firmware_type=ApplicationType.SPINEL,
-            bootloader_reset_type=None,
+            bootloader_reset_methods=(),
         )
 
     # Both owning integrations/addons are stopped and restarted
@@ -717,7 +717,7 @@ async def test_async_flash_silabs_firmware_probe_failure(hass: HomeAssistant) ->
             device="/dev/ttyUSB0",
             fw_data=b"firmware contents",
             expected_installed_firmware_type=ApplicationType.SPINEL,
-            bootloader_reset_type=None,
+            bootloader_reset_methods=(),
         )
 
     # Both owning integrations/addons are stopped and restarted

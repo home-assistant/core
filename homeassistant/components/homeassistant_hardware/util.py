@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import AsyncIterator, Callable, Iterable
+from collections.abc import AsyncIterator, Callable, Iterable, Sequence
 from contextlib import AsyncExitStack, asynccontextmanager
 from dataclasses import dataclass
 from enum import StrEnum
@@ -342,7 +342,7 @@ async def async_flash_silabs_firmware(
     device: str,
     fw_data: bytes,
     expected_installed_firmware_type: ApplicationType,
-    bootloader_reset_type: tuple[str, ...] = (),
+    bootloader_reset_methods: Sequence[str] = (),
     progress_callback: Callable[[int, int], None] | None = None,
 ) -> FirmwareInfo:
     """Flash firmware to the SiLabs device."""
@@ -359,7 +359,7 @@ async def async_flash_silabs_firmware(
             ApplicationType.SPINEL.as_flasher_application_type(),
             ApplicationType.CPC.as_flasher_application_type(),
         ),
-        bootloader_reset=bootloader_reset_type,
+        bootloader_reset=tuple(bootloader_reset_methods),
     )
 
     async with AsyncExitStack() as stack:

@@ -432,7 +432,7 @@ async def test_firmware_options_flow_zigbee(hass: HomeAssistant) -> None:
 
     # Verify async_flash_silabs_firmware was called with Yellow's reset method
     assert flash_mock.call_count == 1
-    assert flash_mock.mock_calls[0].kwargs["bootloader_reset_type"] == ("yellow",)
+    assert flash_mock.mock_calls[0].kwargs["bootloader_reset_methods"] == ["yellow"]
 
 
 @pytest.mark.usefixtures("addon_installed")

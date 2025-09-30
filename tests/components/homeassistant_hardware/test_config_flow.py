@@ -1,7 +1,7 @@
 """Test the Home Assistant hardware firmware config flow."""
 
 import asyncio
-from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator
+from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator, Sequence
 import contextlib
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
@@ -299,7 +299,7 @@ def mock_firmware_info(
         device: str,
         fw_data: bytes,
         expected_installed_firmware_type: ApplicationType,
-        bootloader_reset_type: tuple[str, ...] = (),
+        bootloader_reset_methods: Sequence[str] = (),
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> FirmwareInfo:
         await asyncio.sleep(0)

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, Callable, Sequence
 import dataclasses
 import logging
 from unittest.mock import Mock, patch
@@ -197,7 +197,7 @@ async def mock_async_setup_update_entities(
 class MockFirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Mock SkyConnect firmware update entity."""
 
-    bootloader_reset_type = None
+    bootloader_reset_methods = []
 
     def __init__(
         self,
@@ -361,7 +361,7 @@ async def test_update_entity_installation(
         device: str,
         fw_data: bytes,
         expected_installed_firmware_type: ApplicationType,
-        bootloader_reset_type: tuple[str, ...] = (),
+        bootloader_reset_methods: Sequence[str] = (),
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> FirmwareInfo:
         await asyncio.sleep(0)

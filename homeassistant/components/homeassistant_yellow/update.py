@@ -173,7 +173,7 @@ async def async_setup_entry(
 class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Yellow firmware update entity."""
 
-    bootloader_reset_type = "yellow"  # Triggers a GPIO reset
+    bootloader_reset_methods = ["yellow"]  # Triggers a GPIO reset
 
     def __init__(
         self,
