@@ -42,7 +42,7 @@ class ModelContextServerProtocolConfigFlow(config_entries.ConfigFlow, domain=DOM
             )
         )
 
-        default_selection = vol.UNDEFINED
+        default_selection: list[str] | None = None
         if llm_apis:
             default_selection = [next(iter(llm_apis))]
 
@@ -55,7 +55,7 @@ class ModelContextServerProtocolConfigFlow(config_entries.ConfigFlow, domain=DOM
 
             selection = [api_id for api_id in selection if api_id in llm_apis]
 
-            if not selection and isinstance(default_selection, list):
+            if not selection and default_selection is not None:
                 selection = default_selection.copy()
 
             if not selection:
@@ -78,9 +78,12 @@ class ModelContextServerProtocolConfigFlow(config_entries.ConfigFlow, domain=DOM
         if not llm_apis:
             errors = {CONF_LLM_HASS_API: "llm_api_required"}
 
+        schema_default = (
+            vol.UNDEFINED if default_selection is None else default_selection
+        )
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_LLM_HASS_API, default=default_selection): selector,
+                vol.Required(CONF_LLM_HASS_API, default=schema_default): selector,
             }
         )
 
