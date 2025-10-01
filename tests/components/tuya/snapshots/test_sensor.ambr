@@ -14164,6 +14164,55 @@
     'state': '0.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.projector_screen_last_operation_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.projector_screen_last_operation_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last operation duration',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_operation_duration',
+    'unique_id': 'tuya.aiag5pku0x39rkfllctime_total',
+    'unit_of_measurement': 'ms',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.projector_screen_last_operation_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Projector Screen Last operation duration',
+      'unit_of_measurement': 'ms',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.projector_screen_last_operation_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.pth_9cw_32_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

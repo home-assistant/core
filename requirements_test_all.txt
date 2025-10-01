@@ -1035,7 +1035,7 @@ hole==0.9.0
 holidays==0.81
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250926.0
+home-assistant-frontend==20251001.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.9.24
@@ -2531,7 +2531,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.2.0
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==0.0.32
+universal-silabs-flasher==0.0.34
 
 # homeassistant.components.upb
 upb-lib==0.6.1

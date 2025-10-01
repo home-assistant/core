@@ -582,7 +582,7 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.homeassistant_hardware.util.Flasher",
             return_value=mock_flasher,
-        ),
+        ) as flasher_mock,
         patch(
             "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
         ),
@@ -596,12 +596,16 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
             device="/dev/ttyUSB0",
             fw_data=b"firmware contents",
             expected_installed_firmware_type=ApplicationType.SPINEL,
-            bootloader_reset_type=None,
+            bootloader_reset_methods=(),
             progress_callback=progress_callback,
         )
 
     assert progress_callback.mock_calls == [call(0, 100), call(50, 100), call(100, 100)]
     assert after_flash_info == expected_firmware_info
+
+    # Verify Flasher was called with correct bootloader_reset parameter
+    assert flasher_mock.call_count == 1
+    assert flasher_mock.mock_calls[0].kwargs["bootloader_reset"] == ()
 
     # Both owning integrations/addons are stopped and restarted
     assert owner1.temporarily_stop.mock_calls == [
@@ -657,7 +661,7 @@ async def test_async_flash_silabs_firmware_flash_failure(hass: HomeAssistant) ->
             device="/dev/ttyUSB0",
             fw_data=b"firmware contents",
             expected_installed_firmware_type=ApplicationType.SPINEL,
-            bootloader_reset_type=None,
+            bootloader_reset_methods=(),
         )
 
     # Both owning integrations/addons are stopped and restarted
@@ -719,7 +723,7 @@ async def test_async_flash_silabs_firmware_probe_failure(hass: HomeAssistant) ->
             device="/dev/ttyUSB0",
             fw_data=b"firmware contents",
             expected_installed_firmware_type=ApplicationType.SPINEL,
-            bootloader_reset_type=None,
+            bootloader_reset_methods=(),
         )
 
     # Both owning integrations/addons are stopped and restarted

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, Callable, Sequence
 import dataclasses
 import logging
 from unittest.mock import Mock, patch
@@ -29,6 +29,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
     OwningIntegration,
+    ResetTarget,
 )
 from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
@@ -197,7 +198,7 @@ async def mock_async_setup_update_entities(
 class MockFirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Mock SkyConnect firmware update entity."""
 
-    bootloader_reset_type = None
+    bootloader_reset_methods = []
 
     def __init__(
         self,
@@ -361,7 +362,7 @@ async def test_update_entity_installation(
         device: str,
         fw_data: bytes,
         expected_installed_firmware_type: ApplicationType,
-        bootloader_reset_type: str | None = None,
+        bootloader_reset_methods: Sequence[ResetTarget] = (),
         progress_callback: Callable[[int, int], None] | None = None,
         *,
         domain: str = "homeassistant_hardware",

@@ -13,6 +13,7 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_RELOAD,
@@ -26,7 +27,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
-from tests.common import get_fixture_path
+from tests.common import MockConfigEntry, get_fixture_path
 
 
 async def test_load_values_when_added_to_hass(hass: HomeAssistant) -> None:
@@ -295,6 +296,44 @@ async def test_sensor_value_template(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "binary_sensor", config)
     await hass.async_block_till_done()
 
+    await _test_sensor_value_template(hass)
+
+
+async def test_sensor_value_template_config_entry(hass: HomeAssistant) -> None:
+    """Test sensor on template platform observations."""
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "Test_Binary",
+            "prior": 0.2,
+            "probability_threshold": 0.32,
+        },
+        subentries_data=[
+            ConfigSubentryData(
+                data={
+                    "platform": "template",
+                    "value_template": "{{states('sensor.test_monitored') == 'off'}}",
+                    "prob_given_true": 0.8,
+                    "prob_given_false": 0.4,
+                    "name": "observation_1",
+                },
+                subentry_type="observation",
+                title="observation_1",
+                unique_id=None,
+            )
+        ],
+        title="Test_Binary",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await _test_sensor_value_template(hass)
+
+
+async def _test_sensor_value_template(hass: HomeAssistant) -> None:
     hass.states.async_set("sensor.test_monitored", "on")
 
     state = hass.states.get("binary_sensor.test_binary")
