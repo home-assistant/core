@@ -139,6 +139,7 @@ async def test_user_flow_unable_to_determine_mac(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6742,
+        CONF_MAC: None,
     }
     assert result["result"].unique_id == "127.0.0.1:6742"
 
