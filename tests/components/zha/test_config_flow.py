@@ -2035,6 +2035,14 @@ async def test_options_flow_creates_backup(
 @pytest.mark.parametrize(
     "async_unload_effect", [True, config_entries.OperationNotAllowed()]
 )
+@pytest.mark.parametrize(
+    ("input_flow_control", "conf_flow_control"),
+    [
+        ("hardware", "hardware"),
+        ("software", "software"),
+        ("none", None),
+    ],
+)
 @patch(
     "serial.tools.list_ports.comports",
     MagicMock(
@@ -2047,7 +2055,11 @@ async def test_options_flow_creates_backup(
 )
 @patch("homeassistant.components.zha.async_setup_entry", return_value=True)
 async def test_options_flow_defaults(
-    async_setup_entry, async_unload_effect, hass: HomeAssistant
+    async_setup_entry,
+    async_unload_effect,
+    input_flow_control,
+    conf_flow_control,
+    hass: HomeAssistant,
 ) -> None:
     """Test options flow defaults match radio defaults."""
 
@@ -2127,7 +2139,9 @@ async def test_options_flow_defaults(
         "flow_control": "none",
     }
 
-    with patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True)):
+    with patch(
+        f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True)
+    ) as mock_probe:
         # Change the serial port path
         result5 = await hass.config_entries.options.async_configure(
             flow["flow_id"],
@@ -2135,9 +2149,19 @@ async def test_options_flow_defaults(
                 # Change everything
                 CONF_DEVICE_PATH: "/dev/new_serial_port",
                 CONF_BAUDRATE: 54321,
-                CONF_FLOW_CONTROL: "software",
+                CONF_FLOW_CONTROL: input_flow_control,
             },
         )
+        # verify we passed the correct flow control to the probe function
+        assert mock_probe.mock_calls == [
+            call(
+                {
+                    "path": "/dev/new_serial_port",
+                    "baudrate": 54321,
+                    "flow_control": conf_flow_control,
+                }
+            )
+        ]
 
     # The radio has been detected, we can move on to creating the config entry
     assert result5["step_id"] == "choose_migration_strategy"
@@ -2164,7 +2188,7 @@ async def test_options_flow_defaults(
         CONF_DEVICE: {
             CONF_DEVICE_PATH: "/dev/new_serial_port",
             CONF_BAUDRATE: 54321,
-            CONF_FLOW_CONTROL: "software",
+            CONF_FLOW_CONTROL: conf_flow_control,
         },
         CONF_RADIO_TYPE: "znp",
     }
