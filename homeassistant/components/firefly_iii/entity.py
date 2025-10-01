@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pyfirefly.models import Account, Category
 from yarl import URL
 
 from homeassistant.const import CONF_URL
@@ -9,12 +10,22 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER, NAME
 from .coordinator import FireflyDataUpdateCoordinator
 
 
-class FireflyBaseEntity(CoordinatorEntity[FireflyDataUpdateCoordinator]):
-    """Base class for Firefly III entity."""
+class FireflyCoordinatorEntity(CoordinatorEntity[FireflyDataUpdateCoordinator]):
+    """Base class for Firefly III coordinator entity."""
+
+    _attr_has_entity_name = True
+
+
+class FireflyBaseEntity(FireflyCoordinatorEntity):
+    """Base class for Firefly III entity.
+
+    Represents the integration service itself. Account entities override
+    the device info to point at their specific account.
+    """
 
     _attr_has_entity_name = True
 
@@ -25,18 +36,13 @@ class FireflyBaseEntity(CoordinatorEntity[FireflyDataUpdateCoordinator]):
     ) -> None:
         """Initialize a Firefly entity."""
         super().__init__(coordinator)
-
         self.entity_description = entity_description
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
+            name=NAME,
             configuration_url=URL(coordinator.config_entry.data[CONF_URL]),
-            identifiers={
-                (
-                    DOMAIN,
-                    f"{coordinator.config_entry.entry_id}_{self.entity_description.key}",
-                )
-            },
+            identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}_service")},
         )
 
 
@@ -47,18 +53,40 @@ class FireflyAccountBaseEntity(FireflyBaseEntity):
         self,
         coordinator: FireflyDataUpdateCoordinator,
         entity_description: EntityDescription,
-        account_id: int,
+        account: Account,
     ) -> None:
         """Initialize a Firefly account entity."""
         super().__init__(coordinator, entity_description)
+        self._account = account
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
-            configuration_url=URL(coordinator.config_entry.data[CONF_URL]),
+            name=account.attributes.name,
+            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/accounts/show/{account.id}",
             identifiers={
-                (
-                    DOMAIN,
-                    f"{coordinator.config_entry.entry_id}_{account_id}",
-                )
+                (DOMAIN, f"{coordinator.config_entry.entry_id}_account_{account.id}")
+            },
+        )
+
+
+class FireflyCategoryBaseEntity(FireflyBaseEntity):
+    """Base class for Firefly III category entity."""
+
+    def __init__(
+        self,
+        coordinator: FireflyDataUpdateCoordinator,
+        entity_description: EntityDescription,
+        category: Category,
+    ) -> None:
+        """Initialize a Firefly category entity."""
+        super().__init__(coordinator, entity_description)
+        self._category = category
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer=MANUFACTURER,
+            name=category.attributes.name,
+            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/categories/show/{category.id}",
+            identifiers={
+                (DOMAIN, f"{coordinator.config_entry.entry_id}_category_{category.id}")
             },
         )
