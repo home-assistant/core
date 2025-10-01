@@ -46,7 +46,6 @@ class HannaConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.warning("Connection timeout or error during Hanna authentication")
             errors["base"] = "cannot_connect"
         except AuthenticationError:
-            _LOGGER.warning("Authentication failed for user %s", user_input[CONF_EMAIL])
             errors["base"] = "invalid_auth"
         except Exception:
             _LOGGER.exception("Unexpected error during Hanna authentication")

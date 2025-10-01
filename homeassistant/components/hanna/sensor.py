@@ -18,12 +18,11 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfElectricPotential, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import HannaDataCoordinator
+from .entity import HannaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +96,7 @@ async def async_setup_entry(
         async_add_entities(all_entities)
 
 
-class HannaSensor(CoordinatorEntity[HannaDataCoordinator], SensorEntity):
+class HannaSensor(HannaEntity, SensorEntity):
     """Representation of a Hanna sensor."""
 
     def __init__(
@@ -115,11 +114,6 @@ class HannaSensor(CoordinatorEntity[HannaDataCoordinator], SensorEntity):
         self._attr_has_entity_name = True
         self._attr_should_poll = False
         self.description = description
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return self.coordinator.device_info
 
 
 class HannaParamSensor(HannaSensor):

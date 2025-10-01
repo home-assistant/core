@@ -13,8 +13,16 @@ from requests.exceptions import RequestException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN
+
+
+class HannaConfigEntry(ConfigEntry):
+    """Config entry for Hanna integration with typed runtime data."""
+
+    runtime_data: dict[str, "HannaDataCoordinator"] | None
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,46 +34,24 @@ class HannaDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        device: dict,
+        device: dict[str, Any],
+        api_client: HannaCloudClient,
     ) -> None:
         """Initialize the Hanna data coordinator."""
-        self.api_client = HannaCloudClient()
+        self.api_client = api_client
         self.readings = None
         self.device_data = device
-        self._email = config_entry.data["email"]
-        self._password = config_entry.data["password"]
         super().__init__(
             hass,
             _LOGGER,
-            name=f"hanna_{self.device_identifier}",
+            name=f"{DOMAIN}_{self.device_identifier}",
             update_interval=timedelta(seconds=30),
         )
-        self._authenticated = False
-
-    async def ensure_authenticated(self) -> None:
-        """Ensure the client is authenticated with the Hanna API."""
-        if not self._authenticated:
-            await self.hass.async_add_executor_job(
-                self.api_client.authenticate, self._email, self._password
-            )
-            self._authenticated = True
 
     @property
     def device_identifier(self) -> str:
         """Return the device identifier."""
         return self.device_data["DID"]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for Home Assistant."""
-        return DeviceInfo(
-            identifiers={("hanna", self.device_identifier)},
-            manufacturer=self.device_data.get("manufacturer"),
-            model=self.device_data.get("DM"),
-            name=f"{self.device_identifier} {self.device_data.get('name')}",
-            serial_number=self.device_data.get("serial_number"),
-            sw_version=self.device_data.get("sw_version"),
-        )
 
     def get_all_alarms(self) -> list[str]:
         """Get all alarms from the sensor data."""
@@ -87,7 +73,6 @@ class HannaDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self):
         """Fetch latest sensor data from the Hanna API."""
         try:
-            await self.ensure_authenticated()
             readings = await self.hass.async_add_executor_job(
                 self.api_client.get_last_device_reading, self.device_identifier
             )
@@ -96,6 +81,4 @@ class HannaDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(f"Error communicating with Hanna API: {e}") from e
         except (KeyError, IndexError) as e:
             raise UpdateFailed(f"Error parsing Hanna API response: {e}") from e
-        except Exception as e:
-            _LOGGER.error("Unexpected error while fetching Hanna data: %s", e)
-            raise UpdateFailed(f"Unexpected error: {e}") from e
+        return readings

@@ -7,8 +7,8 @@ from hanna_cloud import HannaCloudClient
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import HannaConfigEntry
-from .coordinator import HannaDataCoordinator
+from .const import CONF_EMAIL, CONF_PASSWORD
+from .coordinator import HannaConfigEntry, HannaDataCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -30,14 +30,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HannaConfigEntry) -> boo
     devices = await hass.async_add_executor_job(
         _authenticate_and_get_devices,
         api_client,
-        entry.data["email"],
-        entry.data["password"],
+        entry.data[CONF_EMAIL],
+        entry.data[CONF_PASSWORD],
     )
 
     # Create device coordinators
     device_coordinators = {}
     for device in devices:
-        coordinator = HannaDataCoordinator(hass, entry, device)
+        coordinator = HannaDataCoordinator(hass, entry, device, api_client)
         await coordinator.async_config_entry_first_refresh()
         device_coordinators[coordinator.device_identifier] = coordinator
 
