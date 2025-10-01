@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from datetime import timedelta
 import logging
@@ -146,8 +147,9 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
             raise DeviceNotFound("Unable to connect to device") from exc
 
         try:
-            packet_a0 = await client.read(PacketA0Notify)
-        except (BleakError, DecodeError) as exc:
+            async with asyncio.timeout(10):
+                packet_a0 = await client.read(PacketA0Notify)
+        except (BleakError, DecodeError, TimeoutError) as exc:
             await client.disconnect()
             raise DeviceFailed(f"Device failed {exc}") from exc
 
