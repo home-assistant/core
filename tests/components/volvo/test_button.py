@@ -83,12 +83,13 @@ async def test_button_press_error(
 
     with patch("homeassistant.components.volvo.PLATFORMS", [Platform.BUTTON]):
         assert await setup_integration()
-configure_mock(mock_api.async_execute_command, side_effect=VolvoApiException)
 
-with pytest.raises(HomeAssistantError):
-await hass.services.async_call(
-BUTTON_DOMAIN,
-SERVICE_PRESS,
+    configure_mock(mock_api.async_execute_command, side_effect=VolvoApiException)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
             {ATTR_ENTITY_ID: f"button.volvo_xc40_{command}"},
             blocking=True,
         )
