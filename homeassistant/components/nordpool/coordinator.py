@@ -57,7 +57,7 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
             next_hour.hour,
             tzinfo=dt_util.UTC,
         )
-        LOGGER.debug("Next update at %s", next_run)
+        LOGGER.debug("Next data update at %s", next_run)
         return next_run
 
     def get_next_15_interval(self, now: datetime) -> datetime:
@@ -68,7 +68,7 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
             minute=next_minute, second=0, microsecond=0, tzinfo=dt_util.UTC
         )
 
-        LOGGER.debug("Next update at %s", next_run)
+        LOGGER.debug("Next listener update at %s", next_run)
         return next_run
 
     async def async_shutdown(self) -> None:
