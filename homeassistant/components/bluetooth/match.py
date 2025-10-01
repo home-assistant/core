@@ -65,7 +65,7 @@ class BluetoothCallbackMatcherWithCallback(
 class IntegrationMatchHistory:
     """Track which fields have been seen."""
 
-    manufacturer_data: bool
+    manufacturer_data: bool | None
     service_data: set[str]
     service_uuids: set[str]
 
@@ -74,7 +74,10 @@ def seen_all_fields(
     previous_match: IntegrationMatchHistory, advertisement_data: AdvertisementData
 ) -> bool:
     """Return if we have seen all fields."""
-    if not previous_match.manufacturer_data and advertisement_data.manufacturer_data:
+    if (
+        previous_match.manufacturer_data is None
+        and advertisement_data.manufacturer_data is not None
+    ):
         return False
     if advertisement_data.service_data and (
         not previous_match.service_data
@@ -135,14 +138,20 @@ class IntegrationMatcher:
         if not matched_domains:
             return matched_domains
         if previous_match:
-            previous_match.manufacturer_data |= bool(
-                advertisement_data.manufacturer_data
-            )
+            if (
+                previous_match.manufacturer_data is None
+                and advertisement_data.manufacturer_data is not None
+            ):
+                previous_match.manufacturer_data = True
             previous_match.service_data |= set(advertisement_data.service_data)
             previous_match.service_uuids |= set(advertisement_data.service_uuids)
         else:
             matched[device.address] = IntegrationMatchHistory(
-                manufacturer_data=bool(advertisement_data.manufacturer_data),
+                manufacturer_data=(
+                    None
+                    if advertisement_data.manufacturer_data is None
+                    else True
+                ),
                 service_data=set(advertisement_data.service_data),
                 service_uuids=set(advertisement_data.service_uuids),
             )
