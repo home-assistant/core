@@ -3249,6 +3249,7 @@
         'energy_save',
         'heating_up',
         'not_running',
+        'pre_heating',
         'process_finished',
         'process_running',
       ]),
@@ -3291,6 +3292,7 @@
         'energy_save',
         'heating_up',
         'not_running',
+        'pre_heating',
         'process_finished',
         'process_running',
       ]),
@@ -3904,7 +3906,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -3932,7 +3934,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_energy_forecast-entry]
@@ -4501,7 +4503,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
@@ -4529,7 +4531,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.washing_machine_water_forecast-entry]
@@ -5395,6 +5397,7 @@
         'energy_save',
         'heating_up',
         'not_running',
+        'pre_heating',
         'process_finished',
         'process_running',
       ]),
@@ -5437,6 +5440,7 @@
         'energy_save',
         'heating_up',
         'not_running',
+        'pre_heating',
         'process_finished',
         'process_running',
       ]),
@@ -6050,7 +6054,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 1,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -6078,7 +6082,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_energy_forecast-entry]
@@ -6647,7 +6651,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
@@ -6675,7 +6679,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states_api_push[platforms0][sensor.washing_machine_water_forecast-entry]

@@ -145,7 +145,7 @@ hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
 numpy==2.3.2
-pandas==2.3.0
+pandas==2.3.3
 
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
@@ -155,7 +155,7 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.11.7
+pydantic==2.11.9
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
@@ -245,7 +245,7 @@ num2words==0.5.14
 # pymodbus does not follow SemVer, and it keeps getting
 # downgraded or upgraded by custom components
 # This ensures all use the same version
-pymodbus==3.11.1
+pymodbus==3.11.2
 
 # Some packages don't support gql 4.0.0 yet
 gql<4.0.0
