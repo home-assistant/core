@@ -99,18 +99,17 @@ def above_greater_than_below(config: dict[str, Any]) -> dict[str, Any]:
     return config
 
 
-NUMERIC_STATE_BASE_SCHEMA = vol.Schema(
-    {
-        CONF_PLATFORM: CONF_NUMERIC_STATE,
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_ABOVE): vol.Coerce(float),
-        vol.Optional(CONF_BELOW): vol.Coerce(float),
-        vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
-    }
-)
 NUMERIC_STATE_SCHEMA = vol.All(
-    NUMERIC_STATE_BASE_SCHEMA,
+    vol.Schema(
+        {
+            CONF_PLATFORM: CONF_NUMERIC_STATE,
+            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Optional(CONF_ABOVE): vol.Coerce(float),
+            vol.Optional(CONF_BELOW): vol.Coerce(float),
+            vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
+            vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+        }
+    ),
     above_greater_than_below,
 )
 
@@ -177,18 +176,6 @@ TEMPLATE_SCHEMA = vol.Schema(
     },
     required=True,
 )
-
-OBSERVATION_CONFIG_FLOW_SCHEMA = vol.Any(
-    vol.Schema({**TEMPLATE_SCHEMA.schema, vol.Optional(CONF_NAME): cv.string}),
-    vol.Schema({**STATE_SCHEMA.schema, vol.Optional(CONF_NAME): cv.string}),
-    vol.All(
-        vol.Schema(
-            {**NUMERIC_STATE_BASE_SCHEMA.schema, vol.Optional(CONF_NAME): cv.string}
-        ),
-        above_greater_than_below,
-    ),
-)
-
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -282,9 +269,15 @@ async def async_setup_entry(
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID, config_entry.entry_id)
     observations: list[ConfigType] = [
-        OBSERVATION_CONFIG_FLOW_SCHEMA(dict(subentry.data))
-        for subentry in config_entry.subentries.values()
+        dict(subentry.data) for subentry in config_entry.subentries.values()
     ]
+
+    for observation in observations:
+        if observation[CONF_PLATFORM] == CONF_TEMPLATE:
+            observation[CONF_VALUE_TEMPLATE] = Template(
+                observation[CONF_VALUE_TEMPLATE], hass
+            )
+
     prior: float = config[CONF_PRIOR]
     probability_threshold: float = config[CONF_PROBABILITY_THRESHOLD]
     device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
