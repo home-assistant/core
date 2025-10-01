@@ -168,6 +168,20 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Import a Yaml config."""
         self._async_abort_entries_match({CONF_URL: import_data[CONF_URL]})
+
+        # Test connection
+        api_data: APIData = {
+            "api_key": import_data[CONF_API_KEY],
+            "api_secret": import_data[CONF_API_SECRET],
+            "base_url": import_data[CONF_URL],
+            "verify_cert": import_data[CONF_VERIFY_SSL],
+        }
+        interfaces_client = diagnostics.InterfaceClient(**api_data)
+        try:
+            await self.hass.async_add_executor_job(interfaces_client.get_arp)
+        except APIException:
+            return self.async_abort(reason="cannot_connect")
+
         return self.async_create_entry(title="OPNsense", data=import_data)
 
     async def _async_check_connection(self, api_data: APIData) -> None:
