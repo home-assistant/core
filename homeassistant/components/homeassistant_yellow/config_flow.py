@@ -27,6 +27,7 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    ResetTarget,
 )
 from homeassistant.config_entries import (
     SOURCE_HARDWARE,
@@ -82,7 +83,7 @@ else:
 class YellowFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     """Mixin for Home Assistant Yellow firmware methods."""
 
-    BOOTLOADER_RESET_METHODS = ["yellow"]
+    BOOTLOADER_RESET_METHODS = [ResetTarget.YELLOW]
 
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None

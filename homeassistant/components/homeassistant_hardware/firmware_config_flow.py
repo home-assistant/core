@@ -39,6 +39,7 @@ from .util import (
     FirmwareInfo,
     OwningAddon,
     OwningIntegration,
+    ResetTarget,
     async_flash_silabs_firmware,
     get_otbr_addon_manager,
     guess_firmware_info,
@@ -79,7 +80,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
     """Base flow to install firmware."""
 
     ZIGBEE_BAUDRATE = 115200  # Default, subclasses may override
-    BOOTLOADER_RESET_METHODS: list[str] = []  # Default, subclasses may override
+    BOOTLOADER_RESET_METHODS: list[ResetTarget] = []  # Default, subclasses may override
 
     _picked_firmware_type: PickedFirmwareType
     _zigbee_flow_strategy: ZigbeeFlowStrategy = ZigbeeFlowStrategy.RECOMMENDED
