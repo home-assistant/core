@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 
 from pysma import SMA
@@ -25,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 class SMADataUpdateCoordinator(DataUpdateCoordinator):
     """Data Update Coordinator for SMA."""
 
+    sma: SMA
     config_entry: ConfigEntry
 
     def __init__(
@@ -39,17 +41,22 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=config_entry.options.get(
-                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+            update_interval=timedelta(
+                seconds=config_entry.options.get(
+                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                )
             ),
         )
         self.sma = sma
+        # @Erwin: make Dataclasses
+        self.sma_device_info = None
+        self.sensors = None
 
     async def _async_setup(self) -> None:
-        """Set up the SMA Data Update Coordinator."""
+        """Setup the SMA Data Update Coordinator."""
         try:
-            sma_device_info = await self.sma.device_info()
-            sensor_def = await self.sma.get_sensors()
+            self.sma_device_info = await self.sma.device_info()
+            self.sensors = await self.sma.get_sensors()
         except (
             SmaReadException,
             SmaConnectionException,
@@ -70,8 +77,7 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> None:
         """Update the used SMA sensors."""
         try:
-            # @Erwin: fetch the sensor data from the data
-            await self.sma.read(sensor_def)
+            await self.sma.read(self.sensors)
         except (
             SmaReadException,
             SmaConnectionException,

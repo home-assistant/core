@@ -6,7 +6,8 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-import pysma
+from pysma import SMA
+from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,6 +19,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -30,29 +32,47 @@ from .const import (
     CONF_GROUP,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    PLATFORMS,
     PYSMA_COORDINATOR,
     PYSMA_DEVICE_INFO,
     PYSMA_OBJECT,
     PYSMA_REMOVE_LISTENER,
     PYSMA_SENSORS,
 )
+from .coordinator import SMADataUpdateCoordinator
+
+PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+type SMAConfigEntry = ConfigEntry[SMADataUpdateCoordinator]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
     """Set up sma from a config entry."""
-    # Init the SMA interface
+
     protocol = "https" if entry.data[CONF_SSL] else "http"
     url = f"{protocol}://{entry.data[CONF_HOST]}"
-    verify_ssl = entry.data[CONF_VERIFY_SSL]
-    group = entry.data[CONF_GROUP]
-    password = entry.data[CONF_PASSWORD]
 
-    session = async_get_clientsession(hass, verify_ssl=verify_ssl)
-    sma = pysma.SMA(session, url, password, group)
+    sma = SMA(
+        session=async_get_clientsession(
+            hass=hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
+        ),
+        url=url,
+        password=entry.data[CONF_PASSWORD],
+        group=entry.data[CONF_GROUP],
+    )
 
+    coordinator = SMADataUpdateCoordinator(hass, entry, sma)
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    return True
+
+
+async def old_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         # Get updated device info
         sma_device_info = await sma.device_info()
@@ -135,7 +155,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     return True
 
 
