@@ -166,6 +166,7 @@ async def test_entity_basic(
                 "position": None,
                 "play": 1,
                 "play_pos": 0,
+                "expected_play_args": [0],
             },
         ),
         (
@@ -205,6 +206,7 @@ async def test_entity_basic(
                 "position": 1,
                 "play": 1,
                 "play_pos": 9,
+                "expected_play_args": [9],
             },
         ),
         (
@@ -218,6 +220,7 @@ async def test_entity_basic(
                 "position": None,
                 "play": 1,
                 "play_pos": 0,
+                "expected_play_args": [0],
             },
         ),
         (
@@ -231,6 +234,7 @@ async def test_entity_basic(
                 "position": None,
                 "play": 1,
                 "play_pos": 0,
+                "expected_play_args": [0],
             },
         ),
     ],
@@ -266,23 +270,20 @@ async def test_play_media_library(
         sock_mock.add_to_queue.call_args_list[0].args[0].item_id
         == test_result["item_id"]
     )
-    if test_result["position"] is not None:
-        assert (
-            sock_mock.add_to_queue.call_args_list[0].kwargs["position"]
-            == test_result["position"]
-        )
-    else:
-        assert "position" not in sock_mock.add_to_queue.call_args_list[0].kwargs
+    assert (
+        sock_mock.add_to_queue.call_args_list[0].kwargs.get("position")
+        == test_result["position"]
+    )
+
     assert (
         sock_mock.add_to_queue.call_args_list[0].kwargs["timeout"]
         == LONG_SERVICE_TIMEOUT
     )
     assert sock_mock.play_from_queue.call_count == test_result["play"]
-    if test_result["play"] != 0:
-        assert (
-            sock_mock.play_from_queue.call_args_list[0].args[0]
-            == test_result["play_pos"]
-        )
+    actual_play_args = [
+        call.args[0] for call in sock_mock.play_from_queue.call_args_list
+    ]
+    assert actual_play_args == test_result.get("expected_play_args", [])
 
 
 @pytest.mark.parametrize(
