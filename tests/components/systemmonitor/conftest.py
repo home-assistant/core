@@ -27,13 +27,20 @@ def mock_sys_platform() -> Generator[None]:
 class MockProcess(Process):
     """Mock a Process class."""
 
-    def __init__(self, name: str, ex: bool = False, num_fds: int | None = None) -> None:
+    def __init__(
+        self,
+        name: str,
+        ex: bool = False,
+        num_fds: int | None = None,
+        raise_os_error: bool = False,
+    ) -> None:
         """Initialize the process."""
         super().__init__(1)
         self._name = name
         self._ex = ex
         self._create_time = 1708700400
         self._num_fds = num_fds
+        self._raise_os_error = raise_os_error
 
     def name(self):
         """Return a name."""
@@ -45,6 +52,9 @@ class MockProcess(Process):
         """Return the number of file descriptors opened by this process."""
         if self._ex:
             raise NoSuchProcess(1, self._name)
+
+        if self._raise_os_error:
+            raise OSError("Permission denied")
 
         # Use explicit num_fds if provided, otherwise use defaults
         if self._num_fds is not None:
