@@ -169,6 +169,31 @@ async def test_user_flow_ipv6(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
 
+@pytest.mark.usefixtures(
+    "mock_setup_entry", "mock_openrgb_client", "mock_get_mac_address"
+)
+async def test_user_flow_hostname(hass: HomeAssistant) -> None:
+    """Test user flow with hostname instead of IP address."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "openrgb.local", CONF_PORT: 6742},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "OpenRGB (aa:bb:cc:dd:ee:ff)"
+    assert result["data"] == {
+        CONF_HOST: "openrgb.local",
+        CONF_PORT: 6742,
+        CONF_MAC: "aa:bb:cc:dd:ee:ff",
+    }
+    assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
+
+
 @pytest.mark.usefixtures("mock_setup_entry", "mock_openrgb_client")
 async def test_user_flow_unknown_error(
     hass: HomeAssistant, mock_get_mac_address: MagicMock
