@@ -117,8 +117,8 @@
       },
       "location": {
         "tz": "Europe/Brussels",
-        "lat": 50.8374,
-        "lon": 4.4076
+        "lat": 99.8888,
+        "lon": 22.3333
       },
       "sntp": {
         "server": "time.google.com"
