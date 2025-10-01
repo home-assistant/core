@@ -1,0 +1,1 @@
+"""Quirks for Tuya."""

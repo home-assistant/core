@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Self
 from tuya_sharing import CustomerDevice
 
 if TYPE_CHECKING:
-    from .device_quirk import DeviceQuirk
+    from .device_quirk import TuyaDeviceQuirk
 
 
 class QuirksRegistry:
@@ -15,7 +15,7 @@ class QuirksRegistry:
 
     instance: Self
 
-    _quirks: dict[str, dict[str, DeviceQuirk]]
+    _quirks: dict[str, dict[str, TuyaDeviceQuirk]]
 
     def __new__(cls) -> Self:
         """Create a new class."""
@@ -27,10 +27,10 @@ class QuirksRegistry:
         """Initialize the registry."""
         self._quirks = {}
 
-    def register(self, category: str, product_id: str, quirk: DeviceQuirk) -> None:
+    def register(self, category: str, product_id: str, quirk: TuyaDeviceQuirk) -> None:
         """Register a quirk for a specific device type."""
         self._quirks.setdefault(category, {})[product_id] = quirk
 
-    def get_quirk_for_device(self, device: CustomerDevice) -> DeviceQuirk | None:
+    def get_quirk_for_device(self, device: CustomerDevice) -> TuyaDeviceQuirk | None:
         """Get the quirk for a specific device."""
         return self._quirks.get(device.category, {}).get(device.product_id)

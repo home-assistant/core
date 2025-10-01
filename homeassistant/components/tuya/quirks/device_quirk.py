@@ -32,7 +32,7 @@ class TuyaCoverDefinition(BaseTuyaDefinition):
 
 
 @dataclass
-class DeviceQuirk:
+class TuyaDeviceQuirk:
     """Quirk for Tuya device."""
 
     _applies_to: list[tuple[str, str]]
