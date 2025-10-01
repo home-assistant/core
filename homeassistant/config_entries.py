@@ -3188,7 +3188,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         return result
 
     @callback
-    def _async_update(
+    def __async_update(
         self,
         entry: ConfigEntry,
         *,
@@ -3243,7 +3243,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         Returns:
             ConfigFlowResult: The result of the config flow.
         """
-        self._async_update(
+        self.__async_update(
             entry=entry,
             unique_id=unique_id,
             title=title,
@@ -3288,7 +3288,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         Returns:
             ConfigFlowResult: The result of the config flow.
         """
-        result = self._async_update(
+        result = self.__async_update(
             entry=entry,
             unique_id=unique_id,
             title=title,
