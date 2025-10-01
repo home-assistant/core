@@ -2,7 +2,12 @@
 
 from unittest.mock import Mock
 
-from aioshelly.const import MODEL_2PM_G3, MODEL_BLU_GATEWAY_G3, MODEL_PRO_EM3
+from aioshelly.const import (
+    MODEL_2PM_G3,
+    MODEL_BLU_GATEWAY_G3,
+    MODEL_PRO_EM3,
+    MODEL_WALL_DISPLAY_XL,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -550,7 +555,7 @@ async def test_wall_display_xl(
 
     await force_uptime_value(hass, freezer)
 
-    config_entry = await init_integration(hass, gen=2)
+    config_entry = await init_integration(hass, gen=2, model=MODEL_WALL_DISPLAY_XL)
 
     await snapshot_device_entities(
         hass, entity_registry, snapshot, config_entry.entry_id
