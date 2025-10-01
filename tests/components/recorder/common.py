@@ -538,12 +538,6 @@ def db_state_to_native(state: States, validate_entity_id: bool = True) -> State 
         parent_id=bytes_to_ulid_or_none(state.context_parent_id_bin),
     )
     attrs = json_loads_object(state.attributes) if state.attributes else {}
-    # try:
-    #    attrs = json_loads_object(state.attributes) if state.attributes else {}
-    # except JSON_DECODE_EXCEPTIONS:
-    #    # When json_loads fails
-    #    _LOGGER.exception("Error converting row to state: %s", state)
-    #    return None
     last_updated = dt_util.utc_from_timestamp(state.last_updated_ts or 0)
     if state.last_changed_ts is None or state.last_changed_ts == state.last_updated_ts:
         last_changed = dt_util.utc_from_timestamp(state.last_updated_ts or 0)
