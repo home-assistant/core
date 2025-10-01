@@ -152,6 +152,8 @@ PUMP_CONTROL_MODE_MAP = {
     clusters.PumpConfigurationAndControl.Enums.ControlModeEnum.kUnknownEnumValue: None,
 }
 
+TEMPERATURE_SCALING_FACTOR = 100
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -634,8 +636,8 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="NitrogenDioxideSensor",
+            translation_key="nitrogen_dioxide",
             native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-            device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         entity_class=MatterSensor,
@@ -1140,6 +1142,23 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.Thermostat.Attributes.LocalTemperature,),
         device_type=(device_types.Thermostat,),
         allow_multi=True,  # also used for climate entity
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThermostatOutdoorTemperature",
+            translation_key="outdoor_temperature",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            suggested_display_precision=1,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            device_to_ha=lambda x: (
+                None if x is None else x / TEMPERATURE_SCALING_FACTOR
+            ),
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.Thermostat.Attributes.OutdoorTemperature,),
+        device_type=(device_types.Thermostat, device_types.RoomAirConditioner),
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
