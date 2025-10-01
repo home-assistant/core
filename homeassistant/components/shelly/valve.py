@@ -17,7 +17,7 @@ from homeassistant.components.valve import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry
+from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
     RpcEntityDescription,
@@ -49,18 +49,34 @@ GAS_VALVE = BlockValveDescription(
 )
 
 
-class RpcShellyWaterValve(ShellyRpcAttributeEntity, ValveEntity):
-    """Entity that controls a valve on RPC Shelly Water Valve."""
+class RpcShellyBaseWaterValve(ShellyRpcAttributeEntity, ValveEntity):
+    """Base Entity for RPC Shelly Water Valves."""
 
     entity_description: RpcValveDescription
     _attr_device_class = ValveDeviceClass.WATER
+    _id: int
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcEntityDescription,
+    ) -> None:
+        """Initialize RPC water valve."""
+        super().__init__(coordinator, key, attribute, description)
+        self._attr_name = None  # Main device entity
+
+
+class RpcShellyWaterValve(RpcShellyBaseWaterValve):
+    """Entity that controls a valve on RPC Shelly Water Valve."""
+
     _attr_supported_features = (
         ValveEntityFeature.OPEN
         | ValveEntityFeature.CLOSE
         | ValveEntityFeature.SET_POSITION
     )
     _attr_reports_position = True
-    _id: int
 
     @property
     def current_valve_position(self) -> int:
@@ -72,14 +88,11 @@ class RpcShellyWaterValve(ShellyRpcAttributeEntity, ValveEntity):
         await self.coordinator.device.number_set(self._id, position)
 
 
-class RpcShellyNeoWaterValve(ShellyRpcAttributeEntity, ValveEntity):
+class RpcShellyNeoWaterValve(RpcShellyBaseWaterValve):
     """Entity that controls a valve on RPC Shelly NEO Water Walve."""
 
-    entity_description: RpcValveDescription
-    _attr_device_class = ValveDeviceClass.WATER
     _attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
     _attr_reports_position = False
-    _id: int
 
     @property
     def is_closed(self) -> bool | None:
