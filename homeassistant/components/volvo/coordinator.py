@@ -8,7 +8,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, Generic, TypeVar, cast
+from typing import Any, cast
 
 from volvocarsapi.api import VolvoCarsApi
 from volvocarsapi.models import (
@@ -64,10 +64,7 @@ def _is_invalid_api_field(field: VolvoCarsApiBaseModel | None) -> bool:
     return False
 
 
-T = TypeVar("T", bound=dict, default=dict[str, Any])
-
-
-class VolvoBaseCoordinator(DataUpdateCoordinator[T], Generic[T]):
+class VolvoBaseCoordinator[T: dict = dict[str, Any]](DataUpdateCoordinator[T]):
     """Volvo base coordinator."""
 
     config_entry: VolvoConfigEntry

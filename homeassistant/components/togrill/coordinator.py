@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import TypeVar
 
 from bleak.exc import BleakError
 from togrill_bluetooth.client import Client
@@ -38,8 +37,6 @@ type ToGrillConfigEntry = ConfigEntry[ToGrillCoordinator]
 
 SCAN_INTERVAL = timedelta(seconds=30)
 LOGGER = logging.getLogger(__name__)
-
-PacketType = TypeVar("PacketType", bound=Packet)
 
 
 def get_version_string(packet: PacketA0Notify) -> str:
@@ -179,9 +176,9 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         self.client = await self._connect_and_update_registry()
         return self.client
 
-    def get_packet(
-        self, packet_type: type[PacketType], probe=None
-    ) -> PacketType | None:
+    def get_packet[PacketT: Packet](
+        self, packet_type: type[PacketT], probe=None
+    ) -> PacketT | None:
         """Get a cached packet of a certain type."""
 
         if packet := self.data.get((packet_type.type, probe)):

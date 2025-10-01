@@ -1,5 +1,8 @@
 """Test Zeroconf multiple instance protection."""
 
+from __future__ import annotations
+
+from typing import Self
 from unittest.mock import Mock, patch
 
 import pytest
@@ -20,7 +23,7 @@ class MockZeroconf:
     def __init__(self, *args, **kwargs) -> None:
         """Initialize the mock."""
 
-    def __new__(cls, *args, **kwargs) -> "MockZeroconf":
+    def __new__(cls, *args, **kwargs) -> Self:
         """Return the shared instance."""
 
 
