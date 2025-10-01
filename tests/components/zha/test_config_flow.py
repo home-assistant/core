@@ -2102,7 +2102,7 @@ async def test_options_flow_defaults(
     assert result1["step_id"] == "prompt_migrate_or_reconfigure"
     result2 = await hass.config_entries.options.async_configure(
         flow["flow_id"],
-        user_input={"next_step_id": config_flow.OPTIONS_INTENT_RECONFIGURE},
+        user_input={"next_step_id": config_flow.OptionsMigrationIntent.RECONFIGURE},
     )
 
     # Current path is the default
@@ -2240,7 +2240,7 @@ async def test_options_flow_defaults_socket(hass: HomeAssistant) -> None:
     assert result1["step_id"] == "prompt_migrate_or_reconfigure"
     result2 = await hass.config_entries.options.async_configure(
         flow["flow_id"],
-        user_input={"next_step_id": config_flow.OPTIONS_INTENT_RECONFIGURE},
+        user_input={"next_step_id": config_flow.OptionsMigrationIntent.RECONFIGURE},
     )
 
     # Radio path must be manually entered
@@ -2320,7 +2320,7 @@ async def test_options_flow_restarts_running_zha_if_cancelled(
     assert result1["step_id"] == "prompt_migrate_or_reconfigure"
     result2 = await hass.config_entries.options.async_configure(
         flow["flow_id"],
-        user_input={"next_step_id": config_flow.OPTIONS_INTENT_RECONFIGURE},
+        user_input={"next_step_id": config_flow.OptionsMigrationIntent.RECONFIGURE},
     )
 
     # Radio path must be manually entered
@@ -2375,7 +2375,7 @@ async def test_options_flow_migration_reset_old_adapter(
     assert result1["step_id"] == "prompt_migrate_or_reconfigure"
     result2 = await hass.config_entries.options.async_configure(
         flow["flow_id"],
-        user_input={"next_step_id": config_flow.OPTIONS_INTENT_MIGRATE},
+        user_input={"next_step_id": config_flow.OptionsMigrationIntent.MIGRATE},
     )
 
     # User must explicitly approve radio reset
