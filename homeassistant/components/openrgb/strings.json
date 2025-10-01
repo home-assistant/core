@@ -37,5 +37,16 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "exceptions": {
+    "failed_to_set_color": {
+      "message": "Failed to set color on OpenRGB SDK Server at {server_address}."
+    },
+    "failed_to_set_mode": {
+      "message": "Failed to set mode on OpenRGB SDK Server at {server_address}."
+    },
+    "unable_to_connect": {
+      "message": "Unable to connect to OpenRGB SDK Server at {server_address}."
+    }
   }
 }

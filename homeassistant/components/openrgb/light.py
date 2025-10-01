@@ -219,7 +219,11 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             await self.coordinator.async_device_set_color(self.device, scaled_color)
         except OpenRGBDisconnected as err:
             raise HomeAssistantError(
-                f"Failed to set color on OpenRGB SDK Server at {self.coordinator.server_address}"
+                translation_domain=DOMAIN,
+                translation_key="failed_to_set_color",
+                translation_placeholders={
+                    "server_address": self.coordinator.server_address,
+                },
             ) from err
 
     async def _async_apply_mode(self, mode: str) -> None:
@@ -228,7 +232,11 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             await self.coordinator.async_device_set_mode(self.device, mode)
         except OpenRGBDisconnected as err:
             raise HomeAssistantError(
-                f"Failed to set mode on OpenRGB SDK Server at {self.coordinator.server_address}"
+                translation_domain=DOMAIN,
+                translation_key="failed_to_set_mode",
+                translation_placeholders={
+                    "server_address": self.coordinator.server_address,
+                },
             ) from err
 
     async def async_turn_on(self, **kwargs: Any) -> None:

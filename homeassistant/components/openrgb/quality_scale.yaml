@@ -64,7 +64,7 @@ rules:
     status: exempt
     comment: Integration does not expose entities that would need to be disabled by default
   entity-translations: todo
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: done
   repair-issues: todo

@@ -74,7 +74,9 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         ) as err:
             await self.async_client_disconnect()
             raise UpdateFailed(
-                f"Unable to connect to OpenRGB SDK Server at {self.server_address}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="unable_to_connect",
+                translation_placeholders={"server_address": self.server_address},
             ) from err
 
         if self._client is None:
@@ -130,7 +132,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         """Update the OpenRGB client data."""
         if self._client is None:
             # Should never happen, but just in case
-            raise UpdateFailed("OpenRGB client is not connected")
+            return
         async with self._client_lock:
             await self.hass.async_add_executor_job(self._client.update)
 
