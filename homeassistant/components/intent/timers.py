@@ -913,9 +913,17 @@ class StartTimerIntentHandler(intent.IntentHandler):
             satellite_id=None,
         )
 
-        recognize_result = await conversation_agent.async_recognize_intent(test_input)
+        # check for sentence trigger
+        if (
+            await conversation_agent.async_recognize_sentence_trigger(test_input)
+        ) is not None:
+            return True
 
-        return recognize_result is not None
+        # check for intent
+        if (await conversation_agent.async_recognize_intent(test_input)) is not None:
+            return True
+
+        return False
 
 
 class CancelTimerIntentHandler(intent.IntentHandler):
