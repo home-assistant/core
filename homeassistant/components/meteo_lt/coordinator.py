@@ -40,44 +40,33 @@ class MeteoLtUpdateCoordinator(DataUpdateCoordinator[MeteoLtForecast]):
             config_entry=config_entry,
         )
 
-    def _log_unavailable(self, message: str, *args: object) -> None:
-        """Log unavailability once."""
+    def _create_update_failed(self, message: str) -> UpdateFailed:
+        """Log unavailability once and create UpdateFailed exception."""
         if not self._unavailable_logged:
-            _LOGGER.info(message, *args)
+            _LOGGER.info(message)
             self._unavailable_logged = True
+        return UpdateFailed(message)
 
     async def _async_update_data(self) -> MeteoLtForecast:
         """Fetch data from Meteo.lt API."""
         try:
             forecast = await self.client.get_forecast(self.place_code)
         except aiohttp.ClientResponseError as err:
-            self._log_unavailable(
-                "API unavailable for %s: HTTP %s - %s",
-                self.place_code,
-                err.status,
-                err.message,
-            )
-            raise UpdateFailed(
-                f"API returned error status {err.status}: {err.message}"
+            raise self._create_update_failed(
+                f"API unavailable for {self.place_code}: HTTP {err.status} - {err.message}"
             ) from err
         except aiohttp.ClientConnectionError as err:
-            self._log_unavailable(
-                "Cannot connect to API for %s: %s", self.place_code, err
-            )
-            raise UpdateFailed(f"Cannot connect to API: {err}") from err
+            raise self._create_update_failed(
+                f"Cannot connect to API for {self.place_code}: {err}"
+            ) from err
         except (aiohttp.ClientError, TimeoutError) as err:
-            self._log_unavailable(
-                "Error communicating with API for %s: %s", self.place_code, err
-            )
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise self._create_update_failed(
+                f"Error communicating with API for {self.place_code}: {err}"
+            ) from err
 
         # Check if forecast data is available
         if not forecast.forecast_timestamps:
-            self._log_unavailable(
-                "No forecast data available for %s - API returned empty timestamps",
-                self.place_code,
-            )
-            raise UpdateFailed(
+            raise self._create_update_failed(
                 f"No forecast data available for {self.place_code} - API returned empty timestamps"
             )
 
