@@ -19,8 +19,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryError
-from homeassistant.helpers.selector import selector
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import CONF_TRAVEL_TIMES, DOMAIN, SUBENTRY_TRAVEL_TIMES
 
@@ -54,12 +53,11 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(user_input[CONF_API_KEY])
-                self._abort_if_unique_id_configured()
+                data = {CONF_API_KEY: user_input[CONF_API_KEY]}
+                self._async_abort_entries_match(data)
                 return self.async_create_entry(
                     title=DOMAIN,
-                    data={
-                        CONF_API_KEY: user_input[CONF_API_KEY],
-                    },
+                    data=data,
                 )
 
         return self.async_show_form(
@@ -75,7 +73,7 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Handle a flow initialized by import."""
         await self.async_set_unique_id(import_info[CONF_API_KEY])
-        self._abort_if_unique_id_configured()
+        self._async_abort_entries_match({CONF_API_KEY: import_info[CONF_API_KEY]})
         wsdot_travel_times = wsdot_api.WsdotTravelTimes(import_info[CONF_API_KEY])
         try:
             travel_time_routes = await wsdot_travel_times.get_all_travel_times()
@@ -93,11 +91,7 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
                 if str(tt.TravelTimeID) == str(route[CONF_ID])
             ]
             if not maybe_travel_time:
-                _LOGGER.error(
-                    "Found legacy WSDOT travel_time that does not describe a valid travel_time route (%s)",
-                    route,
-                )
-                continue
+                return self.async_abort(reason="invalid_travel_time_id")
             travel_time = maybe_travel_time[0]
             route_name = travel_time.Name
             unique_id = "_".join(travel_time.Name.split())
@@ -136,10 +130,10 @@ class TravelTimeSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Add a new Travel Time subentry."""
-        runtime = self._get_entry().runtime_data
-        if runtime is None:
-            raise ConfigEntryError("WSDOT entry has no runtime_data")
-        travel_times = await runtime.wsdot_travel_times.get_all_travel_times()
+        client = self._get_entry().runtime_data
+        if client is None:
+            return self.async_abort(reason="no_travel_time")
+        travel_times = await client.wsdot_travel_times.get_all_travel_times()
         if user_input is not None:
             route = [
                 {CONF_NAME: tt.Name, CONF_ID: tt.TravelTimeID}
@@ -150,15 +144,14 @@ class TravelTimeSubentryFlowHandler(ConfigSubentryFlow):
             unique_id = "_".join(name.split())
             return self.async_create_entry(title=name, unique_id=unique_id, data=route)
 
-        names = sorted(tt.Name for tt in travel_times)
+        names = SelectSelector(
+            SelectSelectorConfig(
+                options=[tt.Name for tt in travel_times],
+                sort=True,
+            )
+        )
         return self.async_show_form(
             step_id=SOURCE_USER,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_NAME): selector(
-                        {"select": {"options": names, "mode": "dropdown"}}
-                    ),
-                }
-            ),
+            data_schema=vol.Schema({vol.Required(CONF_NAME): names}),
             errors={},
         )

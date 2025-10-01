@@ -113,8 +113,7 @@ async def test_travel_sensor_platform_setup_bad_routes(
     await hass.async_block_till_done()
 
     entry = next(iter(hass.config_entries.async_entries(DOMAIN)), None)
-    assert entry is not None
-    assert entry.subentries == {}
+    assert entry is None
 
 
 @pytest.mark.parametrize(

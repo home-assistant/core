@@ -148,7 +148,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
         self._data: wsdot_api.TravelTime | None = None
         self._travel_time_id = travel_time_id
         self._wsdot_travel = wsdot_travel
-        self._attr_unique_id = f"Travel_Time_{travel_time_id}"
+        self._attr_unique_id = str(travel_time_id)
 
     async def async_update(self) -> None:
         """Get the latest data from WSDOT."""
