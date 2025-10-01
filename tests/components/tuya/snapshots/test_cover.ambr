@@ -485,7 +485,7 @@
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <CoverEntityFeature: 11>,
+    'supported_features': <CoverEntityFeature: 15>,
     'translation_key': 'curtain',
     'unique_id': 'tuya.aiag5pku0x39rkfllccontrol',
     'unit_of_measurement': None,
@@ -494,16 +494,17 @@
 # name: test_platform_setup_and_discovery[cover.projector_screen_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'current_position': 100,
       'device_class': 'curtain',
       'friendly_name': 'Projector Screen Curtain',
-      'supported_features': <CoverEntityFeature: 11>,
+      'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.projector_screen_curtain',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'closed',
+    'state': 'open',
   })
 # ---
 # name: test_platform_setup_and_discovery[cover.roller_shutter_living_room_curtain-entry]
