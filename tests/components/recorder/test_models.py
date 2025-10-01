@@ -76,7 +76,10 @@ def test_from_event_to_db_state() -> None:
         {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
         context=state.context,
     )
-    assert state.as_dict() == db_state_to_native(States.from_event(event)).as_dict()
+    db_state = States.from_event(event)
+    # Set entity_id, it's set to None by States.from_event
+    db_state.entity_id = state.entity_id
+    assert state.as_dict() == db_state_to_native(db_state).as_dict()
 
 
 def test_from_event_to_db_state_attributes() -> None:
@@ -188,7 +191,7 @@ def test_from_event_to_delete_state() -> None:
     )
     db_state = States.from_event(event)
 
-    assert db_state.entity_id == "sensor.temperature"
+    assert db_state.entity_id is None
     assert db_state.state == ""
     assert db_state.last_changed_ts is None
     assert db_state.last_updated_ts == pytest.approx(event.time_fired.timestamp())

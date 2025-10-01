@@ -494,7 +494,7 @@ class States(Base):
         context = event.context
         return States(
             state=state_value,
-            entity_id=event.data["entity_id"],
+            entity_id=None,
             attributes=None,
             context_id=None,
             context_id_bin=ulid_to_bytes_or_none(context.id),
