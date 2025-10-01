@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import inspect
+import pathlib
 from typing import TYPE_CHECKING, Self
 
 from .homeassistant import TuyaCoverDeviceClass
@@ -31,7 +33,6 @@ class TuyaCoverDefinition(BaseTuyaDefinition):
     set_position_dp_code: str | None = None
 
 
-@dataclass
 class TuyaDeviceQuirk:
     """Quirk for Tuya device."""
 
@@ -42,6 +43,15 @@ class TuyaDeviceQuirk:
         """Initialize the quirk."""
         self._applies_to = []
         self.cover_definitions = []
+
+        current_frame = inspect.currentframe()
+        if TYPE_CHECKING:
+            assert current_frame is not None
+        caller = current_frame.f_back
+        if TYPE_CHECKING:
+            assert caller is not None
+        self.quirk_file = pathlib.Path(caller.f_code.co_filename)
+        self.quirk_file_line = caller.f_lineno
 
     def applies_to(self, *, category: str, product_id: str) -> Self:
         """Set the device type the quirk applies to."""
