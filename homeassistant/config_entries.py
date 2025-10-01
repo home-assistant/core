@@ -8,7 +8,6 @@ from collections.abc import (
     Callable,
     Coroutine,
     Generator,
-    Hashable,
     Iterable,
     Mapping,
     ValuesView,
@@ -1832,29 +1831,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         if isinstance(unique_id, str):
             # Unique id should be a string
             return
-        if isinstance(unique_id, Hashable):  # type: ignore[unreachable]
-            # Checks for other non-string was added in HA Core 2024.10
-            # In HA Core 2025.10, we should remove the error and instead fail
-            report_issue = async_suggest_report_issue(
-                self._hass, integration_domain=entry.domain
-            )
-            _LOGGER.error(
-                (
-                    "Config entry '%s' from integration %s has an invalid unique_id"
-                    " '%s' of type %s when a string is expected, please %s"
-                ),
-                entry.title,
-                entry.domain,
-                entry.unique_id,
-                type(entry.unique_id).__name__,
-                report_issue,
-            )
-        else:
-            # Guard against integrations using unhashable unique_id
-            # In HA Core 2024.11, the guard was changed from warning to failing
-            raise HomeAssistantError(
-                f"The entry unique id {unique_id} is not a string."
-            )
+        raise HomeAssistantError(f"The entry unique id {unique_id} is not a string.")
 
     def _index_entry(self, entry: ConfigEntry) -> None:
         """Index an entry."""
@@ -1907,7 +1884,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         """Get entry by domain and unique id."""
         if unique_id is None:
             return None  # type: ignore[unreachable]
-        if not isinstance(unique_id, Hashable):
+        if not isinstance(unique_id, str):
             raise HomeAssistantError(
                 f"The entry unique id {unique_id} is not a string."
             )
