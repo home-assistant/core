@@ -89,7 +89,7 @@ class RpcShellyWaterValve(RpcShellyBaseWaterValve):
 
 
 class RpcShellyNeoWaterValve(RpcShellyBaseWaterValve):
-    """Entity that controls a valve on RPC Shelly NEO Water Walve."""
+    """Entity that controls a valve on RPC Shelly NEO Water Valve."""
 
     _attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
     _attr_reports_position = False
@@ -108,7 +108,7 @@ class RpcShellyNeoWaterValve(RpcShellyBaseWaterValve):
         await self.call_rpc("Boolean.Set", {"id": self._id, "value": False})
 
 
-RPC_VAVLES: dict[str, RpcValveDescription] = {
+RPC_VALVES: dict[str, RpcValveDescription] = {
     "water_valve": RpcValveDescription(
         key="number",
         sub_key="value",
@@ -147,7 +147,7 @@ def async_setup_rpc_entry(
     assert coordinator
 
     async_setup_entry_rpc(
-        hass, config_entry, async_add_entities, RPC_VAVLES, RpcShellyWaterValve
+        hass, config_entry, async_add_entities, RPC_VALVES, RpcShellyWaterValve
     )
 
 
