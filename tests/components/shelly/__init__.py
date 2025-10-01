@@ -1,6 +1,6 @@
 """Tests for the Shelly integration."""
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from copy import deepcopy
 from datetime import timedelta
 from typing import Any
@@ -10,6 +10,7 @@ from aioshelly.const import MODEL_25
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.components.shelly.const import (
     CONF_GEN,
@@ -173,15 +174,27 @@ async def snapshot_device_entities(
     config_entry_id: str,
 ) -> None:
     """Snapshot all device entities."""
+
+    def sort_event_types(data: Any, path: Sequence[tuple[str, Any]]) -> Any:
+        """Sort the event_types list for event entity."""
+        if path and path[-1][0] == "event_types" and isinstance(data, list):
+            return sorted(data)
+
+        return data
+
     entity_entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
     assert entity_entries
 
     for entity_entry in entity_entries:
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert entity_entry == snapshot(
+            name=f"{entity_entry.entity_id}-entry", exclude=props("event_types")
+        )
         assert entity_entry.disabled_by is None, "Please enable all entities."
         state = hass.states.get(entity_entry.entity_id)
         assert state, f"State not found for {entity_entry.entity_id}"
-        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+        assert state == snapshot(
+            name=f"{entity_entry.entity_id}-state", matcher=sort_event_types
+        )
 
 
 async def force_uptime_value(
