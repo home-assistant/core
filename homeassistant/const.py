@@ -315,34 +315,6 @@ STATE_UNAVAILABLE: Final = "unavailable"
 STATE_OK: Final = "ok"
 STATE_PROBLEM: Final = "problem"
 
-# #### LOCK STATES ####
-# STATE_* below are deprecated as of 2024.10
-# use the LockState enum instead.
-_DEPRECATED_STATE_LOCKED: Final = DeprecatedConstant(
-    "locked",
-    "LockState.LOCKED",
-    "2025.10",
-)
-_DEPRECATED_STATE_UNLOCKED: Final = DeprecatedConstant(
-    "unlocked",
-    "LockState.UNLOCKED",
-    "2025.10",
-)
-_DEPRECATED_STATE_LOCKING: Final = DeprecatedConstant(
-    "locking",
-    "LockState.LOCKING",
-    "2025.10",
-)
-_DEPRECATED_STATE_UNLOCKING: Final = DeprecatedConstant(
-    "unlocking",
-    "LockState.UNLOCKING",
-    "2025.10",
-)
-_DEPRECATED_STATE_JAMMED: Final = DeprecatedConstant(
-    "jammed",
-    "LockState.JAMMED",
-    "2025.10",
-)
 
 # #### ALARM CONTROL PANEL STATES ####
 # STATE_ALARM_* below are deprecated as of 2024.11
