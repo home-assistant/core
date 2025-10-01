@@ -251,6 +251,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             if not mode_supports_color:
                 # If the mode does not support color, switch to one that does
                 mode_to_apply = self._preferred_no_effect_mode
+                mode_supports_color = True
         elif self._attr_brightness is None:
             # If the current brightness is None (off), try to restore previous brightness if known
             brightness_to_apply = self._previous_brightness or DEFAULT_BRIGHTNESS
@@ -261,6 +262,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             if not mode_supports_color:
                 # If the mode does not support color, switch to one that does
                 mode_to_apply = self._preferred_no_effect_mode
+                mode_supports_color = True
         elif self._attr_rgb_color is None:
             # If the current color is None (off), try to restore previous color if known
             rgb_color_to_apply = self._previous_rgb_color or DEFAULT_COLOR
