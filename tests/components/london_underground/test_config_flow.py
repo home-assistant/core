@@ -15,6 +15,30 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
+async def test_validate_input_success(hass: HomeAssistant, mock_setup_entry) -> None:
+    """Test successful validation of TfL API."""
+    with patch(
+        "homeassistant.components.london_underground.config_flow.TubeData"
+    ) as mock_tube_data:
+        mock_tube_data_instance = mock_tube_data.return_value
+        mock_tube_data_instance.update = AsyncMock()
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_LINE: ["Bakerloo", "Central"]},
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == "London Underground"
+        assert result["data"] == {}
+        assert result["options"] == {CONF_LINE: ["Bakerloo", "Central"]}
+
+
 async def test_options(hass: HomeAssistant, mock_setup_entry) -> None:
     """Test updating options."""
     entry = MockConfigEntry(
@@ -125,27 +149,3 @@ async def test_validate_input_timeout(hass: HomeAssistant, mock_setup_entry) -> 
     assert result["title"] == "London Underground"
     assert result["data"] == {}
     assert result["options"] == {CONF_LINE: DEFAULT_LINES}
-
-
-async def test_validate_input_success(hass: HomeAssistant, mock_setup_entry) -> None:
-    """Test successful validation of TfL API."""
-    with patch(
-        "homeassistant.components.london_underground.config_flow.TubeData"
-    ) as mock_tube_data:
-        mock_tube_data_instance = mock_tube_data.return_value
-        mock_tube_data_instance.update = AsyncMock()
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_LINE: ["Bakerloo", "Central"]},
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "London Underground"
-        assert result["data"] == {}
-        assert result["options"] == {CONF_LINE: ["Bakerloo", "Central"]}
