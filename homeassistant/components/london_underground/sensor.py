@@ -84,13 +84,6 @@ class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):
     _attr_attribution = "Powered by TfL Open Data"
     _attr_icon = "mdi:subway"
     _attr_has_entity_name = True  # Use modern entity naming
-    _attr_device_info = DeviceInfo(
-        identifiers={(DOMAIN, "tfl_tube")},
-        name="London Underground",
-        manufacturer="Transport for London",
-        model="Tube Status",
-        entry_type=DeviceEntryType.SERVICE,
-    )
 
     def __init__(self, coordinator: LondonTubeCoordinator, name: str) -> None:
         """Initialize the London Underground sensor."""
@@ -98,6 +91,13 @@ class LondonTubeSensor(CoordinatorEntity[LondonTubeCoordinator], SensorEntity):
         self._name = name
         # Add unique_id for proper entity registry
         self._attr_unique_id = f"tube_{name.lower().replace(' ', '_')}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, DOMAIN)},
+            name="London Underground",
+            manufacturer="Transport for London",
+            model="Tube Status",
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
     def name(self) -> str:

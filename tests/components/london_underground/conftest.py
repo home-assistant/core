@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 
-@pytest.fixture(autouse=False)
+@pytest.fixture
 def mock_setup_entry():
     """Prevent setup of integration during tests."""
     with patch(
