@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import collections
-from enum import StrEnum
 from contextlib import suppress
+from enum import StrEnum
 import json
 from typing import Any
 
@@ -98,6 +98,7 @@ ZEROCONF_PROPERTIES_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
 
 class OptionsMigrationIntent(StrEnum):
     """Zigbee options flow intents."""
@@ -933,6 +934,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
 class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
     """Handle an options flow."""
+
     _migration_intent: OptionsMigrationIntent
 
     def __init__(self, config_entry: ConfigEntry) -> None:
@@ -1019,8 +1021,7 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
         # Reload ZHA after we finish
         await self.hass.config_entries.async_setup(self.config_entry.entry_id)
 
-        # Intentionally do not set `data` to avoid creating `options`, we set it above
-        return self.async_create_entry(title=self._title, data={})
+        return self.async_abort(reason="reconfigure_successful")
 
     def async_remove(self):
         """Maybe reload ZHA if the flow is aborted."""

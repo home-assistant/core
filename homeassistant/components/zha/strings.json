@@ -236,7 +236,8 @@
       "cannot_resolve_path": "[%key:component::zha::config::abort::cannot_resolve_path%]",
       "wrong_firmware_installed": "[%key:component::zha::config::abort::wrong_firmware_installed%]",
       "cannot_restore_backup": "[%key:component::zha::config::abort::cannot_restore_backup%]",
-      "cannot_restore_backup_no_ieee_confirm": "[%key:component::zha::config::abort::cannot_restore_backup_no_ieee_confirm%]"
+      "cannot_restore_backup_no_ieee_confirm": "[%key:component::zha::config::abort::cannot_restore_backup_no_ieee_confirm%]",
+      "reconfigure_successful": "[%key:component::zha::config::abort::reconfigure_successful%]"
     }
   },
   "config_panel": {
