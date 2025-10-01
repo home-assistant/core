@@ -184,17 +184,35 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Return the current selected color palette name or 'Custom'."""
         seg = self.coordinator.data.state.segments[self._segment]
-        palette_id = int(getattr(seg, "palette_id", 0))
-        palette = self.coordinator.data.palettes.get(palette_id)
-        if palette is not None:
-            return palette.name
-        # Anything unmapped (including 255) shows as 'Custom'
+
+        # Prefer a string palette name if the segment exposes one
+        for name_attr in ("color_palette", "palette_name"):
+            name_val = getattr(seg, name_attr, None)
+            if isinstance(name_val, str) and name_val:
+                if any(
+                    p.name == name_val for p in self.coordinator.data.palettes.values()
+                ):
+                    return name_val
+                return "Custom"
+
+        # Fall back to numeric fields
+        for id_attr in ("palette_id", "palette", "color_palette_id", "pal"):
+            id_val = getattr(seg, id_attr, None)
+            if id_val is not None:
+                try:
+                    pid = int(id_val)
+                except (TypeError, ValueError):
+                    break
+                palette = self.coordinator.data.palettes.get(pid)
+                return palette.name if palette is not None else "Custom"
+
         return "Custom"
 
     @wled_exception_handler
     async def async_select_option(self, option: str) -> None:
         """Set WLED segment to the selected color palette."""
-        # If user selects 'Custom', send the sentinel 255. Otherwise send the name.
+        # For named palettes, send the string name exactly as chosen.
+        # Only use 255 when the user selects the catch-all "Custom".
         value = 255 if option == "Custom" else option
         await self.coordinator.wled.segment(segment_id=self._segment, palette=value)
 
