@@ -184,6 +184,7 @@ DEVICE_MOCKS = [
     "qxj_is2indt9nlth6esa",  # https://github.com/home-assistant/core/issues/136472
     "qxj_xbwbniyt6bgws9ia",  # https://github.com/orgs/home-assistant/discussions/823
     "rqbj_4iqe2hsfyd86kwwc",  # https://github.com/orgs/home-assistant/discussions/100
+    "rs_d7woucobqi8ncacf",  # https://github.com/orgs/home-assistant/discussions/1021
     "sd_i6hyjg3af7doaswm",  # https://github.com/orgs/home-assistant/discussions/539
     "sd_lr33znaodtyarrrz",  # https://github.com/home-assistant/core/issues/141278
     "sfkzq_1fcnd8xk",  # https://github.com/orgs/home-assistant/discussions/539
