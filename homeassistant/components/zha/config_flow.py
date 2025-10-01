@@ -320,7 +320,9 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
                 }
             )
 
-            if await self._radio_mgr.radio_type.controller.probe(user_input):
+            if await self._radio_mgr.radio_type.controller.probe(
+                self._radio_mgr.device_settings
+            ):
                 return await self.async_step_verify_radio()
 
             errors["base"] = "cannot_connect"
