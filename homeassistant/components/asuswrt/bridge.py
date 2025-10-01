@@ -125,6 +125,8 @@ class AsusWrtBridge(ABC):
         self._firmware: str | None = None
         self._label_mac: str | None = None
         self._model: str | None = None
+        self._model_id: str | None = None
+        self._serial_number: str | None = None
 
     @property
     def configuration_url(self) -> str:
@@ -150,6 +152,16 @@ class AsusWrtBridge(ABC):
     def model(self) -> str | None:
         """Return model information."""
         return self._model
+
+    @property
+    def model_id(self) -> str | None:
+        """Return model_id information."""
+        return self._model_id
+
+    @property
+    def serial_number(self) -> str | None:
+        """Return serial number information."""
+        return self._serial_number
 
     @property
     @abstractmethod
@@ -368,6 +380,8 @@ class AsusWrtHttpBridge(AsusWrtBridge):
         self._configuration_url = self._api.webpanel
         self._firmware = str(_identity.firmware)
         self._model = _identity.model
+        self._model_id = _identity.product_id
+        self._serial_number = _identity.serial
 
     async def async_disconnect(self) -> None:
         """Disconnect to the device."""

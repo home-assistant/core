@@ -1,0 +1,88 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules:
+    status: done
+    comment: When we refactor to use a coordinator, be sure to place it in coordinator.py.
+  config-flow-test-coverage:
+    status: todo
+    comment: Use mock calls to check test_urlize_plain_host instead of user_input mod checks, combine test_show_set_form with a happy path flow, finish test_connection_errors and test_login_error with CREATE_ENTRY to check error recovery, move test_success to top and assert unique id in it, split test_reauth to two so we can test incorrect password recovery.
+  config-flow:
+    status: todo
+    comment: See if we can catch more specific exceptions in get_device_info.
+  dependency-transparency:
+    status: todo
+    comment: huawei-lte-api and stringcase are not built and published to PyPI from a public CI pipeline.
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: todo
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: todo
+    comment: Kind of done, but to be reviewed, there's probably room for improvement. Maybe address this when converting to use a data update coordinator. See also https://github.com/home-assistant/core/issues/55495
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage:
+    status: todo
+    comment: Get percentage up there, add missing actual action press invocations in button tests' suspended state tests, rename test_switch.py to test_switch.py + make its functions receive hass as first parameter where applicable.
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: done
+  docs-supported-functions:
+    status: todo
+    comment: Some info exists, but there's room for improvement.
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations:
+    status: todo
+    comment: Buttons and selects are lacking translations.
+  exception-translations: todo
+  icon-translations:
+    status: done
+    comment: Some use numeric state ranges or the like that are not available with icons.json state selectors.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: todo
+    comment: Not sure if we have anything applicable.
+  stale-devices:
+    status: todo
+    comment: Not sure of applicability.
+
+  # Platinum
+  async-dependency:
+    status: todo
+    comment: The integration is async, but underlying huawei-lte-api is not.
+  inject-websession:
+    status: exempt
+    comment: Underlying huawei-lte-api does not use aiohttp or httpx, so this does not apply.
+  strict-typing:
+    status: todo
+    comment: Integration is strictly typechecked already, and huawei-lte-api and url-normalize are in order. stringcase is not typed.

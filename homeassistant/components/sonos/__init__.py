@@ -59,6 +59,7 @@ from .const import (
 from .exception import SonosUpdateError
 from .favorites import SonosFavorites
 from .helpers import SonosConfigEntry, SonosData, sync_get_visible_zones
+from .services import async_setup_services
 from .speaker import SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,6 +104,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
             )
         )
+
+    async_setup_services(hass)
 
     return True
 

@@ -1,6 +1,6 @@
 {
   "domain": "google_generative_ai_conversation",
-  "name": "Google Generative AI",
+  "name": "Google Gemini",
   "after_dependencies": ["assist_pipeline", "intent"],
   "codeowners": ["@tronikos", "@ivanlh"],
   "config_flow": true,
@@ -8,5 +8,5 @@
   "documentation": "https://www.home-assistant.io/integrations/google_generative_ai_conversation",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["google-genai==1.29.0"]
+  "requirements": ["google-genai==1.38.0"]
 }

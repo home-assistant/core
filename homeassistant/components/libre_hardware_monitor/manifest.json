@@ -1,0 +1,10 @@
+{
+  "domain": "libre_hardware_monitor",
+  "name": "Libre Hardware Monitor",
+  "codeowners": ["@Sab44"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/libre_hardware_monitor",
+  "iot_class": "local_polling",
+  "quality_scale": "silver",
+  "requirements": ["librehardwaremonitor-api==1.4.0"]
+}

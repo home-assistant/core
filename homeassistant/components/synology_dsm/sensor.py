@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
-from synology_dsm.api.core.external_usb import SynoCoreExternalUSB
+from synology_dsm.api.core.external_usb import (
+    SynoCoreExternalUSB,
+    SynoCoreExternalUSBDevice,
+)
 from synology_dsm.api.core.utilization import SynoCoreUtilization
 from synology_dsm.api.dsm.information import SynoDSMInformation
 from synology_dsm.api.storage.storage import SynoStorage
@@ -342,15 +345,44 @@ async def async_setup_entry(
     api = data.api
     coordinator = data.coordinator_central
     storage = api.storage
-    assert storage is not None
-    external_usb = api.external_usb
+    if TYPE_CHECKING:
+        assert storage is not None
+    known_usb_devices: set[str] = set()
 
-    entities: list[
-        SynoDSMUtilSensor
-        | SynoDSMStorageSensor
-        | SynoDSMInfoSensor
-        | SynoDSMExternalUSBSensor
-    ] = [
+    def _check_usb_devices() -> None:
+        """Check for new USB devices during and after initial setup."""
+        if api.external_usb is not None and api.external_usb.get_devices:
+            current_usb_devices: set[str] = {
+                device.device_name for device in api.external_usb.get_devices.values()
+            }
+            new_usb_devices = current_usb_devices - known_usb_devices
+            if new_usb_devices:
+                known_usb_devices.update(new_usb_devices)
+                external_devices: list[SynoCoreExternalUSBDevice] = [
+                    device
+                    for device in api.external_usb.get_devices.values()
+                    if device.device_name in new_usb_devices
+                ]
+                new_usb_entities: list[SynoDSMExternalUSBSensor] = [
+                    SynoDSMExternalUSBSensor(
+                        api, coordinator, description, device.device_name
+                    )
+                    for device in entry.data.get(CONF_DEVICES, external_devices)
+                    for description in EXTERNAL_USB_DISK_SENSORS
+                ]
+                new_usb_entities.extend(
+                    [
+                        SynoDSMExternalUSBSensor(
+                            api, coordinator, description, partition.partition_title
+                        )
+                        for device in entry.data.get(CONF_DEVICES, external_devices)
+                        for partition in device.device_partitions.values()
+                        for description in EXTERNAL_USB_PARTITION_SENSORS
+                    ]
+                )
+                async_add_entities(new_usb_entities)
+
+    entities: list[SynoDSMUtilSensor | SynoDSMStorageSensor | SynoDSMInfoSensor] = [
         SynoDSMUtilSensor(api, coordinator, description)
         for description in UTILISATION_SENSORS
     ]
@@ -375,38 +407,15 @@ async def async_setup_entry(
             ]
         )
 
-    # Handle all external usb
-    if external_usb is not None and external_usb.get_devices:
-        entities.extend(
-            [
-                SynoDSMExternalUSBSensor(
-                    api, coordinator, description, device.device_name
-                )
-                for device in entry.data.get(
-                    CONF_DEVICES, external_usb.get_devices.values()
-                )
-                for description in EXTERNAL_USB_DISK_SENSORS
-            ]
-        )
-        entities.extend(
-            [
-                SynoDSMExternalUSBSensor(
-                    api, coordinator, description, partition.partition_title
-                )
-                for device in entry.data.get(
-                    CONF_DEVICES, external_usb.get_devices.values()
-                )
-                for partition in device.device_partitions.values()
-                for description in EXTERNAL_USB_PARTITION_SENSORS
-            ]
-        )
-
     entities.extend(
         [
             SynoDSMInfoSensor(api, coordinator, description)
             for description in INFORMATION_SENSORS
         ]
     )
+
+    _check_usb_devices()
+    entry.async_on_unload(coordinator.async_add_listener(_check_usb_devices))
 
     async_add_entities(entities)
 
@@ -496,7 +505,8 @@ class SynoDSMExternalUSBSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
     def native_value(self) -> StateType:
         """Return the state."""
         external_usb = self._api.external_usb
-        assert external_usb is not None
+        if TYPE_CHECKING:
+            assert external_usb is not None
         if "device" in self.entity_description.key:
             for device in external_usb.get_devices.values():
                 if device.device_name == self._device_id:
@@ -514,6 +524,22 @@ class SynoDSMExternalUSBSensor(SynologyDSMDeviceEntity, SynoDSMSensor):
             return None
 
         return attr  # type: ignore[no-any-return]
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        external_usb = self._api.external_usb
+        assert external_usb is not None
+        if "device" in self.entity_description.key:
+            for device in external_usb.get_devices.values():
+                if device.device_name == self._device_id:
+                    return super().available
+        elif "partition" in self.entity_description.key:
+            for device in external_usb.get_devices.values():
+                for partition in device.device_partitions.values():
+                    if partition.partition_title == self._device_id:
+                        return super().available
+        return False
 
 
 class SynoDSMInfoSensor(SynoDSMSensor):

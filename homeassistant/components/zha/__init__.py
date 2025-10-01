@@ -134,7 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     device_registry = dr.async_get(hass)
     radio_mgr = ZhaRadioManager.from_config_entry(hass, config_entry)
 
-    async with radio_mgr.connect_zigpy_app() as app:
+    async with radio_mgr.create_zigpy_app(connect=False) as app:
         for dev in app.devices.values():
             dev_entry = device_registry.async_get_device(
                 identifiers={(DOMAIN, str(dev.ieee))},

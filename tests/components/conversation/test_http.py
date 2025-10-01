@@ -7,11 +7,8 @@ from unittest.mock import patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.conversation import default_agent
-from homeassistant.components.conversation.const import (
-    DATA_DEFAULT_ENTITY,
-    HOME_ASSISTANT_AGENT,
-)
+from homeassistant.components.conversation import async_get_agent
+from homeassistant.components.conversation.const import HOME_ASSISTANT_AGENT
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
@@ -216,8 +213,7 @@ async def test_ws_prepare(
     hass: HomeAssistant, init_components, hass_ws_client: WebSocketGenerator, agent_id
 ) -> None:
     """Test the Websocket prepare conversation API."""
-    agent = hass.data[DATA_DEFAULT_ENTITY]
-    assert isinstance(agent, default_agent.DefaultAgent)
+    agent = async_get_agent(hass)
 
     # No intents should be loaded yet
     assert not agent._lang_intents.get(hass.config.language)

@@ -1,5 +1,7 @@
 """Test ESPHome entry data."""
 
+from unittest.mock import Mock, patch
+
 from aioesphomeapi import (
     APIClient,
     EntityCategory as ESPHomeEntityCategory,
@@ -8,9 +10,11 @@ from aioesphomeapi import (
 )
 
 from homeassistant.components.esphome import DOMAIN
+from homeassistant.components.esphome.entry_data import RuntimeEntryData
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import discovery_flow, entity_registry as er
+from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 
 from .conftest import MockGenericDeviceEntryType
 
@@ -69,3 +73,50 @@ async def test_migrate_entity_unique_id_downgrade_upgrade(
     # Note that ESPHome includes the EntityInfo type in the unique id
     # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)
     assert entry.unique_id == "11:22:33:44:55:AA-sensor-mysensor"
+
+
+async def test_discover_zwave() -> None:
+    """Test ESPHome discovery of Z-Wave JS."""
+    hass = Mock()
+    entry_data = RuntimeEntryData(
+        "mock-id",
+        "mock-title",
+        Mock(
+            connected_address="mock-client-address",
+            port=1234,
+            noise_psk=None,
+        ),
+        None,
+    )
+    device_info = Mock(
+        mac_address="mock-device-info-mac",
+        zwave_proxy_feature_flags=1,
+        zwave_home_id=1234,
+    )
+    device_info.name = "mock-device-infoname"
+
+    with patch(
+        "homeassistant.helpers.discovery_flow.async_create_flow"
+    ) as mock_create_flow:
+        entry_data.async_on_connect(
+            hass,
+            device_info,
+            None,
+        )
+        mock_create_flow.assert_called_once_with(
+            hass,
+            "zwave_js",
+            {"source": "esphome"},
+            ESPHomeServiceInfo(
+                name="mock-device-infoname",
+                zwave_home_id=1234,
+                ip_address="mock-client-address",
+                port=1234,
+                noise_psk=None,
+            ),
+            discovery_key=discovery_flow.DiscoveryKey(
+                domain="esphome",
+                key="mock-device-info-mac",
+                version=1,
+            ),
+        )

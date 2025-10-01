@@ -45,6 +45,7 @@
         'intent_input': 'test transcript',
         'language': 'en',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -75,6 +76,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'tts.test',
         'language': 'en_US',
         'tts_input': "Sorry, I couldn't understand that",
@@ -145,6 +147,7 @@
         'intent_input': 'test transcript',
         'language': 'en-US',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -175,6 +178,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'test',
         'language': 'en-US',
         'tts_input': "Sorry, I couldn't understand that",
@@ -245,6 +249,7 @@
         'intent_input': 'test transcript',
         'language': 'en-US',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -275,6 +280,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'test',
         'language': 'en-US',
         'tts_input': "Sorry, I couldn't understand that",
@@ -369,6 +375,7 @@
         'intent_input': 'test transcript',
         'language': 'en',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -399,6 +406,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'tts.test',
         'language': 'en_US',
         'tts_input': "Sorry, I couldn't understand that",

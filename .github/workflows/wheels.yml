@@ -32,11 +32,11 @@ jobs:
       architectures: ${{ steps.info.outputs.architectures }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -91,7 +91,7 @@ jobs:
           ) > build_constraints.txt
 
       - name: Upload env_file
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: env_file
           path: ./.env_file
@@ -99,14 +99,14 @@ jobs:
           overwrite: true
 
       - name: Upload build_constraints
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: build_constraints
           path: ./build_constraints.txt
           overwrite: true
 
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
@@ -118,7 +118,7 @@ jobs:
           python -m script.gen_requirements_all ci
 
       - name: Upload requirements_all_wheels
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: requirements_all_wheels
           path: ./requirements_all_wheels_*.txt
@@ -135,20 +135,20 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Download env_file
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           name: env_file
 
       - name: Download build_constraints
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           name: build_constraints
 
       - name: Download requirements_diff
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           name: requirements_diff
 
@@ -158,8 +158,9 @@ jobs:
           sed -i "/uv/d" requirements.txt
           sed -i "/uv/d" requirements_diff.txt
 
+      # home-assistant/wheels doesn't support sha pinning
       - name: Build wheels
-        uses: home-assistant/wheels@2025.07.0
+        uses: home-assistant/wheels@2025.09.1
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -184,25 +185,25 @@ jobs:
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v5.0.0
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Download env_file
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           name: env_file
 
       - name: Download build_constraints
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           name: build_constraints
 
       - name: Download requirements_diff
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           name: requirements_diff
 
       - name: Download requirements_all_wheels
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
           name: requirements_all_wheels
 
@@ -218,8 +219,9 @@ jobs:
           sed -i "/uv/d" requirements.txt
           sed -i "/uv/d" requirements_diff.txt
 
+      # home-assistant/wheels doesn't support sha pinning
       - name: Build wheels
-        uses: home-assistant/wheels@2025.07.0
+        uses: home-assistant/wheels@2025.09.1
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2

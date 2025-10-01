@@ -96,7 +96,7 @@ async def create_server(
         llm_api = await get_api_instance()
         return [_format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools]
 
-    @server.call_tool()  # type: ignore[no-untyped-call, misc]
+    @server.call_tool()  # type: ignore[misc]
     async def call_tool(name: str, arguments: dict) -> Sequence[types.TextContent]:
         """Handle calling tools."""
         llm_api = await get_api_instance()

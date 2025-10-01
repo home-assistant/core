@@ -459,6 +459,7 @@ async def test_rpc_device_switch_type_lights_mode(
     monkeypatch.setitem(
         mock_rpc_device.config["sys"]["ui_data"], "consumption_types", ["lights"]
     )
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
     await init_integration(hass, 2)
 
     await hass.services.async_call(
@@ -926,3 +927,29 @@ async def test_rpc_remove_cct_light(
 
     # there is no cct:0 in the status, so the CCT light entity should be removed
     assert get_entity(hass, LIGHT_DOMAIN, "cct:0") is None
+
+
+async def test_rpc_cct_light_without_ct_range(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC CCT light without ct_range in the light config."""
+    entity_id = f"{LIGHT_DOMAIN}.living_room_lamp"
+
+    config = deepcopy(mock_rpc_device.config)
+    config["cct:0"] = {"id": 0, "name": "Living room lamp"}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["cct:0"] = {"id": 0, "output": False, "brightness": 77, "ct": 3666}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    # default values from constants are 2700 and 6500
+    assert state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 2700
+    assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 6500

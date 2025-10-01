@@ -50,14 +50,13 @@ from .const import (
     ATTR_LANGUAGE,
     ATTR_TEXT,
     DATA_COMPONENT,
-    DATA_DEFAULT_ENTITY,
     DOMAIN,
     HOME_ASSISTANT_AGENT,
     SERVICE_PROCESS,
     SERVICE_RELOAD,
     ConversationEntityFeature,
 )
-from .default_agent import DefaultAgent, async_setup_default_agent
+from .default_agent import async_setup_default_agent
 from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
 from .models import AbstractConversationAgent, ConversationInput, ConversationResult
@@ -142,7 +141,7 @@ def async_unset_agent(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
 ) -> None:
-    """Set the agent to handle the conversations."""
+    """Unset the agent to handle the conversations."""
     get_agent_manager(hass).async_unset_agent(config_entry.entry_id)
 
 
@@ -241,10 +240,10 @@ async def async_handle_sentence_triggers(
 
     Returns None if no match occurred.
     """
-    default_agent = async_get_agent(hass)
-    assert isinstance(default_agent, DefaultAgent)
+    agent = get_agent_manager(hass).default_agent
+    assert agent is not None
 
-    return await default_agent.async_handle_sentence_triggers(user_input)
+    return await agent.async_handle_sentence_triggers(user_input)
 
 
 async def async_handle_intents(
@@ -257,12 +256,10 @@ async def async_handle_intents(
 
     Returns None if no match occurred.
     """
-    default_agent = async_get_agent(hass)
-    assert isinstance(default_agent, DefaultAgent)
+    agent = get_agent_manager(hass).default_agent
+    assert agent is not None
 
-    return await default_agent.async_handle_intents(
-        user_input, intent_filter=intent_filter
-    )
+    return await agent.async_handle_intents(user_input, intent_filter=intent_filter)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -298,9 +295,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def handle_reload(service: ServiceCall) -> None:
         """Reload intents."""
-        await hass.data[DATA_DEFAULT_ENTITY].async_reload(
-            language=service.data.get(ATTR_LANGUAGE)
-        )
+        agent = get_agent_manager(hass).default_agent
+        if agent is not None:
+            await agent.async_reload(language=service.data.get(ATTR_LANGUAGE))
 
     hass.services.async_register(
         DOMAIN,

@@ -55,7 +55,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             update_interval=SCAN_INTERVAL,
         )
         self.api = api
-        self.ws_connected: bool = False
         self.reconnect_time = DEFAULT_RECONNECT_TIME
         self.new_devices_callbacks: list[Callable[[set[str]], None]] = []
         self.new_zones_callbacks: list[Callable[[str, set[str]], None]] = []
@@ -71,31 +70,31 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self._on_data_update()
         super().async_update_listeners()
 
+    async def _async_setup(self) -> None:
+        """Initialize websocket connection and callbacks."""
+        await self.api.connect()
+        self.api.register_data_callback(self.handle_websocket_updates)
+
+        def start_watchdog() -> None:
+            if self._watchdog_task is not None and not self._watchdog_task.done():
+                _LOGGER.debug("Cancelling previous watchdog task")
+                self._watchdog_task.cancel()
+            self._watchdog_task = self.config_entry.async_create_background_task(
+                self.hass,
+                self._pong_watchdog(),
+                "websocket_watchdog",
+            )
+
+        self.api.register_ws_ready_callback(start_watchdog)
+
     async def _async_update_data(self) -> MowerDictionary:
-        """Subscribe for websocket and poll data from the API."""
-        if not self.ws_connected:
-            await self.api.connect()
-            self.api.register_data_callback(self.handle_websocket_updates)
-            self.ws_connected = True
-
-            def start_watchdog() -> None:
-                if self._watchdog_task is not None and not self._watchdog_task.done():
-                    _LOGGER.debug("Cancelling previous watchdog task")
-                    self._watchdog_task.cancel()
-                self._watchdog_task = self.config_entry.async_create_background_task(
-                    self.hass,
-                    self._pong_watchdog(),
-                    "websocket_watchdog",
-                )
-
-            self.api.register_ws_ready_callback(start_watchdog)
+        """Poll data from the API."""
         try:
-            data = await self.api.get_status()
+            return await self.api.get_status()
         except ApiError as err:
             raise UpdateFailed(err) from err
         except AuthError as err:
             raise ConfigEntryAuthFailed(err) from err
-        return data
 
     @callback
     def _on_data_update(self) -> None:

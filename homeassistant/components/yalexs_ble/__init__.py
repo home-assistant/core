@@ -147,22 +147,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) ->
 
     entry.async_on_unload(push_lock.register_callback(_async_state_changed))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown)
     )
     return True
-
-
-async def _async_update_listener(
-    hass: HomeAssistant, entry: YALEXSBLEConfigEntry
-) -> None:
-    """Handle options update."""
-    data = entry.runtime_data
-    if entry.title != data.title or data.always_connected != entry.options.get(
-        CONF_ALWAYS_CONNECTED
-    ):
-        await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def _async_wait_for_first_update(push_lock: PushLock, local_name: str) -> None:

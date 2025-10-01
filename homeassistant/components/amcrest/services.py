@@ -41,7 +41,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         if call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_NONE:
             return []
 
-        call_ids = await async_extract_entity_ids(hass, call)
+        call_ids = await async_extract_entity_ids(call)
         entity_ids = []
         for entity_id in hass.data[DATA_AMCREST][CAMERAS]:
             if entity_id not in call_ids:

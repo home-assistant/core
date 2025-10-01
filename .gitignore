@@ -140,5 +140,5 @@ tmp_cache
 pytest_buckets.txt
 
 # AI tooling
-.claude
+.claude/settings.local.json
 

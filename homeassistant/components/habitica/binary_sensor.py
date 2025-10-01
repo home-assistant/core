@@ -9,7 +9,6 @@ from enum import StrEnum
 from habiticalib import ContentData, UserData
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -108,7 +107,6 @@ class HabiticaPartyBinarySensorEntity(HabiticaPartyBase, BinarySensorEntity):
     entity_description = BinarySensorEntityDescription(
         key=HabiticaBinarySensor.QUEST_RUNNING,
         translation_key=HabiticaBinarySensor.QUEST_RUNNING,
-        device_class=BinarySensorDeviceClass.RUNNING,
     )
 
     def __init__(

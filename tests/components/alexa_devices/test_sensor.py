@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .const import TEST_SERIAL_NUMBER
+from .const import TEST_DEVICE_1_SN
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -83,7 +83,7 @@ async def test_offline_device(
     entity_id = "sensor.echo_test_temperature"
 
     mock_amazon_devices_client.get_devices_data.return_value[
-        TEST_SERIAL_NUMBER
+        TEST_DEVICE_1_SN
     ].online = False
 
     await setup_integration(hass, mock_config_entry)
@@ -92,7 +92,7 @@ async def test_offline_device(
     assert state.state == STATE_UNAVAILABLE
 
     mock_amazon_devices_client.get_devices_data.return_value[
-        TEST_SERIAL_NUMBER
+        TEST_DEVICE_1_SN
     ].online = True
 
     freezer.tick(SCAN_INTERVAL)
@@ -133,11 +133,39 @@ async def test_unit_of_measurement(
     entity_id = f"sensor.echo_test_{sensor}"
 
     mock_amazon_devices_client.get_devices_data.return_value[
-        TEST_SERIAL_NUMBER
-    ].sensors = {sensor: AmazonDeviceSensor(name=sensor, value=api_value, scale=scale)}
+        TEST_DEVICE_1_SN
+    ].sensors = {
+        sensor: AmazonDeviceSensor(
+            name=sensor, value=api_value, error=False, scale=scale
+        )
+    }
 
     await setup_integration(hass, mock_config_entry)
 
     assert (state := hass.states.get(entity_id))
     assert state.state == state_value
     assert state.attributes["unit_of_measurement"] == unit
+
+
+async def test_sensor_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test sensor is unavailable."""
+
+    entity_id = "sensor.echo_test_illuminance"
+
+    mock_amazon_devices_client.get_devices_data.return_value[
+        TEST_DEVICE_1_SN
+    ].sensors = {
+        "illuminance": AmazonDeviceSensor(
+            name="illuminance", value="800", error=True, scale=None
+        )
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE

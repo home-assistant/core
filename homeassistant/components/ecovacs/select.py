@@ -33,7 +33,11 @@ class EcovacsSelectEntityDescription[EventT: Event](
 
 ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
     EcovacsSelectEntityDescription[WaterAmountEvent](
-        capability_fn=lambda caps: caps.water.amount if caps.water else None,
+        capability_fn=lambda caps: (
+            caps.water.amount
+            if caps.water and isinstance(caps.water.amount, CapabilitySetTypes)
+            else None
+        ),
         current_option_fn=lambda e: get_name_key(e.value),
         options_fn=lambda water: [get_name_key(amount) for amount in water.types],
         key="water_amount",

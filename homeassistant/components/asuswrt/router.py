@@ -392,6 +392,8 @@ class AsusWrtRouter:
             identifiers={(DOMAIN, self._entry.unique_id or "AsusWRT")},
             name=self.host,
             model=self._api.model or "Asus Router",
+            model_id=self._api.model_id,
+            serial_number=self._api.serial_number,
             manufacturer="Asus",
         )
         if self._api.firmware:

@@ -7,7 +7,7 @@
     },
     "select": {
       "pipeline": {
-        "name": "Assistant",
+        "name": "Assistant{index}",
         "state": {
           "preferred": "Preferred"
         }

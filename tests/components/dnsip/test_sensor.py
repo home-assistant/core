@@ -171,3 +171,70 @@ async def test_sensor_no_response(
 
     state = hass.states.get("sensor.home_assistant_io")
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_sensor_timeout(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test the DNS IP sensor with timeout."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data={
+            CONF_HOSTNAME: "home-assistant.io",
+            CONF_NAME: "home-assistant.io",
+            CONF_IPV4: True,
+            CONF_IPV6: False,
+        },
+        options={
+            CONF_RESOLVER: "208.67.222.222",
+            CONF_RESOLVER_IPV6: "2620:119:53::53",
+            CONF_PORT: 53,
+            CONF_PORT_IPV6: 53,
+        },
+        entry_id="1",
+        unique_id="home-assistant.io",
+    )
+    entry.add_to_hass(hass)
+
+    dns_mock = RetrieveDNS()
+    with patch(
+        "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
+        return_value=dns_mock,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.home_assistant_io")
+
+    assert state.state == "1.1.1.1"
+
+    with (
+        patch(
+            "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
+            return_value=dns_mock,
+        ),
+        patch(
+            "homeassistant.components.dnsip.sensor.asyncio.timeout",
+            side_effect=TimeoutError(),
+        ),
+    ):
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Allows 2 retries before going unavailable
+        state = hass.states.get("sensor.home_assistant_io")
+        assert state.state == "1.1.1.1"
+        assert state.attributes["ip_addresses"] == ["1.1.1.1", "1.2.3.4"]
+
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.home_assistant_io")
+    assert state.state == STATE_UNAVAILABLE

@@ -69,7 +69,9 @@ class EcovacsMap(
         await super().async_added_to_hass()
 
         async def on_info(event: CachedMapInfoEvent) -> None:
-            self._attr_extra_state_attributes["map_name"] = event.name
+            for map_obj in event.maps:
+                if map_obj.using:
+                    self._attr_extra_state_attributes["map_name"] = map_obj.name
 
         async def on_changed(event: MapChangedEvent) -> None:
             self._attr_image_last_updated = event.when

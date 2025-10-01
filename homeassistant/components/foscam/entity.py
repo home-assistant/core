@@ -13,6 +13,8 @@ from .coordinator import FoscamCoordinator
 class FoscamEntity(CoordinatorEntity[FoscamCoordinator]):
     """Base entity for Foscam camera."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator: FoscamCoordinator, config_entry_id: str) -> None:
         """Initialize the base Foscam entity."""
         super().__init__(coordinator)

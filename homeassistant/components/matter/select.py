@@ -525,6 +525,6 @@ DISCOVERY_SCHEMAS = [
             clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
         ),
         vendor_id=(4447,),
-        product_name=("Aqara Door and Window Sensor P2",),
+        product_id=(8194,),
     ),
 ]

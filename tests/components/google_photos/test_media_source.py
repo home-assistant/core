@@ -6,9 +6,9 @@ from google_photos_library_api.exceptions import GooglePhotosApiError
 import pytest
 
 from homeassistant.components.google_photos.const import DOMAIN, UPLOAD_SCOPE
+from homeassistant.components.media_player import BrowseError
 from homeassistant.components.media_source import (
     URI_SCHEME,
-    BrowseError,
     async_browse_media,
     async_resolve_media,
 )

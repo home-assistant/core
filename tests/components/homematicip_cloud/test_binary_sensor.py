@@ -38,7 +38,7 @@ async def test_hmip_home_cloud_connection_sensor(
         test_devices=[entity_name]
     )
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 

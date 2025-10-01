@@ -6,7 +6,7 @@ from typing import Any
 from unittest import mock
 
 from aiohomekit.controller import TransportType
-from aiohomekit.model import Accessory
+from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.testing import FakeController
@@ -616,3 +616,57 @@ async def test_characteristic_polling_batching(
     assert len(get_chars_calls[1]) == 1, (
         f"Second batch should have exactly 1 characteristic, got {len(get_chars_calls[1])}"
     )
+
+
+async def test_async_setup_handles_unparsable_response(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that async_setup handles ValueError from unparsable accessory responses."""
+    accessories = Accessories()
+    accessory = Accessory.create_with_info(
+        1, "TestDevice", "example.com", "Test", "0001", "0.1"
+    )
+    service = accessory.add_service(ServicesTypes.LIGHTBULB)
+    on_char = service.add_char(CharacteristicsTypes.ON)
+    on_char.value = False
+    accessories.add_accessory(accessory)
+
+    async def mock_get_characteristics(
+        chars: set[tuple[int, int]], **kwargs: Any
+    ) -> dict[tuple[int, int], dict[str, Any]]:
+        """Mock that raises ValueError to simulate unparsable response."""
+        raise ValueError(
+            "Unable to parse text",
+            ("Error processing token: filename. Filename missing or too long?"),
+        )
+
+    fake_controller = await setup_platform(hass)
+    await fake_controller.add_paired_device(accessories, "00:00:00:00:00:00")
+
+    config_entry = MockConfigEntry(
+        version=1,
+        domain="homekit_controller",
+        entry_id="TestData",
+        data={"AccessoryPairingID": "00:00:00:00:00:00"},
+        title="test",
+    )
+    config_entry.add_to_hass(hass)
+
+    pairing = fake_controller.pairings["00:00:00:00:00:00"]
+
+    with (
+        caplog.at_level("DEBUG", logger="homeassistant.components.homekit_controller"),
+        mock.patch.object(pairing, "get_characteristics", mock_get_characteristics),
+    ):
+        # Set up the config entry - this will trigger async_setup
+        # with poll_all=True
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert "responded with unparsable response, first update was skipped" in caplog.text
+    assert "Error processing token: filename" in caplog.text
+
+    # Verify that setup completed - entities were still created
+    # despite the polling error. The light entity should exist even
+    # though initial polling failed
+    state = hass.states.get("light.testdevice")
+    assert state is not None

@@ -148,6 +148,17 @@ async def test_get_triggers(hass: HomeAssistant) -> None:
         }
         for subtype in ("on", "stop", "off", "raise", "lower")
     ]
+    expected_triggers += [
+        {
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_PLATFORM: "device",
+            CONF_SUBTYPE: subtype,
+            CONF_TYPE: "multi_tap",
+            "metadata": {},
+        }
+        for subtype in ("on", "stop", "off", "raise", "lower")
+    ]
 
     triggers = await async_get_device_automations(
         hass, DeviceAutomationType.TRIGGER, device_id
@@ -439,7 +450,7 @@ async def test_validate_trigger_invalid_triggers(
         },
     )
 
-    assert "value must be one of ['press', 'release']" in caplog.text
+    assert "value must be one of ['multi_tap', 'press', 'release']" in caplog.text
 
 
 async def test_if_fires_on_button_event_late_setup(

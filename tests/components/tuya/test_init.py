@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 from syrupy.assertion import SnapshotAssertion
-from tuya_sharing import CustomerDevice
+from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.tuya import ManagerCompat
 from homeassistant.components.tuya.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -17,7 +16,7 @@ from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 async def test_device_registry(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: CustomerDevice,
     device_registry: dr.DeviceRegistry,

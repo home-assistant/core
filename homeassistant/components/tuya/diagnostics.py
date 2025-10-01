@@ -39,15 +39,15 @@ def _async_get_diagnostics(
     device: DeviceEntry | None = None,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     mqtt_connected = None
-    if hass_data.manager.mq.client:
-        mqtt_connected = hass_data.manager.mq.client.is_connected()
+    if manager.mq.client:
+        mqtt_connected = manager.mq.client.is_connected()
 
     data = {
-        "endpoint": hass_data.manager.customer_api.endpoint,
-        "terminal_id": hass_data.manager.terminal_id,
+        "endpoint": manager.customer_api.endpoint,
+        "terminal_id": manager.terminal_id,
         "mqtt_connected": mqtt_connected,
         "disabled_by": entry.disabled_by,
         "disabled_polling": entry.pref_disable_polling,
@@ -55,14 +55,12 @@ def _async_get_diagnostics(
 
     if device:
         tuya_device_id = next(iter(device.identifiers))[1]
-        data |= _async_device_as_dict(
-            hass, hass_data.manager.device_map[tuya_device_id]
-        )
+        data |= _async_device_as_dict(hass, manager.device_map[tuya_device_id])
     else:
         data.update(
             devices=[
                 _async_device_as_dict(hass, device)
-                for device in hass_data.manager.device_map.values()
+                for device in manager.device_map.values()
             ]
         )
 

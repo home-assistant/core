@@ -139,6 +139,9 @@
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
+      "indexed_temperature": {
+        "name": "Temperature {index}"
+      },
       "time": {
         "name": "Time"
       },
@@ -167,7 +170,7 @@
         "name": "Far detection"
       },
       "target_dis_closest": {
-        "name": "Clostest target distance"
+        "name": "Closest target distance"
       },
       "water_level": {
         "name": "Water level"
@@ -176,10 +179,13 @@
         "name": "Powder"
       },
       "cook_temperature": {
-        "name": "Cook temperature"
+        "name": "Cooking temperature"
+      },
+      "indexed_cook_temperature": {
+        "name": "Cooking temperature {index}"
       },
       "cook_time": {
-        "name": "Cook time"
+        "name": "Cooking time"
       },
       "cloud_recipe": {
         "name": "Cloud recipe"
@@ -226,11 +232,17 @@
       "alarm_minimum": {
         "name": "Alarm minimum"
       },
+      "battery_backup_reserve": {
+        "name": "Battery backup reserve"
+      },
       "installation_height": {
         "name": "Installation height"
       },
       "maximum_liquid_depth": {
         "name": "Maximum liquid depth"
+      },
+      "inverter_output_power_limit": {
+        "name": "Inverter output power limit"
       }
     },
     "select": {
@@ -477,6 +489,7 @@
         }
       },
       "blanket_level": {
+        "name": "Level",
         "state": {
           "level_1": "[%key:common::state::low%]",
           "level_2": "Level 2",
@@ -490,11 +503,51 @@
           "level_10": "[%key:common::state::high%]"
         }
       },
+      "indexed_blanket_level": {
+        "name": "Level {index}",
+        "state": {
+          "level_1": "[%key:common::state::low%]",
+          "level_2": "[%key:component::tuya::entity::select::blanket_level::state::level_2%]",
+          "level_3": "[%key:component::tuya::entity::select::blanket_level::state::level_3%]",
+          "level_4": "[%key:component::tuya::entity::select::blanket_level::state::level_4%]",
+          "level_5": "[%key:component::tuya::entity::select::blanket_level::state::level_5%]",
+          "level_6": "[%key:component::tuya::entity::select::blanket_level::state::level_6%]",
+          "level_7": "[%key:component::tuya::entity::select::blanket_level::state::level_7%]",
+          "level_8": "[%key:component::tuya::entity::select::blanket_level::state::level_8%]",
+          "level_9": "[%key:component::tuya::entity::select::blanket_level::state::level_9%]",
+          "level_10": "[%key:common::state::high%]"
+        }
+      },
       "odor_elimination_mode": {
         "name": "Odor elimination mode",
         "state": {
           "smart": "Smart",
           "interim": "Interim"
+        }
+      },
+      "desk_level": {
+        "name": "Level",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "level_3": "Level 3",
+          "level_4": "Level 4"
+        }
+      },
+      "desk_up_down": {
+        "name": "Up/Down",
+        "state": {
+          "up": "Up",
+          "down": "Down",
+          "stop": "Stop"
+        }
+      },
+      "inverter_work_mode": {
+        "name": "Inverter work mode",
+        "state": {
+          "self_powered": "Self-powered",
+          "time_of_use": "Time of use",
+          "manual": "Manual mode"
         }
       }
     },
@@ -568,6 +621,36 @@
       "battery_state": {
         "name": "Battery state"
       },
+      "battery_soc": {
+        "name": "Battery SOC"
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "total_pv_power": {
+        "name": "Total PV power"
+      },
+      "pv_channel_power": {
+        "name": "PV channel {index} power"
+      },
+      "inverter_output_power": {
+        "name": "Inverter output power"
+      },
+      "lifetime_pv_energy": {
+        "name": "Lifetime PV energy"
+      },
+      "lifetime_inverter_output_energy": {
+        "name": "Lifetime inverter output energy"
+      },
+      "lifetime_battery_discharge_energy": {
+        "name": "Lifetime battery discharge energy"
+      },
+      "lifetime_battery_charge_energy": {
+        "name": "Lifetime battery charge energy"
+      },
+      "lifetime_offgrid_port_energy": {
+        "name": "Lifetime off-grid port energy"
+      },
       "gas": {
         "name": "Gas"
       },
@@ -586,6 +669,9 @@
       "status": {
         "name": "Status"
       },
+      "depth": {
+        "name": "Depth"
+      },
       "last_amount": {
         "name": "Last amount"
       },
@@ -597,6 +683,9 @@
       },
       "total_energy": {
         "name": "Total energy"
+      },
+      "total_power": {
+        "name": "Total power"
       },
       "total_production": {
         "name": "Total production"
@@ -733,6 +822,9 @@
       "water_time": {
         "name": "Water usage duration"
       },
+      "cat_weight": {
+        "name": "Cat weight"
+      },
       "odor_elimination_status": {
         "name": "Status",
         "state": {
@@ -758,6 +850,9 @@
       },
       "supply_frequency": {
         "name": "Supply frequency"
+      },
+      "total_dissolved_solids": {
+        "name": "Total dissolved solids"
       }
     },
     "switch": {
@@ -916,9 +1011,21 @@
       },
       "frost_protection": {
         "name": "Frost protection"
+      },
+      "output_power_limit": {
+        "name": "Output power limit"
+      },
+      "music": {
+        "name": "Music"
+      },
+      "snooze": {
+        "name": "Snooze"
       }
     },
     "valve": {
+      "valve": {
+        "name": "Valve"
+      },
       "indexed_valve": {
         "name": "Valve {index}"
       }
@@ -927,6 +1034,12 @@
   "exceptions": {
     "action_dpcode_not_found": {
       "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
+    }
+  },
+  "issues": {
+    "deprecated_entity_new_valve": {
+      "title": "{name} is deprecated",
+      "description": "The Tuya entity `{entity}` is deprecated, replaced by a new valve entity.\nPlease update your dashboards, automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
     }
   }
 }

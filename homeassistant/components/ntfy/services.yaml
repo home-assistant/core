@@ -1,0 +1,90 @@
+publish:
+  target:
+    entity:
+      domain: notify
+      integration: ntfy
+  fields:
+    title:
+      required: false
+      selector:
+        text:
+      example: Hello
+    message:
+      required: false
+      selector:
+        text:
+          multiline: true
+      example: World
+    markdown:
+      required: false
+      selector:
+        constant:
+          value: true
+          label: ""
+      example: true
+    tags:
+      required: false
+      selector:
+        text:
+          multiple: true
+      example: '["partying_face", "grin"]'
+    priority:
+      required: false
+      selector:
+        select:
+          options:
+            - value: "5"
+              label: "max"
+            - value: "4"
+              label: "high"
+            - value: "3"
+              label: "default"
+            - value: "2"
+              label: "low"
+            - value: "1"
+              label: "min"
+          mode: dropdown
+          translation_key: "priority"
+          sort: false
+      example: "5"
+    click:
+      required: false
+      selector:
+        text:
+          type: url
+          autocomplete: url
+      example: https://example.org
+    delay:
+      required: false
+      selector:
+        duration:
+          enable_day: true
+      example: '{"seconds": 30}'
+    attach:
+      required: false
+      selector:
+        text:
+          type: url
+          autocomplete: url
+      example: https://example.org/download.zip
+    email:
+      required: false
+      selector:
+        text:
+          type: email
+          autocomplete: email
+      example: mail@example.org
+    call:
+      required: false
+      selector:
+        text:
+          type: tel
+          autocomplete: tel
+      example: "1234567890"
+    icon:
+      required: false
+      selector:
+        text:
+          type: url
+          autocomplete: url
+      example: https://example.org/logo.png

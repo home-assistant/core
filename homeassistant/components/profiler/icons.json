@@ -15,6 +15,9 @@
     "dump_log_objects": {
       "service": "mdi:invoice-export-outline"
     },
+    "dump_sockets": {
+      "service": "mdi:pipe"
+    },
     "start_log_object_sources": {
       "service": "mdi:play"
     },

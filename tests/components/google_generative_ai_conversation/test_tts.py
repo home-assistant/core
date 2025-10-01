@@ -208,6 +208,7 @@ async def test_tts_service_speak(
                     threshold=RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 ),
             ],
+            thinking_config=types.ThinkingConfig(include_thoughts=True),
         ),
     )
 
@@ -276,5 +277,6 @@ async def test_tts_service_speak_error(
                     threshold=RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 ),
             ],
+            thinking_config=types.ThinkingConfig(include_thoughts=True),
         ),
     )

@@ -1,0 +1,21 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "QNECT WI-FI PIR SENSOR",
+  "category": "pir",
+  "product_id": "j5jgnjvdaczeb6dc",
+  "product_name": "QNECT WI-FI PIR SENSOR",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2024-06-21T07:10:11+00:00",
+  "create_time": "2024-06-21T07:10:11+00:00",
+  "update_time": "2024-06-21T07:10:11+00:00",
+  "function": {},
+  "status_range": {},
+  "status": {},
+  "set_up": false,
+  "support_local": true
+}

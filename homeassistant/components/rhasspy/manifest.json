@@ -1,7 +1,7 @@
 {
   "domain": "rhasspy",
   "name": "Rhasspy",
-  "codeowners": ["@balloob", "@synesthesiam"],
+  "codeowners": ["@synesthesiam"],
   "config_flow": true,
   "dependencies": ["intent"],
   "documentation": "https://www.home-assistant.io/integrations/rhasspy",

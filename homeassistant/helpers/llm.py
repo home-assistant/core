@@ -656,7 +656,6 @@ def _get_exposed_entities(
         if not async_should_expose(hass, assistant, state.entity_id):
             continue
 
-        description: str | None = None
         entity_entry = entity_registry.async_get(state.entity_id)
         names = [state.name]
         area_names = []
@@ -687,8 +686,10 @@ def _get_exposed_entities(
         if include_state:
             info["state"] = state.state
 
-        if description:
-            info["description"] = description
+            # Convert timestamp device_class states from UTC to local time
+            if state.attributes.get("device_class") == "timestamp" and state.state:
+                if (parsed_utc := dt_util.parse_datetime(state.state)) is not None:
+                    info["state"] = dt_util.as_local(parsed_utc).isoformat()
 
         if area_names:
             info["areas"] = ", ".join(area_names)

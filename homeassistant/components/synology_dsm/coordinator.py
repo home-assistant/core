@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from synology_dsm.api.surveillance_station.camera import SynoCamera
 from synology_dsm.exceptions import (
@@ -110,14 +110,16 @@ class SynologyDSMSwitchUpdateCoordinator(
     async def async_setup(self) -> None:
         """Set up the coordinator initial data."""
         info = await self.api.dsm.surveillance_station.get_info()
-        assert info is not None
+        if TYPE_CHECKING:
+            assert info is not None
         self.version = info["data"]["CMSMinVersion"]
 
     @async_re_login_on_expired
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch all data from api."""
         surveillance_station = self.api.surveillance_station
-        assert surveillance_station is not None
+        if TYPE_CHECKING:
+            assert surveillance_station is not None
         return {
             "switches": {
                 "home_mode": bool(await surveillance_station.get_home_mode_status())
@@ -161,7 +163,8 @@ class SynologyDSMCameraUpdateCoordinator(
     async def _async_update_data(self) -> dict[str, dict[int, SynoCamera]]:
         """Fetch all camera data from api."""
         surveillance_station = self.api.surveillance_station
-        assert surveillance_station is not None
+        if TYPE_CHECKING:
+            assert surveillance_station is not None
         current_data: dict[int, SynoCamera] = {
             camera.id: camera for camera in surveillance_station.get_all_cameras()
         }

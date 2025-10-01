@@ -21,6 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import HomeeConfigEntry
 from .const import CLIMATE_PROFILES, DOMAIN, HOMEE_UNIT_TO_HA_UNIT, PRESET_MANUAL
 from .entity import HomeeNodeEntity
+from .helpers import setup_homee_platform
 
 PARALLEL_UPDATES = 0
 
@@ -31,18 +32,27 @@ ROOM_THERMOSTATS = {
 }
 
 
+async def add_climate_entities(
+    config_entry: HomeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    nodes: list[HomeeNode],
+) -> None:
+    """Add homee climate entities."""
+    async_add_entities(
+        HomeeClimate(node, config_entry)
+        for node in nodes
+        if node.profile in CLIMATE_PROFILES
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
-    async_add_devices: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add the Homee platform for the climate component."""
 
-    async_add_devices(
-        HomeeClimate(node, config_entry)
-        for node in config_entry.runtime_data.nodes
-        if node.profile in CLIMATE_PROFILES
-    )
+    await setup_homee_platform(add_climate_entities, async_add_entities, config_entry)
 
 
 class HomeeClimate(HomeeNodeEntity, ClimateEntity):

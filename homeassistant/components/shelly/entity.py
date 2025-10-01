@@ -186,6 +186,11 @@ def async_setup_rpc_attribute_entities(
 
         for key in key_instances:
             # Filter non-existing sensors
+            if description.role and description.role != coordinator.device.config[
+                key
+            ].get("role", "generic"):
+                continue
+
             if description.sub_key not in coordinator.device.status[
                 key
             ] and not description.supported(coordinator.device.status[key]):
@@ -290,7 +295,6 @@ class BlockEntityDescription(EntityDescription):
     available: Callable[[Block], bool] | None = None
     # Callable (settings, block), return true if entity should be removed
     removal_condition: Callable[[dict, Block], bool] | None = None
-    extra_state_attributes: Callable[[Block], dict | None] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -311,6 +315,7 @@ class RpcEntityDescription(EntityDescription):
     unit: Callable[[dict], str | None] | None = None
     options_fn: Callable[[dict], list[str]] | None = None
     entity_class: Callable | None = None
+    role: str | None = None
 
 
 @dataclass(frozen=True)
@@ -493,14 +498,6 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, Entity):
             return available
 
         return self.entity_description.available(self.block)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes."""
-        if self.entity_description.extra_state_attributes is None:
-            return None
-
-        return self.entity_description.extra_state_attributes(self.block)
 
 
 class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):

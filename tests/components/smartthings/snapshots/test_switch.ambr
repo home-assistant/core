@@ -47,6 +47,54 @@
     'state': 'on',
   })
 # ---
+# name: test_all_entities[da_ac_rac_01001][switch.aire_dormitorio_principal_display_lighting-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.aire_dormitorio_principal_display_lighting',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Display lighting',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'display_lighting',
+    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_samsungce.airConditionerLighting_lighting_lighting',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_rac_01001][switch.aire_dormitorio_principal_display_lighting-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aire Dormitorio Principal Display lighting',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.aire_dormitorio_principal_display_lighting',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[da_ref_normal_000001][switch.refrigerator_cubed_ice-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -792,7 +840,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Auto cycle link',
+    'original_name': 'Auto Cycle Link',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -805,7 +853,7 @@
 # name: test_all_entities[da_wm_sc_000001][switch.airdresser_auto_cycle_link-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AirDresser Auto cycle link',
+      'friendly_name': 'AirDresser Auto Cycle Link',
     }),
     'context': <ANY>,
     'entity_id': 'switch.airdresser_auto_cycle_link',

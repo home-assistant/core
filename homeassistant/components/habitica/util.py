@@ -196,6 +196,15 @@ def quest_attributes(party: GroupData, content: ContentData) -> dict[str, Any]:
     }
 
 
+def rage_attributes(party: GroupData, content: ContentData) -> dict[str, Any]:
+    """Display name of rage skill and description of it's effect in attributes."""
+    boss = quest_boss(party, content)
+    return {
+        "rage_skill": boss.rage.title if boss and boss.rage else None,
+        "effect": boss.rage.effect if boss and boss.rage else None,
+    }
+
+
 def quest_boss(party: GroupData, content: ContentData) -> QuestBoss | None:
     """Quest boss."""
 

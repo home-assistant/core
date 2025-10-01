@@ -378,23 +378,23 @@
         "title": "Template sensor"
       },
       "user": {
-        "description": "This helper allows you to create helper entities that define their state using a template.",
+        "description": "This helper allows you to create helper entities that define their state using a template. What kind of template would you like to create?",
         "menu_options": {
-          "alarm_control_panel": "Template an alarm control panel",
-          "binary_sensor": "Template a binary sensor",
-          "button": "Template a button",
-          "cover": "Template a cover",
-          "event": "Template an event",
-          "fan": "Template a fan",
-          "image": "Template an image",
-          "light": "Template a light",
-          "lock": "Template a lock",
-          "number": "Template a number",
-          "select": "Template a select",
-          "sensor": "Template a sensor",
-          "switch": "Template a switch",
-          "update": "Template an update",
-          "vacuum": "Template a vacuum"
+          "alarm_control_panel": "[%key:component::alarm_control_panel::title%]",
+          "binary_sensor": "[%key:component::binary_sensor::title%]",
+          "button": "[%key:component::button::title%]",
+          "cover": "[%key:component::cover::title%]",
+          "event": "[%key:component::event::title%]",
+          "fan": "[%key:component::fan::title%]",
+          "image": "[%key:component::image::title%]",
+          "light": "[%key:component::light::title%]",
+          "lock": "[%key:component::lock::title%]",
+          "number": "[%key:component::number::title%]",
+          "select": "[%key:component::select::title%]",
+          "sensor": "[%key:component::sensor::title%]",
+          "switch": "[%key:component::switch::title%]",
+          "update": "[%key:component::update::title%]",
+          "vacuum": "[%key:component::vacuum::title%]"
         },
         "title": "Template helper"
       },
@@ -439,7 +439,7 @@
           "title": "[%key:component::update::entity_component::_::state_attributes::title::name%]",
           "backup": "Backup",
           "specific_version": "Specific version",
-          "update_percent": "Update percentage"
+          "update_percentage": "Update percentage"
         },
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
@@ -452,7 +452,7 @@
           "title": "Defines a template to get the update title.",
           "backup": "Enable or disable the `automatic backup before update` option in the update repair. When disabled, the `backup` variable will always provide `False` during the `install` action and it will not accept the `backup` option.",
           "specific_version": "Enable or disable using the `version` variable with the `install` action. When disabled, the `specific_version` variable will always provide `None` in the `install` actions",
-          "update_percent": "Defines a template to get the update completion percentage."
+          "update_percentage": "Defines a template to get the update completion percentage."
         },
         "sections": {
           "advanced_options": {
@@ -910,7 +910,7 @@
           "title": "[%key:component::update::entity_component::_::state_attributes::title::name%]",
           "backup": "[%key:component::template::config::step::update::data::backup%]",
           "specific_version": "[%key:component::template::config::step::update::data::specific_version%]",
-          "update_percent": "[%key:component::template::config::step::update::data::update_percent%]"
+          "update_percentage": "[%key:component::template::config::step::update::data::update_percentage%]"
         },
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
@@ -923,7 +923,7 @@
           "title": "[%key:component::template::config::step::update::data_description::title%]",
           "backup": "[%key:component::template::config::step::update::data_description::backup%]",
           "specific_version": "[%key:component::template::config::step::update::data_description::specific_version%]",
-          "update_percent": "[%key:component::template::config::step::update::data_description::update_percent%]"
+          "update_percentage": "[%key:component::template::config::step::update::data_description::update_percentage%]"
         },
         "sections": {
           "advanced_options": {
@@ -1083,6 +1083,7 @@
         "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
         "ph": "[%key:component::sensor::entity_component::ph::name%]",
         "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
+        "pm4": "[%key:component::sensor::entity_component::pm4::name%]",
         "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
         "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
         "power": "[%key:component::sensor::entity_component::power::name%]",

@@ -48,6 +48,55 @@
     'state': 'off',
   })
 # ---
+# name: test_rpc_flood_entities[binary_sensor.test_name_kitchen_cable_unplugged-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_name_kitchen_cable_unplugged',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Kitchen cable unplugged',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '123456789ABC-flood:0-flood_cable_unplugged',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_rpc_flood_entities[binary_sensor.test_name_kitchen_cable_unplugged-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Test name Kitchen cable unplugged',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_name_kitchen_cable_unplugged',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_rpc_flood_entities[binary_sensor.test_name_kitchen_flood-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

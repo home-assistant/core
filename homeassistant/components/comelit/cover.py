@@ -29,10 +29,21 @@ async def async_setup_entry(
 
     coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
 
-    async_add_entities(
-        ComelitCoverEntity(coordinator, device, config_entry.entry_id)
-        for device in coordinator.data[COVER].values()
-    )
+    known_devices: set[int] = set()
+
+    def _check_device() -> None:
+        current_devices = set(coordinator.data[COVER])
+        new_devices = current_devices - known_devices
+        if new_devices:
+            known_devices.update(new_devices)
+            async_add_entities(
+                ComelitCoverEntity(coordinator, device, config_entry.entry_id)
+                for device in coordinator.data[COVER].values()
+                if device.index in new_devices
+            )
+
+    _check_device()
+    config_entry.async_on_unload(coordinator.async_add_listener(_check_device))
 
 
 class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):

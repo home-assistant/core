@@ -148,7 +148,7 @@ from .const import (
     DEFAULT_HVAC_ON_VALUE,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TEMP_UNIT,
-    MODBUS_DOMAIN as DOMAIN,
+    DOMAIN,
     RTUOVERTCP,
     SERIAL,
     TCP,
@@ -479,7 +479,8 @@ MODBUS_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA]),
         vol.Optional(CONF_FANS): vol.All(cv.ensure_list, [FAN_SCHEMA]),
-    }
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 SERIAL_SCHEMA = MODBUS_SCHEMA.extend(

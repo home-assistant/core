@@ -9,7 +9,9 @@
       "progress": {
         "collect": {
           "soapBars": 10
-        }
+        },
+        "hp": 50,
+        "rage": 3.14
       },
       "key": "atom1",
       "active": true,

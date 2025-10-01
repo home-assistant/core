@@ -75,7 +75,15 @@ def setup_mock_foscam_camera(mock_foscam_camera):
         mock_foscam_camera.getWdrMode.return_value = (0, {"mode": "0"})
         mock_foscam_camera.getHdrMode.return_value = (0, {"mode": "0"})
         mock_foscam_camera.get_motion_detect_config.return_value = (0, 1)
-
+        mock_foscam_camera.getSWCapabilities.return_value = (
+            0,
+            {
+                "swCapabilities1": "100",
+                "swCapbilities2": "100",
+                "swCapbilities3": "100",
+                "swCapbilities4": "100",
+            },
+        )
         return mock_foscam_camera
 
     mock_foscam_camera.side_effect = configure_mock_on_init

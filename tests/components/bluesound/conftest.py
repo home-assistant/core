@@ -98,6 +98,9 @@ class PlayerMockData:
             return_value=[
                 Input("1", "input1", "image1", "url1"),
                 Input("2", "input2", "image2", "url2"),
+                Input(None, "input3", "image3", "url3"),
+                Input("4", None, "image4", "url4"),
+                Input(None, None, "image5", "url5"),
             ]
         )
         player.presets = AsyncMock(
