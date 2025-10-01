@@ -63,25 +63,11 @@ class NordPoolDataUpdateCoordinator(DataUpdateCoordinator[DeliveryPeriodsData]):
     def get_next_15_interval(self, now: datetime) -> datetime:
         """Compute next time we need to notify listeners."""
         next_run = dt_util.utcnow() + timedelta(minutes=15)
-        if next_run.minute > 15:
-            next_run = next_run.replace(minute=30)
-        elif next_run.minute > 30:
-            next_run = next_run.replace(minute=45)
-        elif next_run.minute > 45:
-            next_run = next_run.replace(
-                minute=0,
-                hour=next_run.hour + 1,
-            )
-        else:
-            next_run = next_run.replace(minute=15)
-        next_run = datetime(
-            next_run.year,
-            next_run.month,
-            next_run.day,
-            next_run.hour,
-            next_run.minute,
-            tzinfo=dt_util.UTC,
+        next_minute = next_run.minute // 15 * 15
+        next_run = next_run.replace(
+            minute=next_minute, second=0, microsecond=0, tzinfo=dt_util.UTC
         )
+
         LOGGER.debug("Next update at %s", next_run)
         return next_run
 
