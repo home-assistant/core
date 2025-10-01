@@ -1127,8 +1127,6 @@ class Recorder(threading.Thread):
         else:
             states_manager.add_pending(entity_id, dbstate)
 
-        assert dbstate.entity_id is None
-
         if entity_id is None or not (
             shared_attrs_bytes := state_attributes_manager.serialize_from_event(event)
         ):
