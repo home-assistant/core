@@ -62,7 +62,7 @@ async def test_migrate_entry_minor_version_1_2(hass: HomeAssistant) -> None:
             data={CONF_USERNAME: "mock", CONF_PASSWORD: "mock"},
             version=1,
             minor_version=1,
-            unique_id=123456,
+            unique_id="123456",
         )
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)

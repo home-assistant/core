@@ -30,7 +30,7 @@ async def test_config_not_ready(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
-        unique_id=123,
+        unique_id="123",
         data={"station_id": 123, "name": "Home"},
     )
 
@@ -64,7 +64,7 @@ async def test_migrate_device_and_config_entry(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="Home",
-        unique_id=123,
+        unique_id="123",
         data={
             "station_id": 123,
             "name": "Home",
