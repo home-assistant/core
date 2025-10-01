@@ -243,7 +243,11 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         for proc in selected_processes:
             try:
                 process_name = proc.name()
-                process_fds[process_name] = proc.num_fds()
+                # Our sensors are a per-process name aggregation. Not ideal, but the only
+                # way to do it without user specifying PIDs which are not static.
+                process_fds[process_name] = (
+                    process_fds.get(process_name, 0) + proc.num_fds()
+                )
             except (NoSuchProcess, AccessDenied):
                 _LOGGER.warning(
                     "Failed to get file descriptor count for process %s: access denied or process not found",
