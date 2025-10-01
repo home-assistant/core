@@ -26,10 +26,13 @@ _LOGGER = logging.getLogger(__name__)
 
 async def validate_input(hass: HomeAssistant, host: str, port: int) -> None:
     """Validate the user input allows us to connect."""
-    client = await hass.async_add_executor_job(
-        OpenRGBClient, host, port, DEFAULT_CLIENT_NAME
-    )
-    await hass.async_add_executor_job(client.disconnect)
+
+    def _try_connect(host: str, port: int) -> None:
+        """Validate connection to OpenRGB server (sync function for executor)."""
+        client = OpenRGBClient(host, port, DEFAULT_CLIENT_NAME)
+        client.disconnect()
+
+    await hass.async_add_executor_job(_try_connect, host, port)
 
 
 # Modified from dlna_dmr
