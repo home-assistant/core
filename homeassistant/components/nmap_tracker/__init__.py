@@ -104,6 +104,40 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate config entry."""
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s", entry.version, entry.minor_version
+    )
+
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 1:
+        new_options = {**entry.options}
+        if entry.minor_version < 2:
+            new_options[CONF_HOSTS] = cv.ensure_list_csv(
+                new_options.get(CONF_HOSTS, [])
+            )
+            new_options[CONF_EXCLUDE] = cv.ensure_list_csv(
+                new_options.get(CONF_EXCLUDE, [])
+            )
+            new_options[CONF_MAC_EXCLUDE] = []
+
+    hass.config_entries.async_update_entry(
+        entry, options=new_options, minor_version=1, version=2
+    )
+
+    _LOGGER.debug(
+        "Migration to configuration version %s.%s successful",
+        entry.version,
+        entry.minor_version,
+    )
+
+    return True
+
+
 @callback
 def _async_untrack_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove tracking for devices owned by this config entry."""

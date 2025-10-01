@@ -179,7 +179,7 @@ async def _async_build_schema_with_user_input(
 
 
 class OptionsFlowHandler(OptionsFlowWithReload):
-    """Handle a option flow for homekit."""
+    """Handle a option flow for nmap tracker."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
@@ -212,7 +212,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 class NmapTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nmap Tracker."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize config flow."""
