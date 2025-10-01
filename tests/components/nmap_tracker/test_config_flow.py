@@ -55,14 +55,14 @@ async def test_form(hass: HomeAssistant, hosts: str) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == f"Nmap Tracker {','.join(hosts)}"
+    assert result2["title"] == f"Nmap Tracker {', '.join(hosts)}"
     assert result2["data"] == {}
     assert result2["options"] == {
-        CONF_HOSTS: ",".join(hosts),
+        CONF_HOSTS: hosts,
         CONF_HOME_INTERVAL: 3,
         CONF_OPTIONS: DEFAULT_OPTIONS,
-        CONF_EXCLUDE: "4.4.4.4",
-        CONF_MAC_EXCLUDE: "00:00:00:00:00:00",
+        CONF_EXCLUDE: ["4.4.4.4"],
+        CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -96,11 +96,11 @@ async def test_form_range(hass: HomeAssistant) -> None:
     assert result2["title"] == "Nmap Tracker 192.168.0.5-12"
     assert result2["data"] == {}
     assert result2["options"] == {
-        CONF_HOSTS: "192.168.0.5-12",
+        CONF_HOSTS: ["192.168.0.5-12"],
         CONF_HOME_INTERVAL: 3,
         CONF_OPTIONS: DEFAULT_OPTIONS,
-        CONF_EXCLUDE: "4.4.4.4",
-        CONF_MAC_EXCLUDE: "00:00:00:00:00:00",
+        CONF_EXCLUDE: ["4.4.4.4"],
+        CONF_MAC_EXCLUDE: ["00:00:00:00:00:00"],
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -278,12 +278,12 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
-        CONF_HOSTS: "192.168.1.0/24,192.168.2.0/24",
+        CONF_HOSTS: ["192.168.1.0/24", "192.168.2.0/24"],
         CONF_HOME_INTERVAL: 5,
         CONF_CONSIDER_HOME: 500,
         CONF_OPTIONS: "-sn",
-        CONF_EXCLUDE: "4.4.4.4,5.5.5.5",
+        CONF_EXCLUDE: ["4.4.4.4", "5.5.5.5"],
         CONF_SCAN_INTERVAL: 10,
-        CONF_MAC_EXCLUDE: "00:00:00:00:00:00,11:22:33:44:55:66",
+        CONF_MAC_EXCLUDE: ["00:00:00:00:00:00", "11:22:33:44:55:66"],
     }
     assert len(mock_setup_entry.mock_calls) == 1
