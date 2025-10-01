@@ -4755,6 +4755,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "openrgb": {
+      "name": "OpenRGB",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "opensensemap": {
       "name": "openSenseMap",
       "integration_type": "hub",

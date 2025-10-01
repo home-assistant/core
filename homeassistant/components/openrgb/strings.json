@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up OpenRGB connection",
+        "description": "Enter the host and port of your OpenRGB SDK Server",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the OpenRGB SDK Server.",
+          "port": "The port on which the OpenRGB server is accessible."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure OpenRGB connection",
+        "description": "Update the host and port of your OpenRGB SDK Server",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::openrgb::config::step::user::data_description::host%]",
+          "port": "[%key:component::openrgb::config::step::user::data_description::port%]"
+        }
+      }
+    },
+    "error": {
+      "unable_to_determine_mac": "Unable to determine MAC address for the host",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "device_already_registered": "A device with the same MAC address is already registered",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}
