@@ -8,6 +8,7 @@ from typing import cast
 
 from london_tube_status import TubeData
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -19,12 +20,14 @@ _LOGGER = logging.getLogger(__name__)
 class LondonTubeCoordinator(DataUpdateCoordinator[dict[str, dict[str, str]]]):
     """London Underground sensor coordinator."""
 
-    def __init__(self, hass: HomeAssistant, data: TubeData) -> None:
+    def __init__(
+        self, hass: HomeAssistant, data: TubeData, config_entry: ConfigEntry
+    ) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
             _LOGGER,
-            config_entry=None,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
