@@ -1530,3 +1530,70 @@ This is prompt 2
         llm.ToolInput(tool_name="api-2__Tool_2", tool_args={"arg2": "value2"})
     )
     assert result == {"result": {"Tool_2": {"arg2": "value2"}}}
+
+
+async def test_get_exposed_entities_timestamp_conversion(hass: HomeAssistant) -> None:
+    """Test that _get_exposed_entities converts timestamp states to local time."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    # Set the timezone to something other than UTC to ensure conversion is tested
+    await hass.config.async_set_time_zone("America/New_York")
+
+    # Set up a timestamp sensor with UTC time
+    utc_timestamp = "2024-01-15T10:30:00+00:00"
+    hass.states.async_set(
+        "sensor.test_timestamp",
+        utc_timestamp,
+        {"device_class": "timestamp", "friendly_name": "Test Timestamp"},
+    )
+
+    # Also test with a non-timestamp sensor to ensure it's not affected
+    hass.states.async_set(
+        "sensor.regular_sensor",
+        "2024-01-15T10:30:00+00:00",
+        {"friendly_name": "Regular Sensor"},  # No device_class
+    )
+
+    # And test with invalid/empty timestamp
+    hass.states.async_set(
+        "sensor.invalid_timestamp",
+        "not-a-timestamp",
+        {"device_class": "timestamp", "friendly_name": "Invalid Timestamp"},
+    )
+
+    hass.states.async_set(
+        "sensor.empty_timestamp",
+        "",
+        {"device_class": "timestamp", "friendly_name": "Empty Timestamp"},
+    )
+
+    # Expose the entities
+    async_expose_entity(hass, "conversation", "sensor.test_timestamp", True)
+    async_expose_entity(hass, "conversation", "sensor.regular_sensor", True)
+    async_expose_entity(hass, "conversation", "sensor.invalid_timestamp", True)
+    async_expose_entity(hass, "conversation", "sensor.empty_timestamp", True)
+
+    # Call _get_exposed_entities
+    exposed = llm._get_exposed_entities(hass, "conversation", include_state=True)
+
+    # Check the converted timestamp
+    sensor_info = exposed["entities"]["sensor.test_timestamp"]
+
+    assert sensor_info["state"] == "2024-01-15T05:30:00-05:00"
+    # Regular sensor without device_class should keep original value
+    regular_info = exposed["entities"]["sensor.regular_sensor"]
+    assert regular_info["state"] == "2024-01-15T10:30:00+00:00"  # Unchanged
+
+    # Invalid timestamp should remain as-is
+    invalid_info = exposed["entities"]["sensor.invalid_timestamp"]
+    assert invalid_info["state"] == "not-a-timestamp"
+
+    # Empty timestamp should remain empty
+    empty_info = exposed["entities"]["sensor.empty_timestamp"]
+    assert empty_info["state"] == ""
+
+    # Test with include_state=False to ensure no conversion happens
+    exposed_no_state = llm._get_exposed_entities(
+        hass, "conversation", include_state=False
+    )
+    assert "state" not in exposed_no_state["entities"]["sensor.test_timestamp"]
