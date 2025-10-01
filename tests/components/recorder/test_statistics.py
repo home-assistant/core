@@ -847,8 +847,8 @@ async def test_statistics_duplicated(
         ("recorder", "sensor.total_energy_import", async_import_statistics),
     ],
 )
+@pytest.mark.usefixtures("recorder_mock")
 async def test_import_statistics(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
