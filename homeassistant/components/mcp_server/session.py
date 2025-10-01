@@ -7,8 +7,8 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 import logging
 
-from anyio.streams.memory import MemoryObjectSendStream  # type: ignore[import-untyped]
-from mcp.shared.message import SessionMessage  # type: ignore[import-untyped]
+from anyio.streams.memory import MemoryObjectSendStream
+from mcp.shared.message import SessionMessage
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class SessionManager:
     @asynccontextmanager
     async def create(self, session: Session) -> AsyncGenerator[str]:
         """Context manager to create a new session ID and close when done."""
-        from homeassistant.util import ulid as ulid_util  # type: ignore[import-untyped]
+        from homeassistant.util import ulid as ulid_util
 
         session_id = ulid_util.ulid_now()
         _LOGGER.debug("Creating session: %s", session_id)

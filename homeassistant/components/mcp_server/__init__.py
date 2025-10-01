@@ -4,15 +4,15 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components import conversation  # type: ignore[import-untyped]
-from homeassistant.config_entries import ConfigEntry  # type: ignore[import-untyped]
-from homeassistant.const import CONF_LLM_HASS_API  # type: ignore[import-untyped]
-from homeassistant.core import HomeAssistant  # type: ignore[import-untyped]
-from homeassistant.helpers import config_validation as cv  # type: ignore[import-untyped]
-from homeassistant.helpers.typing import ConfigType  # type: ignore[import-untyped]
-from homeassistant.helpers import llm  # type: ignore[import-untyped]
+from homeassistant.components import conversation
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers import llm
 
-from mcp.server.streamable_http_manager import StreamableHTTPSessionManager  # type: ignore[import-untyped]
+from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 
 from . import http
 from .auth import async_resolve_auth_config

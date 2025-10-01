@@ -8,23 +8,25 @@ from collections.abc import Callable, Sequence
 from importlib.metadata import PackageNotFoundError, version
 from typing import Any
 
-from mcp import types  # type: ignore[import-untyped]
-from mcp.server.auth.provider import TokenVerifier  # type: ignore[import-untyped]
-from mcp.server.auth.settings import AuthSettings  # type: ignore[import-untyped]
-from mcp.server.fastmcp import FastMCP  # type: ignore[import-untyped]
-import voluptuous as vol  # type: ignore[import-untyped]
-from voluptuous_openapi import convert  # type: ignore[import-untyped]
+from mcp import types
+from mcp.server.auth.provider import TokenVerifier
+from mcp.server.auth.settings import AuthSettings
+from mcp.server.fastmcp import FastMCP
+import voluptuous as vol
+from voluptuous_openapi import convert
 
-from homeassistant.core import HomeAssistant  # type: ignore[import-untyped]
-from homeassistant.exceptions import HomeAssistantError  # type: ignore[import-untyped]
-from homeassistant.helpers import llm  # type: ignore[import-untyped]
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import llm
 
 from .const import DOMAIN, STATELESS_LLM_API
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _format_tool(tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None) -> types.Tool:
+def _format_tool(
+    tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
+) -> types.Tool:
     """Format an LLM tool specification into an MCP tool."""
 
     input_schema = convert(tool.parameters, custom_serializer=custom_serializer)
@@ -129,7 +131,9 @@ async def create_server(
         return [_format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools]
 
     @base_server.call_tool()  # type: ignore[misc]
-    async def call_tool(name: str, arguments: dict[str, Any]) -> Sequence[types.TextContent]:
+    async def call_tool(
+        name: str, arguments: dict[str, Any]
+    ) -> Sequence[types.TextContent]:
         llm_api = await get_api_instance()
         tool_input = llm.ToolInput(tool_name=name, tool_args=arguments)
         _LOGGER.debug("Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args)

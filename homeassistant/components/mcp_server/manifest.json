@@ -2,7 +2,6 @@
   "domain": "mcp_server",
   "name": "Model Context Protocol Server",
   "codeowners": ["@allenporter"],
-  "version": "2025.9.30",
   "config_flow": true,
   "dependencies": ["homeassistant", "http", "conversation"],
   "documentation": "https://www.home-assistant.io/integrations/mcp_server",

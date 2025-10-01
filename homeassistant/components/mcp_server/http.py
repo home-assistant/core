@@ -7,21 +7,21 @@ import logging
 from collections.abc import Awaitable, Callable
 from typing import Any, cast
 
-from aiohttp import web  # type: ignore[import-untyped]
-from aiohttp.web_exceptions import HTTPBadRequest, HTTPNotFound, HTTPServiceUnavailable  # type: ignore[import-untyped]
-from aiohttp_sse import sse_response  # type: ignore[import-untyped]
-import anyio  # type: ignore[import-untyped]
-from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream  # type: ignore[import-untyped]
-from mcp import types  # type: ignore[import-untyped]
-from mcp.shared.message import SessionMessage  # type: ignore[import-untyped]
-from multidict import CIMultiDict  # type: ignore[import-untyped]
+from aiohttp import web
+from aiohttp.web_exceptions import HTTPBadRequest, HTTPNotFound, HTTPServiceUnavailable
+from aiohttp_sse import sse_response
+import anyio
+from anyio.streams.memory import MemoryObjectReceiveStream, MemoryObjectSendStream
+from mcp import types
+from mcp.shared.message import SessionMessage
+from multidict import CIMultiDict
 
-from homeassistant.config_entries import ConfigEntry  # type: ignore[import-untyped]
-from homeassistant.components import conversation  # type: ignore[import-untyped]
-from homeassistant.components.http import KEY_HASS, HomeAssistantView  # type: ignore[import-untyped]
-from homeassistant.const import CONF_LLM_HASS_API  # type: ignore[import-untyped]
-from homeassistant.core import HomeAssistant, callback  # type: ignore[import-untyped]
-from homeassistant.helpers import llm  # type: ignore[import-untyped]
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.components import conversation
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import llm
 
 from .const import DOMAIN, MESSAGES_API, SSE_API, STREAMABLE_HTTP_API
 from .runtime import MCPServerRuntime
@@ -31,7 +31,11 @@ from .server import create_server
 _LOGGER = logging.getLogger(__name__)
 
 ASGIHandler = Callable[
-    [dict[str, Any], Callable[[], Awaitable[dict[str, Any]]], Callable[[dict[str, Any]], Awaitable[None]]],
+    [
+        dict[str, Any],
+        Callable[[], Awaitable[dict[str, Any]]],
+        Callable[[dict[str, Any]], Awaitable[None]],
+    ],
     Awaitable[None],
 ]
 
@@ -55,7 +59,9 @@ def async_get_config_entry(hass: HomeAssistant) -> ConfigEntry[MCPServerRuntime]
         raise HTTPNotFound(text="Found multiple Model Context Protocol configurations")
     entry = config_entries[0]
     if entry.runtime_data is None:
-        raise HTTPServiceUnavailable(text="Model Context Protocol server is still initialising")
+        raise HTTPServiceUnavailable(
+            text="Model Context Protocol server is still initialising"
+        )
     return cast(ConfigEntry[MCPServerRuntime], entry)
 
 
@@ -88,7 +94,9 @@ class ModelContextProtocolSSEView(HomeAssistantView):
             auth_settings=runtime.auth_settings,
             token_verifier=runtime.token_verifier,
         )
-        options = await hass.async_add_executor_job(server._mcp_server.create_initialization_options)  # noqa: SLF001
+        options = await hass.async_add_executor_job(
+            server._mcp_server.create_initialization_options
+        )  # noqa: SLF001
 
         read_stream_writer: MemoryObjectSendStream[SessionMessage | Exception]
         read_stream: MemoryObjectReceiveStream[SessionMessage | Exception]
@@ -111,7 +119,9 @@ class ModelContextProtocolSSEView(HomeAssistantView):
                 async for session_message in write_stream_reader:
                     _LOGGER.debug("Sending SSE message: %s", session_message)
                     await response.send(
-                        session_message.message.model_dump_json(by_alias=True, exclude_none=True),
+                        session_message.message.model_dump_json(
+                            by_alias=True, exclude_none=True
+                        ),
                         event="message",
                     )
 
@@ -172,10 +182,17 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
     async def options(self, request: web.Request) -> web.StreamResponse:
         """Handle CORS pre-flight checks for web clients."""
         origin = request.headers.get("Origin", "*")
-        allow_headers = request.headers.get("Access-Control-Request-Headers", "Authorization, MCP-Session-ID, Content-Type")
+        allow_headers = request.headers.get(
+            "Access-Control-Request-Headers",
+            "Authorization, MCP-Session-ID, Content-Type",
+        )
         response = web.Response(status=204)
-        _apply_cors_headers(response, request, origin_override=origin, allow_headers=allow_headers)
-        response.headers.setdefault("Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS")
+        _apply_cors_headers(
+            response, request, origin_override=origin, allow_headers=allow_headers
+        )
+        response.headers.setdefault(
+            "Access-Control-Allow-Methods", "GET,POST,DELETE,OPTIONS"
+        )
         return response
 
     async def _handle(self, request: web.Request) -> web.StreamResponse:
@@ -183,14 +200,20 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
         entry = async_get_config_entry(hass)
         runtime: MCPServerRuntime = entry.runtime_data
 
-        async def handler(scope: dict[str, Any], receive: Callable[[], Awaitable[dict[str, Any]]], send: Callable[[dict[str, Any]], Awaitable[None]]) -> None:
+        async def handler(
+            scope: dict[str, Any],
+            receive: Callable[[], Awaitable[dict[str, Any]]],
+            send: Callable[[dict[str, Any]], Awaitable[None]],
+        ) -> None:
             await runtime.streamable_manager.handle_request(scope, receive, send)
 
         try:
             return await _call_asgi(handler, request)
         except RuntimeError as err:
             _LOGGER.error("Streamable HTTP manager not running: %s", err)
-            raise HTTPServiceUnavailable(text="Streamable HTTP transport is unavailable") from err
+            raise HTTPServiceUnavailable(
+                text="Streamable HTTP transport is unavailable"
+            ) from err
 
 
 async def _call_asgi(handler: ASGIHandler, request: web.Request) -> web.StreamResponse:
@@ -286,7 +309,9 @@ async def _call_asgi(handler: ASGIHandler, request: web.Request) -> web.StreamRe
     return await response_future
 
 
-def _apply_headers(response: web.StreamResponse, headers: list[tuple[bytes, bytes]]) -> None:
+def _apply_headers(
+    response: web.StreamResponse, headers: list[tuple[bytes, bytes]]
+) -> None:
     for key, value in headers:
         response.headers[key.decode("latin-1")] = value.decode("latin-1")
 
@@ -328,7 +353,9 @@ def _build_scope(request: web.Request) -> dict[str, Any]:
     client: tuple[str, int] | None = None
     if client_host:
         client = (client_host, 0)
-    server_info = request.transport.get_extra_info("sockname") if request.transport else None
+    server_info = (
+        request.transport.get_extra_info("sockname") if request.transport else None
+    )
 
     return {
         "type": "http",

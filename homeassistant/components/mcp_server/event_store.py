@@ -7,14 +7,14 @@ from collections import deque
 from dataclasses import dataclass
 from uuid import uuid4
 
-from mcp.server.streamable_http import (  # type: ignore[import-untyped]
+from mcp.server.streamable_http import (
     EventCallback,
     EventId,
     EventMessage,
     EventStore,
     StreamId,
 )
-from mcp.types import JSONRPCMessage  # type: ignore[import-untyped]
+from mcp.types import JSONRPCMessage
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,9 @@ class InMemoryEventStore(EventStore):
         self.streams: dict[StreamId, deque[EventEntry]] = {}
         self.event_index: dict[EventId, EventEntry] = {}
 
-    async def store_event(self, stream_id: StreamId, message: JSONRPCMessage) -> EventId:
+    async def store_event(
+        self, stream_id: StreamId, message: JSONRPCMessage
+    ) -> EventId:
         event_id = str(uuid4())
         entry = EventEntry(event_id=event_id, stream_id=stream_id, message=message)
 

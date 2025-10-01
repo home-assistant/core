@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol  # type: ignore[import-untyped]
+import voluptuous as vol
 
-from homeassistant import config_entries  # type: ignore[import-untyped]
-from homeassistant.const import CONF_LLM_HASS_API  # type: ignore[import-untyped]
-from homeassistant.core import HomeAssistant  # type: ignore[import-untyped]
-from homeassistant.helpers import llm  # type: ignore[import-untyped]
-from homeassistant.helpers.selector import (  # type: ignore[import-untyped]
+from homeassistant import config_entries
+from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import llm
+from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
 )
@@ -25,12 +25,20 @@ class ModelContextServerProtocolConfigFlow(config_entries.ConfigFlow, domain=DOM
 
     VERSION = 1
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> config_entries.ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
         """Handle the initial step of the config flow."""
 
         llm_apis = {api.id: api.name for api in llm.async_get_apis(self.hass)}
         selector = SelectSelector(
-            SelectSelectorConfig(options=[{"value": api_id, "label": name} for api_id, name in llm_apis.items()], multiple=True)
+            SelectSelectorConfig(
+                options=[
+                    {"value": api_id, "label": name}
+                    for api_id, name in llm_apis.items()
+                ],
+                multiple=True,
+            )
         )
 
         if user_input is not None:
@@ -43,7 +51,9 @@ class ModelContextServerProtocolConfigFlow(config_entries.ConfigFlow, domain=DOM
             else:
                 await self.async_set_unique_id(DOMAIN)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title="Model Context Protocol", data={CONF_LLM_HASS_API: selection})
+                return self.async_create_entry(
+                    title="Model Context Protocol", data={CONF_LLM_HASS_API: selection}
+                )
         else:
             errors = {}
 

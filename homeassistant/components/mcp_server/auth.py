@@ -6,11 +6,11 @@ from dataclasses import dataclass
 from functools import partial
 from typing import Optional
 
-from homeassistant.core import HomeAssistant  # type: ignore[import-untyped]
-from homeassistant.helpers import network  # type: ignore[import-untyped]
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import network
 
-from mcp.server.auth.provider import AccessToken, TokenVerifier  # type: ignore[import-untyped]
-from mcp.server.auth.settings import AuthSettings  # type: ignore[import-untyped]
+from mcp.server.auth.provider import AccessToken, TokenVerifier
+from mcp.server.auth.settings import AuthSettings
 
 from .const import DOMAIN
 
@@ -39,7 +39,10 @@ class HomeAssistantTokenVerifier(TokenVerifier):
         if refresh_token.expire_at is not None:
             expires_at = float(refresh_token.expire_at)
         elif refresh_token.access_token_expiration:
-            expires_at = refresh_token.created_at.timestamp() + refresh_token.access_token_expiration.total_seconds()
+            expires_at = (
+                refresh_token.created_at.timestamp()
+                + refresh_token.access_token_expiration.total_seconds()
+            )
         else:
             expires_at = None
 
@@ -66,7 +69,9 @@ async def async_resolve_auth_config(hass: HomeAssistant) -> FastMCPAuthConfig:
         required_scopes=None,
     )
 
-    return FastMCPAuthConfig(settings=settings, token_verifier=HomeAssistantTokenVerifier(hass))
+    return FastMCPAuthConfig(
+        settings=settings, token_verifier=HomeAssistantTokenVerifier(hass)
+    )
 
 
 async def _async_detect_base_url(hass: HomeAssistant) -> str:
