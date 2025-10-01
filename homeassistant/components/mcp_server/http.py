@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, MutableMapping
 from typing import Any, cast
 
 from aiohttp import web
@@ -95,8 +95,8 @@ class ModelContextProtocolSSEView(HomeAssistantView):
             token_verifier=runtime.token_verifier,
         )
         options = await hass.async_add_executor_job(
-            server._mcp_server.create_initialization_options
-        )  # noqa: SLF001
+            server._mcp_server.create_initialization_options  # noqa: SLF001
+        )
 
         read_stream_writer: MemoryObjectSendStream[SessionMessage | Exception]
         read_stream: MemoryObjectReceiveStream[SessionMessage | Exception]
@@ -206,7 +206,7 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
         async def handler(
             scope: dict[str, Any],
             receive: Callable[[], Awaitable[dict[str, Any]]],
-            send: Callable[[dict[str, Any]], Awaitable[None]],
+            send: Callable[[MutableMapping[str, Any]], Awaitable[None]],
         ) -> None:
             await runtime.streamable_manager.handle_request(scope, receive, send)
 
