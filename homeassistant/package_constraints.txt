@@ -40,7 +40,7 @@ hass-nabucasa==1.2.0
 hassil==3.2.0
 home-assistant-bluetooth==1.13.1
 home-assistant-frontend==20251001.0
-home-assistant-intents==2025.9.24
+home-assistant-intents==2025.10.1
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.6
@@ -55,7 +55,7 @@ psutil-home-assistant==0.0.1
 PyJWT==2.10.1
 pymicro-vad==1.0.1
 PyNaCl==1.6.0
-pyOpenSSL==25.1.0
+pyOpenSSL==25.3.0
 pyserial==3.5
 pyspeex-noise==1.0.2
 python-slugify==8.0.4
