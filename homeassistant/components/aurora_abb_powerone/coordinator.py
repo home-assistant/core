@@ -66,13 +66,13 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
         """Instantiate the proper aurorapy client for the selected transport."""
         if transport == TRANSPORT_TCP:
             if tcp_host is None or tcp_port is None:
-                raise UpdateFailed("TCP host/port not configured")
+                raise ValueError("TCP host/port not configured")
             return AuroraTCPClient(
                 tcp_host, tcp_port, inverter_serial_address, timeout=1
             )
         if transport == TRANSPORT_SERIAL:
             if serial_comport is None:
-                raise UpdateFailed("Serial port not configured")
+                raise ValueError("Serial port not configured")
             return AuroraSerialClient(
                 inverter_serial_address, serial_comport, parity="N", timeout=1
             )
