@@ -1686,12 +1686,11 @@ class CannotSerializeMe:
 
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
-@pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.usefixtures("recorder_mock", "skip_by_db_engine")
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.parametrize("recorder_config", [{CONF_COMMIT_INTERVAL: 0}])
 async def test_database_corruption_while_running(
     hass: HomeAssistant,
-    recorder_mock: Recorder,
     recorder_db_url: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:

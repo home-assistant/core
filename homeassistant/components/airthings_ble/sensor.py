@@ -163,6 +163,8 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     ),
 }
 
+PARALLEL_UPDATES = 0
+
 
 @callback
 def async_migrate(hass: HomeAssistant, address: str, sensor_name: str) -> None:
