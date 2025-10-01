@@ -23,7 +23,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
 from homeassistant.helpers.typing import VolDictType
@@ -56,11 +55,9 @@ async def async_get_network(hass: HomeAssistant) -> str:
     return str(ip_network(f"{local_ip}/{network_prefix}", False))
 
 
-def _normalize_ips_and_network(hosts_str: str) -> list[str] | None:
+def _normalize_ips_and_network(hosts: str) -> list[str] | None:
     """Check if a list of hosts are all ips or ip networks."""
-
     normalized_hosts = []
-    hosts = [host for host in cv.ensure_list_csv(hosts_str) if host != ""]
 
     for host in sorted(hosts):
         try:
@@ -98,15 +95,10 @@ def _is_valid_mac(mac_address: str) -> bool:
     return False
 
 
-def _normalize_mac_addresses(mac_addresses_str: str) -> list[str] | None:
+def _normalize_mac_addresses(mac_addresses: str) -> list[str] | None:
     """Check if a list of mac addresses are all valid."""
     normalized_mac_addresses = []
 
-    mac_addresses = [
-        mac_address
-        for mac_address in cv.ensure_list_csv(mac_addresses_str)
-        if mac_address != ""
-    ]
     for mac_address in sorted(mac_addresses):
         mac_address = mac_address.replace(":", "").replace("-", "").upper().strip()
         if not _is_valid_mac(mac_address):
@@ -125,19 +117,19 @@ def normalize_input(user_input: dict[str, Any]) -> dict[str, str]:
     if not normalized_hosts:
         errors[CONF_HOSTS] = "invalid_hosts"
     else:
-        user_input[CONF_HOSTS] = ",".join(normalized_hosts)
+        user_input[CONF_HOSTS] = normalized_hosts
 
     normalized_exclude = _normalize_ips_and_network(user_input[CONF_EXCLUDE])
     if normalized_exclude is None:
         errors[CONF_EXCLUDE] = "invalid_hosts"
     else:
-        user_input[CONF_EXCLUDE] = ",".join(normalized_exclude)
+        user_input[CONF_EXCLUDE] = normalized_exclude
 
     normalized_mac_exclude = _normalize_mac_addresses(user_input[CONF_MAC_EXCLUDE])
     if normalized_mac_exclude is None:
         errors[CONF_MAC_EXCLUDE] = "invalid_hosts"
     else:
-        user_input[CONF_MAC_EXCLUDE] = ",".join(normalized_mac_exclude)
+        user_input[CONF_MAC_EXCLUDE] = normalized_mac_exclude
 
     return errors
 
@@ -145,15 +137,12 @@ def normalize_input(user_input: dict[str, Any]) -> dict[str, str]:
 async def _async_build_schema_with_user_input(
     hass: HomeAssistant, user_input: dict[str, Any], include_options: bool
 ) -> vol.Schema:
-    hosts = cv.ensure_list_csv(
-        user_input.get(CONF_HOSTS, await async_get_network(hass))
+    hosts = user_input.get(CONF_HOSTS, [await async_get_network(hass)])
+    ip_exclude = user_input.get(
+        CONF_EXCLUDE, [await network.async_get_source_ip(hass, MDNS_TARGET_IP)]
     )
-    ip_exclude = cv.ensure_list_csv(
-        user_input.get(
-            CONF_EXCLUDE, await network.async_get_source_ip(hass, MDNS_TARGET_IP)
-        )
-    )
-    mac_exclude = cv.ensure_list_csv(user_input.get(CONF_MAC_EXCLUDE, []))
+
+    mac_exclude = user_input.get(CONF_MAC_EXCLUDE, [])
 
     schema: VolDictType = {
         vol.Required(CONF_HOSTS, default=hosts): TextSelector(
@@ -206,8 +195,9 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             self.options.update(user_input)
 
             if not errors:
+                title_hosts = ", ".join(self.options[CONF_HOSTS])
                 return self.async_create_entry(
-                    title=f"Nmap Tracker {self.options[CONF_HOSTS]}", data=self.options
+                    title=f"Nmap Tracker {title_hosts}", data=self.options
                 )
 
         return self.async_show_form(
@@ -241,8 +231,9 @@ class NmapTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
             self.options.update(user_input)
 
             if not errors:
+                title_hosts = ", ".join(user_input[CONF_HOSTS])
                 return self.async_create_entry(
-                    title=f"Nmap Tracker {user_input[CONF_HOSTS]}",
+                    title=f"Nmap Tracker {title_hosts}",
                     data={},
                     options=user_input,
                 )
