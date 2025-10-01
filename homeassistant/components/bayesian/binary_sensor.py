@@ -99,18 +99,18 @@ def above_greater_than_below(config: dict[str, Any]) -> dict[str, Any]:
     return config
 
 
+NUMERIC_STATE_BASE_SCHEMA = vol.Schema(
+    {
+        CONF_PLATFORM: CONF_NUMERIC_STATE,
+        vol.Required(CONF_ENTITY_ID): cv.entity_id,
+        vol.Optional(CONF_ABOVE): vol.Coerce(float),
+        vol.Optional(CONF_BELOW): vol.Coerce(float),
+        vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
+        vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
+    }
+)
 NUMERIC_STATE_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            CONF_PLATFORM: CONF_NUMERIC_STATE,
-            vol.Required(CONF_ENTITY_ID): cv.entity_id,
-            vol.Optional(CONF_ABOVE): vol.Coerce(float),
-            vol.Optional(CONF_BELOW): vol.Coerce(float),
-            vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
-            vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
-        },
-        required=True,
-    ),
+    NUMERIC_STATE_BASE_SCHEMA,
     above_greater_than_below,
 )
 
@@ -177,6 +177,18 @@ TEMPLATE_SCHEMA = vol.Schema(
     },
     required=True,
 )
+
+OBSERVATION_CONFIG_FLOW_SCHEMA = vol.Any(
+    vol.Schema({**TEMPLATE_SCHEMA.schema, vol.Optional(CONF_NAME): cv.string}),
+    vol.Schema({**STATE_SCHEMA.schema, vol.Optional(CONF_NAME): cv.string}),
+    vol.All(
+        vol.Schema(
+            {**NUMERIC_STATE_BASE_SCHEMA.schema, vol.Optional(CONF_NAME): cv.string}
+        ),
+        above_greater_than_below,
+    ),
+)
+
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -270,7 +282,8 @@ async def async_setup_entry(
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID, config_entry.entry_id)
     observations: list[ConfigType] = [
-        dict(subentry.data) for subentry in config_entry.subentries.values()
+        OBSERVATION_CONFIG_FLOW_SCHEMA(dict(subentry.data))
+        for subentry in config_entry.subentries.values()
     ]
     prior: float = config[CONF_PRIOR]
     probability_threshold: float = config[CONF_PROBABILITY_THRESHOLD]
@@ -308,33 +321,20 @@ class BayesianBinarySensor(BinarySensorEntity):
         self._attr_name = name
         self._attr_unique_id = unique_id and f"bayesian-{unique_id}"
 
-        self._observations: list[Observation] = []
-        for observation in observations:
-            template: Template | None = None
-            if observation.get(CONF_VALUE_TEMPLATE) is not None:
-                if isinstance(observation[CONF_VALUE_TEMPLATE], str):
-                    template = Template(
-                        observation[CONF_VALUE_TEMPLATE],
-                        self.hass,
-                    )
-                if isinstance(observation[CONF_VALUE_TEMPLATE], Template):
-                    template = Template(
-                        observation[CONF_VALUE_TEMPLATE].template,
-                        self.hass,
-                    )
-            self._observations.append(
-                Observation(
-                    entity_id=observation.get(CONF_ENTITY_ID),
-                    platform=observation[CONF_PLATFORM],
-                    prob_given_false=observation[CONF_P_GIVEN_F],
-                    prob_given_true=observation[CONF_P_GIVEN_T],
-                    observed=None,
-                    to_state=observation.get(CONF_TO_STATE),
-                    above=observation.get(CONF_ABOVE),
-                    below=observation.get(CONF_BELOW),
-                    value_template=template,
-                )
+        self._observations = [
+            Observation(
+                entity_id=observation.get(CONF_ENTITY_ID),
+                platform=observation[CONF_PLATFORM],
+                prob_given_false=observation[CONF_P_GIVEN_F],
+                prob_given_true=observation[CONF_P_GIVEN_T],
+                observed=None,
+                to_state=observation.get(CONF_TO_STATE),
+                above=observation.get(CONF_ABOVE),
+                below=observation.get(CONF_BELOW),
+                value_template=observation.get(CONF_VALUE_TEMPLATE),
             )
+            for observation in observations
+        ]
 
         self._probability_threshold = probability_threshold
         self._attr_device_class = device_class
