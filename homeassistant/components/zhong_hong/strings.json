@@ -2,40 +2,12 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up ZhongHong HVAC",
-        "description": "Configure connection to your ZhongHong HVAC gateway.\n\nDefault port is {default_port} and default gateway address is {default_gateway}.",
+        "title": "Set up ZhongHong HVAC Gateway",
+        "description": "Please enter the IP address and port of your HVAC gateway.",
         "data": {
-          "host": "Gateway IP address",
+          "host": "IP Address",
           "port": "Port",
-          "gateway_address": "Gateway address"
-        }
-      },
-      "reconfigure": {
-        "title": "Reconfigure ZhongHong HVAC",
-        "description": "Update the connection settings for your ZhongHong HVAC gateway.",
-        "data": {
-          "host": "[%key:component::zhong_hong::config::step::user::data::host%]",
-          "port": "[%key:component::zhong_hong::config::step::user::data::port%]",
-          "gateway_address": "[%key:component::zhong_hong::config::step::user::data::gateway_address%]"
-        }
-      }
-    },
-    "error": {
-      "cannot_connect": "Failed to connect to the gateway. Please check the IP address, port, and network connectivity.",
-      "unknown": "Unexpected error occurred. Please try again."
-    },
-    "abort": {
-      "already_configured": "This gateway is already configured.",
-      "reconfigure_successful": "Gateway reconfigured successfully."
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "ZhongHong HVAC options",
-        "data": {
-          "scan_interval": "Scan interval (seconds)",
-          "timeout": "Connection timeout (seconds)"
+          "gateway_address": "Gateway Address"
         }
       }
     }
