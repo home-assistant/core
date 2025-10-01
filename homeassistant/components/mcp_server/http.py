@@ -23,7 +23,7 @@ from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
 
-from .const import DOMAIN, MESSAGES_API, SSE_API, STREAMABLE_HTTP_API
+from .const import DOMAIN, HTTP_REGISTRATION, MESSAGES_API, SSE_API, STREAMABLE_HTTP_API
 from .runtime import MCPServerRuntime
 from .server import create_server
 from .session import Session
@@ -44,9 +44,14 @@ ASGIHandler = Callable[
 def async_register(hass: HomeAssistant) -> None:
     """Register the HTTP transports."""
 
+    domain_data = hass.data.setdefault(DOMAIN, {})
+    if domain_data.get(HTTP_REGISTRATION):
+        return
+
     hass.http.register_view(ModelContextProtocolSSEView())
     hass.http.register_view(ModelContextProtocolMessagesView())
     hass.http.register_view(ModelContextProtocolStreamableHTTPView())
+    domain_data[HTTP_REGISTRATION] = True
 
 
 def async_get_config_entry(hass: HomeAssistant) -> ConfigEntry[MCPServerRuntime]:

@@ -15,7 +15,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, TITLE
 
 MORE_INFO_URL = "https://www.home-assistant.io/integrations/mcp_server/#configuration"
 
@@ -42,18 +42,35 @@ class ModelContextServerProtocolConfigFlow(config_entries.ConfigFlow, domain=DOM
             )
         )
 
+        default_selection = vol.UNDEFINED
+        if llm_apis:
+            default_selection = [next(iter(llm_apis))]
+
         if user_input is not None:
-            selection = user_input.get(CONF_LLM_HASS_API, [])
+            selection = user_input.get(CONF_LLM_HASS_API)
             if isinstance(selection, str):
                 selection = [selection]
+            elif selection is None:
+                selection = []
+
+            selection = [api_id for api_id in selection if api_id in llm_apis]
+
+            if not selection and isinstance(default_selection, list):
+                selection = default_selection.copy()
 
             if not selection:
                 errors = {CONF_LLM_HASS_API: "llm_api_required"}
             else:
+                unique_selection = list(dict.fromkeys(selection))
                 await self.async_set_unique_id(DOMAIN)
                 self._abort_if_unique_id_configured()
+                title = (
+                    llm_apis[unique_selection[0]]
+                    if len(unique_selection) == 1
+                    else TITLE
+                )
                 return self.async_create_entry(
-                    title="Model Context Protocol", data={CONF_LLM_HASS_API: selection}
+                    title=title, data={CONF_LLM_HASS_API: unique_selection}
                 )
         else:
             errors = {}
@@ -63,7 +80,7 @@ class ModelContextServerProtocolConfigFlow(config_entries.ConfigFlow, domain=DOM
 
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_LLM_HASS_API): selector,
+                vol.Required(CONF_LLM_HASS_API, default=default_selection): selector,
             }
         )
 
