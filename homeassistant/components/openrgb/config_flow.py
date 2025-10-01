@@ -15,6 +15,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -108,7 +109,7 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_PORT,
                         default=reconfigure_entry.data[CONF_PORT],
-                    ): int,
+                    ): cv.port,
                 }
             ),
             errors=errors,
@@ -180,7 +181,7 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 }
             ),
             errors=errors,
