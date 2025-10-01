@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from openrgb.utils import ControllerParsingError, OpenRGBDisconnected, SDKVersionError
+from openrgb.utils import OpenRGBDisconnected, SDKVersionError
 import pytest
 
 from homeassistant.components.openrgb.const import DOMAIN
@@ -105,30 +105,6 @@ async def test_user_flow_sdk_version_error(
     with patch(
         "homeassistant.components.openrgb.config_flow.OpenRGBClient",
         side_effect=SDKVersionError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-@pytest.mark.usefixtures("mock_setup_entry", "mock_openrgb_client")
-async def test_user_flow_controller_parsing_error(
-    hass: HomeAssistant, mock_get_mac_address: MagicMock
-) -> None:
-    """Test user flow with controller parsing error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-
-    with patch(
-        "homeassistant.components.openrgb.config_flow.OpenRGBClient",
-        side_effect=ControllerParsingError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

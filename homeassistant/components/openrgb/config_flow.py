@@ -9,7 +9,7 @@ from typing import Any
 
 from getmac import get_mac_address
 from openrgb import OpenRGBClient
-from openrgb.utils import ControllerParsingError, OpenRGBDisconnected, SDKVersionError
+from openrgb.utils import OpenRGBDisconnected, SDKVersionError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
@@ -102,8 +102,8 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
                 except (
                     ConnectionRefusedError,
                     OpenRGBDisconnected,
+                    OSError,
                     SDKVersionError,
-                    ControllerParsingError,
                 ):
                     errors["base"] = "cannot_connect"
                 except Exception:
@@ -192,8 +192,8 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
                 except (
                     ConnectionRefusedError,
                     OpenRGBDisconnected,
+                    OSError,
                     SDKVersionError,
-                    ControllerParsingError,
                 ):
                     errors["base"] = "cannot_connect"
                 except Exception:

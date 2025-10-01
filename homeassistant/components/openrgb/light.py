@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from openrgb.orgb import Device
-from openrgb.utils import DeviceType, ModeData, ModeFlags, RGBColor
+from openrgb.utils import DeviceType, ModeData, ModeFlags, OpenRGBDisconnected, RGBColor
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -214,7 +214,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
 
         try:
             await self.coordinator.async_device_set_color(self.device, scaled_color)
-        except Exception as err:
+        except OpenRGBDisconnected as err:
             raise HomeAssistantError(
                 f"Failed to set color on OpenRGB SDK Server at {self.coordinator.server_address}"
             ) from err
@@ -223,7 +223,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         """Apply the given mode to the device."""
         try:
             await self.coordinator.async_device_set_mode(self.device, mode)
-        except Exception as err:
+        except OpenRGBDisconnected as err:
             raise HomeAssistantError(
                 f"Failed to set mode on OpenRGB SDK Server at {self.coordinator.server_address}"
             ) from err

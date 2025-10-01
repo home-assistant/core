@@ -7,7 +7,7 @@ import logging
 
 from openrgb import OpenRGBClient
 from openrgb.orgb import Device
-from openrgb.utils import OpenRGBDisconnected, RGBColor
+from openrgb.utils import OpenRGBDisconnected, RGBColor, SDKVersionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT, EVENT_HOMEASSISTANT_STOP
@@ -65,7 +65,12 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                     await self._async_client_connect()
                     # And then try to update once again
                     await self._async_client_update()
-        except Exception as err:
+        except (
+            ConnectionRefusedError,
+            OpenRGBDisconnected,
+            OSError,
+            SDKVersionError,
+        ) as err:
             await self.async_client_disconnect()
             raise UpdateFailed(
                 f"Unable to connect to OpenRGB SDK Server at {self.server_address}: {err}"
