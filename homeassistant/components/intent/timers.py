@@ -880,8 +880,8 @@ class StartTimerIntentHandler(intent.IntentHandler):
         """Validate that a conversation command can be executed."""
         from homeassistant.components.conversation import (  # noqa: PLC0415
             ConversationInput,
-            DefaultAgent,
             async_get_agent,
+            default_agent,
         )
 
         # Only validate if using the default agent
@@ -890,7 +890,7 @@ class StartTimerIntentHandler(intent.IntentHandler):
         )
 
         if conversation_agent is None or not isinstance(
-            conversation_agent, DefaultAgent
+            conversation_agent, default_agent.DefaultAgent
         ):
             return True  # Skip validation
 
@@ -901,6 +901,7 @@ class StartTimerIntentHandler(intent.IntentHandler):
             conversation_id=None,
             context=intent_obj.context,
             agent_id=str(intent_obj.conversation_agent_id),
+            satellite_id=None,
         )
 
         recognize_result = await conversation_agent.async_recognize_intent(test_input)
