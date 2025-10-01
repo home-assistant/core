@@ -6,6 +6,7 @@ from london_tube_status import API_URL
 
 from homeassistant.components.london_underground.const import CONF_LINE, DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_load_fixture
@@ -19,6 +20,7 @@ VALID_CONFIG = {
 async def test_valid_state(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test for operational london_underground sensor with proper attributes."""
     aioclient_mock.get(
@@ -38,6 +40,9 @@ async def test_valid_state(
         # Verify the config entry was created
         entries = hass.config_entries.async_entries(DOMAIN)
         assert len(entries) == 1
+
+        # Verify a warning was issued about YAML deprecation
+        assert issue_registry.async_get_issue(DOMAIN, "yaml_deprecated")
 
         # Check the state after setup completes
         state = hass.states.get("sensor.london_underground_metropolitan")
