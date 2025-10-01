@@ -10,6 +10,7 @@ from homeassistant.components.homeassistant_hardware import firmware_config_flow
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    ResetTarget,
 )
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -66,6 +67,11 @@ class ZBT2FirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     """Mixin for Home Assistant Connect ZBT-2 firmware methods."""
 
     context: ConfigFlowContext
+
+    # `rts_dtr` targets older adapters, `baudrate` works for newer ones. The reason we
+    # try them in this order is that on older adapters `baudrate` entered the ESP32-S3
+    # bootloader instead of the MG24 bootloader.
+    BOOTLOADER_RESET_METHODS = [ResetTarget.RTS_DTR, ResetTarget.BAUDRATE]
 
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
