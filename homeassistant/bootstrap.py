@@ -616,34 +616,44 @@ async def async_enable_logging(
         ),
     )
 
-    # Log errors to a file if we have write access to file or config dir
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO if verbose else logging.WARNING)
+
     if log_file is None:
-        err_log_path = hass.config.path(ERROR_LOG_FILENAME)
+        default_log_path = hass.config.path(ERROR_LOG_FILENAME)
+        if "SUPERVISOR" in os.environ:
+            _LOGGER.info("Running in Supervisor, not logging to file")
+            # Rename the default log file if it exists, since previous versions created
+            # it even on Supervisor
+            if os.path.isfile(default_log_path):
+                with contextlib.suppress(OSError):
+                    os.rename(default_log_path, f"{default_log_path}.old")
+            err_log_path = None
+        else:
+            err_log_path = default_log_path
     else:
         err_log_path = os.path.abspath(log_file)
 
-    err_path_exists = os.path.isfile(err_log_path)
-    err_dir = os.path.dirname(err_log_path)
+    if err_log_path:
+        err_path_exists = os.path.isfile(err_log_path)
+        err_dir = os.path.dirname(err_log_path)
 
-    # Check if we can write to the error log if it exists or that
-    # we can create files in the containing directory if not.
-    if (err_path_exists and os.access(err_log_path, os.W_OK)) or (
-        not err_path_exists and os.access(err_dir, os.W_OK)
-    ):
-        err_handler = await hass.async_add_executor_job(
-            _create_log_file, err_log_path, log_rotate_days
-        )
+        # Check if we can write to the error log if it exists or that
+        # we can create files in the containing directory if not.
+        if (err_path_exists and os.access(err_log_path, os.W_OK)) or (
+            not err_path_exists and os.access(err_dir, os.W_OK)
+        ):
+            err_handler = await hass.async_add_executor_job(
+                _create_log_file, err_log_path, log_rotate_days
+            )
 
-        err_handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
+            err_handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
+            logger.addHandler(err_handler)
 
-        logger = logging.getLogger()
-        logger.addHandler(err_handler)
-        logger.setLevel(logging.INFO if verbose else logging.WARNING)
-
-        # Save the log file location for access by other components.
-        hass.data[DATA_LOGGING] = err_log_path
-    else:
-        _LOGGER.error("Unable to set up error log %s (access denied)", err_log_path)
+            # Save the log file location for access by other components.
+            hass.data[DATA_LOGGING] = err_log_path
+        else:
+            _LOGGER.error("Unable to set up error log %s (access denied)", err_log_path)
 
     async_activate_log_queue_handler(hass)
 
