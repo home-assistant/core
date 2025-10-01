@@ -5,7 +5,7 @@ from collections.abc import Callable
 import dataclasses
 import logging
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -973,7 +973,6 @@ async def test_progress_step(
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):
         VERSION = 5
-        task_init: asyncio.Task[None] | None = None
 
         @data_entry_flow.progress_step(description_placeholders=description)
         async def async_step_init(self, user_input=None):
@@ -1013,6 +1012,215 @@ async def test_progress_step(
     # Frontend refreshes the flow
     result = await manager.async_configure(result["flow_id"])
     assert result["type"] == flow_result
+
+
+@pytest.mark.parametrize(
+    (
+        "task_init_side_effect",
+        "task_next_side_effect",
+        "flow_result_before_init",
+        "flow_result_after_init",
+        "flow_result_after_next",
+        "flow_init_events",
+        "flow_next_events",
+        "manager_call_after_init",
+        "manager_call_after_next",
+        "before_init_task_side_effect",
+        "before_next_task_side_effect",
+    ),
+    [
+        (
+            None,
+            None,
+            data_entry_flow.FlowResultType.SHOW_PROGRESS,
+            data_entry_flow.FlowResultType.SHOW_PROGRESS,
+            data_entry_flow.FlowResultType.CREATE_ENTRY,
+            1,
+            2,
+            lambda manager, result: manager.async_configure(result["flow_id"]),
+            lambda manager, result: manager.async_configure(result["flow_id"]),
+            lambda received_event, init_task_event, next_task_event: None,
+            lambda received_event, init_task_event, next_task_event: None,
+        ),
+        (
+            data_entry_flow.AbortFlow("fail"),
+            None,
+            data_entry_flow.FlowResultType.SHOW_PROGRESS,
+            data_entry_flow.FlowResultType.ABORT,
+            data_entry_flow.FlowResultType.ABORT,
+            1,
+            1,
+            lambda manager, result: manager.async_configure(result["flow_id"]),
+            lambda manager, result: AsyncMock(return_value=result)(),
+            lambda received_event, init_task_event, next_task_event: None,
+            lambda received_event, init_task_event, next_task_event: None,
+        ),
+        (
+            None,
+            data_entry_flow.AbortFlow("fail"),
+            data_entry_flow.FlowResultType.SHOW_PROGRESS,
+            data_entry_flow.FlowResultType.SHOW_PROGRESS,
+            data_entry_flow.FlowResultType.ABORT,
+            1,
+            2,
+            lambda manager, result: manager.async_configure(result["flow_id"]),
+            lambda manager, result: manager.async_configure(result["flow_id"]),
+            lambda received_event, init_task_event, next_task_event: None,
+            lambda received_event, init_task_event, next_task_event: None,
+        ),
+        (
+            None,
+            None,
+            data_entry_flow.FlowResultType.SHOW_PROGRESS,
+            data_entry_flow.FlowResultType.CREATE_ENTRY,
+            data_entry_flow.FlowResultType.CREATE_ENTRY,
+            1,
+            1,
+            lambda manager, result: manager.async_configure(result["flow_id"]),
+            lambda manager, result: AsyncMock(return_value=result)(),
+            lambda received_event,
+            init_task_event,
+            next_task_event: next_task_event.set(),
+            lambda received_event, init_task_event, next_task_event: None,
+        ),
+        (
+            None,
+            None,
+            data_entry_flow.FlowResultType.SHOW_PROGRESS_DONE,
+            data_entry_flow.FlowResultType.CREATE_ENTRY,
+            data_entry_flow.FlowResultType.CREATE_ENTRY,
+            0,
+            0,
+            lambda manager, result: manager.async_configure(result["flow_id"]),
+            lambda manager, result: AsyncMock(return_value=result)(),
+            lambda received_event,
+            init_task_event,
+            next_task_event: received_event.set()
+            or init_task_event.set()
+            or next_task_event.set(),
+            lambda received_event,
+            init_task_event,
+            next_task_event: received_event.set(),
+        ),
+        (
+            None,
+            None,
+            data_entry_flow.FlowResultType.SHOW_PROGRESS_DONE,
+            data_entry_flow.FlowResultType.SHOW_PROGRESS,
+            data_entry_flow.FlowResultType.CREATE_ENTRY,
+            0,
+            0,
+            lambda manager, result: manager.async_configure(result["flow_id"]),
+            lambda manager, result: manager.async_configure(result["flow_id"]),
+            lambda received_event,
+            init_task_event,
+            next_task_event: received_event.set() or init_task_event.set(),
+            lambda received_event,
+            init_task_event,
+            next_task_event: received_event.set(),
+        ),
+    ],
+)
+async def test_chaining_progress_steps(
+    hass: HomeAssistant,
+    manager: MockFlowManager,
+    task_init_side_effect: Exception | None,
+    task_next_side_effect: Exception | None,
+    flow_result_before_init: data_entry_flow.FlowResultType,
+    flow_result_after_init: data_entry_flow.FlowResultType,
+    flow_result_after_next: data_entry_flow.FlowResultType,
+    flow_init_events: int,
+    flow_next_events: int,
+    manager_call_after_init: Callable[
+        [MockFlowManager, data_entry_flow.FlowResult], Any
+    ],
+    manager_call_after_next: Callable[
+        [MockFlowManager, data_entry_flow.FlowResult], Any
+    ],
+    before_init_task_side_effect: Callable[
+        [asyncio.Event, asyncio.Event, asyncio.Event], None
+    ],
+    before_next_task_side_effect: Callable[
+        [asyncio.Event, asyncio.Event, asyncio.Event], None
+    ],
+) -> None:
+    """Test chaining two steps with progress_step decorators."""
+    manager.hass = hass
+    events = []
+    event_received_evt = asyncio.Event()
+    task_init_evt = asyncio.Event()
+    task_next_evt = asyncio.Event()
+    task_init_result = Mock()
+    task_init_result.side_effect = task_init_side_effect
+    task_next_result = Mock()
+    task_next_result.side_effect = task_next_side_effect
+
+    @callback
+    def capture_events(event: Event) -> None:
+        events.append(event)
+        event_received_evt.set()
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 5
+
+        def async_remove(self) -> None:
+            # Disable event received event to allow test to finish if flow is aborted.
+            event_received_evt.set()
+
+        @data_entry_flow.progress_step()
+        async def async_step_init(self, user_input=None):
+            await task_init_evt.wait()
+            task_init_result()
+
+            return await self.async_step_next()
+
+        @data_entry_flow.progress_step()
+        async def async_step_next(self, user_input=None):
+            await task_next_evt.wait()
+            task_next_result()
+
+            return await self.async_step_finish()
+
+        async def async_step_finish(self, user_input=None):
+            return self.async_create_entry(data={})
+
+    hass.bus.async_listen(
+        data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESSED,
+        capture_events,
+    )
+
+    # Run side effect before first event is awaited
+    before_init_task_side_effect(event_received_evt, task_init_evt, task_next_evt)
+
+    result = await manager.async_init("test")
+    assert result["type"] == flow_result_before_init
+    assert len(manager.async_progress()) == 1
+    assert len(manager.async_progress_by_handler("test")) == 1
+    assert manager.async_get(result["flow_id"])["handler"] == "test"
+
+    # Set task init done and wait for event
+    task_init_evt.set()
+    await event_received_evt.wait()
+    event_received_evt.clear()
+    assert len(events) == flow_init_events
+
+    # Run side effect before second event is awaited
+    before_next_task_side_effect(event_received_evt, task_init_evt, task_next_evt)
+
+    # Continue the flow if needed.
+    result = await manager_call_after_init(manager, result)
+    assert result["type"] == flow_result_after_init
+
+    # Set task next done and wait for event
+    task_next_evt.set()
+    await event_received_evt.wait()
+    event_received_evt.clear()
+    assert len(events) == flow_next_events
+
+    # Continue the flow if needed.
+    result = await manager_call_after_next(manager, result)
+    assert result["type"] == flow_result_after_next
 
 
 async def test_abort_flow_exception_step(manager: MockFlowManager) -> None:
