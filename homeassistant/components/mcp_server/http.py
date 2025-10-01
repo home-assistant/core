@@ -171,12 +171,15 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
     requires_auth = False
 
     async def get(self, request: web.Request) -> web.StreamResponse:
+        """Handle GET requests for streamable HTTP transport."""
         return await self._handle(request)
 
     async def post(self, request: web.Request) -> web.StreamResponse:
+        """Handle POST requests for streamable HTTP transport."""
         return await self._handle(request)
 
     async def delete(self, request: web.Request) -> web.StreamResponse:
+        """Handle DELETE requests for streamable HTTP transport."""
         return await self._handle(request)
 
     async def options(self, request: web.Request) -> web.StreamResponse:
@@ -317,7 +320,7 @@ def _apply_headers(
 
 
 def _headers_to_cimultidict(headers: list[tuple[bytes, bytes]]) -> CIMultiDict[str]:
-    result = CIMultiDict()
+    result: CIMultiDict[str] = CIMultiDict()
     for key, value in headers:
         result.add(key.decode("latin-1"), value.decode("latin-1"))
     return result

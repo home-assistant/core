@@ -35,7 +35,7 @@ __all__ = [
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # type: ignore[no-untyped-def]
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Model Context Protocol component."""
 
     http.async_register(hass)
@@ -102,6 +102,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if runtime is not None:
         runtime.session_manager.close()
         await runtime.streamable_runner.stop()
-        entry.runtime_data = None  # type: ignore[assignment]
+        entry.runtime_data = None
 
     return True

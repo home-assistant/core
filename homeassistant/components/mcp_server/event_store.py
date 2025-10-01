@@ -32,6 +32,7 @@ class InMemoryEventStore(EventStore):
     """Simple in-memory implementation of the StreamableHTTP event store."""
 
     def __init__(self, max_events_per_stream: int = 100) -> None:
+        """Initialize the event store with a maximum event limit per stream."""
         self.max_events_per_stream = max_events_per_stream
         self.streams: dict[StreamId, deque[EventEntry]] = {}
         self.event_index: dict[EventId, EventEntry] = {}
@@ -39,6 +40,7 @@ class InMemoryEventStore(EventStore):
     async def store_event(
         self, stream_id: StreamId, message: JSONRPCMessage
     ) -> EventId:
+        """Store an outbound message and return its event ID."""
         event_id = str(uuid4())
         entry = EventEntry(event_id=event_id, stream_id=stream_id, message=message)
 
@@ -58,6 +60,7 @@ class InMemoryEventStore(EventStore):
         last_event_id: EventId,
         send_callback: EventCallback,
     ) -> StreamId | None:
+        """Replay all events after the given event ID for reconnection."""
         entry = self.event_index.get(last_event_id)
         if entry is None:
             _LOGGER.debug("Event ID %s not found during replay", last_event_id)

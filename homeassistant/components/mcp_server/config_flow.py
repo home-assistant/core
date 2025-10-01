@@ -8,9 +8,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_LLM_HASS_API
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
 )
@@ -31,12 +31,13 @@ class ModelContextServerProtocolConfigFlow(config_entries.ConfigFlow, domain=DOM
         """Handle the initial step of the config flow."""
 
         llm_apis = {api.id: api.name for api in llm.async_get_apis(self.hass)}
+        options: list[SelectOptionDict] = [
+            SelectOptionDict(value=api_id, label=name)
+            for api_id, name in llm_apis.items()
+        ]
         selector = SelectSelector(
             SelectSelectorConfig(
-                options=[
-                    {"value": api_id, "label": name}
-                    for api_id, name in llm_apis.items()
-                ],
+                options=options,
                 multiple=True,
             )
         )

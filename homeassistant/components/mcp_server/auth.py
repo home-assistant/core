@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import partial
-from typing import Optional
+from typing import cast
+
+from pydantic import AnyHttpUrl
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import network
@@ -27,19 +29,21 @@ class HomeAssistantTokenVerifier(TokenVerifier):
     """Token verifier that delegates to Home Assistant's auth framework."""
 
     def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the token verifier."""
         self._hass = hass
 
     async def verify_token(self, token: str) -> AccessToken | None:
-        refresh_token = await self._hass.auth.async_validate_access_token(token)
+        """Verify a bearer token against Home Assistant's auth system."""
+        refresh_token = self._hass.auth.async_validate_access_token(token)
         if refresh_token is None:
             return None
 
         client_id = refresh_token.client_id or "home-assistant"
-        expires_at: Optional[float]
+        expires_at: int | None
         if refresh_token.expire_at is not None:
-            expires_at = float(refresh_token.expire_at)
+            expires_at = int(refresh_token.expire_at)
         elif refresh_token.access_token_expiration:
-            expires_at = (
+            expires_at = int(
                 refresh_token.created_at.timestamp()
                 + refresh_token.access_token_expiration.total_seconds()
             )
@@ -63,9 +67,9 @@ async def async_resolve_auth_config(hass: HomeAssistant) -> FastMCPAuthConfig:
     resource_url = f"{base_url}/{DOMAIN}"
 
     settings = AuthSettings(
-        issuer_url=issuer_url,
-        resource_server_url=resource_url,
-        service_documentation_url="https://www.home-assistant.io/integrations/mcp_server",
+        issuer_url=cast(AnyHttpUrl, issuer_url),
+        resource_server_url=cast(AnyHttpUrl, resource_url),
+        service_documentation_url=cast(AnyHttpUrl, "https://www.home-assistant.io/integrations/mcp_server"),
         required_scopes=None,
     )
 
@@ -87,7 +91,7 @@ async def _async_detect_base_url(hass: HomeAssistant) -> str:
                 prefer_external=prefer_external,
             )
             return await hass.async_add_executor_job(get_url)
-        except network.NoURLAvailableError:  # type: ignore[attr-defined]
+        except network.NoURLAvailableError:
             continue
 
     if hass.config.api is not None:

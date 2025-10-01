@@ -22,6 +22,7 @@ class StreamableHTTPManagerRunner:
     """Managed lifecycle wrapper around ``StreamableHTTPSessionManager``."""
 
     def __init__(self, manager: StreamableHTTPSessionManager) -> None:
+        """Initialize the runner with a streamable HTTP session manager."""
         self._manager = manager
         self._stop_event: asyncio.Event | None = None
         self._task: asyncio.Task[None] | None = None
