@@ -53,10 +53,19 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator):
         except (
             SmaReadException,
             SmaConnectionException,
-        ) as exc:
-            raise ConfigEntryNotReady from exc
-        except SmaAuthenticationException as exc:
-            raise ConfigEntryAuthFailed from exc
+        ) as err:
+            await self.async_close_sma_session()
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except SmaAuthenticationException as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={"error": repr(err)},
+            ) from err
 
     async def _async_update_data(self) -> None:
         """Update the used SMA sensors."""
@@ -72,3 +81,14 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator):
                 translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
+        except SmaAuthenticationException as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+
+    async def async_close_sma_session(self) -> None:
+        """Close the SMA session."""
+        await self.sma.close_session()
+        _LOGGER.debug("SMA session closed")
