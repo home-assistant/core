@@ -40,7 +40,7 @@ hass-nabucasa==1.2.0
 hassil==3.2.0
 home-assistant-bluetooth==1.13.1
 home-assistant-frontend==20251001.0
-home-assistant-intents==2025.9.24
+home-assistant-intents==2025.10.1
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.6

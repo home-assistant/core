@@ -1038,7 +1038,7 @@ holidays==0.81
 home-assistant-frontend==20251001.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.9.24
+home-assistant-intents==2025.10.1
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.3.0
