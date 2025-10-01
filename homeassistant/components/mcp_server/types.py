@@ -1,7 +1,7 @@
 """Types for the MCP server integration."""
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry  # type: ignore[import-untyped]
 
-from .session import SessionManager
+from .runtime import MCPServerRuntime
 
-type MCPServerConfigEntry = ConfigEntry[SessionManager]
+MCPServerConfigEntry = ConfigEntry[MCPServerRuntime]

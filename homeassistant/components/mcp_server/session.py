@@ -1,19 +1,14 @@
-"""Model Context Protocol sessions.
+"""Model Context Protocol sessions."""
 
-A session is a long-lived connection between the client and server that is used
-to exchange messages. The server pushes messages to the client over the session
-and the client sends messages to the server over the session.
-"""
+from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 import logging
 
-from anyio.streams.memory import MemoryObjectSendStream
-from mcp.shared.message import SessionMessage
-
-from homeassistant.util import ulid as ulid_util
+from anyio.streams.memory import MemoryObjectSendStream  # type: ignore[import-untyped]
+from mcp.shared.message import SessionMessage  # type: ignore[import-untyped]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,19 +21,17 @@ class Session:
 
 
 class SessionManager:
-    """Manage SSE sessions for the MCP transport layer.
-
-    This class is used to manage the lifecycle of SSE sessions. It is responsible for
-    creating new sessions, resuming existing sessions, and closing sessions.
-    """
+    """Manage SSE sessions for the MCP transport layer."""
 
     def __init__(self) -> None:
-        """Initialize the SSE server transport."""
+        """Initialize the SSE session manager."""
         self._sessions: dict[str, Session] = {}
 
     @asynccontextmanager
     async def create(self, session: Session) -> AsyncGenerator[str]:
         """Context manager to create a new session ID and close when done."""
+        from homeassistant.util import ulid as ulid_util  # type: ignore[import-untyped]
+
         session_id = ulid_util.ulid_now()
         _LOGGER.debug("Creating session: %s", session_id)
         self._sessions[session_id] = session
@@ -46,8 +39,7 @@ class SessionManager:
             yield session_id
         finally:
             _LOGGER.debug("Closing session: %s", session_id)
-            if session_id in self._sessions:  # close() may have already been called
-                self._sessions.pop(session_id)
+            self._sessions.pop(session_id, None)
 
     def get(self, session_id: str) -> Session | None:
         """Get an existing session."""
