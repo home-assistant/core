@@ -215,6 +215,7 @@ def create_coordinator_container_vm(
     return DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=None,
         name=f"proxmox_coordinator_{host_name}_{node_name}_{vm_id}",
         update_method=async_update_data,
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
