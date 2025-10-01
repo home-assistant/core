@@ -41,7 +41,7 @@ async def test_remove_stale_devices(
     """Test removing devices with old-format ids."""
 
     config_entry = MockConfigEntry(
-        unique_id=uuid.uuid4(),
+        unique_id=str(uuid.uuid4()),
         domain="zwave_me",
         data={CONF_TOKEN: "test_token", CONF_URL: "http://test_test"},
     )

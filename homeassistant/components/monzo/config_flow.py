@@ -51,7 +51,7 @@ class MonzoFlowHandler(
         """Create an entry for the flow."""
         self.oauth_data = data
         user_id = data[CONF_TOKEN]["user_id"]
-        await self.async_set_unique_id(user_id)
+        await self.async_set_unique_id(str(user_id))
         if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured()
         else:

@@ -35,7 +35,7 @@ class ArveConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             except ArveConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(customer.customerId)
+                await self.async_set_unique_id(str(customer.customerId))
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title="Arve",

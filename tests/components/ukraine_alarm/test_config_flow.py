@@ -214,7 +214,7 @@ async def test_max_regions(hass: HomeAssistant) -> None:
     for i in range(5):
         MockConfigEntry(
             domain=DOMAIN,
-            unique_id=i,
+            unique_id=str(i),
         ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(

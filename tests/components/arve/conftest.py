@@ -27,7 +27,10 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_config_entry(hass: HomeAssistant, mock_arve: MagicMock) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title="Arve", domain=DOMAIN, data=USER_INPUT, unique_id=mock_arve.customer_id
+        title="Arve",
+        domain=DOMAIN,
+        data=USER_INPUT,
+        unique_id=str(mock_arve.customer_id),
     )
 
 

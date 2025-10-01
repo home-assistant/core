@@ -11,7 +11,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -132,23 +131,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     # convert unique_id to string
     if entry.version == 1 and entry.minor_version == 1:
-        if isinstance(entry.unique_id, int):
-            hass.config_entries.async_update_entry(
-                entry, unique_id=str(entry.unique_id)
-            )
-            device_registry = dr.async_get(hass)
-            for device in dr.async_entries_for_config_entry(
-                device_registry, entry.entry_id
-            ):
-                new_identifiers = set()
-                for identifier in device.identifiers:
-                    if identifier[0] == DOMAIN:
-                        new_identifiers.add((DOMAIN, str(identifier[1])))
-                    else:
-                        new_identifiers.add(identifier)
-                device_registry.async_update_device(
-                    device.id, new_identifiers=new_identifiers
-                )
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
     return True
