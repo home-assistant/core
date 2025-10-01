@@ -69,7 +69,9 @@ async def async_resolve_auth_config(hass: HomeAssistant) -> FastMCPAuthConfig:
     settings = AuthSettings(
         issuer_url=cast(AnyHttpUrl, issuer_url),
         resource_server_url=cast(AnyHttpUrl, resource_url),
-        service_documentation_url=cast(AnyHttpUrl, "https://www.home-assistant.io/integrations/mcp_server"),
+        service_documentation_url=cast(
+            AnyHttpUrl, "https://www.home-assistant.io/integrations/mcp_server"
+        ),
         required_scopes=None,
     )
 

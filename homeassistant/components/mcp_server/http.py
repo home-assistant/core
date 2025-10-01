@@ -210,7 +210,9 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
         ) -> None:
             # Cast send to MutableMapping for handle_request
             await runtime.streamable_manager.handle_request(
-                scope, receive, cast(Callable[[MutableMapping[str, Any]], Awaitable[None]], send)
+                scope,
+                receive,
+                cast(Callable[[MutableMapping[str, Any]], Awaitable[None]], send),
             )
 
         try:
