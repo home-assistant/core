@@ -2180,8 +2180,8 @@ async def test_options_flow_defaults(
     )
     await hass.async_block_till_done()
 
-    assert result7["type"] is FlowResultType.CREATE_ENTRY
-    assert result7["data"] == {}
+    assert result7["type"] is FlowResultType.ABORT
+    assert result7["reason"] == "reconfigure_successful"
 
     # The updated entry contains correct settings
     assert entry.data == {
