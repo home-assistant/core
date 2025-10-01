@@ -86,18 +86,18 @@ async def test_session_scope_not_setup(
 async def test_recorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -> None:
     """Bad execute, retry 3 times."""
 
-    def to_native(validate_entity_id=True):
+    def _all():
         """Raise exception."""
         raise SQLAlchemyError
 
     mck1 = MagicMock()
-    mck1.to_native = to_native
+    mck1.all = _all
 
     with (
         pytest.raises(SQLAlchemyError),
         patch("homeassistant.components.recorder.core.time.sleep") as e_mock,
     ):
-        util.execute((mck1,), to_native=True)
+        util.execute(mck1)
 
     assert e_mock.call_count == 2
 
