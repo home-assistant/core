@@ -19,7 +19,7 @@ attrs==25.3.0
 audioop-lts==0.2.1
 av==13.1.0
 awesomeversion==25.5.0
-bcrypt==4.3.0
+bcrypt==5.0.0
 bleak-retry-connector==4.4.3
 bleak==1.0.1
 bluetooth-adapters==2.1.0
