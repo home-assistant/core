@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import abstractmethod
 import collections
 from contextlib import suppress
+from enum import StrEnum
 import json
 from typing import Any
 
@@ -82,9 +83,6 @@ FORMATION_UPLOAD_MANUAL_BACKUP = "upload_manual_backup"
 CHOOSE_AUTOMATIC_BACKUP = "choose_automatic_backup"
 OVERWRITE_COORDINATOR_IEEE = "overwrite_coordinator_ieee"
 
-OPTIONS_INTENT_MIGRATE = "intent_migrate"
-OPTIONS_INTENT_RECONFIGURE = "intent_reconfigure"
-
 UPLOADED_BACKUP_FILE = "uploaded_backup_file"
 
 REPAIR_MY_URL = "https://my.home-assistant.io/redirect/repairs/"
@@ -100,6 +98,13 @@ ZEROCONF_PROPERTIES_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+
+class OptionsMigrationIntent(StrEnum):
+    """Zigbee options flow intents."""
+
+    MIGRATE = "intent_migrate"
+    RECONFIGURE = "intent_reconfigure"
 
 
 def _format_backup_choice(
@@ -930,6 +935,8 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
     """Handle an options flow."""
 
+    _migration_intent: OptionsMigrationIntent
+
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         super().__init__()
@@ -971,8 +978,8 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
         return self.async_show_menu(
             step_id="prompt_migrate_or_reconfigure",
             menu_options=[
-                OPTIONS_INTENT_RECONFIGURE,
-                OPTIONS_INTENT_MIGRATE,
+                OptionsMigrationIntent.RECONFIGURE,
+                OptionsMigrationIntent.MIGRATE,
             ],
         )
 
@@ -980,30 +987,26 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Virtual step for when the user is reconfiguring the integration."""
+        self._migration_intent = OptionsMigrationIntent.RECONFIGURE
         return await self.async_step_choose_serial_port()
 
     async def async_step_intent_migrate(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm the user wants to reset their current radio."""
+        self._migration_intent = OptionsMigrationIntent.MIGRATE
+        return await self.async_step_choose_serial_port()
 
-        if user_input is not None:
-            await self._radio_mgr.async_reset_adapter()
-
-            return await self.async_step_instruct_unplug()
-
-        return self.async_show_form(step_id="intent_migrate")
-
-    async def async_step_instruct_unplug(
+    async def async_step_maybe_reset_old_radio(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Instruct the user to unplug the current radio, if possible."""
+        """Erase the old radio's network settings before migration."""
 
-        if user_input is not None:
-            # Now that the old radio is gone, we can scan for serial ports again
-            return await self.async_step_choose_serial_port()
+        # If we are reconfiguring, the old radio will not be available
+        if self._migration_intent is OptionsMigrationIntent.RECONFIGURE:
+            return await self.async_step_maybe_confirm_ezsp_restore()
 
-        return self.async_show_form(step_id="instruct_unplug")
+        return await super().async_step_maybe_reset_old_radio(user_input)
 
     async def _async_create_radio_entry(self):
         """Re-implementation of the base flow's final step to update the config."""
@@ -1018,8 +1021,7 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
         # Reload ZHA after we finish
         await self.hass.config_entries.async_setup(self.config_entry.entry_id)
 
-        # Intentionally do not set `data` to avoid creating `options`, we set it above
-        return self.async_create_entry(title=self._title, data={})
+        return self.async_abort(reason="reconfigure_successful")
 
     def async_remove(self):
         """Maybe reload ZHA if the flow is aborted."""

@@ -147,10 +147,6 @@
         "title": "[%key:component::zha::options::step::prompt_migrate_or_reconfigure::menu_options::intent_migrate%]",
         "description": "Before plugging in your new adapter, your old adapter needs to be reset. An automatic backup will be performed. If you are using a combined Z-Wave and Zigbee adapter like the HUSBZB-1, this will only reset the Zigbee portion.\n\n*Note: if you are migrating from a **ConBee/RaspBee**, make sure it is running firmware `0x26720700` or newer! Otherwise, some devices may not be controllable after migrating until they are power cycled.*\n\nDo you wish to continue?"
       },
-      "instruct_unplug": {
-        "title": "Unplug your old adapter",
-        "description": "Your old adapter has been reset. If the hardware is no longer needed, you can now unplug it.\n\nYou can now plug in your new adapter."
-      },
       "choose_serial_port": {
         "title": "[%key:component::zha::config::step::choose_serial_port::title%]",
         "data": {
@@ -240,7 +236,8 @@
       "cannot_resolve_path": "[%key:component::zha::config::abort::cannot_resolve_path%]",
       "wrong_firmware_installed": "[%key:component::zha::config::abort::wrong_firmware_installed%]",
       "cannot_restore_backup": "[%key:component::zha::config::abort::cannot_restore_backup%]",
-      "cannot_restore_backup_no_ieee_confirm": "[%key:component::zha::config::abort::cannot_restore_backup_no_ieee_confirm%]"
+      "cannot_restore_backup_no_ieee_confirm": "[%key:component::zha::config::abort::cannot_restore_backup_no_ieee_confirm%]",
+      "reconfigure_successful": "[%key:component::zha::config::abort::reconfigure_successful%]"
     }
   },
   "config_panel": {
