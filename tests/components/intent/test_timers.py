@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components import conversation
-from homeassistant.components.conversation import DATA_DEFAULT_ENTITY
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent.timers import (
     MultipleTimersMatchedError,
@@ -1479,19 +1478,12 @@ async def test_start_timer_with_invalid_conversation_command(
     device_id = "test_device"
     timer_name = "test timer"
     invalid_command = "invalid command that does not exist"
-    agent_id = "test_agent"
+    agent_id = None  # Default agent
 
     mock_handle_timer = MagicMock()
     async_register_timer_handler(hass, device_id, mock_handle_timer)
 
-    agent = hass.data[DATA_DEFAULT_ENTITY]
-
-    with (
-        patch(
-            "homeassistant.components.conversation.async_get_agent", return_value=agent
-        ),
-        pytest.raises(intent.IntentHandleError) as exc_info,
-    ):
+    with pytest.raises(intent.IntentHandleError) as exc_info:
         await intent.async_handle(
             hass,
             "test",
