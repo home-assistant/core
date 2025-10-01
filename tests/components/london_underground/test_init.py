@@ -16,11 +16,10 @@ async def test_reload_entry(hass: HomeAssistant) -> None:
         options={"line": ["Bakerloo"]},
     )
     with patch(
-        "homeassistant.components.london_underground.LondonTubeCoordinator"
-    ) as mock_cls:
-        # Make the constructor return a mock with an async method
-        mock_instance = mock_cls.return_value
-        mock_instance.async_config_entry_first_refresh = AsyncMock(return_value=True)
+        "homeassistant.components.london_underground.TubeData"
+    ) as mock_tube_data:
+        mock_tube_data_instance = mock_tube_data.return_value
+        mock_tube_data_instance.update = AsyncMock()
 
         entry.add_to_hass(hass)
 
@@ -36,4 +35,4 @@ async def test_reload_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # Verify that setup was called for each reload
-        assert len(mock_instance.mock_calls) > 0
+        assert len(mock_tube_data_instance.mock_calls) > 0
