@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any
 
 from volvocarsapi.models import VolvoApiException, VolvoCarsApiBaseModel
 
@@ -25,7 +24,6 @@ class VolvoButtonDescription(ButtonEntityDescription, VolvoEntityDescription):
 
     api_command: str
     required_command_key: str
-    data: dict[str, Any] | None = None
 
 
 _DESCRIPTIONS: tuple[VolvoButtonDescription, ...] = (
@@ -40,19 +38,6 @@ _DESCRIPTIONS: tuple[VolvoButtonDescription, ...] = (
         api_command="climatization-stop",
         required_command_key="CLIMATIZATION_STOP",
         icon="mdi:air-conditioner",
-    ),
-    VolvoButtonDescription(
-        key="engine_start",
-        api_command="engine-start",
-        required_command_key="ENGINE_START",
-        icon="mdi:engine",
-        data={"runtimeMinutes": 15},
-    ),
-    VolvoButtonDescription(
-        key="engine_stop",
-        api_command="engine-stop",
-        required_command_key="ENGINE_STOP",
-        icon="mdi:engine-off",
     ),
     VolvoButtonDescription(
         key="flash",
@@ -112,7 +97,7 @@ class VolvoCarsButton(VolvoEntity, ButtonEntity):
             _LOGGER.debug("Command %s executing", self.entity_description.api_command)
 
             result = await self.coordinator.context.api.async_execute_command(
-                self.entity_description.api_command, self.entity_description.data
+                self.entity_description.api_command
             )
 
             status = result.invoke_status if result else ""

@@ -194,12 +194,6 @@
       "climatization_stop": {
         "name": "Stop climatization"
       },
-      "engine_start": {
-        "name": "Start engine"
-      },
-      "engine_stop": {
-        "name": "Stop engine"
-      },
       "flash": {
         "name": "Flash"
       },

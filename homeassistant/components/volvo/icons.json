@@ -267,12 +267,6 @@
       "climatization_stop": {
         "default": "mdi:air-conditioner"
       },
-      "engine_start": {
-        "default": "mdi:engine"
-      },
-      "engine_stop": {
-        "default": "mdi:engine-off"
-      },
       "flash": {
         "default": "mdi:alarm-light-outline"
       },
