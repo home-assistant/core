@@ -93,7 +93,7 @@
     "control": "open",
     "work_state": "opening",
     "percent_state": 0,
-    "percent_control": 100,
+    "percent_control": 62,
     "control_back_mode": "back",
     "border": "up"
   },
