@@ -12,24 +12,15 @@ from openrgb import OpenRGBClient
 from openrgb.utils import OpenRGBDisconnected, SDKVersionError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DEFAULT_CLIENT_NAME, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-    }
-)
 
 
 async def validate_input(hass: HomeAssistant, host: str, port: int) -> None:
@@ -70,8 +61,6 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _reconfigure_entry: ConfigEntry | None = None
-
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -103,11 +92,9 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Try to get MAC address to register for DHCP discovery
                 mac = await _async_get_mac(self.hass, host)
 
-                data_updates = {CONF_HOST: host, CONF_PORT: port, CONF_MAC: mac}
-
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
-                    data_updates=data_updates,
+                    data_updates={CONF_HOST: host, CONF_PORT: port, CONF_MAC: mac},
                 )
 
         return self.async_show_form(
@@ -135,13 +122,12 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
 
         for entry in self._async_current_entries():
             if entry.data[CONF_MAC] == mac:
-                self.hass.config_entries.async_update_entry(
+                update_ok = self.hass.config_entries.async_update_entry(
                     entry,
                     data=entry.data | {CONF_HOST: discovery_info.ip},
                 )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
+                if update_ok:
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="already_configured")
 
         return self.async_abort(reason="unknown")
@@ -180,22 +166,22 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
 
-                # Build config entry data
-                data: dict[str, Any] = {CONF_HOST: host, CONF_PORT: port}
-                if mac is not None:
-                    data[CONF_MAC] = mac
-
-                title = f"OpenRGB ({mac})" if mac else f"OpenRGB ({host}:{port})"
+                if mac is None:
+                    title = f"OpenRGB ({host}:{port})"
+                else:
+                    title = f"OpenRGB ({mac})"
 
                 return self.async_create_entry(
-                    title=title,
-                    data=data,
+                    title=title, data={CONF_HOST: host, CONF_PORT: port, CONF_MAC: mac}
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): str,
+                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                }
+            ),
+            errors=errors,
         )
-
-
-class UnableToDetermineMac(HomeAssistantError):
-    """Error to indicate it is unable to determine MAC address for a given host."""
