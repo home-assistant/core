@@ -666,7 +666,8 @@ class ZwaveColorOnOffLight(ZwaveLight):
             if blue is not None:
                 last_color[ColorComponent.BLUE] = blue
 
-            if last_color:
+            # Only store the last color if we're aware of it, i.e. ignore off light
+            if last_color and max(last_color.values()) > 0:
                 self._last_on_color = last_color
 
         if self._target_brightness:
