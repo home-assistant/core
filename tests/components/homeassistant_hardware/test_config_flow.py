@@ -25,6 +25,7 @@ from homeassistant.components.homeassistant_hardware.firmware_config_flow import
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    ResetTarget,
 )
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
@@ -299,7 +300,7 @@ def mock_firmware_info(
         device: str,
         fw_data: bytes,
         expected_installed_firmware_type: ApplicationType,
-        bootloader_reset_methods: Sequence[str] = (),
+        bootloader_reset_methods: Sequence[ResetTarget] = (),
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> FirmwareInfo:
         await asyncio.sleep(0)

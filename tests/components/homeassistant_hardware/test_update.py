@@ -29,6 +29,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
     OwningIntegration,
+    ResetTarget,
 )
 from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
@@ -361,7 +362,7 @@ async def test_update_entity_installation(
         device: str,
         fw_data: bytes,
         expected_installed_firmware_type: ApplicationType,
-        bootloader_reset_methods: Sequence[str] = (),
+        bootloader_reset_methods: Sequence[ResetTarget] = (),
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> FirmwareInfo:
         await asyncio.sleep(0)
