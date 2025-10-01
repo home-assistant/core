@@ -26,7 +26,6 @@ _LOGGER = logging.getLogger(__name__)
 class SMADataUpdateCoordinator(DataUpdateCoordinator):
     """Data Update Coordinator for SMA."""
 
-    sma: SMA
     config_entry: ConfigEntry
 
     def __init__(

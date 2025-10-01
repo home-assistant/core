@@ -845,7 +845,6 @@ async def async_setup_entry(
     async_add_entities(
         SMAsensor(
             coordinator,
-            entry.unique_id,
             SENSOR_ENTITIES.get(sensor.name),
             sensor,
             entry,
@@ -860,7 +859,6 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
     def __init__(
         self,
         coordinator: SMADataUpdateCoordinator,
-        config_entry_unique_id: str,
         description: SensorEntityDescription | None,
         pysma_sensor: pysma.sensor.Sensor,
         entry: SMAConfigEntry,
@@ -887,7 +885,7 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
             serial_number=coordinator.sma_device_info["serial"],
         )
         self._attr_unique_id = (
-            f"{config_entry_unique_id}-{pysma_sensor.key}_{pysma_sensor.key_idx}"
+            f"{entry.unique_id}-{pysma_sensor.key}_{pysma_sensor.key_idx}"
         )
 
         # Set sensor enabled to False.

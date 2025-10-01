@@ -69,6 +69,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SMAConfigEntry) -> bool:
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # A habbit is that SMA stay open. Enforce closing the session on shutdown
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, coordinator.async_close_sma_session
+    )
+
     return True
 
 
