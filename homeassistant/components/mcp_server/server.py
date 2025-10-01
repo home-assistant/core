@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import json
-import logging
 from collections.abc import Callable, Sequence
 from importlib.metadata import PackageNotFoundError, version
+import json
+import logging
 from typing import Any
 
 from mcp import types

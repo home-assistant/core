@@ -6,13 +6,12 @@ from dataclasses import dataclass
 from functools import partial
 from typing import cast
 
+from mcp.server.auth.provider import AccessToken, TokenVerifier
+from mcp.server.auth.settings import AuthSettings
 from pydantic import AnyHttpUrl
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import network
-
-from mcp.server.auth.provider import AccessToken, TokenVerifier
-from mcp.server.auth.settings import AuthSettings
 
 from .const import DOMAIN
 

@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from collections.abc import Awaitable, Callable, MutableMapping
+import logging
 from typing import Any, cast
 
 from aiohttp import web
@@ -16,17 +16,17 @@ from mcp import types
 from mcp.shared.message import SessionMessage
 from multidict import CIMultiDict
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.components import conversation
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
 
 from .const import DOMAIN, MESSAGES_API, SSE_API, STREAMABLE_HTTP_API
 from .runtime import MCPServerRuntime
-from .session import Session
 from .server import create_server
+from .session import Session
 
 _LOGGER = logging.getLogger(__name__)
 
