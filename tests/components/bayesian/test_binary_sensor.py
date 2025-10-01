@@ -263,6 +263,7 @@ async def _test_sensor_numeric_state(
 
 async def test_sensor_state(hass: HomeAssistant) -> None:
     """Test sensor on state platform observations."""
+    prior = 0.2
     config = {
         "binary_sensor": {
             "name": "Test_Binary",
@@ -276,7 +277,7 @@ async def test_sensor_state(hass: HomeAssistant) -> None:
                     "prob_given_false": 0.4,
                 }
             ],
-            "prior": 0.2,
+            "prior": prior,
             "probability_threshold": 0.32,
         }
     }
@@ -284,19 +285,18 @@ async def test_sensor_state(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "binary_sensor", config)
     await hass.async_block_till_done()
 
-    await _test_sensor_state(
-        hass,
-    )
+    await _test_sensor_state(hass, prior)
 
 
 async def test_sensor_state_config_entry(hass: HomeAssistant) -> None:
     """Test sensor on template platform observations."""
+    prior = 0.2
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
             "name": "Test_Binary",
-            "prior": 0.2,
+            "prior": prior,
             "probability_threshold": 0.32,
         },
         subentries_data=[
@@ -321,10 +321,10 @@ async def test_sensor_state_config_entry(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    await _test_sensor_state(hass)
+    await _test_sensor_state(hass, prior)
 
 
-async def _test_sensor_state(hass: HomeAssistant) -> None:
+async def _test_sensor_state(hass: HomeAssistant, prior: float) -> None:
     """Common test code for state-based observations."""
     hass.states.async_set("sensor.test_monitored", "on")
     await hass.async_block_till_done()
@@ -355,7 +355,7 @@ async def _test_sensor_state(hass: HomeAssistant) -> None:
     state = hass.states.get("binary_sensor.test_binary")
 
     assert state.attributes.get("occurred_observation_entities") == []
-    assert abs(0.2 - state.attributes.get("probability")) < 0.01
+    assert abs(prior - state.attributes.get("probability")) < 0.01
     assert state.state == "off"
 
     hass.states.async_set("sensor.test_monitored", STATE_UNAVAILABLE)
@@ -363,7 +363,7 @@ async def _test_sensor_state(hass: HomeAssistant) -> None:
     state = hass.states.get("binary_sensor.test_binary")
 
     assert state.attributes.get("occurred_observation_entities") == []
-    assert abs(0.2 - state.attributes.get("probability")) < 0.01
+    assert abs(prior - state.attributes.get("probability")) < 0.01
     assert state.state == "off"
 
     hass.states.async_set("sensor.test_monitored", STATE_UNKNOWN)
@@ -371,7 +371,7 @@ async def _test_sensor_state(hass: HomeAssistant) -> None:
     state = hass.states.get("binary_sensor.test_binary")
 
     assert state.attributes.get("occurred_observation_entities") == []
-    assert abs(0.2 - state.attributes.get("probability")) < 0.01
+    assert abs(prior - state.attributes.get("probability")) < 0.01
     assert state.state == "off"
 
 
@@ -681,7 +681,7 @@ async def test_multiple_observations(hass: HomeAssistant) -> None:
     Before the merge of #67631 this practice was a common work-around for bayesian's ignoring of negative observations,
     this also preserves that function
     """
-
+    prior = 0.2
     config = {
         "binary_sensor": {
             "name": "Test_Binary",
@@ -702,24 +702,25 @@ async def test_multiple_observations(hass: HomeAssistant) -> None:
                     "prob_given_false": 0.6,
                 },
             ],
-            "prior": 0.2,
+            "prior": prior,
             "probability_threshold": 0.32,
         }
     }
 
     assert await async_setup_component(hass, "binary_sensor", config)
     await hass.async_block_till_done()
-    await _test_multiple_observations(hass)
+    await _test_multiple_observations(hass, prior)
 
 
 async def test_multiple_observations_config_entry(hass: HomeAssistant) -> None:
     """Test sensor on multiple observations."""
+    prior = 0.2
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
             "name": "Test_Binary",
-            "prior": 0.2,
+            "prior": prior,
             "probability_threshold": 0.32,
         },
         subentries_data=[
@@ -756,10 +757,10 @@ async def test_multiple_observations_config_entry(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    await _test_multiple_observations(hass)
+    await _test_multiple_observations(hass, prior)
 
 
-async def _test_multiple_observations(hass: HomeAssistant) -> None:
+async def _test_multiple_observations(hass: HomeAssistant, prior: float) -> None:
     """Common test code for multiple observations."""
     hass.states.async_set("sensor.test_monitored", "off")
     await hass.async_block_till_done()
@@ -769,7 +770,7 @@ async def _test_multiple_observations(hass: HomeAssistant) -> None:
     for attrs in state.attributes.values():
         json.dumps(attrs)
     assert state.attributes.get("occurred_observation_entities") == []
-    assert state.attributes.get("probability") == 0.2
+    assert state.attributes.get("probability") == prior
     # probability should be the same as the prior as negative observations are ignored in multi-state
 
     assert state.state == "off"
@@ -1928,6 +1929,7 @@ async def _test_update_request_without_template(hass: HomeAssistant) -> None:
 
 async def test_monitored_sensor_goes_away(hass: HomeAssistant) -> None:
     """Test sensor on state platform observations that goes away."""
+    prior = 0.2
     config = {
         "binary_sensor": {
             "name": "Test_Binary",
@@ -1941,26 +1943,27 @@ async def test_monitored_sensor_goes_away(hass: HomeAssistant) -> None:
                     "prob_given_false": 0.4,
                 },
             ],
-            "prior": 0.2,
+            "prior": prior,
             "probability_threshold": 0.32,
         }
     }
 
     await async_setup_component(hass, "binary_sensor", config)
 
-    await _test_monitored_sensor_goes_away(hass)
+    await _test_monitored_sensor_goes_away(hass, prior)
 
 
 async def test_monitored_sensor_goes_away_config_entry(
     hass: HomeAssistant,
 ) -> None:
     """Test template sensor with template error using config entry."""
+    prior = 0.2
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
             "name": "Test_Binary",
-            "prior": 0.2,
+            "prior": prior,
             "probability_threshold": 0.32,
         },
         subentries_data=[
@@ -1984,10 +1987,10 @@ async def test_monitored_sensor_goes_away_config_entry(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    await _test_monitored_sensor_goes_away(hass)
+    await _test_monitored_sensor_goes_away(hass, prior)
 
 
-async def _test_monitored_sensor_goes_away(hass: HomeAssistant) -> None:
+async def _test_monitored_sensor_goes_away(hass: HomeAssistant, prior: float) -> None:
     """Common test code for state update."""
 
     await async_setup_component(hass, HA_DOMAIN, {})
@@ -2005,14 +2008,14 @@ async def _test_monitored_sensor_goes_away(hass: HomeAssistant) -> None:
 
     assert (
         hass.states.get("binary_sensor.test_binary").attributes.get("probability")
-        == 0.2
+        == prior
     )
     assert hass.states.get("binary_sensor.test_binary").state == "off"
 
     hass.states.async_set("sensor.test_monitored", STATE_UNAVAILABLE)
     assert (
         hass.states.get("binary_sensor.test_binary").attributes.get("probability")
-        == 0.2
+        == prior
     )
     assert hass.states.get("binary_sensor.test_binary").state == "off"
 
