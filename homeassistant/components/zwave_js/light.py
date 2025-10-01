@@ -631,8 +631,9 @@ class ZwaveColorOnOffLight(ZwaveLight):
             elif current_brightness is not None:
                 scale = current_brightness / 255
 
-        # Reset last color until turning off again
+        # Reset last color and brightness until turning off again
         self._last_on_color = None
+        self._last_brightness = None
 
         if new_colors is None:
             new_colors = self._get_new_colors(
@@ -648,8 +649,10 @@ class ZwaveColorOnOffLight(ZwaveLight):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
 
-        # Remember last color and brightness to restore it when turning on
-        self._last_brightness = self.brightness
+        # Remember last color and brightness to restore it when turning on,
+        # only if we're sure the light is turned on to avoid overwriting good values
+        if self._last_brightness is None:
+            self._last_brightness = self.brightness
         if self._current_color and isinstance(self._current_color.value, dict):
             red = self._current_color.value.get(COLOR_SWITCH_COMBINED_RED)
             green = self._current_color.value.get(COLOR_SWITCH_COMBINED_GREEN)
