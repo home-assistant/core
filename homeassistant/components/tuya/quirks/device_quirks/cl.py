@@ -20,6 +20,13 @@ from ..homeassistant import TuyaCoverDeviceClass, TuyaEntityCategory
         set_position_dp_code="percent_control",
         device_class=TuyaCoverDeviceClass.CURTAIN,
     )
+    .add_select(
+        key="control_back_mode",
+        translation_key="curtain_motor_mode",
+        translation_string="Motor mode",
+        entity_category=TuyaEntityCategory.CONFIG,
+        state_translations={"forward": "Forward", "back": "Back"},
+    )
     .register(TUYA_QUIRKS_REGISTRY)
 )
 (
@@ -33,6 +40,13 @@ from ..homeassistant import TuyaCoverDeviceClass, TuyaEntityCategory
         translation_string="[%key:component::cover::entity_component::curtain::name%]",
         current_state_dp_code="control",
         device_class=TuyaCoverDeviceClass.CURTAIN,
+    )
+    .add_select(
+        key="control_back_mode",
+        translation_key="curtain_motor_mode",
+        translation_string="Motor mode",
+        entity_category=TuyaEntityCategory.CONFIG,
+        state_translations={"forward": "Forward", "back": "Back"},
     )
     .add_sensor(
         key="time_total",

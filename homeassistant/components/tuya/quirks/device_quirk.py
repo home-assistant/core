@@ -40,6 +40,13 @@ class TuyaCoverDefinition(BaseTuyaDefinition):
 
 
 @dataclass(kw_only=True)
+class TuyaSelectDefinition(BaseTuyaDefinition):
+    """Definition for a select entity."""
+
+    state_translations: dict[str, str] | None = None
+
+
+@dataclass(kw_only=True)
 class TuyaSensorDefinition(BaseTuyaDefinition):
     """Definition for a sensor entity."""
 
@@ -51,12 +58,14 @@ class TuyaDeviceQuirk:
 
     _applies_to: list[tuple[str, str]]
     cover_definitions: list[TuyaCoverDefinition]
+    select_definitions: list[TuyaSelectDefinition]
     sensor_definitions: list[TuyaSensorDefinition]
 
     def __init__(self) -> None:
         """Initialize the quirk."""
         self._applies_to = []
         self.cover_definitions = []
+        self.select_definitions = []
         self.sensor_definitions = []
 
         current_frame = inspect.currentframe()
@@ -100,6 +109,28 @@ class TuyaDeviceQuirk:
                 current_state_dp_code=current_state_dp_code,
                 current_position_dp_code=current_position_dp_code,
                 set_position_dp_code=set_position_dp_code,
+            )
+        )
+        return self
+
+    def add_select(
+        self,
+        *,
+        key: str,
+        translation_key: str,
+        translation_string: str,
+        entity_category: TuyaEntityCategory | None = None,
+        # Select specific
+        state_translations: dict[str, str] | None = None,
+    ) -> Self:
+        """Add select definition."""
+        self.select_definitions.append(
+            TuyaSelectDefinition(
+                key=key,
+                translation_key=translation_key,
+                translation_string=translation_string,
+                entity_category=entity_category,
+                state_translations=state_translations,
             )
         )
         return self

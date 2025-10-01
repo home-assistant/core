@@ -8,7 +8,12 @@ import pathlib
 import pkgutil
 import sys
 
-from .device_quirk import TuyaCoverDefinition, TuyaDeviceQuirk, TuyaSensorDefinition
+from .device_quirk import (
+    TuyaCoverDefinition,
+    TuyaDeviceQuirk,
+    TuyaSelectDefinition,
+    TuyaSensorDefinition,
+)
 from .homeassistant import TuyaCoverDeviceClass, TuyaSensorDeviceClass, parse_enum
 from .registry import QuirksRegistry
 
@@ -18,6 +23,7 @@ __all__ = [
     "TuyaCoverDefinition",
     "TuyaCoverDeviceClass",
     "TuyaDeviceQuirk",
+    "TuyaSelectDefinition",
     "TuyaSensorDefinition",
     "TuyaSensorDeviceClass",
     "parse_enum",

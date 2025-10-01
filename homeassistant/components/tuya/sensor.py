@@ -1667,10 +1667,7 @@ async def async_setup_entry(
                         device, manager, _create_quirk_description(definition)
                     )
                     for definition in quirk.sensor_definitions
-                    if (
-                        definition.key in device.function
-                        or definition.key in device.status_range
-                    )
+                    if definition.key in device.status
                 )
             elif descriptions := SENSORS.get(device.category):
                 entities.extend(

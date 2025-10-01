@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
+from .quirks import TUYA_QUIRKS_REGISTRY, TuyaSelectDefinition, parse_enum
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default instructions set of each category end up being a select.
@@ -343,6 +344,16 @@ SELECTS[DeviceCategory.DGHSXJ] = SELECTS[DeviceCategory.SP]
 SELECTS[DeviceCategory.PC] = SELECTS[DeviceCategory.KG]
 
 
+def _create_quirk_description(
+    definition: TuyaSelectDefinition,
+) -> SelectEntityDescription:
+    return SelectEntityDescription(
+        key=DPCode(definition.key),
+        translation_key=definition.translation_key,
+        entity_category=parse_enum(EntityCategory, definition.entity_category),
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -357,7 +368,15 @@ async def async_setup_entry(
         entities: list[TuyaSelectEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if descriptions := SELECTS.get(device.category):
+            if quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device):
+                entities.extend(
+                    TuyaSelectEntity(
+                        device, manager, _create_quirk_description(definition)
+                    )
+                    for definition in quirk.select_definitions
+                    if definition.key in device.status
+                )
+            elif descriptions := SELECTS.get(device.category):
                 entities.extend(
                     TuyaSelectEntity(device, manager, description)
                     for description in descriptions
