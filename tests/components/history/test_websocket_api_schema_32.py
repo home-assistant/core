@@ -5,7 +5,6 @@ from collections.abc import Generator
 import pytest
 
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -25,8 +24,9 @@ def db_schema_32(hass: HomeAssistant) -> Generator[None]:
         yield
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_during_period(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history_during_period."""
     now = dt_util.utcnow()
