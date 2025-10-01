@@ -20,6 +20,9 @@ from homeassistant.components import onboarding, usb
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import AddonError, AddonState
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
+from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
+    ZigbeeFlowStrategy,
+)
 from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
@@ -163,6 +166,7 @@ async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
 class BaseZhaFlow(ConfigEntryBaseFlow):
     """Mixin for common ZHA flow steps and forms."""
 
+    _flow_strategy: ZigbeeFlowStrategy | None = None
     _hass: HomeAssistant
     _title: str
 
@@ -316,7 +320,9 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
                 }
             )
 
-            if await self._radio_mgr.radio_type.controller.probe(user_input):
+            if await self._radio_mgr.radio_type.controller.probe(
+                self._radio_mgr.device_settings
+            ):
                 return await self.async_step_verify_radio()
 
             errors["base"] = "cannot_connect"
@@ -373,6 +379,12 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Choose how to set up the integration from scratch."""
+        if self._flow_strategy == ZigbeeFlowStrategy.RECOMMENDED:
+            # Fast path: automatically form a new network
+            return await self.async_step_setup_strategy_recommended()
+        if self._flow_strategy == ZigbeeFlowStrategy.ADVANCED:
+            # Advanced path: let the user choose
+            return await self.async_step_setup_strategy_advanced()
 
         # Allow onboarding for new users to just create a new network automatically
         if (
@@ -406,6 +418,12 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Choose how to deal with the current radio's settings during migration."""
+        if self._flow_strategy == ZigbeeFlowStrategy.RECOMMENDED:
+            # Fast path: automatically migrate everything
+            return await self.async_step_migration_strategy_recommended()
+        if self._flow_strategy == ZigbeeFlowStrategy.ADVANCED:
+            # Advanced path: let the user choose
+            return await self.async_step_migration_strategy_advanced()
         return self.async_show_menu(
             step_id="choose_migration_strategy",
             menu_options=[
@@ -867,6 +885,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         radio_type = self._radio_mgr.parse_radio_type(discovery_data["radio_type"])
         device_settings = discovery_data["port"]
         device_path = device_settings[CONF_DEVICE_PATH]
+        self._flow_strategy = discovery_data.get("flow_strategy")
 
         await self._set_unique_id_and_update_ignored_flow(
             unique_id=f"{name}_{radio_type.name}_{device_path}",

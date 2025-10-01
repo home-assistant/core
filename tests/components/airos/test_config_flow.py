@@ -137,17 +137,46 @@ async def test_form_exception_handling(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_reauth_flow_scenario(
+    hass: HomeAssistant,
+    mock_airos_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test successful reauthentication."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_airos_client.login.side_effect = AirOSConnectionAuthenticationError
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow["step_id"] == REAUTH_STEP
+
+    mock_airos_client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"],
+        user_input={CONF_PASSWORD: NEW_PASSWORD},
+    )
+
+    # Always test resolution
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert updated_entry.data[CONF_PASSWORD] == NEW_PASSWORD
+
+
 @pytest.mark.parametrize(
     ("reauth_exception", "expected_error"),
     [
-        (None, None),
         (AirOSConnectionAuthenticationError, "invalid_auth"),
         (AirOSDeviceConnectionError, "cannot_connect"),
         (AirOSKeyDataMissingError, "key_data_missing"),
         (Exception, "unknown"),
     ],
     ids=[
-        "reauth_succes",
         "invalid_auth",
         "cannot_connect",
         "key_data_missing",
@@ -180,19 +209,16 @@ async def test_reauth_flow_scenarios(
         user_input={CONF_PASSWORD: NEW_PASSWORD},
     )
 
-    if expected_error:
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == REAUTH_STEP
-        assert result["errors"] == {"base": expected_error}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == REAUTH_STEP
+    assert result["errors"] == {"base": expected_error}
 
-        # Retry
-        mock_airos_client.login.side_effect = None
-        result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"],
-            user_input={CONF_PASSWORD: NEW_PASSWORD},
-        )
+    mock_airos_client.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"],
+        user_input={CONF_PASSWORD: NEW_PASSWORD},
+    )
 
-    # Always test resolution
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
