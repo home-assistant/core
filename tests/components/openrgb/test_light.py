@@ -347,7 +347,7 @@ async def test_duplicate_device_names(
     assert device1_entry is not None
     assert device2_entry is not None
 
-    # device1 has device.id=1 (lower), so it gets suffix "1"
-    # device2 has device.id=2 (higher), so it gets suffix "2"
+    # device1 has lower device.id, so it gets suffix "1"
+    # device2 has higher device.id, so it gets suffix "2"
     assert device1_entry.name == "ENE RAM 1"
     assert device2_entry.name == "ENE RAM 2"
