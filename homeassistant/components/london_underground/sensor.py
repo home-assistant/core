@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -40,14 +40,28 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Tube sensor."""
 
-    # No config entry exists and configuration.yaml config exists, trigger the import flow.
-    if not hass.config_entries.async_entries(DOMAIN):
+    # If configuration.yaml config exists, trigger the import flow.
+    # If the config entry already exists, this will not be triggered as only one config is allowed.
+    try:
         await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
         )
+    except Exception as ex:
+        _LOGGER.exception("Unexpected error initiating config flow from import")
+        raise ex from None
+
     _LOGGER.warning(
         "Loading London Underground via platform (YAML) config is deprecated; The configuration"
         " has been migrated to a config entry and can be safely removed"
+    )
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "yaml_deprecated",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="yaml_deprecated",
+        learn_more_url="https://www.home-assistant.io/integrations/london_underground",
     )
 
 

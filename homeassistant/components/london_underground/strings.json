@@ -28,5 +28,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "yaml_deprecated": {
+      "title": "YAML configuration is deprecated",
+      "description": "The London Underground integration no longer supports configuration via YAML. Your configuration in configuration.yaml has been imported into a config entry and can safely be removed."
+    }
   }
 }
