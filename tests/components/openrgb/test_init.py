@@ -8,9 +8,9 @@ import pytest
 from homeassistant.components.openrgb import async_remove_config_entry_device
 from homeassistant.components.openrgb.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -70,96 +70,6 @@ async def test_unload_entry(
     assert mock_openrgb_client.disconnect.called
 
 
-async def test_async_migrate_unique_ids(
-    hass: HomeAssistant,
-    mock_openrgb_client: MagicMock,
-    mock_get_mac_address: MagicMock,
-) -> None:
-    """Test migrating unique IDs when MAC address changes."""
-    old_mac = "aa:bb:cc:dd:ee:ff"
-    new_mac = "11:22:33:44:55:66"
-
-    # Create config entry with migration marker
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=f"OpenRGB ({old_mac})",
-        data={
-            CONF_HOST: "127.0.0.1",
-            CONF_PORT: 6742,
-            CONF_MAC: new_mac,
-            "_migrate_mac": {"old": old_mac, "new": new_mac},
-        },
-        unique_id=new_mac,
-    )
-    config_entry.add_to_hass(hass)
-
-    # Create old device and entities with old MAC
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-
-    old_server_device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, old_mac)},
-        connections={(dr.CONNECTION_NETWORK_MAC, old_mac)},
-        name=f"OpenRGB ({old_mac})",
-    )
-
-    old_device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={
-            (
-                DOMAIN,
-                f"{old_mac}||LEDSTRIP||Test Vendor||Test LED Strip||TEST123||Test Location",
-            )
-        },
-        name="Test RGB Device",
-        via_device=(DOMAIN, old_mac),
-    )
-
-    entity_registry.async_get_or_create(
-        domain="light",
-        platform=DOMAIN,
-        unique_id=f"{old_mac}||LEDSTRIP||Test Vendor||Test LED Strip||TEST123||Test Location",
-        config_entry=config_entry,
-        device_id=old_device.id,
-    )
-
-    # Setup the integration (which should trigger migration)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Verify migration marker was removed
-    assert "_migrate_mac" not in config_entry.data
-
-    # Verify server device was updated
-    updated_server_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, new_mac)}
-    )
-    assert updated_server_device is not None
-    assert updated_server_device.id == old_server_device.id
-    assert (dr.CONNECTION_NETWORK_MAC, new_mac) in updated_server_device.connections
-
-    # Verify device identifiers were updated
-    updated_device = device_registry.async_get_device(
-        identifiers={
-            (
-                DOMAIN,
-                f"{new_mac}||LEDSTRIP||Test Vendor||Test LED Strip||TEST123||Test Location",
-            )
-        }
-    )
-    assert updated_device is not None
-    assert updated_device.id == old_device.id
-
-    # Verify entity unique ID was updated
-    entity = entity_registry.async_get(f"light.{DOMAIN}_test_rgb_device")
-    if entity:
-        assert (
-            entity.unique_id
-            == f"{new_mac}||LEDSTRIP||Test Vendor||Test LED Strip||TEST123||Test Location"
-        )
-
-
 async def test_server_device_registry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -174,7 +84,7 @@ async def test_server_device_registry(
 
     device_registry = dr.async_get(hass)
     server_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "aa:bb:cc:dd:ee:ff")}
+        identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
 
     assert server_device is not None
@@ -183,6 +93,43 @@ async def test_server_device_registry(
     assert server_device.model == "OpenRGB SDK Server"
     assert server_device.sw_version == "3 (Protocol)"
     assert server_device.entry_type is dr.DeviceEntryType.SERVICE
+
+
+async def test_server_device_registry_no_mac(
+    hass: HomeAssistant,
+    mock_openrgb_client: MagicMock,
+) -> None:
+    """Test server device is created without MAC address."""
+    # Create config entry without MAC address
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="OpenRGB (127.0.0.1:6742)",
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6742,
+        },
+        unique_id="127.0.0.1:6742",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_registry = dr.async_get(hass)
+    server_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    )
+
+    assert server_device is not None
+    assert server_device.name == "OpenRGB (127.0.0.1:6742)"
+    assert server_device.manufacturer == "OpenRGB"
+    assert server_device.model == "OpenRGB SDK Server"
+    assert server_device.sw_version == "3 (Protocol)"
+    assert server_device.entry_type is dr.DeviceEntryType.SERVICE
+    # No MAC connection should be present
+    assert not any(
+        conn[0] == dr.CONNECTION_NETWORK_MAC for conn in server_device.connections
+    )
 
 
 async def test_remove_config_entry_device_server(
@@ -199,7 +146,7 @@ async def test_remove_config_entry_device_server(
 
     device_registry = dr.async_get(hass)
     server_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "aa:bb:cc:dd:ee:ff")}
+        identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
 
     assert server_device is not None
@@ -231,7 +178,8 @@ async def test_remove_config_entry_device_still_connected(
         device_registry, mock_config_entry.entry_id
     )
     rgb_device = next(
-        (d for d in devices if d.identifiers != {(DOMAIN, "aa:bb:cc:dd:ee:ff")}), None
+        (d for d in devices if d.identifiers != {(DOMAIN, mock_config_entry.entry_id)}),
+        None,
     )
 
     if rgb_device:
@@ -256,16 +204,17 @@ async def test_remove_config_entry_device_disconnected(
     await hass.async_block_till_done()
 
     # Create a device that's not in coordinator.data (disconnected)
+    entry_id = mock_config_entry.entry_id
     disconnected_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={
             (
                 DOMAIN,
-                "aa:bb:cc:dd:ee:ff||KEYBOARD||Old Vendor||Old Device||OLD123||Old Location",
+                f"{entry_id}||KEYBOARD||Old Vendor||Old Device||OLD123||Old Location",
             )
         },
         name="Old Disconnected Device",
-        via_device=(DOMAIN, "aa:bb:cc:dd:ee:ff"),
+        via_device=(DOMAIN, entry_id),
     )
 
     # Try to remove disconnected device - should succeed

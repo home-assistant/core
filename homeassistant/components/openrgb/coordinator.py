@@ -42,7 +42,8 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         )
         self.host = config_entry.data[CONF_HOST]
         self.port = config_entry.data[CONF_PORT]
-        self.mac = config_entry.data[CONF_MAC]
+        self.mac = config_entry.data.get(CONF_MAC)
+        self.entry_id = config_entry.entry_id
         self.server_address = f"{self.host}:{self.port}"
         self._client_lock = asyncio.Lock()
 
@@ -89,7 +90,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         a positional index that can change when devices are added or removed.
         """
         parts = (
-            self.mac,
+            self.entry_id,
             device.type.name,
             device.metadata.vendor or "none",
             device.metadata.description or "none",

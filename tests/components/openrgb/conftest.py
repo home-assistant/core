@@ -26,6 +26,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_MAC: "aa:bb:cc:dd:ee:ff",
         },
         unique_id="aa:bb:cc:dd:ee:ff",
+        entry_id="01J0EXAMPLE0CONFIGENTRY00",
     )
 
 

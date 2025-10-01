@@ -38,7 +38,7 @@
     'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 4>,
     'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff||LEDSTRIP||Test Vendor||Test LED Strip||TEST123||Test Location',
+    'unique_id': '01J0EXAMPLE0CONFIGENTRY00||LEDSTRIP||Test Vendor||Test LED Strip||TEST123||Test Location',
     'unit_of_measurement': None,
   })
 # ---

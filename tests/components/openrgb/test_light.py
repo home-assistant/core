@@ -50,7 +50,7 @@ async def test_entities(
         identifiers={
             (
                 DOMAIN,
-                "aa:bb:cc:dd:ee:ff||LEDSTRIP||Test Vendor||Test LED Strip||TEST123||Test Location",
+                f"{mock_config_entry.entry_id}||LEDSTRIP||Test Vendor||Test LED Strip||TEST123||Test Location",
             )
         }
     )
@@ -332,9 +332,13 @@ async def test_duplicate_device_names(
     await hass.async_block_till_done()
 
     # Get device keys (they will be sorted alphabetically)
-    # The device key format is: mac||type||vendor||description||serial||location
-    device1_key = "aa:bb:cc:dd:ee:ff||DRAM||ENE||RAM Module||SERIAL001||DIMM_A1"
-    device2_key = "aa:bb:cc:dd:ee:ff||DRAM||ENE||RAM Module||SERIAL002||DIMM_A2"
+    # The device key format is: entry_id||type||vendor||description||serial||location
+    device1_key = (
+        f"{mock_config_entry.entry_id}||DRAM||ENE||RAM Module||SERIAL001||DIMM_A1"
+    )
+    device2_key = (
+        f"{mock_config_entry.entry_id}||DRAM||ENE||RAM Module||SERIAL002||DIMM_A2"
+    )
 
     # Verify devices exist with correct names (suffix based on device.id, not keys)
     device1_entry = device_registry.async_get_device(

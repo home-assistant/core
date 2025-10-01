@@ -97,7 +97,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             model_id=self.device.type.name,
             sw_version=self.device.metadata.version,
             serial_number=self.device.metadata.serial,
-            via_device=(DOMAIN, f"{coordinator.mac}"),
+            via_device=(DOMAIN, coordinator.entry_id),
         )
 
         modes = [mode.name for mode in self.device.modes]
