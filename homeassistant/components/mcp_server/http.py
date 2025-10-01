@@ -206,9 +206,12 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
         async def handler(
             scope: dict[str, Any],
             receive: Callable[[], Awaitable[dict[str, Any]]],
-            send: Callable[[MutableMapping[str, Any]], Awaitable[None]],
+            send: Callable[[dict[str, Any]], Awaitable[None]],
         ) -> None:
-            await runtime.streamable_manager.handle_request(scope, receive, send)
+            # Cast send to MutableMapping for handle_request
+            await runtime.streamable_manager.handle_request(
+                scope, receive, cast(Callable[[MutableMapping[str, Any]], Awaitable[None]], send)
+            )
 
         try:
             return await _call_asgi(handler, request)
