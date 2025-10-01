@@ -30,6 +30,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.xternal_tuya_quirks import (
+    TUYA_QUIRKS_REGISTRY,
+    TuyaSensorDefinition,
+    parse_enum,
+)
 
 from . import TuyaConfigEntry
 from .const import (
@@ -44,7 +49,6 @@ from .const import (
 )
 from .entity import TuyaEntity
 from .models import ComplexValue, ElectricityValue, EnumTypeData, IntegerTypeData
-from .quirks import TUYA_QUIRKS_REGISTRY, TuyaSensorDefinition, parse_enum
 from .util import get_dptype
 
 _WIND_DIRECTIONS = {

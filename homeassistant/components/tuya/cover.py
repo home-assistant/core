@@ -18,12 +18,16 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.xternal_tuya_quirks import (
+    TUYA_QUIRKS_REGISTRY,
+    TuyaCoverDefinition,
+    parse_enum,
+)
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
 from .models import EnumTypeData, IntegerTypeData
-from .quirks import TUYA_QUIRKS_REGISTRY, TuyaCoverDefinition, parse_enum
 from .util import get_dpcode
 
 

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from .. import TUYA_QUIRKS_REGISTRY
-from ..device_quirk import TuyaDeviceQuirk
-from ..homeassistant import TuyaCoverDeviceClass, TuyaEntityCategory
+from .. import TUYA_QUIRKS_REGISTRY  # noqa: TID252
+from ..device_quirk import TuyaDeviceQuirk  # noqa: TID252
+from ..homeassistant import TuyaCoverDeviceClass, TuyaEntityCategory  # noqa: TID252
 
 (
     # This model has percent_state and percent_control but percent_state never
