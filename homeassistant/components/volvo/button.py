@@ -114,9 +114,6 @@ class VolvoCarsButton(VolvoEntity, ButtonEntity):
                     self.entity_description.api_command,
                     status,
                 )
-
-            self.async_write_ha_state()
-
         except VolvoApiException as ex:
             _LOGGER.debug("Command %s error", self.entity_description.api_command)
             raise HomeAssistantError(
