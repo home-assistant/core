@@ -328,7 +328,6 @@ class BayesianBinarySensor(BinarySensorEntity):
             )
             for observation in observations
         ]
-
         self._probability_threshold = probability_threshold
         self._attr_device_class = device_class
         self._attr_is_on = False
