@@ -2,7 +2,6 @@
 
 from contextlib import suppress
 from datetime import timedelta
-from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from soco.exceptions import SoCoException
@@ -21,10 +20,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import dt as dt_util
 
 from tests.common import SnapshotAssertion, async_fire_time_changed
-
-if TYPE_CHECKING:
-    # Fixture provided by tests/components/sonos/conftest.py
-    from .conftest import MockSoCo
+from .conftest import MockSoCo
 
 CROSSOVER_ENTITY = "number.zone_a_sub_crossover_frequency"
 GROUP_VOLUME_ENTITY_ID = "number.zone_a_group_volume"
@@ -33,7 +29,7 @@ GROUP_VOLUME_ENTITY_ID = "number.zone_a_group_volume"
 async def test_number_entities(
     hass: HomeAssistant,
     async_autosetup_sonos,
-    soco: "MockSoCo",
+    soco: MockSoCo,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test number entities."""
@@ -96,7 +92,7 @@ async def test_number_entities(
 async def test_amp_number_entities(
     hass: HomeAssistant,
     async_setup_sonos,
-    soco: "MockSoCo",
+    soco: MockSoCo,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the sub_crossover feature only available on Sonos Amp devices.
@@ -128,7 +124,7 @@ async def _setup_numbers_only(async_setup_sonos) -> None:
         await async_setup_sonos()
 
 
-def _force_grouped(soco: "MockSoCo") -> str:
+def _force_grouped(soco: MockSoCo) -> str:
     """Make the mock SoCo appear as grouped (>=2 members) with valid attrs; return gid."""
     with suppress(AttributeError):
         # Build or normalize the group object
@@ -164,7 +160,7 @@ def _force_grouped(soco: "MockSoCo") -> str:
 
 
 async def test_group_volume_sets_backend_and_updates_state(
-    hass: HomeAssistant, async_setup_sonos, soco: "MockSoCo"
+    hass: HomeAssistant, async_setup_sonos, soco: MockSoCo
 ) -> None:
     """Setting 33 writes group.volume=33; HA state updates after activity event."""
     # Make it grouped before the platform sets up so subscriptions bind to a real gid
@@ -194,7 +190,7 @@ async def test_group_volume_sets_backend_and_updates_state(
 
 
 async def test_group_volume_rounds_in_range(
-    hass: HomeAssistant, async_setup_sonos, soco: "MockSoCo"
+    hass: HomeAssistant, async_setup_sonos, soco: MockSoCo
 ) -> None:
     """In-range 49.5 rounds to 50."""
     _force_grouped(soco)
@@ -213,7 +209,7 @@ async def test_group_volume_rounds_in_range(
 async def test_group_volume_updates_on_activity(
     hass: HomeAssistant,
     async_setup_sonos,
-    soco: "MockSoCo",
+    soco: MockSoCo,
 ) -> None:
     """Group volume updates when a fresh coordinator value is fanned out."""
     soco.group = MagicMock()
@@ -235,7 +231,7 @@ async def test_group_volume_updates_on_activity(
 async def test_group_volume_fallback_polling(
     hass: HomeAssistant,
     async_setup_sonos,
-    soco: "MockSoCo",
+    soco: MockSoCo,
 ) -> None:
     """Group volume updates when a (simulated) coordinator fan-out occurs."""
     soco.group = MagicMock()
@@ -254,7 +250,7 @@ async def test_group_volume_fallback_polling(
 
 
 async def test_group_volume_ungrouped_sets_player_volume(
-    hass: HomeAssistant, async_setup_sonos, soco: "MockSoCo"
+    hass: HomeAssistant, async_setup_sonos, soco: MockSoCo
 ) -> None:
     """When ungrouped, the number mirrors player RenderingControl volume."""
     await _setup_numbers_only(async_setup_sonos)
@@ -290,7 +286,7 @@ async def test_group_volume_number_metadata(
 async def test_group_fanout_unsubscribe_and_resubscribe_on_group_change(
     hass: HomeAssistant,
     async_setup_sonos,
-    soco: "MockSoCo",
+    soco: MockSoCo,
 ) -> None:
     """When group uid changes, entity rebinds; polling refresh reflects new group volume."""
     # Start grouped with deterministic G-1 and bring up the platform
@@ -341,7 +337,7 @@ async def test_group_fanout_unsubscribe_and_resubscribe_on_group_change(
 
 
 async def test_group_volume_exception(
-    hass: HomeAssistant, async_setup_sonos, soco: "MockSoCo"
+    hass: HomeAssistant, async_setup_sonos, soco: MockSoCo
 ) -> None:
     """Tests handling of SoCoException when reading group volume."""
     _force_grouped(soco)
@@ -355,7 +351,7 @@ async def test_group_volume_exception(
 
 
 async def test_group_volume_rebinds_on_topology_change(
-    hass: HomeAssistant, async_setup_sonos, soco: "MockSoCo"
+    hass: HomeAssistant, async_setup_sonos, soco: MockSoCo
 ) -> None:
     """Verify group volume entity rebinds when topology (group UID / coord UID) changes."""
     await async_setup_sonos()
