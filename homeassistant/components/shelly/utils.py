@@ -552,8 +552,15 @@ def percentage_to_brightness(percentage: int) -> int:
 
 def mac_address_from_name(name: str) -> str | None:
     """Convert a name to a mac address."""
-    mac = name.partition(".")[0].partition("-")[-1]
-    return mac.upper() if len(mac) == 12 else None
+    base = name.split(".", 1)[0]
+    if "-" not in base:
+        return None
+
+    mac = base.rsplit("-", 1)[-1]
+    if len(mac) != 12 or not all(char in "0123456789abcdefABCDEF" for char in mac):
+        return None
+
+    return mac.upper()
 
 
 def get_release_url(gen: int, model: str, beta: bool) -> str | None:
