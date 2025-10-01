@@ -56,16 +56,16 @@ async def async_setup_entry(
     hostname = entry.data[CONF_HOSTNAME]
     name = entry.data[CONF_NAME]
 
-    resolver_ipv4 = entry.options[CONF_RESOLVER]
-    resolver_ipv6 = entry.options[CONF_RESOLVER_IPV6]
+    nameserver_ipv4 = entry.options[CONF_RESOLVER]
+    nameserver_ipv6 = entry.options[CONF_RESOLVER_IPV6]
     port_ipv4 = entry.options[CONF_PORT]
     port_ipv6 = entry.options[CONF_PORT_IPV6]
 
     entities = []
     if entry.data[CONF_IPV4]:
-        entities.append(WanIpSensor(name, hostname, resolver_ipv4, False, port_ipv4))
+        entities.append(WanIpSensor(name, hostname, nameserver_ipv4, False, port_ipv4))
     if entry.data[CONF_IPV6]:
-        entities.append(WanIpSensor(name, hostname, resolver_ipv6, True, port_ipv6))
+        entities.append(WanIpSensor(name, hostname, nameserver_ipv6, True, port_ipv6))
 
     async_add_entities(entities, update_before_add=True)
 
@@ -77,11 +77,13 @@ class WanIpSensor(SensorEntity):
     _attr_translation_key = "dnsip"
     _unrecorded_attributes = frozenset({"resolver", "querytype", "ip_addresses"})
 
+    resolver: aiodns.DNSResolver
+
     def __init__(
         self,
         name: str,
         hostname: str,
-        resolver: str,
+        nameserver: str,
         ipv6: bool,
         port: int,
     ) -> None:
@@ -90,11 +92,11 @@ class WanIpSensor(SensorEntity):
         self._attr_unique_id = f"{hostname}_{ipv6}"
         self.hostname = hostname
         self.port = port
-        self._resolver = resolver
+        self.nameserver = nameserver
         self.querytype: Literal["A", "AAAA"] = "AAAA" if ipv6 else "A"
         self._retries = DEFAULT_RETRIES
         self._attr_extra_state_attributes = {
-            "resolver": resolver,
+            "resolver": nameserver,
             "querytype": self.querytype,
         }
         self._attr_device_info = DeviceInfo(
@@ -104,13 +106,13 @@ class WanIpSensor(SensorEntity):
             model=aiodns.__version__,
             name=name,
         )
-        self.resolver: aiodns.DNSResolver
         self.create_dns_resolver()
 
     def create_dns_resolver(self) -> None:
         """Create the DNS resolver."""
-        self.resolver = aiodns.DNSResolver(tcp_port=self.port, udp_port=self.port)
-        self.resolver.nameservers = [self._resolver]
+        self.resolver = aiodns.DNSResolver(
+            nameservers=[self.nameserver], tcp_port=self.port, udp_port=self.port
+        )
 
     async def async_update(self) -> None:
         """Get the current DNS IP address for hostname."""

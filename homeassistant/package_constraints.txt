@@ -36,7 +36,7 @@ fnv-hash-fast==1.5.0
 go2rtc-client==0.2.1
 ha-ffmpeg==3.2.2
 habluetooth==5.6.4
-hass-nabucasa==1.1.2
+hass-nabucasa==1.2.0
 hassil==3.2.0
 home-assistant-bluetooth==1.13.1
 home-assistant-frontend==20250926.0
@@ -120,7 +120,7 @@ hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
 numpy==2.3.2
-pandas==2.3.0
+pandas==2.3.3
 
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
