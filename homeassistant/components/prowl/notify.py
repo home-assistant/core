@@ -26,8 +26,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-type ProwlConfigEntry = ConfigEntry[ProwlNotificationEntity]
-
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend({vol.Required(CONF_API_KEY): cv.string})
@@ -46,7 +44,7 @@ async def async_get_service(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ProwlConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the notify entities."""
