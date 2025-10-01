@@ -61,15 +61,6 @@ def update_states_metadata(
 ) -> None:
     """Update the states metadata table when an entity is renamed."""
     states_meta_manager = instance.states_meta_manager
-    if not states_meta_manager.active:
-        _LOGGER.warning(
-            "Cannot rename entity_id `%s` to `%s` "
-            "because the states meta manager is not yet active",
-            entity_id,
-            new_entity_id,
-        )
-        return
-
     with session_scope(
         session=instance.get_session(),
         exception_filter=filter_unique_constraint_integrity_error(instance, "state"),
