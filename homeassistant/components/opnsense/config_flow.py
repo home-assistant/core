@@ -36,8 +36,8 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _show_setup_form(
         self,
-        user_input: (dict[Any, Any] | None) = None,
-        errors: (dict[Any, Any] | None) = None,
+        user_input: dict[Any, Any] | None = None,
+        errors: dict[Any, Any] | None = None,
     ) -> ConfigFlowResult:
         """Show the setup form to the user."""
         if user_input is None:
