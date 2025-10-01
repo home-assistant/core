@@ -86,9 +86,12 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         super().__init__(coordinator)
         self.device_key = device_key
         self._attr_unique_id = device_key
+
+        device_name = coordinator.get_device_name(device_key)
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_key)},
-            name=self.device.name,
+            name=device_name,
             manufacturer=self.device.metadata.vendor,
             model=self.device.metadata.description,
             model_id=self.device.type.name,

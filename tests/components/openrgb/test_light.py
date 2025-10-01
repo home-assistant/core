@@ -230,6 +230,7 @@ async def test_dynamic_device_addition(
 
     # Add a second device
     new_device = MagicMock()
+    new_device.id = 1  # Different device ID
     new_device.name = "New RGB Device"
     new_device.type = MagicMock()
     new_device.type.name = "KEYBOARD"
@@ -278,3 +279,75 @@ async def test_light_availability(
     state = hass.states.get("light.test_rgb_device")
     assert state
     assert state.state == "unavailable"
+
+
+async def test_duplicate_device_names(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    mock_openrgb_device: MagicMock,
+    mock_get_mac_address: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that devices with duplicate names get numeric suffixes."""
+    # Create two devices with the same name but different serials and device IDs
+    device1 = MagicMock()
+    device1.id = 3  # Should get suffix "1"
+    device1.name = "ENE RAM"
+    device1.type = MagicMock()
+    device1.type.name = "DRAM"
+    device1.metadata = MagicMock()
+    device1.metadata.vendor = "ENE"
+    device1.metadata.description = "RAM Module"
+    device1.metadata.serial = "SERIAL001"
+    device1.metadata.location = "DIMM_A1"
+    device1.metadata.version = "1.0"
+    device1.active_mode = 0
+    device1.modes = mock_openrgb_device.modes
+    device1.colors = [RGBColor(255, 0, 0)]
+    device1.set_color = MagicMock()
+    device1.set_mode = MagicMock()
+
+    device2 = MagicMock()
+    device2.id = 4  # Should get suffix "2"
+    device2.name = "ENE RAM"
+    device2.type = MagicMock()
+    device2.type.name = "DRAM"
+    device2.metadata = MagicMock()
+    device2.metadata.vendor = "ENE"
+    device2.metadata.description = "RAM Module"
+    device2.metadata.serial = "SERIAL002"
+    device2.metadata.location = "DIMM_A2"
+    device2.metadata.version = "1.0"
+    device2.active_mode = 0
+    device2.modes = mock_openrgb_device.modes
+    device2.colors = [RGBColor(0, 255, 0)]
+    device2.set_color = MagicMock()
+    device2.set_mode = MagicMock()
+
+    mock_openrgb_client.devices = [device1, device2]
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Get device keys (they will be sorted alphabetically)
+    # The device key format is: mac||type||vendor||description||serial||location
+    device1_key = "aa:bb:cc:dd:ee:ff||DRAM||ENE||RAM Module||SERIAL001||DIMM_A1"
+    device2_key = "aa:bb:cc:dd:ee:ff||DRAM||ENE||RAM Module||SERIAL002||DIMM_A2"
+
+    # Verify devices exist with correct names (suffix based on device.id, not keys)
+    device1_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, device1_key)}
+    )
+    device2_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, device2_key)}
+    )
+
+    assert device1_entry is not None
+    assert device2_entry is not None
+
+    # device1 has device.id=1 (lower), so it gets suffix "1"
+    # device2 has device.id=2 (higher), so it gets suffix "2"
+    assert device1_entry.name == "ENE RAM 1"
+    assert device2_entry.name == "ENE RAM 2"

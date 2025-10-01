@@ -142,3 +142,29 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         """Set the mode of a device."""
         async with self._client_lock:
             await self.hass.async_add_executor_job(device.set_mode, mode)
+
+    def get_device_name(self, device_key: str) -> str:
+        """Get device name with suffix if there are duplicates."""
+        if device_key not in self.data:
+            return ""
+
+        device = self.data[device_key]
+        device_name = device.name
+
+        devices_with_same_name = [
+            (key, dev) for key, dev in self.data.items() if dev.name == device_name
+        ]
+
+        if len(devices_with_same_name) == 1:
+            return device_name
+
+        # Sort duplicates by device.id
+        devices_with_same_name.sort(key=lambda x: x[1].id)
+
+        # Return name with numeric suffix based on the sorted order
+        for idx, (key, _) in enumerate(devices_with_same_name, start=1):
+            if key == device_key:
+                return f"{device_name} {idx}"
+
+        # Should never reach here, but just in case
+        return device_name

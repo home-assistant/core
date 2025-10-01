@@ -131,6 +131,7 @@ def mock_device_data() -> dict[str, Any]:
 def mock_openrgb_device(mock_device_data: dict[str, Any]) -> MagicMock:
     """Return a mocked OpenRGB device."""
     device = MagicMock()
+    device.id = 0
     device.name = mock_device_data["name"]
     device.type = MagicMock()
     device.type.name = "LEDSTRIP"
