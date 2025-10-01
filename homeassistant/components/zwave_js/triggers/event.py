@@ -23,8 +23,8 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.trigger import (
-    RunTriggerActionCallback,
     Trigger,
+    TriggerActionRunnerCallback,
     TriggerConfig,
 )
 from homeassistant.helpers.typing import ConfigType
@@ -131,7 +131,7 @@ class EventTrigger(Trigger):
     _event_name: str
     _event_data_filter: dict
     _unsubs: list[Callable]
-    _action_runner: RunTriggerActionCallback
+    _action_runner: TriggerActionRunnerCallback
 
     @classmethod
     async def async_validate_complete_config(
@@ -175,7 +175,7 @@ class EventTrigger(Trigger):
         self._options = config.options
 
     async def async_attach_runner(
-        self, run_action: RunTriggerActionCallback
+        self, run_action: TriggerActionRunnerCallback
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
         dev_reg = dr.async_get(self._hass)

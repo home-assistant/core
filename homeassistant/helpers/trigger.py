@@ -237,7 +237,7 @@ class Trigger(abc.ABC):
 
     @abc.abstractmethod
     async def async_attach_runner(
-        self, run_action: RunTriggerActionCallback
+        self, run_action: TriggerActionRunnerCallback
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
 
@@ -277,7 +277,7 @@ class TriggerConfig:
     options: dict[str, Any] | None = None
 
 
-class RunTriggerActionCallback(Protocol):
+class TriggerActionRunnerCallback(Protocol):
     """Protocol type for the trigger action runner helper callback."""
 
     @callback
