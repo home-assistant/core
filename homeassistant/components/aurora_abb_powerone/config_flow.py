@@ -11,7 +11,11 @@ from aurorapy.client import AuroraError, AuroraSerialClient, AuroraTCPClient
 import serial.tools.list_ports
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import ATTR_SERIAL_NUMBER
 from homeassistant.core import HomeAssistant
 
@@ -101,7 +105,7 @@ def validate_and_connect_tcp(
     return ret
 
 
-def scan_comports() -> tuple[list[str] | None, str | None]:
+def scan_serial_comports() -> tuple[list[str] | None, str | None]:
     """Find and store available com ports for the GUI dropdown."""
     com_ports = serial.tools.list_ports.comports(include_links=True)
     com_ports_list = []
@@ -119,47 +123,67 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
+    _transport: str | None
+    _serial_comport_list: list[str] | None
+    _serial_comport_default: str | None
+
     def __init__(self) -> None:
         """Initialise the config flow."""
-        self._com_ports_list: list[str] | None = None
-        self._default_com_port: str | None = None
-        self._transport: str | None = None
+        self._transport = None
+        self._serial_comport_list = None
+        self._serial_comport_default = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """First step: choose transport."""
+        """Handle user initiated step."""
+        return await self.async_step_choose_transport(user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration request from the user."""
+        return await self.async_step_choose_transport(user_input)
+
+    async def async_step_choose_transport(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Choose transport."""
         errors: dict[str, str] = {}
 
         schema = vol.Schema(
             {
-                vol.Required(CONF_TRANSPORT, default=TRANSPORT_SERIAL): vol.In(
-                    [TRANSPORT_SERIAL, TRANSPORT_TCP]
-                )
+                vol.Required(
+                    CONF_TRANSPORT, default=self._get_default_transport()
+                ): vol.In([TRANSPORT_SERIAL, TRANSPORT_TCP])
             }
         )
 
         if user_input is not None:
             self._transport = user_input[CONF_TRANSPORT]
+
+            if self._transport == TRANSPORT_SERIAL:
+                return await self.async_step_configure_serial()
             if self._transport == TRANSPORT_TCP:
-                return await self.async_step_tcp()
-            return await self.async_step_serial()
+                return await self.async_step_configure_tcp()
 
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(
+            step_id="choose_transport", data_schema=schema, errors=errors
+        )
 
-    async def async_step_serial(
+    async def async_step_configure_serial(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Serial configuration step."""
+        """Serial transport configuration step."""
         errors: dict[str, str] = {}
 
-        if self._com_ports_list is None:
-            result = await self.hass.async_add_executor_job(scan_comports)
-            self._com_ports_list, self._default_com_port = result
-            if self._default_com_port is None:
+        if self._serial_comport_list is None:
+            result = await self.hass.async_add_executor_job(scan_serial_comports)
+            self._serial_comport_list, self._serial_comport_default = result
+            if self._serial_comport_default is None:
                 return self.async_abort(reason="no_serial_ports")
             if TYPE_CHECKING:
-                assert isinstance(self._com_ports_list, list)
+                assert isinstance(self._serial_comport_list, list)
 
         if user_input is not None:
             try:
@@ -187,29 +211,37 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
                 info[CONF_TRANSPORT] = TRANSPORT_SERIAL
                 device_unique_id = info["serial_number"]
                 await self.async_set_unique_id(device_unique_id)
+
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(), data_updates=info
+                    )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=info)
 
-        # initial / retry form
         schema = vol.Schema(
             {
                 vol.Required(
-                    CONF_SERIAL_COMPORT, default=self._default_com_port
-                ): vol.In(self._com_ports_list),
+                    CONF_SERIAL_COMPORT, default=self._get_default_serial_comport()
+                ): vol.In(self._serial_comport_list),
                 vol.Required(
                     CONF_INVERTER_SERIAL_ADDRESS,
-                    default=INVERTER_SERIAL_ADDRESS_DEFAULT,
+                    default=self._get_default_inverter_serial_address(),
                 ): vol.In(
                     range(INVERTER_SERIAL_ADDRESS_MIN, INVERTER_SERIAL_ADDRESS_MAX + 1)
                 ),
             }
         )
-        return self.async_show_form(step_id="serial", data_schema=schema, errors=errors)
 
-    async def async_step_tcp(
+        return self.async_show_form(
+            step_id="configure_serial", data_schema=schema, errors=errors
+        )
+
+    async def async_step_configure_tcp(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """TCP configuration step."""
+        """TCP transport configuration step."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -231,19 +263,63 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
                 info[CONF_TRANSPORT] = TRANSPORT_TCP
                 device_unique_id = info["serial_number"]
                 await self.async_set_unique_id(device_unique_id)
+
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(), data_updates=info
+                    )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=info)
 
         schema = vol.Schema(
             {
-                vol.Required(CONF_TCP_HOST): str,
-                vol.Required(CONF_TCP_PORT, default=TCP_PORT_DEFAULT): int,
+                vol.Required(CONF_TCP_HOST, default=self._get_default_tcp_host()): str,
+                vol.Required(CONF_TCP_PORT, default=self._get_default_tcp_port()): int,
                 vol.Required(
                     CONF_INVERTER_SERIAL_ADDRESS,
-                    default=INVERTER_SERIAL_ADDRESS_DEFAULT,
+                    default=self._get_default_inverter_serial_address(),
                 ): vol.In(
                     range(INVERTER_SERIAL_ADDRESS_MIN, INVERTER_SERIAL_ADDRESS_MAX + 1)
                 ),
             }
         )
-        return self.async_show_form(step_id="tcp", data_schema=schema, errors=errors)
+
+        return self.async_show_form(
+            step_id="configure_tcp", data_schema=schema, errors=errors
+        )
+
+    def _get_default_transport(self) -> str:
+        if self.source == SOURCE_RECONFIGURE:
+            return self._get_reconfigure_entry().data[CONF_TRANSPORT]
+
+        # Fallback to serial transport as default
+        return TRANSPORT_SERIAL
+
+    def _get_default_inverter_serial_address(self) -> int:
+        if self.source == SOURCE_RECONFIGURE:
+            return self._get_reconfigure_entry().data[CONF_INVERTER_SERIAL_ADDRESS]
+
+        # Fallback to default inverter serial address
+        return INVERTER_SERIAL_ADDRESS_DEFAULT
+
+    def _get_default_serial_comport(self) -> str | None:
+        if self.source == SOURCE_RECONFIGURE:
+            return self._get_reconfigure_entry().data[CONF_SERIAL_COMPORT]
+
+        # Fallback to scanned default comport
+        return self._serial_comport_default
+
+    def _get_default_tcp_host(self) -> str | None:
+        if self.source == SOURCE_RECONFIGURE:
+            return self._get_reconfigure_entry().data[CONF_TCP_HOST]
+
+        # Fallback to None
+        return None
+
+    def _get_default_tcp_port(self) -> int:
+        if self.source == SOURCE_RECONFIGURE:
+            return self._get_reconfigure_entry().data[CONF_TCP_PORT]
+
+        # Fallback to default TCP port
+        return TCP_PORT_DEFAULT

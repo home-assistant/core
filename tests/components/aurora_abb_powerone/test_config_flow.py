@@ -27,7 +27,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 async def _start_user_flow(hass: HomeAssistant) -> dict:
     """Start the user flow and return initial form result."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+    await setup.async_setup_component(hass, DOMAIN, {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -50,7 +50,7 @@ async def test_serial_happy_path(hass: HomeAssistant) -> None:
         )
 
     assert serial_step["type"] is FlowResultType.FORM
-    assert serial_step["step_id"] == "serial"
+    assert serial_step["step_id"] == "configure_serial"
 
     with (
         patch("aurorapy.client.AuroraSerialClient.connect", return_value=None),
@@ -67,13 +67,13 @@ async def test_serial_happy_path(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup_entry,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             serial_step["flow_id"],
             {CONF_SERIAL_COMPORT: "/dev/ttyUSB7", CONF_INVERTER_SERIAL_ADDRESS: 7},
         )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
         CONF_SERIAL_COMPORT: "/dev/ttyUSB7",
         CONF_INVERTER_SERIAL_ADDRESS: 7,
         ATTR_FIRMWARE: "1.234",
@@ -118,11 +118,11 @@ async def test_serial_invalid_com_ports(hass: HomeAssistant) -> None:
         side_effect=OSError(19, "...no such device..."),
         return_value=None,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             serial_step["flow_id"],
             {CONF_SERIAL_COMPORT: "/dev/ttyUSB7", CONF_INVERTER_SERIAL_ADDRESS: 7},
         )
-    assert result2["errors"] == {"base": "invalid_serial_port"}
+    assert result["errors"] == {"base": "invalid_serial_port"}
 
     # AuroraError 'could not open port' -> cannot_open_serial_port
     with patch(
@@ -130,11 +130,11 @@ async def test_serial_invalid_com_ports(hass: HomeAssistant) -> None:
         side_effect=AuroraError("..could not open port..."),
         return_value=None,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             serial_step["flow_id"],
             {CONF_SERIAL_COMPORT: "/dev/ttyUSB7", CONF_INVERTER_SERIAL_ADDRESS: 7},
         )
-    assert result2["errors"] == {"base": "cannot_open_serial_port"}
+    assert result["errors"] == {"base": "cannot_open_serial_port"}
 
     # AuroraTimeoutError 'No response after' -> cannot_connect
     with patch(
@@ -142,11 +142,11 @@ async def test_serial_invalid_com_ports(hass: HomeAssistant) -> None:
         side_effect=AuroraTimeoutError("...No response after..."),
         return_value=None,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             serial_step["flow_id"],
             {CONF_SERIAL_COMPORT: "/dev/ttyUSB7", CONF_INVERTER_SERIAL_ADDRESS: 7},
         )
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "cannot_connect"}
 
     # Generic AuroraError -> cannot_connect, client.close called once
     with (
@@ -158,11 +158,11 @@ async def test_serial_invalid_com_ports(hass: HomeAssistant) -> None:
         patch("serial.Serial.isOpen", return_value=True),
         patch("aurorapy.client.AuroraSerialClient.close") as mock_clientclose,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             serial_step["flow_id"],
             {CONF_SERIAL_COMPORT: "/dev/ttyUSB7", CONF_INVERTER_SERIAL_ADDRESS: 7},
         )
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "cannot_connect"}
     assert len(mock_clientclose.mock_calls) == 1
 
 
@@ -171,12 +171,12 @@ async def test_tcp_happy_path(hass: HomeAssistant) -> None:
 
     user_step = await _start_user_flow(hass)
 
-    # Choose TCP -> goes to tcp step
+    # Choose TCP -> goes to configure_tcp step
     tcp_step = await hass.config_entries.flow.async_configure(
         user_step["flow_id"], {CONF_TRANSPORT: TRANSPORT_TCP}
     )
     assert tcp_step["type"] is FlowResultType.FORM
-    assert tcp_step["step_id"] == "tcp"
+    assert tcp_step["step_id"] == "configure_tcp"
 
     with (
         patch("aurorapy.client.AuroraTCPClient.connect", return_value=None),
@@ -189,7 +189,7 @@ async def test_tcp_happy_path(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup_entry,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             tcp_step["flow_id"],
             {
                 CONF_TCP_HOST: "192.168.1.10",
@@ -198,8 +198,8 @@ async def test_tcp_happy_path(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
         CONF_TCP_HOST: "192.168.1.10",
         CONF_TCP_PORT: TCP_PORT_DEFAULT,
         CONF_INVERTER_SERIAL_ADDRESS: 5,
@@ -222,14 +222,14 @@ async def test_tcp_cannot_connect(hass: HomeAssistant) -> None:
         user_step["flow_id"], {CONF_TRANSPORT: TRANSPORT_TCP}
     )
     assert tcp_step["type"] is FlowResultType.FORM
-    assert tcp_step["step_id"] == "tcp"
+    assert tcp_step["step_id"] == "configure_tcp"
 
     with patch(
         "aurorapy.client.AuroraTCPClient.connect",
         side_effect=AuroraError("Some TCP issue"),
         return_value=None,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             tcp_step["flow_id"],
             {
                 CONF_TCP_HOST: "192.168.1.10",
@@ -238,4 +238,4 @@ async def test_tcp_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "cannot_connect"}

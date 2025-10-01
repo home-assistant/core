@@ -1,20 +1,20 @@
 {
   "config": {
     "step": {
-      "user": {
+      "choose_transport": {
         "description": "Please select the transport method you want to use to connect to the inverter.",
         "data": {
           "transport": "Available transport methods"
         }
       },
-      "serial": {
+      "configure_serial": {
         "description": "The inverter must be connected via an RS485 adaptor. Please select the serial port and the inverter's address as configured on the LCD panel.",
         "data": {
           "serial_comport": "RS485 or USB-RS485 adaptor port",
           "inverter_serial_address": "Inverter serial address"
         }
       },
-      "tcp": {
+      "configure_tcp": {
         "description": "Please enter the TCP host and port of the Ethernet / RS485 gateway that connects to the inverter and the inverter's serial address as configured on the LCD panel.",
         "data": {
           "tcp_host": "Gateway IP address or hostname",
@@ -30,7 +30,8 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_serial_ports": "No com ports found. The integration needs a valid RS485 device to communicate."
+      "no_serial_ports": "No com ports found. The integration needs a valid RS485 device to communicate.",
+      "reconfigure_successful": "The integration has been successfully reconfigured."
     }
   },
   "entity": {
