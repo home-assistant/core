@@ -7,7 +7,11 @@ import inspect
 import pathlib
 from typing import TYPE_CHECKING, Self
 
-from .homeassistant import TuyaCoverDeviceClass
+from .homeassistant import (
+    TuyaCoverDeviceClass,
+    TuyaEntityCategory,
+    TuyaSensorDeviceClass,
+)
 
 if TYPE_CHECKING:
     from .registry import QuirksRegistry
@@ -15,16 +19,18 @@ if TYPE_CHECKING:
 
 @dataclass
 class BaseTuyaDefinition:
-    """Definition for a Tuya device."""
+    """Definition for a Tuya entity."""
 
     key: str
     translation_key: str
     translation_string: str
+    device_class: str | None = None
+    entity_category: str | None = None
 
 
 @dataclass(kw_only=True)
 class TuyaCoverDefinition(BaseTuyaDefinition):
-    """Definition for a cover device."""
+    """Definition for a cover entity."""
 
     device_class: TuyaCoverDeviceClass | None = None
 
@@ -33,16 +39,25 @@ class TuyaCoverDefinition(BaseTuyaDefinition):
     set_position_dp_code: str | None = None
 
 
+@dataclass(kw_only=True)
+class TuyaSensorDefinition(BaseTuyaDefinition):
+    """Definition for a sensor entity."""
+
+    device_class: TuyaSensorDeviceClass | None = None
+
+
 class TuyaDeviceQuirk:
     """Quirk for Tuya device."""
 
     _applies_to: list[tuple[str, str]]
     cover_definitions: list[TuyaCoverDefinition]
+    sensor_definitions: list[TuyaSensorDefinition]
 
     def __init__(self) -> None:
         """Initialize the quirk."""
         self._applies_to = []
         self.cover_definitions = []
+        self.sensor_definitions = []
 
         current_frame = inspect.currentframe()
         if TYPE_CHECKING:
@@ -70,11 +85,12 @@ class TuyaDeviceQuirk:
         translation_key: str,
         translation_string: str,
         device_class: TuyaCoverDeviceClass | None = None,
+        # Cover specific
         current_state_dp_code: str | None = None,
         current_position_dp_code: str | None = None,
         set_position_dp_code: str | None = None,
     ) -> Self:
-        """Add cover quirk."""
+        """Add cover definition."""
         self.cover_definitions.append(
             TuyaCoverDefinition(
                 key=key,
@@ -84,6 +100,28 @@ class TuyaDeviceQuirk:
                 current_state_dp_code=current_state_dp_code,
                 current_position_dp_code=current_position_dp_code,
                 set_position_dp_code=set_position_dp_code,
+            )
+        )
+        return self
+
+    def add_sensor(
+        self,
+        *,
+        key: str,
+        translation_key: str,
+        translation_string: str,
+        device_class: TuyaSensorDeviceClass | None = None,
+        entity_category: TuyaEntityCategory | None = None,
+        # Sensor specific
+    ) -> Self:
+        """Add sensor definition."""
+        self.sensor_definitions.append(
+            TuyaSensorDefinition(
+                key=key,
+                translation_key=translation_key,
+                translation_string=translation_string,
+                device_class=device_class,
+                entity_category=entity_category,
             )
         )
         return self

@@ -8,8 +8,8 @@ import pathlib
 import pkgutil
 import sys
 
-from .device_quirk import TuyaCoverDefinition, TuyaCoverDeviceClass, TuyaDeviceQuirk
-from .homeassistant import parse_enum
+from .device_quirk import TuyaCoverDefinition, TuyaDeviceQuirk, TuyaSensorDefinition
+from .homeassistant import TuyaCoverDeviceClass, TuyaSensorDeviceClass, parse_enum
 from .registry import QuirksRegistry
 
 __all__ = [
@@ -18,6 +18,8 @@ __all__ = [
     "TuyaCoverDefinition",
     "TuyaCoverDeviceClass",
     "TuyaDeviceQuirk",
+    "TuyaSensorDefinition",
+    "TuyaSensorDeviceClass",
     "parse_enum",
 ]
 _LOGGER = logging.getLogger(__name__)
