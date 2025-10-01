@@ -1,8 +1,10 @@
 """Test the flow classes."""
 
 import asyncio
+from collections.abc import Callable
 import dataclasses
 import logging
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -928,6 +930,89 @@ async def test_show_progress_fires_only_when_changed(
     await test_change(
         result["flow_id"], events, "task_two", 100, 4, True
     )  # change (description placeholder)
+
+
+@pytest.mark.parametrize(
+    ("task_side_effect", "flow_result"),
+    [
+        (None, data_entry_flow.FlowResultType.CREATE_ENTRY),
+        (data_entry_flow.AbortFlow("fail"), data_entry_flow.FlowResultType.ABORT),
+    ],
+)
+@pytest.mark.parametrize(
+    ("description", "expected_description"),
+    [
+        (None, None),
+        ({"title": "World"}, {"title": "World"}),
+        (lambda x: {"title": "World"}, {"title": "World"}),
+    ],
+)
+async def test_progress_step(
+    hass: HomeAssistant,
+    manager: MockFlowManager,
+    description: Callable[[data_entry_flow.FlowHandler], dict[str, Any]]
+    | dict[str, Any]
+    | None,
+    expected_description: dict[str, Any] | None,
+    task_side_effect: Exception | None,
+    flow_result: data_entry_flow.FlowResultType,
+) -> None:
+    """Test progress_step decorator."""
+    manager.hass = hass
+    events = []
+    task_init_evt = asyncio.Event()
+    event_received_evt = asyncio.Event()
+    task_result = Mock()
+    task_result.side_effect = task_side_effect
+
+    @callback
+    def capture_events(event: Event) -> None:
+        events.append(event)
+        event_received_evt.set()
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 5
+        task_init: asyncio.Task[None] | None = None
+
+        @data_entry_flow.progress_step(description_placeholders=description)
+        async def async_step_init(self, user_input=None):
+            await task_init_evt.wait()
+            task_result()
+
+            return await self.async_step_finish()
+
+        async def async_step_finish(self, user_input=None):
+            return self.async_create_entry(data={})
+
+    hass.bus.async_listen(
+        data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESSED,
+        capture_events,
+    )
+
+    result = await manager.async_init("test")
+    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
+    assert result["progress_action"] == "init"
+    description_placeholders = result["description_placeholders"]
+    assert description_placeholders == expected_description
+    assert len(manager.async_progress()) == 1
+    assert len(manager.async_progress_by_handler("test")) == 1
+    assert manager.async_get(result["flow_id"])["handler"] == "test"
+
+    # Set task one done and wait for event
+    task_init_evt.set()
+    await event_received_evt.wait()
+    event_received_evt.clear()
+    assert len(events) == 1
+    assert events[0].data == {
+        "handler": "test",
+        "flow_id": result["flow_id"],
+        "refresh": True,
+    }
+
+    # Frontend refreshes the flow
+    result = await manager.async_configure(result["flow_id"])
+    assert result["type"] == flow_result
 
 
 async def test_abort_flow_exception_step(manager: MockFlowManager) -> None:
