@@ -10,7 +10,7 @@
         },
         "data_description": {
           "host": "The hostname or IP address of the OpenRGB SDK Server.",
-          "port": "The port on which the OpenRGB server is accessible."
+          "port": "The port on which the OpenRGB SDK Server is accessible."
         }
       },
       "reconfigure": {

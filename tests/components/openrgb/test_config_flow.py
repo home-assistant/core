@@ -48,7 +48,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
 async def test_user_flow_cannot_connect(
     hass: HomeAssistant, mock_get_mac_address: MagicMock
 ) -> None:
-    """Test user flow when cannot connect to OpenRGB server."""
+    """Test user flow when cannot connect to OpenRGB SDK Server."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},

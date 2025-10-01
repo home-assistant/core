@@ -180,7 +180,7 @@ async def test_server_device_registry(
     assert server_device is not None
     assert server_device.name == "OpenRGB (aa:bb:cc:dd:ee:ff)"
     assert server_device.manufacturer == "OpenRGB"
-    assert server_device.model == "OpenRGB Server"
+    assert server_device.model == "OpenRGB SDK Server"
     assert server_device.sw_version == "3 (Protocol)"
     assert server_device.entry_type is dr.DeviceEntryType.SERVICE
 
