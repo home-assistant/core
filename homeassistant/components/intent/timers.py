@@ -30,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 TIMER_NOT_FOUND_RESPONSE = "timer_not_found"
 MULTIPLE_TIMERS_MATCHED_RESPONSE = "multiple_timers_matched"
 NO_TIMER_SUPPORT_RESPONSE = "no_timer_support"
+NO_INTENT_MATCH_RESPONSE = "no_intent_match"
 
 
 @dataclass
@@ -200,6 +201,17 @@ class TimersNotSupportedError(intent.IntentHandleError):
         super().__init__(
             f"Device does not support timers: device_id={device_id}",
             NO_TIMER_SUPPORT_RESPONSE,
+        )
+
+
+class NoIntentMatchError(intent.IntentHandleError):
+    """Error when a conversation command does not match any intent."""
+
+    def __init__(self, command: str) -> None:
+        """Initialize error."""
+        super().__init__(
+            f"No intent was matched for the provided command: {command}",
+            NO_INTENT_MATCH_RESPONSE,
         )
 
 
@@ -840,10 +852,7 @@ class StartTimerIntentHandler(intent.IntentHandler):
         if conversation_command and not await self._validate_conversation_command(
             intent_obj, conversation_command
         ):
-            raise intent.IntentHandleError(
-                f"Invalid conversation command: {conversation_command}",
-                "invalid_conversation_command",
-            )
+            raise NoIntentMatchError(conversation_command)
 
         name: str | None = None
         if "name" in slots:
