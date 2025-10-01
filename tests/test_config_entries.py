@@ -7175,7 +7175,7 @@ async def test_reconfigure_subentry_create_subentry(hass: HomeAssistant) -> None
 async def test_non_string_unique_id_fails(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, unique_id: Any
 ) -> None:
-    """Test the ConfigEntryItems user dict fails unhashable unique_id."""
+    """Test the ConfigEntryItems user dict fails non string unique_id."""
     entries = config_entries.ConfigEntryItems(hass)
     entry = config_entries.ConfigEntry(
         data={},
@@ -7211,7 +7211,7 @@ async def test_non_string_unique_id_fails(
 async def test_non_string_unique_id_fails_on_update(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, unique_id: Any
 ) -> None:
-    """Test the ConfigEntryItems user dict fails non-hashable unique_id on update."""
+    """Test the ConfigEntryItems user dict fails non-string unique_id on update."""
     entries = config_entries.ConfigEntryItems(hass)
     entry = config_entries.ConfigEntry(
         data={},
