@@ -316,6 +316,7 @@ async def test_sensor_value_template_config_entry(hass: HomeAssistant) -> None:
                     "value_template": "{{states('sensor.test_monitored') == 'off'}}",
                     "prob_given_true": 0.8,
                     "prob_given_false": 0.4,
+                    "name": "observation_1",
                 },
                 subentry_type="observation",
                 title="observation_1",

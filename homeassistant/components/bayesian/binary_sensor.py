@@ -108,7 +108,8 @@ NUMERIC_STATE_SCHEMA = vol.All(
             vol.Optional(CONF_BELOW): vol.Coerce(float),
             vol.Required(CONF_P_GIVEN_T): vol.Coerce(float),
             vol.Optional(CONF_P_GIVEN_F): vol.Coerce(float),
-        }
+        },
+        required=True,
     ),
     above_greater_than_below,
 )
