@@ -1768,7 +1768,7 @@ async def test_zeroconf_wrong_device_name(
     mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
 ) -> None:
-    """Test zeroconf."""
+    """Test zeroconf discovery with mismatched device name."""
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
