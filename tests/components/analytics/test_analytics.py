@@ -1087,17 +1087,6 @@ async def test_devices_payload_no_entities(
                     },
                     {
                         "entities": [],
-                        "entry_type": "service",
-                        "has_configuration_url": False,
-                        "hw_version": None,
-                        "manufacturer": "test-manufacturer",
-                        "model": None,
-                        "model_id": "test-model-id",
-                        "sw_version": None,
-                        "via_device": None,
-                    },
-                    {
-                        "entities": [],
                         "entry_type": None,
                         "has_configuration_url": False,
                         "hw_version": None,
@@ -1160,6 +1149,13 @@ async def test_devices_payload_with_entities(
         manufacturer="test-manufacturer",
         model_id="test-model-id",
     )
+    device_entry_3 = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "3")},
+        manufacturer="test-manufacturer",
+        model_id="test-model-id",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
 
     # First device
 
@@ -1207,6 +1203,14 @@ async def test_devices_payload_with_entities(
         platform="hue",
         unique_id="3",
         device_id=device_entry_2.id,
+    )
+
+    # Third device (service type)
+    entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="4",
+        device_id=device_entry_3.id,
     )
 
     # Entity without device with unit of measurement and state class
