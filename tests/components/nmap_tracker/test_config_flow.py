@@ -236,6 +236,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             CONF_EXCLUDE: ["4.4.4.4"],
             CONF_MAC_EXCLUDE: ["00:00:00:00:00:00", "11:22:33:44:55:66"],
         },
+        version=2,
     )
     config_entry.add_to_hass(hass)
     hass.set_state(CoreState.stopped)
