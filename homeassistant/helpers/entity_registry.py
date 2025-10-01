@@ -733,26 +733,12 @@ def _validate_item(
     entity_category: EntityCategory | None | UndefinedType = None,
     hidden_by: RegistryEntryHider | None | UndefinedType = None,
     old_config_subentry_id: str | None = None,
-    report_non_string_unique_id: bool = True,
     unique_id: str | Hashable | UndefinedType | Any,
 ) -> None:
     """Validate entity registry item."""
-    if unique_id is not UNDEFINED and not isinstance(unique_id, Hashable):
+    if unique_id is not UNDEFINED and not isinstance(unique_id, str):
         raise TypeError(f"unique_id must be a string, got {unique_id}")
-    if (
-        report_non_string_unique_id
-        and unique_id is not UNDEFINED
-        and not isinstance(unique_id, str)
-    ):
-        # In HA Core 2025.10, we should fail if unique_id is not a string
-        report_issue = async_suggest_report_issue(hass, integration_domain=platform)
-        _LOGGER.error(
-            "'%s' from integration %s has a non string unique_id '%s', please %s",
-            domain,
-            platform,
-            unique_id,
-            report_issue,
-        )
+
     if config_entry_id and config_entry_id is not UNDEFINED:
         if not hass.config_entries.async_get_entry(config_entry_id):
             raise ValueError(
@@ -1506,7 +1492,6 @@ class EntityRegistry(BaseRegistry):
                         self.hass,
                         domain,
                         entity["platform"],
-                        report_non_string_unique_id=False,
                         unique_id=entity["unique_id"],
                     )
                 except (TypeError, ValueError) as err:
@@ -1584,7 +1569,6 @@ class EntityRegistry(BaseRegistry):
                         self.hass,
                         domain,
                         entity["platform"],
-                        report_non_string_unique_id=False,
                         unique_id=entity["unique_id"],
                     )
                 except (TypeError, ValueError):

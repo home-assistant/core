@@ -657,24 +657,29 @@ async def test_load_bad_data(
     await er.async_load(hass)
     registry = er.async_get(hass)
 
-    assert len(registry.entities) == 1
-    assert set(registry.entities.keys()) == {"test.test1"}
+    assert len(registry.entities) == 0
+    assert set(registry.entities.keys()) == set()
 
-    assert len(registry.deleted_entities) == 1
-    assert set(registry.deleted_entities.keys()) == {("test", "super_platform", 234)}
+    assert len(registry.deleted_entities) == 0
+    assert set(registry.deleted_entities.keys()) == set()
 
     assert (
-        "'test' from integration super_platform has a non string unique_id '123', "
-        "please create a bug report" not in caplog.text
+        "'test.test1' from integration super_platform could not be loaded:"
+        " 'unique_id must be a string, got 123', please create a bug report"
+        in caplog.text
     )
     assert (
-        "'test' from integration super_platform has a non string unique_id '234', "
-        "please create a bug report" not in caplog.text
+        "'test.test2' from integration super_platform could not be loaded:"
+        " 'unique_id must be a string, got ['not', 'valid']', please create a bug report"
+        in caplog.text
     )
     assert (
-        "Entity registry entry 'test.test2' from integration super_platform could not "
-        "be loaded: 'unique_id must be a string, got ['not', 'valid']', please create "
-        "a bug report" in caplog.text
+        "'test.test3' from integration super_platform could not be loaded:"
+        not in caplog.text
+    )
+    assert (
+        "'test.test4' from integration super_platform could not be loaded:"
+        not in caplog.text
     )
 
 
@@ -2902,32 +2907,19 @@ async def test_hidden_by_str_not_allowed(entity_registry: er.EntityRegistry) -> 
         )
 
 
-async def test_unique_id_non_hashable(entity_registry: er.EntityRegistry) -> None:
+async def test_unique_id_non_string(entity_registry: er.EntityRegistry) -> None:
     """Test unique_id which is not hashable."""
     with pytest.raises(TypeError):
         entity_registry.async_get_or_create("light", "hue", ["not", "valid"])
 
+    with pytest.raises(TypeError):
+        entity_registry.async_get_or_create("light", "hue", 1234)
+
     entity_id = entity_registry.async_get_or_create("light", "hue", "1234").entity_id
     with pytest.raises(TypeError):
         entity_registry.async_update_entity(entity_id, new_unique_id=["not", "valid"])
-
-
-async def test_unique_id_non_string(
-    entity_registry: er.EntityRegistry, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test unique_id which is not a string."""
-    entity_registry.async_get_or_create("light", "hue", 1234)
-    assert (
-        "'light' from integration hue has a non string unique_id '1234', "
-        "please create a bug report" in caplog.text
-    )
-
-    entity_id = entity_registry.async_get_or_create("light", "hue", "1234").entity_id
-    entity_registry.async_update_entity(entity_id, new_unique_id=2345)
-    assert (
-        "'light' from integration hue has a non string unique_id '2345', "
-        "please create a bug report" in caplog.text
-    )
+    with pytest.raises(TypeError):
+        entity_registry.async_update_entity(entity_id, new_unique_id=1234)
 
 
 @pytest.mark.parametrize(
