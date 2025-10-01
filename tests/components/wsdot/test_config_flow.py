@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from homeassistant.components.configurator import ATTR_ERRORS
 from homeassistant.components.wsdot.const import (
     CONF_DATA,
     CONF_TITLE,
@@ -13,7 +14,14 @@ from homeassistant.components.wsdot.const import (
     SUBENTRY_TRAVEL_TIMES,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME, CONF_SOURCE, CONF_TYPE
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_BASE,
+    CONF_ID,
+    CONF_NAME,
+    CONF_SOURCE,
+    CONF_TYPE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -167,3 +175,18 @@ async def test_integration_already_exists(
 
     assert duplicate_config_flow[CONF_TYPE] is FlowResultType.ABORT
     assert duplicate_config_flow[CONF_REASON] == "already_configured"
+
+
+async def test_api_not_valid(
+    hass: HomeAssistant,
+    mock_no_auth_travel_time: None,
+) -> None:
+    """Test that an auth error to the service returns the user an error flow."""
+    config_flow = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_USER},
+        data=VALID_USER_CONFIG,
+    )
+
+    assert config_flow[CONF_TYPE] is FlowResultType.FORM
+    assert config_flow[ATTR_ERRORS][CONF_BASE] == "cannot_connect"

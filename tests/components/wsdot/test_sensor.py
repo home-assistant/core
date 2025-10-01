@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.wsdot.const import CONF_TRAVEL_TIMES, DOMAIN
 import homeassistant.components.wsdot.sensor as wsdot_sensor
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ID,
@@ -114,6 +115,21 @@ async def test_travel_sensor_platform_setup_bad_routes(
 
     entry = next(iter(hass.config_entries.async_entries(DOMAIN)), None)
     assert entry is None
+
+
+async def test_travel_sensor_setup_no_auth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_no_auth_travel_time: None,
+) -> None:
+    """Test the wsdot Travel Time sensor does not create an entry with a bad API key."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = next(iter(hass.config_entries.async_entries(DOMAIN)), None)
+    assert entry is not None
+    assert entry.state == ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize(

@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from wsdot import TravelTime
+from wsdot import TravelTime, WsdotTravelError
 
 from homeassistant.components.wsdot.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
@@ -23,6 +23,16 @@ def mock_travel_time() -> Generator[TravelTime]:
         client.get_travel_time.return_value = response
         client.get_all_travel_times.return_value = [response]
         yield mock
+
+
+@pytest.fixture
+def mock_no_auth_travel_time() -> Generator[None]:
+    """WsdotTravelTimes.get_travel_time is mocked to raise a WsdotTravelError."""
+    with patch("wsdot.WsdotTravelTimes", autospec=True) as mock:
+        client = mock.return_value
+        client.get_travel_time.side_effect = WsdotTravelError()
+        client.get_all_travel_times.side_effect = WsdotTravelError()
+        yield
 
 
 @pytest.fixture
