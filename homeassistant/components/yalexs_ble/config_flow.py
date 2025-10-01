@@ -26,7 +26,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
@@ -360,7 +360,7 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
         return YaleXSBLEOptionsFlowHandler()
 
 
-class YaleXSBLEOptionsFlowHandler(OptionsFlow):
+class YaleXSBLEOptionsFlowHandler(OptionsFlowWithReload):
     """Handle YaleXSBLE options."""
 
     async def async_step_init(

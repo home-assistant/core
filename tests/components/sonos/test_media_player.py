@@ -33,16 +33,18 @@ from homeassistant.components.sonos.const import (
     SOURCE_TV,
 )
 from homeassistant.components.sonos.media_player import (
+    LONG_SERVICE_TIMEOUT,
+    VOLUME_INCREMENT,
+)
+from homeassistant.components.sonos.services import (
     ATTR_ALARM_ID,
     ATTR_ENABLED,
     ATTR_INCLUDE_LINKED_ZONES,
     ATTR_VOLUME,
-    LONG_SERVICE_TIMEOUT,
     SERVICE_GET_QUEUE,
     SERVICE_RESTORE,
     SERVICE_SNAPSHOT,
     SERVICE_UPDATE_ALARM,
-    VOLUME_INCREMENT,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -413,6 +415,7 @@ async def test_play_media_lib_track_add(
 
 
 _share_link: str = "spotify:playlist:abcdefghij0123456789XY"
+_share_link_title: str = "playlist title"
 
 
 async def test_play_media_share_link_add(
@@ -430,6 +433,7 @@ async def test_play_media_share_link_add(
             ATTR_MEDIA_CONTENT_TYPE: "playlist",
             ATTR_MEDIA_CONTENT_ID: _share_link,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.ADD,
+            ATTR_MEDIA_EXTRA: {"title": _share_link_title},
         },
         blocking=True,
     )
@@ -440,6 +444,10 @@ async def test_play_media_share_link_add(
     assert (
         soco_sharelink.add_share_link_to_queue.call_args_list[0].kwargs["timeout"]
         == LONG_SERVICE_TIMEOUT
+    )
+    assert (
+        soco_sharelink.add_share_link_to_queue.call_args_list[0].kwargs["dc_title"]
+        == _share_link_title
     )
 
 
@@ -471,6 +479,10 @@ async def test_play_media_share_link_next(
     )
     assert (
         soco_sharelink.add_share_link_to_queue.call_args_list[0].kwargs["position"] == 1
+    )
+    assert (
+        "dc_title"
+        not in soco_sharelink.add_share_link_to_queue.call_args_list[0].kwargs
     )
 
 
