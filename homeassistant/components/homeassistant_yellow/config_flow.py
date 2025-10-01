@@ -28,6 +28,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
     ResetTarget,
+    probe_silabs_firmware_info,
 )
 from homeassistant.config_entries import (
     SOURCE_HARDWARE,
@@ -144,8 +145,10 @@ class HomeAssistantYellowConfigFlow(
         self, data: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+        assert self._device is not None
+
         # We do not actually use any portion of `BaseFirmwareConfigFlow` beyond this
-        await self._probe_firmware_info()
+        self._probed_firmware_info = await probe_silabs_firmware_info(self._device)
 
         # Kick off ZHA hardware discovery automatically if Zigbee firmware is running
         if (

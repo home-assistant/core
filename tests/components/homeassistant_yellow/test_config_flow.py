@@ -482,6 +482,13 @@ async def test_firmware_options_flow_thread(
         step_id: str,
         next_step_id: str,
     ) -> ConfigFlowResult:
+        self._probed_firmware_info = FirmwareInfo(
+            device=RADIO_DEVICE,
+            firmware_type=expected_installed_firmware_type,
+            firmware_version=fw_version,
+            owners=[],
+            source="probe",
+        )
         return await getattr(self, f"async_step_{next_step_id}")()
 
     with (
@@ -493,16 +500,6 @@ async def test_firmware_options_flow_thread(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareInstallFlow._install_firmware_step",
             autospec=True,
             side_effect=mock_install_firmware_step,
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
-            return_value=FirmwareInfo(
-                device=RADIO_DEVICE,
-                firmware_type=fw_type,
-                firmware_version=fw_version,
-                owners=[],
-                source="probe",
-            ),
         ),
     ):
         result = await hass.config_entries.options.async_configure(

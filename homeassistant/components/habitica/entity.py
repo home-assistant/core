@@ -68,14 +68,14 @@ class HabiticaPartyBase(CoordinatorEntity[HabiticaPartyCoordinator]):
         super().__init__(coordinator)
         if TYPE_CHECKING:
             assert config_entry.unique_id
-        unique_id = f"{config_entry.unique_id}_{coordinator.data.id!s}"
+        unique_id = f"{config_entry.unique_id}_{coordinator.data.party.id!s}"
         self.entity_description = entity_description
         self._attr_unique_id = f"{unique_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             model=NAME,
-            name=coordinator.data.summary,
+            name=coordinator.data.party.summary,
             identifiers={(DOMAIN, unique_id)},
             via_device=(DOMAIN, config_entry.unique_id),
         )

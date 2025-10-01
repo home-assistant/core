@@ -226,7 +226,7 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2025.9.1
+aioecowitt==2025.9.2
 
 # homeassistant.components.co2signal
 aioelectricitymaps==1.1.1
@@ -1006,7 +1006,7 @@ habiticalib==0.4.5
 habluetooth==5.6.4
 
 # homeassistant.components.cloud
-hass-nabucasa==1.1.2
+hass-nabucasa==1.2.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
@@ -1230,6 +1230,9 @@ medcom-ble==0.1.1
 
 # homeassistant.components.melnor
 melnor-bluetooth==0.0.25
+
+# homeassistant.components.meteo_lt
+meteo-lt-pkg==0.2.4
 
 # homeassistant.components.meteo_france
 meteofrance-api==1.4.0
@@ -1686,6 +1689,9 @@ pyfibaro==0.8.3
 # homeassistant.components.fido
 pyfido==2.1.2
 
+# homeassistant.components.firefly_iii
+pyfirefly==0.1.5
+
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.46
 
@@ -1993,7 +1999,7 @@ pysmartthings==3.3.0
 pysmarty2==0.10.3
 
 # homeassistant.components.smhi
-pysmhi==1.0.2
+pysmhi==1.1.0
 
 # homeassistant.components.edl21
 pysml==0.1.5
@@ -2667,7 +2673,7 @@ youless-api==2.2.0
 youtubeaio==2.0.0
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.09.23
+yt-dlp[default]==2025.09.26
 
 # homeassistant.components.zamg
 zamg==0.3.6
