@@ -250,13 +250,13 @@ aioguardian==2022.07.0
 aioharmony==0.5.3
 
 # homeassistant.components.hassio
-aiohasupervisor==0.3.3b0
+aiohasupervisor==0.3.3
 
 # homeassistant.components.home_connect
 aiohomeconnect==0.20.0
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.18
+aiohomekit==3.2.19
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -435,7 +435,7 @@ airgradient==0.9.2
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.5.3
+airos==0.5.4
 
 # homeassistant.components.airthings_ble
 airthings-ble==0.9.2
@@ -1200,6 +1200,9 @@ loqedAPI==2.1.10
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
 
+# homeassistant.components.lunatone
+lunatone-rest-api-client==0.4.8
+
 # homeassistant.components.lupusec
 lupupy==0.3.2
 
@@ -1626,7 +1629,7 @@ pycsspeechtts==1.0.8
 # pycups==2.0.4
 
 # homeassistant.components.cync
-pycync==0.4.0
+pycync==0.4.1
 
 # homeassistant.components.daikin
 pydaikin==2.16.0
@@ -1690,7 +1693,7 @@ pyfibaro==0.8.3
 pyfido==2.1.2
 
 # homeassistant.components.firefly_iii
-pyfirefly==0.1.5
+pyfirefly==0.1.6
 
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.46
@@ -1917,7 +1920,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==0.1.7
+pyportainer==1.0.3
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.0.1
@@ -2117,7 +2120,7 @@ python-pooldose==0.5.0
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.47.1
+python-roborock==2.49.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.44
