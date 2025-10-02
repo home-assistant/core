@@ -186,10 +186,12 @@ def pytest_runtest_setup() -> None:
     destinations will be allowed.
 
     freezegun:
-    Modified to include https://github.com/spulec/freezegun/pull/424
+    Modified to include https://github.com/spulec/freezegun/pull/424 and improve class str.
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
+
+    freezegun.api.FakeDate = patch_time.HAFakeDate  # type: ignore[attr-defined]
 
     freezegun.api.datetime_to_fakedatetime = patch_time.ha_datetime_to_fakedatetime  # type: ignore[attr-defined]
     freezegun.api.FakeDatetime = patch_time.HAFakeDatetime  # type: ignore[attr-defined]

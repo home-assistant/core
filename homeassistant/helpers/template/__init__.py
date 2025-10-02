@@ -5,9 +5,7 @@ from __future__ import annotations
 from ast import literal_eval
 import asyncio
 import collections.abc
-from collections.abc import Callable, Generator, Iterable, MutableSequence
-from contextlib import AbstractContextManager
-from contextvars import ContextVar
+from collections.abc import Callable, Generator, Iterable
 from copy import deepcopy
 from datetime import date, datetime, time, timedelta
 from functools import cache, lru_cache, partial, wraps
@@ -20,18 +18,8 @@ import random
 import re
 from struct import error as StructError, pack, unpack_from
 import sys
-from types import CodeType, TracebackType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Concatenate,
-    Literal,
-    NoReturn,
-    Self,
-    cast,
-    overload,
-)
-from urllib.parse import urlencode as urllib_urlencode
+from types import CodeType
+from typing import TYPE_CHECKING, Any, Concatenate, Literal, NoReturn, Self, overload
 import weakref
 
 from awesomeversion import AwesomeVersion
@@ -63,7 +51,6 @@ from homeassistant.core import (
     ServiceResponse,
     State,
     callback,
-    split_entity_id,
     valid_domain,
     valid_entity_id,
 )
@@ -82,17 +69,21 @@ from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.translation import async_translate_state
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
-from homeassistant.util import (
-    convert,
-    dt as dt_util,
-    location as location_util,
-    slugify as slugify_util,
-)
+from homeassistant.util import convert, dt as dt_util, location as location_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
+
+from .context import (
+    TemplateContextManager as TemplateContextManager,
+    render_with_context,
+    template_context_manager,
+    template_cv,
+)
+from .helpers import raise_no_default
+from .render_info import RenderInfo, render_info_cv
 
 if TYPE_CHECKING:
     from _typeshed import OptExcInfo
@@ -133,15 +124,6 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
     "name",
 }
 
-ALL_STATES_RATE_LIMIT = 60  # seconds
-DOMAIN_STATES_RATE_LIMIT = 1  # seconds
-
-_render_info: ContextVar[RenderInfo | None] = ContextVar("_render_info", default=None)
-
-
-template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
-    "template_cv", default=None
-)
 
 #
 # CACHED_TEMPLATE_STATES is a rough estimate of the number of entities
@@ -340,14 +322,6 @@ RESULT_WRAPPERS: dict[type, type] = {kls: gen_result_wrapper(kls) for kls in _ty
 RESULT_WRAPPERS[tuple] = TupleWrapper
 
 
-def _true(arg: str) -> bool:
-    return True
-
-
-def _false(arg: str) -> bool:
-    return False
-
-
 @lru_cache(maxsize=EVAL_CACHE_SIZE)
 def _cached_parse_result(render_result: str) -> Any:
     """Parse a result and cache the result."""
@@ -375,126 +349,6 @@ def _cached_parse_result(render_result: str) -> Any:
         return result
 
     return render_result
-
-
-class RenderInfo:
-    """Holds information about a template render."""
-
-    __slots__ = (
-        "_result",
-        "all_states",
-        "all_states_lifecycle",
-        "domains",
-        "domains_lifecycle",
-        "entities",
-        "exception",
-        "filter",
-        "filter_lifecycle",
-        "has_time",
-        "is_static",
-        "rate_limit",
-        "template",
-    )
-
-    def __init__(self, template: Template) -> None:
-        """Initialise."""
-        self.template = template
-        # Will be set sensibly once frozen.
-        self.filter_lifecycle: Callable[[str], bool] = _true
-        self.filter: Callable[[str], bool] = _true
-        self._result: str | None = None
-        self.is_static = False
-        self.exception: TemplateError | None = None
-        self.all_states = False
-        self.all_states_lifecycle = False
-        self.domains: collections.abc.Set[str] = set()
-        self.domains_lifecycle: collections.abc.Set[str] = set()
-        self.entities: collections.abc.Set[str] = set()
-        self.rate_limit: float | None = None
-        self.has_time = False
-
-    def __repr__(self) -> str:
-        """Representation of RenderInfo."""
-        return (
-            f"<RenderInfo {self.template}"
-            f" all_states={self.all_states}"
-            f" all_states_lifecycle={self.all_states_lifecycle}"
-            f" domains={self.domains}"
-            f" domains_lifecycle={self.domains_lifecycle}"
-            f" entities={self.entities}"
-            f" rate_limit={self.rate_limit}"
-            f" has_time={self.has_time}"
-            f" exception={self.exception}"
-            f" is_static={self.is_static}"
-            ">"
-        )
-
-    def _filter_domains_and_entities(self, entity_id: str) -> bool:
-        """Template should re-render if the entity state changes.
-
-        Only when we match specific domains or entities.
-        """
-        return (
-            split_entity_id(entity_id)[0] in self.domains or entity_id in self.entities
-        )
-
-    def _filter_entities(self, entity_id: str) -> bool:
-        """Template should re-render if the entity state changes.
-
-        Only when we match specific entities.
-        """
-        return entity_id in self.entities
-
-    def _filter_lifecycle_domains(self, entity_id: str) -> bool:
-        """Template should re-render if the entity is added or removed.
-
-        Only with domains watched.
-        """
-        return split_entity_id(entity_id)[0] in self.domains_lifecycle
-
-    def result(self) -> str:
-        """Results of the template computation."""
-        if self.exception is not None:
-            raise self.exception
-        return cast(str, self._result)
-
-    def _freeze_static(self) -> None:
-        self.is_static = True
-        self._freeze_sets()
-        self.all_states = False
-
-    def _freeze_sets(self) -> None:
-        self.entities = frozenset(self.entities)
-        self.domains = frozenset(self.domains)
-        self.domains_lifecycle = frozenset(self.domains_lifecycle)
-
-    def _freeze(self) -> None:
-        self._freeze_sets()
-
-        if self.rate_limit is None:
-            if self.all_states or self.exception:
-                self.rate_limit = ALL_STATES_RATE_LIMIT
-            elif self.domains or self.domains_lifecycle:
-                self.rate_limit = DOMAIN_STATES_RATE_LIMIT
-
-        if self.exception:
-            return
-
-        if not self.all_states_lifecycle:
-            if self.domains_lifecycle:
-                self.filter_lifecycle = self._filter_lifecycle_domains
-            else:
-                self.filter_lifecycle = _false
-
-        if self.all_states:
-            return
-
-        if self.domains:
-            self.filter = self._filter_domains_and_entities
-        elif self.entities:
-            self.filter = self._filter_entities
-        else:
-            self.filter = _false
 
 
 class Template:
@@ -578,7 +432,7 @@ class Template:
             self._compiled_code = compiled
             return
 
-        with _template_context_manager as cm:
+        with template_context_manager as cm:
             cm.set_template(self.template, "compiling")
             try:
                 self._compiled_code = self._env.compile(self.template)
@@ -637,7 +491,7 @@ class Template:
             kwargs.update(variables)
 
         try:
-            render_result = _render_with_context(self.template, compiled, **kwargs)
+            render_result = render_with_context(self.template, compiled, **kwargs)
         except Exception as err:
             raise TemplateError(err) from err
 
@@ -699,7 +553,7 @@ class Template:
         def _render_template() -> None:
             assert self.hass is not None, "hass variable not set on template"
             try:
-                _render_with_context(self.template, compiled, **kwargs)
+                render_with_context(self.template, compiled, **kwargs)
             except TimeoutError:
                 pass
             except Exception:  # noqa: BLE001
@@ -740,7 +594,7 @@ class Template:
         if not self.hass:
             raise RuntimeError(f"hass not set while rendering {self}")
 
-        if _render_info.get() is not None:
+        if render_info_cv.get() is not None:
             raise RuntimeError(
                 f"RenderInfo already set while rendering {self}, "
                 "this usually indicates the template is being rendered "
@@ -752,7 +606,7 @@ class Template:
             render_info._freeze_static()  # noqa: SLF001
             return render_info
 
-        token = _render_info.set(render_info)
+        token = render_info_cv.set(render_info)
         try:
             render_info._result = self.async_render(  # noqa: SLF001
                 variables, strict=strict, log_fn=log_fn, **kwargs
@@ -760,7 +614,7 @@ class Template:
         except TemplateError as ex:
             render_info.exception = ex
         finally:
-            _render_info.reset(token)
+            render_info_cv.reset(token)
 
         render_info._freeze()  # noqa: SLF001
         return render_info
@@ -810,7 +664,7 @@ class Template:
             pass
 
         try:
-            render_result = _render_with_context(
+            render_result = render_with_context(
                 self.template, compiled, **variables
             ).strip()
         except jinja2.TemplateError as ex:
@@ -917,11 +771,11 @@ class AllStates:
     __getitem__ = __getattr__
 
     def _collect_all(self) -> None:
-        if (render_info := _render_info.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None:
             render_info.all_states = True
 
     def _collect_all_lifecycle(self) -> None:
-        if (render_info := _render_info.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None:
             render_info.all_states_lifecycle = True
 
     def __iter__(self) -> Generator[TemplateState]:
@@ -1007,11 +861,11 @@ class DomainStates:
     __getitem__ = __getattr__
 
     def _collect_domain(self) -> None:
-        if (entity_collect := _render_info.get()) is not None:
+        if (entity_collect := render_info_cv.get()) is not None:
             entity_collect.domains.add(self._domain)  # type: ignore[attr-defined]
 
     def _collect_domain_lifecycle(self) -> None:
-        if (entity_collect := _render_info.get()) is not None:
+        if (entity_collect := render_info_cv.get()) is not None:
             entity_collect.domains_lifecycle.add(self._domain)  # type: ignore[attr-defined]
 
     def __iter__(self) -> Generator[TemplateState]:
@@ -1049,7 +903,7 @@ class TemplateStateBase(State):
         self._cache: dict[str, Any] = {}
 
     def _collect_state(self) -> None:
-        if self._collect and (render_info := _render_info.get()):
+        if self._collect and (render_info := render_info_cv.get()):
             render_info.entities.add(self._entity_id)  # type: ignore[attr-defined]
 
     # Jinja will try __getitem__ first and it avoids the need
@@ -1058,7 +912,7 @@ class TemplateStateBase(State):
         """Return a property as an attribute for jinja."""
         if item in _COLLECTABLE_STATE_ATTRIBUTES:
             # _collect_state inlined here for performance
-            if self._collect and (render_info := _render_info.get()):
+            if self._collect and (render_info := render_info_cv.get()):
                 render_info.entities.add(self._entity_id)  # type: ignore[attr-defined]
             return getattr(self._state, item)
         if item == "entity_id":
@@ -1200,7 +1054,7 @@ _create_template_state_no_collect = partial(TemplateState, collect=False)
 
 
 def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
-    if (entity_collect := _render_info.get()) is not None:
+    if (entity_collect := render_info_cv.get()) is not None:
         entity_collect.entities.add(entity_id)  # type: ignore[attr-defined]
 
 
@@ -1951,7 +1805,7 @@ def has_value(hass: HomeAssistant, entity_id: str) -> bool:
 
 def now(hass: HomeAssistant) -> datetime:
     """Record fetching now."""
-    if (render_info := _render_info.get()) is not None:
+    if (render_info := render_info_cv.get()) is not None:
         render_info.has_time = True
 
     return dt_util.now()
@@ -1959,19 +1813,10 @@ def now(hass: HomeAssistant) -> datetime:
 
 def utcnow(hass: HomeAssistant) -> datetime:
     """Record fetching utcnow."""
-    if (render_info := _render_info.get()) is not None:
+    if (render_info := render_info_cv.get()) is not None:
         render_info.has_time = True
 
     return dt_util.utcnow()
-
-
-def raise_no_default(function: str, value: Any) -> NoReturn:
-    """Log warning if no default is specified."""
-    template, action = template_cv.get() or ("", "rendering or compiling")
-    raise ValueError(
-        f"Template error: {function} got invalid input '{value}' when {action} template"
-        f" '{template}' but no default was specified"
-    )
 
 
 def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
@@ -2251,31 +2096,6 @@ def is_number(value):
     return True
 
 
-def _is_list(value: Any) -> bool:
-    """Return whether a value is a list."""
-    return isinstance(value, list)
-
-
-def _is_set(value: Any) -> bool:
-    """Return whether a value is a set."""
-    return isinstance(value, set)
-
-
-def _is_tuple(value: Any) -> bool:
-    """Return whether a value is a tuple."""
-    return isinstance(value, tuple)
-
-
-def _to_set(value: Any) -> set[Any]:
-    """Convert value to set."""
-    return set(value)
-
-
-def _to_tuple(value):
-    """Convert value to tuple."""
-    return tuple(value)
-
-
 def _is_datetime(value: Any) -> bool:
     """Return whether a value is a datetime."""
     return isinstance(value, datetime)
@@ -2284,46 +2104,6 @@ def _is_datetime(value: Any) -> bool:
 def _is_string_like(value: Any) -> bool:
     """Return whether a value is a string or string like object."""
     return isinstance(value, (str, bytes, bytearray))
-
-
-def regex_match(value, find="", ignorecase=False):
-    """Match value using regex."""
-    if not isinstance(value, str):
-        value = str(value)
-    flags = re.IGNORECASE if ignorecase else 0
-    return bool(_regex_cache(find, flags).match(value))
-
-
-_regex_cache = lru_cache(maxsize=128)(re.compile)
-
-
-def regex_replace(value="", find="", replace="", ignorecase=False):
-    """Replace using regex."""
-    if not isinstance(value, str):
-        value = str(value)
-    flags = re.IGNORECASE if ignorecase else 0
-    return _regex_cache(find, flags).sub(replace, value)
-
-
-def regex_search(value, find="", ignorecase=False):
-    """Search using regex."""
-    if not isinstance(value, str):
-        value = str(value)
-    flags = re.IGNORECASE if ignorecase else 0
-    return bool(_regex_cache(find, flags).search(value))
-
-
-def regex_findall_index(value, find="", index=0, ignorecase=False):
-    """Find all matches using regex and then pick specific match index."""
-    return regex_findall(value, find, ignorecase)[index]
-
-
-def regex_findall(value, find="", ignorecase=False):
-    """Find all matches using regex."""
-    if not isinstance(value, str):
-        value = str(value)
-    flags = re.IGNORECASE if ignorecase else 0
-    return _regex_cache(find, flags).findall(value)
 
 
 def struct_pack(value: Any | None, format_string: str) -> bytes | None:
@@ -2365,16 +2145,6 @@ def struct_unpack(value: bytes, format_string: str, offset: int = 0) -> Any | No
 def from_hex(value: str) -> bytes:
     """Perform hex string decode."""
     return bytes.fromhex(value)
-
-
-def ordinal(value):
-    """Perform ordinal conversion."""
-    suffixes = ["th", "st", "nd", "rd"] + ["th"] * 6  # codespell:ignore nd
-    return str(value) + (
-        suffixes[(int(str(value)[-1])) % 10]
-        if int(str(value)[-2:]) % 100 not in range(11, 14)
-        else "th"
-    )
 
 
 def from_json(value, default=_SENTINEL):
@@ -2437,7 +2207,7 @@ def random_every_time(context, values):
 
 def today_at(hass: HomeAssistant, time_str: str = "") -> datetime:
     """Record fetching now where the time has been replaced with value."""
-    if (render_info := _render_info.get()) is not None:
+    if (render_info := render_info_cv.get()) is not None:
         render_info.has_time = True
 
     today = dt_util.start_of_local_day()
@@ -2467,7 +2237,7 @@ def relative_time(hass: HomeAssistant, value: Any) -> Any:
     supported so as not to break old templates.
     """
 
-    if (render_info := _render_info.get()) is not None:
+    if (render_info := render_info_cv.get()) is not None:
         render_info.has_time = True
 
     if not isinstance(value, datetime):
@@ -2488,7 +2258,7 @@ def time_since(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -
 
     If the value not a datetime object the input will be returned unmodified.
     """
-    if (render_info := _render_info.get()) is not None:
+    if (render_info := render_info_cv.get()) is not None:
         render_info.has_time = True
 
     if not isinstance(value, datetime):
@@ -2510,7 +2280,7 @@ def time_until(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -
 
     If the value not a datetime object the input will be returned unmodified.
     """
-    if (render_info := _render_info.get()) is not None:
+    if (render_info := render_info_cv.get()) is not None:
         render_info.has_time = True
 
     if not isinstance(value, datetime):
@@ -2521,16 +2291,6 @@ def time_until(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -
         return value
 
     return dt_util.get_time_remaining(value, precision)
-
-
-def urlencode(value):
-    """Urlencode dictionary and return as UTF-8 string."""
-    return urllib_urlencode(value).encode("utf-8")
-
-
-def slugify(value, separator="_"):
-    """Convert a string into a slug, such as what is used for entity ids."""
-    return slugify_util(value, separator=separator)
 
 
 def iif(
@@ -2553,96 +2313,9 @@ def iif(
     return if_false
 
 
-def shuffle(*args: Any, seed: Any = None) -> MutableSequence[Any]:
-    """Shuffle a list, either with a seed or without."""
-    if not args:
-        raise TypeError("shuffle expected at least 1 argument, got 0")
-
-    # If first argument is iterable and more than 1 argument provided
-    # but not a named seed, then use 2nd argument as seed.
-    if isinstance(args[0], Iterable):
-        items = list(args[0])
-        if len(args) > 1 and seed is None:
-            seed = args[1]
-    elif len(args) == 1:
-        raise TypeError(f"'{type(args[0]).__name__}' object is not iterable")
-    else:
-        items = list(args)
-
-    if seed:
-        r = random.Random(seed)
-        r.shuffle(items)
-    else:
-        random.shuffle(items)
-    return items
-
-
 def typeof(value: Any) -> Any:
     """Return the type of value passed to debug types."""
     return value.__class__.__name__
-
-
-def flatten(value: Iterable[Any], levels: int | None = None) -> list[Any]:
-    """Flattens list of lists."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(f"flatten expected a list, got {type(value).__name__}")
-
-    flattened: list[Any] = []
-    for item in value:
-        if isinstance(item, Iterable) and not isinstance(item, str):
-            if levels is None:
-                flattened.extend(flatten(item))
-            elif levels >= 1:
-                flattened.extend(flatten(item, levels=(levels - 1)))
-            else:
-                flattened.append(item)
-        else:
-            flattened.append(item)
-    return flattened
-
-
-def intersect(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
-    """Return the common elements between two lists."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(f"intersect expected a list, got {type(value).__name__}")
-    if not isinstance(other, Iterable) or isinstance(other, str):
-        raise TypeError(f"intersect expected a list, got {type(other).__name__}")
-
-    return list(set(value) & set(other))
-
-
-def difference(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
-    """Return elements in first list that are not in second list."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(f"difference expected a list, got {type(value).__name__}")
-    if not isinstance(other, Iterable) or isinstance(other, str):
-        raise TypeError(f"difference expected a list, got {type(other).__name__}")
-
-    return list(set(value) - set(other))
-
-
-def union(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
-    """Return all unique elements from both lists combined."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(f"union expected a list, got {type(value).__name__}")
-    if not isinstance(other, Iterable) or isinstance(other, str):
-        raise TypeError(f"union expected a list, got {type(other).__name__}")
-
-    return list(set(value) | set(other))
-
-
-def symmetric_difference(value: Iterable[Any], other: Iterable[Any]) -> list[Any]:
-    """Return elements that are in either list but not in both."""
-    if not isinstance(value, Iterable) or isinstance(value, str):
-        raise TypeError(
-            f"symmetric_difference expected a list, got {type(value).__name__}"
-        )
-    if not isinstance(other, Iterable) or isinstance(other, str):
-        raise TypeError(
-            f"symmetric_difference expected a list, got {type(other).__name__}"
-        )
-
-    return list(set(value) ^ set(other))
 
 
 def combine(*args: Any, recursive: bool = False) -> dict[Any, Any]:
@@ -2669,35 +2342,6 @@ def combine(*args: Any, recursive: bool = False) -> dict[Any, Any]:
             result |= arg
 
     return result
-
-
-class TemplateContextManager(AbstractContextManager):
-    """Context manager to store template being parsed or rendered in a ContextVar."""
-
-    def set_template(self, template_str: str, action: str) -> None:
-        """Store template being parsed or rendered in a Contextvar to aid error handling."""
-        template_cv.set((template_str, action))
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_value: BaseException | None,
-        traceback: TracebackType | None,
-    ) -> None:
-        """Raise any exception triggered within the runtime context."""
-        template_cv.set(None)
-
-
-_template_context_manager = TemplateContextManager()
-
-
-def _render_with_context(
-    template_str: str, template: jinja2.Template, **kwargs: Any
-) -> str:
-    """Store template being rendered in a ContextVar to aid error handling."""
-    with _template_context_manager as cm:
-        cm.set_template(template_str, "rendering")
-        return template.render(**kwargs)
 
 
 def make_logging_undefined(
@@ -2826,9 +2470,15 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.add_extension("jinja2.ext.loopcontrols")
         self.add_extension("jinja2.ext.do")
         self.add_extension("homeassistant.helpers.template.extensions.Base64Extension")
+        self.add_extension(
+            "homeassistant.helpers.template.extensions.CollectionExtension"
+        )
         self.add_extension("homeassistant.helpers.template.extensions.CryptoExtension")
         self.add_extension("homeassistant.helpers.template.extensions.MathExtension")
+        self.add_extension("homeassistant.helpers.template.extensions.RegexExtension")
+        self.add_extension("homeassistant.helpers.template.extensions.StringExtension")
 
+        self.globals["apply"] = apply
         self.globals["as_datetime"] = as_datetime
         self.globals["as_function"] = as_function
         self.globals["as_local"] = dt_util.as_local
@@ -2836,26 +2486,16 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["bool"] = forgiving_boolean
         self.globals["combine"] = combine
-        self.globals["difference"] = difference
-        self.globals["flatten"] = flatten
         self.globals["float"] = forgiving_float
         self.globals["iif"] = iif
         self.globals["int"] = forgiving_int
-        self.globals["intersect"] = intersect
         self.globals["is_number"] = is_number
         self.globals["merge_response"] = merge_response
         self.globals["pack"] = struct_pack
-        self.globals["set"] = _to_set
-        self.globals["shuffle"] = shuffle
-        self.globals["slugify"] = slugify
         self.globals["strptime"] = strptime
-        self.globals["symmetric_difference"] = symmetric_difference
         self.globals["timedelta"] = timedelta
-        self.globals["tuple"] = _to_tuple
         self.globals["typeof"] = typeof
-        self.globals["union"] = union
         self.globals["unpack"] = struct_unpack
-        self.globals["urlencode"] = urlencode
         self.globals["version"] = version
         self.globals["zip"] = zip
 
@@ -2869,36 +2509,23 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["bool"] = forgiving_boolean
         self.filters["combine"] = combine
         self.filters["contains"] = contains
-        self.filters["difference"] = difference
-        self.filters["flatten"] = flatten
         self.filters["float"] = forgiving_float_filter
         self.filters["from_json"] = from_json
         self.filters["from_hex"] = from_hex
         self.filters["iif"] = iif
         self.filters["int"] = forgiving_int_filter
-        self.filters["intersect"] = intersect
         self.filters["is_defined"] = fail_when_undefined
         self.filters["is_number"] = is_number
         self.filters["multiply"] = multiply
         self.filters["ord"] = ord
-        self.filters["ordinal"] = ordinal
         self.filters["pack"] = struct_pack
         self.filters["random"] = random_every_time
-        self.filters["regex_findall_index"] = regex_findall_index
-        self.filters["regex_findall"] = regex_findall
-        self.filters["regex_match"] = regex_match
-        self.filters["regex_replace"] = regex_replace
-        self.filters["regex_search"] = regex_search
         self.filters["round"] = forgiving_round
-        self.filters["shuffle"] = shuffle
-        self.filters["slugify"] = slugify
-        self.filters["symmetric_difference"] = symmetric_difference
         self.filters["timestamp_custom"] = timestamp_custom
         self.filters["timestamp_local"] = timestamp_local
         self.filters["timestamp_utc"] = timestamp_utc
         self.filters["to_json"] = to_json
         self.filters["typeof"] = typeof
-        self.filters["union"] = union
         self.filters["unpack"] = struct_unpack
         self.filters["version"] = version
 
@@ -2906,12 +2533,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.tests["contains"] = contains
         self.tests["datetime"] = _is_datetime
         self.tests["is_number"] = is_number
-        self.tests["list"] = _is_list
-        self.tests["match"] = regex_match
-        self.tests["search"] = regex_search
-        self.tests["set"] = _is_set
         self.tests["string_like"] = _is_string_like
-        self.tests["tuple"] = _is_tuple
 
         if hass is None:
             return

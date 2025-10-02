@@ -234,6 +234,17 @@ ECOWITT_SENSORS_MAPPING: Final = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    EcoWittSensorTypes.DISTANCE_MM: SensorEntityDescription(
+        key="DISTANCE_MM",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EcoWittSensorTypes.HEAT_COUNT: SensorEntityDescription(
+        key="HEAT_COUNT",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     EcoWittSensorTypes.PM1: SensorEntityDescription(
         key="PM1",
         device_class=SensorDeviceClass.PM1,
@@ -242,6 +253,7 @@ ECOWITT_SENSORS_MAPPING: Final = {
     ),
     EcoWittSensorTypes.PM4: SensorEntityDescription(
         key="PM4",
+        device_class=SensorDeviceClass.PM4,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
