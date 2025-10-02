@@ -52,7 +52,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         config_entry.async_on_unload(self.async_client_disconnect)
 
     async def _async_setup(self) -> None:
-        """Set up the coordinator by connecting to the OpenRGB server."""
+        """Set up the coordinator by connecting to the OpenRGB SDK server."""
         self.client = await self.hass.async_add_executor_job(
             OpenRGBClient,
             self.host,

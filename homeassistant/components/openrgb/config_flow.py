@@ -29,7 +29,6 @@ async def validate_input(hass: HomeAssistant, host: str, port: int) -> None:
     """Validate the user input allows us to connect."""
 
     def _try_connect(host: str, port: int) -> None:
-        """Validate connection to OpenRGB server (sync function for executor)."""
         client = OpenRGBClient(host, port, DEFAULT_CLIENT_NAME)
         client.disconnect()
 

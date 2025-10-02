@@ -1,9 +1,9 @@
 """Tests for the OpenRGB light platform."""
 
 from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
-from openrgb.utils import RGBColor
+from openrgb.utils import OpenRGBDisconnected, RGBColor
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -12,8 +12,14 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    EFFECT_OFF,
 )
-from homeassistant.components.openrgb.const import DEFAULT_COLOR, DOMAIN, OpenRGBMode
+from homeassistant.components.openrgb.const import (
+    DEFAULT_COLOR,
+    DOMAIN,
+    OFF_COLOR,
+    OpenRGBMode,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -24,6 +30,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -39,6 +46,7 @@ def light_only() -> Generator[None]:
         yield
 
 
+# Test basic entity setup and configuration
 @pytest.mark.usefixtures("init_integration")
 async def test_entities(
     hass: HomeAssistant,
@@ -69,6 +77,48 @@ async def test_entities(
     assert entity_entries[0].device_id == device_entry.id
 
 
+async def test_light_with_black_leds(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    mock_openrgb_device: MagicMock,
+) -> None:
+    """Test light state when all LEDs are black (off by color)."""
+    # Set all LEDs to black
+    mock_openrgb_device.colors = [RGBColor(*OFF_COLOR), RGBColor(*OFF_COLOR)]
+    mock_openrgb_device.active_mode = 0  # Direct mode (supports colors)
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Verify light is off by color
+    state = hass.states.get("light.test_rgb_device")
+    assert state
+    assert state.state == STATE_OFF
+
+
+async def test_light_with_non_color_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    mock_openrgb_device: MagicMock,
+) -> None:
+    """Test light state with a mode that doesn't support colors."""
+    # Set to Rainbow mode (doesn't support colors)
+    mock_openrgb_device.active_mode = 2
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Verify light is on with white color (default)
+    state = hass.states.get("light.test_rgb_device")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes.get("rgb_color") == DEFAULT_COLOR
+    assert state.attributes.get("brightness") == 255
+
+
+# Test basic turn on/off functionality
 async def test_turn_on_light(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -170,6 +220,103 @@ async def test_turn_on_light_with_effect(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_turn_on_light_with_effect_off(
+    hass: HomeAssistant,
+    mock_openrgb_device: MagicMock,
+) -> None:
+    """Test turning on the light with effect Off."""
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.test_rgb_device",
+            ATTR_EFFECT: EFFECT_OFF,
+        },
+        blocking=True,
+    )
+
+    # Should switch to Static mode (preferred over Direct)
+    mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.STATIC)
+
+
+async def test_turn_on_restores_previous_values(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    mock_openrgb_device: MagicMock,
+) -> None:
+    """Test turning on after off restores previous brightness, color, and mode."""
+    # Start with device in Direct mode with blue color
+    mock_openrgb_device.active_mode = 0
+    mock_openrgb_device.colors = [RGBColor(0, 0, 128), RGBColor(0, 0, 128)]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Verify initial state
+    state = hass.states.get("light.test_rgb_device")
+    assert state
+    assert state.state == STATE_ON
+
+    # Turn off the light
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "light.test_rgb_device"},
+        blocking=True,
+    )
+
+    # Now device is in Off mode
+    mock_openrgb_device.active_mode = 3
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+
+    state = hass.states.get("light.test_rgb_device")
+    assert state
+    assert state.state == STATE_OFF
+
+    # Turn on without parameters - should restore previous mode and values
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.test_rgb_device"},
+        blocking=True,
+    )
+
+    # Should restore to Direct mode (previous mode) even though Static is preferred
+    assert mock_openrgb_device.set_mode.call_args_list == [
+        call(OpenRGBMode.OFF),
+        call(OpenRGBMode.DIRECT),
+    ]
+
+
+async def test_turn_on_with_non_color_effect_and_color_params(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    mock_openrgb_device: MagicMock,
+) -> None:
+    """Test turning on with a non-color effect but providing color/brightness."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Try to set Rainbow effect (doesn't support color) with RGB color parameter
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.test_rgb_device",
+            ATTR_EFFECT: "Rainbow",
+            ATTR_RGB_COLOR: (255, 255, 0),  # Yellow
+        },
+        blocking=True,
+    )
+
+    # Should switch to Static mode (preferred) instead of Rainbow since color was provided
+    mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.STATIC)
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_turn_off_light(
     hass: HomeAssistant,
     mock_openrgb_device: MagicMock,
@@ -183,9 +330,85 @@ async def test_turn_off_light(
     )
 
     # Device supports "Off" mode
-    mock_openrgb_device.set_mode.assert_called_with(OpenRGBMode.OFF)
+    mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.OFF)
 
 
+async def test_turn_off_light_without_off_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    mock_openrgb_device: MagicMock,
+) -> None:
+    """Test turning off a light that doesn't support Off mode."""
+    # Modify the device to not have Off mode
+    mock_openrgb_device.modes = [
+        mode_data
+        for mode_data in mock_openrgb_device.modes
+        if mode_data.name != OpenRGBMode.OFF
+    ]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Verify light is initially on
+    state = hass.states.get("light.test_rgb_device")
+    assert state
+    assert state.state == STATE_ON
+
+    # Turn off the light
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "light.test_rgb_device"},
+        blocking=True,
+    )
+
+    # Device should have set_color called with black/off color instead
+    mock_openrgb_device.set_color.assert_called_once_with(RGBColor(*OFF_COLOR), True)
+
+
+# Test error handling
+@pytest.mark.usefixtures("init_integration")
+async def test_turn_on_light_with_color_error_connection(
+    hass: HomeAssistant,
+    mock_openrgb_device: MagicMock,
+) -> None:
+    """Test turning on the light with connection error when setting color."""
+    mock_openrgb_device.set_color.side_effect = OpenRGBDisconnected()
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "light.test_rgb_device",
+                ATTR_RGB_COLOR: (0, 255, 0),
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_turn_on_light_with_mode_error_connection(
+    hass: HomeAssistant,
+    mock_openrgb_device: MagicMock,
+) -> None:
+    """Test turning on the light with connection error when setting mode."""
+    mock_openrgb_device.set_mode.side_effect = OpenRGBDisconnected()
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "light.test_rgb_device",
+                ATTR_EFFECT: "Rainbow",
+            },
+            blocking=True,
+        )
+
+
+# Test device management
 async def test_dynamic_device_addition(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
