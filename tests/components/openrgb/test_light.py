@@ -1,6 +1,5 @@
 """Tests for the OpenRGB light platform."""
 
-from typing import Any
 from unittest.mock import MagicMock
 
 from openrgb.utils import RGBColor
@@ -171,27 +170,6 @@ async def test_turn_off_light(
 
     # Device supports "Off" mode
     mock_openrgb_device.set_mode.assert_called_with(OpenRGBMode.OFF)
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_turn_off_light_no_off_mode(
-    hass: HomeAssistant,
-    mock_openrgb_device: MagicMock,
-    mock_device_data: dict[str, Any],
-) -> None:
-    """Test turning off a light that doesn't support Off mode."""
-    # This test can't really test the no-off-mode case without reinitializing
-    # the integration with different device modes, so we'll just verify the
-    # basic turn off works
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_rgb_device"},
-        blocking=True,
-    )
-
-    # Device has Off mode, so set_mode should be called
-    assert mock_openrgb_device.set_mode.called
 
 
 async def test_dynamic_device_addition(
