@@ -11,7 +11,7 @@ from victron_vrm.utils import dt_now
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_API_TOKEN, CONF_SITE_ID, DOMAIN, LOGGER
@@ -26,8 +26,8 @@ class VRMForecastStore:
     """Class to hold the forecast data."""
 
     site_id: int
-    solar: ForecastAggregations
-    consumption: ForecastAggregations
+    solar: ForecastAggregations | None
+    consumption: ForecastAggregations | None
 
 
 async def get_forecast(client: VictronVRMClient, site_id: int) -> VRMForecastStore:
@@ -53,6 +53,7 @@ async def get_forecast(client: VictronVRMClient, site_id: int) -> VRMForecastSto
         type="forecast",
         return_aggregations=True,
     )
+
     return VRMForecastStore(
         solar=stats["solar_yield"],
         consumption=stats["consumption"],
@@ -75,7 +76,7 @@ class VictronRemoteMonitoringDataUpdateCoordinator(
         """Initialize."""
         self.client = VictronVRMClient(
             token=config_entry.data[CONF_API_TOKEN],
-            client_session=get_async_client(hass),
+            client_session=async_get_clientsession(hass),
         )
         self.site_id = config_entry.data[CONF_SITE_ID]
         super().__init__(

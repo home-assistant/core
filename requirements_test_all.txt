@@ -2566,7 +2566,7 @@ velbus-aio==2025.8.0
 venstarcolortouch==0.21
 
 # homeassistant.components.victron_remote_monitoring
-victron-vrm==0.1.7
+victron-vrm==0.1.8
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0
