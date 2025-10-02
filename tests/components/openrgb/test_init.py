@@ -8,7 +8,6 @@ import pytest
 from homeassistant.components.openrgb import async_remove_config_entry_device
 from homeassistant.components.openrgb.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -19,7 +18,6 @@ async def test_setup_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_openrgb_client: MagicMock,
-    mock_get_mac_address: MagicMock,
 ) -> None:
     """Test setup entry."""
     mock_config_entry.add_to_hass(hass)
@@ -34,7 +32,6 @@ async def test_setup_entry(
 async def test_setup_entry_connection_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_mac_address: MagicMock,
 ) -> None:
     """Test setup entry with connection error."""
     mock_config_entry.add_to_hass(hass)
@@ -53,7 +50,6 @@ async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_openrgb_client: MagicMock,
-    mock_get_mac_address: MagicMock,
 ) -> None:
     """Test unload entry."""
     mock_config_entry.add_to_hass(hass)
@@ -74,42 +70,8 @@ async def test_server_device_registry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_openrgb_client: MagicMock,
-    mock_get_mac_address: MagicMock,
 ) -> None:
     """Test server device is created in device registry."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    device_registry = dr.async_get(hass)
-    server_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
-    )
-
-    assert server_device is not None
-    assert server_device.name == "OpenRGB (aa:bb:cc:dd:ee:ff)"
-    assert server_device.manufacturer == "OpenRGB"
-    assert server_device.model == "OpenRGB SDK Server"
-    assert server_device.sw_version == "3 (Protocol)"
-    assert server_device.entry_type is dr.DeviceEntryType.SERVICE
-
-
-async def test_server_device_registry_no_mac(
-    hass: HomeAssistant,
-    mock_openrgb_client: MagicMock,
-) -> None:
-    """Test server device is created without MAC address."""
-    # Create config entry without MAC address
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="OpenRGB (127.0.0.1:6742)",
-        data={
-            CONF_HOST: "127.0.0.1",
-            CONF_PORT: 6742,
-        },
-        unique_id="127.0.0.1:6742",
-    )
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -126,17 +88,12 @@ async def test_server_device_registry_no_mac(
     assert server_device.model == "OpenRGB SDK Server"
     assert server_device.sw_version == "3 (Protocol)"
     assert server_device.entry_type is dr.DeviceEntryType.SERVICE
-    # No MAC connection should be present
-    assert not any(
-        conn[0] == dr.CONNECTION_NETWORK_MAC for conn in server_device.connections
-    )
 
 
 async def test_remove_config_entry_device_server(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_openrgb_client: MagicMock,
-    mock_get_mac_address: MagicMock,
 ) -> None:
     """Test that server device cannot be removed."""
     mock_config_entry.add_to_hass(hass)
@@ -163,7 +120,6 @@ async def test_remove_config_entry_device_still_connected(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_openrgb_client: MagicMock,
-    mock_get_mac_address: MagicMock,
 ) -> None:
     """Test that connected devices cannot be removed."""
     mock_config_entry.add_to_hass(hass)
@@ -194,7 +150,6 @@ async def test_remove_config_entry_device_disconnected(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_openrgb_client: MagicMock,
-    mock_get_mac_address: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that disconnected devices can be removed."""
@@ -236,7 +191,6 @@ async def test_remove_config_entry_device_disconnected(
 async def test_setup_entry_exceptions(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_mac_address: MagicMock,
     exception: Exception,
     expected_state: ConfigEntryState,
 ) -> None:

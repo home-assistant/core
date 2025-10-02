@@ -213,7 +213,6 @@ async def test_dynamic_device_addition(
     mock_config_entry: MockConfigEntry,
     mock_openrgb_client: MagicMock,
     mock_openrgb_device: MagicMock,
-    mock_get_mac_address: MagicMock,
 ) -> None:
     """Test that new devices are added dynamically."""
     mock_config_entry.add_to_hass(hass)
@@ -286,7 +285,6 @@ async def test_duplicate_device_names(
     mock_config_entry: MockConfigEntry,
     mock_openrgb_client: MagicMock,
     mock_openrgb_device: MagicMock,
-    mock_get_mac_address: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that devices with duplicate names get numeric suffixes."""

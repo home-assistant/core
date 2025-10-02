@@ -8,7 +8,7 @@ from openrgb.utils import RGBColor
 import pytest
 
 from homeassistant.components.openrgb.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -19,13 +19,12 @@ def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="OpenRGB (aa:bb:cc:dd:ee:ff)",
+        title="OpenRGB (127.0.0.1:6742)",
         data={
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 6742,
-            CONF_MAC: "aa:bb:cc:dd:ee:ff",
         },
-        unique_id="aa:bb:cc:dd:ee:ff",
+        unique_id="127.0.0.1:6742",
         entry_id="01J0EXAMPLE0CONFIGENTRY00",
     )
 
@@ -191,21 +190,10 @@ def mock_openrgb_client(mock_openrgb_device: MagicMock) -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_get_mac_address() -> Generator[MagicMock]:
-    """Mock get_mac_address function."""
-    with patch(
-        "homeassistant.components.openrgb.config_flow.get_mac_address"
-    ) as mock_get_mac:
-        mock_get_mac.return_value = "aa:bb:cc:dd:ee:ff"
-        yield mock_get_mac
-
-
-@pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_openrgb_client: MagicMock,
-    mock_get_mac_address: MagicMock,
 ) -> MockConfigEntry:
     """Set up the OpenRGB integration for testing."""
     mock_config_entry.add_to_hass(hass)

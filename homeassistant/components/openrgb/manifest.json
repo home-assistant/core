@@ -3,14 +3,9 @@
   "name": "OpenRGB",
   "codeowners": ["@felipecrs"],
   "config_flow": true,
-  "dhcp": [
-    {
-      "registered_devices": true
-    }
-  ],
   "documentation": "https://www.home-assistant.io/integrations/openrgb",
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "silver",
-  "requirements": ["openrgb-python==0.3.5", "getmac==0.9.5"]
+  "requirements": ["openrgb-python==0.3.5"]
 }
