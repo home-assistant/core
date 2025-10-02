@@ -2,6 +2,8 @@
 
 from enum import StrEnum
 
+from openrgb.utils import DeviceType
+
 DOMAIN = "openrgb"
 
 # Defaults
@@ -22,3 +24,22 @@ class OpenRGBMode(StrEnum):
 
 
 EFFECT_OFF_OPENRGB_MODES = {OpenRGBMode.STATIC, OpenRGBMode.DIRECT}
+
+DEVICE_TYPE_ICONS: dict[DeviceType, str] = {
+    DeviceType.MOTHERBOARD: "mdi:developer-board",
+    DeviceType.DRAM: "mdi:memory",
+    DeviceType.GPU: "mdi:expansion-card",
+    DeviceType.COOLER: "mdi:fan",
+    DeviceType.LEDSTRIP: "mdi:led-variant-on",
+    DeviceType.KEYBOARD: "mdi:keyboard",
+    DeviceType.MOUSE: "mdi:mouse",
+    DeviceType.MOUSEMAT: "mdi:rug",
+    DeviceType.HEADSET: "mdi:headset",
+    DeviceType.HEADSET_STAND: "mdi:headset-dock",
+    DeviceType.GAMEPAD: "mdi:gamepad-variant",
+    DeviceType.SPEAKER: "mdi:speaker",
+    DeviceType.STORAGE: "mdi:harddisk",
+    DeviceType.CASE: "mdi:desktop-tower",
+    DeviceType.MICROPHONE: "mdi:microphone",
+    DeviceType.KEYPAD: "mdi:dialpad",
+}

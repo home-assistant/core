@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from openrgb.orgb import Device
-from openrgb.utils import DeviceType, ModeData, ModeFlags, OpenRGBDisconnected, RGBColor
+from openrgb.utils import ModeData, ModeFlags, OpenRGBDisconnected, RGBColor
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -26,6 +26,7 @@ from homeassistant.util.color import color_hs_to_RGB, color_RGB_to_hsv
 from .const import (
     DEFAULT_BRIGHTNESS,
     DEFAULT_COLOR,
+    DEVICE_TYPE_ICONS,
     DOMAIN,
     EFFECT_OFF_OPENRGB_MODES,
     OFF_COLOR,
@@ -117,9 +118,8 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             if mode != OpenRGBMode.OFF and mode not in EFFECT_OFF_OPENRGB_MODES
         ]
 
-        icon = get_icon(self.device.type)
-        if icon is not None:
-            self._attr_icon = f"mdi:{icon}"
+        if icon := DEVICE_TYPE_ICONS.get(self.device.type):
+            self._attr_icon = icon
 
         self._update_attrs()
 
@@ -313,27 +313,3 @@ def check_if_mode_supports_color(mode: ModeData) -> bool:
     if mode.flags & ModeFlags.HAS_MODE_SPECIFIC_COLOR:
         return True
     return False
-
-
-def get_icon(device_type: DeviceType) -> str | None:
-    """Return an icon for the device_type."""
-    icons = {
-        DeviceType.MOTHERBOARD: "developer-board",
-        DeviceType.DRAM: "memory",
-        DeviceType.GPU: "expansion-card",
-        DeviceType.COOLER: "fan",
-        DeviceType.LEDSTRIP: "led-variant-on",
-        DeviceType.KEYBOARD: "keyboard",
-        DeviceType.MOUSE: "mouse",
-        DeviceType.MOUSEMAT: "rug",
-        DeviceType.HEADSET: "headset",
-        DeviceType.HEADSET_STAND: "headset-dock",
-        DeviceType.GAMEPAD: "gamepad-variant",
-        DeviceType.SPEAKER: "speaker",
-        DeviceType.STORAGE: "harddisk",
-        DeviceType.CASE: "desktop-tower",
-        DeviceType.MICROPHONE: "microphone",
-        DeviceType.KEYPAD: "dialpad",
-    }
-
-    return icons.get(device_type)
