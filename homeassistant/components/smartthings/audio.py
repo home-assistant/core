@@ -202,7 +202,7 @@ class SmartThingsAudioManager(HomeAssistantView):
                         channels,
                         sample_width,
                     )
-        except wave.Error as err:
+        except (wave.Error, EOFError) as err:
             _LOGGER.error(
                 "Converted SmartThings audio is not a valid PCM WAV: %s",
                 err,
