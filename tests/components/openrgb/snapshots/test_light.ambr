@@ -7,8 +7,13 @@
     'capabilities': dict({
       'effect_list': list([
         'off',
-        'Rainbow',
         'Breathing',
+        'Flashing',
+        'Spectrum Cycle',
+        'Rainbow',
+        'Chase Fade',
+        'Chase',
+        'Random Flicker',
       ]),
       'supported_color_modes': list([
         <ColorMode.RGB: 'rgb'>,
@@ -51,8 +56,13 @@
       'effect': 'off',
       'effect_list': list([
         'off',
-        'Rainbow',
         'Breathing',
+        'Flashing',
+        'Spectrum Cycle',
+        'Rainbow',
+        'Chase Fade',
+        'Chase',
+        'Random Flicker',
       ]),
       'friendly_name': 'Test RGB Device',
       'hs_color': tuple(

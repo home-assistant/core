@@ -108,7 +108,7 @@ async def test_light_with_non_color_mode(
 ) -> None:
     """Test light state with a mode that doesn't support colors."""
     # Set to Rainbow mode (doesn't support colors)
-    mock_openrgb_device.active_mode = 2
+    mock_openrgb_device.active_mode = 6
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -129,7 +129,7 @@ async def test_light_with_mode_specific_color_flag(
 ) -> None:
     """Test mode with HAS_MODE_SPECIFIC_COLOR flag (covers line 324 return True)."""
     # Set device to use Breathing mode which has HAS_MODE_SPECIFIC_COLOR flag
-    mock_openrgb_device.active_mode = 4  # Breathing mode
+    mock_openrgb_device.active_mode = 3  # Breathing mode
     mock_openrgb_device.colors = [RGBColor(255, 0, 255)]  # Purple
 
     mock_config_entry.add_to_hass(hass)
@@ -152,7 +152,7 @@ async def test_turn_on_light(
 ) -> None:
     """Test turning on the light."""
     # Initialize device in Off mode
-    mock_openrgb_device.active_mode = 3
+    mock_openrgb_device.active_mode = 1
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -194,8 +194,7 @@ async def test_turn_on_light_with_color(
         blocking=True,
     )
 
-    # Check that set_color was called with green color scaled by brightness
-    # Current brightness is 255 (from initial red color), so green should be full
+    # Check that set_color was called with green color with full brightness as it was not specified
     mock_openrgb_device.set_color.assert_called_once_with(RGBColor(0, 255, 0), True)
 
 
@@ -215,9 +214,7 @@ async def test_turn_on_light_with_brightness(
         blocking=True,
     )
 
-    # Check that set_color was called with scaled color by brightness (128/255 = 0.502)
-    # Initial color (255, 0, 0) -> HS (0.0, 100.0) -> When applying brightness 128,
-    # the V component becomes 50.2%, giving RGB (128, 128, 128) after hs_to_RGB conversion
+    # Check that set_color was called with default white color scaled by brightness
     mock_openrgb_device.set_color.assert_called_once_with(RGBColor(128, 128, 128), True)
 
 
@@ -288,7 +285,7 @@ async def test_turn_on_restores_previous_values(
     )
 
     # Now device is in Off mode
-    mock_openrgb_device.active_mode = 3
+    mock_openrgb_device.active_mode = 1
     coordinator = mock_config_entry.runtime_data
     await coordinator.async_refresh()
 
@@ -509,7 +506,6 @@ async def test_duplicate_device_names(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that devices with duplicate names get numeric suffixes."""
-    # Create two devices with the same name but different serials and device IDs
     device1 = MagicMock()
     device1.id = 3  # Should get suffix "1"
     device1.name = "ENE DRAM"
@@ -517,13 +513,13 @@ async def test_duplicate_device_names(
     device1.type.name = "DRAM"
     device1.metadata = MagicMock()
     device1.metadata.vendor = "ENE"
-    device1.metadata.description = "RAM Module"
-    device1.metadata.serial = "SERIAL001"
-    device1.metadata.location = "DIMM_A1"
-    device1.metadata.version = "1.0"
+    device1.metadata.description = "ENE SMBus Device"
+    device1.metadata.serial = None
+    device1.metadata.location = "I2C: PIIX4, address 0x71"
+    device1.metadata.version = "DIMM_LED-0103"
     device1.active_mode = 0
     device1.modes = mock_openrgb_device.modes
-    device1.colors = [RGBColor(255, 0, 0)]
+    device1.colors = [RGBColor(255, 0, 0)]  # Red
     device1.set_color = MagicMock()
     device1.set_mode = MagicMock()
 
@@ -534,13 +530,13 @@ async def test_duplicate_device_names(
     device2.type.name = "DRAM"
     device2.metadata = MagicMock()
     device2.metadata.vendor = "ENE"
-    device2.metadata.description = "RAM Module"
-    device2.metadata.serial = "SERIAL002"
-    device2.metadata.location = "DIMM_A2"
-    device2.metadata.version = "1.0"
+    device2.metadata.description = "ENE SMBus Device"
+    device2.metadata.serial = None
+    device2.metadata.location = "I2C: PIIX4, address 0x72"
+    device2.metadata.version = "DIMM_LED-0103"
     device2.active_mode = 0
     device2.modes = mock_openrgb_device.modes
-    device2.colors = [RGBColor(0, 255, 0)]
+    device2.colors = [RGBColor(0, 255, 0)]  # Green
     device2.set_color = MagicMock()
     device2.set_mode = MagicMock()
 
@@ -551,12 +547,8 @@ async def test_duplicate_device_names(
 
     # Get device keys (they will be sorted alphabetically)
     # The device key format is: entry_id||type||vendor||description||serial||location
-    device1_key = (
-        f"{mock_config_entry.entry_id}||DRAM||ENE||RAM Module||SERIAL001||DIMM_A1"
-    )
-    device2_key = (
-        f"{mock_config_entry.entry_id}||DRAM||ENE||RAM Module||SERIAL002||DIMM_A2"
-    )
+    device1_key = f"{mock_config_entry.entry_id}||DRAM||ENE||ENE SMBus Device||none||I2C: PIIX4, address 0x71"
+    device2_key = f"{mock_config_entry.entry_id}||DRAM||ENE||ENE SMBus Device||none||I2C: PIIX4, address 0x72"
 
     # Verify devices exist with correct names (suffix based on device.id, not keys)
     device1_entry = device_registry.async_get_device(
