@@ -515,7 +515,7 @@ class ChatLog:
         llm_api: llm.APIInstance | None = None
 
         if user_llm_hass_api is None:
-            pass
+            llm_api = None
         elif isinstance(user_llm_hass_api, llm.API):
             llm_api = await user_llm_hass_api.async_get_api_instance(llm_context)
         else:
