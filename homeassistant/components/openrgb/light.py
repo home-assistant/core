@@ -218,14 +218,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
                     self.device.set_color, scaled_color, True
                 )
             except (*CONNECTION_ERRORS, ValueError) as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="failed_to_set_color",
-                    translation_placeholders={
-                        "server_address": self.coordinator.server_address,
-                        "error": str(err),
-                    },
-                ) from err
+                raise HomeAssistantError(err) from err
 
     async def _async_apply_mode(self, mode: str) -> None:
         """Apply the given mode to the device."""
@@ -233,14 +226,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             try:
                 await self.hass.async_add_executor_job(self.device.set_mode, mode)
             except (*CONNECTION_ERRORS, ValueError) as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="failed_to_set_mode",
-                    translation_placeholders={
-                        "server_address": self.coordinator.server_address,
-                        "error": str(err),
-                    },
-                ) from err
+                raise HomeAssistantError(err) from err
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""

@@ -68,7 +68,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             except CONNECTION_ERRORS as err:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
-                    translation_key="unable_to_connect",
+                    translation_key="update_error",
                     translation_placeholders={
                         "server_address": self.server_address,
                         "error": str(err),

@@ -24,14 +24,8 @@
     }
   },
   "exceptions": {
-    "failed_to_set_color": {
-      "message": "Failed to set color on OpenRGB SDK server at {server_address}. Error: {error}"
-    },
-    "failed_to_set_mode": {
-      "message": "Failed to set mode on OpenRGB SDK server at {server_address}. Error: {error}"
-    },
-    "unable_to_connect": {
-      "message": "Unable to connect to OpenRGB SDK server at {server_address}. Error: {error}"
+    "update_error": {
+      "message": "An error occurred while communicating with the OpenRGB SDK server at {server_address}: {error}"
     }
   }
 }
