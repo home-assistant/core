@@ -52,7 +52,7 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
-            server_slug = f"{host}:{port}"
+            server_address = f"{host}:{port}"
 
             try:
                 await validate_input(self.hass, host, port)
@@ -66,7 +66,7 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception(
                     "Unknown error while connecting to OpenRGB SDK Server at %s",
-                    server_slug,
+                    server_address,
                 )
                 errors["base"] = "unknown"
             else:
@@ -95,7 +95,10 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
-            server_slug = f"{host}:{port}"
+            server_address = f"{host}:{port}"
+
+            # Prevent duplicate entries
+            self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
 
             try:
                 await validate_input(self.hass, host, port)
@@ -109,15 +112,10 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception(
                     "Unknown error while connecting to OpenRGB SDK Server at %s",
-                    server_slug,
+                    server_address,
                 )
                 errors["base"] = "unknown"
             else:
-                # Use host:port as unique ID
-                unique_id = f"{host}:{port}"
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
-
                 title = f"OpenRGB ({host}:{port})"
 
                 return self.async_create_entry(

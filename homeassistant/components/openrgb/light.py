@@ -118,8 +118,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             if mode != OpenRGBMode.OFF and mode not in EFFECT_OFF_OPENRGB_MODES
         ]
 
-        if icon := DEVICE_TYPE_ICONS.get(self.device.type):
-            self._attr_icon = icon
+        self._attr_icon = DEVICE_TYPE_ICONS.get(self.device.type)
 
         self._update_attrs()
 
