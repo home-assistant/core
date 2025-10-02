@@ -8,38 +8,23 @@ import pathlib
 import pkgutil
 import sys
 
-from .device_quirk import (
-    TuyaCoverDefinition,
-    TuyaDeviceQuirk,
-    TuyaSelectDefinition,
-    TuyaSensorDefinition,
-)
-from .homeassistant import TuyaCoverDeviceClass, TuyaSensorDeviceClass, parse_enum
-from .registry import QuirksRegistry
+from ..xternal_tuya_quirks import TUYA_QUIRKS_REGISTRY
 
-__all__ = [
-    "QUIRKS_REGISTRY",
-    "QuirksRegistry",
-    "TuyaCoverDefinition",
-    "TuyaCoverDeviceClass",
-    "TuyaDeviceQuirk",
-    "TuyaSelectDefinition",
-    "TuyaSensorDefinition",
-    "TuyaSensorDeviceClass",
-    "parse_enum",
-]
 _LOGGER = logging.getLogger(__name__)
-
-TUYA_QUIRKS_REGISTRY = QuirksRegistry()
 
 
 def register_tuya_quirks(custom_quirks_path: str | None = None) -> None:
-    """Register all quirks with zigpy, including optional custom quirks."""
+    """Register all quirks with xternal_tuya_quirks.
+
+    - remove custom quirks from `custom_quirks_path`
+    - add quirks from `xternal_tuya_device_quirks`
+    - add custom quirks from `custom_quirks_path`
+    """
 
     if custom_quirks_path is not None:
         TUYA_QUIRKS_REGISTRY.purge_custom_quirks(custom_quirks_path)
 
-    # Import all quirks in the `zhaquirks` package first
+    # Import all quirks in the `xternal_tuya_device_quirks` package first
     for _importer, modname, _ispkg in pkgutil.walk_packages(
         path=__path__,
         prefix=__name__ + ".",
