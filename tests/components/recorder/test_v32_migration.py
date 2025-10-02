@@ -74,6 +74,7 @@ def _create_engine_test(
 @pytest.mark.parametrize("enable_migrate_state_context_ids", [True])
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
 @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
+@pytest.mark.parametrize("enable_migrate_event_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_times(
@@ -246,6 +247,7 @@ async def test_migrate_times(
 
 
 @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
+@pytest.mark.parametrize("enable_migrate_event_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_can_resume_entity_id_post_migration(
