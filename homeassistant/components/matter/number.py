@@ -73,6 +73,34 @@ class MatterRangeNumberEntityDescription(
     command: Callable[[int], ClusterCommand] | None = None
 
 
+@dataclass(frozen=True, kw_only=True)
+class MatterUnoccupiedSetpointNumberEntityDescription(
+    NumberEntityDescription, MatterEntityDescription
+):
+    """Describe Matter Unoccupied Setpoint Number Input entities with min and max values."""
+
+    ha_to_device: Callable[[Any], Any] = lambda x: x
+
+    # attribute descriptors to get the min and max value
+    manu_min_attribute: type[ClusterAttributeDescriptor] | None = None
+    manu_max_attribute: type[ClusterAttributeDescriptor] | None = None
+
+    # attribute descriptors to get the min and max value
+    min_attribute: type[ClusterAttributeDescriptor] | None = None
+    max_attribute: type[ClusterAttributeDescriptor] | None = None
+
+    # Functions to format the min and max values for display or conversion
+    format_manu_min_attribute: Callable[[float], float] = lambda x: x
+    format_manu_max_attribute: Callable[[float], float] = lambda x: x
+    format_min_value: Callable[[float], float] = lambda x: x
+    format_max_value: Callable[[float], float] = lambda x: x
+
+    # command: a custom callback to create the command to send to the device
+    # the callback's argument will be the index of the selected list value
+    # if omitted the command will just be a write_attribute command to the primary attribute
+    command: Callable[[int], ClusterCommand] | None = None
+
+
 class MatterNumber(MatterEntity, NumberEntity):
     """Representation of a Matter Attribute as a Number entity."""
 
@@ -140,6 +168,72 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
         )
         max_convert = self.entity_description.format_max_value
         self._attr_native_max_value = max_convert(max_value)
+
+
+class MatterUnoccupiedSetpointNumber(MatterEntity, NumberEntity):
+    """Representation of a Matter Setpoint as a Number entity with min and max values."""
+
+    entity_description: MatterUnoccupiedSetpointNumberEntityDescription
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        send_value = self.entity_description.ha_to_device(value)
+
+        if self.entity_description.command:
+            # custom command defined to set the new value
+            await self.send_device_command(
+                self.entity_description.command(send_value),
+            )
+            return
+        # regular write attribute to set the new value
+        await self.write_attribute(
+            value=send_value,
+        )
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        # get the value from the primary attribute and convert it to the HA value if needed
+        value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
+        if value_convert := self.entity_description.device_to_ha:
+            value = value_convert(value)
+        self._attr_native_value = value
+
+        # min case 1: get min from the attribute and convert it
+        if self.entity_description.min_attribute:
+            min_value = self.get_matter_attribute_value(
+                self.entity_description.min_attribute
+            )
+            min_convert = self.entity_description.format_min_value
+            self._attr_native_min_value = min_convert(min_value)
+        # min case 2: get the AbsXHeatSetpointLimit from the attribute and convert it
+        elif self.entity_description.manu_min_attribute:
+            manu_min_value = self.get_matter_attribute_value(
+                self.entity_description.manu_min_attribute
+            )
+            min_convert = self.entity_description.format_min_value
+            self._attr_native_min_value = min_convert(manu_min_value)
+        # min case 3: set the fallback is 7 celsius
+        else:
+            self._attr_native_min_value = 700  # 7 celsius
+
+        # max case 1: get max from the attribute and convert it
+        if self.entity_description.max_attribute:
+            max_value = self.get_matter_attribute_value(
+                self.entity_description.max_attribute
+            )
+            max_convert = self.entity_description.format_max_value
+            self._attr_native_max_value = max_convert(max_value)
+        # max case 2: get the AbsXHeatSetpointLimit from the attribute and convert it
+        elif self.entity_description.manu_max_attribute:
+            manu_max_value = self.get_matter_attribute_value(
+                self.entity_description.manu_max_attribute
+            )
+            max_convert = self.entity_description.format_max_value
+            self._attr_native_max_value = max_convert(manu_max_value)
+        # max case 3: set the fallback is 30 celsius
+        else:
+            self._attr_native_max_value = 3000  # 30 celsius
 
 
 class MatterLevelControlNumber(MatterEntity, NumberEntity):
@@ -415,7 +509,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
-        entity_description=MatterRangeNumberEntityDescription(
+        entity_description=MatterUnoccupiedSetpointNumberEntityDescription(
             key="ThermostatUnoccupiedHeatingSetpoint",
             name=None,
             translation_key="unoccupied_heating_temperature_setpoint",
@@ -426,13 +520,17 @@ DISCOVERY_SCHEMAS = [
             ha_to_device=lambda x: round(x * TEMPERATURE_SCALING_FACTOR),
             format_min_value=lambda x: x / 100,
             format_max_value=lambda x: x / 100,
+            manu_min_attribute=clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit,
+            manu_max_attribute=clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit,
             min_attribute=clusters.Thermostat.Attributes.MinHeatSetpointLimit,
             max_attribute=clusters.Thermostat.Attributes.MaxHeatSetpointLimit,
             mode=NumberMode.SLIDER,
         ),
-        entity_class=MatterRangeNumber,
-        required_attributes=(
-            clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,
+        entity_class=MatterUnoccupiedSetpointNumber,
+        required_attributes=(clusters.Thermostat.Attributes.UnoccupiedHeatingSetpoint,),
+        optional_attributes=(
+            clusters.Thermostat.Attributes.AbsMinHeatSetpointLimit,
+            clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit,
             clusters.Thermostat.Attributes.MinHeatSetpointLimit,
             clusters.Thermostat.Attributes.MaxHeatSetpointLimit,
         ),
