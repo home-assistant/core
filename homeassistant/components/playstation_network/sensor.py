@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_SHOW_ENTITY_PICTURES, TIER_URL, TROPHIES_URL
+from .const import ASSETS_URL, CONF_SHOW_ENTITY_PICTURES
 from .coordinator import (
     PlayStationNetworkBaseCoordinator,
     PlaystationNetworkConfigEntry,
@@ -64,7 +64,7 @@ SENSOR_DESCRIPTIONS_TROPHY: tuple[PlaystationNetworkSensorEntityDescription, ...
             lambda psn: psn.trophy_summary.trophy_level if psn.trophy_summary else None
         ),
         entity_picture=(
-            lambda psn: f"{TIER_URL}tier_{psn.trophy_summary.tier}.png"
+            lambda psn: f"{ASSETS_URL}tier_{psn.trophy_summary.tier}.png"
             if psn.trophy_summary
             else None
         ),
@@ -85,7 +85,7 @@ SENSOR_DESCRIPTIONS_TROPHY: tuple[PlaystationNetworkSensorEntityDescription, ...
             if psn.trophy_summary
             else None
         ),
-        entity_picture=f"{TROPHIES_URL}platinum.png",
+        entity_picture=f"{ASSETS_URL}platinum.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_GOLD,
@@ -95,7 +95,7 @@ SENSOR_DESCRIPTIONS_TROPHY: tuple[PlaystationNetworkSensorEntityDescription, ...
             if psn.trophy_summary
             else None
         ),
-        entity_picture=f"{TROPHIES_URL}gold.png",
+        entity_picture=f"{ASSETS_URL}gold.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_SILVER,
@@ -105,7 +105,7 @@ SENSOR_DESCRIPTIONS_TROPHY: tuple[PlaystationNetworkSensorEntityDescription, ...
             if psn.trophy_summary
             else None
         ),
-        entity_picture=f"{TROPHIES_URL}silver.png",
+        entity_picture=f"{ASSETS_URL}silver.png",
     ),
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.EARNED_TROPHIES_BRONZE,
@@ -115,7 +115,7 @@ SENSOR_DESCRIPTIONS_TROPHY: tuple[PlaystationNetworkSensorEntityDescription, ...
             if psn.trophy_summary
             else None
         ),
-        entity_picture=f"{TROPHIES_URL}bronze.png",
+        entity_picture=f"{ASSETS_URL}bronze.png",
     ),
 )
 SENSOR_DESCRIPTIONS_USER: tuple[PlaystationNetworkSensorEntityDescription, ...] = (

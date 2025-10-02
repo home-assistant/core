@@ -745,7 +745,7 @@
 # name: test_sensors_entity_pictures_enabled[sensor.testuser_bronze_trophies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://dn721902.ca.archive.org/0/items/psn_trophy_images/bronze.png',
+      'entity_picture': 'https://ia600908.us.archive.org/34/items/psn_trophy_images/bronze.png',
       'friendly_name': 'testuser Bronze trophies',
       'unit_of_measurement': 'trophies',
     }),
@@ -795,7 +795,7 @@
 # name: test_sensors_entity_pictures_enabled[sensor.testuser_gold_trophies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://dn721902.ca.archive.org/0/items/psn_trophy_images/gold.png',
+      'entity_picture': 'https://ia600908.us.archive.org/34/items/psn_trophy_images/gold.png',
       'friendly_name': 'testuser Gold trophies',
       'unit_of_measurement': 'trophies',
     }),
@@ -1102,7 +1102,7 @@
 # name: test_sensors_entity_pictures_enabled[sensor.testuser_platinum_trophies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://dn721902.ca.archive.org/0/items/psn_trophy_images/platinum.png',
+      'entity_picture': 'https://ia600908.us.archive.org/34/items/psn_trophy_images/platinum.png',
       'friendly_name': 'testuser Platinum trophies',
       'unit_of_measurement': 'trophies',
     }),
@@ -1152,7 +1152,7 @@
 # name: test_sensors_entity_pictures_enabled[sensor.testuser_silver_trophies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://dn721902.ca.archive.org/0/items/psn_trophy_images/silver.png',
+      'entity_picture': 'https://ia600908.us.archive.org/34/items/psn_trophy_images/silver.png',
       'friendly_name': 'testuser Silver trophies',
       'unit_of_measurement': 'trophies',
     }),
@@ -1202,7 +1202,7 @@
 # name: test_sensors_entity_pictures_enabled[sensor.testuser_trophy_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'https://ia800908.us.archive.org/34/items/psn_trophy_images/tier_10.png',
+      'entity_picture': 'https://ia600908.us.archive.org/34/items/psn_trophy_images/tier_10.png',
       'friendly_name': 'testuser Trophy level',
     }),
     'context': <ANY>,

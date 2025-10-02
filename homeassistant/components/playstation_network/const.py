@@ -18,5 +18,4 @@ SUPPORTED_PLATFORMS = {
 
 NPSSO_LINK: Final = "https://ca.account.sony.com/api/v1/ssocookie"
 PSN_LINK: Final = "https://playstation.com"
-TROPHIES_URL: Final = "https://dn721902.ca.archive.org/0/items/psn_trophy_images/"
-TIER_URL: Final = "https://ia800908.us.archive.org/34/items/psn_trophy_images/"
+ASSETS_URL: Final = "https://ia600908.us.archive.org/34/items/psn_trophy_images/"
