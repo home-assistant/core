@@ -3,7 +3,7 @@
 import socket
 from unittest.mock import MagicMock
 
-from openrgb.utils import OpenRGBDisconnected, SDKVersionError
+from openrgb.utils import ControllerParsingError, OpenRGBDisconnected, SDKVersionError
 import pytest
 
 from homeassistant.components.openrgb.const import DOMAIN
@@ -64,6 +64,7 @@ async def test_server_device_registry(
     [
         (ConnectionRefusedError, ConfigEntryState.SETUP_RETRY),
         (OpenRGBDisconnected, ConfigEntryState.SETUP_RETRY),
+        (ControllerParsingError, ConfigEntryState.SETUP_RETRY),
         (TimeoutError, ConfigEntryState.SETUP_RETRY),
         (socket.gaierror, ConfigEntryState.SETUP_RETRY),
         (SDKVersionError, ConfigEntryState.SETUP_RETRY),

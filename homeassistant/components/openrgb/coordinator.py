@@ -126,7 +126,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         async with self._client_lock:
             try:
                 await self.hass.async_add_executor_job(device.set_color, color, True)
-            except CONNECTION_ERRORS as err:
+            except (*CONNECTION_ERRORS, ValueError) as err:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="failed_to_set_color",
@@ -141,7 +141,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         async with self._client_lock:
             try:
                 await self.hass.async_add_executor_job(device.set_mode, mode)
-            except CONNECTION_ERRORS as err:
+            except (*CONNECTION_ERRORS, ValueError) as err:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="failed_to_set_mode",
