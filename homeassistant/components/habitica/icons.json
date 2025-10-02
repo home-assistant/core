@@ -194,6 +194,11 @@
       "quest_running": {
         "default": "mdi:script-text-play"
       }
+    },
+    "notify": {
+      "party_chat": {
+        "default": "mdi:forum"
+      }
     }
   },
   "services": {
