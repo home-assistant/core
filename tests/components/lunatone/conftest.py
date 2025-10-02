@@ -46,7 +46,7 @@ def mock_lunatone_auth() -> Generator[AsyncMock]:
 def mock_lunatone_devices() -> Generator[AsyncMock]:
     """Mock a Lunatone devices object."""
 
-    def build_device_mock(devices: Devices):
+    def build_devices_mock(devices: Devices):
         device_list = []
         for device_data in devices.data.devices:
             device = AsyncMock(autospec=True)
@@ -67,7 +67,7 @@ def mock_lunatone_devices() -> Generator[AsyncMock]:
         devices._data = DEVICES_DATA
         type(devices).data = PropertyMock(side_effect=lambda d=devices: d._data)
         type(devices).devices = PropertyMock(
-            side_effect=lambda d=devices: build_device_mock(d)
+            side_effect=lambda d=devices: build_devices_mock(d)
         )
         yield devices
 
