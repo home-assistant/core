@@ -6,6 +6,47 @@ from typing import Any
 
 from zeep.exceptions import Fault
 
+from .models import Event
+
+
+def extract_event_source_from_uid(uid: str) -> str:
+    """Extract event source from uid (third element after splitting by underscore)."""
+    parts = uid.split("_")
+    return parts[2] if len(parts) > 2 else ""
+
+
+def build_event_entity_names(events: list[Event]) -> dict[str, str]:
+    """Build entity names for events, with source appended for duplicates.
+
+    When multiple events share the same base name, the source identifier
+    is appended to distinguish them.
+
+    Args:
+        events: List of events to build entity names for.
+
+    Returns:
+        Dictionary mapping event UIDs to their entity names.
+
+    """
+    # Count how many events have the same base name
+    name_counts: dict[str, int] = {}
+    for event in events:
+        name_counts[event.name] = name_counts.get(event.name, 0) + 1
+
+    # Build entity names, appending source when there are duplicates
+    entity_names: dict[str, str] = {}
+    for event in events:
+        if name_counts[event.name] > 1:
+            source = extract_event_source_from_uid(event.uid)
+            if source:
+                entity_names[event.uid] = f"{event.name} {source}"
+            else:
+                entity_names[event.uid] = event.name
+        else:
+            entity_names[event.uid] = event.name
+
+    return entity_names
+
 
 def extract_subcodes_as_strings(subcodes: Any) -> list[str]:
     """Stringify ONVIF subcodes."""
