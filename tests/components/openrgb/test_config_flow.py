@@ -39,9 +39,20 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     }
 
 
+@pytest.mark.parametrize(
+    ("exception", "error_key"),
+    [
+        (ConnectionRefusedError, "cannot_connect"),
+        (OpenRGBDisconnected, "cannot_connect"),
+        (SDKVersionError, "cannot_connect"),
+        (RuntimeError("Test error"), "unknown"),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry", "mock_openrgb_client")
-async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
-    """Test user flow when cannot connect to OpenRGB SDK Server."""
+async def test_user_flow_errors(
+    hass: HomeAssistant, exception: Exception, error_key: str
+) -> None:
+    """Test user flow with various errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -49,7 +60,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.openrgb.config_flow.OpenRGBClient",
-        side_effect=ConnectionRefusedError,
+        side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -58,73 +69,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-@pytest.mark.usefixtures("mock_setup_entry", "mock_openrgb_client")
-async def test_user_flow_openrgb_disconnected(hass: HomeAssistant) -> None:
-    """Test user flow when OpenRGB disconnects."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-
-    with patch(
-        "homeassistant.components.openrgb.config_flow.OpenRGBClient",
-        side_effect=OpenRGBDisconnected,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-@pytest.mark.usefixtures("mock_setup_entry", "mock_openrgb_client")
-async def test_user_flow_sdk_version_error(hass: HomeAssistant) -> None:
-    """Test user flow with SDK version mismatch."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-
-    with patch(
-        "homeassistant.components.openrgb.config_flow.OpenRGBClient",
-        side_effect=SDKVersionError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-@pytest.mark.usefixtures("mock_setup_entry", "mock_openrgb_client")
-async def test_user_flow_unknown_error(hass: HomeAssistant) -> None:
-    """Test user flow with unknown error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-
-    with patch(
-        "homeassistant.components.openrgb.config_flow.OpenRGBClient",
-        side_effect=RuntimeError("Test error"),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == {"base": error_key}
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_openrgb_client")
