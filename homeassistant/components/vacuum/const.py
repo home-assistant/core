@@ -52,7 +52,6 @@ class VacuumEntityFeature(IntFlag):
     STATE = 4096  # Must be set by vacuum platforms derived from StateVacuumEntity
     START = 8192
     CLEAN_AREA = 16384
-    CLEAN_AREA_REPEAT = 32768
 
 
 # These STATE_* constants are deprecated as of Home Assistant 2025.1.

@@ -81,12 +81,6 @@ clean_area:
       selector:
         area:
           multiple: true
-    repeat:
-      required: false
-      example: 1
-      filter:
-        supported_features:
-          - vacuum.VacuumEntityFeature.CLEAN_AREA_REPEAT
 
 send_command:
   target:

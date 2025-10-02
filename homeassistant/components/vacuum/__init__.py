@@ -122,9 +122,6 @@ _DEPRECATED_SUPPORT_CLEAN_SPOT = DeprecatedConstantEnum(
 _DEPRECATED_SUPPORT_CLEAN_AREA = DeprecatedConstantEnum(
     VacuumEntityFeature.CLEAN_AREA, "2025.10"
 )
-_DEPRECATED_SUPPORT_CLEAN_AREA_REPEAT = DeprecatedConstantEnum(
-    VacuumEntityFeature.CLEAN_AREA_REPEAT, "2025.10"
-)
 _DEPRECATED_SUPPORT_MAP = DeprecatedConstantEnum(VacuumEntityFeature.MAP, "2025.10")
 _DEPRECATED_SUPPORT_STATE = DeprecatedConstantEnum(VacuumEntityFeature.STATE, "2025.10")
 _DEPRECATED_SUPPORT_START = DeprecatedConstantEnum(VacuumEntityFeature.START, "2025.10")
@@ -176,7 +173,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_CLEAN_AREA,
         {
             vol.Required("area_ids"): [str],
-            vol.Optional("repeat", default=1): cv.positive_int,
         },
         "async_internal_clean_area",
         [VacuumEntityFeature.CLEAN_AREA],
