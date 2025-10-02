@@ -16,7 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
-from .util import get_market_dates
+from .util import CET
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
     async def _async_update_data(self) -> Mapping[dt.date, OMIEResults[SpotData]]:
         """Update OMIE data, fetching data as needed and available."""
         now = dt.datetime.now(ZoneInfo(self.hass.config.time_zone))
-        market_dates = get_market_dates(now)
+        market_dates = {now.astimezone(CET).date()}
 
         # seed new data with previously-fetched days. these are immutable once fetched.
         data = {
@@ -63,9 +63,12 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
         return data
 
     def _set_update_interval(self) -> None:
-        """Schedules the next refresh at the start of the next hour."""
+        """Schedules the next refresh at the start of the next quarter-hour."""
         now = dt.datetime.now()
-        refresh_at = now.replace(minute=0, second=0) + dt.timedelta(hours=1)
+        now_quarter_minute = now.minute // 15 * 15
+        refresh_at = now.replace(
+            minute=now_quarter_minute, second=0, microsecond=0
+        ) + dt.timedelta(minutes=15)
         self.update_interval = refresh_at - now
 
         _LOGGER.debug("Next refresh at %s", refresh_at.astimezone())

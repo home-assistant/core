@@ -13,9 +13,10 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import util
 from .const import DOMAIN
 from .coordinator import OMIEConfigEntry, OMIECoordinator
-from .util import current_hour_CET, pick_series_cet
+from .util import pick_series_cet
 
 PARALLEL_UPDATES = 0
 
@@ -61,7 +62,7 @@ class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update this sensor's state from the coordinator results."""
-        value = self._get_current_hour_value()
+        value = self._get_current_quarter_hour_value()
         self._attr_available = value is not None
         self._attr_native_value = value if self._attr_available else None
         super()._handle_coordinator_update()
@@ -71,16 +72,16 @@ class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
         """Return if entity is available."""
         return super().available and self._attr_available
 
-    def _get_current_hour_value(self) -> float | None:
-        """Get current hour's price value from coordinator data."""
-        current_hour_cet = current_hour_CET()
-        current_date_cet = current_hour_cet.date()
+    def _get_current_quarter_hour_value(self) -> float | None:
+        """Get current quarter-hour's price value from coordinator data."""
+        current_quarter_hour_cet = util.current_quarter_hour_cet()
+        current_date_cet = current_quarter_hour_cet.date()
 
         pyomie_results = self.coordinator.data.get(current_date_cet)
-        pyomie_hours = pick_series_cet(pyomie_results, self._pyomie_series_name)
+        pyomie_quarter_hours = pick_series_cet(pyomie_results, self._pyomie_series_name)
 
         # Convert to €/kWh
-        value_mwh = pyomie_hours.get(current_hour_cet)
+        value_mwh = pyomie_quarter_hours.get(current_quarter_hour_cet)
         return value_mwh / 1000 if value_mwh is not None else None
 
 
@@ -100,8 +101,8 @@ async def async_setup_entry(
     )
 
     sensors = [
-        OMIEPriceSensor(coordinator, device_info, pyomie_series_name="spot_price_pt"),
-        OMIEPriceSensor(coordinator, device_info, pyomie_series_name="spot_price_es"),
+        OMIEPriceSensor(coordinator, device_info, pyomie_series_name="pt_spot_price"),
+        OMIEPriceSensor(coordinator, device_info, pyomie_series_name="es_spot_price"),
     ]
 
     async_add_entities(sensors)
