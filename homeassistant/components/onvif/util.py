@@ -16,10 +16,10 @@ def extract_event_source_from_uid(uid: str) -> str:
 
 
 def build_event_entity_names(events: list[Event]) -> dict[str, str]:
-    """Build entity names for events, with source appended for duplicates.
+    """Build entity names for events, with index appended for duplicates.
 
-    When multiple events share the same base name, the source identifier
-    is appended to distinguish them.
+    When multiple events share the same base name, a sequential index
+    is appended to distinguish them (sorted by source identifier).
 
     Args:
         events: List of events to build entity names for.
@@ -28,22 +28,26 @@ def build_event_entity_names(events: list[Event]) -> dict[str, str]:
         Dictionary mapping event UIDs to their entity names.
 
     """
-    # Count how many events have the same base name
-    name_counts: dict[str, int] = {}
+    # Group events by name
+    events_by_name: dict[str, list[Event]] = {}
     for event in events:
-        name_counts[event.name] = name_counts.get(event.name, 0) + 1
+        if event.name not in events_by_name:
+            events_by_name[event.name] = []
+        events_by_name[event.name].append(event)
 
-    # Build entity names, appending source when there are duplicates
+    # Build entity names, appending index when there are duplicates
     entity_names: dict[str, str] = {}
-    for event in events:
-        if name_counts[event.name] > 1:
-            source = extract_event_source_from_uid(event.uid)
-            if source:
-                entity_names[event.uid] = f"{event.name} {source}"
-            else:
-                entity_names[event.uid] = event.name
+    for name, name_events in events_by_name.items():
+        if len(name_events) == 1:
+            # No duplicates, use name as-is
+            entity_names[name_events[0].uid] = name
         else:
-            entity_names[event.uid] = event.name
+            # Sort by source identifier and assign sequential indices
+            sorted_events = sorted(
+                name_events, key=lambda e: extract_event_source_from_uid(e.uid)
+            )
+            for index, event in enumerate(sorted_events, start=1):
+                entity_names[event.uid] = f"{name} {index}"
 
     return entity_names
 
