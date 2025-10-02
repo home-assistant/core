@@ -351,6 +351,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.RelativeHumidityMeasurement.Attributes.MeasuredValue,
         ),
+        allow_multi=True,  # also used for climate entity
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,

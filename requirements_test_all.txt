@@ -366,7 +366,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.10.0
+aioshelly==13.11.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1420,7 +1420,7 @@ oralb-ble==0.17.6
 ourgroceries==1.5.4
 
 # homeassistant.components.ovo_energy
-ovoenergy==2.0.1
+ovoenergy==3.0.1
 
 # homeassistant.components.p1_monitor
 p1monitor==3.2.0
@@ -1556,7 +1556,7 @@ pyHomee==1.3.8
 pyRFXtrx==0.31.1
 
 # homeassistant.components.tibber
-pyTibber==0.32.1
+pyTibber==0.32.2
 
 # homeassistant.components.dlink
 pyW215==0.8.0

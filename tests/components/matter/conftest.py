@@ -122,6 +122,7 @@ async def integration_fixture(
         "solar_power",
         "speaker",
         "switch_unit",
+        "tado_smart_radiator_thermostat_x",
         "temperature_sensor",
         "thermostat",
         "vacuum_cleaner",

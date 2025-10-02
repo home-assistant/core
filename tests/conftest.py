@@ -1659,10 +1659,12 @@ async def async_test_recorder(
     migrate_entity_ids = (
         migration.EntityIDMigration.migrate_data if enable_migrate_entity_ids else None
     )
-    legacy_event_id_foreign_key_exists = (
-        migration.EventIDPostMigration._legacy_event_id_foreign_key_exists
+    post_migrate_event_ids = (
+        migration.EventIDPostMigration.needs_migrate_impl
         if enable_migrate_event_ids
-        else lambda _: None
+        else lambda _1, _2, _3: migration.DataMigrationStatus(
+            needs_migrate=False, migration_done=True
+        )
     )
     with (
         patch(
@@ -1701,8 +1703,8 @@ async def async_test_recorder(
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.migration.EventIDPostMigration._legacy_event_id_foreign_key_exists",
-            side_effect=legacy_event_id_foreign_key_exists,
+            "homeassistant.components.recorder.migration.EventIDPostMigration.needs_migrate_impl",
+            side_effect=post_migrate_event_ids,
             autospec=True,
         ),
         patch(
