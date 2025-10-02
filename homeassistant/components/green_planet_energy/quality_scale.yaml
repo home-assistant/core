@@ -86,5 +86,5 @@ rules:
 
   # Platinum
   async-dependency: todo
-  inject-websession: todo
+  inject-websession: done
   strict-typing: todo
