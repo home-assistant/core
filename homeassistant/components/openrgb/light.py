@@ -192,7 +192,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         super()._handle_coordinator_update()
 
     @property
-    def available(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def available(self) -> bool:
         """Return if the light is available."""
         return super().available and self.device_key in self.coordinator.data
 
