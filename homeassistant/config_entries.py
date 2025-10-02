@@ -755,6 +755,7 @@ class ConfigEntry[_DataT = Any]:
         error_reason_translation_placeholders = None
 
         try:
+            result = False
             with async_start_setup(
                 hass, integration=self.domain, group=self.entry_id, phase=setup_phase
             ):
@@ -775,8 +776,6 @@ class ConfigEntry[_DataT = Any]:
                 self.domain,
                 error_reason,
             )
-            await self._async_process_on_unload(hass)
-            result = False
         except ConfigEntryAuthFailed as exc:
             message = str(exc)
             auth_base_message = "could not authenticate"
@@ -792,9 +791,7 @@ class ConfigEntry[_DataT = Any]:
                 self.domain,
                 auth_message,
             )
-            await self._async_process_on_unload(hass)
             self.async_start_reauth(hass)
-            result = False
         except ConfigEntryNotReady as exc:
             message = str(exc)
             error_reason_translation_key = exc.translation_key
@@ -835,14 +832,39 @@ class ConfigEntry[_DataT = Any]:
                     functools.partial(self._async_setup_again, hass),
                 )
 
-            await self._async_process_on_unload(hass)
             return
-        # pylint: disable-next=broad-except
-        except (asyncio.CancelledError, SystemExit, Exception):
+
+        except asyncio.CancelledError:
+            # We want to propagate CancelledError if we are being cancelled.
+            if (task := asyncio.current_task()) and task.cancelling() > 0:
+                _LOGGER.exception(
+                    "Setup of config entry '%s' for %s integration cancelled",
+                    self.title,
+                    self.domain,
+                )
+                self._async_set_state(
+                    hass,
+                    ConfigEntryState.SETUP_ERROR,
+                    None,
+                    None,
+                    None,
+                )
+                raise
+
+            # This was not a "real" cancellation, log it and treat as a normal error.
             _LOGGER.exception(
                 "Error setting up entry %s for %s", self.title, integration.domain
             )
-            result = False
+
+        # pylint: disable-next=broad-except
+        except (SystemExit, Exception):
+            _LOGGER.exception(
+                "Error setting up entry %s for %s", self.title, integration.domain
+            )
+
+        finally:
+            if not result and domain_is_integration:
+                await self._async_process_on_unload(hass)
 
         #
         # After successfully calling async_setup_entry, it is important that this function
