@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
-import json
 import logging
 from typing import Any, cast
 
@@ -1142,7 +1141,7 @@ async def async_setup_entry(
                 if capability in capabilities:
                     for attribute, descriptions in attributes.items():
                         for description in descriptions:
-                            _LOGGER.warning(json.dumps(device.status))
+                            _LOGGER.warning(device.status)
                             if (
                                 (
                                     not description.capability_ignore_list
