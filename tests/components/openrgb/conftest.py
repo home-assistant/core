@@ -4,7 +4,7 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from openrgb.utils import RGBColor
+from openrgb.utils import ModeFlags, RGBColor
 import pytest
 
 from homeassistant.components.openrgb.const import DOMAIN
@@ -56,7 +56,7 @@ def mock_device_data() -> dict[str, Any]:
             {
                 "name": "Direct",
                 "value": 0,
-                "flags": 3,  # HAS_PER_LED_COLOR
+                "flags": ModeFlags.HAS_PER_LED_COLOR,
                 "speed_min": 0,
                 "speed_max": 0,
                 "brightness_min": 0,
@@ -72,7 +72,7 @@ def mock_device_data() -> dict[str, Any]:
             {
                 "name": "Static",
                 "value": 1,
-                "flags": 3,  # HAS_PER_LED_COLOR
+                "flags": ModeFlags.HAS_PER_LED_COLOR,
                 "speed_min": 0,
                 "speed_max": 0,
                 "brightness_min": 0,

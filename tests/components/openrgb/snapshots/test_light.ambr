@@ -55,20 +55,20 @@
       'friendly_name': 'Test RGB Device',
       'hs_color': tuple(
         0.0,
-        0.0,
+        100.0,
       ),
       'rgb_color': tuple(
         255,
-        255,
-        255,
+        0,
+        0,
       ),
       'supported_color_modes': list([
         <ColorMode.RGB: 'rgb'>,
       ]),
       'supported_features': <LightEntityFeature: 4>,
       'xy_color': tuple(
-        0.323,
-        0.329,
+        0.701,
+        0.299,
       ),
     }),
     'context': <ANY>,
