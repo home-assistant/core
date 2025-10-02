@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
         sw_version=info_api.version,
         hw_version=info_api.data.device.pcb,
         configuration_url=entry.data[CONF_URL],
-        serial_number=info_api.serial_number,
+        serial_number=str(info_api.serial_number),
         model_id=(
             f"{info_api.data.device.article_number}{info_api.data.device.article_info}"
         ),
