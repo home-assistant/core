@@ -7,5 +7,7 @@
   "iot_class": "cloud_polling",
   "loggers": ["pyuptimerobot"],
   "quality_scale": "bronze",
-  "requirements": ["pyuptimerobot==22.2.0"]
+  "requirements": [
+    "git+https://github.com/ludeeus/pyuptimerobot.git@refs/pull/33/head#pyuptimerobot==22.4.0"
+  ]
 }
