@@ -855,16 +855,16 @@
         "name": "Total dissolved solids"
       },
       "dew_point_temperature": {
-        "name": "Dew point temperature"
+        "name": "Dew point"
       },
       "feels_like_temperature": {
-        "name": "Feels like temperature"
+        "name": "Feels like"
       },
       "heat_index_temperature": {
-        "name": "Heat index temperature"
+        "name": "Heat index"
       },
       "wind_chill_index_temperature": {
-        "name": "Wind chill index temperature"
+        "name": "Wind chill index"
       }
     },
     "switch": {

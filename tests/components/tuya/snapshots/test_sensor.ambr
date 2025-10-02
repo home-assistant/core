@@ -2201,7 +2201,7 @@
     'state': 'high',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_dew_point_temperature-entry]
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_dew_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2216,7 +2216,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_dew_point_temperature',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_dew_point',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2231,7 +2231,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Dew point temperature',
+    'original_name': 'Dew point',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2241,23 +2241,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_dew_point_temperature-state]
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_dew_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Dew point temperature',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Dew point',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_dew_point_temperature',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_dew_point',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-40.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_feels_like_temperature-entry]
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_feels_like-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2272,7 +2272,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_feels_like_temperature',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_feels_like',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2287,7 +2287,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Feels like temperature',
+    'original_name': 'Feels like',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2297,23 +2297,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_feels_like_temperature-state]
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_feels_like-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Feels like temperature',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Feels like',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_feels_like_temperature',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_feels_like',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-65.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_heat_index_temperature-entry]
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_heat_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2328,7 +2328,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_heat_index_temperature',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_heat_index',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2343,7 +2343,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Heat index temperature',
+    'original_name': 'Heat index',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2353,16 +2353,16 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_heat_index_temperature-state]
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_heat_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Heat index temperature',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Heat index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_heat_index_temperature',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_heat_index',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3131,7 +3131,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_chill_index_temperature-entry]
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_chill_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3146,7 +3146,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_chill_index_temperature',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_chill_index',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3161,7 +3161,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Wind chill index temperature',
+    'original_name': 'Wind chill index',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3171,16 +3171,16 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_chill_index_temperature-state]
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_chill_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Wind chill index temperature',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Wind chill index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_chill_index_temperature',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_chill_index',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -17137,7 +17137,7 @@
     'state': '1007.8',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_dew_point_temperature-entry]
+# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_dew_point-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17152,7 +17152,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sws_16600_wifi_sh_dew_point_temperature',
+    'entity_id': 'sensor.sws_16600_wifi_sh_dew_point',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17167,7 +17167,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Dew point temperature',
+    'original_name': 'Dew point',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -17177,23 +17177,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_dew_point_temperature-state]
+# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_dew_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'SWS 16600 WiFi SH Dew point temperature',
+      'friendly_name': 'SWS 16600 WiFi SH Dew point',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sws_16600_wifi_sh_dew_point_temperature',
+    'entity_id': 'sensor.sws_16600_wifi_sh_dew_point',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '14.5',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_feels_like_temperature-entry]
+# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_feels_like-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17208,7 +17208,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sws_16600_wifi_sh_feels_like_temperature',
+    'entity_id': 'sensor.sws_16600_wifi_sh_feels_like',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17223,7 +17223,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Feels like temperature',
+    'original_name': 'Feels like',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -17233,23 +17233,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_feels_like_temperature-state]
+# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_feels_like-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'SWS 16600 WiFi SH Feels like temperature',
+      'friendly_name': 'SWS 16600 WiFi SH Feels like',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sws_16600_wifi_sh_feels_like_temperature',
+    'entity_id': 'sensor.sws_16600_wifi_sh_feels_like',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20.7',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_heat_index_temperature-entry]
+# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_heat_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17264,7 +17264,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sws_16600_wifi_sh_heat_index_temperature',
+    'entity_id': 'sensor.sws_16600_wifi_sh_heat_index',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -17279,7 +17279,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Heat index temperature',
+    'original_name': 'Heat index',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -17289,16 +17289,16 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_heat_index_temperature-state]
+# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_heat_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'SWS 16600 WiFi SH Heat index temperature',
+      'friendly_name': 'SWS 16600 WiFi SH Heat index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sws_16600_wifi_sh_heat_index_temperature',
+    'entity_id': 'sensor.sws_16600_wifi_sh_heat_index',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -18067,7 +18067,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_wind_chill_index_temperature-entry]
+# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_wind_chill_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -18082,7 +18082,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sws_16600_wifi_sh_wind_chill_index_temperature',
+    'entity_id': 'sensor.sws_16600_wifi_sh_wind_chill_index',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -18097,7 +18097,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Wind chill index temperature',
+    'original_name': 'Wind chill index',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -18107,16 +18107,16 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_wind_chill_index_temperature-state]
+# name: test_platform_setup_and_discovery[sensor.sws_16600_wifi_sh_wind_chill_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'SWS 16600 WiFi SH Wind chill index temperature',
+      'friendly_name': 'SWS 16600 WiFi SH Wind chill index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sws_16600_wifi_sh_wind_chill_index_temperature',
+    'entity_id': 'sensor.sws_16600_wifi_sh_wind_chill_index',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
