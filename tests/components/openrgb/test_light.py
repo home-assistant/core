@@ -3,7 +3,6 @@
 from typing import Any
 from unittest.mock import MagicMock
 
-from freezegun.api import FrozenDateTimeFactory
 from openrgb.utils import RGBColor
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -68,7 +67,6 @@ async def test_entities(
 @pytest.mark.usefixtures("init_integration")
 async def test_turn_on_light(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_openrgb_device: MagicMock,
 ) -> None:
     """Test turning on the light."""
@@ -99,7 +97,6 @@ async def test_turn_on_light(
 @pytest.mark.usefixtures("init_integration")
 async def test_turn_on_light_with_color(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_openrgb_device: MagicMock,
 ) -> None:
     """Test turning on the light with color."""
@@ -112,7 +109,6 @@ async def test_turn_on_light_with_color(
         },
         blocking=True,
     )
-    freezer.tick(1)
 
     # Check that set_color was called
     assert mock_openrgb_device.set_color.called
@@ -125,7 +121,6 @@ async def test_turn_on_light_with_color(
 @pytest.mark.usefixtures("init_integration")
 async def test_turn_on_light_with_brightness(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_openrgb_device: MagicMock,
 ) -> None:
     """Test turning on the light with brightness."""
@@ -138,7 +133,6 @@ async def test_turn_on_light_with_brightness(
         },
         blocking=True,
     )
-    freezer.tick(1)
 
     assert mock_openrgb_device.set_color.called
 
@@ -146,7 +140,6 @@ async def test_turn_on_light_with_brightness(
 @pytest.mark.usefixtures("init_integration")
 async def test_turn_on_light_with_effect(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_openrgb_device: MagicMock,
 ) -> None:
     """Test turning on the light with effect."""
@@ -159,7 +152,6 @@ async def test_turn_on_light_with_effect(
         },
         blocking=True,
     )
-    freezer.tick(1)
 
     mock_openrgb_device.set_mode.assert_called_once_with("Rainbow")
 
@@ -167,7 +159,6 @@ async def test_turn_on_light_with_effect(
 @pytest.mark.usefixtures("init_integration")
 async def test_turn_off_light(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_openrgb_device: MagicMock,
 ) -> None:
     """Test turning off the light."""
@@ -177,7 +168,6 @@ async def test_turn_off_light(
         {ATTR_ENTITY_ID: "light.test_rgb_device"},
         blocking=True,
     )
-    freezer.tick(1)
 
     # Device supports "Off" mode
     mock_openrgb_device.set_mode.assert_called_with(OpenRGBMode.OFF)
@@ -186,7 +176,6 @@ async def test_turn_off_light(
 @pytest.mark.usefixtures("init_integration")
 async def test_turn_off_light_no_off_mode(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_openrgb_device: MagicMock,
     mock_device_data: dict[str, Any],
 ) -> None:
@@ -207,7 +196,6 @@ async def test_turn_off_light_no_off_mode(
 
 async def test_dynamic_device_addition(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_openrgb_client: MagicMock,
     mock_openrgb_device: MagicMock,
@@ -256,7 +244,6 @@ async def test_dynamic_device_addition(
 @pytest.mark.usefixtures("init_integration")
 async def test_light_availability(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_openrgb_client: MagicMock,
     mock_openrgb_device: MagicMock,
