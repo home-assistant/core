@@ -25,9 +25,7 @@ from homeassistant.components.recorder.const import (
     SupportedDialect,
 )
 from homeassistant.components.recorder.db_schema import RecorderRuns
-from homeassistant.components.recorder.history.modern import (
-    _get_single_entity_start_time_stmt,
-)
+from homeassistant.components.recorder.history import _get_single_entity_start_time_stmt
 from homeassistant.components.recorder.models import (
     UnsupportedDialect,
     process_timestamp,
