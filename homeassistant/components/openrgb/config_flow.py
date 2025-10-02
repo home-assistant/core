@@ -40,8 +40,6 @@ async def validate_input(hass: HomeAssistant, host: str, port: int) -> None:
 class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenRGB."""
 
-    VERSION = 1
-
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
