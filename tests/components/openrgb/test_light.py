@@ -545,12 +545,11 @@ async def test_duplicate_device_names(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Get device keys (they will be sorted alphabetically)
     # The device key format is: entry_id||type||vendor||description||serial||location
     device1_key = f"{mock_config_entry.entry_id}||DRAM||ENE||ENE SMBus Device||none||I2C: PIIX4, address 0x71"
     device2_key = f"{mock_config_entry.entry_id}||DRAM||ENE||ENE SMBus Device||none||I2C: PIIX4, address 0x72"
 
-    # Verify devices exist with correct names (suffix based on device.id, not keys)
+    # Verify devices exist with correct names (suffix based on device.id position)
     device1_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, device1_key)}
     )
