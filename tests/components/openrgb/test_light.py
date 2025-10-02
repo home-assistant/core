@@ -15,6 +15,7 @@ from homeassistant.components.light import (
     EFFECT_OFF,
 )
 from homeassistant.components.openrgb.const import (
+    DEFAULT_BRIGHTNESS,
     DEFAULT_COLOR,
     DOMAIN,
     OFF_COLOR,
@@ -95,6 +96,8 @@ async def test_light_with_black_leds(
     state = hass.states.get("light.test_rgb_device")
     assert state
     assert state.state == STATE_OFF
+    assert state.attributes.get("rgb_color") is None
+    assert state.attributes.get("brightness") is None
 
 
 async def test_light_with_non_color_mode(
@@ -115,7 +118,29 @@ async def test_light_with_non_color_mode(
     assert state
     assert state.state == STATE_ON
     assert state.attributes.get("rgb_color") == DEFAULT_COLOR
-    assert state.attributes.get("brightness") == 255
+    assert state.attributes.get("brightness") == DEFAULT_BRIGHTNESS
+
+
+async def test_light_with_mode_specific_color_flag(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    mock_openrgb_device: MagicMock,
+) -> None:
+    """Test mode with HAS_MODE_SPECIFIC_COLOR flag (covers line 324 return True)."""
+    # Set device to use Breathing mode which has HAS_MODE_SPECIFIC_COLOR flag
+    mock_openrgb_device.active_mode = 4  # Breathing mode
+    mock_openrgb_device.colors = [RGBColor(255, 0, 255)]  # Purple
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Verify the light entity works with this mode
+    state = hass.states.get("light.test_rgb_device")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes.get("rgb_color") == (255, 0, 255)
+    assert state.attributes.get("brightness") == DEFAULT_BRIGHTNESS
 
 
 # Test basic turn on/off functionality
@@ -164,16 +189,14 @@ async def test_turn_on_light_with_color(
         SERVICE_TURN_ON,
         {
             ATTR_ENTITY_ID: "light.test_rgb_device",
-            ATTR_RGB_COLOR: (0, 255, 0),
+            ATTR_RGB_COLOR: (0, 255, 0),  # Green
         },
         blocking=True,
     )
 
     # Check that set_color was called with green color scaled by brightness
     # Current brightness is 255 (from initial red color), so green should be full
-    mock_openrgb_device.set_color.assert_called_once_with(
-        RGBColor(red=0, green=255, blue=0), True
-    )
+    mock_openrgb_device.set_color.assert_called_once_with(RGBColor(0, 255, 0), True)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -195,9 +218,7 @@ async def test_turn_on_light_with_brightness(
     # Check that set_color was called with scaled color by brightness (128/255 = 0.502)
     # Initial color (255, 0, 0) -> HS (0.0, 100.0) -> When applying brightness 128,
     # the V component becomes 50.2%, giving RGB (128, 128, 128) after hs_to_RGB conversion
-    mock_openrgb_device.set_color.assert_called_once_with(
-        RGBColor(red=128, green=128, blue=128), True
-    )
+    mock_openrgb_device.set_color.assert_called_once_with(RGBColor(128, 128, 128), True)
 
 
 @pytest.mark.usefixtures("init_integration")

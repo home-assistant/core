@@ -116,6 +116,22 @@ def mock_device_data() -> dict[str, Any]:
                 "color_mode": 0,
                 "colors": [],
             },
+            {
+                "name": "Breathing",
+                "value": 4,
+                "flags": ModeFlags.HAS_MODE_SPECIFIC_COLOR,  # Has mode-specific color
+                "speed_min": 0,
+                "speed_max": 100,
+                "brightness_min": 0,
+                "brightness_max": 0,
+                "colors_min": 1,
+                "colors_max": 2,
+                "speed": 50,
+                "brightness": 0,
+                "direction": 0,
+                "color_mode": 1,
+                "colors": [],
+            },
         ],
         "zones": [],
         "leds": [

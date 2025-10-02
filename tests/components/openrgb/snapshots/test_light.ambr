@@ -8,6 +8,7 @@
       'effect_list': list([
         'off',
         'Rainbow',
+        'Breathing',
       ]),
       'supported_color_modes': list([
         <ColorMode.RGB: 'rgb'>,
@@ -51,6 +52,7 @@
       'effect_list': list([
         'off',
         'Rainbow',
+        'Breathing',
       ]),
       'friendly_name': 'Test RGB Device',
       'hs_color': tuple(
