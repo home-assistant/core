@@ -18,6 +18,7 @@ from homeassistant.components.smartthings.audio import (
     async_get_audio_manager,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.network import NoURLAvailableError
 
 from tests.typing import ClientSessionGenerator
 
@@ -64,12 +65,36 @@ async def test_prepare_notification_creates_url(
 
 
 @pytest.mark.asyncio
-async def test_prepare_notification_requires_external_url(
+async def test_prepare_notification_uses_internal_url_when_external_missing(
     hass: HomeAssistant,
 ) -> None:
-    """External URL must be configured."""
+    """Fallback to the internal URL if no external URL is available."""
 
     hass.config.external_url = None
+    hass.config.internal_url = "http://homeassistant.local:8123"
+    manager = await async_get_audio_manager(hass)
+
+    wav_bytes = _build_wav()
+
+    with patch.object(
+        manager, "_transcode_to_pcm", AsyncMock(return_value=(wav_bytes, 1.0))
+    ):
+        url = await manager.async_prepare_notification("https://example.com/source.mp3")
+
+    parsed = urlsplit(url)
+    assert parsed.scheme == "http"
+    assert parsed.netloc == "homeassistant.local:8123"
+    assert parsed.path.endswith(".pcm")
+
+
+@pytest.mark.asyncio
+async def test_prepare_notification_requires_accessible_url(
+    hass: HomeAssistant,
+) -> None:
+    """Fail if neither external nor internal URLs are available."""
+
+    hass.config.external_url = None
+    hass.config.internal_url = None
     manager = await async_get_audio_manager(hass)
 
     wav_bytes = _build_wav()
@@ -77,6 +102,10 @@ async def test_prepare_notification_requires_external_url(
     with (
         patch.object(
             manager, "_transcode_to_pcm", AsyncMock(return_value=(wav_bytes, 1.0))
+        ),
+        patch(
+            "homeassistant.components.smartthings.audio.get_url",
+            side_effect=NoURLAvailableError,
         ),
         pytest.raises(SmartThingsAudioError),
     ):

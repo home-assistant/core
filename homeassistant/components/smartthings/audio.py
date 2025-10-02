@@ -98,21 +98,20 @@ class SmartThingsAudioManager(HomeAssistantView):
         try:
             base_url = get_url(
                 self.hass,
-                allow_internal=False,
+                allow_internal=True,
                 allow_external=True,
                 allow_cloud=True,
                 prefer_external=True,
                 prefer_cloud=True,
             )
-            url = f"{base_url}{path}"
         except NoURLAvailableError as err:
             async with self._lock:
                 self._entries.pop(token, None)
             raise SmartThingsAudioError(
-                "SmartThings audio notifications require an externally accessible URL"
+                "SmartThings audio notifications require an accessible Home Assistant URL"
             ) from err
 
-        return url
+        return f"{base_url}{path}"
 
     async def get(self, request: web.Request, token: str) -> web.StreamResponse:
         """Serve a PCM audio response."""
