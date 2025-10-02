@@ -391,7 +391,6 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         entity_registry_enabled_default=False,
         mandatory_arg=True,
         value_fn=get_process_num_fds,
-        none_is_unavailable=True,
         add_to_update=lambda entity: ("processes", ""),
     ),
 }
