@@ -238,7 +238,7 @@ async def test_chime_switch(
     [
         (
             f"{TEST_UID}_record",
-            "recording",
+            "rec_enable",
         ),
         (
             f"{TEST_UID}_ftp_upload",
@@ -306,7 +306,7 @@ async def test_cleanup_hub_switches(
     [
         (
             f"{TEST_UID}_record",
-            "recording",
+            "rec_enable",
         ),
         (
             f"{TEST_UID}_ftp_upload",
