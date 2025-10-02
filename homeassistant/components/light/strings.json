@@ -150,11 +150,18 @@
     }
   },
   "selector": {
-    "behavior": {
+    "condition_behavior": {
       "options": {
         "all": "All",
         "any": "Any",
         "one": "One"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "first": "First",
+        "last": "Last",
+        "any": "Any"
       }
     },
     "color_name": {

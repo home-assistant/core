@@ -16,6 +16,7 @@ state:
       default: any
       selector:
         select:
+          translation_key: "condition_behavior"
           options:
             - one
             - all
