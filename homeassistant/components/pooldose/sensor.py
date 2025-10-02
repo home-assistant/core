@@ -151,11 +151,14 @@ async def async_setup_entry(
 
     sensor_data = data.get(PLATFORM_NAME, {}) if data else {}
 
+    # Ensure sensor_data is a dictionary
+    if not isinstance(sensor_data, dict):
+        sensor_data = {}
     async_add_entities(
         PooldoseSensor(
             coordinator,
             serial_number,
-            coordinator.device_info,
+            coordinator.device_info,  # type: ignore[arg-type]
             description,
             PLATFORM_NAME,
         )

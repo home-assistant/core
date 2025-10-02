@@ -14,7 +14,7 @@ from .coordinator import PooldoseCoordinator
 
 
 def device_info(
-    info: dict | None, unique_id: str, mac: str | None = None
+    info: dict[str, Any] | None, unique_id: str, mac: str | None = None
 ) -> DeviceInfo:
     """Create device info for PoolDose devices."""
     if info is None:
@@ -73,11 +73,16 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
             return False
         # Check if the entity type exists in coordinator data
         platform_data = self.coordinator.data.get(self.platform_name, {})
-        return self.entity_description.key in platform_data
+        return (
+            isinstance(platform_data, dict)
+            and self.entity_description.key in platform_data
+        )
 
-    def get_data(self) -> dict | None:
+    def get_data(self) -> dict[str, Any] | None:
         """Get data for this entity, only if available."""
         if not self.available:
             return None
         platform_data = self.coordinator.data.get(self.platform_name, {})
-        return platform_data.get(self.entity_description.key)
+        if isinstance(platform_data, dict):
+            return platform_data.get(self.entity_description.key)
+        return None

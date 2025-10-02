@@ -7,6 +7,7 @@ from typing import Any
 
 from pooldose.client import PooldoseClient
 from pooldose.request_status import RequestStatus
+from pooldose.type_definitions import APIVersionResponse
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -39,7 +40,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _validate_host(
         self, host: str
-    ) -> tuple[str | None, dict[str, str] | None, dict[str, str] | None]:
+    ) -> tuple[str | None, APIVersionResponse | None, dict[str, str] | None]:
         """Validate the host and return (serial_number, api_versions, errors)."""
         client = PooldoseClient(host, websession=async_get_clientsession(self.hass))
         client_status = await client.connect()
@@ -125,7 +126,16 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=SCHEMA_DEVICE,
                 errors=errors,
-                description_placeholders=api_versions,
+                description_placeholders={
+                    "api_version_is": api_versions["api_version_is"] or ""
+                    if api_versions
+                    else "",
+                    "api_version_should": api_versions["api_version_should"]
+                    if api_versions
+                    else "",
+                }
+                if api_versions
+                else None,
             )
 
         await self.async_set_unique_id(serial_number, raise_on_progress=False)
