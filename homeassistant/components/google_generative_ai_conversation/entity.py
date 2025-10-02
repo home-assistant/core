@@ -620,6 +620,13 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
     def create_generate_content_config(self) -> GenerateContentConfig:
         """Create the GenerateContentConfig for the LLM."""
         options = self.subentry.data
+        model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        thinking_config: ThinkingConfig | None = None
+        if model.startswith("gemini-2.5") and not model.endswith(
+            ("tts", "image", "image-preview")
+        ):
+            thinking_config = ThinkingConfig(include_thoughts=True)
+
         return GenerateContentConfig(
             temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
             top_k=options.get(CONF_TOP_K, RECOMMENDED_TOP_K),
@@ -652,7 +659,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                     ),
                 ),
             ],
-            thinking_config=ThinkingConfig(include_thoughts=True),
+            thinking_config=thinking_config,
         )
 
 
