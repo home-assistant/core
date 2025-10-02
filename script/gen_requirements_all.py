@@ -66,8 +66,10 @@ PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")
 # -----------------------------
 
 def _read_file(path: Path) -> str:
-    """Safely read a UTF-8 text file."""
-    return path.read_text(encoding="utf-8") if path.exists() else ""
+    """Safely read a UTF-8 text file. Raises FileNotFoundError if the file does not exist."""
+    if not path.exists():
+        raise FileNotFoundError(f"File not found: {path}")
+    return path.read_text(encoding="utf-8")
 
 
 def _write_file(path: Path, content: str) -> None:
