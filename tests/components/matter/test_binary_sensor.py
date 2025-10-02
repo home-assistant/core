@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
+from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 from matter_server.common.models import EventType
 import pytest
@@ -359,13 +360,13 @@ async def test_thermostat_occupancy(
 
     # Test Occupancy attribute change
     occupancy_attribute = clusters.Thermostat.Attributes.Occupancy
-    
+
     set_node_attribute(
-        matter_node, 
-        1, 
-        occupancy_attribute.cluster_id, 
-        occupancy_attribute.attribute_id, 
-        0
+        matter_node,
+        1,
+        occupancy_attribute.cluster_id,
+        occupancy_attribute.attribute_id,
+        0,
     )
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("binary_sensor.longan_link_hvac_occupancy")
