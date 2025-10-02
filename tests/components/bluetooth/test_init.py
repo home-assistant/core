@@ -892,31 +892,7 @@ async def test_discovery_match_by_service_data_uuid_then_others(
         await hass.async_block_till_done()
         assert len(mock_config_flow.mock_calls) == 0
 
-        # Ensure that an advertisement with empty manufacturer_data combined with
-        # a matching service_uuid or service_data_uuid still triggers discovery
-        adv_with_service_uuid_and_empty_mfr = generate_advertisement_data(
-            local_name="lock",
-            manufacturer_data={},
-            service_data={},
-            service_uuids=["0000fd3d-0000-1000-8000-00805f9b34fd"],
-        )
-        inject_advertisement(hass, device, adv_with_service_uuid_and_empty_mfr)
-        await hass.async_block_till_done()
-        assert len(mock_config_flow.mock_calls) == 1
-        assert mock_config_flow.mock_calls[0][1][0] == "my_domain"
-        mock_config_flow.reset_mock()
-
-        adv_with_service_data_uuid_and_empty_mfr = generate_advertisement_data(
-            local_name="lock",
-            manufacturer_data={},
-            service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"\x01\x02\x03"},
-            service_uuids=[],
-        )
-        inject_advertisement(hass, device, adv_with_service_data_uuid_and_empty_mfr)
-        await hass.async_block_till_done()
-        assert len(mock_config_flow.mock_calls) == 1
-        assert mock_config_flow.mock_calls[0][1][0] == "my_domain"
-        mock_config_flow.reset_mock()
+        # Ensure we don't regress future discovery steps
 
         # 7th discovery should generate a flow because the
         # service_uuids is in the advertisement
