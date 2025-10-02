@@ -1,5 +1,6 @@
 """Common methods used across tests for VeSync."""
 
+import copy
 from typing import Any
 
 from homeassistant.components.vesync.const import DOMAIN
@@ -152,9 +153,12 @@ def mock_air_purifier_400s_update_response(aioclient_mock: AiohttpClientMocker) 
 
     device_name = "Air Purifier 400s"
     for fixture in DEVICE_FIXTURES[device_name]:
+        fixture_data = copy.deepcopy(
+            load_json_object_fixture("air-purifier-detail-updated.json", DOMAIN)
+        )
         getattr(aioclient_mock, fixture[0])(
             f"https://smartapi.vesync.com{fixture[1]}",
-            json=load_json_object_fixture("air-purifier-detail-updated.json", DOMAIN),
+            json=fixture_data,
         )
 
 
