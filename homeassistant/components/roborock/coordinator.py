@@ -458,7 +458,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             # If either of these fail, we don't care, and we want to continue.
             await asyncio.gather(*tasks, return_exceptions=True)
 
-        if len(self.maps) > 1:
+        if len(self.maps) > 1 and not self.data.status.in_cleaning:
             # Set the map back to the map the user previously had selected so that it
             # does not change the end user's app.
             # Only needs to happen when we changed maps above.
