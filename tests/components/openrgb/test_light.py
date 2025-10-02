@@ -308,6 +308,64 @@ async def test_turn_on_restores_previous_values(
     ]
 
 
+async def test_previous_values_updated_on_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    mock_openrgb_device: MagicMock,
+) -> None:
+    """Test that previous values are updated when device state changes externally."""
+    # Start with device in Direct mode with red color at full brightness
+    mock_openrgb_device.active_mode = 0
+    mock_openrgb_device.colors = [RGBColor(255, 0, 0), RGBColor(255, 0, 0)]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Verify initial state
+    state = hass.states.get("light.test_rgb_device")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes.get("rgb_color") == (255, 0, 0)
+    assert state.attributes.get("brightness") == 255
+    assert state.attributes.get("effect") == EFFECT_OFF  # Direct mode
+
+    # Simulate external change to green at 50% brightness in Breathing mode
+    # (e.g., via the OpenRGB application)
+    mock_openrgb_device.active_mode = 3  # Breathing mode
+    mock_openrgb_device.colors = [RGBColor(0, 128, 0), RGBColor(0, 128, 0)]
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+
+    # Verify new state
+    state = hass.states.get("light.test_rgb_device")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes.get("rgb_color") == (0, 255, 0)  # Green
+    assert state.attributes.get("brightness") == 128  # 50% brightness
+    assert state.attributes.get("effect") == "Breathing"
+
+    # Simulate external change to Off mode
+    mock_openrgb_device.active_mode = 1
+    await coordinator.async_refresh()
+
+    # Verify light is off
+    state = hass.states.get("light.test_rgb_device")
+    assert state
+    assert state.state == STATE_OFF
+
+    # Turn on without parameters - should restore most recent state (green, 50%, Breathing)
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.test_rgb_device"},
+        blocking=True,
+    )
+
+    mock_openrgb_device.set_mode.assert_called_once_with("Breathing")
+    mock_openrgb_device.set_color.assert_called_once_with(RGBColor(0, 128, 0), True)
+
+
 async def test_turn_on_with_non_color_effect_and_color_params(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
