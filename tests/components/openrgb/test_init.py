@@ -67,7 +67,7 @@ async def test_server_device_registry(
         (TimeoutError, ConfigEntryState.SETUP_RETRY),
         (socket.gaierror, ConfigEntryState.SETUP_RETRY),
         (SDKVersionError, ConfigEntryState.SETUP_RETRY),
-        (RuntimeError("Test error"), ConfigEntryState.SETUP_RETRY),
+        (RuntimeError("Test error"), ConfigEntryState.SETUP_ERROR),
     ],
 )
 async def test_setup_entry_exceptions(
@@ -80,7 +80,7 @@ async def test_setup_entry_exceptions(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.openrgb.coordinator.OpenRGBClient",
+        "homeassistant.components.openrgb.OpenRGBClient",
         side_effect=exception,
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)

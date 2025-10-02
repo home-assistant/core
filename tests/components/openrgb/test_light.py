@@ -260,6 +260,7 @@ async def test_dynamic_device_addition(
 async def test_light_availability(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
     mock_openrgb_client: MagicMock,
     mock_openrgb_device: MagicMock,
 ) -> None:
@@ -271,8 +272,9 @@ async def test_light_availability(
     # Simulate device disconnection
     mock_openrgb_client.devices = []
 
-    # Trigger coordinator update
-    freezer.tick(15)
+    # Manually trigger coordinator refresh
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
     await hass.async_block_till_done()
 
     state = hass.states.get("light.test_rgb_device")
