@@ -997,7 +997,7 @@ async def test_rpc_linkedgo_st802_thermostat(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_ANTI_FREEZE},
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_ANTI_FREEZE},
         blocking=True,
     )
     monkeypatch.setitem(mock_rpc_device.status["boolean:200"], "value", True)
@@ -1084,7 +1084,7 @@ async def test_rpc_linkedgo_st1820_thermostat(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_ANTI_FREEZE},
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_ANTI_FREEZE},
         blocking=True,
     )
     monkeypatch.setitem(mock_rpc_device.status["boolean:200"], "value", True)
