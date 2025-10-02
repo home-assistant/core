@@ -8,6 +8,7 @@ from typing import Any
 
 from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
 from bleak import BleakError
+from habluetooth import BluetoothServiceInfoBleak
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
@@ -146,17 +147,19 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=discovery.name, data={})
 
         current_addresses = self._async_current_ids(include_ignore=False)
-        for discovery_info in list(async_discovered_service_info(self.hass)):
+        devices: list[BluetoothServiceInfoBleak] = []
+        for discovery_info in async_discovered_service_info(self.hass):
             address = discovery_info.address
             if address in current_addresses or address in self._discovered_devices:
                 continue
-
             if MFCT_ID not in discovery_info.manufacturer_data:
                 continue
-
             if not any(uuid in SERVICE_UUIDS for uuid in discovery_info.service_uuids):
                 continue
+            devices.append(discovery_info)
 
+        for discovery_info in devices:
+            address = discovery_info.address
             try:
                 device = await self._get_device_data(discovery_info)
             except AirthingsDeviceUpdateError:
