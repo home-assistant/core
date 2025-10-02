@@ -956,9 +956,7 @@ async def test_rpc_linkedgo_st802_thermostat(
     monkeypatch.setitem(mock_rpc_device.status["enum:201"], "value", "cool")
     mock_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "Boolean.Set", {"id": 201, "value": True}
-    )
+    mock_rpc_device.boolean_set.assert_called_once_with(201, True)
     mock_rpc_device.enum_set.assert_called_once_with(201, "cool")
     assert (state := hass.states.get(entity_id))
     assert state.state == HVACMode.COOL
@@ -993,7 +991,7 @@ async def test_rpc_linkedgo_st802_thermostat(
     assert state.attributes.get(ATTR_HUMIDITY) == 66
 
     # Anti-Freeze preset mode
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_rpc_device.boolean_set.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
@@ -1003,9 +1001,7 @@ async def test_rpc_linkedgo_st802_thermostat(
     monkeypatch.setitem(mock_rpc_device.status["boolean:200"], "value", True)
     mock_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "Boolean.Set", {"id": 200, "value": True}
-    )
+    mock_rpc_device.boolean_set.assert_called_once_with(200, True)
     assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_FROST_PROTECTION
 
@@ -1025,7 +1021,7 @@ async def test_rpc_linkedgo_st802_thermostat(
     assert state.attributes.get(ATTR_FAN_MODE) == FAN_LOW
 
     # Test HVAC mode off
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_rpc_device.boolean_set.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
@@ -1035,9 +1031,7 @@ async def test_rpc_linkedgo_st802_thermostat(
     monkeypatch.setitem(mock_rpc_device.status["boolean:201"], "value", False)
     mock_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "Boolean.Set", {"id": 201, "value": False}
-    )
+    mock_rpc_device.boolean_set.assert_called_once_with(201, False)
     assert (state := hass.states.get(entity_id))
     assert state.state == HVACMode.OFF
 
@@ -1080,7 +1074,7 @@ async def test_rpc_linkedgo_st1820_thermostat(
     assert state.attributes.get(ATTR_TEMPERATURE) == 25
 
     # Anti-Freeze preset mode
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_rpc_device.boolean_set.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
@@ -1090,14 +1084,12 @@ async def test_rpc_linkedgo_st1820_thermostat(
     monkeypatch.setitem(mock_rpc_device.status["boolean:200"], "value", True)
     mock_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "Boolean.Set", {"id": 200, "value": True}
-    )
+    mock_rpc_device.boolean_set.assert_called_once_with(200, True)
     assert (state := hass.states.get(entity_id))
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_FROST_PROTECTION
 
     # Test HVAC mode off
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_rpc_device.boolean_set.reset_mock()
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
@@ -1107,8 +1099,6 @@ async def test_rpc_linkedgo_st1820_thermostat(
     monkeypatch.setitem(mock_rpc_device.status["boolean:202"], "value", False)
     mock_rpc_device.mock_update()
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "Boolean.Set", {"id": 202, "value": False}
-    )
+    mock_rpc_device.boolean_set.assert_called_once_with(202, False)
     assert (state := hass.states.get(entity_id))
     assert state.state == HVACMode.OFF

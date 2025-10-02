@@ -230,12 +230,8 @@ class RpclinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
         if TYPE_CHECKING:
             assert self._thermostat_enable_key is not None
 
-        await self.call_rpc(
-            "Boolean.Set",
-            {
-                "id": id_from_key(self._thermostat_enable_key),
-                "value": hvac_mode != HVACMode.OFF,
-            },
+        await self.coordinator.device.boolean_set(
+            id_from_key(self._thermostat_enable_key), hvac_mode != HVACMode.OFF
         )
 
         if self._working_mode_key is None or hvac_mode == HVACMode.OFF:
@@ -251,12 +247,8 @@ class RpclinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
         if TYPE_CHECKING:
             assert self._anti_freeze_key is not None
 
-        await self.call_rpc(
-            "Boolean.Set",
-            {
-                "id": id_from_key(self._anti_freeze_key),
-                "value": preset_mode == PRESET_FROST_PROTECTION,
-            },
+        await self.coordinator.device.boolean_set(
+            id_from_key(self._anti_freeze_key), preset_mode == PRESET_FROST_PROTECTION
         )
 
 
