@@ -23,7 +23,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alarm-light-outline',
+    'original_icon': None,
     'original_name': 'Flash',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -38,7 +38,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo EX30 Flash',
-      'icon': 'mdi:alarm-light-outline',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_ex30_flash',
@@ -72,7 +71,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:trumpet',
+    'original_icon': None,
     'original_name': 'Honk',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -87,7 +86,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo EX30 Honk',
-      'icon': 'mdi:trumpet',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_ex30_honk',
@@ -121,7 +119,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alarm-light',
+    'original_icon': None,
     'original_name': 'Honk & flash',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -136,7 +134,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo EX30 Honk & flash',
-      'icon': 'mdi:alarm-light',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_ex30_honk_flash',
@@ -170,7 +167,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:air-conditioner',
+    'original_icon': None,
     'original_name': 'Start climatization',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -185,7 +182,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo EX30 Start climatization',
-      'icon': 'mdi:air-conditioner',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_ex30_start_climatization',
@@ -219,7 +215,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:air-conditioner',
+    'original_icon': None,
     'original_name': 'Stop climatization',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -234,7 +230,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo EX30 Stop climatization',
-      'icon': 'mdi:air-conditioner',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_ex30_stop_climatization',
@@ -268,7 +263,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alarm-light-outline',
+    'original_icon': None,
     'original_name': 'Flash',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -283,7 +278,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo S90 Flash',
-      'icon': 'mdi:alarm-light-outline',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_s90_flash',
@@ -317,7 +311,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:trumpet',
+    'original_icon': None,
     'original_name': 'Honk',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -332,7 +326,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo S90 Honk',
-      'icon': 'mdi:trumpet',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_s90_honk',
@@ -366,7 +359,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alarm-light',
+    'original_icon': None,
     'original_name': 'Honk & flash',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -381,7 +374,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo S90 Honk & flash',
-      'icon': 'mdi:alarm-light',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_s90_honk_flash',
@@ -415,7 +407,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:air-conditioner',
+    'original_icon': None,
     'original_name': 'Start climatization',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -430,7 +422,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo S90 Start climatization',
-      'icon': 'mdi:air-conditioner',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_s90_start_climatization',
@@ -464,7 +455,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:air-conditioner',
+    'original_icon': None,
     'original_name': 'Stop climatization',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -479,7 +470,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo S90 Stop climatization',
-      'icon': 'mdi:air-conditioner',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_s90_stop_climatization',
@@ -513,7 +503,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alarm-light-outline',
+    'original_icon': None,
     'original_name': 'Flash',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -528,7 +518,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo XC40 Flash',
-      'icon': 'mdi:alarm-light-outline',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc40_flash',
@@ -562,7 +551,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:trumpet',
+    'original_icon': None,
     'original_name': 'Honk',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -577,7 +566,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo XC40 Honk',
-      'icon': 'mdi:trumpet',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc40_honk',
@@ -611,7 +599,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alarm-light',
+    'original_icon': None,
     'original_name': 'Honk & flash',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -626,7 +614,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo XC40 Honk & flash',
-      'icon': 'mdi:alarm-light',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc40_honk_flash',
@@ -660,7 +647,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:air-conditioner',
+    'original_icon': None,
     'original_name': 'Start climatization',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -675,7 +662,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo XC40 Start climatization',
-      'icon': 'mdi:air-conditioner',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc40_start_climatization',
@@ -709,7 +695,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:air-conditioner',
+    'original_icon': None,
     'original_name': 'Stop climatization',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -724,7 +710,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo XC40 Stop climatization',
-      'icon': 'mdi:air-conditioner',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc40_stop_climatization',
@@ -758,7 +743,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alarm-light-outline',
+    'original_icon': None,
     'original_name': 'Flash',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -773,7 +758,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo XC90 Flash',
-      'icon': 'mdi:alarm-light-outline',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc90_flash',
@@ -807,7 +791,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:trumpet',
+    'original_icon': None,
     'original_name': 'Honk',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -822,7 +806,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo XC90 Honk',
-      'icon': 'mdi:trumpet',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc90_honk',
@@ -856,7 +839,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alarm-light',
+    'original_icon': None,
     'original_name': 'Honk & flash',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -871,7 +854,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo XC90 Honk & flash',
-      'icon': 'mdi:alarm-light',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc90_honk_flash',
@@ -905,7 +887,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:air-conditioner',
+    'original_icon': None,
     'original_name': 'Start climatization',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -920,7 +902,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo XC90 Start climatization',
-      'icon': 'mdi:air-conditioner',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc90_start_climatization',
@@ -954,7 +935,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:air-conditioner',
+    'original_icon': None,
     'original_name': 'Stop climatization',
     'platform': 'volvo',
     'previous_unique_id': None,
@@ -969,7 +950,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo XC90 Stop climatization',
-      'icon': 'mdi:air-conditioner',
     }),
     'context': <ANY>,
     'entity_id': 'button.volvo_xc90_stop_climatization',
