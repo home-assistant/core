@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aioshelly.block_device import Block
 from aioshelly.const import BLU_TRV_IDENTIFIER, RPC_GENERATIONS
@@ -14,6 +14,7 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_NONE,
     ClimateEntity,
+    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -38,17 +39,234 @@ from .const import (
     SHTRV_01_TEMPERATURE_SETTINGS,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
-from .entity import ShellyRpcEntity, get_entity_block_device_info, rpc_call
+from .entity import (
+    RpcEntityDescription,
+    ShellyRpcAttributeEntity,
+    ShellyRpcEntity,
+    async_setup_entry_rpc,
+    get_entity_block_device_info,
+    rpc_call,
+)
 from .utils import (
     async_remove_shelly_entity,
     get_block_entity_name,
     get_blu_trv_device_info,
     get_device_entry_gen,
+    get_rpc_key_by_role,
     get_rpc_key_ids,
+    id_from_key,
     is_rpc_thermostat_internal_actuator,
 )
 
 PARALLEL_UPDATES = 0
+
+THERMOSTAT_TO_HA_MODE = {
+    "cool": HVACMode.COOL,
+    "dry": HVACMode.DRY,
+    "heat": HVACMode.HEAT,
+    "ventilation": HVACMode.FAN_ONLY,
+}
+
+HA_TO_THERMOSTAT_MODE = {value: key for key, value in THERMOSTAT_TO_HA_MODE.items()}
+
+PRESET_ANTI_FREEZE = "anti_freeze"
+
+
+@dataclass(kw_only=True, frozen=True)
+class RpcClimateDescription(RpcEntityDescription, ClimateEntityDescription):
+    """Class to describe a RPC climate."""
+
+
+class RpclinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
+    """Entity that controls a LINKEDGO Thermostat on RPC based Shelly devices."""
+
+    entity_description: RpcClimateDescription
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = "thermostat"
+    _id: int
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcEntityDescription,
+    ) -> None:
+        """Initialize RPC LINKEDGO Thermostat."""
+        super().__init__(coordinator, key, attribute, description)
+        self._attr_name = None  # Main device entity
+
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
+
+        config = coordinator.device.config
+        self._status = coordinator.device.status
+
+        self._attr_min_temp = config[key]["min"]
+        self._attr_max_temp = config[key]["max"]
+        self._attr_target_temperature_step = config[key]["meta"]["ui"]["step"]
+
+        self._current_humidity_key = get_rpc_key_by_role(config, "current_humidity")
+        self._current_temperature_key = get_rpc_key_by_role(
+            config, "current_temperature"
+        )
+        self._thermostat_enable_key = get_rpc_key_by_role(config, "enable")
+
+        self._target_humidity_key = get_rpc_key_by_role(config, "target_humidity")
+        if self._target_humidity_key:
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
+            self._attr_min_humidity = config[self._target_humidity_key]["min"]
+            self._attr_max_humidity = config[self._target_humidity_key]["max"]
+
+        self._anti_freeze_key = get_rpc_key_by_role(config, "anti_freeze")
+        if self._anti_freeze_key:
+            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+            self._attr_preset_modes = [PRESET_NONE, "anti_freeze"]
+
+        self._fan_speed_key = get_rpc_key_by_role(config, "fan_speed")
+        if self._fan_speed_key:
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
+            self._attr_fan_modes = config[self._fan_speed_key]["options"]
+
+        # ST1820 only supports HEAT and OFF
+        self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
+        # ST802 supports multiple working modes
+        self._working_mode_key = get_rpc_key_by_role(config, "working_mode")
+        if self._working_mode_key:
+            modes = config[self._working_mode_key]["options"]
+            self._attr_hvac_modes = [HVACMode.OFF] + [
+                THERMOSTAT_TO_HA_MODE[mode] for mode in modes
+            ]
+
+    @property
+    def current_humidity(self) -> float | None:
+        """Return the current humidity."""
+        if TYPE_CHECKING:
+            assert self._current_humidity_key is not None
+
+        return cast(float, self._status[self._current_humidity_key]["value"])
+
+    @property
+    def target_humidity(self) -> float | None:
+        """Return the humidity we try to reach."""
+        if TYPE_CHECKING:
+            assert self._target_humidity_key is not None
+
+        return cast(float, self._status[self._target_humidity_key]["value"])
+
+    @property
+    def hvac_mode(self) -> HVACMode | None:
+        """Return hvac operation ie. heat, cool mode."""
+        if TYPE_CHECKING:
+            assert self._thermostat_enable_key is not None
+
+        if not self._status[self._thermostat_enable_key]["value"]:
+            return HVACMode.OFF
+
+        if self._working_mode_key is not None:
+            working_mode = self._status[self._working_mode_key]["value"]
+            return THERMOSTAT_TO_HA_MODE[working_mode]
+
+        return HVACMode.HEAT  # ST1820
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        if TYPE_CHECKING:
+            assert self._current_temperature_key is not None
+
+        return cast(float, self._status[self._current_temperature_key]["value"])
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Return the temperature we try to reach."""
+        return cast(float, self.attribute_value)
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode."""
+        if TYPE_CHECKING:
+            assert self._anti_freeze_key is not None
+
+        if self._status[self._anti_freeze_key]["value"]:
+            return PRESET_ANTI_FREEZE
+
+        return PRESET_NONE
+
+    @property
+    def fan_mode(self) -> str | None:
+        """Return the fan setting."""
+        if TYPE_CHECKING:
+            assert self._fan_speed_key is not None
+
+        return cast(str, self._status[self._fan_speed_key]["value"])
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        await self.coordinator.device.number_set(self._id, kwargs[ATTR_TEMPERATURE])
+
+    async def async_set_humidity(self, humidity: int) -> None:
+        """Set new target humidity."""
+        assert self._target_humidity_key is not None
+
+        await self.coordinator.device.number_set(
+            id_from_key(self._target_humidity_key), humidity
+        )
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+        if TYPE_CHECKING:
+            assert self._fan_speed_key is not None
+
+        await self.coordinator.device.enum_set(
+            id_from_key(self._fan_speed_key), fan_mode
+        )
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        if TYPE_CHECKING:
+            assert self._thermostat_enable_key is not None
+
+        await self.call_rpc(
+            "Boolean.Set",
+            {
+                "id": id_from_key(self._thermostat_enable_key),
+                "value": hvac_mode != HVACMode.OFF,
+            },
+        )
+
+        if self._working_mode_key is None or hvac_mode == HVACMode.OFF:
+            return
+
+        await self.coordinator.device.enum_set(
+            id_from_key(self._working_mode_key),
+            HA_TO_THERMOSTAT_MODE[hvac_mode],
+        )
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        if TYPE_CHECKING:
+            assert self._anti_freeze_key is not None
+
+        await self.call_rpc(
+            "Boolean.Set",
+            {
+                "id": id_from_key(self._anti_freeze_key),
+                "value": preset_mode == PRESET_ANTI_FREEZE,
+            },
+        )
+
+
+RPC_LINKEDGO_THERMOSTAT: dict[str, RpcClimateDescription] = {
+    "linkedgo_thermostat_climate": RpcClimateDescription(
+        key="number",
+        sub_key="value",
+        role="target_temperature",
+    ),
+}
 
 
 async def async_setup_entry(
@@ -149,6 +367,14 @@ def async_setup_rpc_entry(
 
     if blutrv_key_ids:
         async_add_entities(RpcBluTrvClimate(coordinator, id_) for id_ in blutrv_key_ids)
+
+    async_setup_entry_rpc(
+        hass,
+        config_entry,
+        async_add_entities,
+        RPC_LINKEDGO_THERMOSTAT,
+        RpclinkedgoThermostatClimate,
+    )
 
 
 @dataclass

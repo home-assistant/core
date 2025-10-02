@@ -476,6 +476,19 @@ def get_rpc_key_ids(keys_dict: dict[str, Any], key: str) -> list[int]:
     return [int(k.split(":")[1]) for k in keys_dict if k.startswith(f"{key}:")]
 
 
+def get_rpc_key_by_role(keys_dict: dict[str, Any], role: str) -> str | None:
+    """Return key by role for RPC device from a dict."""
+    for key, value in keys_dict.items():
+        if value.get("role") == role:
+            return key
+    return None
+
+
+def id_from_key(key: str) -> int:
+    """Return id from key."""
+    return int(key.split(":")[-1])
+
+
 def is_rpc_momentary_input(
     config: dict[str, Any], status: dict[str, Any], key: str
 ) -> bool:
