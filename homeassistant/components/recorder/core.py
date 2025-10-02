@@ -56,7 +56,6 @@ from .const import (
     DEFAULT_MAX_BIND_VARS,
     DOMAIN,
     KEEPALIVE_TIME,
-    LAST_REPORTED_SCHEMA_VERSION,
     MARIADB_PYMYSQL_URL_PREFIX,
     MARIADB_URL_PREFIX,
     MAX_QUEUE_BACKLOG_MIN_VALUE,
@@ -1226,7 +1225,7 @@ class Recorder(threading.Thread):
         if (
             pending_last_reported
             := self.states_manager.get_pending_last_reported_timestamp()
-        ) and self.schema_version >= LAST_REPORTED_SCHEMA_VERSION:
+        ):
             with session.no_autoflush:
                 session.execute(
                     update(States),
