@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components.airthings_ble.const import DOMAIN
 from homeassistant.config_entries import SOURCE_BLUETOOTH, SOURCE_IGNORE, SOURCE_USER
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -135,7 +135,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
     assert result["data_schema"] is not None
     schema = result["data_schema"].schema
 
-    assert schema.get(CONF_ADDRESS).container == {
+    assert schema.get(CONF_DEVICE).container == {
         "cc:cc:cc:cc:cc:cc": "Airthings Wave Plus"
     }
 
@@ -144,7 +144,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_ADDRESS: "cc:cc:cc:cc:cc:cc"}
+            result["flow_id"], user_input={CONF_DEVICE: "cc:cc:cc:cc:cc:cc"}
         )
 
     await hass.async_block_till_done()
@@ -185,7 +185,7 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
     assert result["data_schema"] is not None
     schema = result["data_schema"].schema
 
-    assert schema.get(CONF_ADDRESS).container == {
+    assert schema.get(CONF_DEVICE).container == {
         "cc:cc:cc:cc:cc:cc": "Airthings Wave Plus"
     }
 
@@ -194,7 +194,7 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_ADDRESS: "cc:cc:cc:cc:cc:cc"}
+            result["flow_id"], user_input={CONF_DEVICE: "cc:cc:cc:cc:cc:cc"}
         )
 
     await hass.async_block_till_done()
