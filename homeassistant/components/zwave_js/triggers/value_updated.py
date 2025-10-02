@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import functools
+from typing import Any
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
@@ -19,12 +20,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.trigger import (
     Trigger,
     TriggerActionType,
+    TriggerConfig,
     TriggerInfo,
-    move_top_level_schema_fields_to_options,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -222,15 +224,17 @@ class ValueUpdatedTrigger(Trigger):
     """Z-Wave JS value updated trigger."""
 
     _hass: HomeAssistant
-    _options: ConfigType
+    _options: dict[str, Any]
 
     @classmethod
     async def async_validate_complete_config(
-        cls, hass: HomeAssistant, config: ConfigType
+        cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
         """Validate complete config."""
-        config = move_top_level_schema_fields_to_options(config, _OPTIONS_SCHEMA_DICT)
-        return await super().async_validate_complete_config(hass, config)
+        complete_config = move_top_level_schema_fields_to_options(
+            complete_config, _OPTIONS_SCHEMA_DICT
+        )
+        return await super().async_validate_complete_config(hass, complete_config)
 
     @classmethod
     async def async_validate_config(
@@ -239,10 +243,11 @@ class ValueUpdatedTrigger(Trigger):
         """Validate config."""
         return await async_validate_trigger_config(hass, config)
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize trigger."""
         self._hass = hass
-        self._options = config[CONF_OPTIONS]
+        assert config.options is not None
+        self._options = config.options
 
     async def async_attach(
         self,
