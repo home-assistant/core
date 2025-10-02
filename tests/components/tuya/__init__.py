@@ -15,6 +15,7 @@ from tests.common import MockConfigEntry
 DEVICE_MOCKS = [
     "bzyd_45idzfufidgee7ir",  # https://github.com/orgs/home-assistant/discussions/717
     "bzyd_ssimhf6r8kgwepfb",  # https://github.com/orgs/home-assistant/discussions/718
+    "cjkg_uenof8jd",  # https://github.com/home-assistant/core/issues/151825
     "ckmkzq_1yyqfw4djv9eii3q",  # https://github.com/home-assistant/core/issues/150856
     "cl_3r8gc33pnqsxfe1g",  # https://github.com/tuya/tuya-home-assistant/issues/754
     "cl_669wsr2w4cvinbh4",  # https://github.com/home-assistant/core/issues/150856
@@ -144,6 +145,7 @@ DEVICE_MOCKS = [
     "hps_2aaelwxk",  # https://github.com/home-assistant/core/issues/149704
     "hps_wqashyqo",  #  https://github.com/home-assistant/core/issues/146180
     "hwsb_ircs2n82vgrozoew",  # https://github.com/home-assistant/core/issues/149233
+    "jsq_r492ifwk6f2ssptb",  # https://github.com/home-assistant/core/issues/151488
     "jtmspro_xqeob8h6",  # https://github.com/orgs/home-assistant/discussions/517
     "kg_4nqs33emdwJxpQ8O",  # https://github.com/orgs/home-assistant/discussions/539
     "kg_5ftkaulg",  # https://github.com/orgs/home-assistant/discussions/539
