@@ -358,7 +358,15 @@ async def test_thermostat_occupancy(
     assert state.state == "on"
 
     # Test Occupancy attribute change
-    set_node_attribute(matter_node, 1, 513, 2, 0)
+    occupancy_attribute = clusters.Thermostat.Attributes.Occupancy
+    
+    set_node_attribute(
+        matter_node, 
+        1, 
+        occupancy_attribute.cluster_id, 
+        occupancy_attribute.attribute_id, 
+        0
+    )
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("binary_sensor.longan_link_hvac_occupancy")
     assert state
