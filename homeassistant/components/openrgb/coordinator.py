@@ -8,12 +8,10 @@ import logging
 
 from openrgb import OpenRGBClient
 from openrgb.orgb import Device
-from openrgb.utils import RGBColor
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -49,7 +47,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.port = config_entry.data[CONF_PORT]
         self.entry_id = config_entry.entry_id
         self.server_address = f"{self.host}:{self.port}"
-        self._client_lock = asyncio.Lock()
+        self.client_lock = asyncio.Lock()
 
         # Register listener for Home Assistant stop event
         self._stop_listener = hass.bus.async_listen_once(
@@ -67,7 +65,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch data from OpenRGB."""
-        async with self._client_lock:
+        async with self.client_lock:
             try:
                 await self.hass.async_add_executor_job(self._client_update)
             except CONNECTION_ERRORS as err:
@@ -111,42 +109,12 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
     async def async_client_disconnect(self, *args) -> None:
         """Disconnect the OpenRGB client."""
-        async with self._client_lock:
+        async with self.client_lock:
             await self.hass.async_add_executor_job(self.client.disconnect)
 
     def get_client_protocol_version(self) -> str:
         """Get the OpenRGB client protocol version."""
         return f"{self.client.protocol_version} (Protocol)"
-
-    async def async_device_set_color(self, device: Device, color: RGBColor) -> None:
-        """Set the color of a device."""
-        async with self._client_lock:
-            try:
-                await self.hass.async_add_executor_job(device.set_color, color, True)
-            except (*CONNECTION_ERRORS, ValueError) as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="failed_to_set_color",
-                    translation_placeholders={
-                        "server_address": self.server_address,
-                        "error": str(err),
-                    },
-                ) from err
-
-    async def async_device_set_mode(self, device: Device, mode: str) -> None:
-        """Set the mode of a device."""
-        async with self._client_lock:
-            try:
-                await self.hass.async_add_executor_job(device.set_mode, mode)
-            except (*CONNECTION_ERRORS, ValueError) as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="failed_to_set_mode",
-                    translation_placeholders={
-                        "server_address": self.server_address,
-                        "error": str(err),
-                    },
-                ) from err
 
     def get_device_name(self, device_key: str) -> str:
         """Get device name with suffix if there are duplicates."""

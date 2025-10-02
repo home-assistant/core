@@ -17,12 +17,14 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.color import color_hs_to_RGB, color_RGB_to_hsv
 
 from .const import (
+    CONNECTION_ERRORS,
     DEFAULT_BRIGHTNESS,
     DEFAULT_COLOR,
     DEVICE_TYPE_ICONS,
@@ -210,11 +212,35 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             int(rgb_color[2] * brightness_factor),
         )
 
-        await self.coordinator.async_device_set_color(self.device, scaled_color)
+        async with self.coordinator.client_lock:
+            try:
+                await self.hass.async_add_executor_job(
+                    self.device.set_color, scaled_color, True
+                )
+            except (*CONNECTION_ERRORS, ValueError) as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="failed_to_set_color",
+                    translation_placeholders={
+                        "server_address": self.coordinator.server_address,
+                        "error": str(err),
+                    },
+                ) from err
 
     async def _async_apply_mode(self, mode: str) -> None:
         """Apply the given mode to the device."""
-        await self.coordinator.async_device_set_mode(self.device, mode)
+        async with self.coordinator.client_lock:
+            try:
+                await self.hass.async_add_executor_job(self.device.set_mode, mode)
+            except (*CONNECTION_ERRORS, ValueError) as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="failed_to_set_mode",
+                    translation_placeholders={
+                        "server_address": self.coordinator.server_address,
+                        "error": str(err),
+                    },
+                ) from err
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
