@@ -203,6 +203,7 @@ homeassistant.components.feedreader.*
 homeassistant.components.file_upload.*
 homeassistant.components.filesize.*
 homeassistant.components.filter.*
+homeassistant.components.firefly_iii.*
 homeassistant.components.fitbit.*
 homeassistant.components.flexit_bacnet.*
 homeassistant.components.flux_led.*
@@ -443,6 +444,7 @@ homeassistant.components.rituals_perfume_genie.*
 homeassistant.components.roborock.*
 homeassistant.components.roku.*
 homeassistant.components.romy.*
+homeassistant.components.route_b_smart_meter.*
 homeassistant.components.rpi_power.*
 homeassistant.components.rss_feed_template.*
 homeassistant.components.russound_rio.*

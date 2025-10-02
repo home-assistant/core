@@ -236,6 +236,61 @@ async def test_microwave_oven(
     )
 
 
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_lock_attributes(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test door lock attributes."""
+    # WrongCodeEntryLimit for door lock
+    state = hass.states.get("number.mock_door_lock_wrong_code_limit")
+    assert state
+    assert state.state == "3"
+
+    set_node_attribute(matter_node, 1, 257, 48, 10)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("number.mock_door_lock_wrong_code_limit")
+    assert state
+    assert state.state == "10"
+
+    # UserCodeTemporaryDisableTime for door lock
+    state = hass.states.get("number.mock_door_lock_user_code_temporary_disable_time")
+    assert state
+    assert state.state == "10"
+
+    set_node_attribute(matter_node, 1, 257, 49, 30)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("number.mock_door_lock_user_code_temporary_disable_time")
+    assert state
+    assert state.state == "30"
+
+
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_matter_exception_on_door_lock_write_attribute(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test that MatterError is handled for write_attribute call."""
+    entity_id = "number.mock_door_lock_wrong_code_limit"
+    state = hass.states.get(entity_id)
+    assert state
+    matter_client.write_attribute.side_effect = MatterError("Boom!")
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {
+                "entity_id": entity_id,
+                "value": 1,
+            },
+            blocking=True,
+        )
+
+    assert str(exc_info.value) == "Boom!"
+
+
 @pytest.mark.parametrize("node_fixture", ["thermostat"])
 async def test_unoccupied_heating_temperature_setpoint(
     hass: HomeAssistant,
