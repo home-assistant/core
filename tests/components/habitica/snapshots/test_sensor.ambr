@@ -332,6 +332,55 @@
     'state': '1',
   })
 # ---
+# name: test_sensors[sensor.test_partymember_displayname_last_check_in-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_partymember_displayname_last_check_in',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last check-in',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.LAST_CHECKIN: 'last_checkin'>,
+    'unique_id': 'ffce870c-3ff3-4fa4-bad1-87612e52b8e7_last_checkin',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_partymember_displayname_last_check_in-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'test-partymember-displayname Last check-in',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_partymember_displayname_last_check_in',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-10-30T19:37:01+00:00',
+  })
+# ---
 # name: test_sensors[sensor.test_partymember_displayname_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

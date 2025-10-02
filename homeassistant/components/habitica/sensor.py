@@ -215,6 +215,16 @@ SENSOR_DESCRIPTIONS_COMMON: tuple[HabiticaSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         native_unit_of_measurement="CON",
     ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.LAST_CHECKIN,
+        translation_key=HabiticaSensorEntity.LAST_CHECKIN,
+        value_fn=(
+            lambda user, _: dt_util.as_local(last)
+            if (last := user.auth.timestamps.loggedin)
+            else None
+        ),
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
 )
 SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
     HabiticaSensorEntityDescription(
@@ -288,16 +298,6 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         key=HabiticaSensorEntity.PENDING_QUEST_ITEMS,
         translation_key=HabiticaSensorEntity.PENDING_QUEST_ITEMS,
         value_fn=pending_quest_items,
-    ),
-    HabiticaSensorEntityDescription(
-        key=HabiticaSensorEntity.LAST_CHECKIN,
-        translation_key=HabiticaSensorEntity.LAST_CHECKIN,
-        value_fn=(
-            lambda user, _: dt_util.as_local(last)
-            if (last := user.auth.timestamps.loggedin)
-            else None
-        ),
-        device_class=SensorDeviceClass.TIMESTAMP,
     ),
 )
 
