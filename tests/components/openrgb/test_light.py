@@ -100,6 +100,28 @@ async def test_light_with_black_leds(
     assert state.attributes.get("brightness") is None
 
 
+async def test_light_with_one_non_black_led(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    mock_openrgb_device: MagicMock,
+) -> None:
+    """Test light state when one LED is non-black among black LEDs (on by color)."""
+    # Set one LED to red, others to black
+    mock_openrgb_device.colors = [RGBColor(*OFF_COLOR), RGBColor(255, 0, 0)]
+    mock_openrgb_device.active_mode = 0  # Direct mode (supports colors)
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Verify light is on with the non-black LED color
+    state = hass.states.get("light.test_rgb_device")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes.get("rgb_color") == (255, 0, 0)
+    assert state.attributes.get("brightness") == 255
+
+
 async def test_light_with_non_color_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
