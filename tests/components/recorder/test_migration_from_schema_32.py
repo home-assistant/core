@@ -46,6 +46,7 @@ from homeassistant.util.ulid import bytes_to_ulid, ulid_at_time, ulid_to_bytes
 
 from .common import (
     async_attach_db_engine,
+    async_drop_index,
     async_recorder_block_till_done,
     async_wait_recording_done,
     get_patched_live_version,
@@ -132,6 +133,7 @@ def db_schema_32():
 async def test_migrate_events_context_ids(
     async_test_recorder: RecorderInstanceContextManager,
     indices_to_drop: list[tuple[str, str]],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we can migrate old uuid context ids and ulid context ids to binary format."""
     importlib.import_module(SCHEMA_MODULE_32)
@@ -257,7 +259,7 @@ async def test_migrate_events_context_ids(
             for table, index in indices_to_drop:
                 with session_scope(hass=hass) as session:
                     assert get_index_by_name(session, table, index) is not None
-                migration._drop_index(instance.get_session, table, index)
+                await async_drop_index(instance, table, index, caplog)
 
             await hass.async_stop()
             await hass.async_block_till_done()
@@ -534,6 +536,7 @@ async def test_finish_migrate_events_context_ids(
 async def test_migrate_states_context_ids(
     async_test_recorder: RecorderInstanceContextManager,
     indices_to_drop: list[tuple[str, str]],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we can migrate old uuid context ids and ulid context ids to binary format."""
     importlib.import_module(SCHEMA_MODULE_32)
@@ -637,7 +640,7 @@ async def test_migrate_states_context_ids(
             for table, index in indices_to_drop:
                 with session_scope(hass=hass) as session:
                     assert get_index_by_name(session, table, index) is not None
-                migration._drop_index(instance.get_session, table, index)
+                await async_drop_index(instance, table, index, caplog)
 
             await hass.async_stop()
             await hass.async_block_till_done()
@@ -1152,6 +1155,7 @@ async def test_migrate_entity_ids(
 async def test_post_migrate_entity_ids(
     async_test_recorder: RecorderInstanceContextManager,
     indices_to_drop: list[tuple[str, str]],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we can migrate entity_ids to the StatesMeta table."""
     importlib.import_module(SCHEMA_MODULE_32)
@@ -1207,7 +1211,7 @@ async def test_post_migrate_entity_ids(
             for table, index in indices_to_drop:
                 with session_scope(hass=hass) as session:
                     assert get_index_by_name(session, table, index) is not None
-                migration._drop_index(instance.get_session, table, index)
+                await async_drop_index(instance, table, index, caplog)
 
             await hass.async_stop()
             await hass.async_block_till_done()

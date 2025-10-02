@@ -19,7 +19,11 @@ from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Event, EventOrigin, State
 from homeassistant.util import dt as dt_util
 
-from .common import async_wait_recording_done, get_patched_live_version
+from .common import (
+    async_drop_index,
+    async_wait_recording_done,
+    get_patched_live_version,
+)
 from .conftest import instrument_migration
 
 from tests.common import async_test_home_assistant
@@ -430,6 +434,7 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
+        patch.object(migration, "Base", old_db_schema.Base),
         patch(
             CREATE_ENGINE_TARGET,
             new=_create_engine_test(
@@ -456,10 +461,18 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
             await instance.async_block_till_done()
 
             await instance.async_add_executor_job(
-                migration._drop_index,
+                migration._drop_foreign_key_constraints,
                 instance.get_session,
+                instance.engine,
                 "states",
-                "ix_states_event_id",
+                "event_id",
+            )
+            await async_drop_index(instance, "states", "ix_states_event_id", caplog)
+            await instance.async_add_executor_job(
+                migration._restore_foreign_key_constraints,
+                instance.get_session,
+                instance.engine,
+                [("states", "event_id", "events", "event_id")],
             )
 
             states_indexes = await instance.async_add_executor_job(
@@ -599,12 +612,7 @@ async def test_out_of_disk_space_while_rebuild_states_table(
             await hass.async_block_till_done()
             await instance.async_block_till_done()
 
-            await instance.async_add_executor_job(
-                migration._drop_index,
-                instance.get_session,
-                "states",
-                "ix_states_event_id",
-            )
+            await async_drop_index(instance, "states", "ix_states_event_id", caplog)
 
             states_indexes = await instance.async_add_executor_job(
                 _get_states_index_names
@@ -763,6 +771,7 @@ async def test_out_of_disk_space_while_removing_foreign_key(
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
+        patch.object(migration, "Base", old_db_schema.Base),
         patch(
             CREATE_ENGINE_TARGET,
             new=_create_engine_test(
@@ -789,10 +798,18 @@ async def test_out_of_disk_space_while_removing_foreign_key(
             await instance.async_block_till_done()
 
             await instance.async_add_executor_job(
-                migration._drop_index,
+                migration._drop_foreign_key_constraints,
                 instance.get_session,
+                instance.engine,
                 "states",
-                "ix_states_event_id",
+                "event_id",
+            )
+            await async_drop_index(instance, "states", "ix_states_event_id", caplog)
+            await instance.async_add_executor_job(
+                migration._restore_foreign_key_constraints,
+                instance.get_session,
+                instance.engine,
+                [("states", "event_id", "events", "event_id")],
             )
 
             states_indexes = await instance.async_add_executor_job(
