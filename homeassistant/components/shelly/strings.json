@@ -123,7 +123,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "anti_freeze": "Anti-freeze"
+              "frost_protection": "Frost protection"
             }
           }
         }

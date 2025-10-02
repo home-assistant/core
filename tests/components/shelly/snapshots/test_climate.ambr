@@ -224,7 +224,7 @@
       'min_temp': 15,
       'preset_modes': list([
         'none',
-        'anti_freeze',
+        'frost_protection',
       ]),
       'target_temp_step': 0.5,
     }),
@@ -272,7 +272,7 @@
       'preset_mode': 'none',
       'preset_modes': list([
         'none',
-        'anti_freeze',
+        'frost_protection',
       ]),
       'supported_features': <ClimateEntityFeature: 401>,
       'target_temp_step': 0.5,
@@ -311,7 +311,7 @@
       'min_temp': 5,
       'preset_modes': list([
         'none',
-        'anti_freeze',
+        'frost_protection',
       ]),
       'target_temp_step': 0.5,
     }),
@@ -372,7 +372,7 @@
       'preset_mode': 'none',
       'preset_modes': list([
         'none',
-        'anti_freeze',
+        'frost_protection',
       ]),
       'supported_features': <ClimateEntityFeature: 413>,
       'target_temp_step': 0.5,

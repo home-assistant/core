@@ -32,7 +32,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.humidifier import ATTR_HUMIDITY
-from homeassistant.components.shelly.climate import PRESET_ANTI_FREEZE
+from homeassistant.components.shelly.climate import PRESET_FROST_PROTECTION
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -997,7 +997,7 @@ async def test_rpc_linkedgo_st802_thermostat(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_ANTI_FREEZE},
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_FROST_PROTECTION},
         blocking=True,
     )
     monkeypatch.setitem(mock_rpc_device.status["boolean:200"], "value", True)
@@ -1007,7 +1007,7 @@ async def test_rpc_linkedgo_st802_thermostat(
         "Boolean.Set", {"id": 200, "value": True}
     )
     assert (state := hass.states.get(entity_id))
-    assert state.attributes[ATTR_PRESET_MODE] == PRESET_ANTI_FREEZE
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_FROST_PROTECTION
 
     # Test set fan mode
     mock_rpc_device.enum_set.reset_mock()
@@ -1084,7 +1084,7 @@ async def test_rpc_linkedgo_st1820_thermostat(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_ANTI_FREEZE},
+        {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: PRESET_FROST_PROTECTION},
         blocking=True,
     )
     monkeypatch.setitem(mock_rpc_device.status["boolean:200"], "value", True)
@@ -1094,7 +1094,7 @@ async def test_rpc_linkedgo_st1820_thermostat(
         "Boolean.Set", {"id": 200, "value": True}
     )
     assert (state := hass.states.get(entity_id))
-    assert state.attributes[ATTR_PRESET_MODE] == PRESET_ANTI_FREEZE
+    assert state.attributes[ATTR_PRESET_MODE] == PRESET_FROST_PROTECTION
 
     # Test HVAC mode off
     mock_rpc_device.call_rpc.reset_mock()

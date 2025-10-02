@@ -69,7 +69,7 @@ THERMOSTAT_TO_HA_MODE = {
 
 HA_TO_THERMOSTAT_MODE = {value: key for key, value in THERMOSTAT_TO_HA_MODE.items()}
 
-PRESET_ANTI_FREEZE = "anti_freeze"
+PRESET_FROST_PROTECTION = "frost_protection"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -124,7 +124,7 @@ class RpclinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
         self._anti_freeze_key = get_rpc_key_by_role(config, "anti_freeze")
         if self._anti_freeze_key:
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
-            self._attr_preset_modes = [PRESET_NONE, "anti_freeze"]
+            self._attr_preset_modes = [PRESET_NONE, PRESET_FROST_PROTECTION]
 
         self._fan_speed_key = get_rpc_key_by_role(config, "fan_speed")
         if self._fan_speed_key:
@@ -192,7 +192,7 @@ class RpclinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
             assert self._anti_freeze_key is not None
 
         if self._status[self._anti_freeze_key]["value"]:
-            return PRESET_ANTI_FREEZE
+            return PRESET_FROST_PROTECTION
 
         return PRESET_NONE
 
@@ -255,7 +255,7 @@ class RpclinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
             "Boolean.Set",
             {
                 "id": id_from_key(self._anti_freeze_key),
-                "value": preset_mode == PRESET_ANTI_FREEZE,
+                "value": preset_mode == PRESET_FROST_PROTECTION,
             },
         )
 
