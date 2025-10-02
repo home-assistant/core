@@ -19,7 +19,7 @@ from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Event, EventOrigin, State
 from homeassistant.util import dt as dt_util
 
-from .common import async_wait_recording_done
+from .common import async_wait_recording_done, get_patched_live_version
 from .conftest import instrument_migration
 
 from tests.common import async_test_home_assistant
@@ -119,6 +119,11 @@ async def test_migrate_times(
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
         patch.object(migration, "non_live_data_migration_needed", return_value=False),
         patch.object(migration, "post_migrate_entity_ids", return_value=False),
         patch.object(migration.EventsContextIDMigration, "migrate_data"),
@@ -281,6 +286,11 @@ async def test_migrate_can_resume_entity_id_post_migration(
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
         patch.object(migration.EventIDPostMigration, "migrate_data"),
         patch.object(migration, "non_live_data_migration_needed", return_value=False),
         patch.object(migration, "post_migrate_entity_ids", return_value=False),
@@ -407,6 +417,11 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
         patch.object(migration.EventIDPostMigration, "migrate_data"),
         patch.object(migration, "non_live_data_migration_needed", return_value=False),
         patch.object(migration, "post_migrate_entity_ids", return_value=False),
@@ -546,6 +561,11 @@ async def test_out_of_disk_space_while_rebuild_states_table(
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
         patch.object(migration.EventIDPostMigration, "migrate_data"),
         patch.object(migration, "non_live_data_migration_needed", return_value=False),
         patch.object(migration, "post_migrate_entity_ids", return_value=False),
@@ -730,6 +750,11 @@ async def test_out_of_disk_space_while_removing_foreign_key(
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
         patch.object(migration.EventIDPostMigration, "migrate_data"),
         patch.object(migration, "non_live_data_migration_needed", return_value=False),
         patch.object(migration, "post_migrate_entity_ids", return_value=False),

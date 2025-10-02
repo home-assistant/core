@@ -19,7 +19,7 @@ from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from ...common import async_wait_recording_done
+from ...common import async_wait_recording_done, get_patched_live_version
 
 from tests.common import async_test_home_assistant
 from tests.typing import RecorderInstanceContextManager
@@ -190,6 +190,11 @@ async def test_delete_metadata_duplicates(
             recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
         ),
         patch.object(
+            recorder.migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
+        patch.object(
             recorder.migration, "non_live_data_migration_needed", return_value=False
         ),
         patch(
@@ -308,6 +313,11 @@ async def test_delete_metadata_duplicates_many(
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(
             recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch.object(
+            recorder.migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
         ),
         patch.object(
             recorder.migration, "non_live_data_migration_needed", return_value=False

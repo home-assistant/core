@@ -11,6 +11,7 @@ from functools import partial
 import importlib
 import sys
 import time
+from types import ModuleType
 from typing import Any, Literal, cast
 from unittest.mock import MagicMock, patch, sentinel
 
@@ -459,6 +460,13 @@ def get_schema_module_path(schema_version_postfix: str) -> str:
     return f"tests.components.recorder.db_schema_{schema_version_postfix}"
 
 
+def get_patched_live_version(old_db_schema: ModuleType) -> int:
+    """Return the patched live migration version."""
+    return min(
+        migration.LIVE_MIGRATION_MIN_SCHEMA_VERSION, old_db_schema.SCHEMA_VERSION
+    )
+
+
 @contextmanager
 def old_db_schema(hass: HomeAssistant, schema_version_postfix: str) -> Iterator[None]:
     """Fixture to initialize the db with the old schema."""
@@ -469,6 +477,11 @@ def old_db_schema(hass: HomeAssistant, schema_version_postfix: str) -> Iterator[
     with (
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(
+            migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
         patch.object(migration, "non_live_data_migration_needed", return_value=False),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
