@@ -6,6 +6,10 @@ from unittest.mock import Mock
 from aioshelly.const import MODEL_GAS
 import pytest
 
+from homeassistant.components.shelly.const import (
+    MODEL_FRANKEVER_WATER_VALVE,
+    MODEL_NEO_WATER_VALVE,
+)
 from homeassistant.components.valve import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
@@ -98,7 +102,7 @@ async def test_rpc_water_valve(
     status["number:200"] = {"value": 0}
     monkeypatch.setattr(mock_rpc_device, "status", status)
 
-    await init_integration(hass, 3)
+    await init_integration(hass, 3, model=MODEL_FRANKEVER_WATER_VALVE)
     entity_id = "valve.test_name"
 
     assert (entry := entity_registry.async_get(entity_id))
@@ -184,7 +188,7 @@ async def test_rpc_neo_water_valve(
     status["boolean:200"] = {"value": False}
     monkeypatch.setattr(mock_rpc_device, "status", status)
 
-    await init_integration(hass, 3)
+    await init_integration(hass, 3, model=MODEL_NEO_WATER_VALVE)
     entity_id = "valve.test_name"
 
     assert (entry := entity_registry.async_get(entity_id))

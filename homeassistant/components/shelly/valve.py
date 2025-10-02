@@ -17,6 +17,7 @@ from homeassistant.components.valve import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import MODEL_FRANKEVER_WATER_VALVE, MODEL_NEO_WATER_VALVE
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -114,12 +115,14 @@ RPC_VALVES: dict[str, RpcValveDescription] = {
         sub_key="value",
         role="position",
         entity_class=RpcShellyWaterValve,
+        models={MODEL_FRANKEVER_WATER_VALVE},
     ),
     "neo_water_valve": RpcValveDescription(
         key="boolean",
         sub_key="value",
         role="state",
         entity_class=RpcShellyNeoWaterValve,
+        models={MODEL_NEO_WATER_VALVE},
     ),
 }
 
