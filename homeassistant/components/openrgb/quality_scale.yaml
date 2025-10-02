@@ -54,7 +54,7 @@ rules:
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
-  docs-use-cases: done
+  docs-use-cases: todo
   dynamic-devices: done
   entity-category:
     status: exempt
