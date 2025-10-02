@@ -23,13 +23,11 @@ async def test_entry_setup_unload(
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data is not None
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     assert mock_openrgb_client.disconnect.called
@@ -44,7 +42,6 @@ async def test_server_device_registry(
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
     device_registry = dr.async_get(hass)
     server_device = device_registry.async_get_device(
@@ -84,6 +81,5 @@ async def test_setup_entry_exceptions(
     mock_openrgb_client.client_class_mock.side_effect = exception
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
     assert mock_config_entry.state is expected_state

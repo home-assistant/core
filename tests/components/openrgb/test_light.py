@@ -83,7 +83,6 @@ async def test_turn_on_light(
         {ATTR_ENTITY_ID: "light.test_rgb_device"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Turn on without parameters - should restore previous state
     await hass.services.async_call(
@@ -92,7 +91,6 @@ async def test_turn_on_light(
         {ATTR_ENTITY_ID: "light.test_rgb_device"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Verify that set_mode was called (to restore previous mode)
     assert mock_openrgb_device.set_mode.called
@@ -202,7 +200,6 @@ async def test_turn_off_light_no_off_mode(
         {ATTR_ENTITY_ID: "light.test_rgb_device"},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
     # Device has Off mode, so set_mode should be called
     assert mock_openrgb_device.set_mode.called
@@ -222,7 +219,6 @@ async def test_dynamic_device_addition(
     mock_openrgb_client.devices = [mock_openrgb_device]
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
     # Check that one light entity exists
     state = hass.states.get("light.test_rgb_device")
@@ -329,7 +325,6 @@ async def test_duplicate_device_names(
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
     # Get device keys (they will be sorted alphabetically)
     # The device key format is: entry_id||type||vendor||description||serial||location
