@@ -76,7 +76,7 @@ class WhirlpoolOvenEntity(WhirlpoolEntity):
         self,
         appliance: Oven,
         cavity: OvenCavity,
-        translation_key_base: str,
+        translation_key_base: str | None,
         unique_id_suffix: str = "",
     ) -> None:
         """Initialize the entity."""

@@ -440,9 +440,9 @@ class WhirlpoolOvenCavitySensor(WhirlpoolOvenEntity, SensorEntity):
         description: WhirlpoolOvenCavitySensorEntityDescription,
     ) -> None:
         """Initialize the oven cavity sensor."""
-        translation_key_base = description.translation_key or description.key
-        super().__init__(oven, cavity, translation_key_base, f"-{description.key}")
-        self.cavity = cavity
+        super().__init__(
+            oven, cavity, description.translation_key, f"-{description.key}"
+        )
         self.entity_description: WhirlpoolOvenCavitySensorEntityDescription = (
             description
         )
