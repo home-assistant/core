@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
+from pyportainer import Portainer
 from pyportainer.models.docker import DockerContainer
 
 from homeassistant.components.button import (
@@ -30,7 +31,7 @@ class PortainerButtonDescription(ButtonEntityDescription):
     """Class to describe a Portainer button entity."""
 
     press_action: Callable[
-        [PortainerCoordinator, int, str],
+        [Portainer, int, str],
         Coroutine[Any, Any, None],
     ]
 
@@ -41,9 +42,11 @@ BUTTONS: tuple[PortainerButtonDescription, ...] = (
         name="Restart Container",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
-        press_action=lambda coordinator,
-        endpoint_id,
-        container_id: coordinator.async_restart_container(endpoint_id, container_id),
+        press_action=(
+            lambda portainer, endpoint_id, container_id: portainer.restart_container(
+                endpoint_id, container_id
+            )
+        ),
     ),
 )
 
@@ -55,21 +58,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up Portainer buttons."""
     coordinator: PortainerCoordinator = entry.runtime_data
-    entities: list[ButtonEntity] = []
 
-    for endpoint in coordinator.data.values():
-        entities.extend(
-            PortainerButton(
-                coordinator=coordinator,
-                entity_description=entity_description,
-                device_info=container,
-                via_device=endpoint,
-            )
-            for container in endpoint.containers.values()
-            for entity_description in BUTTONS
+    async_add_entities(
+        PortainerButton(
+            coordinator=coordinator,
+            entity_description=entity_description,
+            device_info=container,
+            via_device=endpoint,
         )
-
-    async_add_entities(entities)
+        for endpoint in coordinator.data.values()
+        for container in endpoint.containers.values()
+        for entity_description in BUTTONS
+    )
 
 
 class PortainerButton(PortainerContainerEntity, ButtonEntity):
@@ -98,5 +98,6 @@ class PortainerButton(PortainerContainerEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Trigger the Portainer button press service."""
         await self.entity_description.press_action(
-            self.coordinator, self.endpoint_id, self.device_id
+            self.coordinator.portainer, self.endpoint_id, self.device_id
         )
+        # To the reviewer: I don't think we should enforce a coordinator refresh here to respect the nature the Button entity
