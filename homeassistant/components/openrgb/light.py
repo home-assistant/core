@@ -313,28 +313,29 @@ def check_if_mode_supports_color(mode: ModeData) -> bool:
     """Return True if the mode supports colors."""
     if mode.flags & ModeFlags.HAS_PER_LED_COLOR:
         return True
-    if mode.flags & ModeFlags.HAS_MODE_SPECIFIC_COLOR:
-        return True
-    return False
+    @property
+    def icon(self) -> str | None:
+        """Return an icon for the device_type."""
+        icons = {
+            DeviceType.MOTHERBOARD: "developer-board",
+            DeviceType.DRAM: "memory",
+            DeviceType.GPU: "expansion-card",
+            DeviceType.COOLER: "fan",
+            DeviceType.LEDSTRIP: "led-variant-on",
+            DeviceType.KEYBOARD: "keyboard",
+            DeviceType.MOUSE: "mouse",
+            DeviceType.MOUSEMAT: "rug",
+            DeviceType.HEADSET: "headset",
+            DeviceType.HEADSET_STAND: "headset-dock",
+            DeviceType.GAMEPAD: "gamepad-variant",
+            DeviceType.SPEAKER: "speaker",
+            DeviceType.STORAGE: "harddisk",
+            DeviceType.CASE: "desktop-tower",
+            DeviceType.MICROPHONE: "microphone",
+            DeviceType.KEYPAD: "dialpad",
+        }
 
-
-def get_icon(device_type: DeviceType) -> str | None:
-    """Return an icon for the device_type."""
-    icons = {
-        DeviceType.MOTHERBOARD: "developer-board",
-        DeviceType.DRAM: "memory",
-        DeviceType.GPU: "expansion-card",
-        DeviceType.COOLER: "fan",
-        DeviceType.LEDSTRIP: "led-variant-on",
-        DeviceType.KEYBOARD: "keyboard",
-        DeviceType.MOUSE: "mouse",
-        DeviceType.MOUSEMAT: "rug",
-        DeviceType.HEADSET: "headset",
-        DeviceType.HEADSET_STAND: "headset-dock",
-        DeviceType.GAMEPAD: "gamepad-variant",
-        DeviceType.SPEAKER: "speaker",
-        DeviceType.STORAGE: "harddisk",
-        DeviceType.CASE: "desktop-tower",
+        return icons.get(self.device.type)
         DeviceType.MICROPHONE: "microphone",
         DeviceType.KEYPAD: "dialpad",
     }
