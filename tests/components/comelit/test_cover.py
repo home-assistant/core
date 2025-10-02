@@ -193,3 +193,53 @@ async def test_cover_restore_state(
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_OPENING
+
+
+async def test_cover_dynamic(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test cover dynamically added."""
+
+    mock_serial_bridge.reset_mock()
+    await setup_integration(hass, mock_serial_bridge_config_entry)
+
+    assert hass.states.get(ENTITY_ID)
+
+    entity_id_2 = "cover.cover1"
+
+    mock_serial_bridge.get_all_devices.return_value[COVER] = {
+        0: ComelitSerialBridgeObject(
+            index=0,
+            name="Cover0",
+            status=0,
+            human_status="stopped",
+            type="cover",
+            val=0,
+            protected=0,
+            zone="Open space",
+            power=0.0,
+            power_unit=WATT,
+        ),
+        1: ComelitSerialBridgeObject(
+            index=1,
+            name="Cover1",
+            status=0,
+            human_status="stopped",
+            type="cover",
+            val=0,
+            protected=0,
+            zone="Open space",
+            power=0.0,
+            power_unit=WATT,
+        ),
+    }
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID)
+    assert hass.states.get(entity_id_2)

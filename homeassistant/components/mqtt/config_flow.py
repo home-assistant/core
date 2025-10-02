@@ -39,6 +39,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
+from homeassistant.components.image import DEFAULT_CONTENT_TYPE
 from homeassistant.components.light import (
     DEFAULT_MAX_KELVIN,
     DEFAULT_MIN_KELVIN,
@@ -167,6 +168,7 @@ from .const import (
     CONF_COMMAND_ON_TEMPLATE,
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
+    CONF_CONTENT_TYPE,
     CONF_CURRENT_HUMIDITY_TEMPLATE,
     CONF_CURRENT_HUMIDITY_TOPIC,
     CONF_CURRENT_TEMP_TEMPLATE,
@@ -205,6 +207,8 @@ from .const import (
     CONF_HUMIDITY_MIN,
     CONF_HUMIDITY_STATE_TEMPLATE,
     CONF_HUMIDITY_STATE_TOPIC,
+    CONF_IMAGE_ENCODING,
+    CONF_IMAGE_TOPIC,
     CONF_KEEPALIVE,
     CONF_LAST_RESET_VALUE_TEMPLATE,
     CONF_MAX_KELVIN,
@@ -330,6 +334,8 @@ from .const import (
     CONF_TLS_INSECURE,
     CONF_TRANSITION,
     CONF_TRANSPORT,
+    CONF_URL_TEMPLATE,
+    CONF_URL_TOPIC,
     CONF_WHITE_COMMAND_TOPIC,
     CONF_WHITE_SCALE,
     CONF_WILL_MESSAGE,
@@ -434,6 +440,7 @@ SUBENTRY_PLATFORMS = [
     Platform.CLIMATE,
     Platform.COVER,
     Platform.FAN,
+    Platform.IMAGE,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NOTIFY,
@@ -619,6 +626,43 @@ HUMIDITY_SELECTOR = vol.All(
         NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=100, step=1)
     ),
     vol.Coerce(int),
+)
+IMAGE_CONTENT_TYPE_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[
+            SelectOptionDict(
+                value="image/jpeg", label="Joint Photographic Expert Group image (JPEG)"
+            ),
+            SelectOptionDict(
+                value="image/png", label="Portable Network Graphics (PNG)"
+            ),
+            SelectOptionDict(
+                value="image/apng", label="Animated Portable Network Graphics (APNG)"
+            ),
+            SelectOptionDict(value="image/avif", label="AV1 Image File Format (AVIF)"),
+            SelectOptionDict(
+                value="image/gif", label="Graphics Interchange Format (GIF)"
+            ),
+            SelectOptionDict(
+                value="image/svg+xml", label="Scalable Vector Graphics (SVG)"
+            ),
+            SelectOptionDict(value="image/webp", label="Web Picture format (WEBP)"),
+        ],
+        mode=SelectSelectorMode.DROPDOWN,
+    )
+)
+IMAGE_ENCODING_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=["raw", "b64"],
+        translation_key="image_encoding",
+        mode=SelectSelectorMode.DROPDOWN,
+    )
+)
+IMAGE_PROCESSING_MODE_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=["image_url", "image_data"],
+        translation_key="image_processing_mode",
+    )
 )
 KELVIN_SELECTOR = NumberSelector(
     NumberSelectorConfig(
@@ -1019,6 +1063,7 @@ ENTITY_CONFIG_VALIDATOR: dict[
     Platform.CLIMATE.value: validate_climate_platform_config,
     Platform.COVER.value: validate_cover_platform_config,
     Platform.FAN.value: validate_fan_platform_config,
+    Platform.IMAGE.value: None,
     Platform.LIGHT.value: validate_light_platform_config,
     Platform.LOCK.value: None,
     Platform.NOTIFY.value: None,
@@ -1208,6 +1253,18 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             exclude_from_config=True,
             default=lambda config: bool(config.get(CONF_DIRECTION_COMMAND_TOPIC)),
         ),
+    },
+    Platform.IMAGE.value: {
+        "image_processing_mode": PlatformField(
+            selector=IMAGE_PROCESSING_MODE_SELECTOR,
+            required=True,
+            exclude_from_config=True,
+            default=(
+                lambda config: "image_url"
+                if config.get(CONF_IMAGE_TOPIC) is None
+                else "image_data"
+            ),
+        )
     },
     Platform.LIGHT.value: {
         CONF_SCHEMA: PlatformField(
@@ -2290,6 +2347,40 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             error="invalid_template",
             section="fan_direction_settings",
             conditions=({"fan_feature_direction": True},),
+        ),
+    },
+    Platform.IMAGE.value: {
+        CONF_IMAGE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            conditions=({"image_processing_mode": "image_data"},),
+        ),
+        CONF_CONTENT_TYPE: PlatformField(
+            selector=IMAGE_CONTENT_TYPE_SELECTOR,
+            required=True,
+            default=DEFAULT_CONTENT_TYPE,
+            conditions=({"image_processing_mode": "image_data"},),
+        ),
+        CONF_IMAGE_ENCODING: PlatformField(
+            selector=IMAGE_ENCODING_SELECTOR,
+            required=False,
+            conditions=({"image_processing_mode": "image_data"},),
+            default="raw",
+        ),
+        CONF_URL_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            conditions=({"image_processing_mode": "image_url"},),
+        ),
+        CONF_URL_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
         ),
     },
     Platform.LIGHT.value: {

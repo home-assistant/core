@@ -29,7 +29,7 @@ from homeassistant.helpers.recorder import get_instance
 from homeassistant.util import dt as dt_util
 from homeassistant.util.collection import chunked_or_all
 
-from ..const import LAST_REPORTED_SCHEMA_VERSION, MAX_IDS_FOR_INDEXED_GROUP_BY
+from ..const import MAX_IDS_FOR_INDEXED_GROUP_BY
 from ..db_schema import (
     SHARED_ATTR_OR_LEGACY_ATTRIBUTES,
     StateAttributes,
@@ -388,10 +388,9 @@ def _state_changed_during_period_stmt(
     limit: int | None,
     include_start_time_state: bool,
     run_start_ts: float | None,
-    include_last_reported: bool,
 ) -> Select | CompoundSelect:
     stmt = (
-        _stmt_and_join_attributes(no_attributes, False, include_last_reported)
+        _stmt_and_join_attributes(no_attributes, False, True)
         .filter(
             (
                 (States.last_changed_ts == States.last_updated_ts)
@@ -424,22 +423,22 @@ def _state_changed_during_period_stmt(
                     single_metadata_id,
                     no_attributes,
                     False,
-                    include_last_reported,
+                    True,
                 ).subquery(),
                 no_attributes,
                 False,
-                include_last_reported,
+                True,
             ),
             _select_from_subquery(
                 stmt.subquery(),
                 no_attributes,
                 False,
-                include_last_reported,
+                True,
             ),
         ).subquery(),
         no_attributes,
         False,
-        include_last_reported,
+        True,
     )
 
 
@@ -454,9 +453,6 @@ def state_changes_during_period(
     include_start_time_state: bool = True,
 ) -> dict[str, list[State]]:
     """Return states changes during UTC period start_time - end_time."""
-    has_last_reported = (
-        get_instance(hass).schema_version >= LAST_REPORTED_SCHEMA_VERSION
-    )
     if not entity_id:
         raise ValueError("entity_id must be provided")
     entity_ids = [entity_id.lower()]
@@ -489,14 +485,12 @@ def state_changes_during_period(
                 limit,
                 include_start_time_state,
                 oldest_ts,
-                has_last_reported,
             ),
             track_on=[
                 bool(end_time_ts),
                 no_attributes,
                 bool(limit),
                 include_start_time_state,
-                has_last_reported,
             ],
         )
         return cast(
@@ -543,10 +537,10 @@ def _get_last_state_changes_single_stmt(metadata_id: int) -> Select:
 
 
 def _get_last_state_changes_multiple_stmt(
-    number_of_states: int, metadata_id: int, include_last_reported: bool
+    number_of_states: int, metadata_id: int
 ) -> Select:
     return (
-        _stmt_and_join_attributes(False, False, include_last_reported)
+        _stmt_and_join_attributes(False, False, True)
         .where(
             States.state_id
             == (
@@ -568,9 +562,6 @@ def get_last_state_changes(
     hass: HomeAssistant, number_of_states: int, entity_id: str
 ) -> dict[str, list[State]]:
     """Return the last number_of_states."""
-    has_last_reported = (
-        get_instance(hass).schema_version >= LAST_REPORTED_SCHEMA_VERSION
-    )
     entity_id_lower = entity_id.lower()
     entity_ids = [entity_id_lower]
 
@@ -595,9 +586,8 @@ def get_last_state_changes(
         else:
             stmt = lambda_stmt(
                 lambda: _get_last_state_changes_multiple_stmt(
-                    number_of_states, metadata_id, has_last_reported
+                    number_of_states, metadata_id
                 ),
-                track_on=[has_last_reported],
             )
         states = list(execute_stmt_lambda_element(session, stmt, orm_rows=False))
         return cast(
