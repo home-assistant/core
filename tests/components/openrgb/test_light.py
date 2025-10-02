@@ -14,12 +14,13 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
-from homeassistant.components.openrgb.const import DOMAIN
+from homeassistant.components.openrgb.const import DOMAIN, OpenRGBMode
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -162,7 +163,7 @@ async def test_turn_on_light_with_effect(
     )
     freezer.tick(1)
 
-    mock_openrgb_device.set_mode.assert_called_with("Rainbow")
+    mock_openrgb_device.set_mode.assert_called_once_with("Rainbow")
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -181,7 +182,7 @@ async def test_turn_off_light(
     freezer.tick(1)
 
     # Device supports "Off" mode
-    mock_openrgb_device.set_mode.assert_called_with("Off")
+    mock_openrgb_device.set_mode.assert_called_with(OpenRGBMode.OFF)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -247,9 +248,9 @@ async def test_dynamic_device_addition(
 
     mock_openrgb_client.devices = [mock_openrgb_device, new_device]
 
-    # Trigger a coordinator update
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    # Manually trigger coordinator refresh
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
 
     # Check that second light entity was added
     state = hass.states.get("light.new_rgb_device")
@@ -275,11 +276,10 @@ async def test_light_availability(
     # Manually trigger coordinator refresh
     coordinator = mock_config_entry.runtime_data
     await coordinator.async_refresh()
-    await hass.async_block_till_done()
 
     state = hass.states.get("light.test_rgb_device")
     assert state
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_duplicate_device_names(
