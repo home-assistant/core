@@ -82,6 +82,7 @@
         'minor': 99,
       }),
       'device_info': dict({
+        'api_encryption_supported': False,
         'area': dict({
           'area_id': 0,
           'name': '',
@@ -108,6 +109,8 @@
         'uses_password': False,
         'voice_assistant_feature_flags': 0,
         'webserver_port': 0,
+        'zwave_home_id': 0,
+        'zwave_proxy_feature_flags': 0,
       }),
       'services': list([
       ]),

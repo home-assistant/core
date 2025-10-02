@@ -10,6 +10,7 @@ from asyncio import Future
 from collections.abc import Callable, Iterable
 from typing import TYPE_CHECKING, cast
 
+from bleak import BleakScanner
 from habluetooth import (
     BaseHaScanner,
     BluetoothScannerDevice,
@@ -38,13 +39,16 @@ def _get_manager(hass: HomeAssistant) -> HomeAssistantBluetoothManager:
 
 
 @hass_callback
-def async_get_scanner(hass: HomeAssistant) -> HaBleakScannerWrapper:
-    """Return a HaBleakScannerWrapper.
+def async_get_scanner(hass: HomeAssistant) -> BleakScanner:
+    """Return a HaBleakScannerWrapper cast to BleakScanner.
 
     This is a wrapper around our BleakScanner singleton that allows
     multiple integrations to share the same BleakScanner.
+
+    The wrapper is cast to BleakScanner for type compatibility with
+    libraries expecting a BleakScanner instance.
     """
-    return HaBleakScannerWrapper()
+    return cast(BleakScanner, HaBleakScannerWrapper())
 
 
 @hass_callback
@@ -64,6 +68,22 @@ def async_scanner_by_source(hass: HomeAssistant, source: str) -> BaseHaScanner |
 def async_scanner_count(hass: HomeAssistant, connectable: bool = True) -> int:
     """Return the number of scanners currently in use."""
     return _get_manager(hass).async_scanner_count(connectable)
+
+
+@hass_callback
+def async_current_scanners(hass: HomeAssistant) -> list[BaseHaScanner]:
+    """Return the list of currently active scanners.
+
+    This method returns a list of all active Bluetooth scanners registered
+    with Home Assistant, including both connectable and non-connectable scanners.
+
+    Args:
+        hass: Home Assistant instance
+
+    Returns:
+        List of all active scanner instances
+    """
+    return _get_manager(hass).async_current_scanners()
 
 
 @hass_callback

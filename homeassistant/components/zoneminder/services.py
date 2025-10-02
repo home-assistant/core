@@ -5,7 +5,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ID, ATTR_NAME
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
@@ -32,7 +32,8 @@ def _set_active_state(call: ServiceCall) -> None:
         )
 
 
-def register_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register ZoneMinder services."""
 
     hass.services.async_register(

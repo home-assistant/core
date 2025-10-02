@@ -95,7 +95,7 @@ class MatterGenericCommandSwitch(MatterSwitch):
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
-        if value_convert := self.entity_description.measurement_to_ha:
+        if value_convert := self.entity_description.device_to_ha:
             value = value_convert(value)
         self._attr_is_on = value
 
@@ -141,7 +141,7 @@ class MatterNumericSwitch(MatterSwitch):
 
     async def _async_set_native_value(self, value: bool) -> None:
         """Update the current value."""
-        if value_convert := self.entity_description.ha_to_native_value:
+        if value_convert := self.entity_description.ha_to_device:
             send_value = value_convert(value)
         await self.write_attribute(
             value=send_value,
@@ -159,7 +159,7 @@ class MatterNumericSwitch(MatterSwitch):
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
-        if value_convert := self.entity_description.measurement_to_ha:
+        if value_convert := self.entity_description.device_to_ha:
             value = value_convert(value)
         self._attr_is_on = value
 
@@ -248,11 +248,11 @@ DISCOVERY_SCHEMAS = [
             key="EveTrvChildLock",
             entity_category=EntityCategory.CONFIG,
             translation_key="child_lock",
-            measurement_to_ha={
+            device_to_ha={
                 0: False,
                 1: True,
             }.get,
-            ha_to_native_value={
+            ha_to_device={
                 False: 0,
                 True: 1,
             }.get,
@@ -262,6 +262,18 @@ DISCOVERY_SCHEMAS = [
             clusters.ThermostatUserInterfaceConfiguration.Attributes.KeypadLockout,
         ),
         vendor_id=(4874,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
+            key="DoorLockEnablePrivacyModeButton",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="privacy_mode_button",
+            device_to_ha=bool,
+            ha_to_device=int,
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(clusters.DoorLock.Attributes.EnablePrivacyModeButton,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
@@ -275,7 +287,7 @@ DISCOVERY_SCHEMAS = [
             ),
             off_command=clusters.EnergyEvse.Commands.Disable,
             command_timeout=3000,
-            measurement_to_ha=EVSE_SUPPLY_STATE_MAP.get,
+            device_to_ha=EVSE_SUPPLY_STATE_MAP.get,
         ),
         entity_class=MatterGenericCommandSwitch,
         required_attributes=(

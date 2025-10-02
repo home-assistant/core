@@ -200,7 +200,7 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: LookinConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove lookin config entry from a device."""
-    data: LookinData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     all_identifiers: set[tuple[str, str]] = {
         (DOMAIN, data.lookin_device.id),
         *((DOMAIN, remote["UUID"]) for remote in data.devices),

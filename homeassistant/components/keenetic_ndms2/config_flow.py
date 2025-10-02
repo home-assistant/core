@@ -8,7 +8,12 @@ from urllib.parse import urlparse
 from ndms2_client import Client, ConnectionException, InterfaceInfo, TelnetConnection
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -45,7 +50,7 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    host: str | bytes | None = None
+    _host: str | bytes | None = None
 
     @staticmethod
     @callback
@@ -61,8 +66,9 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            host = self.host or user_input[CONF_HOST]
-            self._async_abort_entries_match({CONF_HOST: host})
+            host = self._host or user_input[CONF_HOST]
+            if self.source != SOURCE_RECONFIGURE:
+                self._async_abort_entries_match({CONF_HOST: host})
 
             _client = Client(
                 TelnetConnection(
@@ -81,12 +87,17 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
             except ConnectionException:
                 errors["base"] = "cannot_connect"
             else:
+                if self.source == SOURCE_RECONFIGURE:
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
+                        data={CONF_HOST: host, **user_input},
+                    )
                 return self.async_create_entry(
                     title=router_info.name, data={CONF_HOST: host, **user_input}
                 )
 
         host_schema: VolDictType = (
-            {vol.Required(CONF_HOST): str} if not self.host else {}
+            {vol.Required(CONF_HOST): str} if not self._host else {}
         )
 
         return self.async_show_form(
@@ -101,6 +112,15 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        existing_entry_data = dict(self._get_reconfigure_entry().data)
+        self._host = existing_entry_data[CONF_HOST]
+
+        return await self.async_step_user(user_input)
 
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
@@ -124,7 +144,7 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._async_abort_entries_match({CONF_HOST: host})
 
-        self.host = host
+        self._host = host
         self.context["title_placeholders"] = {
             "name": friendly_name,
             "host": host,
@@ -133,7 +153,7 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
 
-class KeeneticOptionsFlowHandler(OptionsFlow):
+class KeeneticOptionsFlowHandler(OptionsFlowWithReload):
     """Handle options."""
 
     config_entry: KeeneticConfigEntry

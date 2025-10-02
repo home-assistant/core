@@ -1,15 +1,18 @@
 """Tests for Shelly switch platform."""
 
 from copy import deepcopy
+from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
 from aioshelly.const import MODEL_1PM, MODEL_GAS, MODEL_MOTION
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.shelly.const import (
     DOMAIN,
+    ENTRY_RELOAD_COOLDOWN,
     MODEL_WALL_DISPLAY,
     MOTION_MODELS,
 )
@@ -28,10 +31,18 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration, register_device, register_entity
+from . import (
+    init_integration,
+    inject_rpc_device_event,
+    register_device,
+    register_entity,
+    register_sub_device,
+)
 
-from tests.common import mock_restore_cache
+from tests.common import async_fire_time_changed, mock_restore_cache
 
+DEVICE_BLOCK_ID = 4
+LIGHT_BLOCK_ID = 2
 RELAY_BLOCK_ID = 0
 GAS_VALVE_BLOCK_ID = 6
 MOTION_BLOCK_ID = 3
@@ -318,14 +329,51 @@ async def test_block_device_mode_roller(
 
 
 async def test_block_device_app_type_light(
-    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device in app type set to light mode."""
+    switch_entity_id = "switch.test_name_channel_1"
+    light_entity_id = "light.test_name_channel_1"
+
+    # Remove light blocks to prevent light entity creation
+    monkeypatch.setattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "type", "sensor")
+    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "red")
+    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "green")
+    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "blue")
+    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "mode")
+    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "gain")
+    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "brightness")
+    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "effect")
+    monkeypatch.delattr(mock_block_device.blocks[RELAY_BLOCK_ID], "colorTemp")
+
+    await init_integration(hass, 1)
+
+    # Entity is created as switch
+    assert hass.states.get(switch_entity_id)
+    assert hass.states.get(light_entity_id) is None
+
+    # Generate config change from switch to light
+    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "cfgChanged", 1)
+    mock_block_device.mock_update()
+
     monkeypatch.setitem(
         mock_block_device.settings["relays"][RELAY_BLOCK_ID], "appliance_type", "light"
     )
-    await init_integration(hass, 1)
-    assert hass.states.get("switch.test_name_channel_1") is None
+    monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "cfgChanged", 2)
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    # Wait for debouncer
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Switch entity should be removed and light entity created
+    assert hass.states.get(switch_entity_id) is None
+    assert hass.states.get(light_entity_id)
 
 
 async def test_rpc_device_services(
@@ -374,15 +422,57 @@ async def test_rpc_device_unique_ids(
 
 
 async def test_rpc_device_switch_type_lights_mode(
-    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC device with switch in consumption type lights mode."""
+    switch_entity_id = "switch.test_name_test_switch_0"
+    light_entity_id = "light.test_name_test_switch_0"
+
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+    await init_integration(hass, 2)
+
+    # Entity is created as switch
+    assert hass.states.get(switch_entity_id)
+    assert hass.states.get(light_entity_id) is None
+
+    # Generate config change from switch to light
     monkeypatch.setitem(
         mock_rpc_device.config["sys"]["ui_data"], "consumption_types", ["lights"]
     )
-    await init_integration(hass, 2)
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "data": [],
+                    "event": "config_changed",
+                    "id": 1,
+                    "ts": 1668522399.2,
+                },
+                {
+                    "data": [],
+                    "id": 2,
+                    "ts": 1668522399.2,
+                },
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    await hass.async_block_till_done()
 
-    assert hass.states.get("switch.test_switch_0") is None
+    # Wait for debouncer
+    freezer.tick(timedelta(seconds=ENTRY_RELOAD_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Switch entity should be removed and light entity created
+    assert hass.states.get(switch_entity_id) is None
+    assert hass.states.get(light_entity_id)
 
 
 @pytest.mark.parametrize(
@@ -569,6 +659,7 @@ async def test_rpc_device_virtual_switch(
     assert state.state == STATE_ON
 
 
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_rpc_device_virtual_binary_sensor(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -590,6 +681,7 @@ async def test_rpc_device_virtual_binary_sensor(
     assert hass.states.get(entity_id) is None
 
 
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_rpc_remove_virtual_switch_when_mode_label(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
@@ -631,8 +723,10 @@ async def test_rpc_remove_virtual_switch_when_orphaned(
 ) -> None:
     """Check whether the virtual switch will be removed if it has been removed from the device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
+
+    # create orphaned entity on main device
     device_entry = register_device(device_registry, config_entry)
-    entity_id = register_entity(
+    entity_id1 = register_entity(
         hass,
         SWITCH_DOMAIN,
         "test_name_boolean_200",
@@ -641,10 +735,29 @@ async def test_rpc_remove_virtual_switch_when_orphaned(
         device_id=device_entry.id,
     )
 
+    # create orphaned entity on sub device
+    sub_device_entry = register_sub_device(
+        device_registry,
+        config_entry,
+        "boolean:201-boolean",
+    )
+    entity_id2 = register_entity(
+        hass,
+        SWITCH_DOMAIN,
+        "boolean_201",
+        "boolean:201-boolean",
+        config_entry,
+        device_id=sub_device_entry.id,
+    )
+
+    assert entity_registry.async_get(entity_id1) is not None
+    assert entity_registry.async_get(entity_id2) is not None
+
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entity_registry.async_get(entity_id) is None
+    assert entity_registry.async_get(entity_id1) is None
+    assert entity_registry.async_get(entity_id2) is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

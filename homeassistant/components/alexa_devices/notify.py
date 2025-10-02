@@ -15,6 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AmazonConfigEntry
 from .entity import AmazonEntity
+from .utils import alexa_api_call
 
 PARALLEL_UPDATES = 1
 
@@ -56,13 +57,23 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        AmazonNotifyEntity(coordinator, serial_num, sensor_desc)
-        for sensor_desc in NOTIFY
-        for serial_num in coordinator.data
-        if sensor_desc.subkey in coordinator.data[serial_num].capabilities
-        and sensor_desc.is_supported(coordinator.data[serial_num])
-    )
+    known_devices: set[str] = set()
+
+    def _check_device() -> None:
+        current_devices = set(coordinator.data)
+        new_devices = current_devices - known_devices
+        if new_devices:
+            known_devices.update(new_devices)
+            async_add_entities(
+                AmazonNotifyEntity(coordinator, serial_num, sensor_desc)
+                for sensor_desc in NOTIFY
+                for serial_num in new_devices
+                if sensor_desc.subkey in coordinator.data[serial_num].capabilities
+                and sensor_desc.is_supported(coordinator.data[serial_num])
+            )
+
+    _check_device()
+    entry.async_on_unload(coordinator.async_add_listener(_check_device))
 
 
 class AmazonNotifyEntity(AmazonEntity, NotifyEntity):
@@ -70,6 +81,7 @@ class AmazonNotifyEntity(AmazonEntity, NotifyEntity):
 
     entity_description: AmazonNotifyEntityDescription
 
+    @alexa_api_call
     async def async_send_message(
         self, message: str, title: str | None = None, **kwargs: Any
     ) -> None:

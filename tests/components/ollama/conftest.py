@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
-from . import TEST_OPTIONS, TEST_USER_DATA
+from . import TEST_AI_TASK_OPTIONS, TEST_OPTIONS, TEST_USER_DATA
 
 from tests.common import MockConfigEntry
 
@@ -30,14 +30,21 @@ def mock_config_entry(
     entry = MockConfigEntry(
         domain=ollama.DOMAIN,
         data=TEST_USER_DATA,
-        version=2,
+        version=3,
+        minor_version=2,
         subentries_data=[
             {
-                "data": mock_config_entry_options,
+                "data": {**TEST_OPTIONS, **mock_config_entry_options},
                 "subentry_type": "conversation",
                 "title": "Ollama Conversation",
                 "unique_id": None,
-            }
+            },
+            {
+                "data": TEST_AI_TASK_OPTIONS,
+                "subentry_type": "ai_task_data",
+                "title": "Ollama AI Task",
+                "unique_id": None,
+            },
         ],
     )
     entry.add_to_hass(hass)
@@ -49,10 +56,14 @@ def mock_config_entry_with_assist(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> MockConfigEntry:
     """Mock a config entry with assist."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
     hass.config_entries.async_update_subentry(
         mock_config_entry,
-        next(iter(mock_config_entry.subentries.values())),
-        data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST},
+        subentry,
+        data={
+            **subentry.data,
+            CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+        },
     )
     return mock_config_entry
 

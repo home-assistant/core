@@ -60,7 +60,8 @@
           "room_names": "Room names",
           "vacuum_position": "Vacuum position",
           "virtual_walls": "Virtual walls",
-          "zones": "Zones"
+          "zones": "Zones",
+          "show_background": "Show background"
         },
         "data_description": {
           "charger": "Show the charger on the map.",
@@ -79,7 +80,8 @@
           "room_names": "Show room names on the map.",
           "vacuum_position": "Show the vacuum position on the map.",
           "virtual_walls": "Show virtual walls on the map.",
-          "zones": "Show zones on the map."
+          "zones": "Show zones on the map.",
+          "show_background": "Add a background to the map."
         }
       }
     }
@@ -375,8 +377,10 @@
           "max": "Max",
           "high": "[%key:common::state::high%]",
           "intense": "Intense",
+          "extreme": "Extreme",
           "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]",
           "custom_water_flow": "Custom water flow",
+          "vac_followed_by_mop": "Vacuum followed by mop",
           "smart_mode": "[%key:component::roborock::entity::select::mop_mode::state::smart_mode%]"
         }
       },

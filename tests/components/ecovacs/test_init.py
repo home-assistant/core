@@ -107,7 +107,7 @@ async def test_devices_in_dr(
     [
         ("yna5x1", 26),
         ("5xu9h3", 25),
-        ("123", 1),
+        ("123", 3),
     ],
 )
 async def test_all_entities_loaded(

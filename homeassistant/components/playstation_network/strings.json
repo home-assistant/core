@@ -19,6 +19,16 @@
         "data_description": {
           "npsso": "[%key:component::playstation_network::config::step::user::data_description::npsso%]"
         }
+      },
+      "reconfigure": {
+        "title": "Update PlayStation Network configuration",
+        "description": "[%key:component::playstation_network::config::step::user::description%]",
+        "data": {
+          "npsso": "[%key:component::playstation_network::config::step::user::data::npsso%]"
+        },
+        "data_description": {
+          "npsso": "[%key:component::playstation_network::config::step::user::data_description::npsso%]"
+        }
       }
     },
     "error": {
@@ -29,8 +39,39 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_configured_as_subentry": "Already configured as a friend for another account. Delete the existing entry first.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "unique_id_mismatch": "The provided NPSSO token corresponds to the account {wrong_account}. Please re-authenticate with the account **{name}**"
+      "unique_id_mismatch": "The provided NPSSO token corresponds to the account {wrong_account}. Please re-authenticate with the account **{name}**",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "config_subentries": {
+    "friend": {
+      "step": {
+        "user": {
+          "title": "Friend online status",
+          "description": "Track the online status of a PlayStation Network friend.",
+          "data": {
+            "account_id": "Online ID"
+          },
+          "data_description": {
+            "account_id": "Select a friend from your friend list to track their online status."
+          }
+        }
+      },
+      "initiate_flow": {
+        "user": "Add friend"
+      },
+      "entry_type": "Friend",
+      "error": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "abort": {
+        "already_configured_as_entry": "Already configured as a service. This account cannot be added as a friend.",
+        "already_configured": "Already configured as a friend in this or another account.",
+        "no_friends": "Looks like your friend list is empty right now. Add friends on PlayStation Network first."
+      }
     }
   },
   "exceptions": {
@@ -39,9 +80,29 @@
     },
     "update_failed": {
       "message": "Data retrieval failed when trying to access the PlayStation Network."
+    },
+    "group_invalid": {
+      "message": "Failed to send message to group {name}. The group is invalid or does not exist."
+    },
+    "send_message_forbidden": {
+      "message": "Failed to send message to {name}. You are not allowed to send messages to this group or friend."
+    },
+    "send_message_failed": {
+      "message": "Failed to send message to {name}. Try again later."
+    },
+    "user_profile_private": {
+      "message": "Unable to retrieve data for {user}. Privacy settings restrict access to activity."
+    },
+    "user_not_found": {
+      "message": "Unable to retrieve data for {user}. User does not exist or has been removed."
     }
   },
   "entity": {
+    "binary_sensor": {
+      "ps_plus_status": {
+        "name": "Subscribed to PlayStation Plus"
+      }
+    },
     "sensor": {
       "trophy_level": {
         "name": "Trophy level"
@@ -66,8 +127,48 @@
         "unit_of_measurement": "[%key:component::playstation_network::entity::sensor::earned_trophies_platinum::unit_of_measurement%]"
       },
       "online_id": {
-        "name": "Online-ID"
+        "name": "Online ID"
+      },
+      "last_online": {
+        "name": "Last online"
+      },
+      "online_status": {
+        "name": "Online status",
+        "state": {
+          "offline": "Offline",
+          "availabletoplay": "Online",
+          "availabletocommunicate": "Online on PS App",
+          "busy": "Away"
+        }
+      },
+      "now_playing": {
+        "name": "Now playing"
       }
+    },
+    "image": {
+      "share_profile": {
+        "name": "Share profile"
+      },
+      "avatar": {
+        "name": "Avatar"
+      },
+      "now_playing_image": {
+        "name": "[%key:component::playstation_network::entity::sensor::now_playing::name%]"
+      }
+    },
+    "notify": {
+      "group_message": {
+        "name": "Group: {name}"
+      },
+      "direct_message": {
+        "name": "Direct message: {name}"
+      }
+    }
+  },
+  "issues": {
+    "group_chat_forbidden": {
+      "title": "Failed to retrieve group chats for {name}",
+      "description": "The PlayStation Network integration was unable to retrieve group chats for **{name}**.\n\nThis is likely due to insufficient permissions (Error: `{error_message}`).\n\nTo resolve this issue, please ensure the account's chat and messaging feature is not restricted by parental controls or other privacy settings.\n\nIf the restriction is intentional, you can safely ignore this message."
     }
   }
 }

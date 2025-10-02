@@ -50,7 +50,7 @@
           "protocol": "Protocol"
         },
         "data_description": {
-          "protocol": "Streaming protocol to use for the camera entities. RTSP supports 4K streams (h265 encoding) while RTMP and FLV do not. FLV is the least demanding on the camera."
+          "protocol": "Streaming protocol to use for the camera entities. RTSP supports 4K streams (H.265 encoding) while RTMP and FLV do not. FLV is the least demanding on the camera."
         }
       }
     }
@@ -201,6 +201,13 @@
       },
       "vehicle": {
         "name": "Vehicle",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "non-motor_vehicle": {
+        "name": "Bicycle",
         "state": {
           "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
@@ -535,11 +542,26 @@
       "floodlight_brightness": {
         "name": "Floodlight turn on brightness"
       },
+      "floodlight_event_brightness": {
+        "name": "Floodlight event brightness"
+      },
       "ir_brightness": {
         "name": "Infrared light brightness"
       },
+      "floodlight_event_on_time": {
+        "name": "Floodlight event on time"
+      },
+      "floodlight_event_flash_time": {
+        "name": "Floodlight event flash time"
+      },
       "volume": {
         "name": "Volume"
+      },
+      "volume_speak": {
+        "name": "Speak volume"
+      },
+      "volume_doorbell": {
+        "name": "Doorbell volume"
       },
       "alarm_volume": {
         "name": "Alarm volume"
@@ -564,6 +586,9 @@
       },
       "ai_vehicle_sensitivity": {
         "name": "AI vehicle sensitivity"
+      },
+      "ai_non_motor_vehicle_sensitivity": {
+        "name": "AI bicycle sensitivity"
       },
       "ai_package_sensitivity": {
         "name": "AI package sensitivity"
@@ -600,6 +625,9 @@
       },
       "ai_vehicle_delay": {
         "name": "AI vehicle delay"
+      },
+      "ai_non_motor_vehicle_delay": {
+        "name": "AI bicycle delay"
       },
       "ai_package_delay": {
         "name": "AI package delay"
@@ -654,6 +682,15 @@
       },
       "image_hue": {
         "name": "Image hue"
+      },
+      "pre_record_time": {
+        "name": "Pre-recording time"
+      },
+      "pre_record_battery_stop": {
+        "name": "Pre-recording stop battery level"
+      },
+      "silent_time": {
+        "name": "Silent time"
       }
     },
     "select": {
@@ -666,6 +703,14 @@
           "schedule": "Schedule",
           "adaptive": "Adaptive",
           "autoadaptive": "Auto adaptive"
+        }
+      },
+      "floodlight_event_mode": {
+        "name": "Floodlight event mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "flash": "Flash"
         }
       },
       "day_night_mode": {
@@ -846,6 +891,12 @@
       "sub_bit_rate": {
         "name": "Fluent bit rate"
       },
+      "main_encoding": {
+        "name": "Clear encoding"
+      },
+      "sub_encoding": {
+        "name": "Fluent encoding"
+      },
       "scene_mode": {
         "name": "Scene mode",
         "state": {
@@ -857,6 +908,12 @@
       },
       "packing_time": {
         "name": "Recording packing time"
+      },
+      "pre_record_fps": {
+        "name": "Pre-recording frame rate"
+      },
+      "post_rec_time": {
+        "name": "Post-recording time"
       }
     },
     "sensor": {
@@ -896,6 +953,29 @@
       },
       "sd_storage": {
         "name": "SD {hdd_index} storage"
+      },
+      "person_type": {
+        "name": "Person type",
+        "state": {
+          "man": "Man",
+          "woman": "Woman"
+        }
+      },
+      "vehicle_type": {
+        "name": "Vehicle type",
+        "state": {
+          "sedan": "Sedan",
+          "suv": "SUV",
+          "pickup_truck": "Pickup truck",
+          "motorcycle": "Motorcycle"
+        }
+      },
+      "animal_type": {
+        "name": "Animal type",
+        "state": {
+          "dog": "Dog",
+          "cat": "Cat"
+        }
       }
     },
     "siren": {
@@ -942,6 +1022,9 @@
       },
       "manual_record": {
         "name": "Manual record"
+      },
+      "pre_record": {
+        "name": "Pre-recording"
       },
       "hub_ringtone_on_event": {
         "name": "Hub ringtone on event"
