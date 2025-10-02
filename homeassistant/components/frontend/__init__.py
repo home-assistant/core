@@ -452,6 +452,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
+    async_register_built_in_panel(hass, "light")
+    async_register_built_in_panel(hass, "security")
+    async_register_built_in_panel(hass, "climate")
+
     async_register_built_in_panel(hass, "profile")
 
     async_register_built_in_panel(
