@@ -155,7 +155,7 @@ async def test_camera_stream(hass: HomeAssistant) -> None:
     )
 
     trt = trait.CameraStreamTrait(
-        hass, State("camera.bla", camera.STATE_IDLE, {}), BASIC_CONFIG
+        hass, State("camera.bla", camera.CameraState.IDLE, {}), BASIC_CONFIG
     )
 
     assert trt.sync_attributes() == {

@@ -8,7 +8,6 @@ from typing import Any
 from sqlalchemy.orm.session import Session
 
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.recorder import get_instance
 
 from ..filters import Filters
 from .const import NEED_ATTRIBUTE_DOMAINS, SIGNIFICANT_DOMAINS
@@ -44,15 +43,7 @@ def get_full_significant_states_with_session(
     no_attributes: bool = False,
 ) -> dict[str, list[State]]:
     """Return a dict of significant states during a time period."""
-    if not get_instance(hass).states_meta_manager.active:
-        from .legacy import (  # noqa: PLC0415
-            get_full_significant_states_with_session as _legacy_get_full_significant_states_with_session,
-        )
-
-        _target = _legacy_get_full_significant_states_with_session
-    else:
-        _target = _modern_get_full_significant_states_with_session
-    return _target(
+    return _modern_get_full_significant_states_with_session(
         hass,
         session,
         start_time,
@@ -69,15 +60,7 @@ def get_last_state_changes(
     hass: HomeAssistant, number_of_states: int, entity_id: str
 ) -> dict[str, list[State]]:
     """Return the last number_of_states."""
-    if not get_instance(hass).states_meta_manager.active:
-        from .legacy import (  # noqa: PLC0415
-            get_last_state_changes as _legacy_get_last_state_changes,
-        )
-
-        _target = _legacy_get_last_state_changes
-    else:
-        _target = _modern_get_last_state_changes
-    return _target(hass, number_of_states, entity_id)
+    return _modern_get_last_state_changes(hass, number_of_states, entity_id)
 
 
 def get_significant_states(
@@ -93,15 +76,7 @@ def get_significant_states(
     compressed_state_format: bool = False,
 ) -> dict[str, list[State | dict[str, Any]]]:
     """Return a dict of significant states during a time period."""
-    if not get_instance(hass).states_meta_manager.active:
-        from .legacy import (  # noqa: PLC0415
-            get_significant_states as _legacy_get_significant_states,
-        )
-
-        _target = _legacy_get_significant_states
-    else:
-        _target = _modern_get_significant_states
-    return _target(
+    return _modern_get_significant_states(
         hass,
         start_time,
         end_time,
@@ -129,15 +104,7 @@ def get_significant_states_with_session(
     compressed_state_format: bool = False,
 ) -> dict[str, list[State | dict[str, Any]]]:
     """Return a dict of significant states during a time period."""
-    if not get_instance(hass).states_meta_manager.active:
-        from .legacy import (  # noqa: PLC0415
-            get_significant_states_with_session as _legacy_get_significant_states_with_session,
-        )
-
-        _target = _legacy_get_significant_states_with_session
-    else:
-        _target = _modern_get_significant_states_with_session
-    return _target(
+    return _modern_get_significant_states_with_session(
         hass,
         session,
         start_time,
@@ -163,15 +130,7 @@ def state_changes_during_period(
     include_start_time_state: bool = True,
 ) -> dict[str, list[State]]:
     """Return a list of states that changed during a time period."""
-    if not get_instance(hass).states_meta_manager.active:
-        from .legacy import (  # noqa: PLC0415
-            state_changes_during_period as _legacy_state_changes_during_period,
-        )
-
-        _target = _legacy_state_changes_during_period
-    else:
-        _target = _modern_state_changes_during_period
-    return _target(
+    return _modern_state_changes_during_period(
         hass,
         start_time,
         end_time,

@@ -20,7 +20,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
 from .models import EnumTypeData, IntegerTypeData
 from .util import get_dpcode
@@ -40,10 +40,8 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
     motor_reverse_mode: DPCode | None = None
 
 
-COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
-    # Garage Door Opener
-    # https://developer.tuya.com/en/docs/iot/categoryckmkzq?id=Kaiuz0ipcboee
-    "ckmkzq": (
+COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
+    DeviceCategory.CKMKZQ: (
         TuyaCoverEntityDescription(
             key=DPCode.SWITCH_1,
             translation_key="indexed_door",
@@ -69,10 +67,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             device_class=CoverDeviceClass.GARAGE,
         ),
     ),
-    # Curtain
-    # Note: Multiple curtains isn't documented
-    # https://developer.tuya.com/en/docs/iot/categorycl?id=Kaiuz1hnpo7df
-    "cl": (
+    DeviceCategory.CL: (
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL,
             translation_key="curtain",
@@ -117,9 +112,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             device_class=CoverDeviceClass.BLIND,
         ),
     ),
-    # Curtain Switch
-    # https://developer.tuya.com/en/docs/iot/category-clkg?id=Kaiuz0gitil39
-    "clkg": (
+    DeviceCategory.CLKG: (
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL,
             translation_key="curtain",
@@ -138,9 +131,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             device_class=CoverDeviceClass.CURTAIN,
         ),
     ),
-    # Curtain Robot
-    # Note: Not documented
-    "jdcljqr": (
+    DeviceCategory.JDCLJQR: (
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL,
             translation_key="curtain",
@@ -158,17 +149,17 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya cover dynamically through Tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered tuya cover."""
         entities: list[TuyaCoverEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
+            device = manager.device_map[device_id]
             if descriptions := COVERS.get(device.category):
                 entities.extend(
-                    TuyaCoverEntity(device, hass_data.manager, description)
+                    TuyaCoverEntity(device, manager, description)
                     for description in descriptions
                     if (
                         description.key in device.function
@@ -178,7 +169,7 @@ async def async_setup_entry(
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)

@@ -39,7 +39,7 @@ from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.system_info import async_get_system_info
-from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
@@ -142,7 +142,6 @@ class EntityAnalyticsModifications:
     """
 
     remove: bool = False
-    capabilities: dict[str, Any] | None | UndefinedType = UNDEFINED
 
 
 class AnalyticsPlatformProtocol(Protocol):
@@ -514,6 +513,8 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
     integration_inputs: dict[str, tuple[list[str], list[str]]] = {}
     integration_configs: dict[str, AnalyticsModifications] = {}
 
+    removed_devices: set[str] = set()
+
     # Get device list
     for device_entry in dev_reg.devices.values():
         if not device_entry.primary_config_entry:
@@ -524,6 +525,10 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
         )
 
         if config_entry is None:
+            continue
+
+        if device_entry.entry_type is dr.DeviceEntryType.SERVICE:
+            removed_devices.add(device_entry.id)
             continue
 
         integration_domain = config_entry.domain
@@ -537,6 +542,23 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
 
         integration_input = integration_inputs.setdefault(integration_domain, ([], []))
         integration_input[1].append(entity_entry.entity_id)
+
+    integrations = {
+        domain: integration
+        for domain, integration in (
+            await async_get_integrations(hass, integration_inputs.keys())
+        ).items()
+        if isinstance(integration, Integration)
+    }
+
+    # Filter out custom integrations and integrations that are not device or hub type
+    integration_inputs = {
+        domain: integration_info
+        for domain, integration_info in integration_inputs.items()
+        if (integration := integrations.get(domain)) is not None
+        and integration.is_built_in
+        and integration.manifest.get("integration_type") in ("device", "hub")
+    }
 
     # Call integrations that implement the analytics platform
     for integration_domain, integration_input in integration_inputs.items():
@@ -598,11 +620,12 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
                 device_config = integration_config.devices.get(device_id, device_config)
 
             if device_config.remove:
+                removed_devices.add(device_id)
                 continue
 
             device_entry = dev_reg.devices[device_id]
 
-            device_id_mapping[device_entry.id] = (integration_domain, len(devices_info))
+            device_id_mapping[device_id] = (integration_domain, len(devices_info))
 
             devices_info.append(
                 {
@@ -653,57 +676,40 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
 
             entity_entry = ent_reg.entities[entity_id]
 
-            entity_state = hass.states.get(entity_entry.entity_id)
+            entity_state = hass.states.get(entity_id)
 
             entity_info = {
                 # LIMITATION: `assumed_state` can be overridden by users;
                 # we should replace it with the original value in the future.
                 # It is also not present, if entity is not in the state machine,
                 # which can happen for disabled entities.
-                "assumed_state": entity_state.attributes.get(ATTR_ASSUMED_STATE, False)
-                if entity_state is not None
-                else None,
-                "capabilities": entity_config.capabilities
-                if entity_config.capabilities is not UNDEFINED
-                else entity_entry.capabilities,
+                "assumed_state": (
+                    entity_state.attributes.get(ATTR_ASSUMED_STATE, False)
+                    if entity_state is not None
+                    else None
+                ),
                 "domain": entity_entry.domain,
                 "entity_category": entity_entry.entity_category,
                 "has_entity_name": entity_entry.has_entity_name,
-                "modified_by_integration": ["capabilities"]
-                if entity_config.capabilities is not UNDEFINED
-                else None,
                 "original_device_class": entity_entry.original_device_class,
                 # LIMITATION: `unit_of_measurement` can be overridden by users;
                 # we should replace it with the original value in the future.
                 "unit_of_measurement": entity_entry.unit_of_measurement,
             }
 
-            if (
-                ((device_id_ := entity_entry.device_id) is not None)
-                and ((new_device_id := device_id_mapping.get(device_id_)) is not None)
-                and (new_device_id[0] == integration_domain)
-            ):
-                device_info = devices_info[new_device_id[1]]
-                device_info["entities"].append(entity_info)
-            else:
-                entities_info.append(entity_info)
+            if (device_id_ := entity_entry.device_id) is not None:
+                if device_id_ in removed_devices:
+                    # The device was removed, so we remove the entity too
+                    continue
 
-    integrations = {
-        domain: integration
-        for domain, integration in (
-            await async_get_integrations(hass, integrations_info.keys())
-        ).items()
-        if isinstance(integration, Integration)
-    }
+                if (
+                    new_device_id := device_id_mapping.get(device_id_)
+                ) is not None and (new_device_id[0] == integration_domain):
+                    device_info = devices_info[new_device_id[1]]
+                    device_info["entities"].append(entity_info)
+                    continue
 
-    for domain, integration_info in integrations_info.items():
-        if integration := integrations.get(domain):
-            integration_info["is_custom_integration"] = not integration.is_built_in
-            # Include version for custom integrations
-            if not integration.is_built_in and integration.version:
-                integration_info["custom_integration_version"] = str(
-                    integration.version
-                )
+            entities_info.append(entity_info)
 
     return {
         "version": "home-assistant:1",

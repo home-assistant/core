@@ -316,6 +316,8 @@ build.json @home-assistant/supervisor
 /tests/components/crownstone/ @Crownstone @RicArch97
 /homeassistant/components/cups/ @fabaff
 /tests/components/cups/ @fabaff
+/homeassistant/components/cync/ @Kinachi249
+/tests/components/cync/ @Kinachi249
 /homeassistant/components/daikin/ @fredrike
 /tests/components/daikin/ @fredrike
 /homeassistant/components/date/ @home-assistant/core
@@ -410,6 +412,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/egardia/ @jeroenterheerdt
 /homeassistant/components/eheimdigital/ @autinerd
 /tests/components/eheimdigital/ @autinerd
+/homeassistant/components/ekeybionyx/ @richardpolzer
+/tests/components/ekeybionyx/ @richardpolzer
 /homeassistant/components/electrasmart/ @jafar-atili
 /tests/components/electrasmart/ @jafar-atili
 /homeassistant/components/electric_kiwi/ @mikey0000
@@ -488,6 +492,8 @@ build.json @home-assistant/supervisor
 /tests/components/filesize/ @gjohansson-ST
 /homeassistant/components/filter/ @dgomes
 /tests/components/filter/ @dgomes
+/homeassistant/components/firefly_iii/ @erwindouna
+/tests/components/firefly_iii/ @erwindouna
 /homeassistant/components/fireservicerota/ @cyberjunky
 /tests/components/fireservicerota/ @cyberjunky
 /homeassistant/components/firmata/ @DaAwesomeP
@@ -951,6 +957,8 @@ build.json @home-assistant/supervisor
 /tests/components/met_eireann/ @DylanGore
 /homeassistant/components/meteo_france/ @hacf-fr @oncleben31 @Quentame
 /tests/components/meteo_france/ @hacf-fr @oncleben31 @Quentame
+/homeassistant/components/meteo_lt/ @xE1H
+/tests/components/meteo_lt/ @xE1H
 /homeassistant/components/meteoalarm/ @rolfberkenbosch
 /homeassistant/components/meteoclimatic/ @adrianmo
 /tests/components/meteoclimatic/ @adrianmo
@@ -974,8 +982,6 @@ build.json @home-assistant/supervisor
 /tests/components/moat/ @bdraco
 /homeassistant/components/mobile_app/ @home-assistant/core
 /tests/components/mobile_app/ @home-assistant/core
-/homeassistant/components/modbus/ @janiversen
-/tests/components/modbus/ @janiversen
 /homeassistant/components/modem_callerid/ @tkdrob
 /tests/components/modem_callerid/ @tkdrob
 /homeassistant/components/modern_forms/ @wonderslug
@@ -1334,6 +1340,8 @@ build.json @home-assistant/supervisor
 /tests/components/roomba/ @pschmitt @cyr-ius @shenxn @Orhideous
 /homeassistant/components/roon/ @pavoni
 /tests/components/roon/ @pavoni
+/homeassistant/components/route_b_smart_meter/ @SeraphicRav
+/tests/components/route_b_smart_meter/ @SeraphicRav
 /homeassistant/components/rpi_power/ @shenxn @swetoast
 /tests/components/rpi_power/ @shenxn @swetoast
 /homeassistant/components/rss_feed_template/ @home-assistant/core
