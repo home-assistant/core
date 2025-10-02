@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     UnitOfLength,
     UnitOfVolume,
 )
@@ -28,82 +29,6 @@ from .coordinator import PTDevicesCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 RESOURCES: dict[str, SensorEntityDescription] = {
-    "id": SensorEntityDescription(
-        key="id",
-        translation_key="device_id",
-    ),
-    "device_id": SensorEntityDescription(
-        key="device_id",
-        translation_key="device_mac",
-    ),
-    "share_id": SensorEntityDescription(
-        key="share_id",
-        translation_key="device_share_id",
-        entity_registry_enabled_default=True,
-    ),
-    "created": SensorEntityDescription(
-        key="created",
-        translation_key="device_created",
-        entity_registry_enabled_default=False,
-    ),
-    "user_id": SensorEntityDescription(
-        key="user_id",
-        translation_key="user_id",
-    ),
-    "device_type": SensorEntityDescription(
-        key="device_type",
-        translation_key="device_type",
-    ),
-    "title": SensorEntityDescription(
-        key="title",
-        translation_key="device_title",
-    ),
-    "version": SensorEntityDescription(
-        key="version",
-        translation_key="device_version",
-    ),
-    "address": SensorEntityDescription(
-        key="address",
-        translation_key="device_addr",
-    ),
-    "status": SensorEntityDescription(
-        key="status",
-        translation_key="device_status",
-    ),
-    "delivery_notes": SensorEntityDescription(
-        key="delivery_notes",
-        translation_key="device_delivery_notes",
-    ),
-    "units": SensorEntityDescription(
-        key="units",
-        translation_key="device_units",
-    ),
-    "reported": SensorEntityDescription(
-        key="reported",
-        translation_key="device_reported",
-        entity_registry_enabled_default=False,
-    ),
-    "tx_reported": SensorEntityDescription(
-        key="tx_reported",
-        translation_key="tx_reported",
-        entity_registry_enabled_default=False,
-    ),
-    "last_updated_on": SensorEntityDescription(
-        key="last_updated_on",
-        translation_key="rx_updated_on",
-        entity_registry_enabled_default=False,
-    ),
-    "wifi_signal": SensorEntityDescription(
-        key="wifi_signal",
-        translation_key="device_wifi_signal",
-        native_unit_of_measurement=PERCENTAGE,
-    ),
-    "tx_signal": SensorEntityDescription(
-        key="tx_signal",
-        translation_key="tx_signal",
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    ),
     "percent_level": SensorEntityDescription(
         key="percent_level",
         translation_key="level_percent",
@@ -118,6 +43,107 @@ RESOURCES: dict[str, SensorEntityDescription] = {
         key="inch_level",
         translation_key="level_depth",
         native_unit_of_measurement=UnitOfLength.INCHES,
+    ),
+    "title": SensorEntityDescription(
+        key="title",
+        translation_key="device_title",
+        entity_registry_enabled_default=False,
+    ),
+    "id": SensorEntityDescription(
+        key="id",
+        translation_key="device_id",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "device_id": SensorEntityDescription(
+        key="device_id",
+        translation_key="device_mac",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "share_id": SensorEntityDescription(
+        key="share_id",
+        translation_key="device_share_id",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "created": SensorEntityDescription(
+        key="created",
+        translation_key="device_created",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "user_id": SensorEntityDescription(
+        key="user_id",
+        translation_key="user_id",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "device_type": SensorEntityDescription(
+        key="device_type",
+        translation_key="device_type",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "version": SensorEntityDescription(
+        key="version",
+        translation_key="device_version",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "address": SensorEntityDescription(
+        key="address",
+        translation_key="device_addr",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "status": SensorEntityDescription(
+        key="status",
+        translation_key="device_status",
+    ),
+    "delivery_notes": SensorEntityDescription(
+        key="delivery_notes",
+        translation_key="device_delivery_notes",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "units": SensorEntityDescription(
+        key="units",
+        translation_key="device_units",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "reported": SensorEntityDescription(
+        key="reported",
+        translation_key="device_reported",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "tx_reported": SensorEntityDescription(
+        key="tx_reported",
+        translation_key="tx_reported",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "last_updated_on": SensorEntityDescription(
+        key="last_updated_on",
+        translation_key="rx_updated_on",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "wifi_signal": SensorEntityDescription(
+        key="wifi_signal",
+        translation_key="device_wifi_signal",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "tx_signal": SensorEntityDescription(
+        key="tx_signal",
+        translation_key="tx_signal",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 
