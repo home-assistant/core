@@ -249,3 +249,11 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.previous_values[variable] = return_value
 
         return return_value
+
+    def get_value(self, entity_description) -> str | int | None:
+        """Get a value from coordinator data for number/switch entities."""
+        return self.data.get(entity_description.api_key)
+
+    def set_value(self, entity_description, value: str | int) -> None:
+        """Update a value in coordinator data after successful write."""
+        self.data[entity_description.api_key] = value
