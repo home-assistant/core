@@ -135,7 +135,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_CLEAN_AREA,
         {
             vol.Required("area_ids"): [str],
-            vol.Optional("repeat", default=1): cv.positive_int,
         },
         "async_internal_clean_area",
         [VacuumEntityFeature.CLEAN_AREA],
