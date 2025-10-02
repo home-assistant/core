@@ -1115,6 +1115,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[8u5ftxkt52smougesc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        '8u5ftxkt52smougesc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Arida Stavern ',
+    'model_id': 'eguoms25tkxtf5u8',
+    'name': 'Arida Stavern ',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[97k3pwirjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -2231,6 +2262,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[btpss2f6kwfi294rqsj]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'btpss2f6kwfi294rqsj',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'KLARTA HUMEA',
+    'model_id': 'r492ifwk6f2ssptb',
+    'name': 'KLARTA HUMEA',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[btyk53n3v10z7a97zc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -2665,6 +2727,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[dj8foneugkjc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'dj8foneugkjc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Smart Switch (unsupported)',
+    'model_id': 'uenof8jd',
+    'name': 'Smart Switch',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[dke76hazlc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -2968,6 +3061,37 @@
     'model': 'SmartTRV',
     'model_id': 'cpmgn2cf',
     'name': 'Bathroom radiator',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[fcacn8iqbocuow7dsr]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'fcacn8iqbocuow7dsr',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Geti Solar PV Water Heater',
+    'model_id': 'd7woucobqi8ncacf',
+    'name': 'Geti Solar PV Water Heater',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
