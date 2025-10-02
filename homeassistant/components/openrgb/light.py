@@ -29,9 +29,7 @@ from .const import (
     DOMAIN,
     EFFECT_OFF_OPENRGB_MODES,
     OFF_COLOR,
-    OPENRGB_MODE_DIRECT,
-    OPENRGB_MODE_OFF,
-    OPENRGB_MODE_STATIC,
+    OpenRGBMode,
 )
 from .coordinator import OpenRGBConfigEntry, OpenRGBCoordinator
 
@@ -103,10 +101,10 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         modes = [mode.name for mode in self.device.modes]
         # Prefer Static mode over Direct
         self._preferred_no_effect_mode = (
-            OPENRGB_MODE_STATIC if OPENRGB_MODE_STATIC in modes else OPENRGB_MODE_DIRECT
+            OpenRGBMode.STATIC if OpenRGBMode.STATIC in modes else OpenRGBMode.DIRECT
         )
         # Determine if the device supports being turned off through modes
-        self._supports_off_mode = OPENRGB_MODE_OFF in modes
+        self._supports_off_mode = OpenRGBMode.OFF in modes
         # Determine which modes supports color
         self._supports_color_modes = [
             mode.name
@@ -117,7 +115,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         self._attr_effect_list = [EFFECT_OFF] + [
             mode
             for mode in modes
-            if mode != OPENRGB_MODE_OFF and mode not in EFFECT_OFF_OPENRGB_MODES
+            if mode != OpenRGBMode.OFF and mode not in EFFECT_OFF_OPENRGB_MODES
         ]
 
         icon = get_icon(self.device.type)
@@ -131,7 +129,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         """Update the attributes based on the current device state."""
         mode_data = self.device.modes[self.device.active_mode]
         mode = mode_data.name
-        if mode == OPENRGB_MODE_OFF:
+        if mode == OpenRGBMode.OFF:
             mode = None
             mode_supports_colors = False
         else:
@@ -301,7 +299,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         if self._supports_off_mode:
-            await self._async_apply_mode(OPENRGB_MODE_OFF)
+            await self._async_apply_mode(OpenRGBMode.OFF)
         else:
             # If the device does not support Off mode, set color to black
             await self._async_apply_color(OFF_COLOR, 0)
