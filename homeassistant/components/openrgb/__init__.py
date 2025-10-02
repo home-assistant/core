@@ -15,10 +15,10 @@ PLATFORMS: list[Platform] = [Platform.LIGHT]
 def _setup_server_device_registry(
     hass: HomeAssistant, entry: OpenRGBConfigEntry, coordinator: OpenRGBCoordinator
 ):
-    """Set up device registry for the OpenRGB SDK Server."""
+    """Set up device registry for the OpenRGB SDK server."""
     device_registry = dr.async_get(hass)
 
-    # Create the parent OpenRGB SDK Server device
+    # Create the parent OpenRGB SDK server device
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},

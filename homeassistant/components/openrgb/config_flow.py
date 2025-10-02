@@ -58,7 +58,7 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception(
-                    "Unknown error while connecting to OpenRGB SDK Server at %s",
+                    "Unknown error while connecting to OpenRGB SDK server at %s",
                     server_address,
                 )
                 errors["base"] = "unknown"

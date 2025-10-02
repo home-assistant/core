@@ -56,5 +56,5 @@ CONNECTION_ERRORS = (
     ControllerParsingError,
     TimeoutError,
     socket.gaierror,  # DNS errors
-    SDKVersionError,  # The OpenRGB SDK Server version is incompatible with the client
+    SDKVersionError,  # The OpenRGB SDK server version is incompatible with the client
 )
