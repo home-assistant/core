@@ -315,7 +315,7 @@ async def test_washer_running_states(
         ),
         (
             "sensor.oven_upper_oven_state",
-            "mock_oven_api",
+            "mock_oven_dual_cavity_api",
             "get_cavity_state",
             [
                 (OvenCavityState.Standby, "standby"),
@@ -327,7 +327,7 @@ async def test_washer_running_states(
         ),
         (
             "sensor.oven_upper_oven_cook_mode",
-            "mock_oven_api",
+            "mock_oven_dual_cavity_api",
             "get_cook_mode",
             [
                 (CookMode.Standby, "standby"),

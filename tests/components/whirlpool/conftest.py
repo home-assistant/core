@@ -53,7 +53,8 @@ def fixture_mock_appliances_manager_api(
     mock_aircon2_api,
     mock_washer_api,
     mock_dryer_api,
-    mock_oven_api,
+    mock_oven_single_cavity_api,
+    mock_oven_dual_cavity_api,
 ):
     """Set up AppliancesManager fixture."""
     with (
@@ -72,7 +73,10 @@ def fixture_mock_appliances_manager_api(
         ]
         mock_appliances_manager.return_value.washers = [mock_washer_api]
         mock_appliances_manager.return_value.dryers = [mock_dryer_api]
-        mock_appliances_manager.return_value.ovens = [mock_oven_api]
+        mock_appliances_manager.return_value.ovens = [
+            mock_oven_single_cavity_api,
+            mock_oven_dual_cavity_api,
+        ]
         yield mock_appliances_manager
 
 
@@ -163,19 +167,38 @@ def mock_dryer_api():
 
 
 @pytest.fixture
-def mock_oven_api():
-    """Get a mock of an oven."""
+def mock_oven_single_cavity_api():
+    """Get a mock of a single cavity oven."""
     mock_oven = Mock(spec=oven.Oven, said="said_oven")
     mock_oven.name = "Oven"
     mock_oven.appliance_info = Mock(
         data_model="oven", category="oven", model_number="12345"
     )
-    mock_oven.get_cavity_state.return_value = oven.ATTRVAL_CAVITY_STATE_STANDBY
-    mock_oven.get_cook_mode.return_value = oven.ATTRVAL_COOK_MODE_BAKE
+    mock_oven.get_cavity_state.return_value = oven.CavityState.Standby
+    mock_oven.get_cook_mode.return_value = oven.CookMode.Bake
     mock_oven.get_online.return_value = True
-    mock_oven.get_oven_cavity_exists.side_effect = lambda cavity: cavity.name in (
-        "Upper",
-        "Lower",
+    mock_oven.get_oven_cavity_exists.side_effect = (
+        lambda cavity: cavity == oven.Cavity.Upper
+    )
+    mock_oven.get_temp.return_value = 180
+    mock_oven.get_target_temp.return_value = 200
+    return mock_oven
+
+
+@pytest.fixture
+def mock_oven_dual_cavity_api():
+    """Get a mock of a dual cavity oven."""
+    mock_oven = Mock(spec=oven.Oven, said="said_oven")
+    mock_oven.name = "Oven"
+    mock_oven.appliance_info = Mock(
+        data_model="oven", category="oven", model_number="12345"
+    )
+    mock_oven.get_cavity_state.return_value = oven.CavityState.Standby
+    mock_oven.get_cook_mode.return_value = oven.CookMode.Bake
+    mock_oven.get_online.return_value = True
+    mock_oven.get_oven_cavity_exists.side_effect = lambda cavity: cavity in (
+        oven.Cavity.Upper,
+        oven.Cavity.Lower,
     )
     mock_oven.get_temp.return_value = 180
     mock_oven.get_target_temp.return_value = 200
