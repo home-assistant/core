@@ -48,14 +48,12 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
         context={"source": SOURCE_USER},
     )
 
-    with patch(
-        "homeassistant.components.openrgb.config_flow.OpenRGBClient",
-        side_effect=ConnectionRefusedError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
-        )
+    mock_openrgb_client.side_effect=ConnectionRefusedError,
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
