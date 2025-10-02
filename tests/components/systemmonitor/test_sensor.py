@@ -518,6 +518,7 @@ async def test_python3_num_fds_os_error(
         "sensor.system_monitor_open_file_descriptors_python3"
     )
     assert num_fds_sensor is not None
+    assert num_fds_sensor.state == STATE_UNKNOWN
     # Check that warning was logged
     assert "OS error getting file descriptor count for process 1" in caplog.text
 
