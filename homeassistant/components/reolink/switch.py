@@ -390,17 +390,17 @@ async def async_setup_entry(
     )
 
     # Can be removed in HA 2025.4.0
-    depricated_dict = {}
+    deprecated_dict = {}
     for desc in DEPRECATED_NVR_SWITCHES:
         if not desc.supported(reolink_data.host.api):
             continue
-        depricated_dict[f"{reolink_data.host.unique_id}_{desc.key}"] = desc
+        deprecated_dict[f"{reolink_data.host.unique_id}_{desc.key}"] = desc
 
     entity_reg = er.async_get(hass)
     reg_entities = er.async_entries_for_config_entry(entity_reg, config_entry.entry_id)
     for entity in reg_entities:
         # Can be removed in HA 2025.4.0
-        if entity.domain == "switch" and entity.unique_id in depricated_dict:
+        if entity.domain == "switch" and entity.unique_id in deprecated_dict:
             if entity.disabled:
                 entity_reg.async_remove(entity.entity_id)
                 continue
@@ -414,7 +414,7 @@ async def async_setup_entry(
                 translation_key="hub_switch_deprecated",
             )
             entities.append(
-                ReolinkNVRSwitchEntity(reolink_data, depricated_dict[entity.unique_id])
+                ReolinkNVRSwitchEntity(reolink_data, deprecated_dict[entity.unique_id])
             )
 
     async_add_entities(entities)
