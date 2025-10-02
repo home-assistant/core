@@ -33,7 +33,6 @@ from .const import (
 )
 from .coordinator import OpenRGBConfigEntry, OpenRGBCoordinator
 
-# Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
 
