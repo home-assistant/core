@@ -1141,7 +1141,6 @@ async def async_setup_entry(
                 if capability in capabilities:
                     for attribute, descriptions in attributes.items():
                         for description in descriptions:
-                            _LOGGER.warning(device.status)
                             if (
                                 (
                                     not description.capability_ignore_list
@@ -1155,8 +1154,11 @@ async def async_setup_entry(
                                 )
                                 and (
                                     not description.exists_fn
-                                    or description.exists_fn(
-                                        device.status[MAIN][capability][attribute]
+                                    or (
+                                        component == MAIN
+                                        and description.exists_fn(
+                                            device.status[MAIN][capability][attribute]
+                                        )
                                     )
                                 )
                                 and (
