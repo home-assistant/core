@@ -50,7 +50,8 @@ async def async_setup_entry(
     def _check_device() -> None:
         """Add entities for newly discovered OpenRGB devices."""
         current_keys: set[str] = set(coordinator.data.keys())
-        new_keys: set[str] = current_keys - known_device_keys
+        current_keys = set(coordinator.data.keys())
+        new_keys = current_keys - known_device_keys
         if new_keys:
             known_device_keys.update(new_keys)
             async_add_entities(
