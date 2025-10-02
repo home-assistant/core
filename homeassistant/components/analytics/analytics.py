@@ -629,7 +629,6 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
 
             devices_info.append(
                 {
-                    "entities": [],
                     "entry_type": device_entry.entry_type,
                     "has_configuration_url": device_entry.configuration_url is not None,
                     "hw_version": device_entry.hw_version,
@@ -638,6 +637,7 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:  # noqa: C901
                     "model_id": device_entry.model_id,
                     "sw_version": device_entry.sw_version,
                     "via_device": device_entry.via_device_id,
+                    "entities": [],
                 }
             )
 
