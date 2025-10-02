@@ -35,7 +35,7 @@ from .const import CONF_DELETE_PERMANENTLY, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from .coordinator import OneDriveConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-UPLOAD_CHUNK_SIZE = 16 * 320 * 1024  # 5.2MB
+UPLOAD_CHUNK_SIZE = 32 * 320 * 1024  # 10.4MB
 TIMEOUT = ClientTimeout(connect=10, total=43200)  # 12 hours
 METADATA_VERSION = 2
 CACHE_TTL = 300
