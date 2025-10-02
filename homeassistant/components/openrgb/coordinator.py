@@ -106,6 +106,10 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
     async def async_client_disconnect(self, *args) -> None:
         """Disconnect the OpenRGB client."""
+        if not hasattr(self, "client"):
+            # If async_config_entry_first_refresh failed, client will not exist
+            return
+
         async with self.client_lock:
             await self.hass.async_add_executor_job(self.client.disconnect)
 
