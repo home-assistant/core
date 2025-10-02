@@ -145,9 +145,11 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         """Return the state of the device."""
         # When the alarm is triggered, only its 'state' is changing. From 'normal' to 'alarm'.
         # The 'mode' doesn't change, and stays as 'arm' or 'home'.
-        if self._master_state is not None:
-            if self.device.status.get(self._master_state.dpcode) == State.ALARM:
-                return AlarmControlPanelState.TRIGGERED
+        if (
+            self._master_state is not None
+            and self.device.status.get(self._master_state.dpcode) == State.ALARM
+        ):
+            return AlarmControlPanelState.TRIGGERED
 
         if not (status := self.device.status.get(self.entity_description.key)):
             return None
@@ -156,11 +158,13 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
     @property
     def changed_by(self) -> str | None:
         """Last change triggered by."""
-        if self._master_state is not None and self._alarm_msg_dpcode is not None:
-            if self.device.status.get(self._master_state.dpcode) == State.ALARM:
-                encoded_msg = self.device.status.get(self._alarm_msg_dpcode)
-                if encoded_msg:
-                    return b64decode(encoded_msg).decode("utf-16be")
+        if (
+            self._master_state is not None
+            and self._alarm_msg_dpcode is not None
+            and self.device.status.get(self._master_state.dpcode) == State.ALARM
+            and (encoded_msg := self.device.status.get(self._alarm_msg_dpcode))
+        ):
+            return b64decode(encoded_msg).decode("utf-16be")
         return None
 
     def alarm_disarm(self, code: str | None = None) -> None:
