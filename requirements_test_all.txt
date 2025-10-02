@@ -1420,7 +1420,7 @@ oralb-ble==0.17.6
 ourgroceries==1.5.4
 
 # homeassistant.components.ovo_energy
-ovoenergy==3.0.1
+ovoenergy==3.0.2
 
 # homeassistant.components.p1_monitor
 p1monitor==3.2.0
