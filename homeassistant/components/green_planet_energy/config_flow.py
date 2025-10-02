@@ -31,9 +31,9 @@ class GreenPlanetEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            session = async_get_clientsession(self.hass)
+            api = GreenPlanetEnergyAPI(session=session)
             try:
-                session = async_get_clientsession(self.hass)
-                api = GreenPlanetEnergyAPI(session=session)
                 await api.get_electricity_prices()
             except GreenPlanetEnergyConnectionError:
                 errors["base"] = "cannot_connect"
