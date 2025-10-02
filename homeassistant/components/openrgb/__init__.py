@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from homeassistant.const import Platform
+from openrgb import OpenRGBClient
+
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import DOMAIN
+from .const import CONNECTION_ERRORS, DEFAULT_CLIENT_NAME, DOMAIN
 from .coordinator import OpenRGBConfigEntry, OpenRGBCoordinator
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
@@ -33,7 +36,28 @@ def _setup_server_device_registry(
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) -> bool:
     """Set up OpenRGB from a config entry."""
-    coordinator = OpenRGBCoordinator(hass, entry)
+    host = entry.data[CONF_HOST]
+    port = entry.data[CONF_PORT]
+    server_address = f"{host}:{port}"
+
+    try:
+        client = await hass.async_add_executor_job(
+            OpenRGBClient,
+            host,
+            port,
+            DEFAULT_CLIENT_NAME,
+        )
+    except CONNECTION_ERRORS as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="unable_to_connect",
+            translation_placeholders={
+                "server_address": server_address,
+                "error": str(err),
+            },
+        ) from err
+
+    coordinator = OpenRGBCoordinator(hass, entry, client)
 
     await coordinator.async_config_entry_first_refresh()
 

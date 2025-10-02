@@ -8,14 +8,15 @@ import logging
 
 from openrgb import OpenRGBClient
 from openrgb.orgb import Device
-from openrgb.utils import OpenRGBDisconnected, RGBColor, SDKVersionError
+from openrgb.utils import RGBColor
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_CLIENT_NAME, DOMAIN
+from .const import CONNECTION_ERRORS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,13 +26,11 @@ type OpenRGBConfigEntry = ConfigEntry[OpenRGBCoordinator]
 class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """Class to manage fetching OpenRGB data."""
 
-    _client: OpenRGBClient | None = None
-    _client_lock: asyncio.Lock
-
     def __init__(
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
+        client: OpenRGBClient,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -41,6 +40,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             update_interval=timedelta(seconds=15),
             config_entry=config_entry,
         )
+        self.client = client
         self.host = config_entry.data[CONF_HOST]
         self.port = config_entry.data[CONF_PORT]
         self.entry_id = config_entry.entry_id
@@ -54,36 +54,30 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch data from OpenRGB."""
-        try:
-            if self._client is None:
-                await self._async_client_connect()
-            else:
-                try:
-                    # Try to update existing client data
-                    await self._async_client_update()
-                except OpenRGBDisconnected:
-                    # If the client was disconnected, try to reconnect once
-                    await self._async_client_connect()
-                    # And then try to update once again
-                    await self._async_client_update()
-        except (
-            ConnectionRefusedError,
-            OpenRGBDisconnected,
-            OSError,
-            SDKVersionError,
-        ) as err:
-            await self.async_client_disconnect()
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="unable_to_connect",
-                translation_placeholders={"server_address": self.server_address},
-            ) from err
-
-        if self._client is None:
-            return {}
+        async with self._client_lock:
+            try:
+                await self.hass.async_add_executor_job(self._client_update)
+            except CONNECTION_ERRORS as err:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="unable_to_connect",
+                    translation_placeholders={
+                        "server_address": self.server_address,
+                        "error": str(err),
+                    },
+                ) from err
 
         # Return devices indexed by their key
-        return {self._get_device_key(device): device for device in self._client.devices}
+        return {self._get_device_key(device): device for device in self.client.devices}
+
+    def _client_update(self) -> None:
+        try:
+            self.client.update()
+        except CONNECTION_ERRORS:
+            # Try to reconnect once
+            self.client.disconnect()
+            self.client.connect()
+            self.client.update()
 
     def _get_device_key(self, device: Device) -> str:
         """Build a stable device key.
@@ -102,49 +96,44 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         # Double pipe is readable and is unlikely to appear in metadata
         return "||".join(parts)
 
-    async def _async_client_connect(self) -> None:
-        """Connect to the OpenRGB client."""
-        async with self._client_lock:
-            await self._async_client_disconnect_unlocked()
-            self._client = await self.hass.async_add_executor_job(
-                OpenRGBClient, self.host, self.port, DEFAULT_CLIENT_NAME
-            )
-
     async def async_client_disconnect(self, *args) -> None:
         """Disconnect the OpenRGB client."""
         async with self._client_lock:
-            await self._async_client_disconnect_unlocked()
+            await self.hass.async_add_executor_job(self.client.disconnect)
 
-    async def _async_client_disconnect_unlocked(self) -> None:
-        """Disconnect the OpenRGB client without acquiring the lock."""
-        if self._client is None:
-            return
-        await self.hass.async_add_executor_job(self._client.disconnect)
-        self._client = None
-
-    def get_client_protocol_version(self) -> str | None:
+    def get_client_protocol_version(self) -> str:
         """Get the OpenRGB client protocol version."""
-        if self._client is None:
-            return None
-        return f"{self._client.protocol_version} (Protocol)"
-
-    async def _async_client_update(self) -> None:
-        """Update the OpenRGB client data."""
-        if self._client is None:
-            # Should never happen, but just in case
-            return
-        async with self._client_lock:
-            await self.hass.async_add_executor_job(self._client.update)
+        return f"{self.client.protocol_version} (Protocol)"
 
     async def async_device_set_color(self, device: Device, color: RGBColor) -> None:
         """Set the color of a device."""
         async with self._client_lock:
-            await self.hass.async_add_executor_job(device.set_color, color, True)
+            try:
+                await self.hass.async_add_executor_job(device.set_color, color, True)
+            except CONNECTION_ERRORS as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="failed_to_set_color",
+                    translation_placeholders={
+                        "server_address": self.server_address,
+                        "error": str(err),
+                    },
+                ) from err
 
     async def async_device_set_mode(self, device: Device, mode: str) -> None:
         """Set the mode of a device."""
         async with self._client_lock:
-            await self.hass.async_add_executor_job(device.set_mode, mode)
+            try:
+                await self.hass.async_add_executor_job(device.set_mode, mode)
+            except CONNECTION_ERRORS as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="failed_to_set_mode",
+                    translation_placeholders={
+                        "server_address": self.server_address,
+                        "error": str(err),
+                    },
+                ) from err
 
     def get_device_name(self, device_key: str) -> str:
         """Get device name with suffix if there are duplicates."""

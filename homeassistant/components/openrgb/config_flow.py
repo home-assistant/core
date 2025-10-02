@@ -6,7 +6,6 @@ import logging
 from typing import Any
 
 from openrgb import OpenRGBClient
-from openrgb.utils import OpenRGBDisconnected, SDKVersionError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -14,7 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
-from .const import DEFAULT_CLIENT_NAME, DEFAULT_PORT, DOMAIN
+from .const import CONNECTION_ERRORS, DEFAULT_CLIENT_NAME, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,12 +54,7 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await validate_input(self.hass, host, port)
-            except (
-                ConnectionRefusedError,
-                OpenRGBDisconnected,
-                OSError,
-                SDKVersionError,
-            ):
+            except CONNECTION_ERRORS:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception(

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from openrgb.orgb import Device
-from openrgb.utils import ModeData, ModeFlags, OpenRGBDisconnected, RGBColor
+from openrgb.utils import ModeData, ModeFlags, RGBColor
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -17,7 +17,6 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -211,29 +210,11 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             int(rgb_color[2] * brightness_factor),
         )
 
-        try:
-            await self.coordinator.async_device_set_color(self.device, scaled_color)
-        except OpenRGBDisconnected as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="failed_to_set_color",
-                translation_placeholders={
-                    "server_address": self.coordinator.server_address,
-                },
-            ) from err
+        await self.coordinator.async_device_set_color(self.device, scaled_color)
 
     async def _async_apply_mode(self, mode: str) -> None:
         """Apply the given mode to the device."""
-        try:
-            await self.coordinator.async_device_set_mode(self.device, mode)
-        except OpenRGBDisconnected as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="failed_to_set_mode",
-                translation_placeholders={
-                    "server_address": self.coordinator.server_address,
-                },
-            ) from err
+        await self.coordinator.async_device_set_mode(self.device, mode)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""

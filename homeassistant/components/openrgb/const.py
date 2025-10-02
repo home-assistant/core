@@ -1,8 +1,9 @@
 """Constants for the OpenRGB integration."""
 
 from enum import StrEnum
+import socket
 
-from openrgb.utils import DeviceType
+from openrgb.utils import DeviceType, OpenRGBDisconnected, SDKVersionError
 
 DOMAIN = "openrgb"
 
@@ -43,3 +44,11 @@ DEVICE_TYPE_ICONS: dict[DeviceType, str] = {
     DeviceType.MICROPHONE: "mdi:microphone",
     DeviceType.KEYPAD: "mdi:dialpad",
 }
+
+CONNECTION_ERRORS = (
+    ConnectionRefusedError,
+    OpenRGBDisconnected,
+    TimeoutError,
+    socket.gaierror,  # DNS errors
+    SDKVersionError,  # The OpenRGB SDK Server version is incompatible with the client
+)
