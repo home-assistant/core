@@ -256,7 +256,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         else:
             mode_supports_color = mode in self._supports_color_modes
 
-        # Apply color color even if switching from Off mode to a color-capable mode
+        # Apply color even if switching from Off mode to a color-capable mode
         # because there is no guarantee that the device won't go back to black
         need_to_apply_color = (
             ATTR_RGB_COLOR in kwargs
