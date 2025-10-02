@@ -106,10 +106,15 @@ async def test_prepare_notification_requires_accessible_url(
         patch(
             "homeassistant.components.smartthings.audio.get_url",
             side_effect=NoURLAvailableError,
-        ),
+        ) as mock_get_url,
         pytest.raises(SmartThingsAudioError),
     ):
         await manager.async_prepare_notification("https://example.com/source.mp3")
+
+    assert mock_get_url.called
+    # Stored entry should be cleaned up after failure so subsequent requests
+    # don't leak memory or serve stale audio.
+    assert not manager._entries
 
 
 async def test_audio_view_returns_404_for_unknown_token(
