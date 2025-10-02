@@ -31,7 +31,7 @@ async def test_height_sensor(
     mock_desk_api.trigger_update_callback(None)
     await hass.async_block_till_done()
 
-    # Initial state should still be the same due to debounce
+    # State should still be the same due to the debouncer
     state = hass.states.get(entity_id)
     assert state
     assert state.state == EXPECTED_INITIAL_HEIGHT
