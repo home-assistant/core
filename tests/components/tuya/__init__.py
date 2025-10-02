@@ -21,6 +21,7 @@ DEVICE_MOCKS = [
     "cl_cpbo62rn",  # https://github.com/orgs/home-assistant/discussions/539
     "cl_ebt12ypvexnixvtf",  # https://github.com/tuya/tuya-home-assistant/issues/754
     "cl_g1cp07dsqnbdbbki",  # https://github.com/home-assistant/core/issues/139966
+    "cl_lfkr93x0ukp5gaia",  # https://github.com/home-assistant/core/issues/152826
     "cl_qqdxfdht",  # https://github.com/orgs/home-assistant/discussions/539
     "cl_rD7uqAAgQOpSA2Rx",  # https://github.com/home-assistant/core/issues/139966
     "cl_zah67ekd",  # https://github.com/home-assistant/core/issues/71242
@@ -143,6 +144,7 @@ DEVICE_MOCKS = [
     "hps_2aaelwxk",  # https://github.com/home-assistant/core/issues/149704
     "hps_wqashyqo",  #  https://github.com/home-assistant/core/issues/146180
     "hwsb_ircs2n82vgrozoew",  # https://github.com/home-assistant/core/issues/149233
+    "jsq_r492ifwk6f2ssptb",  # https://github.com/home-assistant/core/issues/151488
     "jtmspro_xqeob8h6",  # https://github.com/orgs/home-assistant/discussions/517
     "kg_4nqs33emdwJxpQ8O",  # https://github.com/orgs/home-assistant/discussions/539
     "kg_5ftkaulg",  # https://github.com/orgs/home-assistant/discussions/539
@@ -183,6 +185,7 @@ DEVICE_MOCKS = [
     "qxj_is2indt9nlth6esa",  # https://github.com/home-assistant/core/issues/136472
     "qxj_xbwbniyt6bgws9ia",  # https://github.com/orgs/home-assistant/discussions/823
     "rqbj_4iqe2hsfyd86kwwc",  # https://github.com/orgs/home-assistant/discussions/100
+    "rs_d7woucobqi8ncacf",  # https://github.com/orgs/home-assistant/discussions/1021
     "sd_i6hyjg3af7doaswm",  # https://github.com/orgs/home-assistant/discussions/539
     "sd_lr33znaodtyarrrz",  # https://github.com/home-assistant/core/issues/141278
     "sfkzq_1fcnd8xk",  # https://github.com/orgs/home-assistant/discussions/539

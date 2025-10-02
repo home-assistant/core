@@ -265,7 +265,7 @@ aioguardian==2022.07.0
 aioharmony==0.5.3
 
 # homeassistant.components.hassio
-aiohasupervisor==0.3.3b0
+aiohasupervisor==0.3.3
 
 # homeassistant.components.home_connect
 aiohomeconnect==0.20.0
@@ -453,7 +453,7 @@ airgradient==0.9.2
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.5.3
+airos==0.5.4
 
 # homeassistant.components.airthings_ble
 airthings-ble==0.9.2
@@ -1189,10 +1189,10 @@ hole==0.9.0
 holidays==0.81
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250926.0
+home-assistant-frontend==20251001.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.9.24
+home-assistant-intents==2025.10.1
 
 # homeassistant.components.homematicip_cloud
 homematicip==2.3.0
@@ -1939,7 +1939,7 @@ pycsspeechtts==1.0.8
 # pycups==2.0.4
 
 # homeassistant.components.cync
-pycync==0.4.0
+pycync==0.4.1
 
 # homeassistant.components.daikin
 pydaikin==2.16.0
@@ -2024,7 +2024,7 @@ pyfibaro==0.8.3
 pyfido==2.1.2
 
 # homeassistant.components.firefly_iii
-pyfirefly==0.1.5
+pyfirefly==0.1.6
 
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.46
@@ -2296,7 +2296,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==0.1.7
+pyportainer==1.0.3
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.0.1
@@ -3063,7 +3063,7 @@ unifi_ap==0.0.2
 unifiled==0.11
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==0.0.32
+universal-silabs-flasher==0.0.34
 
 # homeassistant.components.upb
 upb-lib==0.6.1
