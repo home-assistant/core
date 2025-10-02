@@ -21,6 +21,7 @@ from homeassistant.components.openrgb.const import (
     OFF_COLOR,
     OpenRGBMode,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -602,6 +603,8 @@ async def test_duplicate_device_names(
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # The device key format is: entry_id||type||vendor||description||serial||location
     device1_key = f"{mock_config_entry.entry_id}||DRAM||ENE||ENE SMBus Device||none||I2C: PIIX4, address 0x71"
