@@ -236,7 +236,6 @@ async def test_migrate_events_context_ids(
             get_patched_live_version(old_db_schema),
         ),
         patch.object(migration.EventsContextIDMigration, "migrate_data"),
-        patch.object(migration.EventIDPostMigration, "migrate_data"),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
         async with (
@@ -294,7 +293,6 @@ async def test_migrate_events_context_ids(
             patch(
                 "sqlalchemy.schema.Index.create", autospec=True, wraps=Index.create
             ) as wrapped_idx_create,
-            patch.object(migration.EventIDPostMigration, "migrate_data"),
         ):
             # Stall migration when the last non-live schema migration is done
             instrumented_migration.stall_on_schema_version = (
@@ -448,13 +446,6 @@ async def test_finish_migrate_events_context_ids(
             get_patched_live_version(old_db_schema),
         ),
         patch.object(migration.EventsContextIDMigration, "migrate_data"),
-        patch.object(
-            migration.EventIDPostMigration,
-            "needs_migrate_impl",
-            return_value=migration.DataMigrationStatus(
-                needs_migrate=False, migration_done=True
-            ),
-        ),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
         async with (
@@ -620,7 +611,6 @@ async def test_migrate_states_context_ids(
             get_patched_live_version(old_db_schema),
         ),
         patch.object(migration.StatesContextIDMigration, "migrate_data"),
-        patch.object(migration.EventIDPostMigration, "migrate_data"),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
         async with (
@@ -673,7 +663,6 @@ async def test_migrate_states_context_ids(
             patch(
                 "sqlalchemy.schema.Index.create", autospec=True, wraps=Index.create
             ) as wrapped_idx_create,
-            patch.object(migration.EventIDPostMigration, "migrate_data"),
         ):
             # Stall migration when the last non-live schema migration is done
             instrumented_migration.stall_on_schema_version = (
@@ -831,13 +820,6 @@ async def test_finish_migrate_states_context_ids(
             get_patched_live_version(old_db_schema),
         ),
         patch.object(migration.StatesContextIDMigration, "migrate_data"),
-        patch.object(
-            migration.EventIDPostMigration,
-            "needs_migrate_impl",
-            return_value=migration.DataMigrationStatus(
-                needs_migrate=False, migration_done=True
-            ),
-        ),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
         async with (
@@ -1190,7 +1172,6 @@ async def test_post_migrate_entity_ids(
         ),
         patch.object(migration.EntityIDMigration, "migrate_data"),
         patch.object(migration.EntityIDPostMigration, "migrate_data"),
-        patch.object(migration.EventIDPostMigration, "migrate_data"),
         patch(CREATE_ENGINE_TARGET, new=_create_engine_test),
     ):
         async with (
@@ -1228,7 +1209,6 @@ async def test_post_migrate_entity_ids(
             patch(
                 "sqlalchemy.schema.Index.create", autospec=True, wraps=Index.create
             ) as wrapped_idx_create,
-            patch.object(migration.EventIDPostMigration, "migrate_data"),
         ):
             # Stall migration when the last non-live schema migration is done
             instrumented_migration.stall_on_schema_version = (
