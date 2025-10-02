@@ -32,6 +32,7 @@ DEVICE_MOCKS = [
     "co2bj_yrr3eiyiacm31ski",  # https://github.com/orgs/home-assistant/discussions/842
     "cobj_hcdy5zrq3ikzthws",  # https://github.com/orgs/home-assistant/discussions/482
     "cs_b9oyi2yofflroq1g",  # https://github.com/home-assistant/core/issues/139966
+    "cs_eguoms25tkxtf5u8",  # https://github.com/home-assistant/core/issues/152361
     "cs_ipmyy4nigpqcnd8q",  # https://github.com/home-assistant/core/pull/148726
     "cs_ka2wfrdoogpvgzfi",  # https://github.com/home-assistant/core/issues/119865
     "cs_qhxmvae667uap4zh",  # https://github.com/home-assistant/core/issues/141278
