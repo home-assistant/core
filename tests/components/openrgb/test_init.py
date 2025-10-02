@@ -14,12 +14,12 @@ from homeassistant.helpers import device_registry as dr
 from tests.common import MockConfigEntry
 
 
-async def test_setup_entry(
+async def test_entry_setup_unload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_openrgb_client: MagicMock,
 ) -> None:
-    """Test setup entry."""
+    """Test entry setup and unload."""
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -27,20 +27,6 @@ async def test_setup_entry(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data is not None
-
-
-async def test_unload_entry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_openrgb_client: MagicMock,
-) -> None:
-    """Test unload entry."""
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
