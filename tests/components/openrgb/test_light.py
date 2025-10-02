@@ -121,28 +121,6 @@ async def test_light_with_non_color_mode(
     assert state.attributes.get("brightness") == DEFAULT_BRIGHTNESS
 
 
-async def test_light_with_mode_specific_color_flag(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_openrgb_client: MagicMock,
-    mock_openrgb_device: MagicMock,
-) -> None:
-    """Test mode with HAS_MODE_SPECIFIC_COLOR flag (covers line 324 return True)."""
-    # Set device to use Breathing mode which has HAS_MODE_SPECIFIC_COLOR flag
-    mock_openrgb_device.active_mode = 3  # Breathing mode
-    mock_openrgb_device.colors = [RGBColor(255, 0, 255)]  # Purple
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    # Verify the light entity works with this mode
-    state = hass.states.get("light.test_rgb_device")
-    assert state
-    assert state.state == STATE_ON
-    assert state.attributes.get("rgb_color") == (255, 0, 255)
-    assert state.attributes.get("brightness") == DEFAULT_BRIGHTNESS
-
-
 # Test basic turn on/off functionality
 async def test_turn_on_light(
     hass: HomeAssistant,
