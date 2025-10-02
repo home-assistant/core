@@ -500,6 +500,8 @@ async def test_dynamic_device_addition(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
     # Check that one light entity exists
     state = hass.states.get("light.test_rgb_device")
     assert state
