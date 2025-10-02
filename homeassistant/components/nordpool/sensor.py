@@ -56,7 +56,7 @@ def get_prices(
     current_time = dt_util.utcnow()
     previous_time = current_time - timedelta(hours=1)
     next_time = current_time + timedelta(hours=1)
-    # LOGGER.debug("Price data: %s", data)
+    LOGGER.debug("Price data: %s", data)
     for entry in data:
         if entry.start <= current_time <= entry.end:
             current_price_entries = entry.entry
