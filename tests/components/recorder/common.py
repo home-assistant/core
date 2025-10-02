@@ -16,6 +16,7 @@ from typing import Any, Literal, cast
 from unittest.mock import MagicMock, patch, sentinel
 
 from freezegun import freeze_time
+import pytest
 from sqlalchemy import create_engine, event as sqlalchemy_event
 from sqlalchemy.orm.session import Session
 
@@ -583,3 +584,26 @@ def db_state_attributes_to_native(state_attrs: StateAttributes) -> dict[str, Any
     if shared_attrs is None:
         return {}
     return cast(dict[str, Any], json_loads(shared_attrs))
+
+
+async def async_drop_index(
+    recorder: Recorder, table: str, index: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Drop an index from the database.
+
+    migration._drop_index does not return or raise, so we verify the result
+    by checking the log for success or failure messages.
+    """
+
+    finish_msg = f"Finished dropping index `{index}` from table `{table}`"
+    fail_msg = f"Failed to drop index `{index}` from table `{table}`"
+
+    count_finish = caplog.text.count(finish_msg)
+    count_fail = caplog.text.count(fail_msg)
+
+    await recorder.async_add_executor_job(
+        migration._drop_index, recorder.get_session, table, index
+    )
+
+    assert caplog.text.count(finish_msg) == count_finish + 1
+    assert caplog.text.count(fail_msg) == count_fail
