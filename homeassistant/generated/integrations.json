@@ -1984,6 +1984,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "firefly_iii": {
+      "name": "Firefly III",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "fireservicerota": {
       "name": "FireServiceRota",
       "integration_type": "hub",
@@ -3721,6 +3727,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "lunatone": {
+      "name": "Lunatone",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "lupusec": {
       "name": "Lupus Electronics LUPUSEC",
       "integration_type": "hub",
@@ -3917,6 +3929,12 @@
     "meteo_france": {
       "name": "M\u00e9t\u00e9o-France",
       "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "meteo_lt": {
+      "name": "Meteo.lt",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
