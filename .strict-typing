@@ -326,6 +326,7 @@ homeassistant.components.london_underground.*
 homeassistant.components.lookin.*
 homeassistant.components.lovelace.*
 homeassistant.components.luftdaten.*
+homeassistant.components.lunatone.*
 homeassistant.components.madvr.*
 homeassistant.components.manual.*
 homeassistant.components.mastodon.*
