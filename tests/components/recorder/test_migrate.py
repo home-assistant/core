@@ -233,7 +233,7 @@ async def test_database_migration_failed(
         # Test error handling in _modify_columns
         (12, "sqlalchemy.engine.base.Connection.execute", False, 1, 0),
         # Test error handling in _drop_foreign_key_constraints
-        (46, "homeassistant.components.recorder.migration.DropConstraint", False, 2, 1),
+        (46, "homeassistant.components.recorder.migration.DropConstraint", False, 1, 0),
     ],
 )
 @pytest.mark.skip_on_db_engine(["sqlite"])
