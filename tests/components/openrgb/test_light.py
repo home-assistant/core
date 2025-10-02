@@ -1,6 +1,7 @@
 """Tests for the OpenRGB light platform."""
 
-from unittest.mock import MagicMock
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
 
 from openrgb.utils import RGBColor
 import pytest
@@ -27,10 +28,14 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.fixture
-def platforms() -> list[Platform]:
-    """Platforms to setup."""
-    return [Platform.LIGHT]
+@pytest.fixture(autouse=True)
+def light_only() -> Generator[None]:
+    """Enable only the light platform."""
+    with patch(
+        "homeassistant.components.openrgb.PLATFORMS",
+        [Platform.LIGHT],
+    ):
+        yield
 
 
 @pytest.mark.usefixtures("init_integration")
