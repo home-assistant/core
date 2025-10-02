@@ -1,7 +1,7 @@
 """Tests for the OpenRGB light platform."""
 
 from collections.abc import Generator
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 from openrgb.utils import OpenRGBDisconnected, RGBColor
 import pytest
@@ -92,6 +92,7 @@ async def test_light_with_black_leds(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -116,6 +117,7 @@ async def test_light_with_one_non_black_led(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -127,10 +129,10 @@ async def test_light_with_one_non_black_led(
     assert state.attributes.get("brightness") == 255
 
 
+@pytest.mark.usefixtures("mock_openrgb_client")
 async def test_light_with_non_color_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_openrgb_client: MagicMock,
     mock_openrgb_device: MagicMock,
 ) -> None:
     """Test light state with a mode that doesn't support colors."""
@@ -139,6 +141,7 @@ async def test_light_with_non_color_mode(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -151,10 +154,10 @@ async def test_light_with_non_color_mode(
 
 
 # Test basic turn on/off functionality
+@pytest.mark.usefixtures("mock_openrgb_client")
 async def test_turn_on_light(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_openrgb_client: MagicMock,
     mock_openrgb_device: MagicMock,
 ) -> None:
     """Test turning on the light."""
@@ -163,6 +166,7 @@ async def test_turn_on_light(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -279,6 +283,7 @@ async def test_turn_on_restores_previous_values(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -303,6 +308,8 @@ async def test_turn_on_restores_previous_values(
     state = hass.states.get("light.test_rgb_device")
     assert state
     assert state.state == STATE_OFF
+    mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.OFF)
+    mock_openrgb_device.set_mode.reset_mock()
 
     # Turn on without parameters - should restore previous mode and values
     await hass.services.async_call(
@@ -313,10 +320,7 @@ async def test_turn_on_restores_previous_values(
     )
 
     # Should restore to Direct mode (previous mode) even though Static is preferred
-    assert mock_openrgb_device.set_mode.call_args_list == [
-        call(OpenRGBMode.OFF),
-        call(OpenRGBMode.DIRECT),
-    ]
+    mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.DIRECT)
 
 
 async def test_previous_values_updated_on_refresh(
@@ -332,6 +336,7 @@ async def test_previous_values_updated_on_refresh(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -388,6 +393,7 @@ async def test_turn_on_with_non_color_effect_and_color_params(
     """Test turning on with a non-color effect but providing color/brightness."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -440,6 +446,7 @@ async def test_turn_off_light_without_off_mode(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -515,6 +522,7 @@ async def test_dynamic_device_addition(
     mock_openrgb_client.devices = [mock_openrgb_device]
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -620,6 +628,7 @@ async def test_duplicate_device_names(
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
