@@ -1075,7 +1075,6 @@ async def test_devices_payload_no_entities(
             "hue": {
                 "devices": [
                     {
-                        "entities": [],
                         "entry_type": None,
                         "has_configuration_url": True,
                         "hw_version": "test-hw-version",
@@ -1084,20 +1083,9 @@ async def test_devices_payload_no_entities(
                         "model_id": "test-model-id",
                         "sw_version": "test-sw-version",
                         "via_device": None,
+                        "entities": [],
                     },
                     {
-                        "entities": [],
-                        "entry_type": "service",
-                        "has_configuration_url": False,
-                        "hw_version": None,
-                        "manufacturer": "test-manufacturer",
-                        "model": None,
-                        "model_id": "test-model-id",
-                        "sw_version": None,
-                        "via_device": None,
-                    },
-                    {
-                        "entities": [],
                         "entry_type": None,
                         "has_configuration_url": False,
                         "hw_version": None,
@@ -1106,9 +1094,9 @@ async def test_devices_payload_no_entities(
                         "model_id": None,
                         "sw_version": None,
                         "via_device": None,
+                        "entities": [],
                     },
                     {
-                        "entities": [],
                         "entry_type": None,
                         "has_configuration_url": False,
                         "hw_version": None,
@@ -1117,9 +1105,9 @@ async def test_devices_payload_no_entities(
                         "model_id": "test-model-id",
                         "sw_version": None,
                         "via_device": None,
+                        "entities": [],
                     },
                     {
-                        "entities": [],
                         "entry_type": None,
                         "has_configuration_url": False,
                         "hw_version": None,
@@ -1128,6 +1116,7 @@ async def test_devices_payload_no_entities(
                         "model_id": "test-model-id6",
                         "sw_version": None,
                         "via_device": ["hue", 0],
+                        "entities": [],
                     },
                 ],
                 "entities": [],
@@ -1159,6 +1148,13 @@ async def test_devices_payload_with_entities(
         identifiers={("device", "2")},
         manufacturer="test-manufacturer",
         model_id="test-model-id",
+    )
+    device_entry_3 = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "3")},
+        manufacturer="test-manufacturer",
+        model_id="test-model-id",
+        entry_type=dr.DeviceEntryType.SERVICE,
     )
 
     # First device
@@ -1195,7 +1191,7 @@ async def test_devices_payload_with_entities(
     # Entity from a different integration
     entity_registry.async_get_or_create(
         domain="light",
-        platform="roomba",
+        platform="shelly",
         unique_id="1",
         device_id=device_entry.id,
         has_entity_name=True,
@@ -1207,6 +1203,14 @@ async def test_devices_payload_with_entities(
         platform="hue",
         unique_id="3",
         device_id=device_entry_2.id,
+    )
+
+    # Third device (service type)
+    entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="4",
+        device_id=device_entry_3.id,
     )
 
     # Entity without device with unit of measurement and state class
@@ -1229,6 +1233,14 @@ async def test_devices_payload_with_entities(
             "hue": {
                 "devices": [
                     {
+                        "entry_type": None,
+                        "has_configuration_url": False,
+                        "hw_version": None,
+                        "manufacturer": "test-manufacturer",
+                        "model": None,
+                        "model_id": "test-model-id",
+                        "sw_version": None,
+                        "via_device": None,
                         "entities": [
                             {
                                 "assumed_state": None,
@@ -1255,6 +1267,8 @@ async def test_devices_payload_with_entities(
                                 "unit_of_measurement": None,
                             },
                         ],
+                    },
+                    {
                         "entry_type": None,
                         "has_configuration_url": False,
                         "hw_version": None,
@@ -1263,8 +1277,6 @@ async def test_devices_payload_with_entities(
                         "model_id": "test-model-id",
                         "sw_version": None,
                         "via_device": None,
-                    },
-                    {
                         "entities": [
                             {
                                 "assumed_state": None,
@@ -1275,14 +1287,6 @@ async def test_devices_payload_with_entities(
                                 "unit_of_measurement": None,
                             },
                         ],
-                        "entry_type": None,
-                        "has_configuration_url": False,
-                        "hw_version": None,
-                        "manufacturer": "test-manufacturer",
-                        "model": None,
-                        "model_id": "test-model-id",
-                        "sw_version": None,
-                        "via_device": None,
                     },
                 ],
                 "entities": [
@@ -1296,7 +1300,7 @@ async def test_devices_payload_with_entities(
                     },
                 ],
             },
-            "roomba": {
+            "shelly": {
                 "devices": [],
                 "entities": [
                     {
@@ -1398,7 +1402,6 @@ async def test_analytics_platforms(
             "test": {
                 "devices": [
                     {
-                        "entities": [],
                         "entry_type": None,
                         "has_configuration_url": False,
                         "hw_version": None,
@@ -1407,6 +1410,7 @@ async def test_analytics_platforms(
                         "model_id": "test-model-id",
                         "sw_version": None,
                         "via_device": None,
+                        "entities": [],
                     },
                 ],
                 "entities": [
