@@ -4,12 +4,18 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
+from pyportainer.exceptions import (
+    PortainerAuthenticationError,
+    PortainerConnectionError,
+    PortainerTimeoutError,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -69,3 +75,40 @@ async def test_buttons(
     )
 
     assert len(method_mock.mock_calls) == pre_calls + 1
+
+
+@pytest.mark.parametrize(
+    ("exception", "client_method"),
+    [
+        (PortainerAuthenticationError("auth"), "restart_container"),
+        (PortainerConnectionError("conn"), "restart_container"),
+        (PortainerTimeoutError("timeout"), "restart_container"),
+    ],
+)
+async def test_buttons_exceptions(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    client_method: str,
+) -> None:
+    """Test that Portainer buttons, but this time when they will do boom for sure."""
+    with patch(
+        "homeassistant.components.portainer._PLATFORMS",
+        [Platform.BUTTON],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    action = client_method.split("_")[0]
+    entity_id = f"button.practical_morse_{action}_container"
+
+    method_mock = getattr(mock_portainer_client, client_method)
+    method_mock.side_effect = exception
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )

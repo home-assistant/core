@@ -8,6 +8,11 @@ import logging
 from typing import Any
 
 from pyportainer import Portainer
+from pyportainer.exceptions import (
+    PortainerAuthenticationError,
+    PortainerConnectionError,
+    PortainerTimeoutError,
+)
 from pyportainer.models.docker import DockerContainer
 
 from homeassistant.components.button import (
@@ -17,9 +22,11 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
+from .const import DOMAIN
 from .coordinator import PortainerCoordinator, PortainerCoordinatorData
 from .entity import PortainerContainerEntity
 
@@ -97,7 +104,25 @@ class PortainerButton(PortainerContainerEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Trigger the Portainer button press service."""
-        await self.entity_description.press_action(
-            self.coordinator.portainer, self.endpoint_id, self.device_id
-        )
-        # To the reviewer: I don't think we should enforce a coordinator refresh here to respect the nature the Button entity
+        try:
+            await self.entity_description.press_action(
+                self.coordinator.portainer, self.endpoint_id, self.device_id
+            )
+        except PortainerConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except PortainerAuthenticationError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except PortainerTimeoutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_connect",
+                translation_placeholders={"error": repr(err)},
+            ) from err
