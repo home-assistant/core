@@ -10,6 +10,7 @@ CONF_FOLDER_NAME: Final = "folder_name"
 CONF_FOLDER_ID: Final = "folder_id"
 
 CONF_DELETE_PERMANENTLY: Final = "delete_permanently"
+CONF_CHUNK_SIZE: Final = "chunk_size"
 
 # replace "consumers" with "common", when adding SharePoint or OneDrive for Business support
 OAUTH2_AUTHORIZE: Final = (

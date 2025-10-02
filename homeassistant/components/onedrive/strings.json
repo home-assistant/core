@@ -64,12 +64,14 @@
   "options": {
     "step": {
       "init": {
-        "description": "By default, files are put into the Recycle Bin when deleted, where they remain available for another 30 days. If you enable this option, files will be deleted immediately when they are cleaned up by the backup system.",
+        "description": "Fine-tune your OneDrive integration options.",
         "data": {
-          "delete_permanently": "Delete files permanently"
+          "delete_permanently": "Delete files permanently",
+          "chunk_size": "Upload chunk size"
         },
         "data_description": {
-          "delete_permanently": "Delete files without moving them to the Recycle Bin"
+          "delete_permanently": "By default, files are put into the Recycle Bin when deleted, where they remain available for another 30 days. If you enable this option, files will be deleted immediately when they are cleaned up by the backup system.",
+          "chunk_size": "The size of each upload chunk in MB. Larger chunks may improve upload speed but require more memory and can lead to timeouts on slower connections."
         }
       }
     }

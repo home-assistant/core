@@ -25,6 +25,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHan
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
 from .const import (
+    CONF_CHUNK_SIZE,
     CONF_DELETE_PERMANENTLY,
     CONF_FOLDER_ID,
     CONF_FOLDER_NAME,
@@ -251,6 +252,10 @@ class OneDriveOptionsFlowHandler(OptionsFlow):
                         CONF_DELETE_PERMANENTLY, False
                     ),
                 ): bool,
+                vol.Optional(
+                    CONF_CHUNK_SIZE,
+                    default=self.config_entry.options.get(CONF_CHUNK_SIZE, 10),
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=50)),
             }
         )
 

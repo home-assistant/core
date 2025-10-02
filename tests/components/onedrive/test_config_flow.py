@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.onedrive.const import (
+    CONF_CHUNK_SIZE,
     CONF_DELETE_PERMANENTLY,
     CONF_FOLDER_ID,
     CONF_FOLDER_NAME,
@@ -442,13 +443,9 @@ async def test_options_flow(
 
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_DELETE_PERMANENTLY: True,
-        },
+        user_input={CONF_DELETE_PERMANENTLY: True, CONF_CHUNK_SIZE: 15},
     )
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {
-        CONF_DELETE_PERMANENTLY: True,
-    }
+    assert result2["data"] == {CONF_DELETE_PERMANENTLY: True, CONF_CHUNK_SIZE: 15}

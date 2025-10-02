@@ -31,11 +31,15 @@ from homeassistant.components.backup import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_DELETE_PERMANENTLY, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .const import (
+    CONF_CHUNK_SIZE,
+    CONF_DELETE_PERMANENTLY,
+    DATA_BACKUP_AGENT_LISTENERS,
+    DOMAIN,
+)
 from .coordinator import OneDriveConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-UPLOAD_CHUNK_SIZE = 32 * 320 * 1024  # 10.4MB
 TIMEOUT = ClientTimeout(connect=10, total=43200)  # 12 hours
 METADATA_VERSION = 2
 CACHE_TTL = 300
@@ -161,9 +165,17 @@ class OneDriveBackupAgent(BackupAgent):
             self._folder_id,
             await open_stream(),
         )
+
+        # make chunk size in MB to closes multiple of 320KB
+        chunk_size = self._entry.options.get(CONF_CHUNK_SIZE, 10)
+        chunk_size = round(1024 * chunk_size / 320) * 320 * 1024
+
         try:
             backup_file = await LargeFileUploadClient.upload(
-                self._token_function, file, session=async_get_clientsession(self._hass)
+                self._token_function,
+                file,
+                upload_chunk_size=chunk_size,
+                session=async_get_clientsession(self._hass),
             )
         except HashMismatchError as err:
             raise BackupAgentError(
