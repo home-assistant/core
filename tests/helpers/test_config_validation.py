@@ -711,7 +711,8 @@ async def test_template_no_hass(hass: HomeAssistant) -> None:
         "{{ no_such_function('group.foo')|map(attribute='entity_id')|list }}",
     )
     for value in options:
-        await hass.async_add_executor_job(schema, value)
+        with pytest.raises(vol.Invalid):
+            await hass.async_add_executor_job(schema, value)
 
 
 def test_dynamic_template(hass: HomeAssistant) -> None:
