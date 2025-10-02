@@ -163,7 +163,10 @@ class OneDriveBackupAgent(BackupAgent):
         )
         try:
             backup_file = await LargeFileUploadClient.upload(
-                self._token_function, file, session=async_get_clientsession(self._hass)
+                self._token_function,
+                file,
+                upload_chunk_size=UPLOAD_CHUNK_SIZE,
+                session=async_get_clientsession(self._hass),
             )
         except HashMismatchError as err:
             raise BackupAgentError(
