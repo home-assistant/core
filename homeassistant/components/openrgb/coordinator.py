@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONNECTION_ERRORS, DEFAULT_CLIENT_NAME, DOMAIN
@@ -40,6 +41,9 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             name=DOMAIN,
             update_interval=timedelta(seconds=15),
             config_entry=config_entry,
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=0.5, immediate=False
+            ),
         )
         self.host = config_entry.data[CONF_HOST]
         self.port = config_entry.data[CONF_PORT]
