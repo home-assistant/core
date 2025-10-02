@@ -6,6 +6,9 @@
         "description": "[%key:component::bluetooth::config::step::user::description%]",
         "data": {
           "address": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "address": "The Airthings devices discovered via Bluetooth."
         }
       },
       "bluetooth_confirm": {
