@@ -27,6 +27,7 @@ from homeassistant.helpers import (
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture
@@ -1766,3 +1767,77 @@ async def test_cancel_all_timers_area(
     assert result.response_type == intent.IntentResponseType.ACTION_DONE
     timers = result.speech_slots.get("timers", [])
     assert len(timers) == 2
+
+
+@pytest.mark.freeze_time("2025-01-01 06:08:10")
+async def test_subscribe_timers_websocket(
+    hass: HomeAssistant, init_components, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test subscribing to timer updates via websocket."""
+    device_id = "test_device"
+
+    timer_id: str | None = None
+
+    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+        nonlocal timer_id
+        if event_type == TimerEventType.STARTED:
+            timer_id = timer.id
+
+    async_register_timer_handler(hass, device_id, handle_timer)
+
+    result = await intent.async_handle(
+        hass,
+        "test",
+        intent.INTENT_START_TIMER,
+        {"name": {"value": "pizza"}, "seconds": {"value": 3}},
+        device_id=device_id,
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id({"type": "intent/timers/subscribe"})
+    message = await ws_client.receive_json()
+    assert message == {
+        "id": 1,
+        "type": "result",
+        "success": True,
+        "result": {
+            "timers": [
+                {
+                    "id": timer_id,
+                    "name": "pizza",
+                    "seconds": 3,
+                    "device_id": device_id,
+                    "created_at": 1735711690.0,
+                    "updated_at": 1735711690.0,
+                    "is_active": True,
+                    "has_conversation_command": False,
+                }
+            ]
+        },
+    }
+
+    result = await intent.async_handle(
+        hass, "test", intent.INTENT_PAUSE_TIMER, {}, device_id=device_id
+    )
+    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+    message = await ws_client.receive_json()
+    assert message == {
+        "id": 1,
+        "type": "event",
+        "event": {
+            "event_type": "updated",
+            "timer": {
+                "id": timer_id,
+                "name": "pizza",
+                "seconds": 3,
+                "device_id": device_id,
+                "created_at": 1735711690.0,
+                "updated_at": 1735711690.0,
+                "is_active": False,
+                "has_conversation_command": False,
+            },
+        },
+    }

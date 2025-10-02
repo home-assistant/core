@@ -5,14 +5,15 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 import logging
-import time
 from typing import Any
 
 from propcache.api import cached_property
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import (
@@ -21,11 +22,21 @@ from homeassistant.helpers import (
     device_registry as dr,
     intent,
 )
-from homeassistant.util import ulid as ulid_util
+from homeassistant.util import dt as dt_util, ulid as ulid_util
 
-from .const import TIMER_DATA
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+TIMER_DATA = f"{DOMAIN}.timer"
+
+
+async def async_setup(hass: HomeAssistant) -> bool:
+    """Set up intent timers."""
+    hass.data[TIMER_DATA] = TimerManager(hass)
+    websocket_api.async_register_command(hass, websocket_subscribe_timers)
+    return True
+
 
 TIMER_NOT_FOUND_RESPONSE = "timer_not_found"
 MULTIPLE_TIMERS_MATCHED_RESPONSE = "multiple_timers_matched"
@@ -60,11 +71,11 @@ class TimerInfo:
     start_seconds: int | None
     """Number of seconds the timer should run as given by the user."""
 
-    created_at: int
-    """Timestamp when timer was created (time.monotonic_ns)"""
+    created_at: datetime
+    """Timestamp when timer was created (in UTC)"""
 
-    updated_at: int
-    """Timestamp when timer was last updated (time.monotonic_ns)"""
+    updated_at: datetime
+    """Timestamp when timer was last updated (in UTC)"""
 
     language: str
     """Language of command used to set the timer."""
@@ -106,8 +117,8 @@ class TimerInfo:
         if not self.is_active:
             return self.seconds
 
-        now = time.monotonic_ns()
-        seconds_running = int((now - self.updated_at) / 1e9)
+        now = dt_util.utcnow()
+        seconds_running = int((now - self.updated_at).total_seconds())
         return max(0, self.seconds - seconds_running)
 
     @property
@@ -127,18 +138,18 @@ class TimerInfo:
     def cancel(self) -> None:
         """Cancel the timer."""
         self.seconds = 0
-        self.updated_at = time.monotonic_ns()
+        self.updated_at = dt_util.utcnow()
         self.is_active = False
 
     def pause(self) -> None:
         """Pause the timer."""
         self.seconds = self.seconds_left
-        self.updated_at = time.monotonic_ns()
+        self.updated_at = dt_util.utcnow()
         self.is_active = False
 
     def unpause(self) -> None:
         """Unpause the timer."""
-        self.updated_at = time.monotonic_ns()
+        self.updated_at = dt_util.utcnow()
         self.is_active = True
 
     def add_time(self, seconds: int) -> None:
@@ -148,13 +159,27 @@ class TimerInfo:
         """
         self.seconds = max(0, self.seconds_left + seconds)
         self._created_seconds = max(self._created_seconds, self.seconds)
-        self.updated_at = time.monotonic_ns()
+        self.updated_at = dt_util.utcnow()
 
     def finish(self) -> None:
         """Finish the timer."""
         self.seconds = 0
-        self.updated_at = time.monotonic_ns()
+        self.updated_at = dt_util.utcnow()
         self.is_active = False
+
+    @property
+    def dict_repr(self) -> dict[str, Any]:
+        """Return a dictionary representation of the timer."""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "seconds": self.seconds,
+            "device_id": self.device_id,
+            "created_at": self.created_at.timestamp(),
+            "updated_at": self.updated_at.timestamp(),
+            "is_active": self.is_active,
+            "has_conversation_command": self.conversation_command is not None,
+        }
 
 
 class TimerEventType(StrEnum):
@@ -217,6 +242,8 @@ class TimerManager:
         # device_id -> handler
         self.handlers: dict[str, TimerHandler] = {}
 
+        self.listeners: list[TimerHandler] = []
+
     def register_handler(
         self, device_id: str, handler: TimerHandler
     ) -> Callable[[], None]:
@@ -228,6 +255,18 @@ class TimerManager:
 
         def unregister() -> None:
             self.handlers.pop(device_id)
+
+        return unregister
+
+    def register_listener(self, listener: TimerHandler) -> Callable[[], None]:
+        """Register a timer listener.
+
+        Returns a callable to unregister.
+        """
+        self.listeners.append(listener)
+
+        def unregister() -> None:
+            self.listeners.remove(listener)
 
         return unregister
 
@@ -262,18 +301,18 @@ class TimerManager:
             total_seconds += seconds
 
         timer_id = ulid_util.ulid_now()
-        created_at = time.monotonic_ns()
+        created_at = dt_util.utcnow()
         timer = TimerInfo(
             id=timer_id,
             name=name,
+            seconds=total_seconds,
+            device_id=device_id,
             start_hours=hours,
             start_minutes=minutes,
             start_seconds=seconds,
-            seconds=total_seconds,
-            language=language,
-            device_id=device_id,
             created_at=created_at,
             updated_at=created_at,
+            language=language,
             conversation_command=conversation_command,
             conversation_agent_id=conversation_agent_id,
         )
@@ -297,6 +336,9 @@ class TimerManager:
 
         if (not timer.conversation_command) and (timer.device_id in self.handlers):
             self.handlers[timer.device_id](TimerEventType.STARTED, timer)
+        for listener in self.listeners:
+            listener(TimerEventType.STARTED, timer)
+
         _LOGGER.debug(
             "Timer started: id=%s, name=%s, hours=%s, minutes=%s, seconds=%s, device_id=%s",
             timer_id,
@@ -310,7 +352,7 @@ class TimerManager:
         return timer_id
 
     async def _wait_for_timer(
-        self, timer_id: str, seconds: int, updated_at: int
+        self, timer_id: str, seconds: int, updated_at: datetime
     ) -> None:
         """Sleep until timer is up. Timer is only finished if it hasn't been updated."""
         try:
@@ -336,6 +378,9 @@ class TimerManager:
 
         if (not timer.conversation_command) and (timer.device_id in self.handlers):
             self.handlers[timer.device_id](TimerEventType.CANCELLED, timer)
+        for listener in self.listeners:
+            listener(TimerEventType.CANCELLED, timer)
+
         _LOGGER.debug(
             "Timer cancelled: id=%s, name=%s, seconds_left=%s, device_id=%s",
             timer_id,
@@ -365,6 +410,8 @@ class TimerManager:
 
         if (not timer.conversation_command) and (timer.device_id in self.handlers):
             self.handlers[timer.device_id](TimerEventType.UPDATED, timer)
+        for listener in self.listeners:
+            listener(TimerEventType.UPDATED, timer)
 
         if seconds > 0:
             log_verb = "increased"
@@ -403,6 +450,9 @@ class TimerManager:
 
         if (not timer.conversation_command) and (timer.device_id in self.handlers):
             self.handlers[timer.device_id](TimerEventType.UPDATED, timer)
+        for listener in self.listeners:
+            listener(TimerEventType.UPDATED, timer)
+
         _LOGGER.debug(
             "Timer paused: id=%s, name=%s, seconds_left=%s, device_id=%s",
             timer_id,
@@ -429,6 +479,9 @@ class TimerManager:
 
         if (not timer.conversation_command) and (timer.device_id in self.handlers):
             self.handlers[timer.device_id](TimerEventType.UPDATED, timer)
+        for listener in self.listeners:
+            listener(TimerEventType.UPDATED, timer)
+
         _LOGGER.debug(
             "Timer unpaused: id=%s, name=%s, seconds_left=%s, device_id=%s",
             timer_id,
@@ -462,6 +515,8 @@ class TimerManager:
             )
         elif timer.device_id in self.handlers:
             self.handlers[timer.device_id](TimerEventType.FINISHED, timer)
+        for listener in self.listeners:
+            listener(TimerEventType.FINISHED, timer)
 
         _LOGGER.debug(
             "Timer finished: id=%s, name=%s, device_id=%s",
@@ -1066,3 +1121,36 @@ class TimerStatusIntentHandler(intent.IntentHandler):
         response.async_set_speech_slots({"timers": statuses})
 
         return response
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "intent/timers/subscribe",
+    }
+)
+@websocket_api.async_response
+async def websocket_subscribe_timers(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Subscribe to intent timers."""
+    msg_id = msg["id"]
+
+    timer_manager: TimerManager = hass.data[TIMER_DATA]
+
+    def send_event(event_type: TimerEventType, timer: TimerInfo) -> None:
+        """Send a timer event."""
+        connection.send_event(
+            msg_id,
+            {
+                "event_type": event_type,
+                "timer": timer.dict_repr,
+            },
+        )
+
+    connection.subscriptions[msg_id] = timer_manager.register_listener(send_event)
+
+    timers = [timer.dict_repr for timer in timer_manager.timers.values()]
+
+    connection.send_result(msg_id, {"timers": timers})

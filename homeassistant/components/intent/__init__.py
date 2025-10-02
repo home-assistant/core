@@ -56,7 +56,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, TIMER_DATA
+from .const import DOMAIN
 from .timers import (
     CancelAllTimersIntentHandler,
     CancelTimerIntentHandler,
@@ -66,11 +66,11 @@ from .timers import (
     StartTimerIntentHandler,
     TimerEventType,
     TimerInfo,
-    TimerManager,
     TimerStatusIntentHandler,
     UnpauseTimerIntentHandler,
     async_device_supports_timers,
     async_register_timer_handler,
+    async_setup as async_setup_timers,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,7 +96,7 @@ ONOFF_DEVICE_CLASSES = {
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Intent component."""
-    hass.data[TIMER_DATA] = TimerManager(hass)
+    await async_setup_timers(hass)
 
     hass.http.register_view(IntentHandleView())
 
