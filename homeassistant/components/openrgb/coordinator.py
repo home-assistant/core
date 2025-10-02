@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONNECTION_ERRORS, DOMAIN
+from .const import CONNECTION_ERRORS, DEFAULT_CLIENT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,11 +26,12 @@ type OpenRGBConfigEntry = ConfigEntry[OpenRGBCoordinator]
 class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """Class to manage fetching OpenRGB data."""
 
+    client: OpenRGBClient
+
     def __init__(
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        client: OpenRGBClient,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -40,7 +41,6 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             update_interval=timedelta(seconds=15),
             config_entry=config_entry,
         )
-        self.client = client
         self.host = config_entry.data[CONF_HOST]
         self.port = config_entry.data[CONF_PORT]
         self.entry_id = config_entry.entry_id
@@ -50,6 +50,15 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         # Register listener for Home Assistant stop event
         self._stop_listener = hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, self.async_client_disconnect
+        )
+
+    async def _async_setup(self) -> None:
+        """Set up the coordinator by connecting to the OpenRGB server."""
+        self.client = await self.hass.async_add_executor_job(
+            OpenRGBClient,
+            self.host,
+            self.port,
+            DEFAULT_CLIENT_NAME,
         )
 
     async def _async_update_data(self) -> dict[str, Device]:
@@ -98,6 +107,9 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
     async def async_client_disconnect(self, *args) -> None:
         """Disconnect the OpenRGB client."""
+        if not hasattr(self, "client"):
+            # Just in case
+            return
         async with self._client_lock:
             await self.hass.async_add_executor_job(self.client.disconnect)
 

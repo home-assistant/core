@@ -173,12 +173,9 @@ def mock_openrgb_client(mock_openrgb_device: MagicMock) -> Generator[MagicMock]:
     """Return a mocked OpenRGB client."""
     with (
         patch(
-            "homeassistant.components.openrgb.OpenRGBClient", autospec=True
-        ) as client_mock,
-        patch(
             "homeassistant.components.openrgb.coordinator.OpenRGBClient",
-            new=client_mock,
-        ),
+            autospec=True,
+        ) as client_mock,
         patch(
             "homeassistant.components.openrgb.config_flow.OpenRGBClient",
             new=client_mock,
