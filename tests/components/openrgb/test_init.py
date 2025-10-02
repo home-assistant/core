@@ -43,6 +43,8 @@ async def test_server_device_registry(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
     device_registry = dr.async_get(hass)
     server_device = device_registry.async_get_device(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}

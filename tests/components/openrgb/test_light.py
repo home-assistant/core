@@ -93,6 +93,8 @@ async def test_light_with_black_leds(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
     # Verify light is off by color
     state = hass.states.get("light.test_rgb_device")
     assert state
@@ -115,6 +117,8 @@ async def test_light_with_one_non_black_led(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
     # Verify light is on with the non-black LED color
     state = hass.states.get("light.test_rgb_device")
     assert state
@@ -135,6 +139,8 @@ async def test_light_with_non_color_mode(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Verify light is on with white color (default)
     state = hass.states.get("light.test_rgb_device")
@@ -157,6 +163,8 @@ async def test_turn_on_light(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Verify light is initially off
     state = hass.states.get("light.test_rgb_device")
@@ -272,6 +280,8 @@ async def test_turn_on_restores_previous_values(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
     # Verify initial state
     state = hass.states.get("light.test_rgb_device")
     assert state
@@ -322,6 +332,8 @@ async def test_previous_values_updated_on_refresh(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Verify initial state
     state = hass.states.get("light.test_rgb_device")
@@ -377,6 +389,8 @@ async def test_turn_on_with_non_color_effect_and_color_params(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
     # Try to set Rainbow effect (doesn't support color) with RGB color parameter
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -426,6 +440,8 @@ async def test_turn_off_light_without_off_mode(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Verify light is initially on
     state = hass.states.get("light.test_rgb_device")
