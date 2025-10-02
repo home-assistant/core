@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Final
 
 from aioshelly.const import BLU_TRV_IDENTIFIER, MODEL_BLU_GATEWAY_G3, RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
+from aioshelly.rpc_device import RpcDevice
 
 from homeassistant.components.button import (
     DOMAIN as BUTTON_PLATFORM,
@@ -22,13 +23,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
 
 from .const import DOMAIN, LOGGER, SHELLY_GAS_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import get_entity_block_device_info, get_entity_rpc_device_info
 from .utils import (
     async_remove_orphaned_entities,
+    format_ble_addr,
     get_blu_trv_device_info,
     get_device_entry_gen,
     get_rpc_entity_name,
@@ -112,12 +113,10 @@ def async_migrate_unique_ids(
     if not entity_entry.entity_id.startswith("button"):
         return None
 
-    device_name = slugify(coordinator.device.name)
-
     for key in ("reboot", "self_test", "mute", "unmute"):
-        old_unique_id = f"{device_name}_{key}"
+        old_unique_id = f"{coordinator.mac}_{key}"
         if entity_entry.unique_id == old_unique_id:
-            new_unique_id = f"{coordinator.mac}_{key}"
+            new_unique_id = f"{coordinator.mac}-{key}"
             LOGGER.debug(
                 "Migrating unique_id for %s entity from [%s] to [%s]",
                 entity_entry.entity_id,
@@ -129,6 +128,26 @@ def async_migrate_unique_ids(
                     old_unique_id, new_unique_id
                 )
             }
+
+    if blutrv_key_ids := get_rpc_key_ids(coordinator.device.status, BLU_TRV_IDENTIFIER):
+        assert isinstance(coordinator.device, RpcDevice)
+        for _id in blutrv_key_ids:
+            key = f"{BLU_TRV_IDENTIFIER}:{_id}"
+            ble_addr: str = coordinator.device.config[key]["addr"]
+            old_unique_id = f"{ble_addr}_calibrate"
+            if entity_entry.unique_id == old_unique_id:
+                new_unique_id = f"{format_ble_addr(ble_addr)}-{key}-calibrate"
+                LOGGER.debug(
+                    "Migrating unique_id for %s entity from [%s] to [%s]",
+                    entity_entry.entity_id,
+                    old_unique_id,
+                    new_unique_id,
+                )
+                return {
+                    "new_unique_id": entity_entry.unique_id.replace(
+                        old_unique_id, new_unique_id
+                    )
+                }
 
     return None
 
@@ -264,7 +283,7 @@ class ShellyButton(ShellyBaseButton):
         """Initialize Shelly button."""
         super().__init__(coordinator, description)
 
-        self._attr_unique_id = f"{coordinator.mac}_{description.key}"
+        self._attr_unique_id = f"{coordinator.mac}-{description.key}"
         if isinstance(coordinator, ShellyBlockCoordinator):
             self._attr_device_info = get_entity_block_device_info(coordinator)
         else:
@@ -297,7 +316,7 @@ class ShellyBluTrvButton(ShellyBaseButton):
         ble_addr: str = config["addr"]
         fw_ver = coordinator.device.status[key].get("fw_ver")
 
-        self._attr_unique_id = f"{ble_addr}_{description.key}"
+        self._attr_unique_id = f"{format_ble_addr(ble_addr)}-{key}-{description.key}"
         self._attr_device_info = get_blu_trv_device_info(
             config, ble_addr, coordinator.mac, fw_ver
         )

@@ -1,6 +1,6 @@
 {
   "domain": "konnected",
-  "name": "Konnected.io",
+  "name": "Konnected.io (Legacy)",
   "codeowners": ["@heythisisnate"],
   "config_flow": true,
   "dependencies": ["http"],

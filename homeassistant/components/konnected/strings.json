@@ -105,5 +105,11 @@
     "abort": {
       "not_konn_panel": "[%key:component::konnected::config::abort::not_konn_panel%]"
     }
+  },
+  "issues": {
+    "deprecated_firmware": {
+      "title": "Konnected firmware is deprecated",
+      "description": "Konnected's integration is deprecated and Konnected strongly recommends migrating to their ESPHome based firmware and integration by following the guide at {kb_page_url}. After this migration, make sure you don't have any Konnected YAML configuration left in your configuration.yaml file and remove this integration from Home Assistant."
+    }
   }
 }

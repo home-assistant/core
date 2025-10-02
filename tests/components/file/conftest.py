@@ -5,7 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components.file import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
@@ -30,3 +32,14 @@ def mock_is_allowed_path(hass: HomeAssistant, is_allowed: bool) -> Generator[Mag
         hass.config, "is_allowed_path", return_value=is_allowed
     ) as allowed_path_mock:
         yield allowed_path_mock
+
+
+@pytest.fixture
+async def setup_ha_file_integration(hass: HomeAssistant):
+    """Set up Home Assistant and load File integration."""
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {}},
+    )
+    await hass.async_block_till_done()

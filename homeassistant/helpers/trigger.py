@@ -180,7 +180,7 @@ class Trigger(abc.ABC):
 
     @classmethod
     async def async_validate_complete_config(
-        cls, hass: HomeAssistant, config: ConfigType
+        cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
         """Validate complete config.
 
@@ -189,19 +189,19 @@ class Trigger(abc.ABC):
         This method should be overridden by triggers that need to migrate
         from the old-style config.
         """
-        config = _TRIGGER_SCHEMA(config)
+        complete_config = _TRIGGER_SCHEMA(complete_config)
 
         specific_config: ConfigType = {}
         for key in (CONF_OPTIONS, CONF_TARGET):
-            if key in config:
-                specific_config[key] = config.pop(key)
+            if key in complete_config:
+                specific_config[key] = complete_config.pop(key)
         specific_config = await cls.async_validate_config(hass, specific_config)
 
         for key in (CONF_OPTIONS, CONF_TARGET):
             if key in specific_config:
-                config[key] = specific_config[key]
+                complete_config[key] = specific_config[key]
 
-        return config
+        return complete_config
 
     @classmethod
     @abc.abstractmethod
@@ -210,7 +210,7 @@ class Trigger(abc.ABC):
     ) -> ConfigType:
         """Validate config."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize trigger."""
 
     @abc.abstractmethod
@@ -246,6 +246,15 @@ class TriggerProtocol(Protocol):
         trigger_info: TriggerInfo,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
+
+
+@dataclass(slots=True, frozen=True)
+class TriggerConfig:
+    """Trigger config."""
+
+    key: str  # The key used to identify the trigger, e.g. "zwave.event"
+    target: dict[str, Any] | None = None
+    options: dict[str, Any] | None = None
 
 
 class TriggerActionType(Protocol):
@@ -392,29 +401,6 @@ class PluggableAction:
                 await task
 
 
-def move_top_level_schema_fields_to_options(
-    config: ConfigType, options_schema_dict: dict[vol.Marker, Any]
-) -> ConfigType:
-    """Move top-level fields to options.
-
-    This function is used to help migrating old-style configs to new-style configs.
-    If options is already present, the config is returned as-is.
-    """
-    if CONF_OPTIONS in config:
-        return config
-
-    config = config.copy()
-    options = config.setdefault(CONF_OPTIONS, {})
-
-    # Move top-level fields to options
-    for key_marked in options_schema_dict:
-        key = key_marked.schema
-        if key in config:
-            options[key] = config.pop(key)
-
-    return config
-
-
 async def _async_get_trigger_platform(
     hass: HomeAssistant, trigger_key: str
 ) -> tuple[str, TriggerProtocol]:
@@ -552,7 +538,15 @@ async def async_initialize_triggers(
             relative_trigger_key = get_relative_description_key(
                 platform_domain, trigger_key
             )
-            trigger = trigger_descriptors[relative_trigger_key](hass, conf)
+            trigger_cls = trigger_descriptors[relative_trigger_key]
+            trigger = trigger_cls(
+                hass,
+                TriggerConfig(
+                    key=trigger_key,
+                    target=conf.get(CONF_TARGET),
+                    options=conf.get(CONF_OPTIONS),
+                ),
+            )
             coro = trigger.async_attach(action_wrapper, info)
         else:
             coro = platform.async_attach_trigger(hass, conf, action_wrapper, info)

@@ -315,9 +315,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(CalendarListView(component))
     hass.http.register_view(CalendarEventView(component))
 
-    frontend.async_register_built_in_panel(
-        hass, "calendar", "calendar", "hass:calendar"
-    )
+    frontend.async_register_built_in_panel(hass, "calendar", "calendar", "mdi:calendar")
 
     websocket_api.async_register_command(hass, handle_calendar_event_create)
     websocket_api.async_register_command(hass, handle_calendar_event_delete)

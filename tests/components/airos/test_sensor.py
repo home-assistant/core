@@ -3,11 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from airos.exceptions import (
-    AirOSConnectionAuthenticationError,
-    AirOSDataMissingError,
-    AirOSDeviceConnectionError,
-)
+from airos.exceptions import AirOSDataMissingError, AirOSDeviceConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -39,7 +35,6 @@ async def test_all_entities(
 @pytest.mark.parametrize(
     ("exception"),
     [
-        AirOSConnectionAuthenticationError,
         TimeoutError,
         AirOSDeviceConnectionError,
         AirOSDataMissingError,

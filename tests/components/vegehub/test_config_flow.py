@@ -40,7 +40,7 @@ DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
 
 
 @pytest.fixture(autouse=True)
-def mock_setup_entry() -> Generator[Any, Any, Any]:
+def mock_setup_entry() -> Generator[Any]:
     """Prevent the actual integration from being set up."""
     with (
         patch("homeassistant.components.vegehub.async_setup_entry", return_value=True),

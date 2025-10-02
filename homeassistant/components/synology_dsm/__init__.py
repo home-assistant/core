@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from itertools import chain
 import logging
+from typing import TYPE_CHECKING
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 from synology_dsm.api.surveillance_station.camera import SynoCamera
@@ -177,10 +178,12 @@ async def async_remove_config_entry_device(
     """Remove synology_dsm config entry from a device."""
     data = entry.runtime_data
     api = data.api
-    assert api.information is not None
+    if TYPE_CHECKING:
+        assert api.information is not None
     serial = api.information.serial
     storage = api.storage
-    assert storage is not None
+    if TYPE_CHECKING:
+        assert storage is not None
     all_cameras: list[SynoCamera] = []
     if api.surveillance_station is not None:
         # get_all_cameras does not do I/O

@@ -60,7 +60,7 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
 
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{self.device_id}")
+                (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{device_name}")
             },
             manufacturer=DEFAULT_NAME,
             model="Container",

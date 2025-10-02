@@ -15,15 +15,16 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 
-# All descriptions can be found here. Mostly the Boolean data types in the
-# default instruction set of each category end up being a Valve.
-# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-VALVES: dict[str, tuple[ValveEntityDescription, ...]] = {
-    # Smart Water Timer
-    "sfkzq": (
+VALVES: dict[DeviceCategory, tuple[ValveEntityDescription, ...]] = {
+    DeviceCategory.SFKZQ: (
+        ValveEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="valve",
+            device_class=ValveDeviceClass.WATER,
+        ),
         ValveEntityDescription(
             key=DPCode.SWITCH_1,
             translation_key="indexed_valve",
@@ -82,24 +83,24 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up tuya valves dynamically through tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered tuya valve."""
         entities: list[TuyaValveEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
+            device = manager.device_map[device_id]
             if descriptions := VALVES.get(device.category):
                 entities.extend(
-                    TuyaValveEntity(device, hass_data.manager, description)
+                    TuyaValveEntity(device, manager, description)
                     for description in descriptions
                     if description.key in device.status
                 )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)

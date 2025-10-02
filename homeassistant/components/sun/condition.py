@@ -3,16 +3,18 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import cast
+from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_CONDITION, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
+from homeassistant.const import CONF_OPTIONS, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.condition import (
     Condition,
     ConditionCheckerType,
+    ConditionConfig,
     condition_trace_set_result,
     condition_trace_update_result,
     trace_condition_function,
@@ -21,20 +23,22 @@ from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.util import dt as dt_util
 
-_CONDITION_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            **cv.CONDITION_BASE_SCHEMA,
-            vol.Required(CONF_CONDITION): "sun",
-            vol.Optional("before"): cv.sun_event,
-            vol.Optional("before_offset"): cv.time_period,
-            vol.Optional("after"): vol.All(
-                vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE)
-            ),
-            vol.Optional("after_offset"): cv.time_period,
-        }
+_OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
+    vol.Optional("before"): cv.sun_event,
+    vol.Optional("before_offset"): cv.time_period,
+    vol.Optional("after"): vol.All(
+        vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE)
     ),
-    cv.has_at_least_one_key("before", "after"),
+    vol.Optional("after_offset"): cv.time_period,
+}
+
+_CONDITION_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_OPTIONS): vol.All(
+            _OPTIONS_SCHEMA_DICT,
+            cv.has_at_least_one_key("before", "after"),
+        )
+    }
 )
 
 
@@ -125,24 +129,36 @@ def sun(
 class SunCondition(Condition):
     """Sun condition."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
-        """Initialize condition."""
-        self._config = config
-        self._hass = hass
+    _options: dict[str, Any]
+
+    @classmethod
+    async def async_validate_complete_config(
+        cls, hass: HomeAssistant, complete_config: ConfigType
+    ) -> ConfigType:
+        """Validate complete config."""
+        complete_config = move_top_level_schema_fields_to_options(
+            complete_config, _OPTIONS_SCHEMA_DICT
+        )
+        return await super().async_validate_complete_config(hass, complete_config)
 
     @classmethod
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
-        return _CONDITION_SCHEMA(config)  # type: ignore[no-any-return]
+        return cast(ConfigType, _CONDITION_SCHEMA(config))
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize condition."""
+        assert config.options is not None
+        self._options = config.options
 
     async def async_get_checker(self) -> ConditionCheckerType:
         """Wrap action method with sun based condition."""
-        before = self._config.get("before")
-        after = self._config.get("after")
-        before_offset = self._config.get("before_offset")
-        after_offset = self._config.get("after_offset")
+        before = self._options.get("before")
+        after = self._options.get("after")
+        before_offset = self._options.get("before_offset")
+        after_offset = self._options.get("after_offset")
 
         @trace_condition_function
         def sun_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:

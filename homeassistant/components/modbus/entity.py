@@ -83,9 +83,9 @@ class ModbusBaseEntity(Entity):
 
         self._hub = hub
         if (conf_slave := entry.get(CONF_SLAVE)) is not None:
-            self._slave = conf_slave
+            self._device_address = conf_slave
         else:
-            self._slave = entry.get(CONF_DEVICE_ADDRESS, 1)
+            self._device_address = entry.get(CONF_DEVICE_ADDRESS, 1)
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
@@ -208,7 +208,7 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
 
     def __process_raw_value(self, entry: float | str | bytes) -> str | None:
         """Process value from sensor with NaN handling, scaling, offset, min/max etc."""
-        if self._nan_value and entry in (self._nan_value, -self._nan_value):
+        if self._nan_value is not None and entry in (self._nan_value, -self._nan_value):
             return None
         if isinstance(entry, bytes):
             return entry.decode()
@@ -323,7 +323,7 @@ class ModbusToggleEntity(ModbusBaseEntity, ToggleEntity, RestoreEntity):
     async def async_turn(self, command: int) -> None:
         """Evaluate switch result."""
         result = await self._hub.async_pb_call(
-            self._slave, self._address, command, self._write_type
+            self._device_address, self._address, command, self._write_type
         )
         if result is None:
             self._attr_available = False
@@ -358,7 +358,7 @@ class ModbusToggleEntity(ModbusBaseEntity, ToggleEntity, RestoreEntity):
 
         # do not allow multiple active calls to the same platform
         result = await self._hub.async_pb_call(
-            self._slave, self._verify_address, 1, self._verify_type
+            self._device_address, self._verify_address, 1, self._verify_type
         )
         if result is None:
             self._attr_available = False
@@ -379,7 +379,7 @@ class ModbusToggleEntity(ModbusBaseEntity, ToggleEntity, RestoreEntity):
                         "Unexpected response from modbus device slave %s register %s,"
                         " got 0x%2x"
                     ),
-                    self._slave,
+                    self._device_address,
                     self._verify_address,
                     value,
                 )

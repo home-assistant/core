@@ -1,0 +1,53 @@
+{
+  "place": {
+    "code": "vilnius",
+    "name": "Vilnius",
+    "administrativeDivision": "Vilniaus miesto savivaldyb\u0117",
+    "country": "Lietuva",
+    "countryCode": "LT",
+    "coordinates": { "latitude": 54.68705, "longitude": 25.28291 }
+  },
+  "forecastType": "long-term",
+  "forecastCreationTimeUtc": "2025-09-25 08:01:29",
+  "forecastTimestamps": [
+    {
+      "forecastTimeUtc": "2025-09-25 10:00:00",
+      "airTemperature": 10.9,
+      "feelsLikeTemperature": 10.9,
+      "windSpeed": 2,
+      "windGust": 6,
+      "windDirection": 20,
+      "cloudCover": 1,
+      "seaLevelPressure": 1033,
+      "relativeHumidity": 71,
+      "totalPrecipitation": 0,
+      "conditionCode": "clear"
+    },
+    {
+      "forecastTimeUtc": "2025-09-25 11:00:00",
+      "airTemperature": 12.2,
+      "feelsLikeTemperature": 12.2,
+      "windSpeed": 2,
+      "windGust": 7,
+      "windDirection": 25,
+      "cloudCover": 15,
+      "seaLevelPressure": 1032,
+      "relativeHumidity": 68,
+      "totalPrecipitation": 0,
+      "conditionCode": "partly-cloudy"
+    },
+    {
+      "forecastTimeUtc": "2025-09-25 12:00:00",
+      "airTemperature": 13.5,
+      "feelsLikeTemperature": 13.5,
+      "windSpeed": 3,
+      "windGust": 8,
+      "windDirection": 30,
+      "cloudCover": 25,
+      "seaLevelPressure": 1031,
+      "relativeHumidity": 65,
+      "totalPrecipitation": 0.1,
+      "conditionCode": "cloudy"
+    }
+  ]
+}

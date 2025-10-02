@@ -39,6 +39,11 @@
       "battery_volts": {
         "name": "Battery voltage"
       }
+    },
+    "switch": {
+      "switch": {
+        "name": "Actuator {index}"
+      }
     }
   }
 }

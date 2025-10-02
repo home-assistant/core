@@ -108,7 +108,10 @@ class ModbusCover(ModbusBaseEntity, CoverEntity, RestoreEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         result = await self._hub.async_pb_call(
-            self._slave, self._write_address, self._state_open, self._write_type
+            self._device_address,
+            self._write_address,
+            self._state_open,
+            self._write_type,
         )
         self._attr_available = result is not None
         await self.async_local_update(cancel_pending_update=True)
@@ -116,7 +119,10 @@ class ModbusCover(ModbusBaseEntity, CoverEntity, RestoreEntity):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         result = await self._hub.async_pb_call(
-            self._slave, self._write_address, self._state_closed, self._write_type
+            self._device_address,
+            self._write_address,
+            self._state_closed,
+            self._write_type,
         )
         self._attr_available = result is not None
         await self.async_local_update(cancel_pending_update=True)
@@ -124,7 +130,7 @@ class ModbusCover(ModbusBaseEntity, CoverEntity, RestoreEntity):
     async def _async_update(self) -> None:
         """Update the state of the cover."""
         result = await self._hub.async_pb_call(
-            self._slave, self._address, 1, self._input_type
+            self._device_address, self._address, 1, self._input_type
         )
         if result is None:
             self._attr_available = False

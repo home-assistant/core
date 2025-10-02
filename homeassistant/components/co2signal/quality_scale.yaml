@@ -1,0 +1,106 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      The integration does not provide any actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      Stale docstring and test name: `test_form_home` and reusing result.
+      Extract `async_setup_entry` into own fixture.
+      Avoid importing `config_flow` in tests.
+      Test reauth with errors
+  config-flow:
+    status: todo
+    comment: |
+      The config flow misses data descriptions.
+      Remove URLs from data descriptions, they should be replaced with placeholders.
+      Make use of Electricity Maps zone keys in country code as dropdown.
+      Make use of location selector for coordinates.
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      The integration does not provide any actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities of this integration do not explicitly subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: todo
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      The integration does not provide any actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      The integration does not provide any additional options.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage:
+    status: todo
+    comment: |
+      Use `hass.config_entries.async_setup` instead of assert await `async_setup_component(hass, DOMAIN, {})`
+      `test_sensor` could use `snapshot_platform`
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This integration cannot be discovered, it is a connecting to a cloud service.
+  discovery:
+    status: exempt
+    comment: |
+      This integration cannot be discovered, it is a connecting to a cloud service.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: |
+      The integration connects to a single service per configuration entry.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration does not raise any repairable issues.
+  stale-devices:
+    status: exempt
+    comment: |
+      This integration connect to a single device per configuration entry.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

@@ -23,7 +23,7 @@ from homeassistant.components.modbus.const import (
     CONF_SWAP_WORD_BYTE,
     CONF_VIRTUAL_COUNT,
     CONF_ZERO_SUPPRESS,
-    MODBUS_DOMAIN,
+    DOMAIN,
     DataType,
 )
 from homeassistant.components.sensor import (
@@ -1482,7 +1482,7 @@ async def test_no_discovery_info_sensor(
     assert await async_setup_component(
         hass,
         SENSOR_DOMAIN,
-        {SENSOR_DOMAIN: {CONF_PLATFORM: MODBUS_DOMAIN}},
+        {SENSOR_DOMAIN: {CONF_PLATFORM: DOMAIN}},
     )
     await hass.async_block_till_done()
     assert SENSOR_DOMAIN in hass.config.components

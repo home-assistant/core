@@ -1127,9 +1127,6 @@ class Recorder(threading.Thread):
         else:
             states_manager.add_pending(entity_id, dbstate)
 
-        if states_meta_manager.active:
-            dbstate.entity_id = None
-
         if entity_id is None or not (
             shared_attrs_bytes := state_attributes_manager.serialize_from_event(event)
         ):
@@ -1140,7 +1137,7 @@ class Recorder(threading.Thread):
             dbstate.states_meta_rel = pending_states_meta
         elif metadata_id := states_meta_manager.get(entity_id, session, True):
             dbstate.metadata_id = metadata_id
-        elif states_meta_manager.active and entity_removed:
+        elif entity_removed:
             # If the entity was removed, we don't need to add it to the
             # StatesMeta table or record it in the pending commit
             # if it does not have a metadata_id allocated to it as

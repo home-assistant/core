@@ -250,6 +250,10 @@
     "unsupported_os_version": {
       "title": "Unsupported system - Home Assistant OS version",
       "description": "System is unsupported because the Home Assistant OS version in use is not supported. For troubleshooting information, select Learn more."
+    },
+    "unsupported_home_assistant_core_version": {
+      "title": "Unsupported system - Home Assistant Core version",
+      "description": "System is unsupported because the Home Assistant Core version in use is not supported. For troubleshooting information, select Learn more."
     }
   },
   "entity": {

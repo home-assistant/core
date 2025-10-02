@@ -160,7 +160,7 @@ jobs:
 
       # home-assistant/wheels doesn't support sha pinning
       - name: Build wheels
-        uses: home-assistant/wheels@2025.07.0
+        uses: home-assistant/wheels@2025.09.1
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2
@@ -221,7 +221,7 @@ jobs:
 
       # home-assistant/wheels doesn't support sha pinning
       - name: Build wheels
-        uses: home-assistant/wheels@2025.07.0
+        uses: home-assistant/wheels@2025.09.1
         with:
           abi: ${{ matrix.abi }}
           tag: musllinux_1_2

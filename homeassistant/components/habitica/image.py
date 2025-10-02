@@ -128,7 +128,7 @@ class HabiticaPartyImage(HabiticaPartyBase, ImageEntity):
         """Return URL of image."""
         return (
             f"{ASSETS_URL}quest_{key}.png"
-            if (key := self.coordinator.data.quest.key)
+            if (key := self.coordinator.data.party.quest.key)
             else None
         )
 

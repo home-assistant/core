@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import freeze_time
 import pytest
 
 from homeassistant.components import sensor
@@ -473,6 +474,62 @@ async def test_restore_sensor_save_state(
     extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
     assert extra_data == expected_extra_data
     assert type(extra_data["native_value"]) is native_value_type
+
+
+@freeze_time("2020-02-08 15:00:00")
+async def test_restore_sensor_save_state_frozen_time_datetime(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test RestoreSensor."""
+    entity0 = MockRestoreSensor(
+        name="Test",
+        native_value=dt_util.utcnow(),
+        native_unit_of_measurement=None,
+        device_class=SensorDeviceClass.TIMESTAMP,
+    )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Trigger saving state
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
+    state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
+    assert state["entity_id"] == entity0.entity_id
+    extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
+    assert extra_data == RESTORE_DATA["datetime"]
+    assert type(extra_data["native_value"]) is dict
+
+
+@freeze_time("2020-02-08 15:00:00")
+async def test_restore_sensor_save_state_frozen_time_date(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test RestoreSensor."""
+    entity0 = MockRestoreSensor(
+        name="Test",
+        native_value=dt_util.utcnow().date(),
+        native_unit_of_measurement=None,
+        device_class=SensorDeviceClass.DATE,
+    )
+    setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Trigger saving state
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
+    state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
+    assert state["entity_id"] == entity0.entity_id
+    extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
+    assert extra_data == RESTORE_DATA["date"]
+    assert type(extra_data["native_value"]) is dict
 
 
 @pytest.mark.parametrize(
@@ -2158,6 +2215,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.PM1,
         SensorDeviceClass.PM10,
         SensorDeviceClass.PM25,
+        SensorDeviceClass.PM4,
         SensorDeviceClass.POWER_FACTOR,
         SensorDeviceClass.POWER,
         SensorDeviceClass.PRECIPITATION_INTENSITY,
@@ -3007,6 +3065,7 @@ def test_device_class_converters_are_complete() -> None:
     no_converter_device_classes = {
         SensorDeviceClass.AQI,
         SensorDeviceClass.BATTERY,
+        SensorDeviceClass.CO,
         SensorDeviceClass.CO2,
         SensorDeviceClass.DATE,
         SensorDeviceClass.ENUM,
@@ -3024,6 +3083,7 @@ def test_device_class_converters_are_complete() -> None:
         SensorDeviceClass.PM1,
         SensorDeviceClass.PM10,
         SensorDeviceClass.PM25,
+        SensorDeviceClass.PM4,
         SensorDeviceClass.SIGNAL_STRENGTH,
         SensorDeviceClass.SOUND_PRESSURE,
         SensorDeviceClass.SULPHUR_DIOXIDE,

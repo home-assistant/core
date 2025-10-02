@@ -83,7 +83,10 @@ async def test_if_action_before_sunrise_no_offset(
             automation.DOMAIN: {
                 "id": "sun",
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "condition": {"condition": "sun", "before": SUN_EVENT_SUNRISE},
+                "condition": {
+                    "condition": "sun",
+                    "options": {"before": SUN_EVENT_SUNRISE},
+                },
                 "action": {"service": "test.automation"},
             }
         },
@@ -156,7 +159,10 @@ async def test_if_action_after_sunrise_no_offset(
             automation.DOMAIN: {
                 "id": "sun",
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "condition": {"condition": "sun", "after": SUN_EVENT_SUNRISE},
+                "condition": {
+                    "condition": "sun",
+                    "options": {"after": SUN_EVENT_SUNRISE},
+                },
                 "action": {"service": "test.automation"},
             }
         },
@@ -231,8 +237,10 @@ async def test_if_action_before_sunrise_with_offset(
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "condition": {
                     "condition": "sun",
-                    "before": SUN_EVENT_SUNRISE,
-                    "before_offset": "+1:00:00",
+                    "options": {
+                        "before": SUN_EVENT_SUNRISE,
+                        "before_offset": "+1:00:00",
+                    },
                 },
                 "action": {"service": "test.automation"},
             }
@@ -356,8 +364,7 @@ async def test_if_action_before_sunset_with_offset(
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "condition": {
                     "condition": "sun",
-                    "before": "sunset",
-                    "before_offset": "+1:00:00",
+                    "options": {"before": "sunset", "before_offset": "+1:00:00"},
                 },
                 "action": {"service": "test.automation"},
             }
@@ -481,8 +488,7 @@ async def test_if_action_after_sunrise_with_offset(
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "condition": {
                     "condition": "sun",
-                    "after": SUN_EVENT_SUNRISE,
-                    "after_offset": "+1:00:00",
+                    "options": {"after": SUN_EVENT_SUNRISE, "after_offset": "+1:00:00"},
                 },
                 "action": {"service": "test.automation"},
             }
@@ -630,8 +636,7 @@ async def test_if_action_after_sunset_with_offset(
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "condition": {
                     "condition": "sun",
-                    "after": "sunset",
-                    "after_offset": "+1:00:00",
+                    "options": {"after": "sunset", "after_offset": "+1:00:00"},
                 },
                 "action": {"service": "test.automation"},
             }
@@ -707,8 +712,7 @@ async def test_if_action_after_and_before_during(
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "condition": {
                     "condition": "sun",
-                    "after": SUN_EVENT_SUNRISE,
-                    "before": SUN_EVENT_SUNSET,
+                    "options": {"after": SUN_EVENT_SUNRISE, "before": SUN_EVENT_SUNSET},
                 },
                 "action": {"service": "test.automation"},
             }
@@ -812,8 +816,7 @@ async def test_if_action_before_or_after_during(
                 "trigger": {"platform": "event", "event_type": "test_event"},
                 "condition": {
                     "condition": "sun",
-                    "before": SUN_EVENT_SUNRISE,
-                    "after": SUN_EVENT_SUNSET,
+                    "options": {"before": SUN_EVENT_SUNRISE, "after": SUN_EVENT_SUNSET},
                 },
                 "action": {"service": "test.automation"},
             }
@@ -941,7 +944,10 @@ async def test_if_action_before_sunrise_no_offset_kotzebue(
             automation.DOMAIN: {
                 "id": "sun",
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "condition": {"condition": "sun", "before": SUN_EVENT_SUNRISE},
+                "condition": {
+                    "condition": "sun",
+                    "options": {"before": SUN_EVENT_SUNRISE},
+                },
                 "action": {"service": "test.automation"},
             }
         },
@@ -1020,7 +1026,10 @@ async def test_if_action_after_sunrise_no_offset_kotzebue(
             automation.DOMAIN: {
                 "id": "sun",
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "condition": {"condition": "sun", "after": SUN_EVENT_SUNRISE},
+                "condition": {
+                    "condition": "sun",
+                    "options": {"after": SUN_EVENT_SUNRISE},
+                },
                 "action": {"service": "test.automation"},
             }
         },
@@ -1099,7 +1108,10 @@ async def test_if_action_before_sunset_no_offset_kotzebue(
             automation.DOMAIN: {
                 "id": "sun",
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "condition": {"condition": "sun", "before": SUN_EVENT_SUNSET},
+                "condition": {
+                    "condition": "sun",
+                    "options": {"before": SUN_EVENT_SUNSET},
+                },
                 "action": {"service": "test.automation"},
             }
         },
@@ -1178,7 +1190,10 @@ async def test_if_action_after_sunset_no_offset_kotzebue(
             automation.DOMAIN: {
                 "id": "sun",
                 "trigger": {"platform": "event", "event_type": "test_event"},
-                "condition": {"condition": "sun", "after": SUN_EVENT_SUNSET},
+                "condition": {
+                    "condition": "sun",
+                    "options": {"after": SUN_EVENT_SUNSET},
+                },
                 "action": {"service": "test.automation"},
             }
         },

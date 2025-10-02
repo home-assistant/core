@@ -206,6 +206,13 @@
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
+      "non-motor_vehicle": {
+        "name": "Bicycle",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
       "pet": {
         "name": "Pet",
         "state": {
@@ -535,8 +542,17 @@
       "floodlight_brightness": {
         "name": "Floodlight turn on brightness"
       },
+      "floodlight_event_brightness": {
+        "name": "Floodlight event brightness"
+      },
       "ir_brightness": {
         "name": "Infrared light brightness"
+      },
+      "floodlight_event_on_time": {
+        "name": "Floodlight event on time"
+      },
+      "floodlight_event_flash_time": {
+        "name": "Floodlight event flash time"
       },
       "volume": {
         "name": "Volume"
@@ -570,6 +586,9 @@
       },
       "ai_vehicle_sensitivity": {
         "name": "AI vehicle sensitivity"
+      },
+      "ai_non_motor_vehicle_sensitivity": {
+        "name": "AI bicycle sensitivity"
       },
       "ai_package_sensitivity": {
         "name": "AI package sensitivity"
@@ -606,6 +625,9 @@
       },
       "ai_vehicle_delay": {
         "name": "AI vehicle delay"
+      },
+      "ai_non_motor_vehicle_delay": {
+        "name": "AI bicycle delay"
       },
       "ai_package_delay": {
         "name": "AI package delay"
@@ -681,6 +703,14 @@
           "schedule": "Schedule",
           "adaptive": "Adaptive",
           "autoadaptive": "Auto adaptive"
+        }
+      },
+      "floodlight_event_mode": {
+        "name": "Floodlight event mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "flash": "Flash"
         }
       },
       "day_night_mode": {
@@ -923,6 +953,29 @@
       },
       "sd_storage": {
         "name": "SD {hdd_index} storage"
+      },
+      "person_type": {
+        "name": "Person type",
+        "state": {
+          "man": "Man",
+          "woman": "Woman"
+        }
+      },
+      "vehicle_type": {
+        "name": "Vehicle type",
+        "state": {
+          "sedan": "Sedan",
+          "suv": "SUV",
+          "pickup_truck": "Pickup truck",
+          "motorcycle": "Motorcycle"
+        }
+      },
+      "animal_type": {
+        "name": "Animal type",
+        "state": {
+          "dog": "Dog",
+          "cat": "Cat"
+        }
       }
     },
     "siren": {

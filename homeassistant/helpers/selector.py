@@ -1162,7 +1162,7 @@ class ObjectSelectorConfig(BaseSelectorConfig):
     fields: dict[str, ObjectSelectorField]
     multiple: bool
     label_field: str
-    description_field: bool
+    description_field: str
     translation_key: str
 
 

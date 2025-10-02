@@ -9,13 +9,8 @@ import pytest
 from synology_dsm.api.photos import SynoPhotosAlbum, SynoPhotosItem
 from synology_dsm.exceptions import SynologyDSMException
 
-from homeassistant.components.media_player import MediaClass
-from homeassistant.components.media_source import (
-    BrowseError,
-    BrowseMedia,
-    MediaSourceItem,
-    Unresolvable,
-)
+from homeassistant.components.media_player import BrowseError, BrowseMedia, MediaClass
+from homeassistant.components.media_source import MediaSourceItem, Unresolvable
 from homeassistant.components.synology_dsm.const import DOMAIN
 from homeassistant.components.synology_dsm.media_source import (
     SynologyDsmMediaView,

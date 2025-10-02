@@ -23,6 +23,7 @@ from .entity import (
     ReolinkChannelEntityDescription,
     ReolinkChimeCoordinatorEntity,
     ReolinkChimeEntityDescription,
+    ReolinkHostChimeCoordinatorEntity,
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
@@ -125,6 +126,22 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_whiteled(ch, brightness=int(value)),
     ),
     ReolinkNumberEntityDescription(
+        key="floodlight_event_brightness",
+        cmd_key="GetWhiteLed",
+        cmd_id=[289, 438],
+        translation_key="floodlight_event_brightness",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_min_value=1,
+        native_max_value=100,
+        supported=lambda api, ch: api.supported(ch, "floodlight_event"),
+        value=lambda api, ch: api.whiteled_event_brightness(ch),
+        method=lambda api, ch, value: (
+            api.baichuan.set_floodlight(ch, event_brightness=int(value))
+        ),
+    ),
+    ReolinkNumberEntityDescription(
         key="ir_brightness",
         cmd_key="208",
         translation_key="ir_brightness",
@@ -136,6 +153,42 @@ NUMBER_ENTITIES = (
         value=lambda api, ch: api.baichuan.ir_brightness(ch),
         method=lambda api, ch, value: (
             api.baichuan.set_status_led(ch, ir_brightness=int(value))
+        ),
+    ),
+    ReolinkNumberEntityDescription(
+        key="floodlight_event_on_time",
+        cmd_key="GetWhiteLed",
+        cmd_id=[289, 438],
+        translation_key="floodlight_event_on_time",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=30,
+        native_max_value=900,
+        supported=lambda api, ch: api.supported(ch, "floodlight_event"),
+        value=lambda api, ch: api.whiteled_event_on_time(ch),
+        method=lambda api, ch, value: (
+            api.baichuan.set_floodlight(ch, event_on_time=int(value))
+        ),
+    ),
+    ReolinkNumberEntityDescription(
+        key="floodlight_event_flash_time",
+        cmd_key="GetWhiteLed",
+        cmd_id=[289, 438],
+        translation_key="floodlight_event_flash_time",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=10,
+        native_max_value=30,
+        supported=lambda api, ch: api.supported(ch, "floodlight_event"),
+        value=lambda api, ch: api.whiteled_event_flash_time(ch),
+        method=lambda api, ch, value: (
+            api.baichuan.set_floodlight(ch, event_flash_time=int(value))
         ),
     ),
     ReolinkNumberEntityDescription(
@@ -255,6 +308,23 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "vehicle"),
     ),
     ReolinkNumberEntityDescription(
+        key="ai_non_motor_vehicle_sensitivity",
+        cmd_key="GetAiAlarm",
+        translation_key="ai_non_motor_vehicle_sensitivity",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_sensitivity")
+            and api.supported(ch, "ai_non-motor vehicle")
+        ),
+        value=lambda api, ch: api.ai_sensitivity(ch, "non-motor vehicle"),
+        method=lambda api, ch, value: (
+            api.set_ai_sensitivity(ch, int(value), "non-motor vehicle")
+        ),
+    ),
+    ReolinkNumberEntityDescription(
         key="ai_package_sensititvity",
         cmd_key="GetAiAlarm",
         translation_key="ai_package_sensitivity",
@@ -343,6 +413,25 @@ NUMBER_ENTITIES = (
         ),
         value=lambda api, ch: api.ai_delay(ch, "people"),
         method=lambda api, ch, value: api.set_ai_delay(ch, int(value), "people"),
+    ),
+    ReolinkNumberEntityDescription(
+        key="ai_non_motor_vehicle_delay",
+        cmd_key="GetAiAlarm",
+        translation_key="ai_non_motor_vehicle_delay",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=0,
+        native_max_value=8,
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_delay") and api.supported(ch, "ai_non-motor vehicle")
+        ),
+        value=lambda api, ch: api.ai_delay(ch, "non-motor vehicle"),
+        method=lambda api, ch, value: (
+            api.set_ai_delay(ch, int(value), "non-motor vehicle")
+        ),
     ),
     ReolinkNumberEntityDescription(
         key="ai_vehicle_delay",
@@ -855,6 +944,12 @@ async def async_setup_entry(
         for chime in api.chime_list
         if chime.channel is not None
     )
+    entities.extend(
+        ReolinkHostChimeNumberEntity(reolink_data, chime, entity_description)
+        for entity_description in CHIME_NUMBER_ENTITIES
+        for chime in api.chime_list
+        if chime.channel is None
+    )
     async_add_entities(entities)
 
 
@@ -969,7 +1064,36 @@ class ReolinkHostNumberEntity(ReolinkHostCoordinatorEntity, NumberEntity):
 
 
 class ReolinkChimeNumberEntity(ReolinkChimeCoordinatorEntity, NumberEntity):
-    """Base number entity class for Reolink IP cameras."""
+    """Base number entity class for Reolink chimes connected through a camera."""
+
+    entity_description: ReolinkChimeNumberEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        chime: Chime,
+        entity_description: ReolinkChimeNumberEntityDescription,
+    ) -> None:
+        """Initialize Reolink chime number entity."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data, chime)
+
+        self._attr_mode = entity_description.mode
+
+    @property
+    def native_value(self) -> float | None:
+        """State of the number entity."""
+        return self.entity_description.value(self._chime)
+
+    @raise_translated_error
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        await self.entity_description.method(self._chime, value)
+        self.async_write_ha_state()
+
+
+class ReolinkHostChimeNumberEntity(ReolinkHostChimeCoordinatorEntity, NumberEntity):
+    """Base number entity class for Reolink chimes connected to the host."""
 
     entity_description: ReolinkChimeNumberEntityDescription
 

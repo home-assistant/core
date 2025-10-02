@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from copy import deepcopy
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -545,3 +546,15 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         await super()._async_refresh(
             log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
+
+    async def force_addon_info_data_refresh(self, addon_slug: str) -> None:
+        """Force refresh of addon info data for a specific addon."""
+        try:
+            slug, info = await self._update_addon_info(addon_slug)
+            if info is not None and DATA_KEY_ADDONS in self.data:
+                if slug in self.data[DATA_KEY_ADDONS]:
+                    data = deepcopy(self.data)
+                    data[DATA_KEY_ADDONS][slug].update(info)
+                    self.async_set_updated_data(data)
+        except SupervisorError as err:
+            _LOGGER.warning("Could not refresh info for %s: %s", addon_slug, err)

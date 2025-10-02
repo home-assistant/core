@@ -36,7 +36,7 @@ from .const import (
     CONF_VIRTUAL_COUNT,
     DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
-    MODBUS_DOMAIN as DOMAIN,
+    DOMAIN,
     PLATFORMS,
     SERIAL,
     DataType,

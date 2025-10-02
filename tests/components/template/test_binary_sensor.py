@@ -1464,7 +1464,7 @@ async def test_saving_auto_off(
     freezer.move_to("2022-02-02 02:02:00+00:00")
     fake_extra_data = {
         "auto_off_time": {
-            "__type": "<class 'tests.patch_time.HAFakeDatetime'>",
+            "__type": "<class 'datetime.datetime'>",
             "isoformat": "2022-02-02T02:02:02+00:00",
         },
     }

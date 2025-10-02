@@ -1,0 +1,15 @@
+{
+  "type": "currencies",
+  "id": "2",
+  "attributes": {
+    "created_at": "2018-09-17T12:46:47+01:00",
+    "updated_at": "2018-09-17T12:46:47+01:00",
+    "enabled": true,
+    "default": false,
+    "native": false,
+    "code": "AMS",
+    "name": "Ankh-Morpork dollar",
+    "symbol": "AM$",
+    "decimal_places": 2
+  }
+}

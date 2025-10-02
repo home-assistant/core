@@ -718,7 +718,7 @@ async def test_get_services(
     assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is old_cache
 
     # Set up an integration with legacy translations in services.yaml
-    def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
+    def _load_services_file(integration: Integration) -> JSON_TYPE:
         return {
             "set_default_level": {
                 "description": "Translated description",
@@ -2307,14 +2307,21 @@ async def test_manifest_list(
     ]
 
 
+@pytest.mark.parametrize(
+    "integrations",
+    [
+        ["hue", "websocket_api"],
+        ["hue", "non_existing", "websocket_api"],
+    ],
+)
 async def test_manifest_list_specific_integrations(
-    hass: HomeAssistant, websocket_client
+    hass: HomeAssistant, websocket_client, integrations: list[str]
 ) -> None:
     """Test loading manifests for specific integrations."""
     websocket_api = await async_get_integration(hass, "websocket_api")
 
     await websocket_client.send_json_auto_id(
-        {"type": "manifest/list", "integrations": ["hue", "websocket_api"]}
+        {"type": "manifest/list", "integrations": integrations}
     )
     hue = await async_get_integration(hass, "hue")
 

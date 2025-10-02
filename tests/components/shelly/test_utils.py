@@ -34,6 +34,7 @@ from homeassistant.components.shelly.utils import (
     get_rpc_channel_name,
     get_rpc_input_triggers,
     is_block_momentary_input,
+    mac_address_from_name,
 )
 from homeassistant.util import dt as dt_util
 
@@ -327,3 +328,17 @@ def test_get_release_url(
 def test_get_host(host: str, expected: str) -> None:
     """Test get_host function."""
     assert get_host(host) == expected
+
+
+@pytest.mark.parametrize(
+    ("name", "result"),
+    [
+        ("shelly1pm-AABBCCDDEEFF", "AABBCCDDEEFF"),
+        ("Shelly Plus 1 [DDEEFF]", None),
+        ("S11-Schlafzimmer", None),
+        ("22-Kueche-links", None),
+    ],
+)
+def test_mac_address_from_name(name: str, result: str | None) -> None:
+    """Test mac_address_from_name() function."""
+    assert mac_address_from_name(name) == result

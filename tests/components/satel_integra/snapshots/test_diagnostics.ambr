@@ -1,0 +1,57 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config_entry_data': dict({
+      'host': '192.168.0.2',
+      'port': 7094,
+    }),
+    'config_entry_options': dict({
+      'code': '**REDACTED**',
+    }),
+    'subentries': dict({
+      'ID_OUTPUT': dict({
+        'data': dict({
+          'name': 'Output 1',
+          'output_number': 1,
+          'type': 'safety',
+        }),
+        'subentry_id': 'ID_OUTPUT',
+        'subentry_type': 'output',
+        'title': 'Output 1',
+        'unique_id': 'output_1',
+      }),
+      'ID_PARTITION': dict({
+        'data': dict({
+          'arm_home_mode': 1,
+          'name': 'Home',
+          'partition_number': 1,
+        }),
+        'subentry_id': 'ID_PARTITION',
+        'subentry_type': 'partition',
+        'title': 'Home',
+        'unique_id': 'partition_1',
+      }),
+      'ID_SWITCHABLE_OUTPUT': dict({
+        'data': dict({
+          'name': 'Switchable Output 1',
+          'switchable_output_number': 1,
+        }),
+        'subentry_id': 'ID_SWITCHABLE_OUTPUT',
+        'subentry_type': 'switchable_output',
+        'title': 'Switchable Output 1',
+        'unique_id': 'switchable_output_1',
+      }),
+      'ID_ZONE': dict({
+        'data': dict({
+          'name': 'Zone 1',
+          'type': 'motion',
+          'zone_number': 1,
+        }),
+        'subentry_id': 'ID_ZONE',
+        'subentry_type': 'zone',
+        'title': 'Zone 1',
+        'unique_id': 'zone_1',
+      }),
+    }),
+  })
+# ---

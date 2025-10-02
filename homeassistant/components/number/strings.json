@@ -112,6 +112,9 @@
     "pm1": {
       "name": "[%key:component::sensor::entity_component::pm1::name%]"
     },
+    "pm4": {
+      "name": "[%key:component::sensor::entity_component::pm4::name%]"
+    },
     "pm10": {
       "name": "[%key:component::sensor::entity_component::pm10::name%]"
     },

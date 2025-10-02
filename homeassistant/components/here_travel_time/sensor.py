@@ -44,7 +44,7 @@ from .coordinator import (
     HERETransitDataUpdateCoordinator,
 )
 
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=30)
 
 
 def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]:

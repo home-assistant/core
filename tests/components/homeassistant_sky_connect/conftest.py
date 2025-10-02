@@ -27,7 +27,7 @@ def mock_zha():
 
     with (
         patch(
-            "homeassistant.components.zha.radio_manager.ZhaRadioManager.connect_zigpy_app",
+            "homeassistant.components.zha.radio_manager.ZhaRadioManager.create_zigpy_app",
             return_value=mock_connect_app,
         ),
         patch(

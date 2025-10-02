@@ -30,9 +30,9 @@ async def mock_recorder_before_hass(
 
 @pytest.mark.parametrize("enable_schema_validation", [True])
 @pytest.mark.parametrize("db_engine", ["mysql", "postgresql"])
+@pytest.mark.usefixtures("recorder_mock")
 async def test_validate_db_schema(
     hass: HomeAssistant,
-    recorder_mock: Recorder,
     caplog: pytest.LogCaptureFixture,
     db_engine: str,
     recorder_dialect_name: None,

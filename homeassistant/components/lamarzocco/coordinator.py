@@ -8,7 +8,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pylamarzocco import LaMarzoccoMachine
+from pylamarzocco import LaMarzoccoCloudClient, LaMarzoccoMachine
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 
 from homeassistant.config_entries import ConfigEntry
@@ -19,7 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
-SCAN_INTERVAL = timedelta(seconds=15)
+SCAN_INTERVAL = timedelta(seconds=60)
 SETTINGS_UPDATE_INTERVAL = timedelta(hours=8)
 SCHEDULE_UPDATE_INTERVAL = timedelta(minutes=30)
 STATISTICS_UPDATE_INTERVAL = timedelta(minutes=15)
@@ -51,6 +51,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         hass: HomeAssistant,
         entry: LaMarzoccoConfigEntry,
         device: LaMarzoccoMachine,
+        cloud_client: LaMarzoccoCloudClient | None = None,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
@@ -61,6 +62,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=self._default_update_interval,
         )
         self.device = device
+        self.cloud_client = cloud_client
 
     async def _async_update_data(self) -> None:
         """Do the data update."""
@@ -85,11 +87,17 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
 class LaMarzoccoConfigUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     """Class to handle fetching data from the La Marzocco API centrally."""
 
+    cloud_client: LaMarzoccoCloudClient
+
     async def _internal_async_update_data(self) -> None:
         """Fetch data from API endpoint."""
 
+        # ensure token stays valid; does nothing if token is still valid
+        await self.cloud_client.async_get_access_token()
+
         if self.device.websocket.connected:
             return
+
         await self.device.get_dashboard()
         _LOGGER.debug("Current status: %s", self.device.dashboard.to_dict())
 

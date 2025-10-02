@@ -197,6 +197,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
     def _close(*_):
         controller.close()
 
+    entry.async_on_unload(entry.add_update_listener(update_listener))
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -239,3 +240,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> bo
         controller.close()
 
     return unload_ok
+
+
+async def update_listener(hass: HomeAssistant, entry: SatelConfigEntry) -> None:
+    """Handle options update."""
+    hass.config_entries.async_schedule_reload(entry.entry_id)

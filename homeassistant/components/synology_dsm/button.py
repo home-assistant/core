@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -72,8 +72,9 @@ class SynologyDSMButton(ButtonEntity):
         """Initialize the Synology DSM binary_sensor entity."""
         self.entity_description = description
         self.syno_api = api
-        assert api.network is not None
-        assert api.information is not None
+        if TYPE_CHECKING:
+            assert api.network is not None
+            assert api.information is not None
         self._attr_name = f"{api.network.hostname} {description.name}"
         self._attr_unique_id = f"{api.information.serial}_{description.key}"
         self._attr_device_info = DeviceInfo(
@@ -82,7 +83,8 @@ class SynologyDSMButton(ButtonEntity):
 
     async def async_press(self) -> None:
         """Triggers the Synology DSM button press service."""
-        assert self.syno_api.network is not None
+        if TYPE_CHECKING:
+            assert self.syno_api.network is not None
         LOGGER.debug(
             "Trigger %s for %s",
             self.entity_description.key,

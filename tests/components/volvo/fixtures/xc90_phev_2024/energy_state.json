@@ -1,0 +1,55 @@
+{
+  "batteryChargeLevel": {
+    "status": "OK",
+    "value": 87.3,
+    "unit": "percentage",
+    "updatedAt": "2025-09-05T07:58:14Z"
+  },
+  "electricRange": {
+    "status": "OK",
+    "value": 26,
+    "unit": "miles",
+    "updatedAt": "2025-09-05T07:58:14Z"
+  },
+  "chargerConnectionStatus": {
+    "status": "OK",
+    "value": "DISCONNECTED",
+    "updatedAt": "2025-09-05T07:58:14Z"
+  },
+  "chargingStatus": {
+    "status": "OK",
+    "value": "IDLE",
+    "updatedAt": "2025-09-05T07:58:14Z"
+  },
+  "chargingType": {
+    "status": "OK",
+    "value": "NONE",
+    "updatedAt": "2025-09-05T07:58:14Z"
+  },
+  "chargerPowerStatus": {
+    "status": "OK",
+    "value": "NO_POWER_AVAILABLE",
+    "updatedAt": "2025-09-05T07:58:14Z"
+  },
+  "estimatedChargingTimeToTargetBatteryChargeLevel": {
+    "status": "OK",
+    "value": 0,
+    "unit": "minutes",
+    "updatedAt": "2025-09-05T07:58:14Z"
+  },
+  "chargingCurrentLimit": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED",
+    "message": "Resource is not supported for this vehicle"
+  },
+  "targetBatteryChargeLevel": {
+    "status": "ERROR",
+    "code": "ERROR_READING_PROPERTY",
+    "message": "Failed to retrieve property."
+  },
+  "chargingPower": {
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED",
+    "message": "Resource is not supported for this vehicle"
+  }
+}

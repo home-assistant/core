@@ -29,13 +29,16 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
         self, hass: HomeAssistant, entry: PVPCConfigEntry, sensor_keys: set[str]
     ) -> None:
         """Initialize."""
+        config = entry.data.copy()
+        config.update({attr: value for attr, value in entry.options.items() if value})
+
         self.api = PVPCData(
             session=async_get_clientsession(hass),
-            tariff=entry.data[ATTR_TARIFF],
+            tariff=config[ATTR_TARIFF],
             local_timezone=hass.config.time_zone,
-            power=entry.data[ATTR_POWER],
-            power_valley=entry.data[ATTR_POWER_P3],
-            api_token=entry.data.get(CONF_API_TOKEN),
+            power=config[ATTR_POWER],
+            power_valley=config[ATTR_POWER_P3],
+            api_token=config.get(CONF_API_TOKEN),
             sensor_keys=tuple(sensor_keys),
         )
         super().__init__(

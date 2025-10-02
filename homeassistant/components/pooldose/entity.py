@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.const import CONF_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -12,7 +13,9 @@ from .const import DOMAIN, MANUFACTURER
 from .coordinator import PooldoseCoordinator
 
 
-def device_info(info: dict | None, unique_id: str) -> DeviceInfo:
+def device_info(
+    info: dict | None, unique_id: str, mac: str | None = None
+) -> DeviceInfo:
     """Create device info for PoolDose devices."""
     if info is None:
         info = {}
@@ -35,6 +38,7 @@ def device_info(info: dict | None, unique_id: str) -> DeviceInfo:
         configuration_url=(
             f"http://{info['IP']}/index.html" if info.get("IP") else None
         ),
+        connections={(CONNECTION_NETWORK_MAC, mac)} if mac else set(),
     )
 
 
@@ -56,7 +60,11 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
         self.entity_description = entity_description
         self.platform_name = platform_name
         self._attr_unique_id = f"{serial_number}_{entity_description.key}"
-        self._attr_device_info = device_info(device_properties, serial_number)
+        self._attr_device_info = device_info(
+            device_properties,
+            serial_number,
+            coordinator.config_entry.data.get(CONF_MAC),
+        )
 
     @property
     def available(self) -> bool:

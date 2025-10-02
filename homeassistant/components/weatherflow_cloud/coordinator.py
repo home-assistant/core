@@ -2,7 +2,6 @@
 
 from abc import ABC, abstractmethod
 from datetime import timedelta
-from typing import Generic, TypeVar
 
 from aiohttp import ClientResponseError
 from weatherflow4py.api import WeatherFlowRestAPI
@@ -29,10 +28,8 @@ from homeassistant.util.ssl import client_context
 
 from .const import DOMAIN, LOGGER
 
-T = TypeVar("T")
 
-
-class BaseWeatherFlowCoordinator(DataUpdateCoordinator[dict[int, T]], ABC, Generic[T]):
+class BaseWeatherFlowCoordinator[T](DataUpdateCoordinator[dict[int, T]], ABC):
     """Base class for WeatherFlow coordinators."""
 
     def __init__(
@@ -106,9 +103,7 @@ class WeatherFlowCloudUpdateCoordinatorREST(
         return self.data[station_id].station.name
 
 
-class BaseWebsocketCoordinator(
-    BaseWeatherFlowCoordinator[dict[int, T | None]], ABC, Generic[T]
-):
+class BaseWebsocketCoordinator[T](BaseWeatherFlowCoordinator[dict[int, T | None]], ABC):
     """Base class for websocket coordinators."""
 
     _event_type: EventType

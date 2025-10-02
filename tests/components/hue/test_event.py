@@ -17,8 +17,8 @@ async def test_event(
     """Test event entity for Hue integration."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_platform(hass, mock_bridge_v2, Platform.EVENT)
-    # 7 entities should be created from test data
-    assert len(hass.states.async_all()) == 7
+    # 8 entities should be created from test data
+    assert len(hass.states.async_all()) == 8
 
     # pick one of the remote buttons
     state = hass.states.get("event.hue_dimmer_switch_with_4_controls_button_1")

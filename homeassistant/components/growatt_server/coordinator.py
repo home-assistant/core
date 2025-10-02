@@ -1,5 +1,7 @@
 """Coordinator module for managing Growatt data fetching."""
 
+from __future__ import annotations
+
 import datetime
 import json
 import logging
@@ -38,22 +40,30 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         plant_id: str,
     ) -> None:
         """Initialize the coordinator."""
-        self.username = config_entry.data[CONF_USERNAME]
-        self.password = config_entry.data[CONF_PASSWORD]
-        self.url = config_entry.data.get(CONF_URL, DEFAULT_URL)
-        self.api = growattServer.GrowattApi(
-            add_random_user_id=True, agent_identifier=self.username
+        self.api_version = (
+            "v1" if config_entry.data.get("auth_type") == "api_token" else "classic"
         )
-
-        # Set server URL
-        self.api.server_url = self.url
-
         self.device_id = device_id
         self.device_type = device_type
         self.plant_id = plant_id
-
-        # Initialize previous_values to store historical data
         self.previous_values: dict[str, Any] = {}
+
+        if self.api_version == "v1":
+            self.username = None
+            self.password = None
+            self.url = config_entry.data.get(CONF_URL, DEFAULT_URL)
+            self.token = config_entry.data["token"]
+            self.api = growattServer.OpenApiV1(token=self.token)
+        elif self.api_version == "classic":
+            self.username = config_entry.data.get(CONF_USERNAME)
+            self.password = config_entry.data[CONF_PASSWORD]
+            self.url = config_entry.data.get(CONF_URL, DEFAULT_URL)
+            self.api = growattServer.GrowattApi(
+                add_random_user_id=True, agent_identifier=self.username
+            )
+            self.api.server_url = self.url
+        else:
+            raise ValueError(f"Unknown API version: {self.api_version}")
 
         super().__init__(
             hass,
@@ -67,21 +77,54 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Update data via library synchronously."""
         _LOGGER.debug("Updating data for %s (%s)", self.device_id, self.device_type)
 
-        # Login in to the Growatt server
-        self.api.login(self.username, self.password)
+        # login only required for classic API
+        if self.api_version == "classic":
+            self.api.login(self.username, self.password)
 
         if self.device_type == "total":
-            total_info = self.api.plant_info(self.device_id)
-            del total_info["deviceList"]
-            plant_money_text, currency = total_info["plantMoneyText"].split("/")
-            total_info["plantMoneyText"] = plant_money_text
-            total_info["currency"] = currency
+            if self.api_version == "v1":
+                # The V1 Plant APIs do not provide the same information as the classic plant_info() API
+                # More specifically:
+                # 1. There is no monetary information to be found, so today and lifetime money is not available
+                # 2. There is no nominal power, this is provided by inverter min_energy()
+                # This means, for the total coordinator we can only fetch and map the following:
+                # todayEnergy -> today_energy
+                # totalEnergy -> total_energy
+                # invTodayPpv -> current_power
+                total_info = self.api.plant_energy_overview(self.plant_id)
+                total_info["todayEnergy"] = total_info["today_energy"]
+                total_info["totalEnergy"] = total_info["total_energy"]
+                total_info["invTodayPpv"] = total_info["current_power"]
+            else:
+                # Classic API: use plant_info as before
+                total_info = self.api.plant_info(self.device_id)
+                del total_info["deviceList"]
+                plant_money_text, currency = total_info["plantMoneyText"].split("/")
+                total_info["plantMoneyText"] = plant_money_text
+                total_info["currency"] = currency
+            _LOGGER.debug("Total info for plant %s: %r", self.plant_id, total_info)
             self.data = total_info
         elif self.device_type == "inverter":
             self.data = self.api.inverter_detail(self.device_id)
+        elif self.device_type == "min":
+            # Open API V1: min device
+            try:
+                min_details = self.api.min_detail(self.device_id)
+                min_settings = self.api.min_settings(self.device_id)
+                min_energy = self.api.min_energy(self.device_id)
+            except growattServer.GrowattV1ApiError as err:
+                _LOGGER.error(
+                    "Error fetching min device data for %s: %s", self.device_id, err
+                )
+                raise UpdateFailed(f"Error fetching min device data: {err}") from err
+
+            min_info = {**min_details, **min_settings, **min_energy}
+            self.data = min_info
+            _LOGGER.debug("min_info for device %s: %r", self.device_id, min_info)
         elif self.device_type == "tlx":
             tlx_info = self.api.tlx_detail(self.device_id)
             self.data = tlx_info["data"]
+            _LOGGER.debug("tlx_info for device %s: %r", self.device_id, tlx_info)
         elif self.device_type == "storage":
             storage_info_detail = self.api.storage_params(self.device_id)
             storage_energy_overview = self.api.storage_energy_overview(
@@ -145,7 +188,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return self.data.get("currency")
 
     def get_data(
-        self, entity_description: "GrowattSensorEntityDescription"
+        self, entity_description: GrowattSensorEntityDescription
     ) -> str | int | float | None:
         """Get the data."""
         variable = entity_description.api_key

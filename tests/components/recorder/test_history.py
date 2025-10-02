@@ -32,6 +32,8 @@ from .common import (
     assert_states_equal_without_context,
     async_recorder_block_till_done,
     async_wait_recording_done,
+    db_state_attributes_to_native,
+    db_state_to_native,
 )
 
 from tests.typing import RecorderInstanceContextManager
@@ -884,10 +886,10 @@ async def test_get_full_significant_states_handles_empty_last_changed(
                 db_state.entity_id = metadata_id_to_entity_id[
                     db_state.metadata_id
                 ].entity_id
-                state = db_state.to_native()
-                state.attributes = db_state_attributes[
-                    db_state.attributes_id
-                ].to_native()
+                state = db_state_to_native(db_state)
+                state.attributes = db_state_attributes_to_native(
+                    db_state_attributes[db_state.attributes_id]
+                )
                 native_states.append(state)
             return native_states
 

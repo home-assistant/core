@@ -78,5 +78,9 @@
     "building_consumption": 15000.0,
     "battery_stored": 8000.0,
     "battery_consumed": 2000.0
+  },
+  "forecast": {
+    "cons_remaining_today": 3000.0,
+    "prod_remaining_today": 7000.0
   }
 }

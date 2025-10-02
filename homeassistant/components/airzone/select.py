@@ -6,17 +6,19 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Final
 
-from aioairzone.common import GrilleAngle, OperationMode, SleepTimeout
+from aioairzone.common import GrilleAngle, OperationMode, QAdapt, SleepTimeout
 from aioairzone.const import (
     API_COLD_ANGLE,
     API_HEAT_ANGLE,
     API_MODE,
+    API_Q_ADAPT,
     API_SLEEP,
     AZD_COLD_ANGLE,
     AZD_HEAT_ANGLE,
     AZD_MASTER,
     AZD_MODE,
     AZD_MODES,
+    AZD_Q_ADAPT,
     AZD_SLEEP,
     AZD_ZONES,
 )
@@ -65,6 +67,14 @@ SLEEP_DICT: Final[dict[str, int]] = {
     "90m": SleepTimeout.SLEEP_90,
 }
 
+Q_ADAPT_DICT: Final[dict[str, int]] = {
+    "standard": QAdapt.STANDARD,
+    "power": QAdapt.POWER,
+    "silence": QAdapt.SILENCE,
+    "minimum": QAdapt.MINIMUM,
+    "maximum": QAdapt.MAXIMUM,
+}
+
 
 def main_zone_options(
     zone_data: dict[str, Any],
@@ -82,6 +92,14 @@ MAIN_ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
         options_dict=MODE_DICT,
         options_fn=main_zone_options,
         translation_key="modes",
+    ),
+    AirzoneSelectDescription(
+        api_param=API_Q_ADAPT,
+        entity_category=EntityCategory.CONFIG,
+        key=AZD_Q_ADAPT,
+        options=list(Q_ADAPT_DICT),
+        options_dict=Q_ADAPT_DICT,
+        translation_key="q_adapt",
     ),
 )
 

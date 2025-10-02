@@ -16,7 +16,7 @@ from pathlib import Path
 import re
 import secrets
 from time import monotonic
-from typing import Any, Final, Generic, Protocol, TypeVar
+from typing import Any, Final, Protocol
 
 from aiohttp import web
 import mutagen
@@ -628,10 +628,7 @@ class HasLastUsed(Protocol):
     last_used: float
 
 
-T = TypeVar("T", bound=HasLastUsed)
-
-
-class DictCleaning(Generic[T]):
+class DictCleaning[T: HasLastUsed]:
     """Helper to clean up the stale sessions."""
 
     unsub: CALLBACK_TYPE | None = None

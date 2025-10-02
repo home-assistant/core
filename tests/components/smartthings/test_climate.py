@@ -23,6 +23,9 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
+    PRESET_BOOST,
+    PRESET_NONE,
+    PRESET_SLEEP,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
@@ -441,27 +444,40 @@ async def test_ac_set_swing_mode(
     )
 
 
-@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000003"])
+@pytest.mark.parametrize(
+    ("mode", "expected_mode"),
+    [
+        (PRESET_NONE, "off"),
+        (PRESET_SLEEP, "sleep"),
+        ("quiet", "quiet"),
+        (PRESET_BOOST, "speed"),
+        ("wind_free", "windFree"),
+        ("wind_free_sleep", "windFreeSleep"),
+    ],
+)
 async def test_ac_set_preset_mode(
     hass: HomeAssistant,
     devices: AsyncMock,
+    mode: str,
+    expected_mode: str,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test climate set preset mode."""
+    """Test setting and retrieving AC preset modes."""
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.ac_office_granit", ATTR_PRESET_MODE: "windFree"},
+        {ATTR_ENTITY_ID: "climate.office_airfree", ATTR_PRESET_MODE: mode},
         blocking=True,
     )
-    devices.execute_device_command.assert_called_once_with(
-        "96a5ef74-5832-a84b-f1f7-ca799957065d",
+    devices.execute_device_command.assert_called_with(
+        "c76d6f38-1b7f-13dd-37b5-db18d5272783",
         Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
         Command.SET_AC_OPTIONAL_MODE,
         MAIN,
-        argument="windFree",
+        argument=expected_mode,
     )
 
 

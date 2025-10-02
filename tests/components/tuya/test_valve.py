@@ -37,6 +37,7 @@ async def test_platform_setup_and_discovery(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.VALVE])
 @pytest.mark.parametrize(
     "mock_device_code",
     ["sfkzq_ed7frwissyqrejic"],
@@ -66,6 +67,7 @@ async def test_open_valve(
     )
 
 
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.VALVE])
 @pytest.mark.parametrize(
     "mock_device_code",
     ["sfkzq_ed7frwissyqrejic"],

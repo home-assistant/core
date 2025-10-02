@@ -84,7 +84,7 @@ from homeassistant.components.modbus.const import (
     CONF_TARGET_TEMP,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_WRITE_REGISTERS,
-    MODBUS_DOMAIN,
+    DOMAIN,
     DataType,
 )
 from homeassistant.const import (
@@ -1695,7 +1695,7 @@ async def test_no_discovery_info_climate(
     assert await async_setup_component(
         hass,
         CLIMATE_DOMAIN,
-        {CLIMATE_DOMAIN: {CONF_PLATFORM: MODBUS_DOMAIN}},
+        {CLIMATE_DOMAIN: {CONF_PLATFORM: DOMAIN}},
     )
     await hass.async_block_till_done()
     assert CLIMATE_DOMAIN in hass.config.components

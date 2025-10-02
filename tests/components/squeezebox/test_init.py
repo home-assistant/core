@@ -3,16 +3,27 @@
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.squeezebox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
 
 from .conftest import TEST_MAC
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def squeezebox_media_player_platform():
+    """Only set up the media_player platform for squeezebox tests."""
+    with patch(
+        "homeassistant.components.squeezebox.PLATFORMS", [Platform.MEDIA_PLAYER]
+    ):
+        yield
 
 
 async def test_init_api_fail(
