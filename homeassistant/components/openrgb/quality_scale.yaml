@@ -45,7 +45,9 @@ rules:
   devices: done
   diagnostics: todo
   discovery-update-info: done
-  discovery: done
+  discovery:
+    status: exempt
+    comment: Integration does not support discovery
   docs-data-update: done
   docs-examples: todo
   docs-known-limitations: done
