@@ -7,6 +7,10 @@ from typing import Any
 import anthropic
 from anthropic import AsyncStream
 from anthropic.types import (
+    CitationsDelta,
+    CitationsWebSearchResultLocation,
+    CitationWebSearchResultLocationParam,
+    ContentBlockParam,
     InputJSONDelta,
     MessageDeltaUsage,
     MessageParam,
@@ -18,9 +22,13 @@ from anthropic.types import (
     RawMessageStartEvent,
     RedactedThinkingBlock,
     RedactedThinkingBlockParam,
+    ServerToolUseBlock,
+    ServerToolUseBlockParam,
     SignatureDelta,
     TextBlock,
     TextBlockParam,
+    TextCitation,
+    TextCitationParam,
     TextDelta,
     ThinkingBlock,
     ThinkingBlockParam,
@@ -29,9 +37,16 @@ from anthropic.types import (
     ThinkingDelta,
     ToolParam,
     ToolResultBlockParam,
+    ToolUnionParam,
     ToolUseBlock,
     ToolUseBlockParam,
     Usage,
+    WebSearchResultBlockParam,
+    WebSearchTool20250305Param,
+    WebSearchToolRequestErrorParam,
+    WebSearchToolResultBlock,
+    WebSearchToolResultBlockParam,
+    WebSearchToolResultError,
 )
 from anthropic.types.message_create_params import MessageCreateParamsStreaming
 from voluptuous_openapi import convert
@@ -48,6 +63,13 @@ from .const import (
     CONF_MAX_TOKENS,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
+    CONF_WEB_SEARCH,
+    CONF_WEB_SEARCH_CITY,
+    CONF_WEB_SEARCH_COUNTRY,
+    CONF_WEB_SEARCH_MAX_USES,
+    CONF_WEB_SEARCH_REGION,
+    CONF_WEB_SEARCH_TIMEZONE,
+    CONF_WEB_SEARCH_USER_LOCATION,
     DOMAIN,
     LOGGER,
     MIN_THINKING_BUDGET,
@@ -81,15 +103,42 @@ def _convert_content(
 
     for content in chat_content:
         if isinstance(content, conversation.ToolResultContent):
-            tool_result_block = ToolResultBlockParam(
-                type="tool_result",
-                tool_use_id=content.tool_call_id,
-                content=json.dumps(content.tool_result),
-            )
-            if not messages or messages[-1]["role"] != "user":
+            if content.tool_name == "web_search":
+                tool_result_block: ContentBlockParam = WebSearchToolResultBlockParam(
+                    type="web_search_tool_result",
+                    tool_use_id=content.tool_call_id,
+                    content=[
+                        WebSearchResultBlockParam(
+                            type="web_search_result",
+                            encrypted_content=result.get("encrypted_content", ""),
+                            page_age=result.get("page_age", ""),
+                            title=result.get("title", ""),
+                            url=result.get("url", ""),
+                        )
+                        for result in content.tool_result["content"]
+                    ]
+                    if isinstance(content.tool_result, list)
+                    else WebSearchToolRequestErrorParam(
+                        type="web_search_tool_result_error",
+                        error_code=content.tool_result.get("error_code", "unavailable"),  # type: ignore[typeddict-item]
+                    ),
+                )
+                external_tool = True
+            else:
+                tool_result_block = ToolResultBlockParam(
+                    type="tool_result",
+                    tool_use_id=content.tool_call_id,
+                    content=json.dumps(content.tool_result),
+                )
+                external_tool = False
+            if (
+                not messages or messages[-1]["role"] != "assistant"
+                if external_tool
+                else "user"
+            ):
                 messages.append(
                     MessageParam(
-                        role="user",
+                        role="assistant" if external_tool else "user",
                         content=[tool_result_block],
                     )
                 )
@@ -151,13 +200,37 @@ def _convert_content(
                         redacted_thinking_block
                     )
             if content.content:
+                citations: list[TextCitationParam] = []
+                if isinstance(content.native, list):
+                    citations.extend(
+                        CitationWebSearchResultLocationParam(
+                            type="web_search_result_location",
+                            title=citation.title,
+                            url=citation.url,
+                            cited_text=citation.cited_text,
+                            encrypted_index=citation.encrypted_index,
+                        )
+                        for citation in content.native
+                        if isinstance(citation, CitationsWebSearchResultLocation)
+                    )
                 messages[-1]["content"].append(  # type: ignore[union-attr]
-                    TextBlockParam(type="text", text=content.content)
+                    TextBlockParam(
+                        type="text",
+                        text=content.content,
+                        citations=citations if citations else None,
+                    )
                 )
             if content.tool_calls:
                 messages[-1]["content"].extend(  # type: ignore[union-attr]
                     [
-                        ToolUseBlockParam(
+                        ServerToolUseBlockParam(
+                            type="server_tool_use",
+                            id=tool_call.id,
+                            name="web_search",
+                            input=tool_call.tool_args,
+                        )
+                        if tool_call.external and tool_call.tool_name == "web_search"
+                        else ToolUseBlockParam(
                             type="tool_use",
                             id=tool_call.id,
                             name=tool_call.tool_name,
@@ -173,10 +246,12 @@ def _convert_content(
     return messages
 
 
-async def _transform_stream(
+async def _transform_stream(  # noqa: C901 - This is complex, but better to have it in one place
     chat_log: conversation.ChatLog,
     stream: AsyncStream[MessageStreamEvent],
-) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
+) -> AsyncGenerator[
+    conversation.AssistantContentDeltaDict | conversation.ToolResultContentDeltaDict
+]:
     """Transform the response stream into HA format.
 
     A typical stream of responses might look something like the following:
@@ -209,8 +284,9 @@ async def _transform_stream(
     if stream is None:
         raise TypeError("Expected a stream of messages")
 
-    current_tool_block: ToolUseBlockParam | None = None
+    current_tool_block: ToolUseBlockParam | ServerToolUseBlockParam | None = None
     current_tool_args: str
+    citations: list[TextCitation] = []
     input_usage: Usage | None = None
     has_content = False
     has_native = False
@@ -255,6 +331,39 @@ async def _transform_stream(
                     has_content = False
                 yield {"native": response.content_block}
                 has_native = True
+            elif isinstance(response.content_block, ServerToolUseBlock):
+                current_tool_block = ServerToolUseBlockParam(
+                    type="server_tool_use",
+                    id=response.content_block.id,
+                    name=response.content_block.name,
+                    input="",
+                )
+                current_tool_args = ""
+            elif isinstance(response.content_block, WebSearchToolResultBlock):
+                yield {
+                    "role": "tool_result",
+                    "tool_call_id": response.content_block.tool_use_id,
+                    "tool_name": "web_search",
+                    "tool_result": {
+                        "type": "web_search_tool_result_error",
+                        "error_code": response.content_block.content.error_code,
+                    }
+                    if isinstance(
+                        response.content_block.content, WebSearchToolResultError
+                    )
+                    else {
+                        "content": [
+                            {
+                                "type": "web_search_result",
+                                "encrypted_content": block.encrypted_content,
+                                "page_age": block.page_age,
+                                "title": block.title,
+                                "url": block.url,
+                            }
+                            for block in response.content_block.content
+                        ]
+                    },
+                }
         elif isinstance(response, RawContentBlockDeltaEvent):
             if isinstance(response.delta, InputJSONDelta):
                 current_tool_args += response.delta.partial_json
@@ -271,6 +380,8 @@ async def _transform_stream(
                     )
                 }
                 has_native = True
+            elif isinstance(response.delta, CitationsDelta):
+                citations.append(response.delta.citation)
         elif isinstance(response, RawContentBlockStopEvent):
             if current_tool_block is not None:
                 tool_args = json.loads(current_tool_args) if current_tool_args else {}
@@ -281,10 +392,15 @@ async def _transform_stream(
                             id=current_tool_block["id"],
                             tool_name=current_tool_block["name"],
                             tool_args=tool_args,
+                            external=current_tool_block["type"] == "server_tool_use",
                         )
                     ]
                 }
                 current_tool_block = None
+            if citations:
+                if not has_native:
+                    yield {"native": citations}
+                citations = []
         elif isinstance(response, RawMessageDeltaEvent):
             if (usage := response.usage) is not None:
                 chat_log.async_trace(_create_token_stats(input_usage, usage))
@@ -337,21 +453,11 @@ class AnthropicBaseLLMEntity(Entity):
         """Generate an answer for the chat log."""
         options = self.subentry.data
 
-        tools: list[ToolParam] | None = None
-        if chat_log.llm_api:
-            tools = [
-                _format_tool(tool, chat_log.llm_api.custom_serializer)
-                for tool in chat_log.llm_api.tools
-            ]
-
         system = chat_log.content[0]
         if not isinstance(system, conversation.SystemContent):
             raise TypeError("First message must be a system message")
         messages = _convert_content(chat_log.content[1:])
 
-        client = self.entry.runtime_data
-
-        thinking_budget = options.get(CONF_THINKING_BUDGET, RECOMMENDED_THINKING_BUDGET)
         model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
 
         model_args = MessageCreateParamsStreaming(
@@ -361,8 +467,8 @@ class AnthropicBaseLLMEntity(Entity):
             system=system.content,
             stream=True,
         )
-        if tools:
-            model_args["tools"] = tools
+
+        thinking_budget = options.get(CONF_THINKING_BUDGET, RECOMMENDED_THINKING_BUDGET)
         if (
             not model.startswith(tuple(NON_THINKING_MODELS))
             and thinking_budget >= MIN_THINKING_BUDGET
@@ -375,6 +481,34 @@ class AnthropicBaseLLMEntity(Entity):
             model_args["temperature"] = options.get(
                 CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
             )
+
+        tools: list[ToolUnionParam] = []
+        if chat_log.llm_api:
+            tools = [
+                _format_tool(tool, chat_log.llm_api.custom_serializer)
+                for tool in chat_log.llm_api.tools
+            ]
+
+        if options.get(CONF_WEB_SEARCH):
+            web_search = WebSearchTool20250305Param(
+                name="web_search",
+                type="web_search_20250305",
+                max_uses=options.get(CONF_WEB_SEARCH_MAX_USES),
+            )
+            if options.get(CONF_WEB_SEARCH_USER_LOCATION):
+                web_search["user_location"] = {
+                    "type": "approximate",
+                    "city": options.get(CONF_WEB_SEARCH_CITY, ""),
+                    "region": options.get(CONF_WEB_SEARCH_REGION, ""),
+                    "country": options.get(CONF_WEB_SEARCH_COUNTRY, ""),
+                    "timezone": options.get(CONF_WEB_SEARCH_TIMEZONE, ""),
+                }
+            tools.append(web_search)
+
+        if tools:
+            model_args["tools"] = tools
+
+        client = self.entry.runtime_data
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
