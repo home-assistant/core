@@ -2701,7 +2701,7 @@ renault-api==0.4.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.16.0
+reolink-aio==0.16.1
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
