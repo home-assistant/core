@@ -18,6 +18,13 @@ from .const import DEFAULT_CLIENT_NAME, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    }
+)
+
 
 async def validate_input(hass: HomeAssistant, host: str, port: int) -> None:
     """Validate the user input allows us to connect."""
@@ -70,17 +77,12 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_HOST,
-                        default=reconfigure_entry.data[CONF_HOST],
-                    ): str,
-                    vol.Required(
-                        CONF_PORT,
-                        default=reconfigure_entry.data[CONF_PORT],
-                    ): cv.port,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_USER_DATA_SCHEMA,
+                suggested_values={
+                    CONF_HOST: reconfigure_entry.data[CONF_HOST],
+                    CONF_PORT: reconfigure_entry.data[CONF_PORT],
+                },
             ),
             errors=errors,
         )
@@ -124,11 +126,8 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_USER_DATA_SCHEMA, suggested_values=user_input
             ),
             errors=errors,
         )
