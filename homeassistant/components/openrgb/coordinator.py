@@ -10,7 +10,7 @@ from openrgb import OpenRGBClient
 from openrgb.orgb import Device
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -49,10 +49,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.server_address = f"{self.host}:{self.port}"
         self.client_lock = asyncio.Lock()
 
-        # Register listener for Home Assistant stop event
-        self._stop_listener = hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, self.async_client_disconnect
-        )
+        config_entry.async_on_unload(self.async_client_disconnect)
 
     async def _async_setup(self) -> None:
         """Set up the coordinator by connecting to the OpenRGB server."""
