@@ -3626,6 +3626,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[gm0whbftkw]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'gm0whbftkw',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'ZX-5442',
+    'model_id': 'tfbhw0mg',
+    'name': 'Salon',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[gnZOKztbAtcBkEGPzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,

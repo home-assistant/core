@@ -235,6 +235,7 @@ DEVICE_MOCKS = [
     "wk_fi6dne5tu4t1nm6j",  # https://github.com/orgs/home-assistant/discussions/243
     "wk_gc1bxoq2hafxpa35",  # https://github.com/home-assistant/core/issues/145551
     "wk_gogb05wrtredz3bs",  # https://github.com/home-assistant/core/issues/136337
+    "wk_tfbhw0mg",  # https://github.com/home-assistant/core/issues/152282
     "wk_y5obtqhuztqsf2mj",  # https://github.com/home-assistant/core/issues/139735
     "wkcz_gc4b1mdw7kebtuyz",  #  https://github.com/home-assistant/core/issues/135617
     "wkf_9xfjixap",  # https://github.com/home-assistant/core/issues/139966

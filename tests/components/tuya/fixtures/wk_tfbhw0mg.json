@@ -1,0 +1,192 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "terminal_id": "1759417222610hdHuXw",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+
+  "id": "bf01bdj1cbtulmjb",
+  "name": "Salon",
+  "category": "wk",
+  "product_id": "tfbhw0mg",
+  "product_name": "ZX-5442",
+  "online": true,
+  "sub": true,
+  "time_zone": "+02:00",
+  "active_time": "2025-09-13T13:48:55+00:00",
+  "create_time": "2025-09-13T13:48:55+00:00",
+  "update_time": "2025-09-13T13:48:55+00:00",
+  "function": {
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u00b0C",
+        "min": 1,
+        "max": 59,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["auto", "manual", "holiday"]
+      }
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "holiday_set": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    }
+  },
+  "status_range": {
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u00b0C",
+        "min": 1,
+        "max": 59,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u00b0C",
+        "min": -50,
+        "max": 350,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["auto", "manual", "holiday"]
+      }
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": ["fault1", "fault2", "fault3"]
+      }
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "V",
+        "min": 0,
+        "max": 1000,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "holiday_set": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    }
+  },
+  "status": {
+    "temp_set": 59,
+    "temp_current": 203,
+    "mode": "manual",
+    "child_lock": false,
+    "fault": 0,
+    "battery_percentage": 117,
+    "holiday_set": "FAwZAAAiAAA="
+  },
+  "home_assistant": {
+    "name": "Salon",
+    "name_by_user": null,
+    "disabled": false,
+    "disabled_by": null,
+    "entities": [
+      {
+        "disabled": false,
+        "disabled_by": null,
+        "entity_category": null,
+        "device_class": null,
+        "original_device_class": null,
+        "icon": null,
+        "original_icon": null,
+        "unit_of_measurement": null,
+        "state": {
+          "entity_id": "climate.salon",
+          "state": "heat_cool",
+          "attributes": {
+            "hvac_modes": ["off", "heat_cool", "heat_cool", "heat_cool"],
+            "min_temp": 0.1,
+            "max_temp": 5.9,
+            "target_temp_step": 0.5,
+            "preset_modes": ["holiday"],
+            "current_temperature": 20.3,
+            "temperature": 5.9,
+            "preset_mode": null,
+            "friendly_name": "Salon",
+            "supported_features": 17
+          },
+          "last_changed": "2025-10-02T15:00:24.960463+00:00",
+          "last_reported": "2025-10-02T15:00:24.960463+00:00",
+          "last_updated": "2025-10-02T15:00:24.960463+00:00"
+        }
+      },
+      {
+        "disabled": false,
+        "disabled_by": null,
+        "entity_category": "diagnostic",
+        "device_class": null,
+        "original_device_class": "battery",
+        "icon": null,
+        "original_icon": null,
+        "unit_of_measurement": "%",
+        "state": {
+          "entity_id": "sensor.salon_batterie",
+          "state": "1.17",
+          "attributes": {
+            "state_class": "measurement",
+            "unit_of_measurement": "%",
+            "device_class": "battery",
+            "friendly_name": "Salon Batterie"
+          },
+          "last_changed": "2025-10-02T15:00:45.301833+00:00",
+          "last_reported": "2025-10-02T15:00:45.301833+00:00",
+          "last_updated": "2025-10-02T15:00:45.301833+00:00"
+        }
+      },
+      {
+        "disabled": false,
+        "disabled_by": null,
+        "entity_category": "config",
+        "device_class": null,
+        "original_device_class": null,
+        "icon": null,
+        "original_icon": null,
+        "unit_of_measurement": null,
+        "state": {
+          "entity_id": "switch.salon_securite_enfants",
+          "state": "off",
+          "attributes": {
+            "friendly_name": "Salon S\u00e9curit\u00e9 enfants"
+          },
+          "last_changed": "2025-10-02T15:00:24.977087+00:00",
+          "last_reported": "2025-10-02T15:00:24.977087+00:00",
+          "last_updated": "2025-10-02T15:00:24.977087+00:00"
+        }
+      }
+    ]
+  },
+  "set_up": true,
+  "support_local": true
+}
