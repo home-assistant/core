@@ -24,7 +24,7 @@ from homeassistant.helpers.trigger import (
     DATA_PLUGGABLE_ACTIONS,
     PluggableAction,
     Trigger,
-    TriggerActionRunnerCallback,
+    TriggerActionRunner,
     _async_get_trigger_platform,
     async_initialize_triggers,
     async_validate_trigger_config,
@@ -464,7 +464,7 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
         """Mock trigger 1."""
 
         async def async_attach_runner(
-            self, run_action: TriggerActionRunnerCallback
+            self, run_action: TriggerActionRunner
         ) -> CALLBACK_TYPE:
             """Attach a trigger."""
             run_action("trigger 1 desc", {"extra": "test_trigger_1"})
@@ -473,7 +473,7 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
         """Mock trigger 2."""
 
         async def async_attach_runner(
-            self, run_action: TriggerActionRunnerCallback
+            self, run_action: TriggerActionRunner
         ) -> CALLBACK_TYPE:
             """Attach a trigger."""
             run_action("trigger 2 desc", {"extra": "test_trigger_2"})

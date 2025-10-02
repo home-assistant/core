@@ -16,11 +16,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.trigger import (
-    Trigger,
-    TriggerActionRunnerCallback,
-    TriggerConfig,
-)
+from homeassistant.helpers.trigger import Trigger, TriggerActionRunner, TriggerConfig
 from homeassistant.helpers.typing import ConfigType
 
 from ..config_validation import VALUE_SCHEMA
@@ -93,7 +89,7 @@ async def async_validate_trigger_config(
 
 
 async def async_attach_trigger(
-    hass: HomeAssistant, options: ConfigType, run_action: TriggerActionRunnerCallback
+    hass: HomeAssistant, options: ConfigType, run_action: TriggerActionRunner
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     dev_reg = dr.async_get(hass)
@@ -232,7 +228,7 @@ class ValueUpdatedTrigger(Trigger):
         self._options = config.options
 
     async def async_attach_runner(
-        self, run_action: TriggerActionRunnerCallback
+        self, run_action: TriggerActionRunner
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
         return await async_attach_trigger(self._hass, self._options, run_action)
