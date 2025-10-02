@@ -9,17 +9,11 @@ from zeep.exceptions import Fault
 from .models import Event
 
 
-def extract_event_source_from_uid(uid: str) -> str:
-    """Extract event source from uid (third element after splitting by underscore)."""
-    parts = uid.split("_")
-    return parts[2] if len(parts) > 2 else ""
-
-
 def build_event_entity_names(events: list[Event]) -> dict[str, str]:
     """Build entity names for events, with index appended for duplicates.
 
     When multiple events share the same base name, a sequential index
-    is appended to distinguish them (sorted by source identifier).
+    is appended to distinguish them (sorted by UID).
 
     Args:
         events: List of events to build entity names for.
@@ -42,10 +36,8 @@ def build_event_entity_names(events: list[Event]) -> dict[str, str]:
             # No duplicates, use name as-is
             entity_names[name_events[0].uid] = name
         else:
-            # Sort by source identifier and assign sequential indices
-            sorted_events = sorted(
-                name_events, key=lambda e: extract_event_source_from_uid(e.uid)
-            )
+            # Sort by UID and assign sequential indices
+            sorted_events = sorted(name_events, key=lambda e: e.uid)
             for index, event in enumerate(sorted_events, start=1):
                 entity_names[event.uid] = f"{name} {index}"
 

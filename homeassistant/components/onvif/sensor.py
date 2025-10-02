@@ -24,7 +24,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up ONVIF sensors."""
+    """Set up ONVIF sensor platform."""
     device: ONVIFDevice = hass.data[DOMAIN][config_entry.unique_id]
 
     events = device.events.get_platform("sensor")
@@ -77,7 +77,7 @@ class ONVIFSensor(ONVIFBaseEntity, RestoreSensor):
         name: str | None = None,
         entry: er.RegistryEntry | None = None,
     ) -> None:
-        """Initialize the ONVIF binary sensor."""
+        """Initialize the ONVIF sensor."""
         self._attr_unique_id = uid
         if entry is not None:
             self._attr_device_class = try_parse_enum(

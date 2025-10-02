@@ -25,7 +25,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up ONVIF binary sensors."""
+    """Set up ONVIF binary sensor platform."""
     device: ONVIFDevice = hass.data[DOMAIN][config_entry.unique_id]
 
     events = device.events.get_platform("binary_sensor")
