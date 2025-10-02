@@ -1,9 +1,9 @@
 rules:
   # Bronze
-  action-setup: 
+  action-setup:
     status: exempt
     comment: This integration does not provide any service actions.
-  appropriate-polling: 
+  appropriate-polling:
     status: exempt
     comment: This integration does not poll.
   brands: done
@@ -11,7 +11,7 @@ rules:
   config-flow-test-coverage: todo
   config-flow: todo
   dependency-transparency: todo
-  docs-actions: 
+  docs-actions:
     status: exempt
     comment: This integration does not provide any service actions.
   docs-high-level-description: todo
