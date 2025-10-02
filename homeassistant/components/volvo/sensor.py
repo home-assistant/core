@@ -48,25 +48,31 @@ _LOGGER = logging.getLogger(__name__)
 class VolvoSensorDescription(VolvoEntityDescription, SensorEntityDescription):
     """Describes a Volvo sensor entity."""
 
-    value_fn: Callable[[VolvoCarsValue | VolvoCarsLocation], Any] | None = None
+    value_fn: Callable[[VolvoCarsApiBaseModel], Any] | None = None
 
 
-def _availability_status(field: VolvoCarsValue) -> str:
+def _availability_status(field: VolvoCarsApiBaseModel) -> str:
     reason = field.get("unavailable_reason")
-    return reason if reason else str(field.value)
+
+    if reason:
+        return str(reason)
+
+    if isinstance(field, VolvoCarsValue):
+        return str(field.value)
+
+    return ""
 
 
-def _calculate_time_to_service(field: VolvoCarsValue) -> int:
+def _calculate_time_to_service(field: VolvoCarsApiBaseModel) -> int:
+    if not isinstance(field, VolvoCarsValueField):
+        return 0
+
     value = int(field.value)
-
     # Always express value in days
-    if isinstance(field, VolvoCarsValueField) and field.unit == "months":
-        return value * 30
-
-    return value
+    return value * 30 if field.unit == "months" else value
 
 
-def _charging_power_value(field: VolvoCarsValue) -> int:
+def _charging_power_value(field: VolvoCarsApiBaseModel) -> int:
     return (
         field.value
         if isinstance(field, VolvoCarsValueStatusField) and isinstance(field.value, int)
@@ -74,8 +80,8 @@ def _charging_power_value(field: VolvoCarsValue) -> int:
     )
 
 
-def _charging_power_status_value(field: VolvoCarsValue) -> str | None:
-    status = cast(str, field.value)
+def _charging_power_status_value(field: VolvoCarsApiBaseModel) -> str | None:
+    status = cast(str, field.value) if isinstance(field, VolvoCarsValue) else ""
 
     if status.lower() in _CHARGING_POWER_STATUS_OPTIONS:
         return status
@@ -87,8 +93,8 @@ def _charging_power_status_value(field: VolvoCarsValue) -> str | None:
     return None
 
 
-def _direction_value(field: VolvoCarsLocation) -> str:
-    return field.properties.heading
+def _direction_value(field: VolvoCarsApiBaseModel) -> str | None:
+    return field.properties.heading if isinstance(field, VolvoCarsLocation) else None
 
 
 _CHARGING_POWER_STATUS_OPTIONS = [
@@ -393,7 +399,7 @@ class VolvoSensor(VolvoEntity, SensorEntity):
             self._attr_native_value = None
             return
 
-        native_value = ""
+        native_value = None
 
         if self.entity_description.value_fn:
             native_value = self.entity_description.value_fn(api_field)
