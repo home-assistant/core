@@ -120,7 +120,6 @@ _CONFIG_SCHEMA = vol.Schema(
 class EventTrigger(Trigger):
     """Z-Wave JS event trigger."""
 
-    _hass: HomeAssistant
     _options: dict[str, Any]
 
     _event_source: str
@@ -166,7 +165,7 @@ class EventTrigger(Trigger):
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize trigger."""
-        self._hass = hass
+        super().__init__(hass, config)
         assert config.options is not None
         self._options = config.options
 

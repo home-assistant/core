@@ -178,6 +178,8 @@ _TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 class Trigger(abc.ABC):
     """Trigger class."""
 
+    _hass: HomeAssistant
+
     @classmethod
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
@@ -212,10 +214,10 @@ class Trigger(abc.ABC):
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize trigger."""
+        self._hass = hass
 
     async def async_attach_action(
         self,
-        hass: HomeAssistant,
         action: TriggerActionType,
         action_payload_builder: TriggerActionPayloadBuilder,
     ) -> CALLBACK_TYPE:
@@ -231,7 +233,7 @@ class Trigger(abc.ABC):
             """Run action with trigger variables."""
 
             payload = action_payload_builder(description, extra_trigger_payload)
-            return hass.async_run_hass_job(job, payload, context)
+            return self._hass.async_run_hass_job(job, payload, context)
 
         return await self.async_attach_runner(run_action)
 
@@ -574,7 +576,7 @@ async def _async_attach_trigger_cls(
             options=conf.get(CONF_OPTIONS),
         ),
     )
-    return await trigger.async_attach_action(hass, action, action_payload_builder)
+    return await trigger.async_attach_action(action, action_payload_builder)
 
 
 async def async_initialize_triggers(

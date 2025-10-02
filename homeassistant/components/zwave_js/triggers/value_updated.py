@@ -201,7 +201,6 @@ async def async_attach_trigger(
 class ValueUpdatedTrigger(Trigger):
     """Z-Wave JS value updated trigger."""
 
-    _hass: HomeAssistant
     _options: dict[str, Any]
 
     @classmethod
@@ -223,7 +222,7 @@ class ValueUpdatedTrigger(Trigger):
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize trigger."""
-        self._hass = hass
+        super().__init__(hass, config)
         assert config.options is not None
         self._options = config.options
 
