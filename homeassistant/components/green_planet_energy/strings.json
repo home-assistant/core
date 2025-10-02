@@ -11,7 +11,7 @@
       "unknown": "Unexpected error occurred"
     },
     "abort": {
-      "already_configured": "Service is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
   "entity": {
