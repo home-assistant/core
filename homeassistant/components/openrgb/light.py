@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from openrgb.orgb import Device
-from openrgb.utils import ModeData, ModeFlags, RGBColor
+from openrgb.utils import ModeData, RGBColor
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -318,8 +318,4 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
 
 def check_if_mode_supports_color(mode: ModeData) -> bool:
     """Return True if the mode supports colors."""
-    if mode.flags & ModeFlags.HAS_PER_LED_COLOR:
-        return True
-    if mode.flags & ModeFlags.HAS_MODE_SPECIFIC_COLOR:
-        return True
-    return False
+    return mode.color_mode == 1
