@@ -53,7 +53,7 @@ async def test_turn_on_off(
     await setup_integration(hass, mock_config_entry)
 
     async def fake_update():
-        device = mock_lunatone_devices._data.devices[0]
+        device = mock_lunatone_devices.data.devices[0]
         device.features.switchable.status = not device.features.switchable.status
 
     mock_lunatone_devices.async_update.side_effect = fake_update

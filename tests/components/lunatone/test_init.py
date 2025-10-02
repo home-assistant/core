@@ -110,7 +110,7 @@ async def test_config_entry_not_ready_no_devices_data(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the Lunatone configuration entry not ready due to missing devices data."""
-    mock_lunatone_devices._data = None
+    mock_lunatone_devices.data = None
 
     await setup_integration(hass, mock_config_entry)
 

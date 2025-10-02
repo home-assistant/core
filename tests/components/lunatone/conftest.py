@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, PropertyMock, patch
 
-from lunatone_rest_api_client import Devices
+from lunatone_rest_api_client import Device, Devices
 import pytest
 
 from homeassistant.components.lunatone.const import DOMAIN
@@ -25,38 +25,17 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_lunatone_auth() -> Generator[AsyncMock]:
-    """Mock a Lunatone auth object."""
-    with (
-        patch(
-            "homeassistant.components.lunatone.Auth",
-            autospec=True,
-        ) as mock_auth,
-        patch(
-            "homeassistant.components.lunatone.config_flow.Auth",
-            new=mock_auth,
-        ),
-    ):
-        auth = mock_auth.return_value
-        auth.base_url = BASE_URL
-        yield auth
-
-
-@pytest.fixture
 def mock_lunatone_devices() -> Generator[AsyncMock]:
     """Mock a Lunatone devices object."""
 
     def build_devices_mock(devices: Devices):
         device_list = []
         for device_data in devices.data.devices:
-            device = AsyncMock(autospec=True)
-            device._data = device_data
-            type(device).data = PropertyMock(side_effect=lambda d=device: d._data)
+            device = AsyncMock(spec=Device)
+            device.data = device_data
             device.id = device.data.id
             device.name = device.data.name
-            type(device).is_on = PropertyMock(
-                side_effect=lambda d=device: d.data.features.switchable.status
-            )
+            device.is_on = device.data.features.switchable.status
             device_list.append(device)
         return device_list
 
@@ -64,8 +43,7 @@ def mock_lunatone_devices() -> Generator[AsyncMock]:
         "homeassistant.components.lunatone.Devices", autospec=True
     ) as mock_devices:
         devices = mock_devices.return_value
-        devices._data = DEVICES_DATA
-        type(devices).data = PropertyMock(side_effect=lambda d=devices: d._data)
+        devices.data = DEVICES_DATA
         type(devices).devices = PropertyMock(
             side_effect=lambda d=devices: build_devices_mock(d)
         )
@@ -73,7 +51,7 @@ def mock_lunatone_devices() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_lunatone_info(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]:
+def mock_lunatone_info() -> Generator[AsyncMock]:
     """Mock a Lunatone info object."""
     with (
         patch(
@@ -86,7 +64,6 @@ def mock_lunatone_info(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]:
         ),
     ):
         info = mock_info.return_value
-        info._auth = mock_lunatone_auth
         info.data = INFO_DATA
         info.name = info.data.name
         info.version = info.data.version
