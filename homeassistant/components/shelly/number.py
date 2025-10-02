@@ -30,6 +30,7 @@ from .entity import (
     BlockEntityDescription,
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
+    ShellyRpcEntity,
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rpc,
@@ -39,6 +40,7 @@ from .utils import (
     async_remove_orphaned_entities,
     get_blu_trv_device_info,
     get_device_entry_gen,
+    get_rpc_key_ids,
     get_virtual_component_ids,
     get_virtual_component_unit,
     is_view_for_platform,
@@ -230,6 +232,14 @@ async def async_setup_entry(
             hass, config_entry, async_add_entities, RPC_NUMBERS, RpcNumber
         )
 
+        # Set up thermostat hysteresis numbers
+        thermostat_ids = get_rpc_key_ids(coordinator.device.status, "thermostat")
+        if thermostat_ids:
+            async_add_entities(
+                RpcThermostatHysteresisNumber(coordinator, id_)
+                for id_ in thermostat_ids
+            )
+
         # the user can remove virtual components from the device configuration, so
         # we need to remove orphaned entities
         virtual_number_ids = get_virtual_component_ids(
@@ -314,3 +324,40 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
             ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
+
+
+class RpcThermostatHysteresisNumber(ShellyRpcEntity, NumberEntity):
+    """Entity that controls thermostat hysteresis on RPC based Shelly devices."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_translation_key = "thermostat_hysteresis"
+    _attr_native_min_value = 0.1
+    _attr_native_max_value = 5.0
+    _attr_native_step = 0.1
+    _attr_mode = NumberMode.BOX
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
+
+    def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
+        """Initialize thermostat hysteresis number."""
+        super().__init__(coordinator, f"thermostat:{id_}")
+        self._id = id_
+        self._attr_unique_id = f"{coordinator.mac}-thermostat:{id_}-hysteresis"
+
+    @property
+    def native_value(self) -> float | None:
+        """Return current hysteresis value."""
+        return self.coordinator.device.config[f"thermostat:{self._id}"].get(
+            "hysteresis"
+        )
+
+    @rpc_call
+    async def async_set_native_value(self, value: float) -> None:
+        """Change hysteresis value."""
+        await self.call_rpc(
+            "Thermostat.SetConfig",
+            {"config": {"id": self._id, "hysteresis": value}},
+        )
+
+        # Optimistically update the coordinator's config to reflect the change immediately
+        self.coordinator.device.config[f"thermostat:{self._id}"]["hysteresis"] = value
+        self.async_write_ha_state()

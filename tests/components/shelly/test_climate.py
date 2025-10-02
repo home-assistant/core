@@ -712,6 +712,54 @@ async def test_rpc_climate_hvac_mode_cool(
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
 
 
+async def test_rpc_climate_set_hvac_mode_heat_cool(
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test switching climate between heating and cooling modes."""
+    entity_id = "climate.test_name"
+
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    # Initial state should be HEAT (default)
+    assert (state := hass.states.get(entity_id))
+    assert state.state == HVACMode.HEAT
+
+    # Switch to COOL mode
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.COOL},
+        blocking=True,
+    )
+
+    mock_rpc_device.call_rpc.assert_called_with(
+        "Thermostat.SetConfig",
+        {"config": {"id": 0, "enable": True, "type": "cooling"}},
+    )
+
+    # Verify optimistic update
+    assert (state := hass.states.get(entity_id))
+    assert state.state == HVACMode.COOL
+
+    # Switch back to HEAT mode
+    mock_rpc_device.call_rpc.reset_mock()
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+        blocking=True,
+    )
+
+    mock_rpc_device.call_rpc.assert_called_with(
+        "Thermostat.SetConfig",
+        {"config": {"id": 0, "enable": True, "type": "heating"}},
+    )
+
+    # Verify optimistic update
+    assert (state := hass.states.get(entity_id))
+    assert state.state == HVACMode.HEAT
+
+
 async def test_wall_display_thermostat_mode(
     hass: HomeAssistant,
     mock_rpc_device: Mock,

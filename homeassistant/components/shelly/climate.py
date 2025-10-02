@@ -466,18 +466,12 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
     )
     _attr_target_temperature_step = RPC_THERMOSTAT_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL]
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize."""
         super().__init__(coordinator, f"thermostat:{id_}")
         self._id = id_
-        self._thermostat_type = coordinator.device.config[f"thermostat:{id_}"].get(
-            "type", "heating"
-        )
-        if self._thermostat_type == "cooling":
-            self._attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL]
-        else:
-            self._attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
         self._humidity_key: str | None = None
         # Check if there is a corresponding humidity key for the thermostat ID
         if (humidity_key := f"humidity:{id_}") in self.coordinator.device.status:
@@ -507,7 +501,10 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
         if not self.status["enable"]:
             return HVACMode.OFF
 
-        return HVACMode.COOL if self._thermostat_type == "cooling" else HVACMode.HEAT
+        thermostat_type = self.coordinator.device.config[f"thermostat:{self._id}"].get(
+            "type", "heating"
+        )
+        return HVACMode.COOL if thermostat_type == "cooling" else HVACMode.HEAT
 
     @property
     def hvac_action(self) -> HVACAction:
@@ -515,11 +512,10 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
         if not self.status["output"]:
             return HVACAction.IDLE
 
-        return (
-            HVACAction.COOLING
-            if self._thermostat_type == "cooling"
-            else HVACAction.HEATING
+        thermostat_type = self.coordinator.device.config[f"thermostat:{self._id}"].get(
+            "type", "heating"
         )
+        return HVACAction.COOLING if thermostat_type == "cooling" else HVACAction.HEATING
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -533,10 +529,28 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
-        mode = hvac_mode in (HVACMode.COOL, HVACMode.HEAT)
-        await self.call_rpc(
-            "Thermostat.SetConfig", {"config": {"id": self._id, "enable": mode}}
-        )
+        config: dict[str, Any] = {"id": self._id}
+
+        if hvac_mode == HVACMode.OFF:
+            config["enable"] = False
+        else:
+            config["enable"] = True
+            # Change thermostat type based on HVAC mode
+            if hvac_mode == HVACMode.COOL:
+                config["type"] = "cooling"
+            elif hvac_mode == HVACMode.HEAT:
+                config["type"] = "heating"
+
+        await self.call_rpc("Thermostat.SetConfig", {"config": config})
+
+        # Optimistically update the coordinator's config to reflect the change immediately
+        thermostat_config = self.coordinator.device.config[f"thermostat:{self._id}"]
+        if "enable" in config:
+            thermostat_config["enable"] = config["enable"]
+        if "type" in config:
+            thermostat_config["type"] = config["type"]
+
+        self.async_write_ha_state()
 
 
 class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):

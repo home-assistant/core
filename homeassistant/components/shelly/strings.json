@@ -140,6 +140,11 @@
         }
       }
     },
+    "number": {
+      "thermostat_hysteresis": {
+        "name": "Thermostat hysteresis"
+      }
+    },
     "sensor": {
       "charger_state": {
         "state": {

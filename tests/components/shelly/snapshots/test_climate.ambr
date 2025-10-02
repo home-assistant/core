@@ -151,6 +151,7 @@
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
       ]),
       'max_temp': 35,
       'min_temp': 5,
@@ -195,6 +196,7 @@
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
       ]),
       'max_temp': 35,
       'min_temp': 5,
@@ -219,6 +221,7 @@
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
       ]),
       'max_temp': 35,
       'min_temp': 5,
@@ -263,6 +266,7 @@
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
       ]),
       'max_temp': 35,
       'min_temp': 5,
