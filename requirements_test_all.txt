@@ -1628,6 +1628,9 @@ pydexcom==0.2.3
 # homeassistant.components.discovergy
 pydiscovergy==3.0.2
 
+# homeassistant.components.dobiss
+pydobiss==0.1.55
+
 # homeassistant.components.hydrawise
 pydrawise==2025.9.0
 
