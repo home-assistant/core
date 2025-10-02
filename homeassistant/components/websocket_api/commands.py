@@ -473,6 +473,10 @@ def handle_subscribe_entities(
 
     serialized_states = []
     for state in states:
+        if entity_ids and state.entity_id not in entity_ids:
+            continue
+        if entity_filter and not entity_filter(state.entity_id):
+            continue
         try:
             serialized_states.append(state.as_compressed_state_json)
         except (ValueError, TypeError):
