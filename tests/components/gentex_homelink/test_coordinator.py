@@ -13,6 +13,7 @@ from homeassistant.components.gentex_homelink.const import EVENT_PRESSED
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.entity_registry as er
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -56,6 +57,8 @@ async def test_get_state_updates(
         )
         config_entry.add_to_hass(hass)
         result = await async_setup_entry(hass, config_entry)
+        # Assert configuration worked without errors
+        assert result
 
         provider = config_entry.runtime_data.provider
         state_data = {
@@ -66,9 +69,6 @@ async def test_get_state_updates(
                 "Button 3": {"requestId": "rid3", "timestamp": time.time()},
             },
         }
-
-        # Assert configuration worked without errors
-        assert result
 
         # Test successful setup and first data fetch. The buttons should be unknown at the start
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -94,3 +94,62 @@ async def test_get_state_updates(
         )
         buttons_pressed = [s.attributes["event_type"] == EVENT_PRESSED for s in states]
         assert all(buttons_pressed), "At least one button was not pressed"
+
+
+async def test_request_sync(hass: HomeAssistant) -> None:
+    """Test that the config entry is reloaded when a requestSync request is sent."""
+    updatedDeviceInst = Device(id="TestDevice", name="TestDevice")
+    updatedDeviceInst.buttons = [
+        Button(id="Button 1", name="New Button 1", device=deviceInst),
+        Button(id="Button 2", name="New Button 2", device=deviceInst),
+        Button(id="Button 3", name="New Button 3", device=deviceInst),
+    ]
+
+    with patch(
+        "homeassistant.components.gentex_homelink.MQTTProvider", autospec=True
+    ) as MockProvider:
+        instance = MockProvider.return_value
+        instance.discover.side_effect = [[deviceInst], [updatedDeviceInst]]
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            unique_id=None,
+            version=1,
+            data={
+                "auth_implementation": "gentex_homelink",
+                "token": {"expires_at": time.time() + 10000, "access_token": ""},
+                "last_update_id": None,
+            },
+            state=ConfigEntryState.LOADED,
+        )
+        config_entry.add_to_hass(hass)
+        result = await async_setup_entry(hass, config_entry)
+        # Assert configuration worked without errors
+        assert result
+
+        # Check to see if the correct buttons names were loaded
+        comp = er.async_get(hass)
+        button_names = {"Button 1", "Button 2", "Button 3"}
+        registered_button_names = {b.original_name for b in comp.entities.values()}
+
+        assert button_names == registered_button_names, (
+            "Expect button names to be correct for the initial config"
+        )
+
+        provider = config_entry.runtime_data.provider
+
+        # Mimic request sync event
+        state_data = {
+            "type": "requestSync",
+        }
+        provider.listen.mock_calls[0].args[0](None, state_data)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        await asyncio.gather(*asyncio.all_tasks() - {asyncio.current_task()})
+        await asyncio.sleep(0.01)
+
+        # Check that the button names reflect the new values
+        button_names = {"New Button 1", "New Button 2", "New Button 3"}
+        comp = er.async_get(hass)
+        registered_button_names = {b.original_name for b in comp.entities.values()}
+        assert button_names == registered_button_names, (
+            "Expected button names to change"
+        )
