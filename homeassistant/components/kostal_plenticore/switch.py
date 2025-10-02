@@ -136,7 +136,9 @@ async def async_setup_entry(
                 excess_energy_settings["devices:local"]["EnergySensor:InstalledSensor"]
             )
         except (KeyError, ValueError):
-            pass
+            _LOGGER.warning(
+                "Failed to retrieve excess energy settings: %s", excess_energy_settings
+            )
         else:
             if sensor_position == 2 and battery_type > 0 and installed_sensor > 0:
                 # this settings is only available if
@@ -152,6 +154,13 @@ async def async_setup_entry(
                         plenticore.device_info,
                         enabled_default=False,
                     )
+                )
+            else:
+                _LOGGER.debug(
+                    "Skipping excess energy switch, not supported (Sensor position: %d, Battery type: %d, Installed sensor: %d)",
+                    sensor_position,
+                    battery_type,
+                    installed_sensor,
                 )
 
     # add shadow management switches for strings which support it
@@ -187,6 +196,12 @@ async def async_setup_entry(
                     entry.title,
                     plenticore.device_info,
                 )
+            )
+        else:
+            _LOGGER.debug(
+                "Skipping shadow management for DC string %d, not supported (Feature: %d)",
+                dc_string + 1,
+                dc_string_feature,
             )
 
     async_add_entities(entities)
