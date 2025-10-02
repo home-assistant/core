@@ -176,14 +176,16 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
     @property
     def changed_by(self) -> str | None:
         """Last change triggered by."""
-        if self._master_state is not None and self._alarm_msg_dpcode is not None:
-            if self.device.status.get(self._master_state.dpcode) == State.ALARM:
-                encoded_msg = self.device.status.get(self._alarm_msg_dpcode)
-                if encoded_msg:
-                    try:
-                        return b64decode(encoded_msg).decode("utf-16be")
-                    except (ValueError, UnicodeDecodeError):
-                        return None
+        if (
+            self._master_state is not None
+            and self._alarm_msg_dpcode is not None
+            and self.device.status.get(self._master_state.dpcode) == State.ALARM
+            and (encoded_msg := self.device.status.get(self._alarm_msg_dpcode))
+        ):
+            try:
+                return b64decode(encoded_msg).decode("utf-16be")
+            except (ValueError, UnicodeDecodeError):
+                return None
         return None
 
     def alarm_disarm(self, code: str | None = None) -> None:
