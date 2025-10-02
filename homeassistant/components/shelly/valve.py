@@ -102,11 +102,11 @@ class RpcShellyNeoWaterValve(RpcShellyBaseWaterValve):
 
     async def async_open_valve(self, **kwargs: Any) -> None:
         """Open valve."""
-        await self.call_rpc("Boolean.Set", {"id": self._id, "value": True})
+        await self.coordinator.device.boolean_set(self._id, True)
 
     async def async_close_valve(self, **kwargs: Any) -> None:
         """Close valve."""
-        await self.call_rpc("Boolean.Set", {"id": self._id, "value": False})
+        await self.coordinator.device.boolean_set(self._id, False)
 
 
 RPC_VALVES: dict[str, RpcValveDescription] = {

@@ -205,9 +205,7 @@ async def test_rpc_neo_water_valve(
         blocking=True,
     )
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "Boolean.Set", {"id": 200, "value": True}
-    )
+    mock_rpc_device.boolean_set.assert_called_once_with(200, True)
 
     status["boolean:200"] = {"value": True}
     monkeypatch.setattr(mock_rpc_device, "status", status)
@@ -218,7 +216,7 @@ async def test_rpc_neo_water_valve(
     assert state.state == ValveState.OPEN
 
     # Close valve
-    mock_rpc_device.call_rpc.reset_mock()
+    mock_rpc_device.boolean_set.reset_mock()
     await hass.services.async_call(
         VALVE_DOMAIN,
         SERVICE_CLOSE_VALVE,
@@ -226,9 +224,7 @@ async def test_rpc_neo_water_valve(
         blocking=True,
     )
 
-    mock_rpc_device.call_rpc.assert_called_once_with(
-        "Boolean.Set", {"id": 200, "value": False}
-    )
+    mock_rpc_device.boolean_set.assert_called_once_with(200, False)
 
     status["boolean:200"] = {"value": False}
     monkeypatch.setattr(mock_rpc_device, "status", status)
