@@ -91,7 +91,7 @@ def get_current_price(data: dict[str, Any]) -> float | None:
 class GreenPlanetEnergySensorEntityDescription(SensorEntityDescription):
     """Describes Green Planet Energy sensor entity."""
 
-    value_fn: Callable[[dict[str, Any]], float | None] | None = None
+    value_fn: Callable[[dict[str, Any]], float | None]
 
 
 SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
