@@ -58,6 +58,18 @@ SWITCH_SETTINGS_DATA = [
     ),
 ]
 
+EXCESS_AC_ENERGY_SETTINGS_DATA = PlenticoreSwitchEntityDescription(
+    module_id="devices:local",
+    key="EnergyMgmt:AcStorage",
+    name="Store Excess Energy from Local Generation",
+    is_on="1",
+    on_value="1",
+    on_label="On",
+    off_value="0",
+    off_label="Off",
+    installer_required=True,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -103,6 +115,44 @@ async def async_setup_entry(
                 plenticore.device_info,
             )
         )
+
+    # add excess AC energy switch if supported
+    if entry.data.get(CONF_SERVICE_CODE) is not None:
+        excess_energy_settings = await plenticore.client.get_setting_values(
+            "devices:local",
+            (
+                "EnergySensor:SensorPosition",
+                "Battery:Type",
+                "EnergySensor:InstalledSensor",
+            ),
+        )
+
+        try:
+            sensor_position = int(
+                excess_energy_settings["devices:local"]["EnergySensor:SensorPosition"]
+            )
+            battery_type = int(excess_energy_settings["devices:local"]["Battery:Type"])
+            installed_sensor = int(
+                excess_energy_settings["devices:local"]["EnergySensor:InstalledSensor"]
+            )
+        except (KeyError, ValueError):
+            pass
+        else:
+            if sensor_position == 2 and battery_type > 0 and installed_sensor > 0:
+                # this settings is only available if
+                # - energy sensor is installed
+                # - energy sensor is positioned at the grid connection
+                # - a battery is installed
+                entities.append(
+                    PlenticoreDataSwitch(
+                        settings_data_update_coordinator,
+                        EXCESS_AC_ENERGY_SETTINGS_DATA,
+                        entry.entry_id,
+                        entry.title,
+                        plenticore.device_info,
+                        enabled_default=False,
+                    )
+                )
 
     # add shadow management switches for strings which support it
     dc_strings = (0, 1, 2)
@@ -157,6 +207,7 @@ class PlenticoreDataSwitch(
         entry_id: str,
         platform_name: str,
         device_info: DeviceInfo,
+        enabled_default: bool = True,
     ) -> None:
         """Create a new Switch Entity for Plenticore process data."""
         super().__init__(coordinator)
@@ -172,8 +223,8 @@ class PlenticoreDataSwitch(
         self.off_value = description.off_value
         self.off_label = description.off_label
         self._attr_unique_id = f"{entry_id}_{description.module_id}_{description.key}"
-
         self._attr_device_info = device_info
+        self.entity_registry_enabled_default = enabled_default
 
     @property
     def available(self) -> bool:
@@ -277,6 +328,7 @@ class PlenticoreShadowMgmtSwitch(
             f"{entry_id}_{self.MODULE_ID}_{self.SHADOW_DATA_ID}_{dc_string}"
         )
         self._attr_device_info = device_info
+        self.entity_registry_enabled_default = False
 
     @property
     def available(self) -> bool:
