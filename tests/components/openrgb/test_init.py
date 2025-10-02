@@ -33,10 +33,10 @@ async def test_entry_setup_unload(
     assert mock_openrgb_client.disconnect.called
 
 
+@pytest.mark.usefixtures("mock_openrgb_client")
 async def test_server_device_registry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_openrgb_client: MagicMock,
 ) -> None:
     """Test server device is created in device registry."""
     mock_config_entry.add_to_hass(hass)
