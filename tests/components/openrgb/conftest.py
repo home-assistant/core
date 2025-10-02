@@ -4,7 +4,7 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from openrgb.utils import ModeFlags, RGBColor
+from openrgb.utils import DeviceType, ModeFlags, RGBColor
 import pytest
 
 from homeassistant.components.openrgb.const import DOMAIN
@@ -43,7 +43,7 @@ def mock_device_data() -> dict[str, Any]:
     """Return mock device data for creating OpenRGB devices."""
     return {
         "name": "Test RGB Device",
-        "type": 4,  # DeviceType.LEDSTRIP
+        "type": DeviceType.LEDSTRIP,
         "metadata": {
             "vendor": "Test Vendor",
             "description": "Test LED Strip",
