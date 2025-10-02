@@ -164,12 +164,7 @@ class GreenPlanetEnergySensor(
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        # Use value_fn to get calculated values
-        if self.entity_description.value_fn:
-            return self.entity_description.value_fn(self.coordinator.data)
-
-        # All our sensors have value_fn, so this should never happen
-        return None
+        return self.entity_description.value_fn(self.coordinator.data)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
