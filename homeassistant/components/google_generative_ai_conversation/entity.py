@@ -622,7 +622,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         options = self.subentry.data
         model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
         thinking_config: ThinkingConfig | None = None
-        if model.startswith("gemini-2.5") and not model.endswith(
+        if model.startswith("models/gemini-2.5") and not model.endswith(
             ("tts", "image", "image-preview")
         ):
             thinking_config = ThinkingConfig(include_thoughts=True)
