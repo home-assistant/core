@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.openrgb.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -28,12 +28,17 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
+        user_input={
+            CONF_NAME: "Test Computer",
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6742,
+        },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "OpenRGB (127.0.0.1:6742)"
+    assert result["title"] == "Test Computer"
     assert result["data"] == {
+        CONF_NAME: "Test Computer",
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6742,
     }
@@ -64,7 +69,7 @@ async def test_user_flow_errors(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
+        user_input={CONF_NAME: "Test Server", CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -76,12 +81,13 @@ async def test_user_flow_errors(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
+        user_input={CONF_NAME: "Test Server", CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "OpenRGB (127.0.0.1:6742)"
+    assert result["title"] == "Test Server"
     assert result["data"] == {
+        CONF_NAME: "Test Server",
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6742,
     }
@@ -101,7 +107,7 @@ async def test_user_flow_already_configured(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
+        user_input={CONF_NAME: "Test Server", CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
     )
 
     assert result["type"] is FlowResultType.ABORT

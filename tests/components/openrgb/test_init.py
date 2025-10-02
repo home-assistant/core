@@ -24,12 +24,12 @@ async def test_entry_setup_unload(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state == ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data is not None
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
     assert mock_openrgb_client.disconnect.called
 
 
@@ -49,7 +49,7 @@ async def test_server_device_registry(
     )
 
     assert server_device
-    assert server_device.name == "OpenRGB (127.0.0.1:6742)"
+    assert server_device.name == "Test Computer"
     assert server_device.manufacturer == "OpenRGB"
     assert server_device.model == "OpenRGB SDK Server"
     assert server_device.sw_version == "4 (Protocol)"

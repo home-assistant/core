@@ -8,7 +8,7 @@ from openrgb.utils import DeviceType, ModeFlags, RGBColor
 import pytest
 
 from homeassistant.components.openrgb.const import DOMAIN, OpenRGBMode
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -19,8 +19,9 @@ def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="OpenRGB (127.0.0.1:6742)",
+        title="Test Computer",
         data={
+            CONF_NAME: "Test Computer",
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 6742,
         },

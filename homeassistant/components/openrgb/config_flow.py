@@ -9,7 +9,7 @@ from openrgb import OpenRGBClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_NAME): str,
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
@@ -44,9 +45,9 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            name = user_input[CONF_NAME]
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
-            server_address = f"{host}:{port}"
 
             # Prevent duplicate entries
             self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
@@ -58,13 +59,17 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception(
                     "Unknown error while connecting to OpenRGB SDK server at %s",
-                    server_address,
+                    f"{host}:{port}",
                 )
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=f"OpenRGB ({server_address})",
-                    data={CONF_HOST: host, CONF_PORT: port},
+                    title=name,
+                    data={
+                        CONF_NAME: name,
+                        CONF_HOST: host,
+                        CONF_PORT: port,
+                    },
                 )
 
         return self.async_show_form(
