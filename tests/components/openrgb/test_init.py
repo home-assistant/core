@@ -1,8 +1,9 @@
 """Tests for the OpenRGB integration init."""
 
+import socket
 from unittest.mock import MagicMock, patch
 
-from openrgb.utils import OpenRGBDisconnected
+from openrgb.utils import OpenRGBDisconnected, SDKVersionError
 import pytest
 
 from homeassistant.components.openrgb import async_remove_config_entry_device
@@ -154,6 +155,9 @@ async def test_remove_config_entry_device_disconnected(
     [
         (ConnectionRefusedError, ConfigEntryState.SETUP_RETRY),
         (OpenRGBDisconnected, ConfigEntryState.SETUP_RETRY),
+        (TimeoutError, ConfigEntryState.SETUP_RETRY),
+        (socket.gaierror, ConfigEntryState.SETUP_RETRY),
+        (SDKVersionError, ConfigEntryState.SETUP_RETRY),
         (RuntimeError("Test error"), ConfigEntryState.SETUP_RETRY),
     ],
 )

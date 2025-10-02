@@ -1,5 +1,6 @@
 """Tests for the OpenRGB config flow."""
 
+import socket
 from unittest.mock import patch
 
 from openrgb.utils import OpenRGBDisconnected, SDKVersionError
@@ -44,6 +45,8 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     [
         (ConnectionRefusedError, "cannot_connect"),
         (OpenRGBDisconnected, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
+        (socket.gaierror, "cannot_connect"),
         (SDKVersionError, "cannot_connect"),
         (RuntimeError("Test error"), "unknown"),
     ],
