@@ -46,8 +46,6 @@ async def test_all_button_entities_snapshot(
     ("action", "client_method"),
     [
         ("restart", "restart_container"),
-        ("stop", "stop_container"),
-        ("start", "start_container"),
     ],
 )
 async def test_buttons(
@@ -83,10 +81,6 @@ async def test_buttons(
     [
         (PortainerAuthenticationError("auth"), "restart_container"),
         (PortainerConnectionError("conn"), "restart_container"),
-        (PortainerAuthenticationError("auth"), "stop_container"),
-        (PortainerConnectionError("conn"), "stop_container"),
-        (PortainerAuthenticationError("auth"), "start_container"),
-        (PortainerConnectionError("conn"), "start_container"),
     ],
 )
 async def test_buttons_exceptions(

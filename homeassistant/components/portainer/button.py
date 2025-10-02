@@ -45,24 +45,6 @@ BUTTONS: tuple[PortainerButtonDescription, ...] = (
         endpoint_id,
         container_id: coordinator.async_restart_container(endpoint_id, container_id),
     ),
-    PortainerButtonDescription(
-        key="stop",
-        name="Stop Container",
-        icon="mdi:stop-circle-outline",
-        entity_category=EntityCategory.CONFIG,
-        press_action=lambda coordinator,
-        endpoint_id,
-        container_id: coordinator.async_stop_container(endpoint_id, container_id),
-    ),
-    PortainerButtonDescription(
-        key="start",
-        name="Start Container",
-        icon="mdi:play-circle-outline",
-        entity_category=EntityCategory.CONFIG,
-        press_action=lambda coordinator,
-        endpoint_id,
-        container_id: coordinator.async_start_container(endpoint_id, container_id),
-    ),
 )
 
 
