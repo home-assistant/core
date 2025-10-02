@@ -3,11 +3,12 @@
 from pyportainer.models.docker import DockerContainer
 from yarl import URL
 
+from homeassistant.const import CONF_URL
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
-from .coordinator import CONF_URL, PortainerCoordinator, PortainerCoordinatorData
+from .coordinator import PortainerCoordinator, PortainerCoordinatorData
 
 
 class PortainerCoordinatorEntity(CoordinatorEntity[PortainerCoordinator]):
