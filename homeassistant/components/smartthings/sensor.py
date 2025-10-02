@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
-import logging
 from typing import Any, cast
 
 from pysmartthings import Attribute, Capability, ComponentStatus, SmartThings, Status
@@ -40,8 +39,6 @@ from . import FullDevice, SmartThingsConfigEntry
 from .const import MAIN
 from .entity import SmartThingsEntity
 from .util import deprecate_entity
-
-_LOGGER = logging.getLogger(__name__)
 
 THERMOSTAT_CAPABILITIES = {
     Capability.TEMPERATURE_MEASUREMENT,
