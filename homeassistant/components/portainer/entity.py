@@ -1,12 +1,13 @@
 """Base class for Portainer entities."""
 
 from pyportainer.models.docker import DockerContainer
+from yarl import URL
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
-from .coordinator import PortainerCoordinator, PortainerCoordinatorData
+from .coordinator import CONF_URL, PortainerCoordinator, PortainerCoordinatorData
 
 
 class PortainerCoordinatorEntity(CoordinatorEntity[PortainerCoordinator]):
@@ -31,6 +32,9 @@ class PortainerEndpointEntity(PortainerCoordinatorEntity):
             identifiers={
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_{self.device_id}")
             },
+            configuration_url=URL(
+                f"{coordinator.config_entry.data[CONF_URL]}#!/{self.device_id}/docker/dashboard"
+            ),
             manufacturer=DEFAULT_NAME,
             model="Endpoint",
             name=device_info.endpoint.name,
@@ -63,6 +67,9 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
                 (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{device_name}")
             },
             manufacturer=DEFAULT_NAME,
+            configuration_url=URL(
+                f"{coordinator.config_entry.data[CONF_URL]}#!/{self.endpoint_id}/docker/containers/{self.device_id}"
+            ),
             model="Container",
             name=device_name,
             via_device=(
