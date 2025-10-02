@@ -89,6 +89,11 @@
               "long_wind": "Long wind",
               "smart": "Smart"
             }
+          },
+          "fan_mde": {
+            "state": {
+              "turbo": "Turbo"
+            }
           }
         }
       }
