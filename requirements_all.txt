@@ -271,7 +271,7 @@ aiohasupervisor==0.3.3
 aiohomeconnect==0.20.0
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.18
+aiohomekit==3.2.19
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -1399,6 +1399,9 @@ loqedAPI==2.1.10
 # homeassistant.components.luftdaten
 luftdaten==0.7.4
 
+# homeassistant.components.lunatone
+lunatone-rest-api-client==0.4.8
+
 # homeassistant.components.lupusec
 lupupy==0.3.2
 
@@ -1939,7 +1942,7 @@ pycsspeechtts==1.0.8
 # pycups==2.0.4
 
 # homeassistant.components.cync
-pycync==0.4.0
+pycync==0.4.1
 
 # homeassistant.components.daikin
 pydaikin==2.16.0
@@ -2296,7 +2299,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.2
+pyportainer==1.0.3
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.0.1
@@ -2550,7 +2553,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.47.1
+python-roborock==2.49.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.44
