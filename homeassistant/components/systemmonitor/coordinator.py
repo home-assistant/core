@@ -96,7 +96,6 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         config_entry: SystemMonitorConfigEntry,
         psutil_wrapper: ha_psutil.PsutilWrapper,
         arguments: list[str],
-        monitor_processes: list[str] | None = None,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -109,7 +108,6 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         )
         self._psutil = psutil_wrapper.psutil
         self._arguments = arguments
-        self._monitor_processes = set(monitor_processes or [])
         self.boot_time: datetime | None = None
 
         self._initial_update: bool = True
