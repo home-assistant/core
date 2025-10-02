@@ -79,10 +79,10 @@ async def test_entities(
     assert entity_entries[0].device_id == device_entry.id
 
 
+@pytest.mark.usefixtures("mock_openrgb_client")
 async def test_light_with_black_leds(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_openrgb_client: MagicMock,
     mock_openrgb_device: MagicMock,
 ) -> None:
     """Test light state when all LEDs are black (off by color)."""
@@ -104,10 +104,10 @@ async def test_light_with_black_leds(
     assert state.attributes.get("brightness") is None
 
 
+@pytest.mark.usefixtures("mock_openrgb_client")
 async def test_light_with_one_non_black_led(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_openrgb_client: MagicMock,
     mock_openrgb_device: MagicMock,
 ) -> None:
     """Test light state when one LED is non-black among black LEDs (on by color)."""
@@ -270,10 +270,10 @@ async def test_turn_on_light_with_effect_off(
     mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.STATIC)
 
 
+@pytest.mark.usefixtures("mock_openrgb_client")
 async def test_turn_on_restores_previous_values(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_openrgb_client: MagicMock,
     mock_openrgb_device: MagicMock,
 ) -> None:
     """Test turning on after off restores previous brightness, color, and mode."""
@@ -323,10 +323,10 @@ async def test_turn_on_restores_previous_values(
     mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.DIRECT)
 
 
+@pytest.mark.usefixtures("mock_openrgb_client")
 async def test_previous_values_updated_on_refresh(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_openrgb_client: MagicMock,
     mock_openrgb_device: MagicMock,
 ) -> None:
     """Test that previous values are updated when device state changes externally."""
@@ -384,10 +384,10 @@ async def test_previous_values_updated_on_refresh(
     mock_openrgb_device.set_color.assert_called_once_with(RGBColor(0, 128, 0), True)
 
 
+@pytest.mark.usefixtures("mock_openrgb_client")
 async def test_turn_on_with_non_color_effect_and_color_params(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_openrgb_client: MagicMock,
     mock_openrgb_device: MagicMock,
 ) -> None:
     """Test turning on with a non-color effect but providing color/brightness."""
@@ -430,10 +430,10 @@ async def test_turn_off_light(
     mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.OFF)
 
 
+@pytest.mark.usefixtures("mock_openrgb_client")
 async def test_turn_off_light_without_off_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_openrgb_client: MagicMock,
     mock_openrgb_device: MagicMock,
 ) -> None:
     """Test turning off a light that doesn't support Off mode."""
