@@ -119,9 +119,6 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
     def get_device_name(self, device_key: str) -> str:
         """Get device name with suffix if there are duplicates."""
-        if device_key not in self.data:
-            return ""
-
         device = self.data[device_key]
         device_name = device.name
 
