@@ -84,7 +84,7 @@ class PortainerContainerSwitch(PortainerContainerEntity, SwitchEntity):
         device_info: DockerContainer,
         via_device: PortainerCoordinatorData,
     ) -> None:
-        """Initialize the Portainer container sensor."""
+        """Initialize the Portainer container switch."""
         self.entity_description = entity_description
         super().__init__(device_info, coordinator, via_device)
 
