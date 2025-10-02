@@ -22,7 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from .conftest import TEST_CAM_NAME, TEST_NVR_NAME, TEST_UID
 
