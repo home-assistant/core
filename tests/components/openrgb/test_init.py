@@ -1,7 +1,7 @@
 """Tests for the OpenRGB integration init."""
 
 import socket
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from openrgb.utils import OpenRGBDisconnected, SDKVersionError
 import pytest
@@ -73,17 +73,16 @@ async def test_server_device_registry(
 async def test_setup_entry_exceptions(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
     exception: Exception,
     expected_state: ConfigEntryState,
 ) -> None:
     """Test setup entry with various exceptions."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.openrgb.coordinator.OpenRGBClient",
-        side_effect=exception,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_openrgb_client.client_class_mock.side_effect = exception
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is expected_state

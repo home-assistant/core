@@ -187,6 +187,9 @@ def mock_openrgb_client(mock_openrgb_device: MagicMock) -> Generator[MagicMock]:
         client.update = MagicMock()
         client.disconnect = MagicMock()
 
+        # Store the class mock so tests can set side_effect
+        client.client_class_mock = client_mock
+
         yield client
 
 

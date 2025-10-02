@@ -1,7 +1,6 @@
 """Tests for the OpenRGB config flow."""
 
 import socket
-from unittest.mock import patch
 
 from openrgb.utils import OpenRGBDisconnected, SDKVersionError
 import pytest
@@ -51,9 +50,9 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         (RuntimeError("Test error"), "unknown"),
     ],
 )
-@pytest.mark.usefixtures("mock_setup_entry", "mock_openrgb_client")
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_errors(
-    hass: HomeAssistant, exception: Exception, error_key: str
+    hass: HomeAssistant, exception: Exception, error_key: str, mock_openrgb_client
 ) -> None:
     """Test user flow with various errors."""
     result = await hass.config_entries.flow.async_init(
@@ -61,14 +60,12 @@ async def test_user_flow_errors(
         context={"source": SOURCE_USER},
     )
 
-    with patch(
-        "homeassistant.components.openrgb.config_flow.OpenRGBClient",
-        side_effect=exception,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
-        )
+    mock_openrgb_client.client_class_mock.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
