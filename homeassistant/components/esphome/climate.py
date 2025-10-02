@@ -163,8 +163,13 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         self._attr_max_temp = static_info.visual_max_temperature
         self._attr_min_humidity = round(static_info.visual_min_humidity)
         self._attr_max_humidity = round(static_info.visual_max_humidity)
-        features = ClimateEntityFeature.TARGET_TEMPERATURE
-        if static_info.supports_two_point_target_temperature:
+        features = ClimateEntityFeature(0)
+        if not static_info.requires_two_point_target_temperature:
+            features = ClimateEntityFeature.TARGET_TEMPERATURE
+        if (
+            static_info.supports_two_point_target_temperature
+            or static_info.requires_two_point_target_temperature
+        ):
             features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         if static_info.supports_target_humidity:
             features |= ClimateEntityFeature.TARGET_HUMIDITY
