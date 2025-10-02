@@ -48,7 +48,7 @@ async def test_server_device_registry(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
 
-    assert server_device is not None
+    assert server_device
     assert server_device.name == "OpenRGB (127.0.0.1:6742)"
     assert server_device.manufacturer == "OpenRGB"
     assert server_device.model == "OpenRGB SDK Server"

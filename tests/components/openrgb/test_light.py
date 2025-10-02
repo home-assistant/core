@@ -13,11 +13,12 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
-from homeassistant.components.openrgb.const import DOMAIN, OpenRGBMode
+from homeassistant.components.openrgb.const import DEFAULT_COLOR, DOMAIN, OpenRGBMode
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     Platform,
@@ -68,25 +69,25 @@ async def test_entities(
     assert entity_entries[0].device_id == device_entry.id
 
 
-@pytest.mark.usefixtures("init_integration")
 async def test_turn_on_light(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
     mock_openrgb_device: MagicMock,
 ) -> None:
     """Test turning on the light."""
+    # Initialize device in Off mode
+    mock_openrgb_device.active_mode = 3
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Verify light is initially off
     state = hass.states.get("light.test_rgb_device")
     assert state
-    assert state.state == STATE_ON
+    assert state.state == STATE_OFF
 
-    # Turn off first
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_rgb_device"},
-        blocking=True,
-    )
-
-    # Turn on without parameters - should restore previous state
+    # Turn on without parameters
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -94,8 +95,12 @@ async def test_turn_on_light(
         blocking=True,
     )
 
-    # Verify that set_mode was called (to restore previous mode)
-    assert mock_openrgb_device.set_mode.called
+    # Verify that set_mode was called to restore to Static mode (preferred over Direct)
+    mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.STATIC)
+    # And set_color was called with default color
+    mock_openrgb_device.set_color.assert_called_once_with(
+        RGBColor(*DEFAULT_COLOR), True
+    )
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -114,12 +119,11 @@ async def test_turn_on_light_with_color(
         blocking=True,
     )
 
-    # Check that set_color was called
-    assert mock_openrgb_device.set_color.called
-    call_args = mock_openrgb_device.set_color.call_args
-    color: RGBColor = call_args[0][0]
-    # Color should be scaled with brightness
-    assert isinstance(color, RGBColor)
+    # Check that set_color was called with green color scaled by brightness
+    # Current brightness is 255 (from initial red color), so green should be full
+    mock_openrgb_device.set_color.assert_called_once_with(
+        RGBColor(red=0, green=255, blue=0), True
+    )
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -138,7 +142,12 @@ async def test_turn_on_light_with_brightness(
         blocking=True,
     )
 
-    assert mock_openrgb_device.set_color.called
+    # Check that set_color was called with scaled color by brightness (128/255 = 0.502)
+    # Initial color (255, 0, 0) -> HS (0.0, 100.0) -> When applying brightness 128,
+    # the V component becomes 50.2%, giving RGB (128, 128, 128) after hs_to_RGB conversion
+    mock_openrgb_device.set_color.assert_called_once_with(
+        RGBColor(red=128, green=128, blue=128), True
+    )
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -231,7 +240,7 @@ async def test_light_availability(
     mock_openrgb_client: MagicMock,
     mock_openrgb_device: MagicMock,
 ) -> None:
-    """Test light becomes unavailable when device disconnects."""
+    """Test light becomes unavailable when device is unplugged."""
     state = hass.states.get("light.test_rgb_device")
     assert state
     assert state.state == STATE_ON
@@ -259,7 +268,7 @@ async def test_duplicate_device_names(
     # Create two devices with the same name but different serials and device IDs
     device1 = MagicMock()
     device1.id = 3  # Should get suffix "1"
-    device1.name = "ENE RAM"
+    device1.name = "ENE DRAM"
     device1.type = MagicMock()
     device1.type.name = "DRAM"
     device1.metadata = MagicMock()
@@ -276,7 +285,7 @@ async def test_duplicate_device_names(
 
     device2 = MagicMock()
     device2.id = 4  # Should get suffix "2"
-    device2.name = "ENE RAM"
+    device2.name = "ENE DRAM"
     device2.type = MagicMock()
     device2.type.name = "DRAM"
     device2.metadata = MagicMock()
@@ -313,10 +322,10 @@ async def test_duplicate_device_names(
         identifiers={(DOMAIN, device2_key)}
     )
 
-    assert device1_entry is not None
-    assert device2_entry is not None
+    assert device1_entry
+    assert device2_entry
 
     # device1 has lower device.id, so it gets suffix "1"
     # device2 has higher device.id, so it gets suffix "2"
-    assert device1_entry.name == "ENE RAM 1"
-    assert device2_entry.name == "ENE RAM 2"
+    assert device1_entry.name == "ENE DRAM 1"
+    assert device2_entry.name == "ENE DRAM 2"

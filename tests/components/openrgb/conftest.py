@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from openrgb.utils import DeviceType, ModeFlags, RGBColor
 import pytest
 
-from homeassistant.components.openrgb.const import DOMAIN
+from homeassistant.components.openrgb.const import DOMAIN, OpenRGBMode
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -53,7 +53,7 @@ def mock_device_data() -> dict[str, Any]:
         "active_mode": 0,
         "modes": [
             {
-                "name": "Direct",
+                "name": OpenRGBMode.DIRECT,
                 "value": 0,
                 "flags": ModeFlags.HAS_PER_LED_COLOR,
                 "speed_min": 0,
@@ -69,7 +69,7 @@ def mock_device_data() -> dict[str, Any]:
                 "colors": [],
             },
             {
-                "name": "Static",
+                "name": OpenRGBMode.STATIC,
                 "value": 1,
                 "flags": ModeFlags.HAS_PER_LED_COLOR,
                 "speed_min": 0,
@@ -101,7 +101,7 @@ def mock_device_data() -> dict[str, Any]:
                 "colors": [],
             },
             {
-                "name": "Off",
+                "name": OpenRGBMode.OFF,
                 "value": 3,
                 "flags": 0,
                 "speed_min": 0,
