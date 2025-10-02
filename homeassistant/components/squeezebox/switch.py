@@ -21,7 +21,7 @@ from .coordinator import SqueezeBoxPlayerUpdateCoordinator
 from .entity import SqueezeboxEntity
 
 _LOGGER = logging.getLogger(__name__)
-# Coordinator is used to centralize the data updates
+
 PARALLEL_UPDATES = 1
 
 
