@@ -328,10 +328,7 @@ async def test_options_flow(
 
     # Verify async_flash_silabs_firmware was called with ZBT-2's reset methods
     assert flash_mock.call_count == 1
-    assert flash_mock.mock_calls[0].kwargs["bootloader_reset_methods"] == [
-        "rts_dtr",
-        "baudrate",
-    ]
+    assert flash_mock.mock_calls[0].kwargs["bootloader_reset_methods"] == ["rts_dtr"]
 
 
 async def test_duplicate_discovery(hass: HomeAssistant) -> None:
