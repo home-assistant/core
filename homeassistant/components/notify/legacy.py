@@ -327,7 +327,8 @@ class BaseNotificationService:
         service_desc = {
             CONF_NAME: f"Send a notification with {self._service_name}",
             CONF_DESCRIPTION: (
-                f"Sends a notification message using the {self._service_name} service."
+                "Sends a notification message using the"
+                f" {self._service_name} service."
             ),
             CONF_FIELDS: self.services_dict[SERVICE_NOTIFY][CONF_FIELDS],
         }

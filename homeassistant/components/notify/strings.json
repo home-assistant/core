@@ -6,6 +6,28 @@
     }
   },
   "services": {
+    "html5": {
+      "name": "Send a notification with html5",
+      "description": "Sends a notification message using the html5 service.",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "The message to be sent."
+        },
+        "title": {
+          "name": "Title",
+          "description": "The title of the message (optional)."
+        },
+        "target": {
+          "name": "Target",
+          "description": "An array of targets."
+        },
+        "data": {
+          "name": "Data",
+          "description": "Extended information of notification. Supports tag, actions, and timestamp."
+        }
+      }
+    },
     "notify": {
       "name": "Send a notification",
       "description": "Sends a notification message to selected targets.",
