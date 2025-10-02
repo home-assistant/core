@@ -21,7 +21,7 @@
         "data_description": {
           "api_key": "The new API access token for authenticating with Firefly III"
         },
-        "description": "The access token for your Firefly III instance needs to be re-authenticated. Go to **Options > Profile** and select the **OAuth** tab. Create a new personal access token and copy it (it will only display once)."
+        "description": "The access token for your Firefly III instance is invalid and needs to be updated. Go to **Options > Profile** and select the **OAuth** tab. Create a new personal access token and copy it (it will only display once)."
       }
     },
     "error": {
