@@ -34,7 +34,7 @@
     "climate": {
       "air_conditioner": {
         "state_attributes": {
-          "fan_mde": {
+          "fan_mode": {
             "state": {
               "turbo": "mdi:wind-power"
             }

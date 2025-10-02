@@ -90,7 +90,7 @@
               "smart": "Smart"
             }
           },
-          "fan_mde": {
+          "fan_mode": {
             "state": {
               "turbo": "Turbo"
             }
