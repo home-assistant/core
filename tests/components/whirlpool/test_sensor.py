@@ -6,6 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from whirlpool.dryer import MachineState as DryerMachineState
+from whirlpool.oven import CavityState as OvenCavityState, CookMode
 from whirlpool.washer import MachineState as WasherMachineState
 
 from homeassistant.components.whirlpool.sensor import SCAN_INTERVAL
@@ -310,6 +311,34 @@ async def test_washer_running_states(
                 (3, "50"),
                 (4, "100"),
                 (5, "active"),
+            ],
+        ),
+        (
+            "sensor.oven_upper_oven_state",
+            "mock_oven_api",
+            "get_cavity_state",
+            [
+                (OvenCavityState.Standby, "standby"),
+                (OvenCavityState.Preheating, "preheating"),
+                (OvenCavityState.Cooking, "cooking"),
+                (OvenCavityState.NotPresent, "not_present"),
+                (None, STATE_UNKNOWN),
+            ],
+        ),
+        (
+            "sensor.oven_upper_oven_cook_mode",
+            "mock_oven_api",
+            "get_cook_mode",
+            [
+                (CookMode.Standby, "standby"),
+                (CookMode.Bake, "bake"),
+                (CookMode.ConvectBake, "convection_bake"),
+                (CookMode.Broil, "broil"),
+                (CookMode.ConvectBroil, "convection_broil"),
+                (CookMode.ConvectRoast, "convection_roast"),
+                (CookMode.KeepWarm, "keep_warm"),
+                (CookMode.AirFry, "air_fry"),
+                (None, STATE_UNKNOWN),
             ],
         ),
     ],
