@@ -19,7 +19,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -147,7 +147,7 @@ def _format_dict(input: dict[str, Any]) -> dict[str, Any]:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PTDevices sensors from config entries."""
     coordinator: PTDevicesCoordinator = hass.data[DOMAIN][config_entry.entry_id]
@@ -181,10 +181,9 @@ class PTDevicesSensor(CoordinatorEntity[PTDevicesCoordinator], SensorEntity):
         # Get the mac address for use in the device id
         mac: str = self.coordinator.data["body"]["device_id"]
 
-        self._attr_unique_id = f"{mac}_{description.key}"
-
         self.entity_description = description
         self._attr_device_info = coordinator.device_info
+        self._attr_unique_id = f"{mac}_{description.key}"
 
         # Initial Update
         self._update_attrs()
