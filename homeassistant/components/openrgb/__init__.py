@@ -23,7 +23,7 @@ def _setup_server_device_registry(
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},
-        name=f"OpenRGB ({coordinator.server_address})",
+        name=entry.title,
         model="OpenRGB SDK Server",
         manufacturer="OpenRGB",
         sw_version=coordinator.get_client_protocol_version(),
