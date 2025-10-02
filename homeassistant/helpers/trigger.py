@@ -290,7 +290,7 @@ class TriggerActionRunner(Protocol):
         """Define trigger action runner type.
 
         :return: A future that allows awaiting for the action to finish if it is a
-        coroutine, or None if it is a callback.
+        coroutine function, or None if the action is a callback.
         """
 
 
