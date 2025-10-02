@@ -460,20 +460,22 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
             await hass.async_block_till_done()
             await instance.async_block_till_done()
 
-            await instance.async_add_executor_job(
-                migration._drop_foreign_key_constraints,
-                instance.get_session,
-                instance.engine,
-                "states",
-                "event_id",
-            )
+            if not recorder_db_url.startswith("sqlite://"):
+                await instance.async_add_executor_job(
+                    migration._drop_foreign_key_constraints,
+                    instance.get_session,
+                    instance.engine,
+                    "states",
+                    "event_id",
+                )
             await async_drop_index(instance, "states", "ix_states_event_id", caplog)
-            await instance.async_add_executor_job(
-                migration._restore_foreign_key_constraints,
-                instance.get_session,
-                instance.engine,
-                [("states", "event_id", "events", "event_id")],
-            )
+            if not recorder_db_url.startswith("sqlite://"):
+                await instance.async_add_executor_job(
+                    migration._restore_foreign_key_constraints,
+                    instance.get_session,
+                    instance.engine,
+                    [("states", "event_id", "events", "event_id")],
+                )
 
             states_indexes = await instance.async_add_executor_job(
                 _get_states_index_names
