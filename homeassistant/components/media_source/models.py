@@ -63,12 +63,9 @@ class MediaSourceItem:
     async def async_browse(self) -> BrowseMediaSource:
         """Browse this item."""
         if self.domain is None:
-            translations = async_get_cached_translations(
+            title = async_get_cached_translations(
                 self.hass, self.hass.config.language, "common", "media_source"
-            )
-            title = translations.get(
-                "component.media_source.common.sources_default", "Media Sources"
-            )
+            ).get("component.media_source.common.sources_default", "Media Sources")
             base = BrowseMediaSource(
                 domain=None,
                 identifier=None,
