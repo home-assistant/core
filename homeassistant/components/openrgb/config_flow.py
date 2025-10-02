@@ -63,10 +63,9 @@ class OpenRGBConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 errors["base"] = "unknown"
             else:
-                title = f"OpenRGB ({host}:{port})"
-
                 return self.async_create_entry(
-                    title=title, data={CONF_HOST: host, CONF_PORT: port}
+                    title=f"OpenRGB ({server_address})",
+                    data={CONF_HOST: host, CONF_PORT: port},
                 )
 
         return self.async_show_form(
