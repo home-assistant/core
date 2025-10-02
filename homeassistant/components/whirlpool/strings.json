@@ -124,7 +124,6 @@
         "name": "End time"
       },
       "oven_state": {
-        "name": "Oven state",
         "state": {
           "standby": "[%key:common::state::standby%]",
           "preheating": "Preheating",
@@ -151,7 +150,7 @@
         }
       },
       "oven_cook_mode": {
-        "name": "Oven cook mode",
+        "name": "Cook mode",
         "state": {
           "standby": "[%key:common::state::standby%]",
           "bake": "Bake",
@@ -190,7 +189,7 @@
         }
       },
       "oven_current_temperature": {
-        "name": "Oven current temperature"
+        "name": "Current temperature"
       },
       "oven_current_temperature_upper": {
         "name": "Upper oven current temperature"
@@ -199,22 +198,13 @@
         "name": "Lower oven current temperature"
       },
       "oven_target_temperature": {
-        "name": "Oven target temperature"
+        "name": "Target temperature"
       },
       "oven_target_temperature_upper": {
         "name": "Upper oven target temperature"
       },
       "oven_target_temperature_lower": {
         "name": "Lower oven target temperature"
-      },
-      "oven_end_time": {
-        "name": "Oven end time"
-      },
-      "oven_end_time_upper": {
-        "name": "Upper oven end time"
-      },
-      "oven_end_time_lower": {
-        "name": "Lower oven end time"
       }
     }
   },
