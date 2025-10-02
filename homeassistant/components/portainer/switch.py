@@ -55,21 +55,18 @@ async def async_setup_entry(
     """Set up Portainer switch sensors."""
 
     coordinator: PortainerCoordinator = entry.runtime_data
-    entities: list[SwitchEntity] = []
 
-    for endpoint in coordinator.data.values():
-        entities.extend(
-            PortainerContainerSwitch(
-                coordinator=coordinator,
-                entity_description=entity_description,
-                device_info=container,
-                via_device=endpoint,
-            )
-            for container in endpoint.containers.values()
-            for entity_description in SWITCHES
+    async_add_entities(
+        PortainerContainerSwitch(
+            coordinator=coordinator,
+            entity_description=entity_description,
+            device_info=container,
+            via_device=endpoint,
         )
-
-    async_add_entities(entities)
+        for endpoint in coordinator.data.values()
+        for container in endpoint.containers.values()
+        for entity_description in SWITCHES
+    )
 
 
 class PortainerContainerSwitch(PortainerContainerEntity, SwitchEntity):
