@@ -83,7 +83,7 @@
       'friendly_name': 'Air Purifier 131s',
       'mode': 'sleep',
       'night_light': None,
-      'percentage': None,
+      'percentage': 0,
       'percentage_step': 33.333333333333336,
       'preset_mode': 'sleep',
       'preset_modes': list([
@@ -670,7 +670,7 @@
       'display_status': 'off',
       'friendly_name': 'SmartTowerFan',
       'mode': 'normal',
-      'percentage': None,
+      'percentage': 0,
       'percentage_step': 8.333333333333334,
       'preset_mode': 'normal',
       'preset_modes': list([
