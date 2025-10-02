@@ -853,6 +853,18 @@
       },
       "total_dissolved_solids": {
         "name": "Total dissolved solids"
+      },
+      "dew_point_temperature": {
+        "name": "Dew point temperature"
+      },
+      "feels_like_temperature": {
+        "name": "Feels like temperature"
+      },
+      "heat_index_temperature": {
+        "name": "Heat index temperature"
+      },
+      "wind_chill_index_temperature": {
+        "name": "Wind chill index temperature"
       }
     },
     "switch": {
