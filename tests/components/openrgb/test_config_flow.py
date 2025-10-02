@@ -71,6 +71,21 @@ async def test_user_flow_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": error_key}
 
+    # Test recovery from error
+    mock_openrgb_client.client_class_mock.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6742},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "OpenRGB (127.0.0.1:6742)"
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 6742,
+    }
+
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_openrgb_client")
 async def test_user_flow_already_configured(
