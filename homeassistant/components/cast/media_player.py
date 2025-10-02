@@ -818,7 +818,7 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                 return MediaPlayerState.IDLE
 
         if self._chromecast is not None and self._chromecast.is_idle:
-            # Iff library consider us idle, that is our off state
+            # If library consider us idle, that is our off state
             # it takes HDMI status into account for cast devices.
             return MediaPlayerState.OFF
 
