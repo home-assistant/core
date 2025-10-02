@@ -540,7 +540,6 @@ async def test_light_availability(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_openrgb_client: MagicMock,
-    mock_openrgb_device: MagicMock,
 ) -> None:
     """Test light becomes unavailable when device is unplugged."""
     state = hass.states.get("light.test_rgb_device")
