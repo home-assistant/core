@@ -32,7 +32,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: OpenRGBConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
