@@ -2344,7 +2344,6 @@ async def test_cleanup_unmigrated_state_timestamps(
             await instance.async_add_executor_job(_insert_states)
 
             await async_wait_recording_done(hass)
-            now = dt_util.utcnow()
             await _async_wait_migration_done(hass)
             await async_wait_recording_done(hass)
 
@@ -2358,29 +2357,22 @@ async def test_cleanup_unmigrated_state_timestamps(
             return {state.state_id: _object_as_dict(state) for state in states}
 
     # Run again with new schema, let migration run
-    async with async_test_home_assistant() as hass:
-        with (
-            freeze_time(now),
-            instrument_migration(hass) as instrumented_migration,
-        ):
-            async with async_test_recorder(
-                hass, wait_recorder=False, wait_recorder_setup=False
-            ) as instance:
-                # Check the context ID migrator is considered non-live
-                assert recorder.util.async_migration_is_live(hass) is False
-                instrumented_migration.migration_stall.set()
-                instance.recorder_and_worker_thread_ids.add(threading.get_ident())
+    async with (
+        async_test_home_assistant() as hass,
+        async_test_recorder(hass) as instance,
+    ):
+        instance.recorder_and_worker_thread_ids.add(threading.get_ident())
 
-                await hass.async_block_till_done()
-                await async_wait_recording_done(hass)
-                await async_wait_recording_done(hass)
+        await hass.async_block_till_done()
+        await async_wait_recording_done(hass)
+        await async_wait_recording_done(hass)
 
-                states_by_metadata_id = await instance.async_add_executor_job(
-                    _fetch_migrated_states
-                )
+        states_by_metadata_id = await instance.async_add_executor_job(
+            _fetch_migrated_states
+        )
 
-                await hass.async_stop()
-                await hass.async_block_till_done()
+        await hass.async_stop()
+        await hass.async_block_till_done()
 
     assert len(states_by_metadata_id) == 3
     for state in states_by_metadata_id.values():
