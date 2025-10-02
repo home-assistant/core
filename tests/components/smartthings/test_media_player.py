@@ -1,33 +1,6 @@
 """Test for the SmartThings media player platform."""
 
-import sys
-import types
 from unittest.mock import AsyncMock, patch
-
-if "haffmpeg" not in sys.modules:
-    haffmpeg_module = types.ModuleType("haffmpeg")
-    haffmpeg_core_module = types.ModuleType("haffmpeg.core")
-    haffmpeg_tools_module = types.ModuleType("haffmpeg.tools")
-
-    class _StubHAFFmpeg:  # minimal stub to satisfy imports
-        ...
-
-    haffmpeg_core_module.HAFFmpeg = _StubHAFFmpeg
-    haffmpeg_tools_module.IMAGE_JPEG = b""
-
-    class _StubFFVersion:  # minimal stub used by ffmpeg integration
-        ...
-
-    class _StubImageFrame:  # minimal stub used by ffmpeg integration
-        ...
-
-    haffmpeg_tools_module.FFVersion = _StubFFVersion
-    haffmpeg_tools_module.ImageFrame = _StubImageFrame
-    haffmpeg_module.core = haffmpeg_core_module
-    haffmpeg_module.tools = haffmpeg_tools_module
-    sys.modules["haffmpeg"] = haffmpeg_module
-    sys.modules["haffmpeg.core"] = haffmpeg_core_module
-    sys.modules["haffmpeg.tools"] = haffmpeg_tools_module
 
 from pysmartthings import Attribute, Capability, Command, Status
 from pysmartthings.models import HealthStatus

@@ -3,38 +3,11 @@
 from __future__ import annotations
 
 import io
-import sys
-import types
 from unittest.mock import AsyncMock, patch
 from urllib.parse import urlsplit
 import wave
 
 import pytest
-
-# Provide minimal haffmpeg stub so ffmpeg imports succeed without installing dependency.
-if "haffmpeg" not in sys.modules:
-    haffmpeg_module = types.ModuleType("haffmpeg")
-    haffmpeg_core_module = types.ModuleType("haffmpeg.core")
-    haffmpeg_tools_module = types.ModuleType("haffmpeg.tools")
-
-    class _StubHAFFmpeg:  # pragma: no cover - simple stub
-        ...
-
-    class _StubFFVersion:  # pragma: no cover - simple stub
-        ...
-
-    class _StubImageFrame:  # pragma: no cover - simple stub
-        ...
-
-    haffmpeg_core_module.HAFFmpeg = _StubHAFFmpeg
-    haffmpeg_tools_module.IMAGE_JPEG = b""
-    haffmpeg_tools_module.FFVersion = _StubFFVersion
-    haffmpeg_tools_module.ImageFrame = _StubImageFrame
-    haffmpeg_module.core = haffmpeg_core_module
-    haffmpeg_module.tools = haffmpeg_tools_module
-    sys.modules["haffmpeg"] = haffmpeg_module
-    sys.modules["haffmpeg.core"] = haffmpeg_core_module
-    sys.modules["haffmpeg.tools"] = haffmpeg_tools_module
 
 from homeassistant.components.smartthings.audio import (
     PCM_CHANNELS,
