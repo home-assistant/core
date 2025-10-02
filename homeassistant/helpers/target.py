@@ -96,10 +96,10 @@ class TargetSelectorData:
 class SelectedEntities:
     """Class to hold the selected entities."""
 
-    # Entities that were explicitly mentioned.
+    # Entity IDs of entities that were explicitly mentioned.
     referenced: set[str] = dataclasses.field(default_factory=set)
 
-    # Entities that were referenced via device/area/floor/label ID.
+    # Entity IDs of entities that were referenced via device/area/floor/label ID.
     # Should not trigger a warning when they don't exist.
     indirectly_referenced: set[str] = dataclasses.field(default_factory=set)
 
@@ -182,10 +182,7 @@ def async_extract_referenced_entity_ids(
                 selected.missing_labels.add(label_id)
 
             for entity_entry in entities.get_entries_for_label(label_id):
-                if (
-                    entity_entry.entity_category is None
-                    and entity_entry.hidden_by is None
-                ):
+                if entity_entry.hidden_by is None:
                     selected.indirectly_referenced.add(entity_entry.entity_id)
 
             for device_entry in dev_reg.devices.get_devices_for_label(label_id):

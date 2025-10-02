@@ -34,6 +34,22 @@
           "10": "mdi:brightness-7"
         }
       }
+    },
+    "humidifier": {
+      "evaporative_humidifier": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "high": "mdi:water-plus",
+              "medium": "mdi:water",
+              "low": "mdi:water-outline",
+              "quiet": "mdi:volume-off",
+              "target_humidity": "mdi:target",
+              "drying_filter": "mdi:water-remove"
+            }
+          }
+        }
+      }
     }
   }
 }
