@@ -53,7 +53,6 @@ async def get_forecast(client: VictronVRMClient, site_id: int) -> VRMForecastSto
         type="forecast",
         return_aggregations=True,
     )
-
     return VRMForecastStore(
         solar=stats["solar_yield"],
         consumption=stats["consumption"],

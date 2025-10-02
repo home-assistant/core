@@ -34,14 +34,40 @@ class VRMForecastsSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[VRMForecastStore], int | float | datetime | None]
 
 
+def _get_solar_attr(
+    attr: str,
+) -> Callable[[VRMForecastStore], int | float | datetime | None]:
+    """Return a function that safely gets an attribute from estimate.solar."""
+
+    def getter(estimate: VRMForecastStore) -> int | float | datetime | None:
+        return (
+            getattr(estimate.solar, attr, None) if estimate.solar is not None else None
+        )
+
+    return getter
+
+
+def _get_consumption_attr(
+    attr: str,
+) -> Callable[[VRMForecastStore], int | float | datetime | None]:
+    """Return a function that safely gets an attribute from estimate.consumption."""
+
+    def getter(estimate: VRMForecastStore) -> int | float | datetime | None:
+        return (
+            getattr(estimate.consumption, attr, None)
+            if estimate.consumption is not None
+            else None
+        )
+
+    return getter
+
+
 SENSORS: tuple[VRMForecastsSensorEntityDescription, ...] = (
     # Solar forecast sensors
     VRMForecastsSensorEntityDescription(
         key="energy_production_estimate_yesterday",
         translation_key="energy_production_estimate_yesterday",
-        value_fn=lambda estimate: estimate.solar.yesterday_total
-        if estimate.solar is not None
-        else None,
+        value_fn=_get_solar_attr("yesterday_total"),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -51,9 +77,7 @@ SENSORS: tuple[VRMForecastsSensorEntityDescription, ...] = (
     VRMForecastsSensorEntityDescription(
         key="energy_production_estimate_today",
         translation_key="energy_production_estimate_today",
-        value_fn=lambda estimate: estimate.solar.today_total
-        if estimate.solar is not None
-        else None,
+        value_fn=_get_solar_attr("today_total"),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -63,9 +87,7 @@ SENSORS: tuple[VRMForecastsSensorEntityDescription, ...] = (
     VRMForecastsSensorEntityDescription(
         key="energy_production_estimate_today_remaining",
         translation_key="energy_production_estimate_today_remaining",
-        value_fn=lambda estimate: estimate.solar.today_left_total
-        if estimate.solar is not None
-        else None,
+        value_fn=_get_solar_attr("today_left_total"),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -75,9 +97,7 @@ SENSORS: tuple[VRMForecastsSensorEntityDescription, ...] = (
     VRMForecastsSensorEntityDescription(
         key="energy_production_estimate_tomorrow",
         translation_key="energy_production_estimate_tomorrow",
-        value_fn=lambda estimate: estimate.solar.tomorrow_total
-        if estimate.solar is not None
-        else None,
+        value_fn=_get_solar_attr("tomorrow_total"),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -87,33 +107,25 @@ SENSORS: tuple[VRMForecastsSensorEntityDescription, ...] = (
     VRMForecastsSensorEntityDescription(
         key="power_highest_peak_time_yesterday",
         translation_key="power_highest_peak_time_yesterday",
-        value_fn=lambda estimate: estimate.solar.yesterday_peak_time
-        if estimate.solar is not None
-        else None,
+        value_fn=_get_solar_attr("yesterday_peak_time"),
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     VRMForecastsSensorEntityDescription(
         key="power_highest_peak_time_today",
         translation_key="power_highest_peak_time_today",
-        value_fn=lambda estimate: estimate.solar.today_peak_time
-        if estimate.solar is not None
-        else None,
+        value_fn=_get_solar_attr("today_peak_time"),
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     VRMForecastsSensorEntityDescription(
         key="power_highest_peak_time_tomorrow",
         translation_key="power_highest_peak_time_tomorrow",
-        value_fn=lambda estimate: estimate.solar.tomorrow_peak_time
-        if estimate.solar is not None
-        else None,
+        value_fn=_get_solar_attr("tomorrow_peak_time"),
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     VRMForecastsSensorEntityDescription(
         key="energy_production_current_hour",
         translation_key="energy_production_current_hour",
-        value_fn=lambda estimate: estimate.solar.current_hour_total
-        if estimate.solar is not None
-        else None,
+        value_fn=_get_solar_attr("current_hour_total"),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -123,9 +135,7 @@ SENSORS: tuple[VRMForecastsSensorEntityDescription, ...] = (
     VRMForecastsSensorEntityDescription(
         key="energy_production_next_hour",
         translation_key="energy_production_next_hour",
-        value_fn=lambda estimate: estimate.solar.next_hour_total
-        if estimate.solar is not None
-        else None,
+        value_fn=_get_solar_attr("next_hour_total"),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -136,9 +146,7 @@ SENSORS: tuple[VRMForecastsSensorEntityDescription, ...] = (
     VRMForecastsSensorEntityDescription(
         key="energy_consumption_estimate_yesterday",
         translation_key="energy_consumption_estimate_yesterday",
-        value_fn=lambda estimate: estimate.consumption.yesterday_total
-        if estimate.consumption is not None
-        else None,
+        value_fn=_get_consumption_attr("yesterday_total"),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -148,9 +156,7 @@ SENSORS: tuple[VRMForecastsSensorEntityDescription, ...] = (
     VRMForecastsSensorEntityDescription(
         key="energy_consumption_estimate_today",
         translation_key="energy_consumption_estimate_today",
-        value_fn=lambda estimate: estimate.consumption.today_total
-        if estimate.consumption is not None
-        else None,
+        value_fn=_get_consumption_attr("today_total"),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -160,9 +166,7 @@ SENSORS: tuple[VRMForecastsSensorEntityDescription, ...] = (
     VRMForecastsSensorEntityDescription(
         key="energy_consumption_estimate_today_remaining",
         translation_key="energy_consumption_estimate_today_remaining",
-        value_fn=lambda estimate: estimate.consumption.today_left_total
-        if estimate.consumption is not None
-        else None,
+        value_fn=_get_consumption_attr("today_left_total"),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -172,9 +176,7 @@ SENSORS: tuple[VRMForecastsSensorEntityDescription, ...] = (
     VRMForecastsSensorEntityDescription(
         key="energy_consumption_estimate_tomorrow",
         translation_key="energy_consumption_estimate_tomorrow",
-        value_fn=lambda estimate: estimate.consumption.tomorrow_total
-        if estimate.consumption is not None
-        else None,
+        value_fn=_get_consumption_attr("tomorrow_total"),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -184,33 +186,25 @@ SENSORS: tuple[VRMForecastsSensorEntityDescription, ...] = (
     VRMForecastsSensorEntityDescription(
         key="consumption_highest_peak_time_yesterday",
         translation_key="consumption_highest_peak_time_yesterday",
-        value_fn=lambda estimate: estimate.consumption.yesterday_peak_time
-        if estimate.consumption is not None
-        else None,
+        value_fn=_get_consumption_attr("yesterday_peak_time"),
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     VRMForecastsSensorEntityDescription(
         key="consumption_highest_peak_time_today",
         translation_key="consumption_highest_peak_time_today",
-        value_fn=lambda estimate: estimate.consumption.today_peak_time
-        if estimate.consumption is not None
-        else None,
+        value_fn=_get_consumption_attr("today_peak_time"),
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     VRMForecastsSensorEntityDescription(
         key="consumption_highest_peak_time_tomorrow",
         translation_key="consumption_highest_peak_time_tomorrow",
-        value_fn=lambda estimate: estimate.consumption.tomorrow_peak_time
-        if estimate.consumption is not None
-        else None,
+        value_fn=_get_consumption_attr("tomorrow_peak_time"),
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     VRMForecastsSensorEntityDescription(
         key="energy_consumption_current_hour",
         translation_key="energy_consumption_current_hour",
-        value_fn=lambda estimate: estimate.consumption.current_hour_total
-        if estimate.consumption is not None
-        else None,
+        value_fn=_get_consumption_attr("current_hour_total"),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
@@ -220,9 +214,7 @@ SENSORS: tuple[VRMForecastsSensorEntityDescription, ...] = (
     VRMForecastsSensorEntityDescription(
         key="energy_consumption_next_hour",
         translation_key="energy_consumption_next_hour",
-        value_fn=lambda estimate: estimate.consumption.next_hour_total
-        if estimate.consumption is not None
-        else None,
+        value_fn=_get_consumption_attr("next_hour_total"),
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
