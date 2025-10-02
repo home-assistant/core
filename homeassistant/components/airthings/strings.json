@@ -4,9 +4,9 @@
       "user": {
         "data": {
           "id": "ID",
-          "secret": "Secret",
-          "description": "Login at {url} to find your credentials"
-        }
+          "secret": "Secret"
+        },
+        "description": "Login at {url} to find your credentials"
       }
     },
     "error": {
