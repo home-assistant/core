@@ -238,30 +238,6 @@ async def test_fix_unique_id_duplicate(
         "expected_device_identifier",
     ),
     [
-        (
-            SERIAL_NUMBER,
-            SERIAL_NUMBER,
-            SERIAL_NUMBER,
-            str(SERIAL_NUMBER),
-            MAC_ADDRESS_UNIQUE_ID,
-            MAC_ADDRESS_UNIQUE_ID,
-        ),
-        (
-            SERIAL_NUMBER,
-            SERIAL_NUMBER,
-            f"{SERIAL_NUMBER}-rain-delay",
-            f"{SERIAL_NUMBER}-1",
-            f"{MAC_ADDRESS_UNIQUE_ID}-rain-delay",
-            f"{MAC_ADDRESS_UNIQUE_ID}-1",
-        ),
-        (
-            SERIAL_NUMBER,
-            SERIAL_NUMBER,
-            SERIAL_NUMBER,
-            SERIAL_NUMBER,
-            MAC_ADDRESS_UNIQUE_ID,
-            MAC_ADDRESS_UNIQUE_ID,
-        ),
         ("0", 0, "0", "0", MAC_ADDRESS_UNIQUE_ID, MAC_ADDRESS_UNIQUE_ID),
         (
             "0",
@@ -289,9 +265,6 @@ async def test_fix_unique_id_duplicate(
         ),
     ],
     ids=(
-        "serial-number",
-        "serial-number-with-suffix",
-        "serial-number-int",
         "zero-serial",
         "zero-serial-suffix",
         "new-format",

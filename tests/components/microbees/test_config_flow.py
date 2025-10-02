@@ -74,7 +74,7 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test@microbees.com"
     assert "result" in result
-    assert result["result"].unique_id == 54321
+    assert result["result"].unique_id == "54321"
     assert "token" in result["result"].data
     assert result["result"].data["token"]["access_token"] == "mock-access-token"
     assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"

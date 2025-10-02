@@ -20,7 +20,6 @@ from .conftest import (
     HOST,
     MAC_ADDRESS_UNIQUE_ID,
     PASSWORD,
-    SERIAL_NUMBER,
     SERIAL_RESPONSE,
     URL,
     WIFI_PARAMS_RESPONSE,
@@ -190,13 +189,6 @@ async def test_multiple_config_entries(
             ],
             CONFIG_ENTRY_DATA,
         ),
-        # Old unique id with serial, but same host
-        (
-            SERIAL_NUMBER,
-            CONFIG_ENTRY_DATA,
-            [mock_response(SERIAL_RESPONSE), mock_json_response(WIFI_PARAMS_RESPONSE)],
-            CONFIG_ENTRY_DATA,
-        ),
         # Old unique id with no serial, but same host
         (
             None,
@@ -220,7 +212,6 @@ async def test_multiple_config_entries(
     ],
     ids=[
         "duplicate-mac-unique-id",
-        "duplicate-host-legacy-serial-number",
         "duplicate-host-port-no-serial",
         "duplicate-duplicate-hostname",
     ],
