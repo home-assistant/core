@@ -241,55 +241,60 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        mode_to_apply = None
+        mode = None
         if ATTR_EFFECT in kwargs:
             effect = kwargs[ATTR_EFFECT]
-            mode_to_apply = (
-                self._preferred_no_effect_mode if effect == EFFECT_OFF else effect
-            )
+            mode = self._preferred_no_effect_mode if effect == EFFECT_OFF else effect
         elif self._mode is None:
-            # If the current mode is Off, try to restore previous mode if known
-            mode_to_apply = self._previous_mode or self._preferred_no_effect_mode
+            # Restore previous mode when turning on from Off mode
+            mode = self._previous_mode or self._preferred_no_effect_mode
 
-        if mode_to_apply is None:
+        # Check if current or new mode supports colors
+        if mode is None:
+            # When not applying a new mode, check if the current mode supports color
             mode_supports_color = self._mode in self._supports_color_modes
         else:
-            mode_supports_color = mode_to_apply in self._supports_color_modes
+            mode_supports_color = mode in self._supports_color_modes
 
-        brightness_to_apply = None
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness_to_apply = kwargs[ATTR_BRIGHTNESS]
-            if not mode_supports_color:
-                # If the mode does not support color, switch to one that does
-                mode_to_apply = self._preferred_no_effect_mode
-                mode_supports_color = True
-        elif self._attr_brightness is None:
-            # If the current brightness is None (off), try to restore previous brightness if known
-            brightness_to_apply = self._previous_brightness or DEFAULT_BRIGHTNESS
+        # Apply color color even if switching from Off mode to a color-capable mode
+        # because there is no guarantee that the device won't go back to black
+        need_to_apply_color = (
+            ATTR_RGB_COLOR in kwargs
+            or ATTR_BRIGHTNESS in kwargs
+            or self._attr_brightness is None
+            or self._attr_rgb_color is None
+        )
 
-        rgb_color_to_apply = None
-        if ATTR_RGB_COLOR in kwargs:
-            rgb_color_to_apply = kwargs[ATTR_RGB_COLOR]
-            if not mode_supports_color:
-                # If the mode does not support color, switch to one that does
-                mode_to_apply = self._preferred_no_effect_mode
-                mode_supports_color = True
-        elif self._attr_rgb_color is None:
-            # If the current color is None (off), try to restore previous color if known
-            rgb_color_to_apply = self._previous_rgb_color or DEFAULT_COLOR
+        # If color/brightness parameters require color support but mode doesn't support it,
+        # switch to a color-capable mode
+        if need_to_apply_color and not mode_supports_color:
+            mode = self._preferred_no_effect_mode
 
-        if mode_to_apply is not None:
-            await self._async_apply_mode(mode_to_apply)
+        if mode is not None:
+            await self._async_apply_mode(mode)
 
-        if rgb_color_to_apply is not None or brightness_to_apply is not None:
-            if rgb_color_to_apply is None:
-                # In case only brightness is being changed, reuse the current color
-                rgb_color_to_apply = self._attr_rgb_color or DEFAULT_COLOR
-            if brightness_to_apply is None:
-                # In case only color is being changed, reuse the current brightness
-                brightness_to_apply = self._attr_brightness or DEFAULT_BRIGHTNESS
+        if need_to_apply_color:
+            brightness = None
+            if ATTR_BRIGHTNESS in kwargs:
+                brightness = kwargs[ATTR_BRIGHTNESS]
+            elif self._attr_brightness is None:
+                # Restore previous brightness when turning on
+                brightness = self._previous_brightness
+            if brightness is None:
+                # Use default brightness if still None
+                brightness = DEFAULT_BRIGHTNESS
 
-            await self._async_apply_color(rgb_color_to_apply, brightness_to_apply)
+            color = None
+            if ATTR_RGB_COLOR in kwargs:
+                color = kwargs[ATTR_RGB_COLOR]
+            elif self._attr_rgb_color is None:
+                # Restore previous color when turning on
+                color = self._previous_rgb_color
+            if color is None:
+                # Use default color if still None
+                color = DEFAULT_COLOR
+
+            await self._async_apply_color(color, brightness)
 
         await self.coordinator.async_refresh()
 
