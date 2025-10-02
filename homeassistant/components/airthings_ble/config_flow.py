@@ -160,7 +160,11 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 device = await self._get_device_data(discovery_info)
             except AirthingsDeviceUpdateError:
-                return self.async_abort(reason="cannot_connect")
+                _LOGGER.error(
+                    "Error connecting to and getting data from %s",
+                    discovery_info.address,
+                )
+                continue
             except Exception:
                 _LOGGER.exception("Unknown error occurred")
                 return self.async_abort(reason="unknown")
