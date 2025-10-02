@@ -16,7 +16,7 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_DEVICE
 
 from .const import DOMAIN, MFCT_ID
 
@@ -132,7 +132,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the user step to pick discovered device."""
         if user_input is not None:
-            address = user_input[CONF_ADDRESS]
+            address = user_input[CONF_DEVICE]
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             discovery = self._discovered_devices[address]
@@ -178,7 +178,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(titles),
+                    vol.Required(CONF_DEVICE): vol.In(titles),
                 },
             ),
         )
