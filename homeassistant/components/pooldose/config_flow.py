@@ -39,7 +39,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _validate_host(
         self, host: str
-    ) -> tuple[str | None, Any | None, dict[str, str] | None]:
+    ) -> tuple[str | None, dict[str, str] | None, dict[str, str] | None]:
         """Validate the host and return (serial_number, api_versions, errors)."""
         client = PooldoseClient(host, websession=async_get_clientsession(self.hass))
         client_status = await client.connect()
