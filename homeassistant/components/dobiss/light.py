@@ -30,11 +30,11 @@ async def async_setup_entry(
     dobiss = client.api
 
     light_entities = dobiss.get_devices_by_type(DobissLight)
-    entities = [DobissLight(device) for device in light_entities]
+    entities = [DobissLightEntity(device) for device in light_entities]
 
     # wrap analog output in lights for now...
     analog_entities = dobiss.get_devices_by_type(DobissAnalogOutput)
-    entities.extend(DobissLight(device) for device in analog_entities)
+    entities.extend(DobissLightEntity(device) for device in analog_entities)
 
     if entities:
         async_add_entities(entities)
