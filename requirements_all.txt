@@ -1842,7 +1842,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.32.1
+pyTibber==0.32.2
 
 # homeassistant.components.dlink
 pyW215==0.8.0
