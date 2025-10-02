@@ -217,7 +217,16 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
                 await self.hass.async_add_executor_job(
                     self.device.set_color, scaled_color, True
                 )
-            except (*CONNECTION_ERRORS, ValueError) as err:
+            except CONNECTION_ERRORS as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="communication_error",
+                    translation_placeholders={
+                        "server_address": self.coordinator.server_address,
+                        "error": str(err),
+                    },
+                ) from err
+            except ValueError as err:
                 raise HomeAssistantError(err) from err
 
     async def _async_apply_mode(self, mode: str) -> None:
@@ -225,7 +234,16 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         async with self.coordinator.client_lock:
             try:
                 await self.hass.async_add_executor_job(self.device.set_mode, mode)
-            except (*CONNECTION_ERRORS, ValueError) as err:
+            except CONNECTION_ERRORS as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="communication_error",
+                    translation_placeholders={
+                        "server_address": self.coordinator.server_address,
+                        "error": str(err),
+                    },
+                ) from err
+            except ValueError as err:
                 raise HomeAssistantError(err) from err
 
     async def async_turn_on(self, **kwargs: Any) -> None:

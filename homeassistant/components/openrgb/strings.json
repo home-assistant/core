@@ -24,7 +24,7 @@
     }
   },
   "exceptions": {
-    "update_error": {
+    "communication_error": {
       "message": "An error occurred while communicating with the OpenRGB SDK server at {server_address}: {error}"
     }
   }
