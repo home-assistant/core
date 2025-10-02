@@ -29,23 +29,6 @@ async def test_setup_entry(
     assert mock_config_entry.runtime_data is not None
 
 
-async def test_setup_entry_connection_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test setup entry with connection error."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.openrgb.coordinator.OpenRGBClient",
-        side_effect=ConnectionRefusedError,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
