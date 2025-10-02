@@ -146,7 +146,7 @@ class AlarmDecoderBinarySensor(AlarmDecoderEntity, BinarySensorEntity):
             if self._loop:
                 self._attr_is_on = bool(message.loop[self._loop - 1])
             attr = {CONF_ZONE_NUMBER: self._zone_number}
-            if self._rfid and rfstate is not None:
+            if rfstate is not None:
                 attr[ATTR_RF_BIT0] = bool(rfstate & 0x01)
                 attr[ATTR_RF_LOW_BAT] = bool(rfstate & 0x02)
                 attr[ATTR_RF_SUPERVISED] = bool(rfstate & 0x04)
