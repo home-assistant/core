@@ -11,7 +11,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import VolvoBaseCoordinator, VolvoConfigEntry
+from .coordinator import VolvoConfigEntry
 from .entity import VolvoEntity, VolvoEntityDescription
 
 PARALLEL_UPDATES = 0
@@ -31,31 +31,26 @@ _DESCRIPTIONS: tuple[VolvoButtonDescription, ...] = (
         key="climatization_start",
         api_command="climatization-start",
         required_command_key="CLIMATIZATION_START",
-        icon="mdi:air-conditioner",
     ),
     VolvoButtonDescription(
         key="climatization_stop",
         api_command="climatization-stop",
         required_command_key="CLIMATIZATION_STOP",
-        icon="mdi:air-conditioner",
     ),
     VolvoButtonDescription(
         key="flash",
         api_command="flash",
         required_command_key="FLASH",
-        icon="mdi:alarm-light-outline",
     ),
     VolvoButtonDescription(
         key="honk",
         api_command="honk",
         required_command_key="HONK",
-        icon="mdi:trumpet",
     ),
     VolvoButtonDescription(
         key="honk_flash",
         api_command="honk-flash",
         required_command_key="HONK_AND_FLASH",
-        icon="mdi:alarm-light",
     ),
 )
 
@@ -82,43 +77,35 @@ class VolvoCarsButton(VolvoEntity, ButtonEntity):
 
     entity_description: VolvoButtonDescription
 
-    def __init__(
-        self,
-        coordinator: VolvoBaseCoordinator,
-        description: VolvoButtonDescription,
-    ) -> None:
-        """Initialize."""
-        super().__init__(coordinator, description)
-
     async def async_press(self) -> None:
         """Handle the button press."""
 
-        try:
-            _LOGGER.debug("Command %s executing", self.entity_description.api_command)
+        _LOGGER.debug("Command %s executing", self.entity_description.api_command)
 
+        try:
             result = await self.coordinator.context.api.async_execute_command(
                 self.entity_description.api_command
             )
-
-            status = result.invoke_status if result else ""
-
-            _LOGGER.debug(
-                "Command %s result: %s",
-                self.entity_description.api_command,
-                status,
-            )
-
-            if status != "COMPLETED":
-                _LOGGER.warning(
-                    "Command %s not successful: %s",
-                    self.entity_description.api_command,
-                    status,
-                )
         except VolvoApiException as ex:
             _LOGGER.debug("Command %s error", self.entity_description.api_command)
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="command_error"
             ) from ex
+
+        status = result.invoke_status if result else ""
+
+        _LOGGER.debug(
+            "Command %s result: %s",
+            self.entity_description.api_command,
+            status,
+        )
+
+        if status != "COMPLETED":
+            _LOGGER.warning(
+                "Command %s not successful: %s",
+                self.entity_description.api_command,
+                status,
+            )
 
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
         """Update the state of the entity."""
