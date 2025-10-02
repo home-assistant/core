@@ -24,7 +24,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 6742,
         },
-        unique_id="127.0.0.1:6742",
         entry_id="01J0EXAMPLE0CONFIGENTRY00",
     )
 
