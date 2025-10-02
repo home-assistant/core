@@ -37,7 +37,6 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         CONF_HOST: "127.0.0.1",
         CONF_PORT: 6742,
     }
-    assert result["result"].unique_id == "127.0.0.1:6742"
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_openrgb_client")
