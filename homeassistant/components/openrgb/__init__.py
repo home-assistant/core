@@ -49,7 +49,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) -> 
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    if unload_ok and hasattr(entry, "runtime_data"):
+    if unload_ok:
         await entry.runtime_data.async_client_disconnect()
 
     return unload_ok
