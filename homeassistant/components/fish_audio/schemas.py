@@ -3,6 +3,8 @@
 import voluptuous as vol
 
 from homeassistant.helpers.selector import (
+    LanguageSelector,
+    LanguageSelectorConfig,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -18,8 +20,8 @@ from .const import (
     CONF_SELF_ONLY,
     CONF_SORT_BY,
     CONF_VOICE_ID,
-    LANGUAGE_OPTIONS,
     SORT_BY_OPTIONS,
+    TTS_SUPPORTED_LANGUAGES,
 )
 from .types import TTSConfigData
 
@@ -39,25 +41,18 @@ def get_filter_schema(options: TTSConfigData) -> vol.Schema:
     """Return the schema for the filter step."""
     return vol.Schema(
         {
-            vol.Required(
-                CONF_SELF_ONLY,
-                default=options.get(CONF_SELF_ONLY, False),
+            vol.Optional(
+                CONF_SELF_ONLY, default=options.get(CONF_SELF_ONLY, False)
             ): bool,
-            vol.Required(
-                CONF_LANGUAGE,
-                default=options.get(CONF_LANGUAGE, "en"),
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    options=[
-                        SelectOptionDict(value=opt["value"], label=opt["label"])
-                        for opt in LANGUAGE_OPTIONS
-                    ],
-                    mode=SelectSelectorMode.DROPDOWN,
+            vol.Optional(
+                CONF_LANGUAGE, default=options.get(CONF_LANGUAGE, "en")
+            ): LanguageSelector(
+                LanguageSelectorConfig(
+                    languages=TTS_SUPPORTED_LANGUAGES,
                 )
             ),
-            vol.Required(
-                CONF_SORT_BY,
-                default=options.get(CONF_SORT_BY, "score"),
+            vol.Optional(
+                CONF_SORT_BY, default=options.get(CONF_SORT_BY, "score")
             ): SelectSelector(
                 SelectSelectorConfig(
                     options=SORT_BY_OPTIONS, mode=SelectSelectorMode.DROPDOWN

@@ -16,25 +16,15 @@ CONF_SORT_BY: Literal["sort_by"] = "sort_by"
 
 DEVELOPER_ID = "1e9f9baadce144f5b16dd94cbc0314c8"
 
-LANGUAGE_OPTIONS = [
-    {"value": "en", "label": "English"},
-    {"value": "zh", "label": "Chinese"},
-    {"value": "de", "label": "German"},
-    {"value": "ja", "label": "Japanese"},
-    {"value": "ar", "label": "Arabic"},
-    {"value": "fr", "label": "French"},
-    {"value": "es", "label": "Spanish"},
-    {"value": "ko", "label": "Korean"},
-]
 TTS_SUPPORTED_LANGUAGES = [
-    "ar",
-    "de",
     "en",
-    "es",
-    "fr",
-    "ja",
-    "ko",
     "zh",
+    "de",
+    "ja",
+    "ar",
+    "fr",
+    "es",
+    "ko",
 ]
 
 STT_SUPPORTED_LANGUAGES = [
