@@ -21,11 +21,7 @@ from .entity import PortainerContainerEntity, PortainerCoordinatorData
 
 @dataclass(frozen=True, kw_only=True)
 class PortainerSensorEntityDescription(SensorEntityDescription):
-    """Class to hold Portainer sensor description.
-
-    value_fn must return a StateType (str | int | float | None or date/datetime/Decimal),
-    but for these container sensors we only return str | None.
-    """
+    """Class to hold Portainer sensor description."""
 
     value_fn: Callable[[DockerContainer], StateType]
 
