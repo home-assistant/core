@@ -918,7 +918,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info = await self._async_get_addon_discovery_info()
             self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
 
-        if not self.unique_id or self.source in (SOURCE_USB, SOURCE_ESPHOME):
+        if not self.unique_id or self.source == SOURCE_USB:
             if not self.version_info:
                 try:
                     self.version_info = await async_get_version_info(
@@ -942,7 +942,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
                 CONF_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
                 CONF_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
-            }
+            },
+            error=(
+                "migration_successful"
+                if self.source in (SOURCE_USB, SOURCE_ESPHOME)
+                else "already_configured"
+            ),
         )
         return self._async_create_entry_from_vars()
 
@@ -1490,6 +1495,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             # Only update existing entries that are configured via sockets
             and existing_entry.data.get(CONF_SOCKET_PATH)
+            # And use the add-on
+            and existing_entry.data.get(CONF_USE_ADDON)
         ):
             await self._async_set_addon_config(
                 {CONF_ADDON_SOCKET: discovery_info.socket_path}
@@ -1498,6 +1505,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.async_schedule_reload(existing_entry.entry_id)
             return self.async_abort(reason="already_configured")
 
+        # We are not aborting if home ID configured here, we just want to make sure that it's set
+        # We will update a USB based config entry automatically in `async_step_finish_addon_setup_user`
+        await self.async_set_unique_id(
+            str(discovery_info.zwave_home_id), raise_on_progress=False
+        )
         self.socket_path = discovery_info.socket_path
         self.context["title_placeholders"] = {
             CONF_NAME: f"{discovery_info.name} via ESPHome"
