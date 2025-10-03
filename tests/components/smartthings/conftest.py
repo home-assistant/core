@@ -166,6 +166,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "hw_q80r_soundbar",
         "gas_meter",
         "lumi",
+        "tesla_powerwall",
     ]
 )
 def device_fixture(
