@@ -1675,7 +1675,7 @@ pyegps==0.2.5
 pyemoncms==0.1.3
 
 # homeassistant.components.enphase_envoy
-pyenphase==2.3.0
+pyenphase==2.4.0
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -2582,9 +2582,6 @@ volvocarsapi==0.4.2
 
 # homeassistant.components.verisure
 vsure==2.6.7
-
-# homeassistant.components.vultr
-vultr==0.1.2
 
 # homeassistant.components.samsungtv
 # homeassistant.components.wake_on_lan
