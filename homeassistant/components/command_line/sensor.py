@@ -20,7 +20,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
     ManualTriggerSensorEntity,
@@ -33,11 +32,14 @@ from .const import (
     CONF_COMMAND_TIMEOUT,
     CONF_JSON_ATTRIBUTES,
     CONF_JSON_ATTRIBUTES_PATH,
-    DOMAIN,
     LOGGER,
     TRIGGER_ENTITY_OPTIONS,
 )
-from .utils import async_check_output_or_log, render_template_args
+from .utils import (
+    async_check_output_or_log,
+    create_platform_yaml_not_supported_issue,
+    render_template_args,
+)
 
 DEFAULT_NAME = "Command Sensor"
 
@@ -52,16 +54,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Command Sensor."""
     if not discovery_info:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "sensor_platform_yaml_not_supported",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="platform_yaml_not_supported",
-            translation_placeholders={"platform": SENSOR_DOMAIN},
-            learn_more_url="https://www.home-assistant.io/integrations/command_line/",
-        )
+        create_platform_yaml_not_supported_issue(hass, SENSOR_DOMAIN)
         return
 
     sensor_config = discovery_info
