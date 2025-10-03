@@ -30,7 +30,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SERVICE_WATER_HEATER_BOOST
+from .const import SERVICE_WATER_HEATER_BOOST, SERVICE_WATER_HEATER_CANCEL_BOOST
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
@@ -64,6 +64,13 @@ async def async_setup_entry(
         supports_response=SupportsResponse.ONLY,
     )
 
+    platform.async_register_entity_service(
+        SERVICE_WATER_HEATER_CANCEL_BOOST,
+        schema={},
+        func="async_cancel_boost",
+        supports_response=SupportsResponse.ONLY,
+    )
+
 
 class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     """Representation of a Matter WaterHeater entity."""
@@ -85,6 +92,17 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     duration = 3600  # 1 hour
     _platform_translation_key = "water_heater"
+
+    async def async_cancel_boost(self) -> None:
+        """Cancel boost."""
+        try:
+            await self.send_device_command(
+                clusters.WaterHeaterManagement.Commands.CancelBoost()
+            )
+        except MatterError as err:
+            # self.logger.error("Error sending CancelBoost command: %s", err)
+            raise HomeAssistantError from err
+        self._update_from_device()
 
     # Fields=[
     #     ClusterObjectFieldDescriptor(Label="duration", Tag=0, Type=uint),
