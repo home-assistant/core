@@ -7411,12 +7411,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "vultr": {
-      "name": "Vultr",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
-    },
     "w800rf32": {
       "name": "WGL Designs W800RF32",
       "integration_type": "hub",
