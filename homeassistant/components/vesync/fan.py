@@ -100,8 +100,9 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         """Return the currently set speed."""
 
         current_level = self.device.state.fan_level
-
         if self.device.state.mode == VS_FAN_MODE_MANUAL and current_level is not None:
+            if current_level == 0:
+                return 0
             return ordered_list_item_to_percentage(
                 self.device.fan_levels, current_level
             )
@@ -118,7 +119,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         if hasattr(self.device, "modes"):
             return sorted(
                 [
-                    mode
+                    mode.value
                     for mode in self.device.modes
                     if mode in VS_FAN_MODE_PRESET_LIST_HA
                 ]
@@ -141,7 +142,9 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
             attr["active_time"] = self.device.state.active_time
 
         if hasattr(self.device.state, "display_status"):
-            attr["display_status"] = self.device.state.display_status
+            attr["display_status"] = getattr(
+                self.device.state.display_status, "value", None
+            )
 
         if hasattr(self.device.state, "child_lock"):
             attr["child_lock"] = self.device.state.child_lock

@@ -27,6 +27,8 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    ResetTarget,
+    probe_silabs_firmware_info,
 )
 from homeassistant.config_entries import (
     SOURCE_HARDWARE,
@@ -82,6 +84,8 @@ else:
 class YellowFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     """Mixin for Home Assistant Yellow firmware methods."""
 
+    BOOTLOADER_RESET_METHODS = [ResetTarget.YELLOW]
+
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -92,7 +96,7 @@ class YellowFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
             firmware_name="Zigbee",
             expected_installed_firmware_type=ApplicationType.EZSP,
             step_id="install_zigbee_firmware",
-            next_step_id="confirm_zigbee",
+            next_step_id="pre_confirm_zigbee",
         )
 
     async def async_step_install_thread_firmware(
@@ -105,7 +109,7 @@ class YellowFirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
             firmware_name="OpenThread",
             expected_installed_firmware_type=ApplicationType.SPINEL,
             step_id="install_thread_firmware",
-            next_step_id="start_otbr_addon",
+            next_step_id="finish_thread_installation",
         )
 
 
@@ -141,8 +145,10 @@ class HomeAssistantYellowConfigFlow(
         self, data: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+        assert self._device is not None
+
         # We do not actually use any portion of `BaseFirmwareConfigFlow` beyond this
-        await self._probe_firmware_info()
+        self._probed_firmware_info = await probe_silabs_firmware_info(self._device)
 
         # Kick off ZHA hardware discovery automatically if Zigbee firmware is running
         if (

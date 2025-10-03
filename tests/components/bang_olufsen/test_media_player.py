@@ -76,6 +76,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
 
+from .conftest import mock_websocket_connection
 from .const import (
     TEST_ACTIVE_SOUND_MODE_NAME,
     TEST_ACTIVE_SOUND_MODE_NAME_2,
@@ -126,12 +127,12 @@ async def test_initialization(
     mock_mozart_client: AsyncMock,
 ) -> None:
     """Test the integration is initialized properly in _initialize, async_added_to_hass and __init__."""
-
     caplog.set_level(logging.DEBUG)
 
     # Setup entity
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await mock_websocket_connection(hass, mock_mozart_client)
 
     # Ensure that the logger has been called with the debug message
     assert "Connected to: Beosound Balance 11111111 running SW 1.0.0" in caplog.text
@@ -145,14 +146,13 @@ async def test_initialization(
 
     # Check API calls
     mock_mozart_client.get_softwareupdate_status.assert_called_once()
-    mock_mozart_client.get_product_state.assert_called_once()
     mock_mozart_client.get_available_sources.assert_called_once()
     mock_mozart_client.get_remote_menu.assert_called_once()
     mock_mozart_client.get_listening_mode_set.assert_called_once()
     mock_mozart_client.get_active_listening_mode.assert_called_once()
     mock_mozart_client.get_beolink_self.assert_called_once()
-    mock_mozart_client.get_beolink_peers.assert_called_once()
-    mock_mozart_client.get_beolink_listeners.assert_called_once()
+    assert mock_mozart_client.get_beolink_peers.call_count == 2
+    assert mock_mozart_client.get_beolink_listeners.call_count == 2
 
 
 async def test_async_update_sources_audio_only(
@@ -165,6 +165,7 @@ async def test_async_update_sources_audio_only(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await mock_websocket_connection(hass, mock_mozart_client)
 
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states.attributes[ATTR_INPUT_SOURCE_LIST] == TEST_AUDIO_SOURCES
@@ -180,6 +181,7 @@ async def test_async_update_sources_outdated_api(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await mock_websocket_connection(hass, mock_mozart_client)
 
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert (
@@ -194,7 +196,6 @@ async def test_async_update_sources_remote(
     mock_mozart_client: AsyncMock,
 ) -> None:
     """Test _async_update_sources is called when there are new video sources."""
-
     notification_callback = mock_mozart_client.get_notification_notifications.call_args[
         0
     ][0]
@@ -221,6 +222,7 @@ async def test_async_update_sources_availability(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await mock_websocket_connection(hass, mock_mozart_client)
 
     playback_source_callback = (
         mock_mozart_client.get_playback_source_notifications.call_args[0][0]
@@ -408,7 +410,6 @@ async def test_async_turn_off(
     mock_mozart_client: AsyncMock,
 ) -> None:
     """Test async_turn_off."""
-
     playback_state_callback = (
         mock_mozart_client.get_playback_state_notifications.call_args[0][0]
     )
@@ -475,6 +476,7 @@ async def test_async_update_beolink_line_in(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await mock_websocket_connection(hass, mock_mozart_client)
 
     source_change_callback = (
         mock_mozart_client.get_source_change_notifications.call_args[0][0]
@@ -488,9 +490,9 @@ async def test_async_update_beolink_line_in(
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
     assert states.attributes["group_members"] == []
 
-    # Called once during _initialize and once during _async_update_beolink
-    assert mock_mozart_client.get_beolink_listeners.call_count == 2
-    assert mock_mozart_client.get_beolink_peers.call_count == 2
+    # Called twice during _initialize and once during WebSocket connection
+    assert mock_mozart_client.get_beolink_listeners.call_count == 3
+    assert mock_mozart_client.get_beolink_peers.call_count == 3
 
 
 async def test_async_update_beolink_listener(
@@ -525,10 +527,10 @@ async def test_async_update_beolink_listener(
     ]
 
     # Called once for each entity during _initialize
-    assert mock_mozart_client.get_beolink_listeners.call_count == 2
+    assert mock_mozart_client.get_beolink_listeners.call_count == 3
     # Called once for each entity during _initialize and
     # once more during _async_update_beolink for the entity that has the callback associated with it.
-    assert mock_mozart_client.get_beolink_peers.call_count == 3
+    assert mock_mozart_client.get_beolink_peers.call_count == 4
 
     # Main entity
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
@@ -553,6 +555,7 @@ async def test_async_update_name_and_beolink(
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await mock_websocket_connection(hass, mock_mozart_client)
 
     configuration_callback = (
         mock_mozart_client.get_notification_notifications.call_args[0][0]
@@ -563,8 +566,8 @@ async def test_async_update_name_and_beolink(
     await hass.async_block_till_done()
 
     assert mock_mozart_client.get_beolink_self.call_count == 2
-    assert mock_mozart_client.get_beolink_peers.call_count == 2
-    assert mock_mozart_client.get_beolink_listeners.call_count == 2
+    assert mock_mozart_client.get_beolink_peers.call_count == 3
+    assert mock_mozart_client.get_beolink_listeners.call_count == 3
 
     # Check that device name has been changed
     assert mock_config_entry.unique_id
@@ -841,7 +844,6 @@ async def test_async_select_sound_mode_invalid(
     integration: None,
 ) -> None:
     """Test async_select_sound_mode with an invalid sound_mode."""
-
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
@@ -863,7 +865,6 @@ async def test_async_play_media_invalid_type(
     integration: None,
 ) -> None:
     """Test async_play_media only accepts valid media types."""
-
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
@@ -910,7 +911,6 @@ async def test_async_play_media_overlay_absolute_volume_uri(
     mock_mozart_client: AsyncMock,
 ) -> None:
     """Test async_play_media overlay with Home Assistant local URI and absolute volume."""
-
     await async_setup_component(hass, "media_source", {"media_source": {}})
 
     await hass.services.async_call(
@@ -1062,7 +1062,6 @@ async def test_async_play_media_deezer_flow(
     mock_mozart_client: AsyncMock,
 ) -> None:
     """Test async_play_media with Deezer flow."""
-
     # Send a service call
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
@@ -1132,7 +1131,6 @@ async def test_async_play_media_invalid_deezer(
     mock_mozart_client: AsyncMock,
 ) -> None:
     """Test async_play_media with an invalid/no Deezer login."""
-
     mock_mozart_client.start_deezer_flow.side_effect = TEST_DEEZER_INVALID_FLOW
 
     with pytest.raises(HomeAssistantError) as exc_info:
@@ -1231,7 +1229,6 @@ async def test_async_browse_media(
     present: bool,
 ) -> None:
     """Test async_browse_media with audio and video source."""
-
     await async_setup_component(hass, "media_source", {"media_source": {}})
 
     client = await hass_ws_client()
@@ -1489,18 +1486,18 @@ async def test_async_beolink_join_invalid(
     [
         # All discovered
         # Valid peers
-        ("all_discovered", True, None, [], 2),
+        ("all_discovered", True, None, [], 3),
         # Invalid peers
         (
             "all_discovered",
             True,
             NotFoundException(),
             [f"Unable to expand to {TEST_JID_3}", f"Unable to expand to {TEST_JID_4}"],
-            2,
+            3,
         ),
         # Beolink JIDs
         # Valid peer
-        ("beolink_jids", [TEST_JID_3, TEST_JID_4], None, [], 1),
+        ("beolink_jids", [TEST_JID_3, TEST_JID_4], None, [], 2),
         # Invalid peer
         (
             "beolink_jids",
@@ -1510,7 +1507,7 @@ async def test_async_beolink_join_invalid(
                 f"Unable to expand to {TEST_JID_3}. Is the device available on the network?",
                 f"Unable to expand to {TEST_JID_4}. Is the device available on the network?",
             ],
-            1,
+            2,
         ),
     ],
 )
@@ -1622,9 +1619,8 @@ async def test_async_set_repeat(
     repeat: RepeatMode,
 ) -> None:
     """Test async_set_repeat."""
-
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
-    assert ATTR_MEDIA_REPEAT not in states.attributes
+    assert states.attributes[ATTR_MEDIA_REPEAT] == RepeatMode.OFF
 
     # Set the return value of the repeat endpoint to match service call
     mock_mozart_client.get_settings_queue.return_value = PlayQueueSettings(
@@ -1668,7 +1664,7 @@ async def test_async_set_shuffle(
 ) -> None:
     """Test async_set_shuffle."""
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID))
-    assert ATTR_MEDIA_SHUFFLE not in states.attributes
+    assert states.attributes[ATTR_MEDIA_SHUFFLE] is False
 
     # Set the return value of the shuffle endpoint to match service call
     mock_mozart_client.get_settings_queue.return_value = PlayQueueSettings(

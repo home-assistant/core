@@ -241,7 +241,9 @@
               "timer_is_complete": "Timer has been completed",
               "washing_is_complete": "Washing is completed",
               "water_is_full": "Water is full",
-              "water_leak_has_occurred": "The dishwasher has detected a water leak"
+              "water_leak_has_occurred": "The dishwasher has detected a water leak",
+              "filter_reset_complete": "The filter lifetime has been reset",
+              "water_filter_reset_complete": "The water filter lifetime has been reset"
             }
           }
         }
@@ -608,8 +610,23 @@
       "filter_lifetime": {
         "name": "Filter remaining"
       },
+      "top_filter_remain_percent": {
+        "name": "Upper filter remaining"
+      },
       "used_time": {
         "name": "Water filter used"
+      },
+      "water_filter_state": {
+        "name": "Water filter"
+      },
+      "water_filter_1_remain_percent": {
+        "name": "[%key:component::lg_thinq::entity::sensor::water_filter_state::name%]"
+      },
+      "water_filter_2_remain_percent": {
+        "name": "Water filter stage 2"
+      },
+      "water_filter_3_remain_percent": {
+        "name": "Water filter stage 3"
       },
       "current_job_mode": {
         "name": "Operating mode",
@@ -923,6 +940,15 @@
       },
       "cycle_count_for_location": {
         "name": "{location} cycles"
+      },
+      "energy_usage_yesterday": {
+        "name": "Energy yesterday"
+      },
+      "energy_usage_this_month": {
+        "name": "Energy this month"
+      },
+      "energy_usage_last_month": {
+        "name": "Energy last month"
       }
     },
     "select": {

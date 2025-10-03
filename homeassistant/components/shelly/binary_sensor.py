@@ -37,7 +37,6 @@ from .utils import (
     async_remove_orphaned_entities,
     get_blu_trv_device_info,
     get_device_entry_gen,
-    get_virtual_component_ids,
     is_block_momentary_input,
     is_rpc_momentary_input,
     is_view_for_platform,
@@ -299,10 +298,28 @@ RPC_SENSORS: Final = {
         name="Mute",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    "flood_cable_unplugged": RpcBinarySensorDescription(
+        key="flood",
+        sub_key="errors",
+        value=lambda status, _: False
+        if status is None
+        else "cable_unplugged" in status,
+        name="Cable unplugged",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        supported=lambda status: status.get("alarm") is not None,
+    ),
     "presence_num_objects": RpcBinarySensorDescription(
         key="presence",
         sub_key="num_objects",
         value=lambda status, _: bool(status),
+        name="Occupancy",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+        entity_class=RpcPresenceBinarySensor,
+    ),
+    "presencezone_state": RpcBinarySensorDescription(
+        key="presencezone",
+        sub_key="state",
         name="Occupancy",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
         entity_class=RpcPresenceBinarySensor,
@@ -333,18 +350,12 @@ async def async_setup_entry(
                 hass, config_entry, async_add_entities, RPC_SENSORS, RpcBinarySensor
             )
 
-            # the user can remove virtual components from the device configuration, so
-            # we need to remove orphaned entities
-            virtual_binary_sensor_ids = get_virtual_component_ids(
-                coordinator.device.config, BINARY_SENSOR_PLATFORM
-            )
             async_remove_orphaned_entities(
                 hass,
                 config_entry.entry_id,
                 coordinator.mac,
                 BINARY_SENSOR_PLATFORM,
-                virtual_binary_sensor_ids,
-                "boolean",
+                coordinator.device.status,
             )
         return
 

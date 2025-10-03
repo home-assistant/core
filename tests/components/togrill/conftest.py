@@ -57,9 +57,18 @@ def mock_client(enable_bluetooth: None, mock_client_class: Mock) -> Generator[Mo
     client_object.mocked_notify = None
 
     async def _connect(
-        address: str, callback: Callable[[Packet], None] | None = None
+        address: str,
+        callback: Callable[[Packet], None] | None = None,
+        disconnected_callback: Callable[[], None] | None = None,
     ) -> Mock:
         client_object.mocked_notify = callback
+        if disconnected_callback:
+
+            def _disconnected_callback():
+                client_object.is_connected = False
+                disconnected_callback()
+
+            client_object.mocked_disconnected_callback = _disconnected_callback
         return client_object
 
     async def _disconnect() -> None:

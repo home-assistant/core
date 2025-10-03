@@ -371,7 +371,11 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     @property
     def __native_unit_of_measurement_compat(self) -> str | None:
-        """Process ambiguous units."""
+        """Handle wrong character coding in unit provided by integrations.
+
+        NumberEntity should read the number's native unit through this property instead
+        of through native_unit_of_measurement.
+        """
         native_unit_of_measurement = self.native_unit_of_measurement
         return AMBIGUOUS_UNITS.get(
             native_unit_of_measurement, native_unit_of_measurement

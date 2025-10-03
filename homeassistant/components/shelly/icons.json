@@ -20,6 +20,9 @@
       }
     },
     "sensor": {
+      "charger_state": {
+        "default": "mdi:ev-station"
+      },
       "detected_objects": {
         "default": "mdi:account-group"
       },

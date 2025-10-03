@@ -46,7 +46,7 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
     event_bus.notify(LifeSpanEvent(LifeSpan.FILTER, 56, 40 * 60))
     event_bus.notify(LifeSpanEvent(LifeSpan.SIDE_BRUSH, 40, 20 * 60))
     event_bus.notify(ErrorEvent(0, "NoError: Robot is operational"))
-    event_bus.notify(station.StationEvent(station.State.EMPTYING))
+    event_bus.notify(station.StationEvent(station.State.EMPTYING_DUSTBIN))
     await block_till_done(hass, event_bus)
 
 

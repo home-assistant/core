@@ -17,37 +17,27 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 
-# All descriptions can be found here:
-# https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
-    # CO2 Detector
-    # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
-    "co2bj": (
+SIRENS: dict[DeviceCategory, tuple[SirenEntityDescription, ...]] = {
+    DeviceCategory.CO2BJ: (
         SirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Multi-functional Sensor
-    # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
-    "dgnbj": (
+    DeviceCategory.DGNBJ: (
         SirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
         ),
     ),
-    # Siren Alarm
-    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
-    "sgbj": (
+    DeviceCategory.SGBJ: (
         SirenEntityDescription(
             key=DPCode.ALARM_SWITCH,
         ),
     ),
-    # Smart Camera
-    # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
-    "sp": (
+    DeviceCategory.SP: (
         SirenEntityDescription(
             key=DPCode.SIREN_SWITCH,
         ),
@@ -55,8 +45,7 @@ SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
 }
 
 # Smart Camera - Low power consumption camera (duplicate of `sp`)
-# Undocumented, see https://github.com/home-assistant/core/issues/132844
-SIRENS["dghsxj"] = SIRENS["sp"]
+SIRENS[DeviceCategory.DGHSXJ] = SIRENS[DeviceCategory.SP]
 
 
 async def async_setup_entry(
@@ -65,24 +54,24 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya siren dynamically through Tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya siren."""
         entities: list[TuyaSirenEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
+            device = manager.device_map[device_id]
             if descriptions := SIRENS.get(device.category):
                 entities.extend(
-                    TuyaSirenEntity(device, hass_data.manager, description)
+                    TuyaSirenEntity(device, manager, description)
                     for description in descriptions
                     if description.key in device.status
                 )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)

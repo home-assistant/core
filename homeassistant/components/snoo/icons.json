@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "button": {
+      "start_snoo": {
+        "default": "mdi:play"
+      }
+    }
+  }
+}

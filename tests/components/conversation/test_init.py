@@ -10,14 +10,12 @@ import voluptuous as vol
 from homeassistant.components import conversation
 from homeassistant.components.conversation import (
     ConversationInput,
+    async_get_agent,
     async_handle_intents,
     async_handle_sentence_triggers,
     default_agent,
 )
-from homeassistant.components.conversation.const import (
-    DATA_DEFAULT_ENTITY,
-    HOME_ASSISTANT_AGENT,
-)
+from homeassistant.components.conversation.const import HOME_ASSISTANT_AGENT
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -145,13 +143,13 @@ async def test_custom_agent(
     )
 
 
-async def test_prepare_reload(hass: HomeAssistant, init_components) -> None:
+@pytest.mark.usefixtures("init_components")
+async def test_prepare_reload(hass: HomeAssistant) -> None:
     """Test calling the reload service."""
     language = hass.config.language
+    agent = async_get_agent(hass)
 
     # Load intents
-    agent = hass.data[DATA_DEFAULT_ENTITY]
-    assert isinstance(agent, default_agent.DefaultAgent)
     await agent.async_prepare(language)
 
     # Confirm intents are loaded
@@ -172,14 +170,12 @@ async def test_prepare_reload(hass: HomeAssistant, init_components) -> None:
     assert not agent._lang_intents.get(language)
 
 
+@pytest.mark.usefixtures("init_components")
 async def test_prepare_fail(hass: HomeAssistant) -> None:
     """Test calling prepare with a non-existent language."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
+    agent = async_get_agent(hass)
 
     # Load intents
-    agent = hass.data[DATA_DEFAULT_ENTITY]
-    assert isinstance(agent, default_agent.DefaultAgent)
     await agent.async_prepare("not-a-language")
 
     # Confirm no intents were loaded

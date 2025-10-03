@@ -26,6 +26,7 @@ FIRMWARE_UPDATE_ENTITY = UpdateEntityDescription(
     key="firmware",
     device_class=UpdateDeviceClass.FIRMWARE,
 )
+RELEASE_URL = "https://www.litter-robot.com/releases.html"
 
 
 async def async_setup_entry(
@@ -48,6 +49,7 @@ async def async_setup_entry(
 class RobotUpdateEntity(LitterRobotEntity[LitterRobot4], UpdateEntity):
     """A class that describes robot update entities."""
 
+    _attr_release_url = RELEASE_URL
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
     )

@@ -125,6 +125,7 @@
         "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
         "ph": "[%key:component::sensor::entity_component::ph::name%]",
         "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
+        "pm4": "[%key:component::sensor::entity_component::pm4::name%]",
         "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
         "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
         "power": "[%key:component::sensor::entity_component::power::name%]",

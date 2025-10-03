@@ -43,6 +43,8 @@ from .common import (
     MOCK_CLIMATE_SUBENTRY_DATA_SINGLE,
     MOCK_COVER_SUBENTRY_DATA_SINGLE,
     MOCK_FAN_SUBENTRY_DATA_SINGLE,
+    MOCK_IMAGE_SUBENTRY_DATA_IMAGE_DATA,
+    MOCK_IMAGE_SUBENTRY_DATA_IMAGE_URL,
     MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE,
     MOCK_LOCK_SUBENTRY_DATA_SINGLE,
     MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
@@ -3278,6 +3280,45 @@ async def test_migrate_of_incompatible_config_entry(
             ),
             "Milk notifier Breezer",
             id="fan",
+        ),
+        pytest.param(
+            MOCK_IMAGE_SUBENTRY_DATA_IMAGE_DATA,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Merchandise"},
+            {"image_processing_mode": "image_data"},
+            (),
+            {
+                "image_topic": "test-topic",
+                "content_type": "image/jpeg",
+                "image_encoding": "b64",
+            },
+            (
+                (
+                    {"image_topic": "test-topic#invalid", "content_type": "image/jpeg"},
+                    {"image_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Merchandise",
+            id="notify_image_data",
+        ),
+        pytest.param(
+            MOCK_IMAGE_SUBENTRY_DATA_IMAGE_URL,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Merchandise"},
+            {"image_processing_mode": "image_url"},
+            (),
+            {
+                "url_topic": "test-topic",
+                "url_template": "{{ value_json.value }}",
+            },
+            (
+                (
+                    {"url_topic": "test-topic#invalid"},
+                    {"url_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Merchandise",
+            id="notify_image_url",
         ),
         pytest.param(
             MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE,

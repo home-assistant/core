@@ -18,8 +18,10 @@ from homeassistant.const import (
     CONF_ALIAS,
     CONF_ENABLED,
     CONF_ID,
+    CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_SELECTOR,
+    CONF_TARGET,
     CONF_VARIABLES,
 )
 from homeassistant.core import (
@@ -74,17 +76,17 @@ TRIGGERS: HassKey[dict[str, str]] = HassKey("triggers")
 
 # Basic schemas to sanity check the trigger descriptions,
 # full validation is done by hassfest.triggers
-_FIELD_SCHEMA = vol.Schema(
+_FIELD_DESCRIPTION_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_SELECTOR): selector.validate_selector,
     },
     extra=vol.ALLOW_EXTRA,
 )
 
-_TRIGGER_SCHEMA = vol.Schema(
+_TRIGGER_DESCRIPTION_SCHEMA = vol.Schema(
     {
         vol.Optional("target"): TargetSelector.CONFIG_SCHEMA,
-        vol.Optional("fields"): vol.Schema({str: _FIELD_SCHEMA}),
+        vol.Optional("fields"): vol.Schema({str: _FIELD_DESCRIPTION_SCHEMA}),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -97,10 +99,10 @@ def starts_with_dot(key: str) -> str:
     return key
 
 
-_TRIGGERS_SCHEMA = vol.Schema(
+_TRIGGERS_DESCRIPTION_SCHEMA = vol.Schema(
     {
         vol.Remove(vol.All(str, starts_with_dot)): object,
-        cv.underscore_slug: vol.Any(None, _TRIGGER_SCHEMA),
+        cv.underscore_slug: vol.Any(None, _TRIGGER_DESCRIPTION_SCHEMA),
     }
 )
 
@@ -165,11 +167,41 @@ async def _register_trigger_platform(
             _LOGGER.exception("Error while notifying trigger platform listener")
 
 
+_TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
+    {
+        vol.Optional(CONF_OPTIONS): object,
+        vol.Optional(CONF_TARGET): cv.TARGET_FIELDS,
+    }
+)
+
+
 class Trigger(abc.ABC):
     """Trigger class."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
-        """Initialize trigger."""
+    @classmethod
+    async def async_validate_complete_config(
+        cls, hass: HomeAssistant, complete_config: ConfigType
+    ) -> ConfigType:
+        """Validate complete config.
+
+        The complete config includes fields that are generic to all triggers,
+        such as the alias or the ID.
+        This method should be overridden by triggers that need to migrate
+        from the old-style config.
+        """
+        complete_config = _TRIGGER_SCHEMA(complete_config)
+
+        specific_config: ConfigType = {}
+        for key in (CONF_OPTIONS, CONF_TARGET):
+            if key in complete_config:
+                specific_config[key] = complete_config.pop(key)
+        specific_config = await cls.async_validate_config(hass, specific_config)
+
+        for key in (CONF_OPTIONS, CONF_TARGET):
+            if key in specific_config:
+                complete_config[key] = specific_config[key]
+
+        return complete_config
 
     @classmethod
     @abc.abstractmethod
@@ -177,6 +209,9 @@ class Trigger(abc.ABC):
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize trigger."""
 
     @abc.abstractmethod
     async def async_attach(
@@ -211,6 +246,15 @@ class TriggerProtocol(Protocol):
         trigger_info: TriggerInfo,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
+
+
+@dataclass(slots=True, frozen=True)
+class TriggerConfig:
+    """Trigger config."""
+
+    key: str  # The key used to identify the trigger, e.g. "zwave.event"
+    target: dict[str, Any] | None = None
+    options: dict[str, Any] | None = None
 
 
 class TriggerActionType(Protocol):
@@ -390,7 +434,7 @@ async def async_validate_trigger_config(
             )
             if not (trigger := trigger_descriptors.get(relative_trigger_key)):
                 raise vol.Invalid(f"Invalid trigger '{trigger_key}' specified")
-            conf = await trigger.async_validate_config(hass, conf)
+            conf = await trigger.async_validate_complete_config(hass, conf)
         elif hasattr(platform, "async_validate_trigger_config"):
             conf = await platform.async_validate_trigger_config(hass, conf)
         else:
@@ -494,7 +538,15 @@ async def async_initialize_triggers(
             relative_trigger_key = get_relative_description_key(
                 platform_domain, trigger_key
             )
-            trigger = trigger_descriptors[relative_trigger_key](hass, conf)
+            trigger_cls = trigger_descriptors[relative_trigger_key]
+            trigger = trigger_cls(
+                hass,
+                TriggerConfig(
+                    key=trigger_key,
+                    target=conf.get(CONF_TARGET),
+                    options=conf.get(CONF_OPTIONS),
+                ),
+            )
             coro = trigger.async_attach(action_wrapper, info)
         else:
             coro = platform.async_attach_trigger(hass, conf, action_wrapper, info)
@@ -537,7 +589,7 @@ def _load_triggers_file(integration: Integration) -> dict[str, Any]:
     try:
         return cast(
             dict[str, Any],
-            _TRIGGERS_SCHEMA(
+            _TRIGGERS_DESCRIPTION_SCHEMA(
                 load_yaml_dict(str(integration.file_path / "triggers.yaml"))
             ),
         )

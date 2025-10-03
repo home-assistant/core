@@ -1,0 +1,27 @@
+{
+  "did": "E1234567890000000009",
+  "name": "E1234567890000000009",
+  "class": "n0vyif",
+  "resource": "eSQtNR9N",
+  "company": "eco-ng",
+  "service": {
+    "jmq": "jmq-ngiot-eu.dc.ww.ecouser.net",
+    "mqs": "api-ngiot.dc-eu.ww.ecouser.net"
+  },
+  "deviceName": "DEEBOT X8 PRO OMNI",
+  "icon": "https://api-app.dc-eu.ww.ecouser.net/api/pim/file/get/66e3ac63a2928902a25d83a0",
+  "ota": true,
+  "UILogicId": "keplerh_ww_h_keplerh5",
+  "materialNo": "110-2417-0402",
+  "pid": "66daaa789dd37cf146cb1d2e",
+  "product_category": "DEEBOT",
+  "model": "KEPLER_BLACK_AI_INT",
+  "updateInfo": {
+    "needUpdate": false,
+    "changeLog": ""
+  },
+  "nick": "X8 PRO OMNI",
+  "homeSort": 9999,
+  "status": 1,
+  "otaUpgrade": {}
+}

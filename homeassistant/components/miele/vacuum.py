@@ -64,7 +64,7 @@ PROGRAM_TO_SPEED: dict[int, str] = {
 }
 
 
-class MieleVacuumStateCode(MieleEnum):
+class MieleVacuumStateCode(MieleEnum, missing_to_none=True):
     """Define vacuum state codes."""
 
     idle = 0
@@ -82,7 +82,6 @@ class MieleVacuumStateCode(MieleEnum):
     blocked_front_wheel = 5900
     docked = 5903, 5904
     remote_controlled = 5910
-    missing2none = -9999
 
 
 SUPPORTED_FEATURES = (

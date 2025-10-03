@@ -32,7 +32,12 @@ from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant, State
 from homeassistant.util import dt as dt_util
 
-from .common import async_wait_recorder, async_wait_recording_done, create_engine_test
+from .common import (
+    async_wait_recorder,
+    async_wait_recording_done,
+    create_engine_test,
+    db_state_to_native,
+)
 from .conftest import InstrumentedMigration
 
 from tests.common import async_fire_time_changed
@@ -53,7 +58,7 @@ def _get_native_states(hass: HomeAssistant, entity_id: str) -> list[State]:
         states = []
         for dbstate in session.query(States).filter(States.metadata_id == metadata_id):
             dbstate.entity_id = entity_id
-            states.append(dbstate.to_native())
+            states.append(db_state_to_native(dbstate))
         return states
 
 
@@ -102,7 +107,7 @@ async def test_schema_update_calls(
                 schema_errors=set(),
                 start_version=0,
             ),
-            42,
+            48,
         ),
         call(
             instance,
@@ -110,7 +115,7 @@ async def test_schema_update_calls(
             engine,
             session_maker,
             migration.SchemaValidationStatus(
-                current_version=42,
+                current_version=48,
                 initial_version=0,
                 migration_needed=True,
                 non_live_data_migration_needed=True,
@@ -228,7 +233,7 @@ async def test_database_migration_failed(
         # Test error handling in _modify_columns
         (12, "sqlalchemy.engine.base.Connection.execute", False, 1, 0),
         # Test error handling in _drop_foreign_key_constraints
-        (46, "homeassistant.components.recorder.migration.DropConstraint", False, 2, 1),
+        (46, "homeassistant.components.recorder.migration.DropConstraint", False, 1, 0),
     ],
 )
 @pytest.mark.skip_on_db_engine(["sqlite"])
@@ -555,7 +560,8 @@ async def test_events_during_migration_queue_exhausted(
         (18, False),
         (22, False),
         (25, False),
-        (43, True),
+        (43, False),
+        (48, True),
     ],
 )
 async def test_schema_migrate(

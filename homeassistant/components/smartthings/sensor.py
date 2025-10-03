@@ -1151,8 +1151,11 @@ async def async_setup_entry(
                                 )
                                 and (
                                     not description.exists_fn
-                                    or description.exists_fn(
-                                        device.status[MAIN][capability][attribute]
+                                    or (
+                                        component == MAIN
+                                        and description.exists_fn(
+                                            device.status[MAIN][capability][attribute]
+                                        )
                                     )
                                 )
                                 and (

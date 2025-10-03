@@ -121,6 +121,9 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
     "variable": BlockedIntegration(
         AwesomeVersion("3.4.4"), "prevents recorder from working"
     ),
+    # Added in 2025.10.0 because of
+    # https://github.com/frenck/spook/issues/1066
+    "spook": BlockedIntegration(AwesomeVersion("4.0.0"), "breaks the template engine"),
 }
 
 DATA_COMPONENTS: HassKey[dict[str, ModuleType | ComponentProtocol]] = HassKey(

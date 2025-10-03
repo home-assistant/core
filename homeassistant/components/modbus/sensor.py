@@ -26,7 +26,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import get_hub
 from .const import _LOGGER, CONF_SLAVE_COUNT, CONF_VIRTUAL_COUNT
-from .entity import BaseStructPlatform
+from .entity import ModbusStructEntity
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -56,7 +56,7 @@ async def async_setup_platform(
     async_add_entities(sensors)
 
 
-class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
+class ModbusRegisterSensor(ModbusStructEntity, RestoreSensor, SensorEntity):
     """Modbus register sensor."""
 
     def __init__(
@@ -107,7 +107,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
     async def _async_update(self) -> None:
         """Update the state of the sensor."""
         raw_result = await self._hub.async_pb_call(
-            self._slave, self._address, self._count, self._input_type
+            self._device_address, self._address, self._count, self._input_type
         )
         if raw_result is None:
             self._attr_available = False

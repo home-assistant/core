@@ -23,6 +23,7 @@ from .common import (
     CREATE_ENGINE_TARGET,
     async_wait_recording_done,
     create_engine_test_for_schema_version_postfix,
+    get_patched_live_version,
     get_schema_module_path,
 )
 
@@ -168,6 +169,11 @@ async def test_delete_duplicates(
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(
             recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch.object(
+            recorder.migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
         ),
         patch.object(
             recorder.migration, "non_live_data_migration_needed", return_value=False
@@ -358,6 +364,11 @@ async def test_delete_duplicates_many(
             recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
         ),
         patch.object(
+            recorder.migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
+        patch.object(
             recorder.migration, "non_live_data_migration_needed", return_value=False
         ),
         patch(
@@ -524,6 +535,11 @@ async def test_delete_duplicates_non_identical(
             recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
         ),
         patch.object(
+            recorder.migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
+        ),
+        patch.object(
             recorder.migration, "non_live_data_migration_needed", return_value=False
         ),
         patch(
@@ -648,6 +664,11 @@ async def test_delete_duplicates_short_term(
         patch.object(recorder, "db_schema", old_db_schema),
         patch.object(
             recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
+        ),
+        patch.object(
+            recorder.migration,
+            "LIVE_MIGRATION_MIN_SCHEMA_VERSION",
+            get_patched_live_version(old_db_schema),
         ),
         patch.object(
             recorder.migration, "non_live_data_migration_needed", return_value=False

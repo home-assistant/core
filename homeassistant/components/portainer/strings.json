@@ -3,14 +3,25 @@
     "step": {
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "url": "[%key:common::config_flow::data::url%]",
+          "api_token": "[%key:common::config_flow::data::api_token%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "The host/URL, including the port, of your Portainer instance",
-          "api_key": "The API key for authenticating with Portainer"
+          "url": "The URL, including the port, of your Portainer instance",
+          "api_token": "The API access token for authenticating with Portainer",
+          "verify_ssl": "Whether to verify SSL certificates. Disable only if you have a self-signed certificate"
         },
-        "description": "You can create an API key in the Portainer UI. Go to **My account > API keys** and select **Add API key**"
+        "description": "You can create an access token in the Portainer UI. Go to **My account > Access tokens** and select **Add access token**"
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "The new API access token for authenticating with Portainer"
+        },
+        "description": "The access token for your Portainer instance needs to be re-authenticated. You can create a new access token in the Portainer UI. Go to **My account > Access tokens** and select **Add access token**"
       }
     },
     "error": {
@@ -20,7 +31,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "device": {

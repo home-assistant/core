@@ -1,0 +1,5 @@
+{
+  "domain": "konnected",
+  "name": "Konnected",
+  "integrations": ["konnected", "konnected_esphome"]
+}

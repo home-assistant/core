@@ -8,7 +8,6 @@ from reolink_aio.api import Chime
 from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
-from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -22,9 +21,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
-from .conftest import TEST_CAM_NAME, TEST_NVR_NAME, TEST_UID
+from .conftest import TEST_CAM_NAME, TEST_NVR_NAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -164,14 +162,18 @@ async def test_host_switch(
         )
 
 
+@pytest.mark.parametrize("channel", [0, None])
 async def test_chime_switch(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     reolink_host: MagicMock,
     reolink_chime: Chime,
+    channel: int | None,
 ) -> None:
     """Test host switch entity."""
+    reolink_chime.channel = channel
+
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -224,141 +226,3 @@ async def test_chime_switch(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-
-
-@pytest.mark.parametrize(
-    (
-        "original_id",
-        "capability",
-    ),
-    [
-        (
-            f"{TEST_UID}_record",
-            "recording",
-        ),
-        (
-            f"{TEST_UID}_ftp_upload",
-            "ftp",
-        ),
-        (
-            f"{TEST_UID}_push_notifications",
-            "push",
-        ),
-        (
-            f"{TEST_UID}_email",
-            "email",
-        ),
-        (
-            f"{TEST_UID}_buzzer",
-            "buzzer",
-        ),
-    ],
-)
-async def test_cleanup_hub_switches(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    reolink_host: MagicMock,
-    entity_registry: er.EntityRegistry,
-    original_id: str,
-    capability: str,
-) -> None:
-    """Test entity ids that need to be migrated."""
-
-    def mock_supported(ch, cap):
-        if cap == capability:
-            return False
-        return True
-
-    domain = Platform.SWITCH
-
-    reolink_host.channels = [0]
-    reolink_host.is_hub = True
-    reolink_host.supported = mock_supported
-
-    entity_registry.async_get_or_create(
-        domain=domain,
-        platform=DOMAIN,
-        unique_id=original_id,
-        config_entry=config_entry,
-        suggested_object_id=original_id,
-        disabled_by=er.RegistryEntryDisabler.USER,
-    )
-
-    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
-
-    # setup CH 0 and host entities/device
-    with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
-
-
-@pytest.mark.parametrize(
-    (
-        "original_id",
-        "capability",
-    ),
-    [
-        (
-            f"{TEST_UID}_record",
-            "recording",
-        ),
-        (
-            f"{TEST_UID}_ftp_upload",
-            "ftp",
-        ),
-        (
-            f"{TEST_UID}_push_notifications",
-            "push",
-        ),
-        (
-            f"{TEST_UID}_email",
-            "email",
-        ),
-        (
-            f"{TEST_UID}_buzzer",
-            "buzzer",
-        ),
-    ],
-)
-async def test_hub_switches_repair_issue(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    reolink_host: MagicMock,
-    entity_registry: er.EntityRegistry,
-    issue_registry: ir.IssueRegistry,
-    original_id: str,
-    capability: str,
-) -> None:
-    """Test entity ids that need to be migrated."""
-
-    def mock_supported(ch, cap):
-        if cap == capability:
-            return False
-        return True
-
-    domain = Platform.SWITCH
-
-    reolink_host.channels = [0]
-    reolink_host.is_hub = True
-    reolink_host.supported = mock_supported
-
-    entity_registry.async_get_or_create(
-        domain=domain,
-        platform=DOMAIN,
-        unique_id=original_id,
-        config_entry=config_entry,
-        suggested_object_id=original_id,
-        disabled_by=None,
-    )
-
-    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
-
-    # setup CH 0 and host entities/device
-    with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
-    assert (DOMAIN, "hub_switch_deprecated") in issue_registry.issues

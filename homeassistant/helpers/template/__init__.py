@@ -6,8 +6,6 @@ from ast import literal_eval
 import asyncio
 import collections.abc
 from collections.abc import Callable, Generator, Iterable
-from contextlib import AbstractContextManager
-from contextvars import ContextVar
 from copy import deepcopy
 from datetime import date, datetime, time, timedelta
 from functools import cache, lru_cache, partial, wraps
@@ -20,17 +18,8 @@ import random
 import re
 from struct import error as StructError, pack, unpack_from
 import sys
-from types import CodeType, TracebackType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Concatenate,
-    Literal,
-    NoReturn,
-    Self,
-    cast,
-    overload,
-)
+from types import CodeType
+from typing import TYPE_CHECKING, Any, Concatenate, Literal, NoReturn, Self, overload
 import weakref
 
 from awesomeversion import AwesomeVersion
@@ -62,7 +51,6 @@ from homeassistant.core import (
     ServiceResponse,
     State,
     callback,
-    split_entity_id,
     valid_domain,
     valid_entity_id,
 )
@@ -87,6 +75,15 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
+
+from .context import (
+    TemplateContextManager as TemplateContextManager,
+    render_with_context,
+    template_context_manager,
+    template_cv,
+)
+from .helpers import raise_no_default
+from .render_info import RenderInfo, render_info_cv
 
 if TYPE_CHECKING:
     from _typeshed import OptExcInfo
@@ -127,15 +124,6 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
     "name",
 }
 
-ALL_STATES_RATE_LIMIT = 60  # seconds
-DOMAIN_STATES_RATE_LIMIT = 1  # seconds
-
-_render_info: ContextVar[RenderInfo | None] = ContextVar("_render_info", default=None)
-
-
-template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
-    "template_cv", default=None
-)
 
 #
 # CACHED_TEMPLATE_STATES is a rough estimate of the number of entities
@@ -334,14 +322,6 @@ RESULT_WRAPPERS: dict[type, type] = {kls: gen_result_wrapper(kls) for kls in _ty
 RESULT_WRAPPERS[tuple] = TupleWrapper
 
 
-def _true(arg: str) -> bool:
-    return True
-
-
-def _false(arg: str) -> bool:
-    return False
-
-
 @lru_cache(maxsize=EVAL_CACHE_SIZE)
 def _cached_parse_result(render_result: str) -> Any:
     """Parse a result and cache the result."""
@@ -369,126 +349,6 @@ def _cached_parse_result(render_result: str) -> Any:
         return result
 
     return render_result
-
-
-class RenderInfo:
-    """Holds information about a template render."""
-
-    __slots__ = (
-        "_result",
-        "all_states",
-        "all_states_lifecycle",
-        "domains",
-        "domains_lifecycle",
-        "entities",
-        "exception",
-        "filter",
-        "filter_lifecycle",
-        "has_time",
-        "is_static",
-        "rate_limit",
-        "template",
-    )
-
-    def __init__(self, template: Template) -> None:
-        """Initialise."""
-        self.template = template
-        # Will be set sensibly once frozen.
-        self.filter_lifecycle: Callable[[str], bool] = _true
-        self.filter: Callable[[str], bool] = _true
-        self._result: str | None = None
-        self.is_static = False
-        self.exception: TemplateError | None = None
-        self.all_states = False
-        self.all_states_lifecycle = False
-        self.domains: collections.abc.Set[str] = set()
-        self.domains_lifecycle: collections.abc.Set[str] = set()
-        self.entities: collections.abc.Set[str] = set()
-        self.rate_limit: float | None = None
-        self.has_time = False
-
-    def __repr__(self) -> str:
-        """Representation of RenderInfo."""
-        return (
-            f"<RenderInfo {self.template}"
-            f" all_states={self.all_states}"
-            f" all_states_lifecycle={self.all_states_lifecycle}"
-            f" domains={self.domains}"
-            f" domains_lifecycle={self.domains_lifecycle}"
-            f" entities={self.entities}"
-            f" rate_limit={self.rate_limit}"
-            f" has_time={self.has_time}"
-            f" exception={self.exception}"
-            f" is_static={self.is_static}"
-            ">"
-        )
-
-    def _filter_domains_and_entities(self, entity_id: str) -> bool:
-        """Template should re-render if the entity state changes.
-
-        Only when we match specific domains or entities.
-        """
-        return (
-            split_entity_id(entity_id)[0] in self.domains or entity_id in self.entities
-        )
-
-    def _filter_entities(self, entity_id: str) -> bool:
-        """Template should re-render if the entity state changes.
-
-        Only when we match specific entities.
-        """
-        return entity_id in self.entities
-
-    def _filter_lifecycle_domains(self, entity_id: str) -> bool:
-        """Template should re-render if the entity is added or removed.
-
-        Only with domains watched.
-        """
-        return split_entity_id(entity_id)[0] in self.domains_lifecycle
-
-    def result(self) -> str:
-        """Results of the template computation."""
-        if self.exception is not None:
-            raise self.exception
-        return cast(str, self._result)
-
-    def _freeze_static(self) -> None:
-        self.is_static = True
-        self._freeze_sets()
-        self.all_states = False
-
-    def _freeze_sets(self) -> None:
-        self.entities = frozenset(self.entities)
-        self.domains = frozenset(self.domains)
-        self.domains_lifecycle = frozenset(self.domains_lifecycle)
-
-    def _freeze(self) -> None:
-        self._freeze_sets()
-
-        if self.rate_limit is None:
-            if self.all_states or self.exception:
-                self.rate_limit = ALL_STATES_RATE_LIMIT
-            elif self.domains or self.domains_lifecycle:
-                self.rate_limit = DOMAIN_STATES_RATE_LIMIT
-
-        if self.exception:
-            return
-
-        if not self.all_states_lifecycle:
-            if self.domains_lifecycle:
-                self.filter_lifecycle = self._filter_lifecycle_domains
-            else:
-                self.filter_lifecycle = _false
-
-        if self.all_states:
-            return
-
-        if self.domains:
-            self.filter = self._filter_domains_and_entities
-        elif self.entities:
-            self.filter = self._filter_entities
-        else:
-            self.filter = _false
 
 
 class Template:
@@ -572,7 +432,7 @@ class Template:
             self._compiled_code = compiled
             return
 
-        with _template_context_manager as cm:
+        with template_context_manager as cm:
             cm.set_template(self.template, "compiling")
             try:
                 self._compiled_code = self._env.compile(self.template)
@@ -631,7 +491,7 @@ class Template:
             kwargs.update(variables)
 
         try:
-            render_result = _render_with_context(self.template, compiled, **kwargs)
+            render_result = render_with_context(self.template, compiled, **kwargs)
         except Exception as err:
             raise TemplateError(err) from err
 
@@ -693,7 +553,7 @@ class Template:
         def _render_template() -> None:
             assert self.hass is not None, "hass variable not set on template"
             try:
-                _render_with_context(self.template, compiled, **kwargs)
+                render_with_context(self.template, compiled, **kwargs)
             except TimeoutError:
                 pass
             except Exception:  # noqa: BLE001
@@ -734,7 +594,7 @@ class Template:
         if not self.hass:
             raise RuntimeError(f"hass not set while rendering {self}")
 
-        if _render_info.get() is not None:
+        if render_info_cv.get() is not None:
             raise RuntimeError(
                 f"RenderInfo already set while rendering {self}, "
                 "this usually indicates the template is being rendered "
@@ -746,7 +606,7 @@ class Template:
             render_info._freeze_static()  # noqa: SLF001
             return render_info
 
-        token = _render_info.set(render_info)
+        token = render_info_cv.set(render_info)
         try:
             render_info._result = self.async_render(  # noqa: SLF001
                 variables, strict=strict, log_fn=log_fn, **kwargs
@@ -754,7 +614,7 @@ class Template:
         except TemplateError as ex:
             render_info.exception = ex
         finally:
-            _render_info.reset(token)
+            render_info_cv.reset(token)
 
         render_info._freeze()  # noqa: SLF001
         return render_info
@@ -804,7 +664,7 @@ class Template:
             pass
 
         try:
-            render_result = _render_with_context(
+            render_result = render_with_context(
                 self.template, compiled, **variables
             ).strip()
         except jinja2.TemplateError as ex:
@@ -911,11 +771,11 @@ class AllStates:
     __getitem__ = __getattr__
 
     def _collect_all(self) -> None:
-        if (render_info := _render_info.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None:
             render_info.all_states = True
 
     def _collect_all_lifecycle(self) -> None:
-        if (render_info := _render_info.get()) is not None:
+        if (render_info := render_info_cv.get()) is not None:
             render_info.all_states_lifecycle = True
 
     def __iter__(self) -> Generator[TemplateState]:
@@ -1001,11 +861,11 @@ class DomainStates:
     __getitem__ = __getattr__
 
     def _collect_domain(self) -> None:
-        if (entity_collect := _render_info.get()) is not None:
+        if (entity_collect := render_info_cv.get()) is not None:
             entity_collect.domains.add(self._domain)  # type: ignore[attr-defined]
 
     def _collect_domain_lifecycle(self) -> None:
-        if (entity_collect := _render_info.get()) is not None:
+        if (entity_collect := render_info_cv.get()) is not None:
             entity_collect.domains_lifecycle.add(self._domain)  # type: ignore[attr-defined]
 
     def __iter__(self) -> Generator[TemplateState]:
@@ -1043,7 +903,7 @@ class TemplateStateBase(State):
         self._cache: dict[str, Any] = {}
 
     def _collect_state(self) -> None:
-        if self._collect and (render_info := _render_info.get()):
+        if self._collect and (render_info := render_info_cv.get()):
             render_info.entities.add(self._entity_id)  # type: ignore[attr-defined]
 
     # Jinja will try __getitem__ first and it avoids the need
@@ -1052,7 +912,7 @@ class TemplateStateBase(State):
         """Return a property as an attribute for jinja."""
         if item in _COLLECTABLE_STATE_ATTRIBUTES:
             # _collect_state inlined here for performance
-            if self._collect and (render_info := _render_info.get()):
+            if self._collect and (render_info := render_info_cv.get()):
                 render_info.entities.add(self._entity_id)  # type: ignore[attr-defined]
             return getattr(self._state, item)
         if item == "entity_id":
@@ -1194,7 +1054,7 @@ _create_template_state_no_collect = partial(TemplateState, collect=False)
 
 
 def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
-    if (entity_collect := _render_info.get()) is not None:
+    if (entity_collect := render_info_cv.get()) is not None:
         entity_collect.entities.add(entity_id)  # type: ignore[attr-defined]
 
 
@@ -1945,7 +1805,7 @@ def has_value(hass: HomeAssistant, entity_id: str) -> bool:
 
 def now(hass: HomeAssistant) -> datetime:
     """Record fetching now."""
-    if (render_info := _render_info.get()) is not None:
+    if (render_info := render_info_cv.get()) is not None:
         render_info.has_time = True
 
     return dt_util.now()
@@ -1953,19 +1813,10 @@ def now(hass: HomeAssistant) -> datetime:
 
 def utcnow(hass: HomeAssistant) -> datetime:
     """Record fetching utcnow."""
-    if (render_info := _render_info.get()) is not None:
+    if (render_info := render_info_cv.get()) is not None:
         render_info.has_time = True
 
     return dt_util.utcnow()
-
-
-def raise_no_default(function: str, value: Any) -> NoReturn:
-    """Log warning if no default is specified."""
-    template, action = template_cv.get() or ("", "rendering or compiling")
-    raise ValueError(
-        f"Template error: {function} got invalid input '{value}' when {action} template"
-        f" '{template}' but no default was specified"
-    )
 
 
 def forgiving_round(value, precision=0, method="common", default=_SENTINEL):
@@ -2356,7 +2207,7 @@ def random_every_time(context, values):
 
 def today_at(hass: HomeAssistant, time_str: str = "") -> datetime:
     """Record fetching now where the time has been replaced with value."""
-    if (render_info := _render_info.get()) is not None:
+    if (render_info := render_info_cv.get()) is not None:
         render_info.has_time = True
 
     today = dt_util.start_of_local_day()
@@ -2386,7 +2237,7 @@ def relative_time(hass: HomeAssistant, value: Any) -> Any:
     supported so as not to break old templates.
     """
 
-    if (render_info := _render_info.get()) is not None:
+    if (render_info := render_info_cv.get()) is not None:
         render_info.has_time = True
 
     if not isinstance(value, datetime):
@@ -2407,7 +2258,7 @@ def time_since(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -
 
     If the value not a datetime object the input will be returned unmodified.
     """
-    if (render_info := _render_info.get()) is not None:
+    if (render_info := render_info_cv.get()) is not None:
         render_info.has_time = True
 
     if not isinstance(value, datetime):
@@ -2429,7 +2280,7 @@ def time_until(hass: HomeAssistant, value: Any | datetime, precision: int = 1) -
 
     If the value not a datetime object the input will be returned unmodified.
     """
-    if (render_info := _render_info.get()) is not None:
+    if (render_info := render_info_cv.get()) is not None:
         render_info.has_time = True
 
     if not isinstance(value, datetime):
@@ -2491,35 +2342,6 @@ def combine(*args: Any, recursive: bool = False) -> dict[Any, Any]:
             result |= arg
 
     return result
-
-
-class TemplateContextManager(AbstractContextManager):
-    """Context manager to store template being parsed or rendered in a ContextVar."""
-
-    def set_template(self, template_str: str, action: str) -> None:
-        """Store template being parsed or rendered in a Contextvar to aid error handling."""
-        template_cv.set((template_str, action))
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_value: BaseException | None,
-        traceback: TracebackType | None,
-    ) -> None:
-        """Raise any exception triggered within the runtime context."""
-        template_cv.set(None)
-
-
-_template_context_manager = TemplateContextManager()
-
-
-def _render_with_context(
-    template_str: str, template: jinja2.Template, **kwargs: Any
-) -> str:
-    """Store template being rendered in a ContextVar to aid error handling."""
-    with _template_context_manager as cm:
-        cm.set_template(template_str, "rendering")
-        return template.render(**kwargs)
 
 
 def make_logging_undefined(

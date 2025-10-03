@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 import logging
 from typing import Any
@@ -53,7 +54,7 @@ PARALLEL_UPDATES = 1
 class HabiticaSensorEntityDescription(SensorEntityDescription):
     """Habitica Sensor Description."""
 
-    value_fn: Callable[[UserData, ContentData], StateType]
+    value_fn: Callable[[UserData, ContentData], StateType | datetime]
     attributes_fn: Callable[[UserData, ContentData], dict[str, Any] | None] | None = (
         None
     )
@@ -114,6 +115,7 @@ class HabiticaSensorEntity(StrEnum):
     COLLECTED_ITEMS = "collected_items"
     BOSS_RAGE = "boss_rage"
     BOSS_RAGE_LIMIT = "boss_rage_limit"
+    LAST_CHECKIN = "last_checkin"
 
 
 SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
@@ -284,6 +286,16 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         translation_key=HabiticaSensorEntity.PENDING_QUEST_ITEMS,
         value_fn=pending_quest_items,
     ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.LAST_CHECKIN,
+        translation_key=HabiticaSensorEntity.LAST_CHECKIN,
+        value_fn=(
+            lambda user, _: dt_util.as_local(last)
+            if (last := user.auth.timestamps.loggedin)
+            else None
+        ),
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
 )
 
 
@@ -399,7 +411,7 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
     entity_description: HabiticaSensorEntityDescription
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the device."""
 
         return self.entity_description.value_fn(
@@ -442,10 +454,12 @@ class HabiticaPartySensor(HabiticaPartyBase, SensorEntity):
     entity_description: HabiticaPartySensorEntityDescription
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the device."""
 
-        return self.entity_description.value_fn(self.coordinator.data, self.content)
+        return self.entity_description.value_fn(
+            self.coordinator.data.party, self.content
+        )
 
     @property
     def entity_picture(self) -> str | None:
@@ -453,7 +467,9 @@ class HabiticaPartySensor(HabiticaPartyBase, SensorEntity):
         pic = self.entity_description.entity_picture
 
         entity_picture = (
-            pic if isinstance(pic, str) or pic is None else pic(self.coordinator.data)
+            pic
+            if isinstance(pic, str) or pic is None
+            else pic(self.coordinator.data.party)
         )
 
         return (
@@ -468,5 +484,5 @@ class HabiticaPartySensor(HabiticaPartyBase, SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return entity specific state attributes."""
         if func := self.entity_description.attributes_fn:
-            return func(self.coordinator.data, self.content)
+            return func(self.coordinator.data.party, self.content)
         return None

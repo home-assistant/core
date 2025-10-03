@@ -136,7 +136,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
     schema = result["data_schema"].schema
 
     assert schema.get(CONF_ADDRESS).container == {
-        "cc:cc:cc:cc:cc:cc": "Airthings Wave Plus"
+        "cc:cc:cc:cc:cc:cc": "Airthings Wave Plus (123456)"
     }
 
     with patch(
@@ -186,7 +186,7 @@ async def test_user_setup_replaces_ignored_device(hass: HomeAssistant) -> None:
     schema = result["data_schema"].schema
 
     assert schema.get(CONF_ADDRESS).container == {
-        "cc:cc:cc:cc:cc:cc": "Airthings Wave Plus"
+        "cc:cc:cc:cc:cc:cc": "Airthings Wave Plus (123456)"
     }
 
     with patch(

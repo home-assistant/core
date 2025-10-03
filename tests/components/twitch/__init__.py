@@ -1,7 +1,7 @@
 """Tests for the Twitch component."""
 
 from collections.abc import AsyncGenerator, AsyncIterator
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from twitchAPI.object.base import TwitchObject
 
@@ -20,10 +20,7 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     await hass.async_block_till_done()
 
 
-TwitchType = TypeVar("TwitchType", bound=TwitchObject)
-
-
-class TwitchIterObject(Generic[TwitchType]):
+class TwitchIterObject[TwitchT: TwitchObject]:
     """Twitch object iterator."""
 
     raw_data: JsonArrayType
@@ -31,14 +28,14 @@ class TwitchIterObject(Generic[TwitchType]):
     total: int
 
     def __init__(
-        self, hass: HomeAssistant, fixture: str, target_type: type[TwitchType]
+        self, hass: HomeAssistant, fixture: str, target_type: type[TwitchT]
     ) -> None:
         """Initialize object."""
         self.hass = hass
         self.fixture = fixture
         self.target_type = target_type
 
-    async def __aiter__(self) -> AsyncIterator[TwitchType]:
+    async def __aiter__(self) -> AsyncIterator[TwitchT]:
         """Return async iterator."""
         if not hasattr(self, "raw_data"):
             self.raw_data = await async_load_json_array_fixture(
@@ -50,18 +47,18 @@ class TwitchIterObject(Generic[TwitchType]):
             yield item
 
 
-async def get_generator(
-    hass: HomeAssistant, fixture: str, target_type: type[TwitchType]
-) -> AsyncGenerator[TwitchType]:
+async def get_generator[TwitchT: TwitchObject](
+    hass: HomeAssistant, fixture: str, target_type: type[TwitchT]
+) -> AsyncGenerator[TwitchT]:
     """Return async generator."""
     data = await async_load_json_array_fixture(hass, fixture, DOMAIN)
     async for item in get_generator_from_data(data, target_type):
         yield item
 
 
-async def get_generator_from_data(
-    items: list[dict[str, Any]], target_type: type[TwitchType]
-) -> AsyncGenerator[TwitchType]:
+async def get_generator_from_data[TwitchT: TwitchObject](
+    items: list[dict[str, Any]], target_type: type[TwitchT]
+) -> AsyncGenerator[TwitchT]:
     """Return async generator."""
     for item in items:
         yield target_type(**item)

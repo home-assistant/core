@@ -2,26 +2,42 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_plants": "No plants have been found on this account"
     },
     "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "Authentication failed. Please check your credentials and try again.",
+      "cannot_connect": "Cannot connect to Growatt servers. Please check your internet connection and try again."
     },
     "step": {
+      "user": {
+        "title": "Choose authentication method",
+        "description": "Note: API Token authentication is currently only supported for MIN/TLX devices. For other device types, please use Username & Password authentication.",
+        "menu_options": {
+          "password_auth": "Username & Password",
+          "token_auth": "API Token (MIN/TLX only)"
+        }
+      },
+      "password_auth": {
+        "title": "Enter your Growatt login credentials",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "url": "[%key:common::config_flow::data::url%]"
+        }
+      },
+      "token_auth": {
+        "title": "Enter your API token",
+        "description": "Token authentication is only supported for MIN/TLX devices. For other device types, please use username/password authentication.",
+        "data": {
+          "token": "API Token"
+        }
+      },
       "plant": {
         "data": {
           "plant_id": "Plant"
         },
         "title": "Select your plant"
-      },
-      "user": {
-        "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "url": "[%key:common::config_flow::data::url%]"
-        },
-        "title": "Enter your Growatt information"
       }
     }
   },

@@ -333,6 +333,15 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         value=lambda data: data.cpu.usage,
     ),
     SystemBridgeSensorEntityDescription(
+        key="power_usage",
+        translation_key="power_usage",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_display_precision=2,
+        icon="mdi:power-plug",
+        value=lambda data: data.system.power_usage,
+    ),
+    SystemBridgeSensorEntityDescription(
         key="version",
         translation_key="version",
         icon="mdi:counter",

@@ -377,8 +377,10 @@
           "max": "Max",
           "high": "[%key:common::state::high%]",
           "intense": "Intense",
+          "extreme": "Extreme",
           "custom": "[%key:component::roborock::entity::select::mop_mode::state::custom%]",
           "custom_water_flow": "Custom water flow",
+          "vac_followed_by_mop": "Vacuum followed by mop",
           "smart_mode": "[%key:component::roborock::entity::select::mop_mode::state::smart_mode%]"
         }
       },
