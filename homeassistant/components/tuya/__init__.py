@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
         raise ConfigEntryAuthFailed("Authentication failed. Please re-authenticate.")
 
     token_listener = TokenListener(hass, entry)
-    manager = Manager(
+    manager = CustomManager(
         TUYA_CLIENT_ID,
         entry.data[CONF_USER_CODE],
         entry.data[CONF_TERMINAL_ID],
@@ -243,3 +243,32 @@ class TokenListener(SharingTokenListener):
             self.hass.config_entries.async_update_entry(self.entry, data=data)
 
         self.hass.add_job(async_update_entry)
+
+
+# Workaround for https://github.com/home-assistant/core/issues/151239
+# When a status update is received with a dpId not present in the
+# local_strategy, all subsequent dpId are ignored resulting in
+# missing update in Home Assistant.
+# Can be removed when fix is implemented in library
+# - https://github.com/tuya/tuya-device-sharing-sdk/pull/39
+
+
+class CustomManager(Manager):
+    """Workaround for device status update issue #151239.
+
+    Can be removed when fix is implemented in library
+    https://github.com/tuya/tuya-device-sharing-sdk/pull/39
+    """
+
+    def _on_device_report(self, device_id: str, status: list[dict[str, Any]]) -> None:
+        # Patch start
+        if (device := self.device_map.get(device_id)) and device.support_local:
+            new_status = []
+            for item in status:
+                if (dpId := item.get("dpId")) and dpId not in device.local_strategy:
+                    LOGGER.debug(f"Ignoring dpId {dpId} missing from local_strategy")
+                    continue
+                new_status.append(item)
+            status = new_status
+        # Patch end
+        super()._on_device_report(device_id, status)
