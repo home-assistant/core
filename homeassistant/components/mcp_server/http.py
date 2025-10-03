@@ -181,7 +181,6 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
 
     name = f"{DOMAIN}:streamable-http"
     url = STREAMABLE_HTTP_API
-    requires_auth = False
 
     async def get(self, request: web.Request) -> web.StreamResponse:
         """Handle GET requests for streamable HTTP transport."""

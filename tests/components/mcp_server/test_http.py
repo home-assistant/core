@@ -17,7 +17,11 @@ from homeassistant.components.conversation import DOMAIN as CONVERSATION_DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.mcp_server.const import STATELESS_LLM_API
-from homeassistant.components.mcp_server.http import MESSAGES_API, SSE_API
+from homeassistant.components.mcp_server.http import (
+    MESSAGES_API,
+    SSE_API,
+    STREAMABLE_HTTP_API,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LLM_HASS_API, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -264,7 +268,7 @@ async def test_http_requires_authentication(
     setup_integration: None,
     hass_client_no_auth: ClientSessionGenerator,
 ) -> None:
-    """Test the SSE endpoint requires authentication."""
+    """Test the SSE, Messages, and Streamable HTTP endpoints require authentication."""
 
     client = await hass_client_no_auth()
 
@@ -272,6 +276,9 @@ async def test_http_requires_authentication(
     assert response.status == HTTPStatus.UNAUTHORIZED
 
     response = await client.post(MESSAGES_API.format(session_id="session-id"))
+    assert response.status == HTTPStatus.UNAUTHORIZED
+
+    response = await client.post(STREAMABLE_HTTP_API)
     assert response.status == HTTPStatus.UNAUTHORIZED
 
 
