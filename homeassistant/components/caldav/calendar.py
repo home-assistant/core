@@ -83,7 +83,7 @@ PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         vol.Optional(CONF_DAYS, default=1): cv.positive_int,
         vol.Optional(CONF_LEGACY_ENTITY_NAMES, default=True): cv.boolean,
-        vol.Optional(CONF_READ_ONLY, default=True): cv.boolean,
+        vol.Optional(CONF_READ_ONLY, default=False): cv.boolean,
     }
 )
 
