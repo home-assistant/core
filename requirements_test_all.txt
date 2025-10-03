@@ -438,7 +438,7 @@ airly==1.1.0
 airos==0.5.4
 
 # homeassistant.components.airthings_ble
-airthings-ble==0.9.2
+airthings-ble==1.1.1
 
 # homeassistant.components.airthings
 airthings-cloud==0.2.0
@@ -1420,7 +1420,7 @@ oralb-ble==0.17.6
 ourgroceries==1.5.4
 
 # homeassistant.components.ovo_energy
-ovoenergy==3.0.1
+ovoenergy==3.0.2
 
 # homeassistant.components.p1_monitor
 p1monitor==3.2.0
@@ -2256,7 +2256,7 @@ renault-api==0.4.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.16.0
+reolink-aio==0.16.1
 
 # homeassistant.components.rflink
 rflink==0.0.67
@@ -2534,7 +2534,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.2.0
 
 # homeassistant.components.homeassistant_hardware
-universal-silabs-flasher==0.0.34
+universal-silabs-flasher==0.0.35
 
 # homeassistant.components.upb
 upb-lib==0.6.1
