@@ -55,7 +55,12 @@ class ModelContextServerProtocolConfigFlow(config_entries.ConfigFlow, domain=DOM
 
             selection = [api_id for api_id in selection if api_id in llm_apis]
 
-            if not selection and default_selection is not None:
+            # Only use default selection if user hasn't explicitly provided an empty list
+            if (
+                not selection
+                and user_input.get(CONF_LLM_HASS_API) is None
+                and default_selection is not None
+            ):
                 selection = default_selection.copy()
 
             if not selection:

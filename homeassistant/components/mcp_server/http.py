@@ -48,10 +48,18 @@ def async_register(hass: HomeAssistant) -> None:
     if domain_data.get(HTTP_REGISTRATION):
         return
 
-    hass.http.register_view(ModelContextProtocolSSEView())
-    hass.http.register_view(ModelContextProtocolMessagesView())
-    hass.http.register_view(ModelContextProtocolStreamableHTTPView())
-    domain_data[HTTP_REGISTRATION] = True
+    try:
+        hass.http.register_view(ModelContextProtocolSSEView())
+        hass.http.register_view(ModelContextProtocolMessagesView())
+        hass.http.register_view(ModelContextProtocolStreamableHTTPView())
+        domain_data[HTTP_REGISTRATION] = True
+    except ValueError as err:
+        # Route already registered, likely in tests
+        if "already has OPTIONS handler" in str(err):
+            _LOGGER.debug("HTTP routes already registered: %s", err)
+            domain_data[HTTP_REGISTRATION] = True
+        else:
+            raise
 
 
 def async_get_config_entry(hass: HomeAssistant) -> ConfigEntry[MCPServerRuntime]:

@@ -97,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
-    runtime: MCPServerRuntime | None = entry.runtime_data
+    runtime: MCPServerRuntime | None = getattr(entry, "runtime_data", None)
     if runtime is not None:
         runtime.session_manager.close()
         await runtime.streamable_runner.stop()
