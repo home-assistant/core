@@ -1495,6 +1495,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             # Only update existing entries that are configured via sockets
             and existing_entry.data.get(CONF_SOCKET_PATH)
+            # And use the add-on
+            and existing_entry.data.get(CONF_USE_ADDON)
         ):
             await self._async_set_addon_config(
                 {CONF_ADDON_SOCKET: discovery_info.socket_path}
