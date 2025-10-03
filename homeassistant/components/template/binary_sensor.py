@@ -352,6 +352,10 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
             self._set_state(state)
             return
 
+        if self._attr_is_on and state:
+            self._set_state(state)
+            return
+
         if not isinstance(delay, timedelta):
             try:
                 delay = cv.positive_time_period(delay)
