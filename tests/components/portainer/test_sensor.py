@@ -1,7 +1,8 @@
 """Tests for the Portainer sensor platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform

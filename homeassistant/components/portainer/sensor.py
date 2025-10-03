@@ -51,21 +51,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up Portainer sensors based on a config entry."""
     coordinator = entry.runtime_data
-    entities: list[SensorEntity] = []
 
-    for endpoint in coordinator.data.values():
-        entities.extend(
-            PortainerContainerSensor(
-                coordinator,
-                entity_description,
-                container,
-                endpoint,
-            )
-            for container in endpoint.containers.values()
-            for entity_description in CONTAINER_SENSORS
+    async_add_entities(
+        PortainerContainerSensor(
+            coordinator,
+            entity_description,
+            container,
+            endpoint,
         )
-
-    async_add_entities(entities)
+        for endpoint in coordinator.data.values()
+        for container in endpoint.containers.values()
+        for entity_description in CONTAINER_SENSORS
+    )
 
 
 class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
