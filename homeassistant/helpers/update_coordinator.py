@@ -8,6 +8,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Generator
 from datetime import datetime, timedelta
 from functools import partial
 import logging
+import random
 from random import randint
 from time import monotonic
 from typing import Any, Generic, Protocol, TypeVar
@@ -41,6 +42,15 @@ _DataT = TypeVar("_DataT", default=dict[str, Any])
 
 class UpdateFailed(HomeAssistantError):
     """Raised when an update has failed."""
+
+
+class TooManyRequests(HomeAssistantError):
+    """Raised when the API returns a rate limit error."""
+
+    def __init__(self, retry_after: int) -> None:
+        """Initialize exception with retry_after time in seconds."""
+        super().__init__(retry_after)
+        self.retry_after = retry_after
 
 
 class BaseDataUpdateCoordinatorProtocol(Protocol):
@@ -121,6 +131,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._request_refresh_task: asyncio.TimerHandle | None = None
         self.last_update_success = True
         self.last_exception: Exception | None = None
+
+        # Backoff strategy
+        self._failure_count: int = 0
 
         if request_refresh_debouncer is None:
             request_refresh_debouncer = Debouncer(
@@ -457,6 +470,17 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self.last_exception = err
             raise
 
+        except TooManyRequests as err:
+            self.last_exception = err
+            if self.last_update_success:
+                if log_failures:
+                    self.logger.error("Error fetching %s data: %s", self.name, err)
+                self.last_update_success = False
+                # Apply or continue backoff strategy to the debouncer
+                self._failure_count += 1
+                # This time passthrough the retry_after from the exception
+                # self._update_interval_cooldown(err.retry_after)
+
         except Exception as err:
             self.last_exception = err
             self.last_update_success = False
@@ -489,6 +513,28 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             or previous_data != self.data
         ):
             self.async_update_listeners()
+
+    def _calculate_delay(
+        self, attempt: int, base: float = 0.5, cap: float = 60.0
+    ) -> float:
+        """Calculate delay for exponential backoff with jitter."""
+        # Exponential backoff (attempt starts at 1)
+        exp: float = base * (2 ** (attempt - 1))
+        delay: float = min(cap, exp)
+
+        # Add some random jitter of 10%
+        jitter_factor: float = random.uniform(0.9, 1.1)
+        delay *= jitter_factor
+
+        # Add extra microsecond jitter (thundering herd prevention)
+        micro_jitter_us: int = randint(
+            int(event.RANDOM_MICROSECOND_MIN), int(event.RANDOM_MICROSECOND_MAX)
+        )
+        micro_jitter: float = micro_jitter_us / 1_000_000.0
+        delay += micro_jitter
+
+        # Ensure we never exceed the cap
+        return min(cap, delay)
 
     @callback
     def _async_refresh_finished(self) -> None:
