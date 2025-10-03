@@ -703,7 +703,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_on_supervisor(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle logic when on Supervisor host."""
+        """Handle logic when on Supervisor host.
+
+        When the add-on is running, we copy over it's settings.
+        We will ignore settings for USB/Socket if those were discovered.
+
+        If add-on is not running, we will configure the add-on.
+
+        When it's not installed, we install it with new config options.
+        """
         if user_input is None:
             return self.async_show_form(
                 step_id="on_supervisor", data_schema=ON_SUPERVISOR_SCHEMA
@@ -717,8 +725,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if addon_info.state == AddonState.RUNNING:
             addon_config = addon_info.options
-            self.usb_path = addon_config.get(CONF_ADDON_DEVICE)
-            self.socket_path = addon_config.get(CONF_ADDON_SOCKET)
+            # Use the options set by USB/ESPHome discovery
+            if not self._adapter_discovered:
+                self.usb_path = addon_config.get(CONF_ADDON_DEVICE)
+                self.socket_path = addon_config.get(CONF_ADDON_SOCKET)
+
             self.s0_legacy_key = addon_config.get(CONF_ADDON_S0_LEGACY_KEY, "")
             self.s2_access_control_key = addon_config.get(
                 CONF_ADDON_S2_ACCESS_CONTROL_KEY, ""
@@ -929,6 +940,21 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
             await self.async_set_unique_id(
                 str(self.version_info.home_id), raise_on_progress=False
+            )
+
+        # When we came from discovery, make sure we update the add-on
+        if self._adapter_discovered and self.use_addon:
+            await self._async_set_addon_config(
+                {
+                    CONF_ADDON_DEVICE: self.usb_path,
+                    CONF_ADDON_SOCKET: self.socket_path,
+                    CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
+                    CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
+                    CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
+                    CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
+                    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
+                    CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+                }
             )
 
         self._abort_if_unique_id_configured(
