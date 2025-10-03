@@ -87,6 +87,11 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
         return self._device.ip[0] if self._device.ip else None
 
     @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Enable entity by default."""
+        return True
+
+    @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         attrs: dict[str, str] = {}

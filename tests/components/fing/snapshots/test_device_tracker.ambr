@@ -1,0 +1,164 @@
+# serializer version: 1
+# name: test_all_entities[new][device_tracker.freebsd_router-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.freebsd_router',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:router-network',
+    'original_name': 'FreeBSD router',
+    'platform': 'fing',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0000000000XX-00:00:00:00:00:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[new][device_tracker.freebsd_router-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'FreeBSD router',
+      'icon': 'mdi:router-network',
+      'ip': '192.168.50.1',
+      'mac': '00:00:00:00:00:01',
+      'manufacturer': 'OPNsense',
+      'source_type': <SourceType.ROUTER: 'router'>,
+      'type': 'FIREWALL',
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.freebsd_router',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---
+# name: test_all_entities[new][device_tracker.pc_home-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.pc_home',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:desktop-tower',
+    'original_name': 'PC_HOME',
+    'platform': 'fing',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0000000000XX-00:00:00:00:00:03',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[new][device_tracker.pc_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'PC_HOME',
+      'icon': 'mdi:desktop-tower',
+      'ip': '192.168.50.3',
+      'mac': '00:00:00:00:00:03',
+      'manufacturer': 'Dell',
+      'source_type': <SourceType.ROUTER: 'router'>,
+      'type': 'COMPUTER',
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.pc_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---
+# name: test_all_entities[new][device_tracker.samsung_the_frame_55-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.samsung_the_frame_55',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:television',
+    'original_name': 'Samsung The Frame 55',
+    'platform': 'fing',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0000000000XX-00:00:00:00:00:02',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[new][device_tracker.samsung_the_frame_55-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Samsung The Frame 55',
+      'icon': 'mdi:television',
+      'ip': '192.168.50.2',
+      'mac': '00:00:00:00:00:02',
+      'manufacturer': 'Samsung',
+      'model': 'The Frame 55',
+      'source_type': <SourceType.ROUTER: 'router'>,
+      'type': 'TELEVISION',
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.samsung_the_frame_55',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---

@@ -19,7 +19,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
-      "unexpected_error": "[%key:common::config_flow::error::unknown%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "url_error": "[%key:common::config_flow::error::invalid_host%]",
       "http_status_error": "HTTP request failed: {message}"
     },
