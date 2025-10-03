@@ -41,7 +41,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import CalDavConfigEntry
 from .api import async_get_calendars
-from .const import CONF_READ_ONLY
+from .const import CONF_LEGACY_ENTITY_NAMES, CONF_READ_ONLY
 from .coordinator import CalDavUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,6 +82,8 @@ PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         vol.Optional(CONF_DAYS, default=1): cv.positive_int,
+        vol.Optional(CONF_LEGACY_ENTITY_NAMES, default=True): cv.boolean,
+        vol.Optional(CONF_READ_ONLY, default=True): cv.boolean,
     }
 )
 
@@ -97,6 +99,8 @@ async def async_setup_platform(
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     days = config[CONF_DAYS]
+    read_only = config[CONF_READ_ONLY]
+    legacy_entity_names = config[CONF_LEGACY_ENTITY_NAMES]
 
     client = caldav.DAVClient(
         url, None, username, password, ssl_verify_cert=config[CONF_VERIFY_SSL]
@@ -137,13 +141,20 @@ async def async_setup_platform(
         # Create a default calendar if there was no custom one for all calendars
         # that support events.
         if not config[CONF_CUSTOM_CALENDARS]:
-            name = f"{username.capitalize() + ' ' if username else ''}{calendar.name}"  # default entity name is USERNAME calendar.name so the user can better distinguish between calendars.
-            device_id = f"{username} {calendar.name}"
-            entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT,
-                f"{url + ' ' if url else ''}{username + ' ' if username else ''}{calendar.name}",  # entity_id based on URL, USERNAME and calendarname to identify a calendar uniquely
-                hass=hass,
-            )
+            if legacy_entity_names:
+                name = calendar.name
+                device_id = calendar.name
+                entity_id = async_generate_entity_id(
+                    ENTITY_ID_FORMAT, device_id, hass=hass
+                )
+            else:
+                name = f"{username.capitalize() + ' ' if username else ''}{calendar.name}"  # default entity name is USERNAME calendar.name so the user can better distinguish between calendars.
+                device_id = f"{username} {calendar.name}"
+                entity_id = async_generate_entity_id(
+                    ENTITY_ID_FORMAT,
+                    f"{url + ' ' if url else ''}{username + ' ' if username else ''}{calendar.name}",  # entity_id based on URL, USERNAME and calendarname to identify a calendar uniquely
+                    hass=hass,
+                )
             coordinator = CalDavUpdateCoordinator(
                 hass,
                 None,
@@ -153,7 +164,13 @@ async def async_setup_platform(
                 search=None,
             )
             entities.append(
-                WebDavCalendarEntity(name, entity_id, coordinator, supports_offset=True)
+                WebDavCalendarEntity(
+                    name,
+                    entity_id,
+                    coordinator,
+                    supports_offset=True,
+                    read_only=read_only,
+                )
             )
 
     async_add_entities(entities, True)
@@ -166,16 +183,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up the CalDav calendar platform for a config entry."""
     calendars = await async_get_calendars(hass, entry.runtime_data, SUPPORTED_COMPONENT)
+
+    legacy_entity_names = entry.data.get(CONF_LEGACY_ENTITY_NAMES, True)
+
     async_add_entities(
         new_entities=(
             WebDavCalendarEntity(
-                f"{entry.data[CONF_USERNAME].capitalize()} {calendar.name}",  # default entity name is USERNAME calendar.name so the user can better distinguish between calendars.
-                async_generate_entity_id(
+                name=calendar.name
+                if legacy_entity_names
+                else f"{entry.data[CONF_USERNAME].capitalize()} {calendar.name}",  # new friendly entity name is USERNAME calendar.name so the user can better distinguish between calendars.
+                entity_id=async_generate_entity_id(
                     ENTITY_ID_FORMAT,
-                    f"{entry.data[CONF_URL]} {entry.data[CONF_USERNAME]} {calendar.name}",  # entity_id based on URL, USERNAME and calendarname to identify a calendar uniquely
+                    calendar.name
+                    if legacy_entity_names
+                    else f"{entry.data[CONF_URL]} {entry.data[CONF_USERNAME]} {calendar.name}",  # new entity_id based on URL, USERNAME and calendarname to identify a calendar uniquely
                     hass=hass,
                 ),
-                CalDavUpdateCoordinator(
+                coordinator=CalDavUpdateCoordinator(
                     hass,
                     entry,
                     calendar=calendar,

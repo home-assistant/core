@@ -27,6 +27,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv, selector
 
 from .const import (
+    CONF_LEGACY_ENTITY_NAMES,
     CONF_READ_ONLY,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -44,6 +45,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD, default=""): cv.string,
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Optional(CONF_LEGACY_ENTITY_NAMES, default=True): cv.boolean,
         vol.Optional(CONF_READ_ONLY, default=False): cv.boolean,
     }
 )
