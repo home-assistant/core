@@ -43,7 +43,7 @@ def get_fire_index_value(entity: SMHISensor, key: str) -> str | None:
     """Return index value as string."""
     value: int | None = entity.coordinator.fire_current.get(key)  # type: ignore[assignment]
     if value is not None and value > 0:
-        return str(value)
+        return str(int(value))
     return None
 
 
@@ -108,7 +108,7 @@ SENSOR_DESCRIPTIONS: tuple[SMHISensorEntityDescription, ...] = (
     SMHISensorEntityDescription(
         key="fwiindex",
         translation_key="fwiindex",
-        value_fn=lambda entity: str(get_fire_index_value(entity, "fwiindex")),
+        value_fn=lambda entity: get_fire_index_value(entity, "fwiindex"),
         device_class=SensorDeviceClass.ENUM,
         options=["1", "2", "3", "4", "5", "6"],
         state_class=SensorStateClass.MEASUREMENT,
@@ -163,7 +163,7 @@ SENSOR_DESCRIPTIONS: tuple[SMHISensorEntityDescription, ...] = (
     SMHISensorEntityDescription(
         key="grassfire",
         translation_key="grassfire",
-        value_fn=lambda entity: str(get_fire_index_value(entity, "grassfire")),
+        value_fn=lambda entity: get_fire_index_value(entity, "grassfire"),
         device_class=SensorDeviceClass.ENUM,
         options=["1", "2", "3", "4", "5", "6"],
         state_class=SensorStateClass.MEASUREMENT,
@@ -181,7 +181,7 @@ SENSOR_DESCRIPTIONS: tuple[SMHISensorEntityDescription, ...] = (
     SMHISensorEntityDescription(
         key="forestdry",
         translation_key="forestdry",
-        value_fn=lambda entity: str(get_fire_index_value(entity, "forestdry")),
+        value_fn=lambda entity: get_fire_index_value(entity, "forestdry"),
         device_class=SensorDeviceClass.ENUM,
         options=["1", "2", "3", "4", "5", "6"],
         state_class=SensorStateClass.MEASUREMENT,

@@ -1,4 +1,264 @@
 # serializer version: 1
+# name: test_sensor_setup[load_platforms0][sensor.test_build_up_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_build_up_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Build Up Index',
+    'platform': 'smhi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bui',
+    'unique_id': '59.32624, 17.84197-bui',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_build_up_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Swedish weather institute (SMHI)',
+      'friendly_name': 'Test Build Up Index',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_build_up_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '39.0',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_drought_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_drought_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Drought Code',
+    'platform': 'smhi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dc',
+    'unique_id': '59.32624, 17.84197-dc',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_drought_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Swedish weather institute (SMHI)',
+      'friendly_name': 'Test Drought Code',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_drought_code',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '508.2',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_duff_moisture_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_duff_moisture_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Duff Moisture Code',
+    'platform': 'smhi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dmc',
+    'unique_id': '59.32624, 17.84197-dmc',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_duff_moisture_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Swedish weather institute (SMHI)',
+      'friendly_name': 'Test Duff Moisture Code',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_duff_moisture_code',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '21.6',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_fine_fuel_moisture_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_fine_fuel_moisture_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fine Fuel Moisture Code',
+    'platform': 'smhi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ffmc',
+    'unique_id': '59.32624, 17.84197-ffmc',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_fine_fuel_moisture_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Swedish weather institute (SMHI)',
+      'friendly_name': 'Test Fine Fuel Moisture Code',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_fine_fuel_moisture_code',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '83.2',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_fire_weather_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_fire_weather_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fire Weather Index',
+    'platform': 'smhi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fwi',
+    'unique_id': '59.32624, 17.84197-fwi',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_fire_weather_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Swedish weather institute (SMHI)',
+      'friendly_name': 'Test Fire Weather Index',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_fire_weather_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.6',
+  })
+# ---
 # name: test_sensor_setup[load_platforms0][sensor.test_frozen_precipitation-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -49,6 +309,112 @@
     'state': '0',
   })
 # ---
+# name: test_sensor_setup[load_platforms0][sensor.test_fuel_drying-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_fuel_drying',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Fuel drying',
+    'platform': 'smhi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'forestdry',
+    'unique_id': '59.32624, 17.84197-forestdry',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_fuel_drying-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Swedish weather institute (SMHI)',
+      'device_class': 'enum',
+      'friendly_name': 'Test Fuel drying',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_fuel_drying',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_fwi_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_fwi_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'FWI-index',
+    'platform': 'smhi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fwiindex',
+    'unique_id': '59.32624, 17.84197-fwiindex',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_fwi_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Swedish weather institute (SMHI)',
+      'device_class': 'enum',
+      'friendly_name': 'Test FWI-index',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_fwi_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
 # name: test_sensor_setup[load_platforms0][sensor.test_high_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -97,6 +463,111 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '88',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_highest_grass_fire_risk-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_highest_grass_fire_risk',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Highest grass fire risk',
+    'platform': 'smhi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grassfire',
+    'unique_id': '59.32624, 17.84197-grassfire',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_highest_grass_fire_risk-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Swedish weather institute (SMHI)',
+      'device_class': 'enum',
+      'friendly_name': 'Test Highest grass fire risk',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_highest_grass_fire_risk',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_initial_spread_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_initial_spread_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Initial Spread Index',
+    'platform': 'smhi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'isi',
+    'unique_id': '59.32624, 17.84197-isi',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_initial_spread_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Swedish weather institute (SMHI)',
+      'friendly_name': 'Test Initial Spread Index',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_initial_spread_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.6',
   })
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_low_cloud_coverage-entry]
@@ -197,6 +668,63 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '88',
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_potential_rate_of_spread-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_potential_rate_of_spread',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
+    'original_icon': None,
+    'original_name': 'Potential rate of spread',
+    'platform': 'smhi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rn',
+    'unique_id': '59.32624, 17.84197-rn',
+    'unit_of_measurement': <UnitOfSpeed.METERS_PER_MINUTE: 'm/min'>,
+  })
+# ---
+# name: test_sensor_setup[load_platforms0][sensor.test_potential_rate_of_spread-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Swedish weather institute (SMHI)',
+      'device_class': 'speed',
+      'friendly_name': 'Test Potential rate of spread',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfSpeed.METERS_PER_MINUTE: 'm/min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_potential_rate_of_spread',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_precipitation_category-entry]
