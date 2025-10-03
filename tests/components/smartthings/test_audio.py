@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import io
 import logging
 from types import SimpleNamespace
@@ -18,6 +19,7 @@ from homeassistant.components.smartthings.audio import (
     PCM_MIME,
     PCM_SAMPLE_RATE,
     PCM_SAMPLE_WIDTH,
+    TRANSCODE_TIMEOUT_SECONDS,
     SmartThingsAudioError,
     async_get_audio_manager,
 )
@@ -34,9 +36,13 @@ class _FakeProcess:
         self._stdout = stdout
         self._stderr = stderr
         self.returncode = returncode
+        self.killed = False
 
     async def communicate(self) -> tuple[bytes, bytes]:
         return self._stdout, self._stderr
+
+    def kill(self) -> None:
+        self.killed = True
 
 
 def _build_wav(
@@ -69,7 +75,7 @@ async def test_prepare_notification_creates_url(
     wav_bytes = _build_wav()
 
     with patch.object(
-        manager, "_transcode_to_pcm", AsyncMock(return_value=(wav_bytes, 1.0))
+        manager, "_transcode_to_pcm", AsyncMock(return_value=(wav_bytes, 1.0, False))
     ):
         url = await manager.async_prepare_notification("https://example.com/source.mp3")
 
@@ -99,7 +105,7 @@ async def test_prepare_notification_uses_internal_url_when_external_missing(
     wav_bytes = _build_wav()
 
     with patch.object(
-        manager, "_transcode_to_pcm", AsyncMock(return_value=(wav_bytes, 1.0))
+        manager, "_transcode_to_pcm", AsyncMock(return_value=(wav_bytes, 1.0, False))
     ):
         url = await manager.async_prepare_notification("https://example.com/source.mp3")
 
@@ -123,7 +129,9 @@ async def test_prepare_notification_requires_accessible_url(
 
     with (
         patch.object(
-            manager, "_transcode_to_pcm", AsyncMock(return_value=(wav_bytes, 1.0))
+            manager,
+            "_transcode_to_pcm",
+            AsyncMock(return_value=(wav_bytes, 1.0, False)),
         ),
         patch(
             "homeassistant.components.smartthings.audio.get_url",
@@ -161,7 +169,9 @@ async def test_prepare_notification_raises_when_transcode_empty(
     manager = await async_get_audio_manager(hass)
 
     with (
-        patch.object(manager, "_transcode_to_pcm", AsyncMock(return_value=(b"", 0.0))),
+        patch.object(
+            manager, "_transcode_to_pcm", AsyncMock(return_value=(b"", 0.0, False))
+        ),
         pytest.raises(SmartThingsAudioError, match="Converted audio is empty"),
     ):
         await manager.async_prepare_notification("https://example.com/source.mp3")
@@ -183,11 +193,11 @@ async def test_prepare_notification_warns_when_duration_exceeds_max(
     with patch.object(
         manager,
         "_transcode_to_pcm",
-        AsyncMock(return_value=(wav_bytes, MAX_DURATION_SECONDS + 1.0)),
+        AsyncMock(return_value=(wav_bytes, MAX_DURATION_SECONDS + 1.0, True)),
     ):
         await manager.async_prepare_notification("https://example.com/source.mp3")
 
-    assert any("exceeds" in record.message for record in caplog.records)
+    assert any("truncated" in record.message for record in caplog.records)
 
 
 @pytest.mark.asyncio
@@ -206,7 +216,7 @@ async def test_prepare_notification_evicts_old_entries(
     with patch.object(
         manager,
         "_transcode_to_pcm",
-        AsyncMock(return_value=(wav_bytes, 1.0)),
+        AsyncMock(return_value=(wav_bytes, 1.0, False)),
     ):
         for _ in range(MAX_STORED_ENTRIES + 2):
             await manager.async_prepare_notification("https://example.com/source.mp3")
@@ -287,16 +297,62 @@ async def test_transcode_to_pcm_returns_empty_audio(
             AsyncMock(return_value=fake_process),
         ) as mock_exec,
     ):
-        pcm, duration = await manager._transcode_to_pcm(
+        pcm, duration, truncated = await manager._transcode_to_pcm(
             "https://example.com/source.mp3"
         )
 
     assert pcm == b""
     assert duration == 0.0
+    assert truncated is False
     mock_exec.assert_awaited_once()
 
 
 @pytest.mark.asyncio
+async def test_transcode_to_pcm_enforces_duration_cap(
+    hass: HomeAssistant,
+) -> None:
+    """Ensure ffmpeg is instructed to limit duration and timeout is enforced."""
+
+    manager = await async_get_audio_manager(hass)
+    wav_bytes = _build_wav(duration_seconds=MAX_DURATION_SECONDS)
+    fake_process = _FakeProcess(stdout=wav_bytes, stderr=b"", returncode=0)
+
+    timeouts: list[float] = []
+    original_wait_for = asyncio.wait_for
+
+    async def _wait_for(awaitable, timeout):
+        timeouts.append(timeout)
+        return await original_wait_for(awaitable, timeout)
+
+    mock_exec = AsyncMock(return_value=fake_process)
+
+    with (
+        patch(
+            "homeassistant.components.smartthings.audio.ffmpeg.get_ffmpeg_manager",
+            return_value=SimpleNamespace(binary="ffmpeg"),
+        ),
+        patch(
+            "homeassistant.components.smartthings.audio.asyncio.create_subprocess_exec",
+            mock_exec,
+        ),
+        patch(
+            "homeassistant.components.smartthings.audio.asyncio.wait_for",
+            new=_wait_for,
+        ),
+    ):
+        pcm, duration, truncated = await manager._transcode_to_pcm(
+            "https://example.com/source.mp3"
+        )
+
+    command = list(mock_exec.await_args.args)
+    assert "-t" in command
+    assert command[command.index("-t") + 1] == str(MAX_DURATION_SECONDS)
+    assert timeouts == [TRANSCODE_TIMEOUT_SECONDS]
+    assert pcm == wav_bytes
+    assert duration == pytest.approx(MAX_DURATION_SECONDS)
+    assert truncated is True
+
+
 async def test_transcode_to_pcm_logs_unexpected_format(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -319,12 +375,13 @@ async def test_transcode_to_pcm_logs_unexpected_format(
             AsyncMock(return_value=fake_process),
         ),
     ):
-        pcm, duration = await manager._transcode_to_pcm(
+        pcm, duration, truncated = await manager._transcode_to_pcm(
             "https://example.com/source.mp3"
         )
 
     assert pcm == wav_bytes
     assert duration > 0
+    assert truncated is False
     assert any("unexpected format" in record.message for record in caplog.records)
 
 

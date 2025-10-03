@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
+import contextlib
 from dataclasses import dataclass
 from datetime import timedelta
 import io
@@ -29,8 +30,9 @@ PCM_SAMPLE_WIDTH = 2
 PCM_CHANNELS = 1
 PCM_MIME = "audio/wav"
 PCM_EXTENSION = ".pcm"
-BYTES_PER_SECOND = PCM_SAMPLE_RATE * PCM_SAMPLE_WIDTH * PCM_CHANNELS
 MAX_DURATION_SECONDS = 50
+TRANSCODE_TIMEOUT_SECONDS = MAX_DURATION_SECONDS + 10
+_TRUNCATION_EPSILON = 1 / PCM_SAMPLE_RATE
 ENTRY_TTL = timedelta(minutes=5)
 MAX_STORED_ENTRIES = 8
 
@@ -65,13 +67,13 @@ class SmartThingsAudioManager(HomeAssistantView):
 
     async def async_prepare_notification(self, source_url: str) -> str:
         """Generate an externally accessible PCM URL for SmartThings."""
-        pcm, duration = await self._transcode_to_pcm(source_url)
+        pcm, duration, truncated = await self._transcode_to_pcm(source_url)
         if not pcm:
             raise SmartThingsAudioError("Converted audio is empty")
 
-        if duration > MAX_DURATION_SECONDS:
+        if truncated or duration > MAX_DURATION_SECONDS:
             _LOGGER.warning(
-                "SmartThings audio notification exceeds %s seconds (%.1fs); playback will be truncated",
+                "SmartThings audio notification truncated to %s seconds (output length %.1fs); longer sources may be cut off",
                 MAX_DURATION_SECONDS,
                 duration,
             )
@@ -135,7 +137,7 @@ class SmartThingsAudioManager(HomeAssistantView):
         )
         return response
 
-    async def _transcode_to_pcm(self, source_url: str) -> tuple[bytes, float]:
+    async def _transcode_to_pcm(self, source_url: str) -> tuple[bytes, float, bool]:
         """Use ffmpeg to convert the source media to 24kHz mono PCM WAV."""
         manager = ffmpeg.get_ffmpeg_manager(self.hass)
         command = [
@@ -152,6 +154,8 @@ class SmartThingsAudioManager(HomeAssistantView):
             str(PCM_SAMPLE_RATE),
             "-c:a",
             "pcm_s16le",
+            "-t",
+            str(MAX_DURATION_SECONDS),
             "-f",
             "wav",
             "pipe:1",
@@ -168,7 +172,19 @@ class SmartThingsAudioManager(HomeAssistantView):
                 "FFmpeg is required for SmartThings audio notifications"
             ) from err
 
-        stdout, stderr = await process.communicate()
+        try:
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(), timeout=TRANSCODE_TIMEOUT_SECONDS
+            )
+        except TimeoutError:
+            _LOGGER.warning(
+                "FFmpeg timed out after %s seconds while converting SmartThings audio from %s",
+                TRANSCODE_TIMEOUT_SECONDS,
+                source_url,
+            )
+            with contextlib.suppress(ProcessLookupError):
+                process.kill()
+            stdout, stderr = await process.communicate()
 
         if process.returncode != 0:
             message = stderr.decode().strip() or "unknown error"
@@ -182,7 +198,7 @@ class SmartThingsAudioManager(HomeAssistantView):
             )
 
         if not stdout:
-            return b"", 0.0
+            return b"", 0.0, False
 
         wav_io = io.BytesIO(stdout)
         try:
@@ -212,7 +228,8 @@ class SmartThingsAudioManager(HomeAssistantView):
             ) from err
 
         duration = frames / frame_rate if frame_rate else 0
-        return stdout, duration
+        truncated = duration >= (MAX_DURATION_SECONDS - _TRUNCATION_EPSILON)
+        return stdout, duration, truncated
 
     def _cleanup(self, now: float) -> None:
         """Remove expired entries."""
