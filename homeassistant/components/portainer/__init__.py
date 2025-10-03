@@ -22,6 +22,7 @@ _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.SENSOR,
 ]
+_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SWITCH]
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 

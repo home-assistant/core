@@ -52,6 +52,9 @@
       },
       "status": {
         "name": "Status"
+    "switch": {
+      "container": {
+        "name": "Container"
       }
     }
   },
