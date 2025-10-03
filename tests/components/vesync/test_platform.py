@@ -95,3 +95,4 @@ async def test_entity_update(
     assert hass.states.get("sensor.air_purifier_400s_air_quality").state == "good"
     assert hass.states.get("sensor.outlet_current_voltage").state == "129.0"
     assert hass.states.get("sensor.outlet_energy_use_weekly").state == "2.2"
+    aioclient_mock.clear_requests()
