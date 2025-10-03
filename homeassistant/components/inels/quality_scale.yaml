@@ -73,10 +73,7 @@ rules:
       configuration.
 
   # Gold
-  entity-translations:
-    status: todo
-    comment: |
-      There is room for improvement here.
+  entity-translations: done
   entity-device-class: todo
   devices: done
   entity-category: todo
@@ -113,7 +110,7 @@ rules:
   docs-examples: todo
 
   # Platinum
-  async-dependency: todo
+  async-dependency: done
   inject-websession:
     status: exempt
     comment: |

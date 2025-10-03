@@ -1,35 +1,17 @@
 {
   "config": {
     "step": {
-      "user": {
-        "title": "iNELS MQTT broker",
-        "description": "Please enter the MQTT broker details to connect iNELS components.",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "transport": "Transport protocol"
-        },
-        "data_description": {
-          "host": "The hostname or IP address of the MQTT broker.",
-          "port": "The port number on which the MQTT broker is running.",
-          "username": "The username for authenticating with the MQTT broker.",
-          "password": "The password for authenticating with the MQTT broker.",
-          "transport": "The transport protocol to use for MQTT communication (TCP or WebSocket)."
-        }
+      "confirm_from_user": {
+        "description": "iNELS devices must be connected to the same broker as the Home Assistant MQTT integration client. Continue setup?"
+      },
+      "confirm_from_mqtt": {
+        "description": "Do you want to set up iNELS?"
       }
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
-    },
-    "error": {
-      "mqtt_version": "Incorrect broker MQTT version",
-      "forbidden_id": "Forbidden MQTT client ID",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unauthorized": "Unauthorized connection",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "mqtt_not_connected": "Home Assistant MQTT integration not connected to MQTT broker.",
+      "mqtt_not_configured": "Home Assistant MQTT integration not configured."
     }
   },
   "entity": {

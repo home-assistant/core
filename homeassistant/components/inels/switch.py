@@ -127,15 +127,11 @@ class InelsSwitch(InelsBaseEntity, SwitchEntity):
         current_state = self.entity_description.get_state_fn(self._device, self._index)
         self._check_alerts(current_state)
         current_state.is_on = False
-        await self.hass.async_add_executor_job(
-            self._device.set_ha_value, self._device.state
-        )
+        await self._device.set_ha_value(self._device.state)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
         current_state = self.entity_description.get_state_fn(self._device, self._index)
         self._check_alerts(current_state)
         current_state.is_on = True
-        await self.hass.async_add_executor_job(
-            self._device.set_ha_value, self._device.state
-        )
+        await self._device.set_ha_value(self._device.state)

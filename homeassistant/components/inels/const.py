@@ -2,9 +2,13 @@
 
 import logging
 
+from homeassistant.const import Platform
+
 DOMAIN = "inels"
 TITLE = "iNELS"
 
-DESCRIPTION = ""
-INELS_VERSION = 1
+PLATFORMS: list[Platform] = [
+    Platform.SWITCH,
+]
+
 LOGGER = logging.getLogger(__package__)

@@ -4,17 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from inelsmqtt import InelsMqtt
-from inelsmqtt.const import MQTT_TRANSPORT
-import voluptuous as vol
-
+from homeassistant.components import mqtt
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from .const import DOMAIN, TITLE
-
-CONNECTION_TIMEOUT = 5
 
 
 class INelsConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -22,81 +16,63 @@ class INelsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    async def async_step_mqtt(
+        self, discovery_info: MqttServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by MQTT discovery."""
+        if self._async_in_progress() or self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        # Validate the message, abort if it fails.
+        if not discovery_info.topic.endswith("/gw"):
+            # Not an iNELS discovery message.
+            return self.async_abort(reason="invalid_discovery_info")
+        if not discovery_info.payload:
+            # Empty payload, unexpected payload.
+            return self.async_abort(reason="invalid_discovery_info")
+
+        return await self.async_step_confirm_from_mqtt()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle a flow initiated by the user."""
-        errors: dict[str, str] = {}
+        """Handle a flow initialized by the user."""
+        # There is no reason to have multiple entries due to the single broker limitation
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
 
-        if user_input:
-            # Abort if an entry with the same host already exists
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+        try:
+            if not mqtt.is_connected(self.hass):
+                return self.async_abort(reason="mqtt_not_connected")
+        except KeyError:
+            return self.async_abort(reason="mqtt_not_configured")
 
-            test_connect = await self.hass.async_add_executor_job(
-                try_connection,
-                self.hass,
-                user_input[CONF_HOST],
-                user_input[CONF_PORT],
-                user_input.get(CONF_USERNAME, ""),
-                user_input.get(CONF_PASSWORD, ""),
-                user_input[MQTT_TRANSPORT],
-            )
+        return await self.async_step_confirm_from_user()
 
-            if test_connect is None:
-                return self.async_create_entry(
-                    title=f"{TITLE} ({user_input[CONF_HOST]})",
-                    data=user_input,
-                )
+    async def step_confirm(
+        self, step_id: str, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the setup."""
 
-            errors["base"] = TEST_CONNECT_ERRORS.get(test_connect, "unknown")
+        if user_input is not None:
+            await self.async_set_unique_id(DOMAIN)
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(title=TITLE, data={})
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
-                    {
-                        vol.Required(CONF_HOST): str,
-                        vol.Required(CONF_PORT, default=1883): vol.Coerce(int),
-                        vol.Optional(CONF_USERNAME): str,
-                        vol.Optional(CONF_PASSWORD): str,
-                        vol.Required(MQTT_TRANSPORT, default="tcp"): vol.In(
-                            ["tcp", "websockets"]
-                        ),
-                    }
-                ),
-                user_input,
-            ),
-            errors=errors,
+        return self.async_show_form(step_id=step_id)
+
+    async def async_step_confirm_from_mqtt(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the setup from MQTT discovered."""
+        return await self.step_confirm(
+            step_id="confirm_from_mqtt", user_input=user_input
         )
 
-
-def try_connection(
-    hass: HomeAssistant,
-    host: str,
-    port: int,
-    username: str,
-    password: str,
-    transport: str = "tcp",
-) -> int | None:
-    """Test if we can connect to an MQTT broker."""
-    entry_config = {
-        CONF_HOST: host,
-        CONF_PORT: port,
-        CONF_USERNAME: username,
-        CONF_PASSWORD: password,
-        MQTT_TRANSPORT: transport,
-    }
-    client = InelsMqtt(entry_config)
-    ret: int | None = client.test_connection()
-    client.disconnect()
-
-    return ret
-
-
-TEST_CONNECT_ERRORS: dict[int, str] = {
-    1: "mqtt_version",
-    2: "forbidden_id",  # should never happen
-    3: "cannot_connect",
-    4: "invalid_auth",
-    5: "unauthorized",
-}
+    async def async_step_confirm_from_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the setup from user add integration."""
+        return await self.step_confirm(
+            step_id="confirm_from_user", user_input=user_input
+        )
