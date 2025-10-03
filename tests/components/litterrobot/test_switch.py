@@ -19,6 +19,7 @@ from .conftest import setup_integration
 
 NIGHT_LIGHT_MODE_ENTITY_ID = "switch.test_night_light_mode"
 PANEL_LOCKOUT_ENTITY_ID = "switch.test_panel_lockout"
+POWER_ENTITY_ID = "switch.test_power"
 
 
 async def test_switch(
@@ -37,10 +38,11 @@ async def test_switch(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "robot_command", "updated_field"),
+    ("entity_id", "robot_command", "updated_field", "on_value", "off_value"),
     [
-        (NIGHT_LIGHT_MODE_ENTITY_ID, "set_night_light", "nightLightActive"),
-        (PANEL_LOCKOUT_ENTITY_ID, "set_panel_lockout", "panelLockActive"),
+        (NIGHT_LIGHT_MODE_ENTITY_ID, "set_night_light", "nightLightActive", "1", "0"),
+        (PANEL_LOCKOUT_ENTITY_ID, "set_panel_lockout", "panelLockActive", "1", "0"),
+        (POWER_ENTITY_ID, "set_power_status", "powerStatus", "AC", "NC"),
     ],
 )
 async def test_on_off_commands(
@@ -49,6 +51,8 @@ async def test_on_off_commands(
     entity_id: str,
     robot_command: str,
     updated_field: str,
+    on_value: str,
+    off_value: str,
 ) -> None:
     """Test sending commands to the switch."""
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
@@ -59,7 +63,7 @@ async def test_on_off_commands(
 
     data = {ATTR_ENTITY_ID: entity_id}
 
-    services = ((SERVICE_TURN_ON, STATE_ON, "1"), (SERVICE_TURN_OFF, STATE_OFF, "0"))
+    services = ((SERVICE_TURN_ON, STATE_ON, on_value), (SERVICE_TURN_OFF, STATE_OFF, off_value))
     for count, (service, new_state, new_value) in enumerate(services):
         await hass.services.async_call(PLATFORM_DOMAIN, service, data, blocking=True)
         robot._update_data({updated_field: new_value}, partial=True)
