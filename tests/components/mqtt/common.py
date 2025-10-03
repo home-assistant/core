@@ -517,6 +517,20 @@ MOCK_SUBENTRY_NUMBER_COMPONENT_NO_UNIT = {
         "entity_picture": "https://example.com/f9261f6feed443e7b7d5f3fbe2a47414",
     },
 }
+MOCK_SUBENTRY_SELECT_COMPONENT = {
+    "fa261f6feed443e7b7d5f3fbe2a47414": {
+        "platform": "select",
+        "name": "Mode",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "options": ["beer", "milk"],
+        "value_template": "{{ value_json.value }}",
+        "retain": False,
+        "entity_picture": "https://example.com/fa261f6feed443e7b7d5f3fbe2a47414",
+    },
+}
 MOCK_SUBENTRY_SENSOR_COMPONENT = {
     "e9261f6feed443e7b7d5f3fbe2a47412": {
         "platform": "sensor",
@@ -667,6 +681,10 @@ MOCK_NUMBER_SUBENTRY_DATA_DEVICE_CLASS_UNIT = {
 MOCK_NUMBER_SUBENTRY_DATA_NO_UNIT = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_NUMBER_COMPONENT_NO_UNIT,
+}
+MOCK_SELECT_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_SELECT_COMPONENT,
 }
 MOCK_SENSOR_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
