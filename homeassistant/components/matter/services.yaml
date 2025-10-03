@@ -1,4 +1,4 @@
-async_set_boost:
+water_heater_boost:
   target:
     entity:
       domain: water_heater
