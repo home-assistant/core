@@ -1,5 +1,7 @@
 """Support for EcoNet products."""
 
+from typing import Generic, TypeVar
+
 from pyeconet.equipment import Equipment
 
 from homeassistant.core import callback
@@ -9,8 +11,10 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, PUSH_UPDATE
 
+_EquipmentT = TypeVar("_EquipmentT", bound=Equipment)
 
-class EcoNetEntity[_EquipmentT: Equipment = Equipment](Entity):
+
+class EcoNetEntity(Entity, Generic[_EquipmentT]):
     """Define a base EcoNet entity."""
 
     _attr_should_poll = False
@@ -25,7 +29,9 @@ class EcoNetEntity[_EquipmentT: Equipment = Equipment](Entity):
         """Subscribe to device events."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, PUSH_UPDATE, self.on_update_received)
+            async_dispatcher_connect(
+                self.hass, PUSH_UPDATE, self.on_update_received
+            )
         )
 
     @callback

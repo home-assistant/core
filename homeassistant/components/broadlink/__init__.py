@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Broadlink device from a config entry."""
     data: BroadlinkData = hass.data[DOMAIN]
 
-    device = BroadlinkDevice(hass, entry)
+    device: BroadlinkDevice = BroadlinkDevice(hass, entry)
     if not await device.async_setup():
         return False
     if data.heartbeat is None:

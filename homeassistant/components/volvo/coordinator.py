@@ -8,7 +8,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any, Generic, TypeAlias, TypeVar, cast
 
 from volvocarsapi.api import VolvoCarsApi
 from volvocarsapi.models import (
@@ -23,7 +23,10 @@ from volvocarsapi.models import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import DATA_BATTERY_CAPACITY, DOMAIN
 
@@ -50,21 +53,26 @@ class VolvoRuntimeData:
     interval_coordinators: tuple[VolvoBaseIntervalCoordinator, ...]
 
 
-type VolvoConfigEntry = ConfigEntry[VolvoRuntimeData]
-type CoordinatorData = dict[str, VolvoCarsApiBaseModel | None]
+VolvoConfigEntry: TypeAlias = ConfigEntry[VolvoRuntimeData]
+CoordinatorData: TypeAlias = dict[str, VolvoCarsApiBaseModel | None]
+
+_T = TypeVar("_T", bound=dict[str, Any])
 
 
 def _is_invalid_api_field(field: VolvoCarsApiBaseModel | None) -> bool:
     if not field:
         return True
 
-    if isinstance(field, VolvoCarsValueStatusField) and field.status == "ERROR":
+    if (
+        isinstance(field, VolvoCarsValueStatusField)
+        and field.status == "ERROR"
+    ):
         return True
 
     return False
 
 
-class VolvoBaseCoordinator[T: dict = dict[str, Any]](DataUpdateCoordinator[T]):
+class VolvoBaseCoordinator(DataUpdateCoordinator[_T], Generic[_T]):
     """Volvo base coordinator."""
 
     config_entry: VolvoConfigEntry
@@ -89,7 +97,9 @@ class VolvoBaseCoordinator[T: dict = dict[str, Any]](DataUpdateCoordinator[T]):
 
         self.context = context
 
-    def get_api_field(self, api_field: str | None) -> VolvoCarsApiBaseModel | None:
+    def get_api_field(
+        self, api_field: str | None
+    ) -> VolvoCarsApiBaseModel | None:
         """Get the API field based on the entity description."""
 
         return self.data.get(api_field) if api_field else None
@@ -141,12 +151,14 @@ class VolvoBaseIntervalCoordinator(VolvoBaseCoordinator[CoordinatorData]):
 
         for result in results:
             if isinstance(result, VolvoAuthException):
-                # If one result is a VolvoAuthException, then probably all requests
+                # If one result is a VolvoAuthException, then probably all
+                # requests
                 # will fail. In this case we can cancel everything to
                 # reauthenticate.
                 #
                 # Raising ConfigEntryAuthFailed will cancel future updates
-                # and start a config flow with SOURCE_REAUTH (async_step_reauth)
+                # and start a config flow with SOURCE_REAUTH
+                # (async_step_reauth)
                 _LOGGER.debug(
                     "%s - Authentication failed. %s",
                     self.config_entry.entry_id,
@@ -314,12 +326,17 @@ class VolvoMediumIntervalCoordinator(VolvoBaseIntervalCoordinator):
             if capabilities.get("isSupported", False):
 
                 def _normalize_key(key: str) -> str:
-                    return "chargingStatus" if key == "chargingSystemStatus" else key
+                    return (
+                        "chargingStatus"
+                        if key == "chargingSystemStatus"
+                        else key
+                    )
 
                 self._supported_capabilities = [
                     _normalize_key(key)
                     for key, value in capabilities.items()
-                    if isinstance(value, dict) and value.get("isSupported", False)
+                    if isinstance(value, dict)
+                    and value.get("isSupported", False)
                 ]
 
                 api_calls.append(self._async_get_energy_state)

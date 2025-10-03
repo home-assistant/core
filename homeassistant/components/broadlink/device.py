@@ -3,6 +3,7 @@
 from contextlib import suppress
 from functools import partial
 import logging
+from typing import Generic, TypeVar
 
 import broadlink as blk
 from broadlink.exceptions import (
@@ -31,13 +32,15 @@ from .updater import BroadlinkUpdateManager, get_update_manager
 
 _LOGGER = logging.getLogger(__name__)
 
+_ApiT = TypeVar("_ApiT", bound=blk.Device)
+
 
 def get_domains(device_type: str) -> set[Platform]:
     """Return the domains available for a device type."""
     return {d for d, t in DOMAINS_AND_TYPES.items() if device_type in t}
 
 
-class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
+class BroadlinkDevice(Generic[_ApiT]):
     """Manages a Broadlink device."""
 
     api: _ApiT
@@ -122,7 +125,9 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
 
         except BroadlinkException as err:
             _LOGGER.error(
-                "Failed to authenticate to the device at %s: %s", api.host[0], err
+                "Failed to authenticate to the device at %s: %s",
+                api.host[0],
+                err,
             )
             return False
 
@@ -161,7 +166,9 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             await self.hass.async_add_executor_job(self.api.auth)
         except (BroadlinkException, OSError) as err:
             _LOGGER.debug(
-                "Failed to authenticate to the device at %s: %s", self.api.host[0], err
+                "Failed to authenticate to the device at %s: %s",
+                self.api.host[0],
+                err,
             )
             if isinstance(err, AuthenticationError):
                 await self._async_handle_auth_error()
