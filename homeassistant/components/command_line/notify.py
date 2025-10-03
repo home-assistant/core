@@ -6,13 +6,17 @@ import logging
 import subprocess
 from typing import Any
 
-from homeassistant.components.notify import BaseNotificationService
+from homeassistant.components.notify import (
+    DOMAIN as NOTIFY_DOMAIN,
+    BaseNotificationService,
+)
 from homeassistant.const import CONF_COMMAND
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.process import kill_subprocess
 
-from .const import CONF_COMMAND_TIMEOUT, LOGGER
+from .const import CONF_COMMAND_TIMEOUT, DOMAIN, LOGGER
 from .utils import render_template_args
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,6 +29,16 @@ def get_service(
 ) -> CommandLineNotificationService | None:
     """Get the Command Line notification service."""
     if not discovery_info:
+        create_issue(
+            hass,
+            DOMAIN,
+            "notify_platform_yaml_not_supported",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="platform_yaml_not_supported",
+            translation_placeholders={"platform": NOTIFY_DOMAIN},
+            learn_more_url="https://www.home-assistant.io/integrations/command_line/",
+        )
         return None
 
     notify_config = discovery_info
