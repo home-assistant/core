@@ -77,7 +77,7 @@ class RpcClimateDescription(RpcEntityDescription, ClimateEntityDescription):
     """Class to describe a RPC climate."""
 
 
-class RpclinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
+class RpcLinkedgoThermostatClimate(ShellyRpcAttributeEntity, ClimateEntity):
     """Entity that controls a LINKEDGO Thermostat on RPC based Shelly devices."""
 
     entity_description: RpcClimateDescription
@@ -365,7 +365,7 @@ def async_setup_rpc_entry(
         config_entry,
         async_add_entities,
         RPC_LINKEDGO_THERMOSTAT,
-        RpclinkedgoThermostatClimate,
+        RpcLinkedgoThermostatClimate,
     )
 
 
