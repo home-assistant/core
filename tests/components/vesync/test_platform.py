@@ -72,7 +72,7 @@ async def test_entity_update(
     assert hass.states.get("sensor.outlet_energy_use_weekly").state == "0.0"
 
     # Update the mock responses
-    aioclient_mock.clear_requests()
+    # aioclient_mock.clear_requests()
     mock_air_purifier_400s_update_response(aioclient_mock)
     mock_device_response(aioclient_mock, "Outlet", {"voltage": 129})
     mock_outlet_energy_response(aioclient_mock, "Outlet", {"totalEnergy": 2.2})
