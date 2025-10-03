@@ -8,7 +8,6 @@ from collections.abc import Awaitable, Callable, Coroutine, Generator
 from datetime import datetime, timedelta
 from functools import partial
 import logging
-import random
 from random import randint
 from time import monotonic
 from typing import Any, Generic, Protocol, TypeVar
@@ -125,6 +124,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._unsub_shutdown: CALLBACK_TYPE | None = None
         self._request_refresh_task: asyncio.TimerHandle | None = None
+        self._retry_after: int | None = None
         self.last_update_success = True
         self.last_exception: Exception | None = None
 
@@ -256,9 +256,17 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         hass = self.hass
         loop = hass.loop
 
-        next_refresh = (
-            int(loop.time()) + self._microsecond + self._update_interval_seconds
-        )
+        update_interval = self._update_interval_seconds
+        if self._retry_after:
+            self.logger.debug(
+                "Retry after triggered. Retrying next update in %s seconds",
+                self._retry_after,
+            )
+            update_interval = self._retry_after
+            self._retry_after = None
+
+        next_refresh = int(loop.time()) + self._microsecond + update_interval
+        self.logger.debug("Next update scheduled in %s seconds", update_interval)
         self._unsub_refresh = loop.call_at(
             next_refresh, self.__wrap_handle_refresh_interval
         ).cancel
@@ -323,7 +331,10 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             )
         if await self.__wrap_async_setup():
             await self._async_refresh(
-                log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
+                log_failures=False,
+                raise_on_auth_failed=True,
+                raise_on_entry_error=True,
+                from_config_entry=True,
             )
             if self.last_update_success:
                 return
@@ -379,6 +390,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         raise_on_auth_failed: bool = False,
         scheduled: bool = False,
         raise_on_entry_error: bool = False,
+        from_config_entry: bool = False,
     ) -> None:
         """Refresh data."""
         self._async_unsub_refresh()
@@ -425,20 +437,13 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
         except UpdateFailed as err:
             self.last_exception = err
-
-            if err.retry_after is not None:
-                # If we got a retry_after, schedule the next refresh accordingly.
+            # We can only honor a retry_after, after the config entry has been set up.
+            if err.retry_after and not from_config_entry:
+                self._retry_after = self.hass.loop.time() + err.retry_after
                 self.logger.debug(
-                    "Scheduling next update for %s in %d seconds",
-                    self.name,
+                    "Retry after triggered. Delaying next update in %d second(s)",
                     err.retry_after,
                 )
-                if self._unsub_refresh:
-                    self._unsub_refresh()
-                loop = self.hass.loop
-                self._unsub_refresh = loop.call_later(
-                    err.retry_after, self.__wrap_handle_refresh_interval
-                ).cancel
 
             if self.last_update_success:
                 if log_failures:
@@ -510,28 +515,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             or previous_data != self.data
         ):
             self.async_update_listeners()
-
-    def _calculate_delay(
-        self, attempt: int, base: float = 0.5, cap: float = 60.0
-    ) -> float:
-        """Calculate delay for exponential backoff with jitter."""
-        # Exponential backoff (attempt starts at 1)
-        exp: float = base * (2 ** (attempt - 1))
-        delay: float = min(cap, exp)
-
-        # Add some random jitter of 10%
-        jitter_factor: float = random.uniform(0.9, 1.1)
-        delay *= jitter_factor
-
-        # Add extra microsecond jitter (thundering herd prevention)
-        micro_jitter_us: int = randint(
-            int(event.RANDOM_MICROSECOND_MIN), int(event.RANDOM_MICROSECOND_MAX)
-        )
-        micro_jitter: float = micro_jitter_us / 1_000_000.0
-        delay += micro_jitter
-
-        # Ensure we never exceed the cap
-        return min(cap, delay)
 
     @callback
     def _async_refresh_finished(self) -> None:

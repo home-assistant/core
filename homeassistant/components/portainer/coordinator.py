@@ -106,15 +106,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 translation_placeholders={"error": repr(err)},
             ) from err
         else:
-            _LOGGER.debug("Triggering UpdateFailed with retry_after")
-            raise UpdateFailed(
-                retry_after=30,
-                translation_domain=DOMAIN,
-                translation_key="timeout_connect",
-                # translation_placeholders={"error": repr(err)},
-            )
-
-            # _LOGGER.debug("Fetched endpoints: %s", endpoints)
+            _LOGGER.debug("Finished")
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
         for endpoint in endpoints:
