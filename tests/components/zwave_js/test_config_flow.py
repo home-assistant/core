@@ -1428,7 +1428,7 @@ async def test_esphome_discovery_usb_same_home_id(
     assert start_addon.call_args == call("core_zwave_js")
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "migration_successful"
     assert entry.data == {
         "url": "ws://host1:3001",
         "usb_path": None,

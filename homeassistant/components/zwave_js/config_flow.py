@@ -26,6 +26,7 @@ from homeassistant.components.hassio import (
     AddonState,
 )
 from homeassistant.config_entries import (
+    SOURCE_ESPHOME,
     SOURCE_USB,
     ConfigEntryState,
     ConfigFlow,
@@ -941,7 +942,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
                 CONF_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
                 CONF_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
-            }
+            },
+            error=(
+                "migration_successful"
+                if self.source in (SOURCE_USB, SOURCE_ESPHOME)
+                else "already_configured"
+            ),
         )
         return self._async_create_entry_from_vars()
 
