@@ -103,7 +103,7 @@ def create_platform_yaml_not_supported_issue(
     async_create_issue(
         hass,
         DOMAIN,
-        "binary_sensor_platform_yaml_not_supported",
+        f"{platform_domain}_platform_yaml_not_supported",
         is_fixable=False,
         severity=IssueSeverity.WARNING,
         translation_key="platform_yaml_not_supported",
