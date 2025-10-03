@@ -407,8 +407,9 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
         stream_id = f"session_{session_id}"
         self._event_store.clear_stream(stream_id)
 
-        # Note: Session termination in session_manager would require extending
-        # the session manager interface to support explicit termination
+        # Terminate the session
+        if not session_manager.terminate_session(session_id):
+            raise HTTPNotFound(text="Session not found")
 
         return web.Response(status=200)
 

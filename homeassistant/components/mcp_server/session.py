@@ -53,6 +53,23 @@ class SessionManager:
         """Get an existing session."""
         return self._sessions.get(session_id)
 
+    def terminate_session(self, session_id: str) -> bool:
+        """Terminate a specific session.
+
+        Args:
+            session_id: The ID of the session to terminate
+
+        Returns:
+            True if session was found and terminated, False otherwise
+
+        """
+        if session_id in self._sessions:
+            session = self._sessions[session_id]
+            session.read_stream_writer.close()
+            del self._sessions[session_id]
+            return True
+        return False
+
     def close(self) -> None:
         """Close any open sessions."""
         for session in self._sessions.values():
