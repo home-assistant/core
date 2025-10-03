@@ -1505,7 +1505,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # We are not aborting if home ID configured here, we just want to make sure that it's set
         # We will update a USB based config entry automatically in `async_step_finish_addon_setup_user`
-        await self.async_set_unique_id(str(discovery_info.zwave_home_id))
+        await self.async_set_unique_id(
+            str(discovery_info.zwave_home_id), raise_on_progress=False
+        )
         self.socket_path = discovery_info.socket_path
         self.context["title_placeholders"] = {
             CONF_NAME: f"{discovery_info.name} via ESPHome"
