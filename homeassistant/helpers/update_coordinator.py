@@ -43,12 +43,8 @@ _DataT = TypeVar("_DataT", default=dict[str, Any])
 class UpdateFailed(HomeAssistantError):
     """Raised when an update has failed."""
 
-
-class TooManyRequests(HomeAssistantError):
-    """Raised when the API returns a rate limit error."""
-
-    def __init__(self, retry_after: int) -> None:
-        """Initialize exception with retry_after time in seconds."""
+    def __init__(self, retry_after: int | None) -> None:
+        """Initialize exception."""
         super().__init__(retry_after)
         self.retry_after = retry_after
 
@@ -131,9 +127,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._request_refresh_task: asyncio.TimerHandle | None = None
         self.last_update_success = True
         self.last_exception: Exception | None = None
-
-        # Backoff strategy
-        self._failure_count: int = 0
 
         if request_refresh_debouncer is None:
             request_refresh_debouncer = Debouncer(
@@ -432,6 +425,21 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
         except UpdateFailed as err:
             self.last_exception = err
+
+            if err.retry_after is not None:
+                # If we got a retry_after, schedule the next refresh accordingly.
+                self.logger.debug(
+                    "Scheduling next update for %s in %d seconds",
+                    self.name,
+                    err.retry_after,
+                )
+                if self._unsub_refresh:
+                    self._unsub_refresh()
+                loop = self.hass.loop
+                self._unsub_refresh = loop.call_later(
+                    err.retry_after, self.__wrap_handle_refresh_interval
+                ).cancel
+
             if self.last_update_success:
                 if log_failures:
                     self.logger.error("Error fetching %s data: %s", self.name, err)
@@ -469,17 +477,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         except NotImplementedError as err:
             self.last_exception = err
             raise
-
-        except TooManyRequests as err:
-            self.last_exception = err
-            if self.last_update_success:
-                if log_failures:
-                    self.logger.error("Error fetching %s data: %s", self.name, err)
-                self.last_update_success = False
-                # Apply or continue backoff strategy to the debouncer
-                self._failure_count += 1
-                # This time passthrough the retry_after from the exception
-                # self._update_interval_cooldown(err.retry_after)
 
         except Exception as err:
             self.last_exception = err
