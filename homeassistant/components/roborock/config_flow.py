@@ -129,7 +129,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                         reauth_entry, data_updates={CONF_USER_DATA: user_data.as_dict()}
                     )
                 self._abort_if_unique_id_configured(error="already_configured_account")
-                return self._create_entry(self._client, self._username, user_data)
+                return await self._create_entry(self._client, self._username, user_data)
 
         return self.async_show_form(
             step_id="code",
@@ -176,7 +176,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_code()
         return self.async_show_form(step_id="reauth_confirm", errors=errors)
 
-    def _create_entry(
+    async def _create_entry(
         self, client: RoborockApiClient, username: str, user_data: UserData
     ) -> ConfigFlowResult:
         """Finished config flow and create entry."""
@@ -185,7 +185,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_USERNAME: username,
                 CONF_USER_DATA: user_data.as_dict(),
-                CONF_BASE_URL: client.base_url,
+                CONF_BASE_URL: await client.base_url,
             },
         )
 
