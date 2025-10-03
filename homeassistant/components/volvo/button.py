@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 import logging
 
-from volvocarsapi.models import VolvoApiException, VolvoCarsApiBaseModel
+from volvocarsapi.models import VolvoApiException
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import VolvoConfigEntry
-from .entity import VolvoEntity, VolvoEntityDescription
+from .entity import VolvoBaseEntity, VolvoEntityDescription
 
 PARALLEL_UPDATES = 0
 _LOGGER = logging.getLogger(__name__)
@@ -61,18 +61,18 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up buttons."""
-    coordinator = entry.runtime_data.command_coordinator
+    supported_commands = entry.runtime_data.context.supported_commands
 
     buttons = [
-        VolvoCarsButton(coordinator, description)
+        VolvoCarsButton(entry, description)
         for description in _DESCRIPTIONS
-        if description.required_command_key in coordinator.commands
+        if description.required_command_key in supported_commands
     ]
 
     async_add_entities(buttons)
 
 
-class VolvoCarsButton(VolvoEntity, ButtonEntity):
+class VolvoCarsButton(VolvoBaseEntity, ButtonEntity):
     """Volvo button."""
 
     entity_description: VolvoButtonDescription
@@ -83,7 +83,7 @@ class VolvoCarsButton(VolvoEntity, ButtonEntity):
         _LOGGER.debug("Command %s executing", self.entity_description.api_command)
 
         try:
-            result = await self.coordinator.context.api.async_execute_command(
+            result = await self.entry.runtime_data.context.api.async_execute_command(
                 self.entity_description.api_command
             )
         except VolvoApiException as ex:
@@ -106,6 +106,3 @@ class VolvoCarsButton(VolvoEntity, ButtonEntity):
                 self.entity_description.api_command,
                 status,
             )
-
-    def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
-        """Update the state of the entity."""
