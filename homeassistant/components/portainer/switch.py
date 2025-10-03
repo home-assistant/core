@@ -7,6 +7,11 @@ from dataclasses import dataclass
 from typing import Any
 
 from pyportainer import Portainer
+from pyportainer.exceptions import (
+    PortainerAuthenticationError,
+    PortainerConnectionError,
+    PortainerTimeoutError,
+)
 from pyportainer.models.docker import DockerContainer
 
 from homeassistant.components.switch import (
@@ -15,9 +20,11 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
+from .const import DOMAIN
 from .coordinator import PortainerCoordinator
 from .entity import PortainerContainerEntity, PortainerCoordinatorData
 
@@ -27,22 +34,37 @@ class PortainerSwitchEntityDescription(SwitchEntityDescription):
     """Class to hold Portainer switch description."""
 
     is_on_fn: Callable[[DockerContainer], bool | None]
-    turn_on_fn: Callable[[Portainer, int, str], Coroutine[Any, Any, None]]
-    turn_off_fn: Callable[[Portainer, int, str], Coroutine[Any, Any, None]]
+    turn_on_fn: Callable[[str, Portainer, int, str], Coroutine[Any, Any, None]]
+    turn_off_fn: Callable[[str, Portainer, int, str], Coroutine[Any, Any, None]]
 
 
-async def stop_container(
-    portainer: Portainer, endpoint_id: int, container_id: str
+async def perform_action(
+    action: str, portainer: Portainer, endpoint_id: int, container_id: str
 ) -> None:
     """Stop a container."""
-    await portainer.stop_container(endpoint_id, container_id)
-
-
-async def start_container(
-    portainer: Portainer, endpoint_id: int, container_id: str
-) -> None:
-    """Start a container."""
-    await portainer.start_container(endpoint_id, container_id)
+    try:
+        if action == "start":
+            await portainer.start_container(endpoint_id, container_id)
+        elif action == "stop":
+            await portainer.stop_container(endpoint_id, container_id)
+    except PortainerAuthenticationError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+            translation_placeholders={"error": repr(err)},
+        ) from err
+    except PortainerConnectionError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"error": repr(err)},
+        ) from err
+    except PortainerTimeoutError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="timeout_connect",
+            translation_placeholders={"error": repr(err)},
+        ) from err
 
 
 SWITCHES: tuple[PortainerSwitchEntityDescription, ...] = (
@@ -51,8 +73,8 @@ SWITCHES: tuple[PortainerSwitchEntityDescription, ...] = (
         translation_key="container",
         device_class=SwitchDeviceClass.SWITCH,
         is_on_fn=lambda data: data.state == "running",
-        turn_on_fn=start_container,
-        turn_off_fn=stop_container,
+        turn_on_fn=perform_action,
+        turn_off_fn=perform_action,
     ),
 )
 
@@ -64,7 +86,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Portainer switch sensors."""
 
-    coordinator: PortainerCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities(
         PortainerContainerSwitch(
@@ -95,12 +117,7 @@ class PortainerContainerSwitch(PortainerContainerEntity, SwitchEntity):
         self.entity_description = entity_description
         super().__init__(device_info, coordinator, via_device)
 
-        device_identifier = (
-            self._device_info.names[0].replace("/", " ").strip()
-            if self._device_info.names
-            else None
-        )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_identifier}_{entity_description.key}"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
 
     @property
     def is_on(self) -> bool | None:
@@ -112,13 +129,13 @@ class PortainerContainerSwitch(PortainerContainerEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start (turn on) the container."""
         await self.entity_description.turn_on_fn(
-            self.coordinator.portainer, self.endpoint_id, self.device_id
+            "start", self.coordinator.portainer, self.endpoint_id, self.device_id
         )
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop (turn off) the container."""
         await self.entity_description.turn_off_fn(
-            self.coordinator.portainer, self.endpoint_id, self.device_id
+            "stop", self.coordinator.portainer, self.endpoint_id, self.device_id
         )
         await self.coordinator.async_request_refresh()

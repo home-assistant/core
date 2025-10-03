@@ -57,25 +57,25 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
         self.device_id = self._device_info.id
         self.endpoint_id = via_device.endpoint.id
 
-        device_name = (
-            self._device_info.names[0].replace("/", " ").strip()
-            if self._device_info.names
-            else None
-        )
+        # Container ID's are ephemeral, so use the container name for the unique ID
+        # The first one, should always be unique, it's fine if users have aliases
+        # According to Docker's API docs, the first name is unique
+        assert self._device_info.names, "Container names list unexpectedly empty"
+        self.device_name = self._device_info.names[0].replace("/", " ").strip()
 
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{device_name}")
+                (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{self.device_name}")
             },
             manufacturer=DEFAULT_NAME,
             configuration_url=URL(
                 f"{coordinator.config_entry.data[CONF_URL]}#!/{self.endpoint_id}/docker/containers/{self.device_id}"
             ),
             model="Container",
-            name=device_name,
+            name=self.device_name,
             via_device=(
                 DOMAIN,
                 f"{self.coordinator.config_entry.entry_id}_{self.endpoint_id}",
             ),
-            translation_key=None if device_name else "unknown_container",
+            translation_key=None if self.device_name else "unknown_container",
         )
