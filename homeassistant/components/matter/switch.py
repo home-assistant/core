@@ -245,7 +245,6 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SWITCH,
         entity_description=MatterNumericSwitchEntityDescription(
             key="MatterMuteToggle",
-            device_class=SwitchDeviceClass.SWITCH,
             translation_key="speaker_mute",
             device_to_ha={
                 True: False,  # True means volume is on, so HA should show mute as off
