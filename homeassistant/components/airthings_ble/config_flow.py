@@ -27,6 +27,7 @@ SERVICE_UUIDS = [
     "b42e4a8e-ade7-11e4-89d3-123b93f75cba",
     "b42e1c08-ade7-11e4-89d3-123b93f75cba",
     "b42e3882-ade7-11e4-89d3-123b93f75cba",
+    "b42e90a2-ade7-11e4-89d3-123b93f75cba",
 ]
 
 
