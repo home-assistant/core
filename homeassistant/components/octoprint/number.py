@@ -3,17 +3,18 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 from pyoctoprintapi import OctoprintClient, OctoprintPrinterInfo
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import OctoprintDataUpdateCoordinator, async_get_client_for_service_call
+from . import OctoprintDataUpdateCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -120,16 +121,15 @@ class OctoPrintTemperatureNumber(
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the target temperature."""
-        client: OctoprintClient = self.hass.data[DOMAIN][
-            self.coordinator.config_entry.entry_id
-        ]["client"]
-
         _LOGGER.debug("set_native_value %s to %s", self._api_tool, value)
+
+        client = self.coordinator._octoprint
+
         if is_bed(self._api_tool):
-            await client.set_bed_temperature(value)
+            await client.set_bed_temperature(int(value))
             _LOGGER.debug("set_bed_temperature successful %s", value)
         elif is_extruder(self._api_tool):
-            await client.set_tool_temperature(self._api_tool, value)
+            await client.set_tool_temperature(self._api_tool, int(value))
             _LOGGER.debug("set_tool_temperature successful %s %s", self._api_tool, value)
 
         # Request coordinator update to reflect the change

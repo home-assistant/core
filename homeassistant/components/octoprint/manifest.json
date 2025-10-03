@@ -14,5 +14,5 @@
     }
   ],
   "zeroconf": ["_octoprint._tcp.local."],
-  "version": "2025.10.013"
+  "version": "2025.10.026"
 }
