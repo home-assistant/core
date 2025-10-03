@@ -131,6 +131,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     # convert unique_id to string
     if entry.version == 1 and entry.minor_version == 1:
+        # Migration of unique id was removed in #153369
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
     return True
