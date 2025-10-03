@@ -1,5 +1,6 @@
 """The tests for the hassio switch."""
 
+from collections.abc import AsyncGenerator
 import os
 from unittest.mock import AsyncMock, patch
 
@@ -22,7 +23,7 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 async def setup_integration(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-) -> MockConfigEntry:
+) -> AsyncGenerator[MockConfigEntry]:
     """Set up the hassio integration and enable entity."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -34,9 +35,9 @@ async def setup_integration(
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
-    return config_entry
+        yield config_entry
 
 
 async def enable_entity(
