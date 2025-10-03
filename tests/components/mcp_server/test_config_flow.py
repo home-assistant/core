@@ -1,7 +1,7 @@
 """Test the Model Context Protocol Server config flow."""
 
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -15,8 +15,8 @@ from homeassistant.data_entry_flow import FlowResultType
 @pytest.mark.parametrize(
     "params",
     [
-        {},
-        {CONF_LLM_HASS_API: ["assist"]},
+        {},  # Test default selection (no user_input key)
+        {CONF_LLM_HASS_API: ["assist"]},  # Test explicit selection
     ],
 )
 async def test_form(
@@ -68,3 +68,18 @@ async def test_form_errors(
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == errors
+
+
+async def test_form_no_llm_apis(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test form when no LLM APIs are available."""
+    with patch(
+        "homeassistant.components.mcp_server.config_flow.llm.async_get_apis",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] == {CONF_LLM_HASS_API: "llm_api_required"}
