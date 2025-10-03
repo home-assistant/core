@@ -126,13 +126,11 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user",
                 data_schema=SCHEMA_DEVICE,
                 errors=errors,
+                # Handle API version info for error display; pass version info when available
+                # or None when api_versions is None to avoid displaying version details
                 description_placeholders={
-                    "api_version_is": api_versions["api_version_is"] or ""
-                    if api_versions
-                    else "",
-                    "api_version_should": api_versions["api_version_should"]
-                    if api_versions
-                    else "",
+                    "api_version_is": api_versions.get("api_version_is") or "",
+                    "api_version_should": api_versions.get("api_version_should") or "",
                 }
                 if api_versions
                 else None,
