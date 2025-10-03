@@ -11,7 +11,7 @@
         "data_description": {
           "name": "A name for this integration entry, like the name of the computer running the OpenRGB SDK server.",
           "host": "The IP address or hostname of the computer running the OpenRGB SDK server.",
-          "port": "The port number on which the OpenRGB SDK server is running on."
+          "port": "The port number that the OpenRGB SDK server is running on."
         }
       }
     },
