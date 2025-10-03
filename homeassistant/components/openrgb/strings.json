@@ -10,7 +10,7 @@
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "name": "A name for this OpenRGB entry, like the name of the computer running the server.",
+          "name": "A name for this OpenRGB entry, like the name of the computer running the SDK server.",
           "host": "The hostname or IP address of the computer running the OpenRGB SDK server.",
           "port": "The port on which the OpenRGB SDK server is accessible."
         }
