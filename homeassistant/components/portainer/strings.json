@@ -47,8 +47,8 @@
       }
     },
     "switch": {
-      "container_on_off": {
-        "name": "Container on/off"
+      "container": {
+        "name": "Container"
       }
     }
   },

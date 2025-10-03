@@ -60,7 +60,7 @@ async def test_turn_off_on(
     ):
         await setup_integration(hass, mock_config_entry)
 
-    entity_id = "switch.practical_morse_container_on_off"
+    entity_id = "switch.practical_morse_container"
     method_mock = getattr(mock_portainer_client, client_method)
 
     await hass.services.async_call(
