@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from functools import partial
 import logging
 from typing import Any, cast
@@ -50,7 +49,6 @@ from .types import (
     SubentryModelUserInput,
     SubentryNameUserInput,
     TTSConfigData,
-    UserInput,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,41 +83,6 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._reauth_entry = None
         self.session = None
-
-    async def async_step_reconfigure(
-        self, user_input: UserInput | None = None
-    ) -> ConfigFlowResult:
-        """Handle a reconfiguration flow."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry
-
-        errors: dict[str, str] = {}
-
-        if user_input:
-            try:
-                credit_info, _ = await _validate_api_key(
-                    self.hass, user_input[CONF_API_KEY]
-                )
-                if credit_info.user_id != entry.data[CONF_USER_ID]:
-                    errors["base"] = "reconfigure_wrong_account"
-                else:
-                    return self.async_update_reload_and_abort(
-                        entry,
-                        data={**entry.data, CONF_API_KEY: user_input[CONF_API_KEY]},
-                        reason="reconfigure_successful",
-                    )
-            except InvalidAuthError:
-                errors["base"] = "invalid_auth"
-            except CannotConnectError:
-                errors["base"] = "cannot_connect"
-            except UnexpectedError:
-                errors["base"] = "unknown"
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=get_api_key_schema(default=entry.data.get(CONF_API_KEY)),
-            errors=errors,
-        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -159,54 +122,6 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=get_api_key_schema(), errors=errors
-        )
-
-    async def async_step_reauth(
-        self, user_input: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle re-authentication."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: UserInput | None = None
-    ) -> ConfigFlowResult:
-        """Handle re-authentication confirmation."""
-        errors: dict[str, str] = {}
-
-        if user_input:
-            assert self._reauth_entry
-            try:
-                credit_info, _ = await _validate_api_key(
-                    self.hass, user_input[CONF_API_KEY]
-                )
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry,
-                    data={
-                        **self._reauth_entry.data,
-                        CONF_API_KEY: user_input[CONF_API_KEY],
-                    },
-                )
-                if self._reauth_entry.unique_id != credit_info.user_id:
-                    await self.async_set_unique_id(credit_info.user_id)
-                    self._abort_if_unique_id_configured()
-
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
-
-            except AbortFlow:
-                raise
-            except InvalidAuthError:
-                errors["base"] = "invalid_auth"
-            except CannotConnectError:
-                errors["base"] = "cannot_connect"
-            except UnexpectedError:
-                errors["base"] = "unknown"
-
-        return self.async_show_form(
-            step_id="reauth_confirm", data_schema=get_api_key_schema(), errors=errors
         )
 
     @classmethod
