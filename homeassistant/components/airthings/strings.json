@@ -6,7 +6,7 @@
           "id": "ID",
           "secret": "Secret"
         },
-        "description": "Login at {url} to find your credentials"
+        "description": "Log in at {url} to find your credentials"
       }
     },
     "error": {
