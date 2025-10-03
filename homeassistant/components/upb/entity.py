@@ -35,7 +35,10 @@ class UpbEntity(Entity):
         return self._upb.is_connected()
 
     def _element_changed(self, element, changeset):
-        pass
+        """Handle callback from an UPB element that has changed.
+
+        This method should be overridden by subclasses to handle element changes.
+        """
 
     @callback
     def _element_callback(self, element, changeset):
