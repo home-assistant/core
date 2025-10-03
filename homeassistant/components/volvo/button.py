@@ -61,12 +61,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up buttons."""
-    supported_commands = entry.runtime_data.context.supported_commands
     async_add_entities(
         [
             VolvoCarsButton(entry, description)
             for description in _DESCRIPTIONS
-            if description.required_command_key in supported_commands
+            if description.required_command_key
+            in entry.runtime_data.context.supported_commands
         ]
     )
 
