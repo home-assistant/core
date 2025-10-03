@@ -266,7 +266,7 @@ class CustomManager(Manager):
             new_status = []
             for item in status:
                 if (dpId := item.get("dpId")) and dpId not in device.local_strategy:
-                    LOGGER.debug(f"Ignoring dpId {dpId} missing from local_strategy")
+                    LOGGER.debug("Ignoring dpId %s missing from local_strategy", dpId)
                     continue
                 new_status.append(item)
             status = new_status
