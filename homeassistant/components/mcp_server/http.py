@@ -175,6 +175,9 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
 
     Implements the MCP streamable HTTP transport specification with full
     event stream buffering and resumability support.
+
+    Note: CORS handling is performed automatically by Home Assistant's HTTP framework.
+    Manual OPTIONS handlers and CORS headers are not needed and would conflict.
     """
 
     name = f"{DOMAIN}:streamable-http"
@@ -184,12 +187,6 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
         """Initialize the streamable HTTP view."""
         # Event store for resumability support
         self._event_store = InMemoryEventStore(max_events_per_stream=1000)
-
-    async def options(self, request: web.Request) -> web.StreamResponse:
-        """Handle OPTIONS requests for CORS preflight."""
-        response = web.Response(status=200)
-        self._add_cors_headers(response, request)
-        return response
 
     async def get(self, request: web.Request) -> web.StreamResponse:
         """Handle GET requests - open SSE stream for server-to-client communication.
@@ -236,8 +233,6 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
                 )
 
                 async with sse_response(request) as response:
-                    self._add_cors_headers(response, request)
-
                     # Replay missed events
                     for event_message in missed_events:
                         await response.send(
@@ -258,9 +253,7 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
 
         # For new connections or non-resumable, delegate to existing SSE implementation
         sse_view = ModelContextProtocolSSEView()
-        response = await sse_view.get(request)
-        self._add_cors_headers(response, request)
-        return response
+        return await sse_view.get(request)
 
     async def post(self, request: web.Request) -> web.StreamResponse:
         """Handle POST requests - process JSON-RPC messages with event buffering.
@@ -333,7 +326,6 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
             ):
                 # Add session ID header
                 response.headers["Mcp-Session-Id"] = new_session_id
-                self._add_cors_headers(response, request)
 
                 # Stream ID for event storage
                 stream_id = f"session_{new_session_id}"
@@ -379,9 +371,7 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
 
             # Use existing messages endpoint logic
             messages_view = ModelContextProtocolMessagesView()
-            response = await messages_view.post(request, session_id)
-            self._add_cors_headers(response, request)
-            return response
+            return await messages_view.post(request, session_id)
 
         # For requests without session (not initialize) - require session
         if hasattr(message, "method"):
@@ -391,9 +381,7 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
 
         # For responses/notifications without session, accept them
         if hasattr(message, "result") or hasattr(message, "error"):
-            response = web.Response(status=202)  # 202 Accepted
-            self._add_cors_headers(response, request)
-            return response
+            return web.Response(status=202)  # 202 Accepted
 
         raise HTTPBadRequest(text="Invalid request")
 
@@ -422,9 +410,7 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
         # TODO: Properly terminate the session in session_manager
         # This would require extending the session manager interface
 
-        response = web.Response(status=200)
-        self._add_cors_headers(response, request)
-        return response
+        return web.Response(status=200)
 
     def _validate_origin(self, request: web.Request) -> bool:
         """Validate Origin header to prevent DNS rebinding attacks.
@@ -463,23 +449,3 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
         else:
             # TODO: Make this configurable/more restrictive in production
             return True
-
-    def _add_cors_headers(
-        self, response: web.StreamResponse, request: web.Request
-    ) -> None:
-        """Add CORS headers to the response."""
-        origin = request.headers.get("Origin")
-        if origin:
-            response.headers.setdefault("Access-Control-Allow-Origin", origin)
-            response.headers.setdefault("Access-Control-Allow-Credentials", "true")
-            response.headers.setdefault(
-                "Access-Control-Allow-Headers",
-                "Authorization, Content-Type, Mcp-Session-Id, MCP-Protocol-Version, Last-Event-ID",
-            )
-            response.headers.setdefault(
-                "Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS"
-            )
-            response.headers.setdefault(
-                "Access-Control-Max-Age",
-                "86400",  # Cache preflight for 24 hours
-            )
