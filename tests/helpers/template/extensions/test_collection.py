@@ -397,15 +397,19 @@ def test_collection_error_handling(hass: HomeAssistant) -> None:
             ["apple", "banana", "corn", "Apple", "Banana", "Corn"],
         ),
         (
-            "{{ ['1.5', '0.1', '-2.0', '9.8', '6.0'] | natural_sort(alg='ns.SIGNED')}}",
+            "{{ ['1.5', '0.1', '-2.0', '9.8', '6.0'] | natural_sort()}}",
             ["-2.0", "0.1", "1.5", "6.0", "9.8"],
         ),
         (
-            "{{ ['1.5', '0.1', '-2.0', '9.8', '6.0'] | natural_sort(alg='SIGNED', reverse=True) }}",
+            "{{ ['1,5', '0,1', '-2,0', '9,8', '6,0'] | natural_sort()}}",
+            ["-2,0", "0,1", "1,5", "6,0", "9,8"],
+        ),
+        (
+            "{{ ['1.5', '0.1', '-2.0', '9.8', '6.0'] | natural_sort(reverse=True) }}",
             ["9.8", "6.0", "1.5", "0.1", "-2.0"],
         ),
         (
-            "{{ ['a50', 'a5.034e1', 'a51.', 'a+50.300', 'a+50.4'] | natural_sort(alg='ns.FLOAT | ns.SIGNED')}}",
+            "{{ ['a50', 'a5.034e1', 'a51.', 'a+50.300', 'a+50.4'] | natural_sort()}}",
             ["a50", "a+50.300", "a5.034e1", "a+50.4", "a51."],
         ),
     ],

@@ -209,7 +209,7 @@ class CollectionExtension(BaseTemplateExtension):
 
             ALG_MAP = {name: getattr(ns, name) for name in dir(ns) if name.isupper()}
 
-            alg = ns.DEFAULT
+            alg = ns.FLOAT | ns.SIGNED
 
             if isinstance(expr, str):
                 parts = [p.strip().replace("ns.", "").upper() for p in expr.split("|")]
@@ -225,7 +225,7 @@ class CollectionExtension(BaseTemplateExtension):
         return natsorted(
             lst,
             key=_get_key if key else None,
-            alg=_get_alg(alg) if alg else ns.DEFAULT,
+            alg=_get_alg(alg) if alg else ns.FLOAT | ns.SIGNED,
             reverse=reverse,
         )
 
