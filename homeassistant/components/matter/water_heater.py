@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Types import Nullable
 from matter_server.client.models import device_types
 from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
@@ -59,6 +60,10 @@ async def async_setup_entry(
         SERVICE_WATER_HEATER_BOOST,
         schema={
             vol.Required("duration"): vol.All(cv.positive_int),
+            vol.Optional("emergencyBoost"): cv.boolean,
+            vol.Optional("temporarySetpoint"): vol.All(
+                vol.Coerce(int), vol.Range(min=30, max=65)
+            ),
         },
         func="async_set_boost",
         supports_response=SupportsResponse.NONE,
@@ -113,7 +118,10 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     #     ClusterObjectFieldDescriptor(Label="targetReheat", Tag=5, Type=typing.Optional[uint]),
     # ])
     async def async_set_boost(
-        self, duration: int, emergencyBoost: bool, temporarySetpoint: int
+        self,
+        duration: int,
+        emergencyBoost: bool = False,
+        temporarySetpoint: int = Nullable,
     ) -> None:
         """Set boost."""
         self.duration = duration

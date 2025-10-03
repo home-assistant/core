@@ -2,7 +2,6 @@ water_heater_boost:
   target:
     entity:
       domain: water_heater
-    integration: matter
   fields:
     duration:
       selector:
@@ -11,20 +10,22 @@ water_heater_boost:
           max: 14400
           step: 60
           mode: box
+      default: 3600
       required: true
     emergencyBoost:
       selector:
         boolean:
+      default: false
     temporarySetpoint:
       selector:
         number:
           min: 30
-          max: 75
+          max: 65
           step: 1
-          mode: box
+          mode: slider
+      default: 65
 
 water_heater_cancel_boost:
   target:
     entity:
       domain: water_heater
-    integration: matter
