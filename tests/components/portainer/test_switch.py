@@ -21,10 +21,10 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("mock_portainer_client")
 async def test_all_switch_entities_snapshot(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -62,7 +62,6 @@ async def test_turn_off_on(
 
     entity_id = "switch.practical_morse_container_up_down"
     method_mock = getattr(mock_portainer_client, client_method)
-    pre_calls = len(method_mock.mock_calls)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -71,4 +70,7 @@ async def test_turn_off_on(
         blocking=True,
     )
 
-    assert len(method_mock.mock_calls) == pre_calls + 1
+    # Matches the endpoint ID and container ID
+    method_mock.assert_called_once_with(
+        1, "ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf"
+    )

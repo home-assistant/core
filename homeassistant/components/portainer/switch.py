@@ -31,18 +31,28 @@ class PortainerSwitchEntityDescription(SwitchEntityDescription):
     turn_off_fn: Callable[[Portainer, int, str], Coroutine[Any, Any, None]]
 
 
+async def stop_container(
+    portainer: Portainer, endpoint_id: int, container_id: str
+) -> None:
+    """Stop a container."""
+    await portainer.stop_container(endpoint_id, container_id)
+
+
+async def start_container(
+    portainer: Portainer, endpoint_id: int, container_id: str
+) -> None:
+    """Start a container."""
+    await portainer.start_container(endpoint_id, container_id)
+
+
 SWITCHES: tuple[PortainerSwitchEntityDescription, ...] = (
     PortainerSwitchEntityDescription(
         key="container_up_down",
         translation_key="container_up_down",
         device_class=SwitchDeviceClass.SWITCH,
         is_on_fn=lambda data: data.state == "running",
-        turn_on_fn=lambda portainer,
-        endpoint_id,
-        container_id: portainer.start_container(endpoint_id, container_id),
-        turn_off_fn=lambda portainer,
-        endpoint_id,
-        container_id: portainer.stop_container(endpoint_id, container_id),
+        turn_on_fn=start_container,
+        turn_off_fn=stop_container,
     ),
 )
 
@@ -104,7 +114,6 @@ class PortainerContainerSwitch(PortainerContainerEntity, SwitchEntity):
         await self.entity_description.turn_on_fn(
             self.coordinator.portainer, self.endpoint_id, self.device_id
         )
-        # For the reviewer: we need to refresh the coordinator after changing the container state
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
