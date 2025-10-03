@@ -36,7 +36,9 @@ class StreamableHTTPSessionManager:
         # For now, we'll create a mock implementation
         session_id = f"streamable_{id(session)}"
         self._sessions[session_id] = session
-        self._session_event_stores[session_id] = InMemoryEventStore(max_events_per_stream=1000)
+        self._session_event_stores[session_id] = InMemoryEventStore(
+            max_events_per_stream=1000
+        )
         self._session_streams[session_id] = set()
 
         _LOGGER.debug("Created streamable HTTP session: %s", session_id)
@@ -107,7 +109,8 @@ class StreamableHTTPSessionManager:
     def cleanup_expired_sessions(self) -> None:
         """Clean up sessions that have no active connections."""
         expired_sessions = [
-            session_id for session_id in self._sessions
+            session_id
+            for session_id in self._sessions
             if self.get_active_streams(session_id) == 0
         ]
 

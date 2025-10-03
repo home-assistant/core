@@ -26,7 +26,9 @@ class EventStore(ABC):
     """Interface for resumability support via event storage."""
 
     @abstractmethod
-    async def store_event(self, stream_id: StreamId, message: types.JSONRPCMessage) -> EventId:
+    async def store_event(
+        self, stream_id: StreamId, message: types.JSONRPCMessage
+    ) -> EventId:
         """Store an event and return its ID.
 
         Args:
@@ -40,9 +42,7 @@ class EventStore(ABC):
 
     @abstractmethod
     async def replay_events_after(
-        self,
-        last_event_id: EventId,
-        stream_id: StreamId
+        self, last_event_id: EventId, stream_id: StreamId
     ) -> list[EventMessage]:
         """Replay events that occurred after the specified event ID.
 
@@ -63,7 +63,7 @@ class InMemoryEventStore(EventStore):
     consider implementing a persistent storage solution.
     """
 
-    def __init__(self, max_events_per_stream: int = 100):
+    def __init__(self, max_events_per_stream: int = 100) -> None:
         """Initialize the event store.
 
         Args:
@@ -77,7 +77,9 @@ class InMemoryEventStore(EventStore):
         self._event_index: dict[EventId, EventMessage] = {}
         self._next_event_id = 1
 
-    async def store_event(self, stream_id: StreamId, message: types.JSONRPCMessage) -> EventId:
+    async def store_event(
+        self, stream_id: StreamId, message: types.JSONRPCMessage
+    ) -> EventId:
         """Store an event and return its ID."""
         event_id = str(self._next_event_id)
         self._next_event_id += 1
@@ -96,9 +98,7 @@ class InMemoryEventStore(EventStore):
         return event_id
 
     async def replay_events_after(
-        self,
-        last_event_id: EventId,
-        stream_id: StreamId
+        self, last_event_id: EventId, stream_id: StreamId
     ) -> list[EventMessage]:
         """Replay events that occurred after the specified event ID."""
         if stream_id not in self._streams:
@@ -120,7 +120,12 @@ class InMemoryEventStore(EventStore):
                 # Start replaying from the next event
                 start_replay = True
 
-        _LOGGER.debug("Replaying %d events for stream %s after %s", len(replay_events), stream_id, last_event_id)
+        _LOGGER.debug(
+            "Replaying %d events for stream %s after %s",
+            len(replay_events),
+            stream_id,
+            last_event_id,
+        )
         return replay_events
 
     def get_event_count(self, stream_id: StreamId) -> int:

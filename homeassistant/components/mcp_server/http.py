@@ -224,10 +224,16 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
         # If we have last_event_id, replay missed events
         if last_event_id and session_id:
             stream_id = f"session_{session_id}"
-            missed_events = await self._event_store.replay_events_after(last_event_id, stream_id)
+            missed_events = await self._event_store.replay_events_after(
+                last_event_id, stream_id
+            )
 
             if missed_events:
-                _LOGGER.debug("Replaying %d missed events for session %s", len(missed_events), session_id)
+                _LOGGER.debug(
+                    "Replaying %d missed events for session %s",
+                    len(missed_events),
+                    session_id,
+                )
 
                 async with sse_response(request) as response:
                     self._add_cors_headers(response, request)
@@ -235,9 +241,11 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
                     # Replay missed events
                     for event_message in missed_events:
                         await response.send(
-                            event_message.message.model_dump_json(by_alias=True, exclude_none=True),
+                            event_message.message.model_dump_json(
+                                by_alias=True, exclude_none=True
+                            ),
                             event="message",
-                            id=event_message.event_id
+                            id=event_message.event_id,
                         )
 
                     # Continue with live events from session
@@ -265,7 +273,9 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
 
         # Validate required headers
         accept_header = request.headers.get("Accept", "")
-        if not ("application/json" in accept_header and "text/event-stream" in accept_header):
+        if not (
+            "application/json" in accept_header and "text/event-stream" in accept_header
+        ):
             raise HTTPBadRequest(
                 text="Accept header must include both application/json and text/event-stream"
             )
@@ -273,7 +283,9 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
         # Validate MCP protocol version
         protocol_version = request.headers.get("MCP-Protocol-Version")
         if protocol_version and protocol_version not in ["2025-06-18", "2024-11-05"]:
-            raise HTTPBadRequest(text=f"Unsupported MCP protocol version: {protocol_version}")
+            raise HTTPBadRequest(
+                text=f"Unsupported MCP protocol version: {protocol_version}"
+            )
 
         # Parse JSON-RPC message
         try:
@@ -293,7 +305,6 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
 
         # For initialize requests, create new session with event buffering
         if hasattr(message, "method") and message.method == "initialize":
-
             # Create enhanced SSE response with event buffering
             context = llm.LLMContext(
                 platform=DOMAIN,
@@ -334,18 +345,24 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
                     """Forward MCP server responses with event buffering."""
                     async for response_message in write_stream_reader:
                         # Store event for resumability
-                        event_id = await self._event_store.store_event(stream_id, response_message)
+                        event_id = await self._event_store.store_event(
+                            stream_id, response_message
+                        )
 
                         _LOGGER.debug("Sending SSE message with event ID %s", event_id)
                         await response.send(
-                            response_message.model_dump_json(by_alias=True, exclude_none=True),
+                            response_message.model_dump_json(
+                                by_alias=True, exclude_none=True
+                            ),
                             event="message",
-                            id=event_id
+                            id=event_id,
                         )
 
                         # Close stream after sending response to initialize
-                        if (isinstance(response_message, types.JSONRPCResponse) and
-                                response_message.id == message.id):
+                        if (
+                            isinstance(response_message, types.JSONRPCResponse)
+                            and response_message.id == message.id
+                        ):
                             break
 
                 # Start both tasks
@@ -368,7 +385,9 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
 
         # For requests without session (not initialize) - require session
         if hasattr(message, "method"):
-            raise HTTPBadRequest(text="Session required for requests (except initialize)")
+            raise HTTPBadRequest(
+                text="Session required for requests (except initialize)"
+            )
 
         # For responses/notifications without session, accept them
         if hasattr(message, "result") or hasattr(message, "error"):
@@ -458,10 +477,9 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
                 "Authorization, Content-Type, Mcp-Session-Id, MCP-Protocol-Version, Last-Event-ID",
             )
             response.headers.setdefault(
-                "Access-Control-Allow-Methods",
-                "GET, POST, DELETE, OPTIONS"
+                "Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS"
             )
             response.headers.setdefault(
                 "Access-Control-Max-Age",
-                "86400"  # Cache preflight for 24 hours
+                "86400",  # Cache preflight for 24 hours
             )
