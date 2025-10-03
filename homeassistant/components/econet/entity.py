@@ -29,9 +29,7 @@ class EcoNetEntity(Entity, Generic[_EquipmentT]):
         """Subscribe to device events."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, PUSH_UPDATE, self.on_update_received
-            )
+            async_dispatcher_connect(self.hass, PUSH_UPDATE, self.on_update_received)
         )
 
     @callback

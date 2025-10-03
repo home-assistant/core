@@ -63,10 +63,7 @@ def _is_invalid_api_field(field: VolvoCarsApiBaseModel | None) -> bool:
     if not field:
         return True
 
-    if (
-        isinstance(field, VolvoCarsValueStatusField)
-        and field.status == "ERROR"
-    ):
+    if isinstance(field, VolvoCarsValueStatusField) and field.status == "ERROR":
         return True
 
     return False
@@ -97,9 +94,7 @@ class VolvoBaseCoordinator(DataUpdateCoordinator[_T], Generic[_T]):
 
         self.context = context
 
-    def get_api_field(
-        self, api_field: str | None
-    ) -> VolvoCarsApiBaseModel | None:
+    def get_api_field(self, api_field: str | None) -> VolvoCarsApiBaseModel | None:
         """Get the API field based on the entity description."""
 
         return self.data.get(api_field) if api_field else None
@@ -326,17 +321,12 @@ class VolvoMediumIntervalCoordinator(VolvoBaseIntervalCoordinator):
             if capabilities.get("isSupported", False):
 
                 def _normalize_key(key: str) -> str:
-                    return (
-                        "chargingStatus"
-                        if key == "chargingSystemStatus"
-                        else key
-                    )
+                    return "chargingStatus" if key == "chargingSystemStatus" else key
 
                 self._supported_capabilities = [
                     _normalize_key(key)
                     for key, value in capabilities.items()
-                    if isinstance(value, dict)
-                    and value.get("isSupported", False)
+                    if isinstance(value, dict) and value.get("isSupported", False)
                 ]
 
                 api_calls.append(self._async_get_energy_state)
