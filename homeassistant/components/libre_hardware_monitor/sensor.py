@@ -30,7 +30,7 @@ async def async_setup_entry(
     lhm_coordinator = config_entry.runtime_data
 
     async_add_entities(
-        LibreHardwareMonitorSensor(lhm_coordinator, sensor_data)
+        LibreHardwareMonitorSensor(lhm_coordinator, config_entry, sensor_data)
         for sensor_data in lhm_coordinator.data.sensor_data.values()
     )
 
@@ -46,6 +46,7 @@ class LibreHardwareMonitorSensor(
     def __init__(
         self,
         coordinator: LibreHardwareMonitorCoordinator,
+        config_entry: LibreHardwareMonitorConfigEntry,
         sensor_data: LibreHardwareMonitorSensorData,
     ) -> None:
         """Initialize an LibreHardwareMonitor sensor."""
@@ -64,7 +65,7 @@ class LibreHardwareMonitorSensor(
 
         # Hardware device
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, sensor_data.device_id)},
+            identifiers={(DOMAIN, f"{config_entry.entry_id}_{sensor_data.device_id}")},
             name=sensor_data.device_name,
             model=sensor_data.device_type,
         )

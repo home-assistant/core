@@ -175,7 +175,7 @@ async def test_orphaned_devices_are_removed(
     device_registry = dr.async_get(hass)
     orphaned_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "lpc-nct6687d-0")},
+        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_lpc-nct6687d-0")},
     )
 
     with patch.object(
