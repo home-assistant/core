@@ -1727,6 +1727,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/vilfo/ @ManneW
 /tests/components/vilfo/ @ManneW
 /homeassistant/components/vivotek/ @HarlemSquirrel
+/tests/components/vivotek/ @HarlemSquirrel
 /homeassistant/components/vizio/ @raman325
 /tests/components/vizio/ @raman325
 /homeassistant/components/vlc_telnet/ @rodripf @MartinHjelmare
