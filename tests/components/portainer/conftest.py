@@ -49,6 +49,8 @@ def mock_portainer_client() -> Generator[AsyncMock]:
             DockerContainer.from_dict(container)
             for container in load_json_array_fixture("containers.json", DOMAIN)
         ]
+        client.start_container = AsyncMock(return_value=None)
+        client.stop_container = AsyncMock(return_value=None)
 
         yield client
 
