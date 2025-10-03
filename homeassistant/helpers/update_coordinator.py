@@ -42,7 +42,7 @@ _DataT = TypeVar("_DataT", default=dict[str, Any])
 class UpdateFailed(HomeAssistantError):
     """Raised when an update has failed."""
 
-    def __init__(self, retry_after: int | None) -> None:
+    def __init__(self, retry_after: int | None = None) -> None:
         """Initialize exception."""
         super().__init__(retry_after)
         self.retry_after = retry_after
@@ -439,7 +439,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self.last_exception = err
             # We can only honor a retry_after, after the config entry has been set up.
             if err.retry_after and not from_config_entry:
-                self._retry_after = self.hass.loop.time() + err.retry_after
+                # Store the delay (seconds) – not the absolute timestamp – so the
+                # scheduler can uniformly apply it regardless of current loop time.
+                self._retry_after = err.retry_after
                 self.logger.debug(
                     "Retry after triggered. Delaying next update in %d second(s)",
                     err.retry_after,
