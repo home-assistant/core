@@ -16,9 +16,8 @@ from pathlib import Path
 import re
 import secrets
 from time import monotonic
-from typing import Any, Final, Generic, Protocol, TypeVar
+from typing import Any, Final, Protocol
 
-import aiofiles
 from aiohttp import web
 import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
@@ -591,13 +590,9 @@ class ResultStream:
 
         if not needs_conversion:
             # Read file directly (no conversion)
-            async with aiofiles.open(self._override_media_path, "rb") as media_file:
-                while True:
-                    chunk = await media_file.read(FFMPEG_CHUNK_SIZE)
-                    if not chunk:
-                        break
-                    yield chunk
-
+            yield await self.hass.async_add_executor_job(
+                self._override_media_path.read_bytes
+            )
             return
 
         # Use ffmpeg to convert audio to preferred format
@@ -633,10 +628,7 @@ class HasLastUsed(Protocol):
     last_used: float
 
 
-T = TypeVar("T", bound=HasLastUsed)
-
-
-class DictCleaning(Generic[T]):
+class DictCleaning[T: HasLastUsed]:
     """Helper to clean up the stale sessions."""
 
     unsub: CALLBACK_TYPE | None = None

@@ -33,6 +33,7 @@ from . import (
     entity_registry,
     floor_registry,
 )
+from .deprecation import EnumWithDeprecatedMembers
 from .typing import VolSchemaType
 
 _LOGGER = logging.getLogger(__name__)
@@ -1316,14 +1317,23 @@ class Intent:
         return IntentResponse(language=self.language, intent=self)
 
 
-class IntentResponseType(Enum):
+class IntentResponseType(
+    Enum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "PARTIAL_ACTION_DONE": (
+            "IntentResponseType.ACTION_DONE or IntentResponseType.ERROR",
+            "2026.3.0",
+        ),
+    },
+):
     """Type of the intent response."""
 
     ACTION_DONE = "action_done"
     """Intent caused an action to occur"""
 
     PARTIAL_ACTION_DONE = "partial_action_done"
-    """Intent caused an action, but it could only be partially done"""
+    """Deprecated. Intent caused an action, but it could only be partially done"""
 
     QUERY_ANSWER = "query_answer"
     """Response is an answer to a query"""

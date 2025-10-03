@@ -35,7 +35,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import (  # Loading the config flow file will register the flow
@@ -221,6 +221,19 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Konnected platform."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_firmware",
+        breaks_in_ha_version="2026.4.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_firmware",
+        translation_placeholders={
+            "kb_page_url": "https://support.konnected.io/migrating-from-konnected-legacy-home-assistant-integration-to-esphome",
+        },
+    )
     if (cfg := config.get(DOMAIN)) is None:
         cfg = {}
 

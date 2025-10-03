@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Fing agent setup",
+        "title": "Set up Fing agent",
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]",
           "port": "[%key:common::config_flow::data::port%]",
