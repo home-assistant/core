@@ -2,7 +2,7 @@
   "issues": {
     "integration_removed": {
       "title": "The Plum Lightpad integration has been removed",
-      "description": "The Plum Lightpad integration has been removed from Home Assistant.\n\nTo resolve this issue, please remove the (now defunct) integration entries from your Home Assistant setup. [Click here to see your existing Plum Lightpad integration entries]({entries})."
+      "description": "The Plum Lightpad integration has been removed from Home Assistant.\n\nThe required cloud services are no longer available since the Plum servers have been shut down. To resolve this issue, please remove the (now defunct) integration entries from your Home Assistant setup. [Click here to see your existing Plum Lightpad integration entries]({entries})."
     }
   }
 }
