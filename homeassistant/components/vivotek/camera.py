@@ -98,11 +98,7 @@ class VivotekCam(Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return bytes of camera image."""
-        snapshot = self._cam.snapshot()
-        if not isinstance(snapshot, bytes):
-            return None
-
-        return snapshot
+        return self._cam.snapshot()
 
     async def stream_source(self) -> str:
         """Return the source of the stream."""
