@@ -8,7 +8,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, Generic, TypeAlias, TypeVar, cast
+from typing import Any, Generic, TypeVar, cast
 
 from volvocarsapi.api import VolvoCarsApi
 from volvocarsapi.models import (
@@ -53,8 +53,8 @@ class VolvoRuntimeData:
     interval_coordinators: tuple[VolvoBaseIntervalCoordinator, ...]
 
 
-VolvoConfigEntry: TypeAlias = ConfigEntry[VolvoRuntimeData]
-CoordinatorData: TypeAlias = dict[str, VolvoCarsApiBaseModel | None]
+type VolvoConfigEntry = ConfigEntry[VolvoRuntimeData]
+type CoordinatorData = dict[str, VolvoCarsApiBaseModel | None]
 
 _T = TypeVar("_T", bound=dict[str, Any])
 
