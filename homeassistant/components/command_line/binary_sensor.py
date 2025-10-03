@@ -5,7 +5,10 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorEntity,
+)
 from homeassistant.const import (
     CONF_COMMAND,
     CONF_NAME,
@@ -17,6 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
     ManualTriggerEntity,
@@ -25,7 +29,7 @@ from homeassistant.helpers.trigger_template_entity import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_COMMAND_TIMEOUT, LOGGER, TRIGGER_ENTITY_OPTIONS
+from .const import CONF_COMMAND_TIMEOUT, DOMAIN, LOGGER, TRIGGER_ENTITY_OPTIONS
 from .sensor import CommandSensorData
 
 DEFAULT_NAME = "Binary Command Sensor"
@@ -43,6 +47,16 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Command line Binary Sensor."""
     if not discovery_info:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "binary_sensor_platform_yaml_not_supported",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="platform_yaml_not_supported",
+            translation_placeholders={"platform": BINARY_SENSOR_DOMAIN},
+            learn_more_url="https://www.home-assistant.io/integrations/command_line/",
+        )
         return
 
     binary_sensor_config = discovery_info

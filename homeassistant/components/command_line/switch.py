@@ -6,7 +6,11 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    ENTITY_ID_FORMAT,
+    SwitchEntity,
+)
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -18,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
     ManualTriggerEntity,
@@ -26,7 +31,7 @@ from homeassistant.helpers.trigger_template_entity import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import CONF_COMMAND_TIMEOUT, LOGGER, TRIGGER_ENTITY_OPTIONS
+from .const import CONF_COMMAND_TIMEOUT, DOMAIN, LOGGER, TRIGGER_ENTITY_OPTIONS
 from .utils import async_call_shell_with_timeout, async_check_output_or_log
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -40,6 +45,16 @@ async def async_setup_platform(
 ) -> None:
     """Find and return switches controlled by shell commands."""
     if not discovery_info:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "switch_platform_yaml_not_supported",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="platform_yaml_not_supported",
+            translation_placeholders={"platform": SWITCH_DOMAIN},
+            learn_more_url="https://www.home-assistant.io/integrations/command_line/",
+        )
         return
 
     switches = []
