@@ -1218,9 +1218,6 @@ iaqualink==0.6.0
 # homeassistant.components.ibeacon
 ibeacon-ble==1.2.0
 
-# homeassistant.components.watson_iot
-ibmiotf==0.3.4
-
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
