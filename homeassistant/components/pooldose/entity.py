@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from pooldose.type_definitions import DeviceInfoDict
+
 from homeassistant.const import CONF_MAC
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -14,13 +16,13 @@ from .coordinator import PooldoseCoordinator
 
 
 def device_info(
-    info: dict[str, Any] | None, unique_id: str, mac: str | None = None
+    info: DeviceInfoDict | None, unique_id: str, mac: str | None = None
 ) -> DeviceInfo:
     """Create device info for PoolDose devices."""
     if info is None:
         info = {}
 
-    api_version = info.get("API_VERSION", "").removesuffix("/")
+    api_version = (info.get("API_VERSION") or "").removesuffix("/")
 
     return DeviceInfo(
         identifiers={(DOMAIN, unique_id)},
@@ -51,7 +53,7 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
         self,
         coordinator: PooldoseCoordinator,
         serial_number: str,
-        device_properties: dict[str, Any],
+        device_properties: DeviceInfoDict,
         entity_description: EntityDescription,
         platform_name: str,
     ) -> None:

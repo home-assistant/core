@@ -158,7 +158,7 @@ async def async_setup_entry(
         PooldoseSensor(
             coordinator,
             serial_number,
-            coordinator.device_info,  # type: ignore[arg-type]
+            coordinator.device_info,
             description,
             PLATFORM_NAME,
         )
