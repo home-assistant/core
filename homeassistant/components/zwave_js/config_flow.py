@@ -26,7 +26,6 @@ from homeassistant.components.hassio import (
     AddonState,
 )
 from homeassistant.config_entries import (
-    SOURCE_ESPHOME,
     SOURCE_USB,
     ConfigEntryState,
     ConfigFlow,
@@ -918,7 +917,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info = await self._async_get_addon_discovery_info()
             self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
 
-        if not self.unique_id or self.source in (SOURCE_USB, SOURCE_ESPHOME):
+        if not self.unique_id or self.source == SOURCE_USB:
             if not self.version_info:
                 try:
                     self.version_info = await async_get_version_info(
@@ -1498,6 +1497,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.async_schedule_reload(existing_entry.entry_id)
             return self.async_abort(reason="already_configured")
 
+        # We are not aborting if home ID configured here, we just want to make sure that it's set
+        # We will update a USB based config entry automatically in `async_step_finish_addon_setup_user`
+        await self.async_set_unique_id(str(discovery_info.zwave_home_id))
         self.socket_path = discovery_info.socket_path
         self.context["title_placeholders"] = {
             CONF_NAME: f"{discovery_info.name} via ESPHome"
