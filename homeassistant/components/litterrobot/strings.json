@@ -183,7 +183,7 @@
         "name": "Panel lockout"
       },
       "power": {
-        "name": "Power"
+        "name": "[%key:component::binary_sensor::entity_component::power::name%]"
       }
     },
     "time": {
