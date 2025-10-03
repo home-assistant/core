@@ -7,6 +7,11 @@ from dataclasses import dataclass
 from typing import Any
 
 from pyportainer import Portainer
+from pyportainer.exceptions import (
+    PortainerAuthenticationError,
+    PortainerConnectionError,
+    PortainerTimeoutError,
+)
 from pyportainer.models.docker import DockerContainer
 
 from homeassistant.components.switch import (
@@ -15,9 +20,11 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
+from .const import DOMAIN
 from .coordinator import PortainerCoordinator
 from .entity import PortainerContainerEntity, PortainerCoordinatorData
 
@@ -35,14 +42,52 @@ async def stop_container(
     portainer: Portainer, endpoint_id: int, container_id: str
 ) -> None:
     """Stop a container."""
-    await portainer.stop_container(endpoint_id, container_id)
+    try:
+        await portainer.stop_container(endpoint_id, container_id)
+    except PortainerAuthenticationError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+            translation_placeholders={"error": repr(err)},
+        ) from err
+    except PortainerConnectionError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"error": repr(err)},
+        ) from err
+    except PortainerTimeoutError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="timeout_connect",
+            translation_placeholders={"error": repr(err)},
+        ) from err
 
 
 async def start_container(
     portainer: Portainer, endpoint_id: int, container_id: str
 ) -> None:
     """Start a container."""
-    await portainer.start_container(endpoint_id, container_id)
+    try:
+        await portainer.start_container(endpoint_id, container_id)
+    except PortainerAuthenticationError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+            translation_placeholders={"error": repr(err)},
+        ) from err
+    except PortainerConnectionError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"error": repr(err)},
+        ) from err
+    except PortainerTimeoutError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="timeout_connect",
+            translation_placeholders={"error": repr(err)},
+        ) from err
 
 
 SWITCHES: tuple[PortainerSwitchEntityDescription, ...] = (
@@ -64,7 +109,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Portainer switch sensors."""
 
-    coordinator: PortainerCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities(
         PortainerContainerSwitch(
@@ -95,11 +140,8 @@ class PortainerContainerSwitch(PortainerContainerEntity, SwitchEntity):
         self.entity_description = entity_description
         super().__init__(device_info, coordinator, via_device)
 
-        device_identifier = (
-            self._device_info.names[0].replace("/", " ").strip()
-            if self._device_info.names
-            else None
-        )
+        assert self._device_info.names, "Container names list unexpectedly empty"
+        device_identifier = self._device_info.names[0].replace("/", " ").strip()
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_identifier}_{entity_description.key}"
 
     @property
