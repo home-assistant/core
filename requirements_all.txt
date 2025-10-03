@@ -1361,7 +1361,7 @@ letpot==0.6.2
 libpyfoscamcgi==0.0.7
 
 # homeassistant.components.vivotek
-libpyvivotek==0.6.0
+libpyvivotek==0.6.1
 
 # homeassistant.components.libre_hardware_monitor
 librehardwaremonitor-api==1.4.0
