@@ -2583,9 +2583,6 @@ volvocarsapi==0.4.2
 # homeassistant.components.verisure
 vsure==2.6.7
 
-# homeassistant.components.vultr
-vultr==0.1.2
-
 # homeassistant.components.samsungtv
 # homeassistant.components.wake_on_lan
 wakeonlan==3.1.0
