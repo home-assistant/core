@@ -74,6 +74,7 @@ def _create_engine_test(
 @pytest.mark.parametrize("enable_migrate_state_context_ids", [True])
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
 @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
+@pytest.mark.parametrize("enable_migrate_event_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_times(
@@ -246,6 +247,7 @@ async def test_migrate_times(
 
 
 @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
+@pytest.mark.parametrize("enable_migrate_event_ids", [True])
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_can_resume_entity_id_post_migration(
@@ -843,11 +845,28 @@ async def test_out_of_disk_space_while_removing_foreign_key(
                     instrumented_migration.live_migration_done.wait
                 )
 
+                # The states.event_id foreign key constraint was removed when
+                # migration to schema version 46
+                assert (
+                    await instance.async_add_executor_job(_get_event_id_foreign_keys)
+                    is None
+                )
+
+                # Re-add the foreign key constraint to simulate failure to remove it during
+                # schema migration
+                with patch.object(migration, "Base", old_db_schema.Base):
+                    await instance.async_add_executor_job(
+                        migration._restore_foreign_key_constraints,
+                        instance.get_session,
+                        instance.engine,
+                        [("states", "event_id", "events", "event_id")],
+                    )
+
                 # Simulate out of disk space while removing the foreign key from the states table by
                 # - patching DropConstraint to raise InternalError for MySQL and PostgreSQL
                 with (
                     patch(
-                        "homeassistant.components.recorder.migration.sqlalchemy.inspect",
+                        "homeassistant.components.recorder.migration.DropConstraint.__init__",
                         side_effect=OperationalError(
                             None, None, OSError("No space left on device")
                         ),
@@ -865,14 +884,6 @@ async def test_out_of_disk_space_while_removing_foreign_key(
                     )
                     states_index_names = {index["name"] for index in states_indexes}
                     assert instance.use_legacy_events_index is True
-                    # The states.event_id foreign key constraint was removed when
-                    # migration to schema version 46
-                    assert (
-                        await instance.async_add_executor_job(
-                            _get_event_id_foreign_keys
-                        )
-                        is None
-                    )
 
                     await hass.async_stop()
 
