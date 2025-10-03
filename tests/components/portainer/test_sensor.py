@@ -13,10 +13,10 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("mock_portainer_client")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
