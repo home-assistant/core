@@ -18,7 +18,7 @@ from pyfirefly.models import Account, Bill, Budget, Category, Currency
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -72,7 +72,7 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
         try:
             await self.firefly.get_about()
         except FireflyAuthenticationError as err:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
                 translation_placeholders={"error": repr(err)},
@@ -109,7 +109,7 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
             budgets = await self.firefly.get_budgets()
             bills = await self.firefly.get_bills()
         except FireflyAuthenticationError as err:
-            raise UpdateFailed(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
                 translation_placeholders={"error": repr(err)},
