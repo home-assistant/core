@@ -24,6 +24,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the OctoPrint number entities."""
+    _LOGGER.debug("octoprint number async_setup_entry called")
     coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]["coordinator"]
@@ -42,6 +43,7 @@ async def async_setup_entry(
         for tool in [
             tool
             for tool in coordinator.data["printer"].temperatures
+            if is_extruder(tool.name) or is_bed(tool.name)
             if tool.name not in known_tools
         ]:
             assert device_id is not None
@@ -60,6 +62,13 @@ async def async_setup_entry(
     if coordinator.data["printer"]:
         async_add_tool_numbers()
 
+def is_extruder(tool_name: str) -> bool:
+    """Return True if the tool name indicates an extruder."""
+    return tool_name.startswith("tool") and any(char.isdigit() for char in tool_name)
+
+def is_bed(tool_name: str) -> bool:
+    """Return True if the tool name indicates a bed."""
+    return tool_name == "bed"
 
 class OctoPrintTemperatureNumber(
     CoordinatorEntity[OctoprintDataUpdateCoordinator], NumberEntity
@@ -85,6 +94,7 @@ class OctoPrintTemperatureNumber(
         self._attr_name = f"OctoPrint set {tool} temperature"
         self._attr_unique_id = f"set-{tool}-temp-{device_id}"
         self._attr_device_info = coordinator.device_info
+        _LOGGER.debug("octoprint create %s", self._attr_unique_id)
 
     @property
     def native_value(self) -> float | None:
@@ -96,7 +106,9 @@ class OctoPrintTemperatureNumber(
         for temp in printer.temperatures:
             if temp.name == self._api_tool:
                 if temp.target_temp is None:
+                    _LOGGER.debug("native_value %s failed: target temp none", self._api_tool)
                     return None
+                _LOGGER.debug("native_value %s [%s] returns: %s", temp.name, temp, temp.target_temp)
                 return round(temp.target_temp, 2)
 
         return None
@@ -112,10 +124,13 @@ class OctoPrintTemperatureNumber(
             self.coordinator.config_entry.entry_id
         ]["client"]
 
-        if self._api_tool.lower() == "bed":
+        _LOGGER.debug("set_native_value %s to %s", self._api_tool, value)
+        if is_bed(self._api_tool):
             await client.set_bed_temperature(value)
-        elif self._api_tool.startswith("tool"):
+            _LOGGER.debug("set_bed_temperature successful %s", value)
+        elif is_extruder(self._api_tool):
             await client.set_tool_temperature(self._api_tool, value)
+            _LOGGER.debug("set_tool_temperature successful %s %s", self._api_tool, value)
 
         # Request coordinator update to reflect the change
         await self.coordinator.async_request_refresh()
