@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
-class VolvoButtonDescription(ButtonEntityDescription, VolvoEntityDescription):
+class VolvoButtonDescription(VolvoEntityDescription, ButtonEntityDescription):
     """Describes a Volvo button entity."""
 
     api_command: str
@@ -62,14 +62,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up buttons."""
     supported_commands = entry.runtime_data.context.supported_commands
-
-    buttons = [
-        VolvoCarsButton(entry, description)
-        for description in _DESCRIPTIONS
-        if description.required_command_key in supported_commands
-    ]
-
-    async_add_entities(buttons)
+    async_add_entities(
+        [
+            VolvoCarsButton(entry, description)
+            for description in _DESCRIPTIONS
+            if description.required_command_key in supported_commands
+        ]
+    )
 
 
 class VolvoCarsButton(VolvoBaseEntity, ButtonEntity):
