@@ -18,6 +18,39 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
+@pytest.fixture
+async def setup_integration(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> MockConfigEntry:
+    """Set up the hassio integration and enable entity."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    return config_entry
+
+
+async def enable_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+    entity_id: str,
+) -> None:
+    """Enable an entity and reload the config entry."""
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
 @pytest.fixture(autouse=True)
 def mock_all(
     aioclient_mock: AiohttpClientMocker,
@@ -170,31 +203,18 @@ async def test_switch_state(
     entity_id: str,
     expected: str,
     addon_state: str,
-    aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
     addon_installed: AsyncMock,
+    setup_integration: MockConfigEntry,
 ) -> None:
     """Test hassio addon switch state."""
     addon_installed.return_value.state = addon_state
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
-    config_entry.add_to_hass(hass)
-
-    with patch.dict(os.environ, MOCK_ENVIRON):
-        result = await async_setup_component(
-            hass,
-            "hassio",
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
-        )
-        assert result
-    await hass.async_block_till_done()
 
     # Verify that the entity is disabled by default.
     assert hass.states.get(entity_id) is None
 
     # Enable the entity.
-    entity_registry.async_update_entity(entity_id, disabled_by=None)
-    await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
+    await enable_entity(hass, entity_registry, setup_integration, entity_id)
 
     # Verify that the entity have the expected state.
     state = hass.states.get(entity_id)
@@ -210,6 +230,7 @@ async def test_switch_turn_on(
     aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
     addon_installed: AsyncMock,
+    setup_integration: MockConfigEntry,
 ) -> None:
     """Test turning on addon switch."""
     entity_id = "switch.test_two"
@@ -218,25 +239,11 @@ async def test_switch_turn_on(
     # Mock the start addon API call
     aioclient_mock.post("http://127.0.0.1/addons/test-two/start", json={"result": "ok"})
 
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
-    config_entry.add_to_hass(hass)
-
-    with patch.dict(os.environ, MOCK_ENVIRON):
-        result = await async_setup_component(
-            hass,
-            "hassio",
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
-        )
-        assert result
-    await hass.async_block_till_done()
-
     # Verify that the entity is disabled by default.
     assert hass.states.get(entity_id) is None
 
     # Enable the entity.
-    entity_registry.async_update_entity(entity_id, disabled_by=None)
-    await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
+    await enable_entity(hass, entity_registry, setup_integration, entity_id)
 
     # Verify initial state is off
     state = hass.states.get(entity_id)
@@ -252,13 +259,8 @@ async def test_switch_turn_on(
     )
 
     # Verify the API was called
-    assert len(aioclient_mock.mock_calls) > 0
-    start_call_found = False
-    for call in aioclient_mock.mock_calls:
-        if call[1].path == "/addons/test-two/start" and call[0] == "POST":
-            start_call_found = True
-            break
-    assert start_call_found
+    assert aioclient_mock.mock_calls[-1][1].path == "/addons/test-two/start"
+    assert aioclient_mock.mock_calls[-1][0] == "POST"
 
 
 @pytest.mark.parametrize(
@@ -269,6 +271,7 @@ async def test_switch_turn_off(
     aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
     addon_installed: AsyncMock,
+    setup_integration: MockConfigEntry,
 ) -> None:
     """Test turning off addon switch."""
     entity_id = "switch.test"
@@ -277,25 +280,11 @@ async def test_switch_turn_off(
     # Mock the stop addon API call
     aioclient_mock.post("http://127.0.0.1/addons/test/stop", json={"result": "ok"})
 
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
-    config_entry.add_to_hass(hass)
-
-    with patch.dict(os.environ, MOCK_ENVIRON):
-        result = await async_setup_component(
-            hass,
-            "hassio",
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
-        )
-        assert result
-    await hass.async_block_till_done()
-
     # Verify that the entity is disabled by default.
     assert hass.states.get(entity_id) is None
 
     # Enable the entity.
-    entity_registry.async_update_entity(entity_id, disabled_by=None)
-    await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
+    await enable_entity(hass, entity_registry, setup_integration, entity_id)
 
     # Verify initial state is on
     state = hass.states.get(entity_id)
@@ -311,10 +300,5 @@ async def test_switch_turn_off(
     )
 
     # Verify the API was called
-    assert len(aioclient_mock.mock_calls) > 0
-    stop_call_found = False
-    for call in aioclient_mock.mock_calls:
-        if call[1].path == "/addons/test/stop" and call[0] == "POST":
-            stop_call_found = True
-            break
-    assert stop_call_found
+    assert aioclient_mock.mock_calls[-1][1].path == "/addons/test/stop"
+    assert aioclient_mock.mock_calls[-1][0] == "POST"
