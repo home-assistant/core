@@ -290,6 +290,9 @@
           }
         }
       },
+      "last_checkin": {
+        "name": "Last check-in"
+      },
       "health": {
         "name": "Health",
         "unit_of_measurement": "[%key:component::habitica::common::unit_health_points%]"
