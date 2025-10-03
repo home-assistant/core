@@ -169,31 +169,96 @@ class ModelContextProtocolMessagesView(HomeAssistantView):
 
 
 class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
-    """Model Context Protocol Streamable HTTP endpoint."""
+    """Model Context Protocol Streamable HTTP endpoint.
+
+    Implements a simplified version of the MCP streamable HTTP transport specification.
+    This delegates to the existing SSE infrastructure for compatibility.
+    """
 
     name = f"{DOMAIN}:streamable-http"
     url = STREAMABLE_HTTP_API
 
     async def get(self, request: web.Request) -> web.StreamResponse:
-        """Handle GET requests for streamable HTTP transport."""
-        return await self._handle_request(request)
+        """Handle GET requests - delegate to SSE endpoint."""
+        # Validate Accept header
+        accept_header = request.headers.get("Accept", "")
+        if "text/event-stream" not in accept_header:
+            raise HTTPBadRequest(text="Accept header must include text/event-stream")
+
+        # Delegate to existing SSE implementation
+        sse_view = ModelContextProtocolSSEView()
+        response = await sse_view.get(request)
+        self._add_cors_headers(response, request)
+        return response
 
     async def post(self, request: web.Request) -> web.StreamResponse:
-        """Handle POST requests for streamable HTTP transport."""
-        return await self._handle_request(request)
+        """Handle POST requests - process JSON-RPC messages."""
+        # Validate required headers
+        accept_header = request.headers.get("Accept", "")
+        if not ("application/json" in accept_header and "text/event-stream" in accept_header):
+            raise HTTPBadRequest(
+                text="Accept header must include both application/json and text/event-stream"
+            )
+
+        # Validate MCP protocol version
+        protocol_version = request.headers.get("MCP-Protocol-Version")
+        if protocol_version and protocol_version not in ["2025-06-18", "2024-11-05"]:
+            raise HTTPBadRequest(text=f"Unsupported MCP protocol version: {protocol_version}")
+
+        # Parse JSON-RPC message
+        try:
+            json_data = await request.json()
+            message = types.JSONRPCMessage.model_validate(json_data)
+        except ValueError as err:
+            _LOGGER.info("Failed to parse JSON-RPC message: %s", err)
+            raise HTTPBadRequest(text="Invalid JSON-RPC message") from err
+
+        _LOGGER.debug("Received streamable HTTP message: %s", message)
+
+        # Handle session management
+        session_id = request.headers.get("Mcp-Session-Id")
+        hass = request.app[KEY_HASS]
+        config_entry = async_get_config_entry(hass)
+        session_manager = config_entry.runtime_data
+
+        # For initialize requests, start new session
+        if hasattr(message, "method") and message.method == "initialize":
+            # Start SSE stream similar to GET request
+            sse_view = ModelContextProtocolSSEView()
+            response = await sse_view.get(request)
+            
+            # Add session ID header (simplified - would need proper session management)
+            session_id = "streamable-session-" + str(hash(request))[-8:]
+            response.headers["Mcp-Session-Id"] = session_id
+            
+            self._add_cors_headers(response, request)
+            return response
+
+        # For other requests with session
+        if session_id and session_manager.get(session_id):
+            # Use existing messages endpoint logic
+            messages_view = ModelContextProtocolMessagesView()
+            response = await messages_view.post(request, session_id)
+            self._add_cors_headers(response, request)
+            return response
+
+        # For responses/notifications without session, accept them
+        if hasattr(message, "method") or hasattr(message, "result") or hasattr(message, "error"):
+            response = web.Response(status=202)  # 202 Accepted
+            self._add_cors_headers(response, request)
+            return response
+
+        raise HTTPBadRequest(text="Session required for requests")
 
     async def delete(self, request: web.Request) -> web.StreamResponse:
-        """Handle DELETE requests for streamable HTTP transport."""
-        return await self._handle_request(request)
+        """Handle DELETE requests - terminate session."""
+        session_id = request.headers.get("Mcp-Session-Id")
+        if not session_id:
+            raise HTTPBadRequest(text="Mcp-Session-Id header required")
 
-    async def _handle_request(self, request: web.Request) -> web.StreamResponse:
-        """Handle HTTP requests for streamable transport."""
-        # For now, return a simple response
-        response = web.Response(
-            text="Streamable HTTP transport endpoint",
-            status=200,
-            headers={"Content-Type": "text/plain"},
-        )
+        # In a full implementation, would properly clean up the session
+        # For now, just return success
+        response = web.Response(status=200)
         self._add_cors_headers(response, request)
         return response
 
@@ -207,5 +272,9 @@ class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
             response.headers.setdefault("Access-Control-Allow-Credentials", "true")
             response.headers.setdefault(
                 "Access-Control-Allow-Headers",
-                "Authorization, Content-Type, MCP-Session-ID",
+                "Authorization, Content-Type, Mcp-Session-Id, MCP-Protocol-Version",
+            )
+            response.headers.setdefault(
+                "Access-Control-Allow-Methods",
+                "GET, POST, DELETE, OPTIONS"
             )
