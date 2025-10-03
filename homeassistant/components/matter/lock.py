@@ -198,7 +198,12 @@ class MatterLock(MatterEntity, LockEntity):
         )
 
         # always reset the optimisically (un)locking state on state update
-        self._reset_optimistic_state(write_state=False)
+        if self._optimistic_timer and not self._optimistic_timer.cancelled():
+            self._optimistic_timer.cancel()
+        self._optimistic_timer = None
+        self._attr_is_locking = False
+        self._attr_is_unlocking = False
+        self._attr_is_opening = False
 
         LOGGER.debug("Lock state: %s for %s", lock_state, self.entity_id)
 
@@ -221,15 +226,9 @@ class MatterLock(MatterEntity, LockEntity):
             self._attr_is_open = None
 
     @callback
-    def _reset_optimistic_state(self, write_state: bool = True) -> None:
-        if self._optimistic_timer and not self._optimistic_timer.cancelled():
-            self._optimistic_timer.cancel()
-        self._optimistic_timer = None
-        self._attr_is_locking = False
-        self._attr_is_unlocking = False
-        self._attr_is_opening = False
-        if write_state:
-            self.async_write_ha_state()
+    def _reset_optimistic_state(self) -> None:
+        self._update_from_device()
+        self.async_write_ha_state()
 
     @callback
     def _calculate_features(
