@@ -1,0 +1,14 @@
+{
+  "domain": "ryse",
+  "name": "RYSE",
+  "version": "1.0.0",
+  "documentation": "https://www.helloryse.com/",
+  "dependencies": ["bluetooth_adapters"],
+  "integration_type": "device",
+  "codeowners": ["@mohamedkalel82"],
+  "requirements": ["bleak", "ryseble>=1.4.0"],
+  "iot_class": "local_push",
+  "config_flow": true,
+  "bluetooth": [],
+  "supported_platforms": ["cover"]
+}
