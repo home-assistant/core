@@ -34,6 +34,8 @@ from .const import (
     BLU_TRV_TEMPERATURE_SETTINGS,
     DOMAIN,
     LOGGER,
+    MODEL_LINKEDGO_ST802_THERMOSTAT,
+    MODEL_LINKEDGO_ST1820_THERMOSTAT,
     NOT_CALIBRATED_ISSUE_ID,
     RPC_THERMOSTAT_SETTINGS,
     SHTRV_01_TEMPERATURE_SETTINGS,
@@ -257,6 +259,7 @@ RPC_LINKEDGO_THERMOSTAT: dict[str, RpcClimateDescription] = {
         key="number",
         sub_key="value",
         role="target_temperature",
+        models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
     ),
 }
 

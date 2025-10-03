@@ -33,7 +33,11 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.humidifier import ATTR_HUMIDITY
 from homeassistant.components.shelly.climate import PRESET_FROST_PROTECTION
-from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.components.shelly.const import (
+    DOMAIN,
+    MODEL_LINKEDGO_ST802_THERMOSTAT,
+    MODEL_LINKEDGO_ST1820_THERMOSTAT,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
@@ -940,7 +944,7 @@ async def test_rpc_linkedgo_st802_thermostat(
     monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
     monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
 
-    await init_integration(hass, 3)
+    await init_integration(hass, 3, model=MODEL_LINKEDGO_ST802_THERMOSTAT)
 
     assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-state")
 
@@ -1053,7 +1057,7 @@ async def test_rpc_linkedgo_st1820_thermostat(
     monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
     monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
 
-    await init_integration(hass, 3)
+    await init_integration(hass, 3, model=MODEL_LINKEDGO_ST1820_THERMOSTAT)
 
     assert hass.states.get(entity_id) == snapshot(name=f"{entity_id}-state")
 
