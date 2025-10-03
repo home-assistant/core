@@ -19,7 +19,7 @@ from .util import NoDevicesError, NoUsernameError, async_validate_api
 
 type SensiboConfigEntry = ConfigEntry[SensiboDataUpdateCoordinator]
 
-CONFiG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
