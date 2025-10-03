@@ -99,7 +99,7 @@ class VivotekCam(Camera):
     ) -> bytes | None:
         """Return bytes of camera image."""
         snapshot = self._cam.snapshot()
-        if type(snapshot) is not bytes:
+        if not isinstance(snapshot, bytes):
             return None
 
         return snapshot
