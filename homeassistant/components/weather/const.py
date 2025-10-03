@@ -82,6 +82,7 @@ VALID_UNITS_WIND_SPEED: set[str] = {
     UnitOfSpeed.KNOTS,
     UnitOfSpeed.METERS_PER_SECOND,
     UnitOfSpeed.MILES_PER_HOUR,
+    UnitOfSpeed.BEAUFORT,
 }
 
 UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
