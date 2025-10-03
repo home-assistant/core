@@ -12,11 +12,11 @@ water_heater_boost:
           mode: box
       default: 3600
       required: true
-    emergencyBoost:
+    emergency_boost:
       selector:
         boolean:
       default: false
-    temporarySetpoint:
+    temporary_setpoint:
       selector:
         number:
           min: 30

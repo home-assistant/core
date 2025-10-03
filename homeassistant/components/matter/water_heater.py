@@ -60,8 +60,8 @@ async def async_setup_entry(
         SERVICE_WATER_HEATER_BOOST,
         schema={
             vol.Required("duration"): vol.All(cv.positive_int),
-            vol.Optional("emergencyBoost"): cv.boolean,
-            vol.Optional("temporarySetpoint"): vol.All(
+            vol.Optional("emergency_boost"): cv.boolean,
+            vol.Optional("temporary_setpoint"): vol.All(
                 vol.Coerce(int), vol.Range(min=30, max=65)
             ),
         },
@@ -120,8 +120,8 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     async def async_set_boost(
         self,
         duration: int,
-        emergencyBoost: bool = False,
-        temporarySetpoint: int = Nullable,
+        emergency_boost: bool = False,
+        temporary_setpoint: int = Nullable,
     ) -> None:
         """Set boost."""
         self.duration = duration
@@ -129,8 +129,8 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
             clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct
         ] = clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct(
             duration=self.duration,
-            emergencyBoost=emergencyBoost,
-            temporarySetpoint=temporarySetpoint,
+            emergencyBoost=emergency_boost,
+            temporarySetpoint=temporary_setpoint,
         )
         try:
             await self.send_device_command(

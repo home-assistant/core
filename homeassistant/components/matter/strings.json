@@ -569,11 +569,11 @@
           "name": "Duration",
           "description": "Boost duration"
         },
-        "emergencyBoost": {
+        "emergency_boost": {
           "name": "Emergency boost",
           "description": "Whether to enable emergency boost mode."
         },
-        "temporarySetpoint": {
+        "temporary_setpoint": {
           "name": "Temporary setpoint",
           "description": "Temporary setpoint temperature in Celsius during the boost period."
         }
