@@ -46,7 +46,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unlocked',
+    'state': 'jammed',
   })
 # ---
 # name: test_locks[door_lock_with_unbolt][lock.mock_door_lock-entry]

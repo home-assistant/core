@@ -127,8 +127,9 @@ class MatterLock(MatterEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock with pin if needed."""
-        if not self._attr_is_locked:
+        if not self._attr_is_locked or self._attr_is_jammed:
             # optimistically signal locking to state machine
+            self._attr_is_jammed = False
             self._attr_is_locking = True
             self.async_write_ha_state()
             # the lock should acknowledge the command with an attribute update
@@ -145,8 +146,9 @@ class MatterLock(MatterEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock with pin if needed."""
-        if self._attr_is_locked:
+        if self._attr_is_locked or self._attr_is_jammed:
             # optimistically signal unlocking to state machine
+            self._attr_is_jammed = False
             self._attr_is_unlocking = True
             self.async_write_ha_state()
             # the lock should acknowledge the command with an attribute update
@@ -173,6 +175,7 @@ class MatterLock(MatterEntity, LockEntity):
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
         # optimistically signal opening to state machine
+        self._attr_is_jammed = False
         self._attr_is_opening = True
         self.async_write_ha_state()
         # the lock should acknowledge the command with an attribute update
@@ -209,20 +212,25 @@ class MatterLock(MatterEntity, LockEntity):
 
         if lock_state == clusters.DoorLock.Enums.DlLockState.kUnlatched:
             self._attr_is_locked = False
+            self._attr_is_jammed = False
             self._attr_is_open = True
         elif lock_state == clusters.DoorLock.Enums.DlLockState.kLocked:
             self._attr_is_locked = True
+            self._attr_is_jammed = False
             self._attr_is_open = False
-        elif lock_state in (
-            clusters.DoorLock.Enums.DlLockState.kUnlocked,
-            clusters.DoorLock.Enums.DlLockState.kNotFullyLocked,
-        ):
+        elif lock_state == clusters.DoorLock.Enums.DlLockState.kUnlocked:
             self._attr_is_locked = False
+            self._attr_is_jammed = False
+            self._attr_is_open = False
+        elif lock_state == clusters.DoorLock.Enums.DlLockState.kNotFullyLocked:
+            self._attr_is_locked = False
+            self._attr_is_jammed = True
             self._attr_is_open = False
         else:
             # Treat any other state as unknown.
             # NOTE: A null state can happen during device startup.
             self._attr_is_locked = None
+            self._attr_is_jammed = None
             self._attr_is_open = None
 
     @callback

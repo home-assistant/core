@@ -84,7 +84,7 @@ async def test_lock(
 
     state = hass.states.get("lock.mock_door_lock")
     assert state
-    assert state.state == LockState.UNLOCKED
+    assert state.state == LockState.JAMMED
 
     set_node_attribute(matter_node, 1, 257, 0, 2)
     await trigger_subscription_callback(hass, matter_client)
@@ -248,7 +248,7 @@ async def test_lock_with_unbolt(
     assert state
     assert state.state == LockState.OPENING
 
-    set_node_attribute(matter_node, 1, 257, 0, 0)
+    set_node_attribute(matter_node, 1, 257, 0, 2)
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("lock.mock_door_lock")
