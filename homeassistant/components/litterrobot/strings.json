@@ -181,6 +181,9 @@
       },
       "panel_lockout": {
         "name": "Panel lockout"
+      },
+      "power": {
+        "name": "Power"
       }
     },
     "time": {

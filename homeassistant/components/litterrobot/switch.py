@@ -65,6 +65,15 @@ SWITCH_MAP: dict[type[Robot], tuple[RobotSwitchEntityDescription, ...]] = {
             value_fn=lambda robot: robot.panel_lock_enabled,
         ),
     ),
+    LitterRobot: (
+        RobotSwitchEntityDescription[LitterRobot](
+            key="power",
+            translation_key="power",
+            set_fn=lambda robot, value: robot.set_power_status(value),
+            value_fn=lambda robot: robot.power_status == "AC",
+            entity_registry_enabled_default=False,
+        ),
+    ),
 }
 
 
