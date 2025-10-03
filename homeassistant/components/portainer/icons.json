@@ -6,6 +6,8 @@
       },
       "status": {
         "default": "mdi:information-outline"
+      }
+    },
     "switch": {
       "container": {
         "default": "mdi:arrow-down-box",
