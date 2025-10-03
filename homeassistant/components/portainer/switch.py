@@ -140,7 +140,6 @@ class PortainerContainerSwitch(PortainerContainerEntity, SwitchEntity):
         self.entity_description = entity_description
         super().__init__(device_info, coordinator, via_device)
 
-        assert self._device_info.names, "Container names list unexpectedly empty"
         device_identifier = self._device_info.names[0].replace("/", " ").strip()
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_identifier}_{entity_description.key}"
 
