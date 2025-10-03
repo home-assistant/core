@@ -560,6 +560,16 @@
           "description": "The Matter device to add to the other Matter network."
         }
       }
+    },
+    "water_heater_boost": {
+      "name": "Open commissioning window",
+      "description": "Water heater boost for a specific duration.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Boost duration"
+        }
+      }
     }
   }
 }
