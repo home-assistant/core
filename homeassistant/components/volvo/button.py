@@ -63,7 +63,7 @@ async def async_setup_entry(
     """Set up buttons."""
     async_add_entities(
         [
-            VolvoCarsButton(entry, description)
+            VolvoButton(entry, description)
             for description in _DESCRIPTIONS
             if description.required_command_key
             in entry.runtime_data.context.supported_commands
@@ -71,7 +71,7 @@ async def async_setup_entry(
     )
 
 
-class VolvoCarsButton(VolvoBaseEntity, ButtonEntity):
+class VolvoButton(VolvoBaseEntity, ButtonEntity):
     """Volvo button."""
 
     entity_description: VolvoButtonDescription
