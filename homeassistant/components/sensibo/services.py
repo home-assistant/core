@@ -44,7 +44,7 @@ BOOST_INCLUSIVE = "boost_inclusive"
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Register Sonos services."""
+    """Register Sensibo services."""
 
     service.async_register_platform_entity_service(
         hass,
