@@ -61,14 +61,14 @@ async def async_setup_entry(
             vol.Required("duration"): vol.All(cv.positive_int),
         },
         func="async_set_boost",
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.NONE,
     )
 
     platform.async_register_entity_service(
         SERVICE_WATER_HEATER_CANCEL_BOOST,
         schema={},
         func="async_cancel_boost",
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.NONE,
     )
 
 
@@ -112,18 +112,17 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     #     ClusterObjectFieldDescriptor(Label="targetPercentage", Tag=4, Type=typing.Optional[uint]),
     #     ClusterObjectFieldDescriptor(Label="targetReheat", Tag=5, Type=typing.Optional[uint]),
     # ])
-    async def async_set_boost(self, duration: int) -> None:
+    async def async_set_boost(
+        self, duration: int, emergencyBoost: bool, temporarySetpoint: int
+    ) -> None:
         """Set boost."""
         self.duration = duration
         boost_info: type[
             clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct
         ] = clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct(
             duration=self.duration,
-            oneShot=False,
-            emergencyBoost=False,
-            temporarySetpoint=None,
-            targetPercentage=None,
-            targetReheat=None,
+            emergencyBoost=emergencyBoost,
+            temporarySetpoint=temporarySetpoint,
         )
         try:
             await self.send_device_command(
