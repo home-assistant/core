@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_IP_ADDRESS, CONF_PORT
 
-from .const import DOMAIN
+from .const import DOMAIN, UPNP_AVAILABLE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,9 +77,12 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                 ):
                     agent_name = user_input.get(CONF_IP_ADDRESS)
                     if agent_info_response is not None:
+                        user_input[UPNP_AVAILABLE] = True
                         agent_name = agent_info_response.agent_id
                         await self.async_set_unique_id(agent_info_response.agent_id)
                         self._abort_if_unique_id_configured()
+                    else:
+                        user_input[UPNP_AVAILABLE] = False
 
                     return self.async_create_entry(
                         title=f"Fing Agent {agent_name}",

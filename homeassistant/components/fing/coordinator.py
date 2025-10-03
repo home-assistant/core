@@ -1,6 +1,5 @@
 """DataUpdateCoordinator for Fing integration."""
 
-from contextlib import suppress
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
@@ -14,7 +13,7 @@ from homeassistant.const import CONF_API_KEY, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DOMAIN, UPNP_AVAILABLE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +39,7 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
             port=int(config_entry.data[CONF_PORT]),
             key=config_entry.data[CONF_API_KEY],
         )
+        self._upnp_available = config_entry.data[UPNP_AVAILABLE]
         update_interval = timedelta(seconds=30)
         super().__init__(
             hass,
@@ -56,8 +56,7 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
         try:
             device_response = await self._fing.get_devices()
 
-            with suppress(httpx.ConnectError):
-                # The suppression is needed because the get_agent_info method isn't available for desktop agents
+            if self._upnp_available:
                 agent_info_response = await self._fing.get_agent_info()
 
         except httpx.NetworkError as err:
