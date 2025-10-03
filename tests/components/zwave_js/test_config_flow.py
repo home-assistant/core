@@ -1303,7 +1303,11 @@ async def test_esphome_discovery_already_configured(
     entry = MockConfigEntry(
         entry_id="mock-entry-id",
         domain=DOMAIN,
-        data={CONF_SOCKET_PATH: "esphome://existing-device:6053"},
+        data={
+            CONF_SOCKET_PATH: "esphome://existing-device:6053",
+            "use_addon": True,
+            "integration_created_addon": True,
+        },
         title=TITLE,
         unique_id="1234",
     )
