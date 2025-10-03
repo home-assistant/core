@@ -30,22 +30,20 @@ from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
 
-from .const import DOMAIN
+from .const import DOMAIN, MESSAGES_API, SSE_API, STREAMABLE_HTTP_API
 from .server import create_server
 from .session import Session
 from .types import MCPServerConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-SSE_API = f"/{DOMAIN}/sse"
-MESSAGES_API = f"/{DOMAIN}/messages/{{session_id}}"
-
 
 @callback
 def async_register(hass: HomeAssistant) -> None:
-    """Register the websocket API."""
+    """Register the HTTP transports."""
     hass.http.register_view(ModelContextProtocolSSEView())
     hass.http.register_view(ModelContextProtocolMessagesView())
+    hass.http.register_view(ModelContextProtocolStreamableHTTPView())
 
 
 def async_get_config_entry(hass: HomeAssistant) -> MCPServerConfigEntry:
@@ -168,3 +166,46 @@ class ModelContextProtocolMessagesView(HomeAssistantView):
         _LOGGER.debug("Received client message: %s", message)
         await session.read_stream_writer.send(SessionMessage(message))
         return web.Response(status=200)
+
+
+class ModelContextProtocolStreamableHTTPView(HomeAssistantView):
+    """Model Context Protocol Streamable HTTP endpoint."""
+
+    name = f"{DOMAIN}:streamable-http"
+    url = STREAMABLE_HTTP_API
+
+    async def get(self, request: web.Request) -> web.StreamResponse:
+        """Handle GET requests for streamable HTTP transport."""
+        return await self._handle_request(request)
+
+    async def post(self, request: web.Request) -> web.StreamResponse:
+        """Handle POST requests for streamable HTTP transport."""
+        return await self._handle_request(request)
+
+    async def delete(self, request: web.Request) -> web.StreamResponse:
+        """Handle DELETE requests for streamable HTTP transport."""
+        return await self._handle_request(request)
+
+    async def _handle_request(self, request: web.Request) -> web.StreamResponse:
+        """Handle HTTP requests for streamable transport."""
+        # For now, return a simple response
+        response = web.Response(
+            text="Streamable HTTP transport endpoint",
+            status=200,
+            headers={"Content-Type": "text/plain"},
+        )
+        self._add_cors_headers(response, request)
+        return response
+
+    def _add_cors_headers(
+        self, response: web.StreamResponse, request: web.Request
+    ) -> None:
+        """Add CORS headers to the response."""
+        origin = request.headers.get("Origin")
+        if origin:
+            response.headers.setdefault("Access-Control-Allow-Origin", origin)
+            response.headers.setdefault("Access-Control-Allow-Credentials", "true")
+            response.headers.setdefault(
+                "Access-Control-Allow-Headers",
+                "Authorization, Content-Type, MCP-Session-ID",
+            )

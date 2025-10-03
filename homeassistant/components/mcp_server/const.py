@@ -5,3 +5,8 @@ TITLE = "Model Context Protocol Server"
 # The Stateless API is no longer registered explicitly, but this name may still exist in the
 # users config entry.
 STATELESS_LLM_API = "stateless_assist"
+
+# HTTP Transport endpoints
+SSE_API = f"/{DOMAIN}/sse"
+MESSAGES_API = f"/{DOMAIN}/messages/{{session_id}}"
+STREAMABLE_HTTP_API = "/mcp"
