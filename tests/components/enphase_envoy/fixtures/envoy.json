@@ -27,6 +27,8 @@
     "system_consumption_phases": null,
     "system_net_consumption_phases": null,
     "system_production_phases": null,
+    "ctmeters": {},
+    "ctmeters_phases": {},
     "ctmeter_production": null,
     "ctmeter_consumption": null,
     "ctmeter_storage": null,
