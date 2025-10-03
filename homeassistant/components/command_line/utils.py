@@ -6,9 +6,10 @@ import asyncio
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 
 _EXEC_FAILED_CODE = 127
 
@@ -93,3 +94,19 @@ def render_template_args(hass: HomeAssistant, command: str) -> str | None:
     LOGGER.debug("Running command: %s", command)
 
     return command
+
+
+def create_platform_yaml_not_supported_issue(
+    hass: HomeAssistant, platform_domain: str
+) -> None:
+    """Create an issue when platform yaml is used."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "binary_sensor_platform_yaml_not_supported",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="platform_yaml_not_supported",
+        translation_placeholders={"platform": platform_domain},
+        learn_more_url="https://www.home-assistant.io/integrations/command_line/",
+    )
