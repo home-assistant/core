@@ -6,7 +6,9 @@ from typing import Any, cast
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
+from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
+import voluptuous as vol
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -23,9 +25,12 @@ from homeassistant.const import (
     Platform,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, SupportsResponse, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import SERVICE_WATER_HEATER_BOOST
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
@@ -49,6 +54,16 @@ async def async_setup_entry(
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.WATER_HEATER, async_add_entities)
 
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_WATER_HEATER_BOOST,
+        schema={
+            vol.Required("duration"): vol.All(cv.positive_int),
+        },
+        func="async_set_boost",
+        supports_response=SupportsResponse.ONLY,
+    )
+
 
 class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     """Representation of a Matter WaterHeater entity."""
@@ -68,7 +83,38 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     )
     _attr_target_temperature: float | None = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    duration = 3600  # 1 hour
     _platform_translation_key = "water_heater"
+
+    # Fields=[
+    #     ClusterObjectFieldDescriptor(Label="duration", Tag=0, Type=uint),
+    #     ClusterObjectFieldDescriptor(Label="oneShot", Tag=1, Type=typing.Optional[bool]),
+    #     ClusterObjectFieldDescriptor(Label="emergencyBoost", Tag=2, Type=typing.Optional[bool]),
+    #     ClusterObjectFieldDescriptor(Label="temporarySetpoint", Tag=3, Type=typing.Optional[int]),
+    #     ClusterObjectFieldDescriptor(Label="targetPercentage", Tag=4, Type=typing.Optional[uint]),
+    #     ClusterObjectFieldDescriptor(Label="targetReheat", Tag=5, Type=typing.Optional[uint]),
+    # ])
+    async def async_set_boost(self, duration: int) -> None:
+        """Set boost."""
+        self.duration = duration
+        boost_info: type[
+            clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct
+        ] = clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct(
+            duration=self.duration,
+            oneShot=False,
+            emergencyBoost=False,
+            temporarySetpoint=None,
+            targetPercentage=None,
+            targetReheat=None,
+        )
+        try:
+            await self.send_device_command(
+                clusters.WaterHeaterManagement.Commands.Boost(boostInfo=boost_info)
+            )
+        except MatterError as err:
+            # self.logger.error("Error sending boost command: %s", err)
+            raise HomeAssistantError from err
+        self._update_from_device()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -90,7 +136,7 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         boost_info: type[
             clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct
         ] = clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct(
-            duration=3600
+            duration=self.duration
         )
         system_mode_value = WATER_HEATER_SYSTEM_MODE_MAP[operation_mode]
         await self.write_attribute(

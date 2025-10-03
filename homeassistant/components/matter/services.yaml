@@ -1,0 +1,12 @@
+async_set_boost:
+  target:
+    entity:
+      domain: water_heater
+  fields:
+    duration:
+      selector:
+        number:
+          min: 60
+          max: 14400
+          step: 60
+          mode: box

@@ -15,3 +15,6 @@ ID_TYPE_DEVICE_ID = "deviceid"
 ID_TYPE_SERIAL = "serial"
 
 FEATUREMAP_ATTRIBUTE_ID = 65532
+
+# WaterHeaterManagement.Commands.Boost
+SERVICE_WATER_HEATER_BOOST = "water_heater_boost"
