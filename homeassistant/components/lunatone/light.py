@@ -11,6 +11,7 @@ from lunatone_rest_api_client.models import LineStatus
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
+    ATTR_RGB_COLOR,
     ColorMode,
     LightEntity,
     brightness_supported,
@@ -126,6 +127,8 @@ class LunatoneLight(
     @property
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
+        if self._device.rgb_color is not None:
+            return ColorMode.RGB
         if self._device.color_temperature is not None:
             return ColorMode.COLOR_TEMP
         if self._device.brightness is not None:
@@ -143,6 +146,13 @@ class LunatoneLight(
         assert self._device.color_temperature
         return self._device.color_temperature
 
+    @property
+    def rgb_color(self) -> tuple[int, int, int]:
+        """Return the RGB color of this light."""
+        assert self._device.rgb_color
+        r, g, b = self._device.rgb_color
+        return (round(r * 255), round(g * 255), round(b * 255))
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -158,6 +168,13 @@ class LunatoneLight(
                 status_update_delay *= 3.5
                 await self._device.fade_to_color_temperature(
                     kwargs[ATTR_COLOR_TEMP_KELVIN]
+                )
+            if ATTR_RGB_COLOR in kwargs:
+                status_update_delay *= 4
+                await self._device.fade_to_rgbw_color(
+                    tuple(
+                        (color / 255 for color in kwargs[ATTR_RGB_COLOR]),
+                    )
                 )
             if ATTR_BRIGHTNESS in kwargs or not self.is_on:
                 await self._device.fade_to_brightness(

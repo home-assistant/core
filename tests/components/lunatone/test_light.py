@@ -10,6 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
+    ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
 from homeassistant.const import (
@@ -274,3 +275,44 @@ async def test_turn_on_with_color_temperature(
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == color_temp_kelvin
+
+
+@pytest.mark.parametrize(
+    ("rgb_color"),
+    [(255, 128, 0), (0, 255, 128), (128, 0, 255)],
+)
+async def test_turn_on_with_rgb_color(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    rgb_color: tuple[int, int, int],
+) -> None:
+    """Test the RGB color of the light can be set."""
+    device_id = 4
+    entity_id = f"light.device_{device_id}"
+
+    await setup_integration(hass, mock_config_entry)
+
+    async def fake_update():
+        device = mock_lunatone_devices.data.devices[device_id - 1]
+        device.features.switchable.status = True
+        device.features.color_rgb.status.red = rgb_color[0] / 255
+        device.features.color_rgb.status.green = rgb_color[1] / 255
+        device.features.color_rgb.status.blue = rgb_color[2] / 255
+
+    mock_lunatone_devices.async_update.side_effect = fake_update
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_RGB_COLOR: rgb_color,
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_RGB_COLOR] == rgb_color

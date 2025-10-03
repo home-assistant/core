@@ -50,6 +50,15 @@ def mock_lunatone_devices() -> Generator[AsyncMock]:
                 if device.data.features.color_kelvin
                 else None
             )
+            device.rgb_color = (
+                (
+                    device.data.features.color_rgb.status.red,
+                    device.data.features.color_rgb.status.green,
+                    device.data.features.color_rgb.status.blue,
+                )
+                if device.data.features.color_rgb
+                else None
+            )
             device_list.append(device)
         return device_list
 
