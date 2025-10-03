@@ -45,11 +45,6 @@
       "status": {
         "name": "Status"
       }
-    },
-    "switch": {
-      "container_up_down": {
-        "name": "Container up/down"
-      }
     }
   },
   "exceptions": {
