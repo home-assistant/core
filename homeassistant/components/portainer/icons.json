@@ -1,7 +1,7 @@
 {
   "entity": {
     "switch": {
-      "container_up_down": {
+      "container_on_off": {
         "default": "mdi:arrow-down-box",
         "state": {
           "on": "mdi:arrow-up-box"

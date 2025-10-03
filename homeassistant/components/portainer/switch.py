@@ -47,8 +47,8 @@ async def start_container(
 
 SWITCHES: tuple[PortainerSwitchEntityDescription, ...] = (
     PortainerSwitchEntityDescription(
-        key="container_up_down",
-        translation_key="container_up_down",
+        key="container_on_off",
+        translation_key="container_on_off",
         device_class=SwitchDeviceClass.SWITCH,
         is_on_fn=lambda data: data.state == "running",
         turn_on_fn=start_container,
