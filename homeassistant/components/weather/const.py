@@ -77,12 +77,12 @@ VALID_UNITS_VISIBILITY: set[str] = {
     UnitOfLength.MILES,
 }
 VALID_UNITS_WIND_SPEED: set[str] = {
+    UnitOfSpeed.BEAUFORT,
     UnitOfSpeed.FEET_PER_SECOND,
     UnitOfSpeed.KILOMETERS_PER_HOUR,
     UnitOfSpeed.KNOTS,
     UnitOfSpeed.METERS_PER_SECOND,
     UnitOfSpeed.MILES_PER_HOUR,
-    UnitOfSpeed.BEAUFORT,
 }
 
 UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
