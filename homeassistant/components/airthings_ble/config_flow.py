@@ -201,7 +201,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
 
         titles = {
-            address: discovery.name
+            address: get_name(discovery.device)
             for (address, discovery) in self._discovered_devices.items()
         }
         return self.async_show_form(
