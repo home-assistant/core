@@ -227,7 +227,13 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
                     },
                 ) from err
             except ValueError as err:
-                raise HomeAssistantError(err) from err
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="openrgb_error",
+                    translation_placeholders={
+                        "error": str(err),
+                    },
+                ) from err
 
     async def _async_apply_mode(self, mode: str) -> None:
         """Apply the given mode to the device."""
@@ -244,7 +250,13 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
                     },
                 ) from err
             except ValueError as err:
-                raise HomeAssistantError(err) from err
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="openrgb_error",
+                    translation_placeholders={
+                        "error": str(err),
+                    },
+                ) from err
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""

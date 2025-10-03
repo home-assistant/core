@@ -469,12 +469,17 @@ async def test_turn_off_light_without_off_mode(
 
 # Test error handling
 @pytest.mark.usefixtures("init_integration")
-async def test_turn_on_light_with_color_error_connection(
+@pytest.mark.parametrize(
+    "exception",
+    [OpenRGBDisconnected(), ValueError("Invalid color")],
+)
+async def test_turn_on_light_with_color_exceptions(
     hass: HomeAssistant,
     mock_openrgb_device: MagicMock,
+    exception: Exception,
 ) -> None:
-    """Test turning on the light with connection error when setting color."""
-    mock_openrgb_device.set_color.side_effect = OpenRGBDisconnected()
+    """Test turning on the light with exceptions when setting color."""
+    mock_openrgb_device.set_color.side_effect = exception
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -489,12 +494,17 @@ async def test_turn_on_light_with_color_error_connection(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_turn_on_light_with_mode_error_connection(
+@pytest.mark.parametrize(
+    "exception",
+    [OpenRGBDisconnected(), ValueError("Invalid mode")],
+)
+async def test_turn_on_light_with_mode_exceptions(
     hass: HomeAssistant,
     mock_openrgb_device: MagicMock,
+    exception: Exception,
 ) -> None:
-    """Test turning on the light with connection error when setting mode."""
-    mock_openrgb_device.set_mode.side_effect = OpenRGBDisconnected()
+    """Test turning on the light with exceptions when setting mode."""
+    mock_openrgb_device.set_mode.side_effect = exception
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
