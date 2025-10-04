@@ -10,9 +10,10 @@ from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .const import ACCOUNT_ID, API_TOKEN, LOGIN_URL
+
 from tests.common import MockConfigEntry
 
-from .const import ACCOUNT_ID, API_TOKEN, LOGIN_URL
 
 async def test_full_flow(
     hass: HomeAssistant,

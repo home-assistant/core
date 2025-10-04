@@ -7,11 +7,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pynintendoparental.device import Device
 import pytest
 
-from tests.common import MockConfigEntry
-
 from homeassistant.components.nintendo_parental.const import DOMAIN
 
 from .const import ACCOUNT_ID, API_TOKEN, LOGIN_URL
+
+from tests.common import MockConfigEntry
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
