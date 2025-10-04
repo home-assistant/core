@@ -74,58 +74,60 @@ async def test_migrations(hass: HomeAssistant) -> None:
 
 
 async def test_device_migration(
-    hass: HomeAssistant, mock_config_entry_v3: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test migration of device identifiers from v3 to v4."""
-    mock_config_entry_v3.add_to_hass(hass)
+    mock_config_entry.version = 3
+    mock_config_entry.add_to_hass(hass)
 
     device_registry = dr.async_get(hass)
 
     endpoint_device = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry_v3.entry_id,
-        identifiers={(DOMAIN, f"{mock_config_entry_v3.entry_id}_endpoint1")},
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_endpoint1")},
         name="Test Endpoint",
         model="Endpoint",
     )
 
     container_device = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry_v3.entry_id,
-        identifiers={(DOMAIN, f"{mock_config_entry_v3.entry_id}_test_container")},
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_test_container")},
         name="Test Container",
         model="Container",
         via_device_id=endpoint_device.id,
     )
 
     assert container_device.identifiers == {
-        (DOMAIN, f"{mock_config_entry_v3.entry_id}_test_container")
+        (DOMAIN, f"{mock_config_entry.entry_id}_test_container")
     }
 
-    assert await async_migrate_entry(hass, mock_config_entry_v3)
-    assert mock_config_entry_v3.version == 4
+    assert await async_migrate_entry(hass, mock_config_entry)
+    assert mock_config_entry.version == 4
 
     updated_device = device_registry.async_get(container_device.id)
-    expected_identifier = f"{mock_config_entry_v3.entry_id}_endpoint1_test_container"
+    expected_identifier = f"{mock_config_entry.entry_id}_endpoint1_test_container"
     assert updated_device.identifiers == {(DOMAIN, expected_identifier)}
 
 
 async def test_device_migration_skips_endpoints(
-    hass: HomeAssistant, mock_config_entry_v3: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test migration skips endpoint devices (those without via_device_id)."""
-    mock_config_entry_v3.add_to_hass(hass)
+    mock_config_entry.version = 3
+    mock_config_entry.add_to_hass(hass)
 
     device_registry = dr.async_get(hass)
 
     endpoint_device = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry_v3.entry_id,
-        identifiers={(DOMAIN, f"{mock_config_entry_v3.entry_id}_endpoint1")},
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_endpoint1")},
         name="Test Endpoint",
         model="Endpoint",
     )
 
-    assert await async_migrate_entry(hass, mock_config_entry_v3)
+    assert await async_migrate_entry(hass, mock_config_entry)
 
     updated_device = device_registry.async_get(endpoint_device.id)
     assert updated_device.identifiers == {
-        (DOMAIN, f"{mock_config_entry_v3.entry_id}_endpoint1")
+        (DOMAIN, f"{mock_config_entry.entry_id}_endpoint1")
     }

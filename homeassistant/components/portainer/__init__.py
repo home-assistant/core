@@ -79,16 +79,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
             parent_identifier = next(iter(parent_device.identifiers))
             endpoint_id = parent_identifier[1].split("_")[-1]
 
-            new_identifiers = {
-                (
-                    DOMAIN,
-                    f"{entry.entry_id}_{endpoint_id}_{identifier.split('_', 1)[1]}",
+            for domain, identifier in device.identifiers:
+                container_name = identifier.split("_", 1)[1]
+                new_identifier = (DOMAIN, f"{entry.entry_id}_{endpoint_id}_{container_name}")
+                device_registry.async_update_device(
+                    device.id, new_identifiers={new_identifier}
                 )
-                if domain == DOMAIN
-                else (domain, identifier)
-                for domain, identifier in device.identifiers
-            }
 
+        hass.config_entries.async_update_entry(entry=entry, version=4)
             device_registry.async_update_device(
                 device.id, new_identifiers=new_identifiers
             )
