@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_MODE,
-    CONF_NAME,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
@@ -40,7 +39,6 @@ from .utils import build_data_and_options, validate_api_key
 
 USER_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_LOCATION): LocationSelector(
             LocationSelectorConfig(radius=False, icon="")
         ),
@@ -99,7 +97,7 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_LONGITUDE] = location[CONF_LONGITUDE]
                 data, options = build_data_and_options(user_input)
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=data, options=options
+                    title=DEFAULT_NAME, data=data, options=options
                 )
             schema_data = user_input
         else:

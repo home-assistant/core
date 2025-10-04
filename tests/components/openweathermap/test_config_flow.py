@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.openweathermap.const import (
     DEFAULT_LANGUAGE,
+    DEFAULT_NAME,
     DEFAULT_OWM_MODE,
     DOMAIN,
     OWM_MODE_V30,
@@ -19,7 +20,6 @@ from homeassistant.const import (
     CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_MODE,
-    CONF_NAME,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -29,7 +29,6 @@ from .conftest import LATITUDE, LONGITUDE
 from tests.common import MockConfigEntry
 
 CONFIG = {
-    CONF_NAME: "openweathermap",
     CONF_API_KEY: "foo",
     CONF_LATITUDE: LATITUDE,
     CONF_LONGITUDE: LONGITUDE,
@@ -38,7 +37,6 @@ CONFIG = {
 }
 
 USER_INPUT = {
-    CONF_NAME: "openweathermap",
     CONF_API_KEY: "foo",
     CONF_LOCATION: {CONF_LATITUDE: LATITUDE, CONF_LONGITUDE: LONGITUDE},
     CONF_LANGUAGE: DEFAULT_LANGUAGE,
@@ -67,7 +65,7 @@ async def test_successful_config_flow(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == USER_INPUT[CONF_NAME]
+    assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_LATITUDE] == USER_INPUT[CONF_LOCATION][CONF_LATITUDE]
     assert result["data"][CONF_LONGITUDE] == USER_INPUT[CONF_LOCATION][CONF_LONGITUDE]
     assert result["data"][CONF_API_KEY] == USER_INPUT[CONF_API_KEY]
