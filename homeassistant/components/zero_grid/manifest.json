@@ -1,0 +1,14 @@
+{
+  "domain": "zero_grid",
+  "name": "ZeroGrid",
+  "codeowners": ["@mike-debney"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/zero_grid",
+  "homekit": {},
+  "iot_class": "calculated",
+  "quality_scale": "bronze",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}
