@@ -44,6 +44,7 @@ async def test_serial_flow_success(hass: HomeAssistant) -> None:
         )
         assert configure_serial_result["type"] is FlowResultType.FORM
         assert configure_serial_result["step_id"] == "configure_serial"
+        assert configure_serial_result["errors"] == {}
 
         client = MagicMock()
         client.try_connect_and_fetch_identifier.return_value = SimpleNamespace(
@@ -207,6 +208,7 @@ async def test_tcp_flow_success(hass: HomeAssistant) -> None:
     )
     assert configure_tcp_result["type"] is FlowResultType.FORM
     assert configure_tcp_result["step_id"] == "configure_tcp"
+    assert configure_tcp_result["errors"] == {}
 
     client = MagicMock()
     client.try_connect_and_fetch_identifier.return_value = SimpleNamespace(
