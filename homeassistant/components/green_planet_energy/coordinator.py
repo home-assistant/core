@@ -46,6 +46,14 @@ class GreenPlanetEnergyUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await self.api.get_electricity_prices()
         except GreenPlanetEnergyConnectionError as err:
-            raise UpdateFailed(f"Connection error: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
         except GreenPlanetEnergyAPIError as err:
-            raise UpdateFailed(f"API error: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": str(err)},
+            ) from err

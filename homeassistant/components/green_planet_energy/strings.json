@@ -29,5 +29,13 @@
         "name": "Current price"
       }
     }
+  },
+  "exceptions": {
+    "connection_error": {
+      "message": "Connection error: {error}"
+    },
+    "api_error": {
+      "message": "API error: {error}"
+    }
   }
 }
