@@ -176,7 +176,6 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OnLevel,),
-        not_device_type=(device_types.Speaker,),
         # allow None value to account for 'default' value
         allow_none_value=True,
     ),
@@ -368,6 +367,23 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
+            key="speaker_setpoint",
+            translation_key="speaker_setpoint",
+            native_unit_of_measurement=PERCENTAGE,
+            native_max_value=100,
+            native_min_value=0,
+            native_step=1,
+            device_to_ha=lambda x: round(x / 2.55),  # Matter range (0-255)
+            ha_to_device=lambda x: round(x * 2.55),  # HA range (0–100.0%)
+            mode=NumberMode.SLIDER,
+        ),
+        entity_class=MatterLevelControlNumber,
+        required_attributes=(clusters.LevelControl.Attributes.CurrentLevel,),
+        device_type=(device_types.Speaker,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
             key="AutoRelockTimer",
             entity_category=EntityCategory.CONFIG,
             translation_key="auto_relock_timer",
@@ -439,19 +455,6 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
-            key="speaker_setpoint",
-            translation_key="speaker_setpoint",
-            native_unit_of_measurement=PERCENTAGE,
-            native_max_value=100,
-            native_min_value=0,
-            native_step=1,
-            device_to_ha=lambda x: round(x / 2.55),  # Matter range (0-255)
-            ha_to_device=lambda x: round(x * 2.55),  # HA range (0–100.0%)
-            mode=NumberMode.SLIDER,
-        ),
-        entity_class=MatterLevelControlNumber,
-        required_attributes=(clusters.LevelControl.Attributes.CurrentLevel,),
-        device_type=(device_types.Speaker,),
             key="DoorLockWrongCodeEntryLimit",
             entity_category=EntityCategory.CONFIG,
             translation_key="wrong_code_entry_limit",

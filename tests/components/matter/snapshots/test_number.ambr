@@ -2654,8 +2654,64 @@
     'state': '4.0',
   })
 # ---
+# name: test_numbers[speaker][number.audiolink_on_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.audiolink_on_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'On level',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_level',
+    'unique_id': '00000000000004D2-000000000000006B-MatterNodeDevice-1-on_level-8-17',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[speaker][number.audiolink_on_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'AudioLink On level',
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.audiolink_on_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '255',
+  })
+# ---
 # name: test_numbers[speaker][number.audiolink_volume-entry]
-# name: test_numbers[valve][number.valve_default_open_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2665,10 +2721,6 @@
       'min': 0,
       'mode': <NumberMode.SLIDER: 'slider'>,
       'step': 1,
-      'max': 65534,
-      'min': 1,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2678,8 +2730,6 @@
     'domain': 'number',
     'entity_category': None,
     'entity_id': 'number.audiolink_volume',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.valve_default_open_duration',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2692,7 +2742,6 @@
     'original_device_class': None,
     'original_icon': None,
     'original_name': 'Volume',
-    'original_name': 'Default open duration',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2718,6 +2767,43 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '18',
+  })
+# ---
+# name: test_numbers[valve][number.valve_default_open_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.valve_default_open_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Default open duration',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
     'translation_key': 'valve_configuration_and_control_default_open_duration',
     'unique_id': '00000000000004D2-000000000000004B-MatterNodeDevice-1-ValveConfigurationAndControlDefaultOpenDuration-129-1',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
