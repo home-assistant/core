@@ -2,7 +2,11 @@
 
 from typing import Any
 
-from homeassistant.components.notify import NotifyEntity, NotifyEntityFeature
+from homeassistant.components.notify import (
+    NotifyEntity,
+    NotifyEntityDescription,
+    NotifyEntityFeature,
+)
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -37,9 +41,10 @@ class TelegramBotNotifyEntity(TelegramBotEntity, NotifyEntity):
         subentry: ConfigSubentry,
     ) -> None:
         """Initialize a notification entity."""
-        super().__init__(config_entry)
+        super().__init__(
+            config_entry, NotifyEntityDescription(key=subentry.data[CONF_CHAT_ID])
+        )
         self.chat_id = subentry.data[CONF_CHAT_ID]
-        self._attr_unique_id = f"{self.bot_id}_{self.chat_id}"
         self.name = subentry.title
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
