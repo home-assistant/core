@@ -60,7 +60,7 @@ pyserial==3.5
 pyspeex-noise==1.0.2
 python-slugify==8.0.4
 PyTurboJPEG==1.8.0
-PyYAML==6.0.2
+PyYAML==6.0.3
 requests==2.32.5
 securetar==2025.2.1
 SQLAlchemy==2.0.41

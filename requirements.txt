@@ -37,7 +37,7 @@ orjson==3.11.3
 packaging>=23.1
 psutil-home-assistant==0.0.1
 python-slugify==8.0.4
-PyYAML==6.0.2
+PyYAML==6.0.3
 requests==2.32.5
 securetar==2025.2.1
 SQLAlchemy==2.0.41
