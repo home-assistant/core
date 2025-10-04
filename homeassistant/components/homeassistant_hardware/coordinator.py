@@ -40,7 +40,6 @@ class FirmwareUpdateCoordinator(DataUpdateCoordinator[FirmwareManifest]):
             update_interval=FIRMWARE_REFRESH_INTERVAL,
             config_entry=config_entry,
         )
-        self.hass = hass
         self.session = session
 
         self.client = FirmwareUpdateClient(url, session)

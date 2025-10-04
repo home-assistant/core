@@ -1,6 +1,18 @@
 # serializer version: 1
 # name: test_diagnostics_cloudhook_instance
   dict({
+    'devices': list([
+      dict({
+        'battery': 'high',
+        'device_id': '**REDACTED**',
+        'device_type': 'Scale',
+        'first_session_date': None,
+        'hashed_device_id': '**REDACTED**',
+        'last_session_date': '2023-09-04T22:39:39+00:00',
+        'model': 5,
+        'raw_model': 'Body+',
+      }),
+    ]),
     'has_cloudhooks': True,
     'has_valid_external_webhook_url': True,
     'received_activity_data': False,
@@ -64,6 +76,18 @@
 # ---
 # name: test_diagnostics_polling_instance
   dict({
+    'devices': list([
+      dict({
+        'battery': 'high',
+        'device_id': '**REDACTED**',
+        'device_type': 'Scale',
+        'first_session_date': None,
+        'hashed_device_id': '**REDACTED**',
+        'last_session_date': '2023-09-04T22:39:39+00:00',
+        'model': 5,
+        'raw_model': 'Body+',
+      }),
+    ]),
     'has_cloudhooks': False,
     'has_valid_external_webhook_url': False,
     'received_activity_data': False,
@@ -127,6 +151,18 @@
 # ---
 # name: test_diagnostics_webhook_instance
   dict({
+    'devices': list([
+      dict({
+        'battery': 'high',
+        'device_id': '**REDACTED**',
+        'device_type': 'Scale',
+        'first_session_date': None,
+        'hashed_device_id': '**REDACTED**',
+        'last_session_date': '2023-09-04T22:39:39+00:00',
+        'model': 5,
+        'raw_model': 'Body+',
+      }),
+    ]),
     'has_cloudhooks': False,
     'has_valid_external_webhook_url': True,
     'received_activity_data': False,

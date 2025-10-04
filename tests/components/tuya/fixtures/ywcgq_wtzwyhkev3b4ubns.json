@@ -1,20 +1,22 @@
 {
-  "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
+  "endpoint": "https://openapi.tuyaus.com",
+  "auth_type": 0,
+  "country_code": "1",
+  "app_type": "tuyaSmart",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bf27a4********368f4w",
-  "name": "Nivel del tanque A",
+  "name": "House Water Level",
+  "model": "EPT_Ultrasonic level sensor",
   "category": "ywcgq",
   "product_id": "wtzwyhkev3b4ubns",
   "product_name": "Tank A Level",
   "online": true,
   "sub": false,
-  "time_zone": "+01:00",
-  "active_time": "2024-01-05T10:22:24+00:00",
-  "create_time": "2024-01-05T10:22:24+00:00",
-  "update_time": "2024-01-05T10:22:24+00:00",
+  "time_zone": "-06:00",
+  "active_time": "2023-11-02T22:48:03+00:00",
+  "create_time": "2023-11-02T22:48:03+00:00",
+  "update_time": "2023-11-09T13:32:38+00:00",
   "function": {
     "max_set": {
       "type": "Integer",
@@ -126,14 +128,12 @@
     }
   },
   "status": {
-    "liquid_state": "normal",
-    "liquid_depth": 77,
+    "liquid_state": "upper_alarm",
+    "liquid_depth": 42,
     "max_set": 100,
-    "mini_set": 10,
-    "installation_height": 980,
-    "liquid_depth_max": 140,
-    "liquid_level_percent": 97
-  },
-  "set_up": false,
-  "support_local": true
+    "mini_set": 0,
+    "installation_height": 560,
+    "liquid_depth_max": 100,
+    "liquid_level_percent": 100
+  }
 }

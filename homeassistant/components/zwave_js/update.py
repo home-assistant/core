@@ -10,7 +10,6 @@ from datetime import datetime, timedelta
 from typing import Any, Final, cast
 
 from awesomeversion import AwesomeVersion
-from zwave_js_server.const import NodeStatus
 from zwave_js_server.exceptions import BaseZwaveJSServerError, FailedZWaveCommand
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.firmware import (
@@ -43,7 +42,7 @@ from .models import ZwaveJSConfigEntry
 PARALLEL_UPDATES = 1
 
 UPDATE_DELAY_STRING = "delay"
-UPDATE_DELAY_INTERVAL = 5  # In minutes
+UPDATE_DELAY_INTERVAL = 15  # In seconds
 ATTR_LATEST_VERSION_FIRMWARE = "latest_version_firmware"
 
 
@@ -130,11 +129,11 @@ async def async_setup_entry(
     @callback
     def async_add_firmware_update_entity(node: ZwaveNode) -> None:
         """Add firmware update entity."""
-        # We need to delay the first update of each entity to avoid flooding the network
-        # so we maintain a counter to schedule first update in UPDATE_DELAY_INTERVAL
-        # minute increments.
+        # Delay the first update of each entity to avoid spamming the firmware server.
+        # Maintain a counter to schedule first update in UPDATE_DELAY_INTERVAL
+        # second increments.
         cnt[UPDATE_DELAY_STRING] += 1
-        delay = timedelta(minutes=(cnt[UPDATE_DELAY_STRING] * UPDATE_DELAY_INTERVAL))
+        delay = timedelta(seconds=(cnt[UPDATE_DELAY_STRING] * UPDATE_DELAY_INTERVAL))
         driver = client.driver
         assert driver is not None  # Driver is ready before platforms are loaded.
         if node.is_controller_node:
@@ -192,7 +191,6 @@ class ZWaveFirmwareUpdateEntity(UpdateEntity):
         self.entity_description = entity_description
         self.node = node
         self._latest_version_firmware: FirmwareUpdateInfo | None = None
-        self._status_unsub: Callable[[], None] | None = None
         self._poll_unsub: Callable[[], None] | None = None
         self._progress_unsub: Callable[[], None] | None = None
         self._finished_unsub: Callable[[], None] | None = None
@@ -212,12 +210,6 @@ class ZWaveFirmwareUpdateEntity(UpdateEntity):
     def extra_restore_state_data(self) -> ZWaveFirmwareUpdateExtraStoredData:
         """Return ZWave Node Firmware Update specific state data to be restored."""
         return ZWaveFirmwareUpdateExtraStoredData(self._latest_version_firmware)
-
-    @callback
-    def _update_on_status_change(self, _: dict[str, Any]) -> None:
-        """Update the entity when node is awake."""
-        self._status_unsub = None
-        self.hass.async_create_task(self._async_update())
 
     @callback
     def update_progress(self, event: dict[str, Any]) -> None:
@@ -268,14 +260,6 @@ class ZWaveFirmwareUpdateEntity(UpdateEntity):
             self._poll_unsub = async_call_later(
                 self.hass, timedelta(days=1), self._async_update
             )
-            return
-
-        # If device is asleep, wait for it to wake up before attempting an update
-        if self.node.status == NodeStatus.ASLEEP:
-            if not self._status_unsub:
-                self._status_unsub = self.node.once(
-                    "wake up", self._update_on_status_change
-                )
             return
 
         try:
@@ -429,17 +413,14 @@ class ZWaveFirmwareUpdateEntity(UpdateEntity):
         ):
             self._attr_latest_version = self._attr_installed_version
 
-        # Spread updates out in 5 minute increments to avoid flooding the network
+        # Spread updates out in 15 second increments
+        # to avoid spamming the firmware server
         self.async_on_remove(
             async_call_later(self.hass, self._delay, self._async_update)
         )
 
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed."""
-        if self._status_unsub:
-            self._status_unsub()
-            self._status_unsub = None
-
         if self._poll_unsub:
             self._poll_unsub()
             self._poll_unsub = None

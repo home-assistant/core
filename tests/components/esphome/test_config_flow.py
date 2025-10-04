@@ -1045,8 +1045,11 @@ async def test_encryption_key_valid_psk(
     assert result["step_id"] == "encryption_key"
     assert result["description_placeholders"] == {"name": "ESPHome"}
 
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(uses_password=False, name="test")
+    device_info = DeviceInfo(uses_password=False, name="test")
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
@@ -1181,6 +1184,42 @@ async def test_reauth_attempt_to_change_mac_aborts(
     }
 
 
+@pytest.mark.usefixtures("mock_zeroconf", "mock_setup_entry")
+async def test_reauth_password_changed(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test reauth when password has changed."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053, CONF_PASSWORD: "old_password"},
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    mock_client.connect.side_effect = InvalidAuthAPIError("Invalid password")
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "authenticate"
+    assert result["description_placeholders"] == {
+        "name": "Mock Title",
+    }
+
+    mock_client.connect.side_effect = None
+    mock_client.connect.return_value = None
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=True, name="test", mac_address="11:22:33:44:55:aa"
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_PASSWORD: "new_password"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_PASSWORD] == "new_password"
+
+
 @pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
 async def test_reauth_fixed_via_dashboard(
     hass: HomeAssistant,
@@ -1236,7 +1275,7 @@ async def test_reauth_fixed_via_dashboard_add_encryption_remove_password(
 ) -> None:
     """Test reauth fixed automatically via dashboard with password removed."""
     mock_client.device_info.side_effect = (
-        InvalidAuthAPIError,
+        InvalidEncryptionKeyAPIError("Wrong key", "test"),
         DeviceInfo(uses_password=False, name="test", mac_address="11:22:33:44:55:aa"),
     )
 
@@ -1363,10 +1402,13 @@ async def test_reauth_confirm_invalid(
     assert result["errors"]
     assert result["errors"]["base"] == "invalid_psk"
 
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            uses_password=False, name="test", mac_address="11:22:33:44:55:aa"
-        )
+    device_info = DeviceInfo(
+        uses_password=False, name="test", mac_address="11:22:33:44:55:aa"
+    )
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
@@ -1404,10 +1446,13 @@ async def test_reauth_confirm_invalid_with_unique_id(
     assert result["errors"]
     assert result["errors"]["base"] == "invalid_psk"
 
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            uses_password=False, name="test", mac_address="11:22:33:44:55:aa"
-        )
+    device_info = DeviceInfo(
+        uses_password=False, name="test", mac_address="11:22:33:44:55:aa"
+    )
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_NOISE_PSK: VALID_NOISE_PSK}
@@ -1449,6 +1494,45 @@ async def test_reauth_encryption_key_removed(hass: HomeAssistant) -> None:
     assert entry.data[CONF_NOISE_PSK] == ""
 
 
+async def test_reauth_different_device_at_same_address(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test reauth aborts when a different device is found at the same IP address."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_NOISE_PSK: VALID_NOISE_PSK,
+            CONF_DEVICE_NAME: "old_device",
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    # Mock a different device at the same IP (different MAC address)
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=False,
+        name="new_device",
+        legacy_bluetooth_proxy_version=0,
+        # Different MAC address than the entry
+        mac_address="AA:BB:CC:DD:EE:FF",
+        esphome_version="1.0.0",
+    )
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_unique_id_changed"
+    assert result["description_placeholders"] == {
+        "name": "old_device",
+        "host": "127.0.0.1",
+        "expected_mac": "11:22:33:44:55:aa",
+        "unexpected_mac": "aa:bb:cc:dd:ee:ff",
+        "unexpected_device_name": "new_device",
+    }
+
+
 @pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
 async def test_discovery_dhcp_updates_host(
     hass: HomeAssistant, mock_client: APIClient
@@ -1460,8 +1544,11 @@ async def test_discovery_dhcp_updates_host(
         unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(name="test8266", mac_address="1122334455aa")
+    device_info = DeviceInfo(name="test8266", mac_address="1122334455aa")
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
 
     service_info = DhcpServiceInfo(
@@ -1496,8 +1583,11 @@ async def test_discovery_dhcp_does_not_update_host_wrong_mac(
         unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(name="test8266", mac_address="1122334455ff")
+    device_info = DeviceInfo(name="test8266", mac_address="1122334455ff")
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
 
     service_info = DhcpServiceInfo(
@@ -1602,7 +1692,12 @@ async def test_discovery_dhcp_no_changes(
     )
     entry.add_to_hass(hass)
 
-    mock_client.device_info = AsyncMock(return_value=DeviceInfo(name="test8266"))
+    device_info = DeviceInfo(name="test8266")
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
+    )
 
     service_info = DhcpServiceInfo(
         ip="192.168.43.183",
@@ -2034,12 +2129,15 @@ async def test_user_flow_name_conflict_migrate(
         unique_id="11:22:33:44:55:cc",
     )
     existing_entry.add_to_hass(hass)
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            uses_password=False,
-            name="test",
-            mac_address="11:22:33:44:55:AA",
-        )
+    device_info = DeviceInfo(
+        uses_password=False,
+        name="test",
+        mac_address="11:22:33:44:55:AA",
+    )
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -2084,12 +2182,15 @@ async def test_user_flow_name_conflict_overwrite(
         unique_id="11:22:33:44:55:cc",
     )
     existing_entry.add_to_hass(hass)
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            uses_password=False,
-            name="test",
-            mac_address="11:22:33:44:55:AA",
-        )
+    device_info = DeviceInfo(
+        uses_password=False,
+        name="test",
+        mac_address="11:22:33:44:55:AA",
+    )
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -2503,7 +2604,7 @@ async def test_discovery_dhcp_no_probe_same_host_port_none(
     service_info = DhcpServiceInfo(
         ip="192.168.43.183",
         hostname="test8266",
-        macaddress="11:22:33:44:55:aa",  # Same MAC as configured
+        macaddress="1122334455aa",  # Same MAC as configured
     )
 
     result = await hass.config_entries.flow.async_init(
