@@ -2766,7 +2766,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '18',
+    'state': '19',
   })
 # ---
 # name: test_numbers[valve][number.valve_default_open_duration-entry]
