@@ -136,7 +136,7 @@ async def init_integration(
     if grid is None:
         grid = {}
 
-    platforms = []
+    platforms = [platform] if platform else []
     if platform:
         platforms.append(platform)
 
