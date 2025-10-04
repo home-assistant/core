@@ -711,7 +711,9 @@ async def test_template_no_hass(hass: HomeAssistant) -> None:
         "{{ no_such_function('group.foo')|map(attribute='entity_id')|list }}",
     )
     for value in options:
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(
+            vol.Invalid, match="Validates schema outside the event loop"
+        ):
             await hass.async_add_executor_job(schema, value)
 
 
