@@ -31,6 +31,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="192.168.0.20:8085",
         data=VALID_CONFIG,
+        entry_id="test_entry_id",
     )
 
 
