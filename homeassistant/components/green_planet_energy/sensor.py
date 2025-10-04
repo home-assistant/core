@@ -61,7 +61,8 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         translation_key="current_price",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
         suggested_display_precision=4,
-        value_fn=lambda api, data: api.get_current_price(data, dt_util.now().hour),
+        # Don't use lambda for current_price, handled in native_value property
+        value_fn=None,
     ),
 ]
 
@@ -108,13 +109,19 @@ class GreenPlanetEnergySensor(
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        # Use value_fn to get calculated values
+        # Special handling for current_price to use the current hour
+        if self.entity_description.key == "gpe_current_price":
+            return self.coordinator.api.get_current_price(
+                self.coordinator.data, dt_util.now().hour
+            )
+
+        # Use value_fn to get calculated values for other sensors
         if self.entity_description.value_fn:
             return self.entity_description.value_fn(
                 self.coordinator.api, self.coordinator.data
             )
 
-        # All our sensors have value_fn, so this should never happen
+        # All our sensors have value_fn or are handled above
         return None
 
     @property
