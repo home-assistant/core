@@ -35,6 +35,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -43,7 +44,13 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import MOCK_MAC, init_integration, register_device, register_entity
+from . import (
+    MOCK_MAC,
+    init_integration,
+    patch_platforms,
+    register_device,
+    register_entity,
+)
 from .conftest import MOCK_STATUS_COAP
 
 from tests.common import mock_restore_cache, mock_restore_cache_with_extra_data
@@ -53,6 +60,13 @@ DEVICE_BLOCK_ID = 4
 EMETER_BLOCK_ID = 5
 GAS_VALVE_BLOCK_ID = 6
 ENTITY_ID = f"{CLIMATE_DOMAIN}.test_name"
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms([Platform.CLIMATE, Platform.SWITCH]):
+        yield
 
 
 async def test_climate_hvac_mode(
