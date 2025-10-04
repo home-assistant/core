@@ -277,7 +277,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     async def _handle_refresh_interval(self, _now: datetime | None = None) -> None:
         """Handle a refresh interval occurrence."""
         self._unsub_refresh = None
-        async with self._debounced_refresh.lock:
+        async with self._debounced_refresh.async_lock():
             await self._async_refresh(log_failures=True, scheduled=True)
 
     async def async_request_refresh(self) -> None:
@@ -300,7 +300,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         fails. Additionally logging is handled by config entry setup
         to ensure that multiple retries do not cause log spam.
         """
-        async with self._debounced_refresh.lock:
+        async with self._debounced_refresh.async_lock():
             await self._async_config_entry_first_refresh()
 
     async def _async_config_entry_first_refresh(self) -> None:
@@ -376,7 +376,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
     async def async_refresh(self) -> None:
         """Refresh data and log errors."""
-        async with self._debounced_refresh.lock:
+        async with self._debounced_refresh.async_lock():
             await self._async_refresh(log_failures=True)
 
     async def _async_refresh(  # noqa: C901

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
+from contextlib import asynccontextmanager
 from logging import Logger
+from typing import Any
 
 from homeassistant.core import HassJob, HomeAssistant, callback
 
@@ -36,6 +38,7 @@ class Debouncer[_R_co]:
         self._timer_task: asyncio.TimerHandle | None = None
         self._execute_at_end_of_timer: bool = False
         self._execute_lock = asyncio.Lock()
+        self._execute_lock_owner: asyncio.Task[Any] | None = None
         self._background = background
         self._job: HassJob[[], _R_co] | None = (
             None
@@ -46,10 +49,16 @@ class Debouncer[_R_co]:
         )
         self._shutdown_requested = False
 
-    @property
-    def lock(self) -> asyncio.Lock:
-        """Return the lock used to ensure only one call is running at a time."""
-        return self._execute_lock
+    @asynccontextmanager
+    async def async_lock(self) -> AsyncGenerator[None]:
+        """Return an async context manager to lock the debouncer."""
+        if self._execute_lock_owner is asyncio.current_task():
+            raise RuntimeError("Debouncer lock is not re-entrant")
+
+        async with self._execute_lock:
+            self._execute_lock_owner = asyncio.current_task()
+            yield
+            self._execute_lock_owner = None
 
     @property
     def function(self) -> Callable[[], _R_co] | None:
@@ -103,7 +112,7 @@ class Debouncer[_R_co]:
         if not self._async_schedule_or_call_now():
             return
 
-        async with self._execute_lock:
+        async with self.async_lock():
             # Abort if timer got set while we're waiting for the lock.
             if self._timer_task:
                 return
@@ -127,7 +136,7 @@ class Debouncer[_R_co]:
         if self._execute_lock.locked():
             return
 
-        async with self._execute_lock:
+        async with self.async_lock():
             # Abort if timer got set while we're waiting for the lock.
             if self._timer_task:
                 return
