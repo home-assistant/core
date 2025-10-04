@@ -14,13 +14,12 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_LANGUAGE,
     CONF_LATITUDE,
-    CONF_LONGITUDE,
     CONF_LOCATION,
+    CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     LanguageSelector,
     LanguageSelectorConfig,
@@ -45,12 +44,8 @@ USER_SCHEMA = vol.Schema(
         vol.Required(CONF_LOCATION): LocationSelector(
             LocationSelectorConfig(radius=False, icon="")
         ),
-        vol.Optional(
-            CONF_LANGUAGE, default=DEFAULT_LANGUAGE
-        ): LanguageSelector(
-            LanguageSelectorConfig(
-                languages=LANGUAGES, native_name=True, sort=True
-            )
+        vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
+            LanguageSelectorConfig(languages=LANGUAGES, native_name=True)
         ),
         vol.Required(CONF_API_KEY): str,
         vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): vol.In(OWM_MODES),
@@ -59,12 +54,8 @@ USER_SCHEMA = vol.Schema(
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Optional(
-            CONF_LANGUAGE, default=DEFAULT_LANGUAGE
-        ): LanguageSelector(
-            LanguageSelectorConfig(
-                languages=LANGUAGES, native_name=True, sort=True
-            )
+        vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
+            LanguageSelectorConfig(languages=LANGUAGES, native_name=True)
         ),
         vol.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): vol.In(OWM_MODES),
     }
