@@ -10,7 +10,7 @@ aiohttp==3.12.15
 aiohttp_cors==0.8.1
 aiousbwatcher==1.1.1
 aiozoneinfo==0.2.3
-annotatedyaml==0.4.5
+annotatedyaml==1.0.2
 astral==2.2
 async-interrupt==1.2.2
 async-upnp-client==0.45.0
@@ -24,7 +24,7 @@ bleak-retry-connector==4.4.3
 bleak==1.0.1
 bluetooth-adapters==2.1.0
 bluetooth-auto-recovery==1.5.3
-bluetooth-data-tools==1.28.2
+bluetooth-data-tools==1.28.3
 cached-ipaddress==0.10.0
 certifi>=2021.5.30
 ciso8601==2.3.3
@@ -35,7 +35,7 @@ file-read-backwards==2.0.0
 fnv-hash-fast==1.5.0
 go2rtc-client==0.2.1
 ha-ffmpeg==3.2.2
-habluetooth==5.6.4
+habluetooth==5.7.0
 hass-nabucasa==1.2.0
 hassil==3.2.0
 home-assistant-bluetooth==1.13.1
@@ -60,7 +60,7 @@ pyserial==3.5
 pyspeex-noise==1.0.2
 python-slugify==8.0.4
 PyTurboJPEG==1.8.0
-PyYAML==6.0.2
+PyYAML==6.0.3
 requests==2.32.5
 securetar==2025.2.1
 SQLAlchemy==2.0.41
@@ -88,9 +88,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.72.1
-grpcio-status==1.72.1
-grpcio-reflection==1.72.1
+grpcio==1.75.1
+grpcio-status==1.75.1
+grpcio-reflection==1.75.1
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
