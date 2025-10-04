@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import serial.tools.list_ports
 import voluptuous as vol
@@ -103,13 +103,13 @@ def validate_and_connect_tcp(
 
 def scan_serial_comports() -> tuple[list[str] | None, str | None]:
     """Find and store available com ports for the GUI dropdown."""
-    com_ports = serial.tools.list_ports.comports(include_links=True)
-    com_ports_list = []
-    for port in com_ports:
-        com_ports_list.append(port.device)
+    comports = serial.tools.list_ports.comports(include_links=True)
+    comports_list = []
+    for port in comports:
+        comports_list.append(port.device)
         _LOGGER.debug("COM port option: %s", port.device)
-    if len(com_ports_list) > 0:
-        return com_ports_list, com_ports_list[0]
+    if len(comports_list) > 0:
+        return comports_list, comports_list[0]
     _LOGGER.warning("No com ports found. Need a valid RS485 device to communicate")
     return None, None
 
@@ -286,36 +286,29 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     def _get_default_transport(self) -> str:
-        if self.source == SOURCE_RECONFIGURE:
-            return self._get_reconfigure_entry().data[CONF_TRANSPORT]
-
-        # Fallback to serial transport as default
-        return TRANSPORT_SERIAL
+        return self._get_or_default(CONF_TRANSPORT, TRANSPORT_SERIAL)
 
     def _get_default_inverter_serial_address(self) -> int:
-        if self.source == SOURCE_RECONFIGURE:
-            return self._get_reconfigure_entry().data[CONF_INVERTER_SERIAL_ADDRESS]
-
-        # Fallback to default inverter serial address
-        return INVERTER_SERIAL_ADDRESS_DEFAULT
+        return self._get_or_default(
+            CONF_INVERTER_SERIAL_ADDRESS, INVERTER_SERIAL_ADDRESS_DEFAULT
+        )
 
     def _get_default_serial_comport(self) -> str | None:
-        if self.source == SOURCE_RECONFIGURE:
-            return self._get_reconfigure_entry().data[CONF_SERIAL_COMPORT]
-
-        # Fallback to scanned default comport
-        return self._serial_comport_default
+        return self._get_or_default(CONF_SERIAL_COMPORT, self._serial_comport_default)
 
     def _get_default_tcp_host(self) -> str | None:
-        if self.source == SOURCE_RECONFIGURE:
-            return self._get_reconfigure_entry().data[CONF_TCP_HOST]
-
-        # Fallback to None
-        return None
+        return self._get_or_default(CONF_TCP_HOST, None)
 
     def _get_default_tcp_port(self) -> int:
-        if self.source == SOURCE_RECONFIGURE:
-            return self._get_reconfigure_entry().data[CONF_TCP_PORT]
+        return self._get_or_default(CONF_TCP_PORT, TCP_PORT_DEFAULT)
 
-        # Fallback to default TCP port
-        return TCP_PORT_DEFAULT
+    GetOrDefaultType = TypeVar("GetOrDefaultType")
+
+    def _get_or_default(self, key: str, default: GetOrDefaultType) -> GetOrDefaultType:
+        if self.source == SOURCE_RECONFIGURE:
+            reconfigure_data = self._get_reconfigure_entry().data
+
+            if key in reconfigure_data:
+                return reconfigure_data[key]
+
+        return default

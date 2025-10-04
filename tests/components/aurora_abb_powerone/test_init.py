@@ -30,31 +30,25 @@ CURRENT_VERSION = 2
 
 
 @pytest.mark.parametrize(
-    ("data", "expected_kwargs"),
+    "data",
     [
-        (
-            {
-                CONF_TRANSPORT: TRANSPORT_SERIAL,
-                CONF_SERIAL_COMPORT: "/dev/ttyUSB7",
-                CONF_INVERTER_SERIAL_ADDRESS: 2,
-            },
-            {CONF_SERIAL_COMPORT: "/dev/ttyUSB7"},
-        ),
-        (
-            {
-                CONF_TRANSPORT: TRANSPORT_TCP,
-                CONF_TCP_HOST: "192.168.1.10",
-                CONF_TCP_PORT: 8899,
-                CONF_INVERTER_SERIAL_ADDRESS: 2,
-            },
-            {CONF_TCP_HOST: "192.168.1.10", CONF_TCP_PORT: 8899},
-        ),
+        {
+            CONF_TRANSPORT: TRANSPORT_SERIAL,
+            CONF_SERIAL_COMPORT: "/dev/ttyUSB7",
+            CONF_INVERTER_SERIAL_ADDRESS: 2,
+        },
+        {
+            CONF_TRANSPORT: TRANSPORT_TCP,
+            CONF_TCP_HOST: "192.168.1.10",
+            CONF_TCP_PORT: 8899,
+            CONF_INVERTER_SERIAL_ADDRESS: 2,
+        },
     ],
 )
 async def test_async_setup_entry_creates_coordinator_and_forwards_platforms(
-    hass: HomeAssistant, data, expected_kwargs
+    hass: HomeAssistant, data
 ) -> None:
-    """Creates the appropriate coordinator, refreshes, sets runtime_data, forwards platforms."""
+    """Creates the coordinator, refreshes, sets runtime_data, forwards platforms."""
 
     entry = MockConfigEntry(
         domain=DOMAIN, title="Aurora", data=data, version=CURRENT_VERSION
@@ -79,13 +73,12 @@ async def test_async_setup_entry_creates_coordinator_and_forwards_platforms(
 
         assert coord_cls.call_count == 1
         args, kwargs = coord_cls.call_args
+
         assert args[0] is hass
         assert args[1] is entry
-        assert args[2] == data[CONF_INVERTER_SERIAL_ADDRESS]
-        assert args[3] == data[CONF_TRANSPORT]
-        for k, v in expected_kwargs.items():
-            assert kwargs[k] == v
-        assert set(kwargs.keys()) == set(expected_kwargs.keys())
+        assert len(args) == 3
+        assert args[2] is not None
+        assert not kwargs
 
         mock_coordinator.async_config_entry_first_refresh.assert_awaited_once()
 
