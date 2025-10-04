@@ -117,6 +117,8 @@ def _get_migrated_identifiers(
             new_identifier = f"{entry_id}_{endpoint_id}_{container_name}"
             new_identifiers.add((domain, new_identifier))
         else:
+            # Fallback: Keep old identifier if endpoint not found
+            # This can happen if via_device relationship is broken/missing
             new_identifiers.add((domain, identifier))
 
     return new_identifiers

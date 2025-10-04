@@ -130,5 +130,37 @@ async def test_device_migration(hass: HomeAssistant) -> None:
     updated_device = device_registry.async_get(container_device.id)
     expected_identifier = f"{entry.entry_id}_endpoint1_test_container"
     assert updated_device.identifiers == {(DOMAIN, expected_identifier)}
-    expected_identifier = f"{entry.entry_id}_endpoint1_test_container"
-    assert updated_device.identifiers == {(DOMAIN, expected_identifier)}
+
+
+async def test_device_migration_fallback(hass: HomeAssistant) -> None:
+    """Test migration fallback when via_device relationship is broken."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_URL: "http://test_host",
+            CONF_API_TOKEN: "test_key",
+            CONF_VERIFY_SSL: True,
+        },
+        unique_id="1",
+        version=3,
+    )
+    entry.add_to_hass(hass)
+
+    device_registry = dr.async_get(hass)
+
+    # Create container without via_device_id (fallback case)
+    container_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, f"{entry.entry_id}_orphaned_container")},
+        name="Orphaned Container",
+        model="Container",
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Should keep old format since no via_device (fallback)
+    updated_device = device_registry.async_get(container_device.id)
+    assert updated_device.identifiers == {
+        (DOMAIN, f"{entry.entry_id}_orphaned_container")
+    }
