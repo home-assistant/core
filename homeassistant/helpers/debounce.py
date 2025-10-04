@@ -57,8 +57,10 @@ class Debouncer[_R_co]:
 
         async with self._execute_lock:
             self._execute_lock_owner = asyncio.current_task()
-            yield
-            self._execute_lock_owner = None
+            try:
+                yield
+            finally:
+                self._execute_lock_owner = None
 
     @property
     def function(self) -> Callable[[], _R_co] | None:
