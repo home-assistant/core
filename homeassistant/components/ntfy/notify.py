@@ -49,6 +49,7 @@ ATTR_MARKDOWN = "markdown"
 ATTR_PRIORITY = "priority"
 ATTR_TAGS = "tags"
 ATTR_ATTACH_FILE = "attach_file"
+ATTR_FILENAME = "filename"
 
 SERVICE_PUBLISH_SCHEMA = cv.make_entity_service_schema(
     {
@@ -67,6 +68,7 @@ SERVICE_PUBLISH_SCHEMA = cv.make_entity_service_schema(
         vol.Optional(ATTR_CALL): cv.string,
         vol.Optional(ATTR_ICON): vol.All(vol.Url(), vol.Coerce(URL)),
         vol.Optional(ATTR_ATTACH_FILE): MediaSelector({"accept": ["*/*"]}),
+        vol.Optional(ATTR_FILENAME): cv.string,
     }
 )
 
@@ -155,7 +157,7 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
                     )
                 async with aiofiles.open(media.path, mode="rb") as f:
                     attachment = await f.read()
-                params["filename"] = media.path.name
+                params.setdefault(ATTR_FILENAME, media.path.name)
 
         msg = Message(topic=self.topic, **params)
         try:

@@ -342,6 +342,10 @@
           "name": "Attach local file",
           "description": "Attach images or other files by uploading from a local file, camera, or image media source. When selecting a camera feed, the current snapshot will be uploaded and attached to the notification."
         },
+        "filename": {
+          "name": "Attachment filename",
+          "description": "Specify a custom filename for the attachment, including the file extension (for example, attachment.jpg). If not provided, the original filename from local file will be used."
+        },
         "email": {
           "name": "Forward to email",
           "description": "Specify the address to forward the notification to, for example mail@example.com"

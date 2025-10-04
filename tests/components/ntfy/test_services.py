@@ -21,6 +21,7 @@ from homeassistant.components.ntfy.notify import (
     ATTR_CLICK,
     ATTR_DELAY,
     ATTR_EMAIL,
+    ATTR_FILENAME,
     ATTR_ICON,
     ATTR_MARKDOWN,
     ATTR_PRIORITY,
@@ -283,12 +284,13 @@ async def test_ntfy_publish_upload_camera_snapshot(
                     "media_content_id": "media-source://camera/camera.demo_camera",
                     "media_content_type": "image/jpeg",
                 },
+                ATTR_FILENAME: "Epic Sax Guy 10 Hours.jpg",
             },
             blocking=True,
         )
     mock_get_image.assert_called_once_with(hass, "camera.demo_camera")
     mock_aiontfy.publish.assert_called_once_with(
-        Message(topic="mytopic"),
+        Message(topic="mytopic", filename="Epic Sax Guy 10 Hours.jpg"),
         b"I play the sax\n",
     )
 

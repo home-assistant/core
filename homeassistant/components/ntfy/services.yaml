@@ -73,6 +73,11 @@ publish:
         media:
           accept:
             - "*"
+    filename:
+      required: false
+      selector:
+        text:
+      example: attachment.jpg
     email:
       required: false
       selector:
