@@ -186,10 +186,12 @@ def pytest_runtest_setup() -> None:
     destinations will be allowed.
 
     freezegun:
-    Modified to include https://github.com/spulec/freezegun/pull/424
+    Modified to include https://github.com/spulec/freezegun/pull/424 and improve class str.
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
+
+    freezegun.api.FakeDate = patch_time.HAFakeDate  # type: ignore[attr-defined]
 
     freezegun.api.datetime_to_fakedatetime = patch_time.ha_datetime_to_fakedatetime  # type: ignore[attr-defined]
     freezegun.api.FakeDatetime = patch_time.HAFakeDatetime  # type: ignore[attr-defined]
@@ -1657,10 +1659,12 @@ async def async_test_recorder(
     migrate_entity_ids = (
         migration.EntityIDMigration.migrate_data if enable_migrate_entity_ids else None
     )
-    legacy_event_id_foreign_key_exists = (
-        migration.EventIDPostMigration._legacy_event_id_foreign_key_exists
+    post_migrate_event_ids = (
+        migration.EventIDPostMigration.needs_migrate_impl
         if enable_migrate_event_ids
-        else lambda _: None
+        else lambda _1, _2, _3: migration.DataMigrationStatus(
+            needs_migrate=False, migration_done=True
+        )
     )
     with (
         patch(
@@ -1699,8 +1703,8 @@ async def async_test_recorder(
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.migration.EventIDPostMigration._legacy_event_id_foreign_key_exists",
-            side_effect=legacy_event_id_foreign_key_exists,
+            "homeassistant.components.recorder.migration.EventIDPostMigration.needs_migrate_impl",
+            side_effect=post_migrate_event_ids,
             autospec=True,
         ),
         patch(
@@ -1858,9 +1862,10 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
     # pylint: disable-next=c-extension-no-member
     bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
 
-    # Mock BlueZ management controller
+    # Mock BlueZ management controller to successfully setup
+    # This prevents the manager from operating in degraded mode
     mock_mgmt_bluetooth_ctl = Mock()
-    mock_mgmt_bluetooth_ctl.setup = AsyncMock(side_effect=OSError("Mocked error"))
+    mock_mgmt_bluetooth_ctl.setup = AsyncMock(return_value=None)
 
     with (
         patch.object(

@@ -7,7 +7,6 @@ set -e
 cd "$(realpath "$(dirname "$0")/..")"
 
 echo "Installing development dependencies..."
-uv pip install wheel --constraint homeassistant/package_constraints.txt --upgrade
 uv pip install \
   -e . \
   -r requirements_test.txt \
@@ -15,3 +14,5 @@ uv pip install \
   --constraint homeassistant/package_constraints.txt \
   --upgrade \
   --config-settings editable_mode=compat
+
+python3 -m script.translations develop --all

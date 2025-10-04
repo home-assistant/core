@@ -76,7 +76,13 @@
     },
     "reset_accessory": {
       "name": "Reset accessory",
-      "description": "Resets a HomeKit accessory."
+      "description": "Resets a HomeKit accessory.",
+      "fields": {
+        "entity_id": {
+          "name": "Entity",
+          "description": "Entity to reset."
+        }
+      }
     },
     "unpair": {
       "name": "Unpair an accessory or bridge",

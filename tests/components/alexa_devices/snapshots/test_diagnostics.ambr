@@ -2,7 +2,6 @@
 # name: test_device_diagnostics
   dict({
     'account name': 'Echo Test',
-    'bluetooth state': True,
     'capabilities': list([
       'AUDIO_PLAYER',
       'MICROPHONE',
@@ -12,9 +11,17 @@
     ]),
     'device family': 'mine',
     'device type': 'echo',
-    'do not disturb': False,
     'online': True,
-    'response style': None,
+    'sensors': dict({
+      'dnd': dict({
+        '__type': "<class 'aioamazondevices.api.AmazonDeviceSensor'>",
+        'repr': "AmazonDeviceSensor(name='dnd', value=False, error=False, scale=None)",
+      }),
+      'temperature': dict({
+        '__type': "<class 'aioamazondevices.api.AmazonDeviceSensor'>",
+        'repr': "AmazonDeviceSensor(name='temperature', value='22.5', error=False, scale='CELSIUS')",
+      }),
+    }),
     'serial number': 'echo_test_serial_number',
     'software version': 'echo_test_software_version',
   })
@@ -25,7 +32,6 @@
       'devices': list([
         dict({
           'account name': 'Echo Test',
-          'bluetooth state': True,
           'capabilities': list([
             'AUDIO_PLAYER',
             'MICROPHONE',
@@ -35,9 +41,17 @@
           ]),
           'device family': 'mine',
           'device type': 'echo',
-          'do not disturb': False,
           'online': True,
-          'response style': None,
+          'sensors': dict({
+            'dnd': dict({
+              '__type': "<class 'aioamazondevices.api.AmazonDeviceSensor'>",
+              'repr': "AmazonDeviceSensor(name='dnd', value=False, error=False, scale=None)",
+            }),
+            'temperature': dict({
+              '__type': "<class 'aioamazondevices.api.AmazonDeviceSensor'>",
+              'repr': "AmazonDeviceSensor(name='temperature', value='22.5', error=False, scale='CELSIUS')",
+            }),
+          }),
           'serial number': 'echo_test_serial_number',
           'software version': 'echo_test_software_version',
         }),
@@ -49,6 +63,7 @@
       'data': dict({
         'login_data': dict({
           'session': 'test-session',
+          'site': 'https://www.amazon.com',
         }),
         'password': '**REDACTED**',
         'username': '**REDACTED**',
@@ -57,7 +72,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'alexa_devices',
-      'minor_version': 2,
+      'minor_version': 3,
       'options': dict({
       }),
       'pref_disable_new_entities': False,

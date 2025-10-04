@@ -752,6 +752,9 @@
       },
       "vehicle_state_valet_mode": {
         "default": "mdi:speedometer-slow"
+      },
+      "guest_mode_enabled": {
+        "default": "mdi:account-group"
       }
     }
   },

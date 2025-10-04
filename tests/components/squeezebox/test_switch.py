@@ -1,20 +1,60 @@
 """Tests for the Squeezebox alarm switch platform."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.squeezebox.const import PLAYER_UPDATE_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import CONF_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    CONF_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .conftest import TEST_ALARM_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def squeezebox_alarm_platform():
+    """Only set up the media_player platform for squeezebox tests."""
+    with patch("homeassistant.components.squeezebox.PLATFORMS", [Platform.SWITCH]):
+        yield
+
+
+@pytest.fixture
+async def mock_alarms_player(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lms: MagicMock,
+) -> MagicMock:
+    """Mock the alarms of a configured player."""
+    players = await lms.async_get_players()
+    players[0].alarms = [
+        {
+            "id": TEST_ALARM_ID,
+            "enabled": True,
+            "time": "07:00",
+            "dow": [0, 1, 2, 3, 4, 5, 6],
+            "repeat": False,
+            "url": "CURRENT_PLAYLIST",
+            "volume": 50,
+        },
+    ]
+
+    with patch("homeassistant.components.squeezebox.Server", return_value=lms):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return players[0]
 
 
 async def test_entity_registry(
