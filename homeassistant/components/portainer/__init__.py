@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from pyportainer import Portainer
 
 from homeassistant.config_entries import ConfigEntry
@@ -21,6 +23,7 @@ from .const import DOMAIN
 from .coordinator import PortainerCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SWITCH]
+_LOGGER = logging.getLogger(__name__)
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
@@ -65,82 +68,61 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
         hass.config_entries.async_update_entry(entry=entry, data=data, version=3)
 
     if entry.version < 4:
-        # Migrate device identifiers from entry_id_container_name to entry_id_endpoint_id_container_name
-        await _migrate_device_identifiers(hass, entry)
+        _LOGGER.debug("Migrating devices for config entry: %s", entry.entry_id)
+        device_registry = dr.async_get(hass)
+        devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+
+        for device in devices:
+            # Skip endpoints - we only want to migrate containers
+            if device.via_device_id is None:
+                continue
+
+            # Get the parent endpoint device
+            parent_device = device_registry.async_get(device.via_device_id)
+            if not parent_device:
+                _LOGGER.debug("Skipping device %s - parent device not found", device.id)
+                continue
+
+            _LOGGER.debug(
+                "Migrating device: %s, with parent: %s", device.id, parent_device.id
+            )
+
+            # Extract endpoint_id from parent device identifier
+            parent_identifier = next(iter(parent_device.identifiers), None)
+            if not parent_identifier or parent_identifier[0] != DOMAIN:
+                continue
+
+            endpoint_id = parent_identifier[1].split("_")[-1]
+            _LOGGER.debug("Endpoint ID: %s", endpoint_id)
+
+            # Update device identifiers
+            new_identifiers = set()
+            for domain, identifier in device.identifiers:
+                if domain != DOMAIN:
+                    # Keep non-domain identifiers as-is
+                    new_identifiers.add((domain, identifier))
+                else:
+                    # Update domain identifier with endpoint_id
+                    parts = identifier.split("_", 1)
+                    if len(parts) == 2 and parts[0] == entry.entry_id:
+                        container_name = parts[1]
+                        new_identifier = (
+                            f"{entry.entry_id}_{endpoint_id}_{container_name}"
+                        )
+                        new_identifiers.add((domain, new_identifier))
+                        _LOGGER.debug(
+                            "Updated identifier: %s -> %s", identifier, new_identifier
+                        )
+                    else:
+                        # Keep identifier if it doesn't match expected format
+                        new_identifiers.add((domain, identifier))
+
+            # Apply the migration
+            if new_identifiers != device.identifiers:
+                device_registry.async_update_device(
+                    device.id, new_identifiers=new_identifiers
+                )
+
         hass.config_entries.async_update_entry(entry=entry, version=4)
 
     return True
-
-
-async def _migrate_device_identifiers(
-    hass: HomeAssistant, entry: PortainerConfigEntry
-) -> None:
-    """Migrate device identifiers to include endpoint_id."""
-    device_registry = dr.async_get(hass)
-    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-
-    for device in devices:
-        if device.model != "Container":
-            continue
-
-        new_identifiers = _get_migrated_identifiers(
-            device, entry.entry_id, device_registry
-        )
-
-        if new_identifiers and new_identifiers != device.identifiers:
-            device_registry.async_update_device(
-                device.id, new_identifiers=new_identifiers
-            )
-
-
-def _get_migrated_identifiers(
-    device: dr.DeviceEntry, entry_id: str, device_registry: dr.DeviceRegistry
-) -> set[tuple[str, str]] | None:
-    """Get new identifiers for a container device."""
-    new_identifiers = set()
-
-    for domain, identifier in device.identifiers:
-        if domain != DOMAIN:
-            new_identifiers.add((domain, identifier))
-            continue
-
-        # Check if this is the old format
-        parts = identifier.split("_", 1)
-        if len(parts) != 2 or parts[0] != entry_id:
-            new_identifiers.add((domain, identifier))
-            continue
-
-        # Get endpoint_id from via_device
-        endpoint_id = _get_endpoint_id_from_via_device(device, device_registry)
-        if endpoint_id:
-            container_name = parts[1]
-            new_identifier = f"{entry_id}_{endpoint_id}_{container_name}"
-            new_identifiers.add((domain, new_identifier))
-        else:
-            # Fallback: Keep old identifier if endpoint not found
-            # This can happen if via_device relationship is broken/missing
-            new_identifiers.add((domain, identifier))
-
-    return new_identifiers
-
-
-def _get_endpoint_id_from_via_device(
-    device: dr.DeviceEntry, device_registry: dr.DeviceRegistry
-) -> str | None:
-    """Extract endpoint_id from the via_device relationship."""
-    if not device.via_device_id:
-        return None
-
-    # Get the endpoint device using the via_device_id
-    endpoint_device = device_registry.async_get(device.via_device_id)
-    if not endpoint_device:
-        return None
-
-    # Extract endpoint_id from the endpoint device's identifiers
-    for domain, identifier in endpoint_device.identifiers:
-        if domain == DOMAIN:
-            parts = identifier.split("_", 1)
-            if len(parts) == 2:
-                return parts[1]
-
-    return None
