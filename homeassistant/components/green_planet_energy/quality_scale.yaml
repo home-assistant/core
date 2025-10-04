@@ -6,8 +6,7 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules:
-    status: exempt
-    comment: Not really potential for common modules.
+    status: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
