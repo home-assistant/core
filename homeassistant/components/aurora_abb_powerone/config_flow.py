@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import contextlib
 import logging
 from typing import TYPE_CHECKING, Any
 
-from aurorapy.client import AuroraError, AuroraSerialClient, AuroraTCPClient
 import serial.tools.list_ports
 import voluptuous as vol
 
@@ -19,6 +17,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import ATTR_SERIAL_NUMBER
 from homeassistant.core import HomeAssistant
 
+from .aurora_client import AuroraClient, AuroraClientError
 from .const import (
     ATTR_FIRMWARE,
     ATTR_MODEL,
@@ -49,27 +48,24 @@ def validate_and_connect_serial(
     """
     serial_comport = data[CONF_SERIAL_COMPORT]
     inverter_serial_address = data[CONF_INVERTER_SERIAL_ADDRESS]
-    _LOGGER.debug("Initialising serial com port=%s", serial_comport)
-    ret = {}
-    ret["title"] = DEFAULT_INTEGRATION_TITLE
-    try:
-        client = AuroraSerialClient(
-            inverter_serial_address, serial_comport, parity="N", timeout=1
-        )
-        client.connect()
-        ret[ATTR_SERIAL_NUMBER] = client.serial_number()
-        ret[ATTR_MODEL] = f"{client.version()} ({client.pn()})"
-        ret[ATTR_FIRMWARE] = client.firmware(1)
-        _LOGGER.debug("Returning device info=%s", ret)
-    except AuroraError:
-        _LOGGER.warning("Could not connect to device=%s", serial_comport)
-        raise
-    finally:
-        with contextlib.suppress(Exception):
-            client.close()
+
+    _LOGGER.debug(
+        "Trying to connect to inverter with address=%s via serial transport on comport='%s'",
+        inverter_serial_address,
+        serial_comport,
+    )
+    client = AuroraClient.from_serial(
+        inverter_serial_address=inverter_serial_address, serial_comport=serial_comport
+    )
+    info = client.try_connect_and_fetch_identifier()
 
     # Return info we want to store in the config entry.
-    return ret
+    return {
+        "title": DEFAULT_INTEGRATION_TITLE,
+        ATTR_SERIAL_NUMBER: info.serial_number,
+        ATTR_MODEL: info.model,
+        ATTR_FIRMWARE: info.firmware,
+    }
 
 
 def validate_and_connect_tcp(
@@ -82,27 +78,27 @@ def validate_and_connect_tcp(
     tcp_host = data[CONF_TCP_HOST]
     tcp_port = data[CONF_TCP_PORT]
     inverter_serial_address = data[CONF_INVERTER_SERIAL_ADDRESS]
-    _LOGGER.debug("Initialising TCP host=%s port=%s", tcp_host, tcp_port)
-    ret = {}
-    ret["title"] = DEFAULT_INTEGRATION_TITLE
-    try:
-        client = AuroraTCPClient(tcp_host, tcp_port, inverter_serial_address, timeout=1)
-        client.connect()
-        ret[ATTR_SERIAL_NUMBER] = client.serial_number()
-        ret[ATTR_MODEL] = f"{client.version()} ({client.pn()})"
-        ret[ATTR_FIRMWARE] = client.firmware(1)
-        _LOGGER.debug("Returning device info (TCP)=%s", ret)
-    except AuroraError:
-        _LOGGER.warning(
-            "Could not connect to device over TCP at %s:%s", tcp_host, tcp_port
-        )
-        raise
-    finally:
-        with contextlib.suppress(Exception):
-            client.close()
+
+    _LOGGER.debug(
+        "Trying to connect to inverter with address=%s via TCP transport on %s:%s",
+        inverter_serial_address,
+        tcp_host,
+        tcp_port,
+    )
+    client = AuroraClient.from_tcp(
+        inverter_serial_address=inverter_serial_address,
+        tcp_host=tcp_host,
+        tcp_port=tcp_port,
+    )
+    info = client.try_connect_and_fetch_identifier()
 
     # Return info we want to store in the config entry.
-    return ret
+    return {
+        "title": DEFAULT_INTEGRATION_TITLE,
+        ATTR_SERIAL_NUMBER: info.serial_number,
+        ATTR_MODEL: info.model,
+        ATTR_FIRMWARE: info.firmware,
+    }
 
 
 def scan_serial_comports() -> tuple[list[str] | None, str | None]:
@@ -193,7 +189,7 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
             except OSError as error:
                 if error.errno == 19:  # No such device.
                     errors["base"] = "invalid_serial_port"
-            except AuroraError as error:
+            except AuroraClientError as error:
                 if "could not open port" in str(error):
                     errors["base"] = "cannot_open_serial_port"
                 elif "No response after" in str(error):
@@ -249,7 +245,7 @@ class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await self.hass.async_add_executor_job(
                     validate_and_connect_tcp, self.hass, user_input
                 )
-            except AuroraError as error:
+            except AuroraClientError as error:
                 _LOGGER.error(
                     "Unable to communicate with Aurora ABB Inverter over TCP at %s:%s: %s %s",
                     user_input.get(CONF_TCP_HOST),

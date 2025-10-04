@@ -1,22 +1,15 @@
 """DataUpdateCoordinator for the aurora_abb_powerone integration."""
 
-import contextlib
 import logging
 from time import sleep
-
-from aurorapy.client import (
-    AuroraError,
-    AuroraSerialClient,
-    AuroraTCPClient,
-    AuroraTimeoutError,
-)
-from serial import SerialException
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, SCAN_INTERVAL, TRANSPORT_SERIAL, TRANSPORT_TCP
+from .aurora_client import AuroraClient, AuroraClientError, AuroraClientTimeoutError
+from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,25 +20,23 @@ type AuroraAbbConfigEntry = ConfigEntry[AuroraAbbDataUpdateCoordinator]
 class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
     """Class to manage fetching AuroraAbbPowerone data."""
 
-    config_entry: AuroraAbbConfigEntry
-    client: AuroraSerialClient | AuroraTCPClient
+    client: AuroraClient
+
+    available_prev: bool | None
+    available: bool | None
 
     def __init__(
         self,
         hass: HomeAssistant,
         config_entry: AuroraAbbConfigEntry,
-        inverter_serial_address: int,
-        transport: str,
-        serial_comport: str | None = None,
-        tcp_host: str | None = None,
-        tcp_port: int | None = None,
+        client: AuroraClient,
     ) -> None:
         """Initialize the data update coordinator."""
-        self.available_prev = False
-        self.available = False
-        self.client = self._build_client(
-            inverter_serial_address, transport, serial_comport, tcp_host, tcp_port
-        )
+
+        self.client = client
+
+        self.available_prev = None
+        self.available = None
 
         super().__init__(
             hass,
@@ -55,59 +46,21 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
             update_interval=SCAN_INTERVAL,
         )
 
-    def _build_client(
-        self,
-        inverter_serial_address: int,
-        transport: str,
-        serial_comport: str | None,
-        tcp_host: str | None,
-        tcp_port: int | None,
-    ) -> AuroraSerialClient | AuroraTCPClient:
-        """Instantiate the proper aurorapy client for the selected transport."""
-        if transport == TRANSPORT_TCP:
-            if tcp_host is None or tcp_port is None:
-                raise ValueError("TCP host/port not configured")
-            return AuroraTCPClient(
-                tcp_host, tcp_port, inverter_serial_address, timeout=1
-            )
-        if transport == TRANSPORT_SERIAL:
-            if serial_comport is None:
-                raise ValueError("Serial port not configured")
-            return AuroraSerialClient(
-                inverter_serial_address, serial_comport, parity="N", timeout=1
-            )
-
-        raise UpdateFailed(f"Unsupported transport type: {transport}")
-
-    def _update_data(self) -> dict[str, float]:
+    def _update_data(self) -> dict[str, Any]:
         """Fetch new state data for the sensors.
 
         This is the only function that should fetch new data for Home Assistant.
         """
-        data: dict[str, float] = {}
         self.available_prev = self.available
         retries: int = 3
         while retries > 0:
             try:
-                self.client.connect()
-
-                # See command 59 in the protocol manual linked in __init__.py
-                grid_voltage = self.client.measure(1, True)
-                grid_current = self.client.measure(2, True)
-                power_watts = self.client.measure(3, True)
-                frequency = self.client.measure(4)
-                i_leak_dcdc = self.client.measure(6)
-                i_leak_inverter = self.client.measure(7)
-                temperature_c = self.client.measure(21)
-                r_iso = self.client.measure(30)
-                energy_wh = self.client.cumulated_energy(5)
-                [alarm, *_] = self.client.alarms()
-            except AuroraTimeoutError:
+                result = self.client.try_connect_and_fetch_data()
+            except AuroraClientTimeoutError:
                 self.available = False
                 _LOGGER.debug("No response from inverter (could be dark)")
                 retries = 0
-            except (SerialException, AuroraError) as error:
-                # For TCP transports, SerialException shouldn't occur, but is harmless to catch.
+            except AuroraClientError as error:
                 self.available = False
                 retries -= 1
                 if retries <= 0:
@@ -119,20 +72,13 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
                 )
                 sleep(1)
             else:
-                data["grid_voltage"] = round(grid_voltage, 1)
-                data["grid_current"] = round(grid_current, 1)
-                data["instantaneouspower"] = round(power_watts, 1)
-                data["grid_frequency"] = round(frequency, 1)
-                data["i_leak_dcdc"] = i_leak_dcdc
-                data["i_leak_inverter"] = i_leak_inverter
-                data["temp"] = round(temperature_c, 1)
-                data["r_iso"] = r_iso
-                data["totalenergy"] = round(energy_wh / 1000, 2)
-                data["alarm"] = alarm
+                data = result.__dict__
                 self.available = True
                 retries = 0
             finally:
-                if self.available != self.available_prev:
+                if (self.available != self.available_prev) and (
+                    self.available_prev is not None
+                ):
                     if self.available:
                         _LOGGER.warning("Communication with %s back online", self.name)
                     else:
@@ -140,10 +86,8 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
                             "Communication with %s lost",
                             self.name,
                         )
-                with contextlib.suppress(Exception):
-                    self.client.close()
         return data
 
-    async def _async_update_data(self) -> dict[str, float]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update inverter data in the executor."""
         return await self.hass.async_add_executor_job(self._update_data)

@@ -15,6 +15,7 @@ import logging
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
+from .aurora_client import AuroraClient
 from .const import (
     CONF_INVERTER_SERIAL_ADDRESS,
     CONF_SERIAL_COMPORT,
@@ -69,24 +70,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: AuroraAbbConfigEntry) ->
 
     def transport_handler_serial() -> AuroraAbbDataUpdateCoordinator:
         serial_comport = entry.data[CONF_SERIAL_COMPORT]
+        client = AuroraClient.from_serial(
+            inverter_serial_address=inverter_serial_address,
+            serial_comport=serial_comport,
+        )
         return AuroraAbbDataUpdateCoordinator(
             hass,
             entry,
-            inverter_serial_address,
-            transport,
-            serial_comport=serial_comport,
+            client,
         )
 
     def transport_handler_tcp() -> AuroraAbbDataUpdateCoordinator:
         tcp_host = entry.data[CONF_TCP_HOST]
         tcp_port = entry.data[CONF_TCP_PORT]
+        client = AuroraClient.from_tcp(
+            inverter_serial_address=inverter_serial_address,
+            tcp_host=tcp_host,
+            tcp_port=tcp_port,
+        )
         return AuroraAbbDataUpdateCoordinator(
             hass,
             entry,
-            inverter_serial_address,
-            transport,
-            tcp_host=tcp_host,
-            tcp_port=tcp_port,
+            client,
         )
 
     transport_handler = {
