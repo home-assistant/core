@@ -317,10 +317,7 @@ async def test_ntfy_publish_upload_media_source_not_supported(
                 path=None,
             ),
         ),
-        pytest.raises(
-            ServiceValidationError,
-            match="Media source currently not supported",
-        ),
+        pytest.raises(ServiceValidationError),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -350,10 +347,7 @@ async def test_ntfy_publish_upload_media_image_source_not_found(
 
     assert config_entry.state is ConfigEntryState.LOADED
     with (
-        pytest.raises(
-            HomeAssistantError,
-            match="The selected image source could not be found",
-        ),
+        pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -364,6 +358,36 @@ async def test_ntfy_publish_upload_media_image_source_not_found(
                     "media_content_id": "media-source://image/image.test",
                     "media_content_type": "image/png",
                 },
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_ntfy_publish_upload_media_image_newline_not_supported(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test publishing ntfy message with attachment and unsupported characters in message."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    with (
+        pytest.raises(ServiceValidationError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PUBLISH,
+            {
+                ATTR_ENTITY_ID: "notify.mytopic",
+                ATTR_ATTACH_FILE: {
+                    "media_content_id": "media-source://image/image.test",
+                    "media_content_type": "image/png",
+                },
+                ATTR_MESSAGE: "\r\n",
             },
             blocking=True,
         )

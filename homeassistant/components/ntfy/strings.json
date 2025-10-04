@@ -299,6 +299,9 @@
     },
     "image_source_not_found": {
       "message": "The selected image source could not be found"
+    },
+    "newline_not_supported": {
+      "message": "Messages with newline or carriage return characters are not supported when sending a local file attachment."
     }
   },
   "services": {

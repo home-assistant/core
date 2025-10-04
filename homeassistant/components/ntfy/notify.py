@@ -130,6 +130,14 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
                     translation_domain=DOMAIN,
                     translation_key="attach_url_xor_local",
                 )
+            if params.get(ATTR_MESSAGE) and (
+                "\n" in params[ATTR_MESSAGE] or "\r" in params[ATTR_MESSAGE]
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="newline_not_supported",
+                )
+
             media_content_id: str = file["media_content_id"]
             if media_content_id.startswith("media-source://camera/"):
                 entity_id = media_content_id.removeprefix("media-source://camera/")
