@@ -35,7 +35,8 @@ from .const import CONF_DELETE_PERMANENTLY, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from .coordinator import OneDriveConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-UPLOAD_CHUNK_SIZE = 32 * 320 * 1024  # 10.4MB
+MAX_CHUNK_SIZE = 60 * 1024 * 1024  # largest chunk possible, must be <= 60 MiB
+TARGET_CHUNKS = 20
 TIMEOUT = ClientTimeout(connect=10, total=43200)  # 12 hours
 METADATA_VERSION = 2
 CACHE_TTL = 300
@@ -161,11 +162,19 @@ class OneDriveBackupAgent(BackupAgent):
             self._folder_id,
             await open_stream(),
         )
+
+        # determine chunk based on target chunks
+        upload_chunk_size = backup.size / TARGET_CHUNKS
+        # find the nearest multiple of 320KB
+        upload_chunk_size = round(upload_chunk_size / (320 * 1024)) * (320 * 1024)
+        # limit to max chunk size
+        upload_chunk_size = min(upload_chunk_size, MAX_CHUNK_SIZE)
+
         try:
             backup_file = await LargeFileUploadClient.upload(
                 self._token_function,
                 file,
-                upload_chunk_size=UPLOAD_CHUNK_SIZE,
+                upload_chunk_size=upload_chunk_size,
                 session=async_get_clientsession(self._hass),
             )
         except HashMismatchError as err:
