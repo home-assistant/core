@@ -40,9 +40,6 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.auth.complete_login(
                     self.auth, user_input[CONF_API_TOKEN], False
                 )
-            except (ValueError, InvalidSessionTokenException, HttpException):
-                errors["base"] = "invalid_auth"
-            else:
                 if TYPE_CHECKING:
                     assert self.auth.account_id
                 await self.async_set_unique_id(self.auth.account_id)
@@ -53,6 +50,8 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_SESSION_TOKEN: self.auth.get_session_token,
                     },
                 )
+            except (ValueError, InvalidSessionTokenException, HttpException):
+                errors["base"] = "invalid_auth"
         return self.async_show_form(
             step_id="user",
             description_placeholders={"link": self.auth.login_url},

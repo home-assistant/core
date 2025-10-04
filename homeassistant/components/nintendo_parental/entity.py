@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pynintendoparental import Device
+from pynintendoparental.device import Device
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
