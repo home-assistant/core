@@ -15,7 +15,11 @@ from homeassistant.components.habitica.const import (
     SECTION_REAUTH_API_KEY,
     SECTION_REAUTH_LOGIN,
 )
-from homeassistant.config_entries import SOURCE_USER, ConfigSubentry
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigEntryDisabler,
+    ConfigSubentry,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_PASSWORD,
@@ -610,7 +614,6 @@ async def test_add_party_member_already_configured_as_entry(
     assert result["reason"] == "already_configured_as_entry"
 
 
-@pytest.mark.usefixtures("habitica")
 async def test_add_party_member_not_in_a_party(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -632,3 +635,23 @@ async def test_add_party_member_not_in_a_party(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_in_a_party"
+
+
+@pytest.mark.usefixtures("habitica")
+async def test_add_party_member_entry_disabled(hass: HomeAssistant) -> None:
+    """Test we abort add party member subentry flow when the main config entry is disabled."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
+        disabled_by=ConfigEntryDisabler.USER,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "party_member"),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "config_entry_disabled"

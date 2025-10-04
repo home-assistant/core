@@ -20,6 +20,7 @@ import voluptuous as vol
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -406,6 +407,8 @@ class PartyMembersSubentryFlowHandler(ConfigSubentryFlow):
         """Subentry user flow."""
 
         entry: HabiticaConfigEntry = self._get_entry()
+        if entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="config_entry_disabled")
         if (
             not (party := entry.runtime_data.data.user.party.id)
             or party not in self.hass.data[HABITICA_KEY]

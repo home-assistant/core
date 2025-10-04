@@ -194,7 +194,8 @@
       "entry_type": "Party member",
       "abort": {
         "already_configured_as_entry": "Already configured as a user. This adventurer cannot be added as a party member.",
-        "already_configured": "This adventurer is already configured as a party member in this or another account."
+        "already_configured": "This adventurer is already configured as a party member in this or another account.",
+        "config_entry_disabled": "Cannot add party members when the main account is disabled or not loaded."
       }
     }
   },
