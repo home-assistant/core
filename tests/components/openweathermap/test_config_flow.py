@@ -62,7 +62,7 @@ async def test_successful_config_flow(
 
     # create entry
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], 
+        result["flow_id"],
         USER_INPUT,
     )
     await hass.async_block_till_done()
@@ -99,7 +99,8 @@ async def test_abort_config_flow(
     assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT,
+        result["flow_id"],
+        USER_INPUT,
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
@@ -176,7 +177,8 @@ async def test_form_invalid_api_key(
     # invalid api key
     owm_client_mock.validate_key.return_value = False
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
+        result["flow_id"],
+        USER_INPUT,
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
@@ -184,7 +186,8 @@ async def test_form_invalid_api_key(
     # valid api key
     owm_client_mock.validate_key.return_value = True
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
+        result["flow_id"],
+        USER_INPUT,
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -203,7 +206,8 @@ async def test_form_api_call_error(
     # simulate api call error
     owm_client_mock.validate_key.side_effect = RequestError("oops")
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
+        result["flow_id"],
+        USER_INPUT,
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
@@ -211,7 +215,8 @@ async def test_form_api_call_error(
     # simulate successful api call
     owm_client_mock.validate_key.side_effect = None
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
+        result["flow_id"],
+        USER_INPUT,
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
