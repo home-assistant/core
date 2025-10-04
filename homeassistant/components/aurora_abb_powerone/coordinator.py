@@ -53,6 +53,7 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
         """
         self.available_prev = self.available
         retries: int = 3
+        data = {}
         while retries > 0:
             try:
                 result = self.client.try_connect_and_fetch_data()
