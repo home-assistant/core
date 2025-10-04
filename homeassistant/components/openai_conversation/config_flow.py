@@ -49,6 +49,7 @@ from .const import (
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    CONF_VERBOSITY,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_CONTEXT_SIZE,
@@ -67,6 +68,7 @@ from .const import (
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
+    RECOMMENDED_VERBOSITY,
     RECOMMENDED_WEB_SEARCH,
     RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
     RECOMMENDED_WEB_SEARCH_USER_LOCATION,
@@ -323,7 +325,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
 
         model = options[CONF_CHAT_MODEL]
 
-        if model.startswith("o"):
+        if model.startswith(("o", "gpt-5")):
             step_schema.update(
                 {
                     vol.Optional(
@@ -331,7 +333,9 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         default=RECOMMENDED_REASONING_EFFORT,
                     ): SelectSelector(
                         SelectSelectorConfig(
-                            options=["low", "medium", "high"],
+                            options=["low", "medium", "high"]
+                            if model.startswith("o")
+                            else ["minimal", "low", "medium", "high"],
                             translation_key=CONF_REASONING_EFFORT,
                             mode=SelectSelectorMode.DROPDOWN,
                         )
@@ -340,6 +344,24 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             )
         elif CONF_REASONING_EFFORT in options:
             options.pop(CONF_REASONING_EFFORT)
+
+        if model.startswith("gpt-5"):
+            step_schema.update(
+                {
+                    vol.Optional(
+                        CONF_VERBOSITY,
+                        default=RECOMMENDED_VERBOSITY,
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=["low", "medium", "high"],
+                            translation_key=CONF_VERBOSITY,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                }
+            )
+        elif CONF_VERBOSITY in options:
+            options.pop(CONF_VERBOSITY)
 
         if self._subentry_type == "conversation" and not model.startswith(
             tuple(UNSUPPORTED_WEB_SEARCH_MODELS)

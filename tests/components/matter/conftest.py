@@ -76,6 +76,8 @@ async def integration_fixture(
     params=[
         "air_purifier",
         "air_quality_sensor",
+        "aqara_door_window_p2",
+        "aqara_motion_p2",
         "battery_storage",
         "color_temperature_light",
         "cooktop",
@@ -118,7 +120,9 @@ async def integration_fixture(
         "silabs_water_heater",
         "smoke_detector",
         "solar_power",
+        "speaker",
         "switch_unit",
+        "tado_smart_radiator_thermostat_x",
         "temperature_sensor",
         "thermostat",
         "vacuum_cleaner",

@@ -55,12 +55,6 @@ from homeassistant.const import (  # noqa: F401
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
@@ -75,26 +69,6 @@ from .browse_media import (  # noqa: F401
     async_process_play_media_url,
 )
 from .const import (  # noqa: F401
-    _DEPRECATED_MEDIA_CLASS_DIRECTORY,
-    _DEPRECATED_SUPPORT_BROWSE_MEDIA,
-    _DEPRECATED_SUPPORT_CLEAR_PLAYLIST,
-    _DEPRECATED_SUPPORT_GROUPING,
-    _DEPRECATED_SUPPORT_NEXT_TRACK,
-    _DEPRECATED_SUPPORT_PAUSE,
-    _DEPRECATED_SUPPORT_PLAY,
-    _DEPRECATED_SUPPORT_PLAY_MEDIA,
-    _DEPRECATED_SUPPORT_PREVIOUS_TRACK,
-    _DEPRECATED_SUPPORT_REPEAT_SET,
-    _DEPRECATED_SUPPORT_SEEK,
-    _DEPRECATED_SUPPORT_SELECT_SOUND_MODE,
-    _DEPRECATED_SUPPORT_SELECT_SOURCE,
-    _DEPRECATED_SUPPORT_SHUFFLE_SET,
-    _DEPRECATED_SUPPORT_STOP,
-    _DEPRECATED_SUPPORT_TURN_OFF,
-    _DEPRECATED_SUPPORT_TURN_ON,
-    _DEPRECATED_SUPPORT_VOLUME_MUTE,
-    _DEPRECATED_SUPPORT_VOLUME_SET,
-    _DEPRECATED_SUPPORT_VOLUME_STEP,
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_ENTITY_PICTURE_LOCAL,
@@ -161,6 +135,8 @@ CACHE_LOCK: Final = "lock"
 CACHE_URL: Final = "url"
 CACHE_CONTENT: Final = "content"
 
+ATTR_MEDIA = "media"
+
 
 class MediaPlayerEnqueue(StrEnum):
     """Enqueue types for playing media."""
@@ -186,18 +162,25 @@ class MediaPlayerDeviceClass(StrEnum):
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(MediaPlayerDeviceClass))
 
 
-# DEVICE_CLASS* below are deprecated as of 2021.12
-# use the MediaPlayerDeviceClass enum instead.
-_DEPRECATED_DEVICE_CLASS_TV = DeprecatedConstantEnum(
-    MediaPlayerDeviceClass.TV, "2025.10"
-)
-_DEPRECATED_DEVICE_CLASS_SPEAKER = DeprecatedConstantEnum(
-    MediaPlayerDeviceClass.SPEAKER, "2025.10"
-)
-_DEPRECATED_DEVICE_CLASS_RECEIVER = DeprecatedConstantEnum(
-    MediaPlayerDeviceClass.RECEIVER, "2025.10"
-)
 DEVICE_CLASSES = [cls.value for cls in MediaPlayerDeviceClass]
+
+
+def _promote_media_fields(data: dict[str, Any]) -> dict[str, Any]:
+    """If 'media' key exists, promote its fields to the top level."""
+    if ATTR_MEDIA in data and isinstance(data[ATTR_MEDIA], dict):
+        if ATTR_MEDIA_CONTENT_TYPE in data or ATTR_MEDIA_CONTENT_ID in data:
+            raise vol.Invalid(
+                f"Play media cannot contain '{ATTR_MEDIA}' and '{ATTR_MEDIA_CONTENT_ID}' or '{ATTR_MEDIA_CONTENT_TYPE}'"
+            )
+        media_data = data[ATTR_MEDIA]
+
+        if ATTR_MEDIA_CONTENT_TYPE in media_data:
+            data[ATTR_MEDIA_CONTENT_TYPE] = media_data[ATTR_MEDIA_CONTENT_TYPE]
+        if ATTR_MEDIA_CONTENT_ID in media_data:
+            data[ATTR_MEDIA_CONTENT_ID] = media_data[ATTR_MEDIA_CONTENT_ID]
+
+        del data[ATTR_MEDIA]
+    return data
 
 
 MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
@@ -436,6 +419,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_PLAY_MEDIA,
         vol.All(
+            _promote_media_fields,
             cv.make_entity_service_schema(MEDIA_PLAYER_PLAY_MEDIA_SCHEMA),
             _rewrite_enqueue,
             _rename_keys(
@@ -1175,6 +1159,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         media_content_id: str | None = None,
         media_filter_classes: list[MediaClass] | None = None,
     ) -> SearchMedia:
+        """Search for media."""
         return await self.async_search_media(
             query=SearchMediaQuery(
                 search_query=search_query,
@@ -1489,13 +1474,3 @@ async def async_fetch_image(
         logger.warning("Error retrieving proxied image from %s", url)
 
     return content, content_type
-
-
-# As we import deprecated constants from the const module, we need to add these two functions
-# otherwise this module will be logged for using deprecated constants and not the custom component
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = ft.partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())
