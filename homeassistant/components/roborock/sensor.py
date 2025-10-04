@@ -271,6 +271,7 @@ A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
     RoborockSensorDescriptionA01(
         key="total_cleaning_time",
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
         data_protocol=RoborockDyadDataProtocol.TOTAL_RUN_TIME,
         device_class=SensorDeviceClass.DURATION,
         translation_key="total_cleaning_time",
