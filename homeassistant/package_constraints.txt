@@ -25,7 +25,7 @@ bleak==1.0.1
 bluetooth-adapters==2.1.0
 bluetooth-auto-recovery==1.5.3
 bluetooth-data-tools==1.28.3
-cached-ipaddress==0.10.0
+cached-ipaddress==1.0.1
 certifi>=2021.5.30
 ciso8601==2.3.3
 cronsim==2.6
@@ -35,7 +35,7 @@ file-read-backwards==2.0.0
 fnv-hash-fast==1.5.0
 go2rtc-client==0.2.1
 ha-ffmpeg==3.2.2
-habluetooth==5.6.4
+habluetooth==5.7.0
 hass-nabucasa==1.2.0
 hassil==3.2.0
 home-assistant-bluetooth==1.13.1

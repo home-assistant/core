@@ -627,7 +627,7 @@ bimmer-connected[china]==0.17.3
 bizkaibus==0.1.1
 
 # homeassistant.components.esphome
-bleak-esphome==3.3.0
+bleak-esphome==3.4.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.4.3
@@ -712,7 +712,7 @@ btsmarthub-devicelist==0.2.3
 buienradar==1.0.6
 
 # homeassistant.components.dhcp
-cached-ipaddress==0.10.0
+cached-ipaddress==1.0.1
 
 # homeassistant.components.caldav
 caldav==1.6.0
@@ -1142,7 +1142,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.4.5
 
 # homeassistant.components.bluetooth
-habluetooth==5.6.4
+habluetooth==5.7.0
 
 # homeassistant.components.cloud
 hass-nabucasa==1.2.0
