@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import TypeAlias
-
 from pyportainer import Portainer
 
 from homeassistant.config_entries import ConfigEntry
@@ -24,7 +22,7 @@ from .coordinator import PortainerCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SWITCH]
 
-PortainerConfigEntry: TypeAlias = ConfigEntry[PortainerCoordinator]
+type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
