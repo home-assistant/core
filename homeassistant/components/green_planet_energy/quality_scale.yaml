@@ -48,8 +48,7 @@ rules:
 
   # Gold
   devices:
-    status: exempt
-    comment: Only creates sensors.
+    status: done
   diagnostics: todo
   discovery-update-info:
     status: exempt

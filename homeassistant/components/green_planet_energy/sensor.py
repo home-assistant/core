@@ -12,11 +12,13 @@ from greenplanet_energy_api import GreenPlanetEnergyAPI
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import CURRENCY_EURO, UnitOfEnergy
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from . import GreenPlanetEnergyConfigEntry
+from .const import DOMAIN
 from .coordinator import GreenPlanetEnergyUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,6 +99,11 @@ class GreenPlanetEnergySensor(
         self.entity_description = description
         # Use fixed unique_id with just the key for predictable entity IDs
         self._attr_unique_id = description.key
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            name="Green Planet Energy",
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
     def native_value(self) -> float | None:
