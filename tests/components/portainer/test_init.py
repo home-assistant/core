@@ -105,13 +105,19 @@ async def test_device_migration(hass: HomeAssistant) -> None:
         identifiers={(DOMAIN, f"{entry.entry_id}_test_container")},
         name="Test Container",
         model="Container",
-        via_device_id=endpoint_device.id,
     )
+
+    # Manually set via_device_id to simulate the relationship
+    device_registry.async_update_device(
+        container_device.id, via_device_id=endpoint_device.id
+    )
+    container_device = device_registry.async_get(container_device.id)
 
     # Verify old format
     assert container_device.identifiers == {
         (DOMAIN, f"{entry.entry_id}_test_container")
     }
+    assert container_device.via_device_id == endpoint_device.id
 
     # Run migration by setting up the entry
     await hass.config_entries.async_setup(entry.entry_id)
@@ -122,5 +128,7 @@ async def test_device_migration(hass: HomeAssistant) -> None:
 
     # Check that device identifier was updated
     updated_device = device_registry.async_get(container_device.id)
+    expected_identifier = f"{entry.entry_id}_endpoint1_test_container"
+    assert updated_device.identifiers == {(DOMAIN, expected_identifier)}
     expected_identifier = f"{entry.entry_id}_endpoint1_test_container"
     assert updated_device.identifiers == {(DOMAIN, expected_identifier)}
