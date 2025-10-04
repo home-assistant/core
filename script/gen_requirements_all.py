@@ -113,9 +113,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.72.1
-grpcio-status==1.72.1
-grpcio-reflection==1.72.1
+grpcio==1.75.1
+grpcio-status==1.75.1
+grpcio-reflection==1.75.1
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -145,7 +145,7 @@ hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
 numpy==2.3.2
-pandas==2.3.0
+pandas==2.3.3
 
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046

@@ -52,6 +52,10 @@
         }
       }
     },
+    "issue_addon_pwned": {
+      "title": "Insecure secrets detected in add-on configuration",
+      "description": "Add-on {addon} uses secrets/passwords in its configuration which are detected as not secure. See [pwned passwords and secrets]({more_info_pwned}) for more information on this issue."
+    },
     "issue_mount_mount_failed": {
       "title": "Network storage device failed",
       "fix_flow": {
@@ -119,6 +123,10 @@
       "title": "Disk lifetime exceeding 90%",
       "description": "The data disk has exceeded 90% of its expected lifespan. The disk may soon malfunction which can lead to data loss. You should replace it soon and migrate your data."
     },
+    "issue_system_free_space": {
+      "title": "Data disk is running low on free space",
+      "description": "The data disk has only {free_space}GB free space left. This may cause issues with system stability and interfere with functionality such as backups and updates. See [clear up storage]({more_info_free_space}) for tips on how to free up space."
+    },
     "unhealthy": {
       "title": "Unhealthy system - {reason}",
       "description": "System is currently unhealthy due to {reason}. For troubleshooting information, select Learn more."
@@ -185,7 +193,7 @@
     },
     "unsupported_docker_version": {
       "title": "Unsupported system - Docker version",
-      "description": "System is unsupported because the wrong version of Docker is in use. Use the link to learn the correct version and how to fix this."
+      "description": "System is unsupported because the Docker version is out of date. For information about the required version and how to fix this, select Learn more."
     },
     "unsupported_job_conditions": {
       "title": "Unsupported system - Protections disabled",
@@ -201,7 +209,7 @@
     },
     "unsupported_os": {
       "title": "Unsupported system - Operating System",
-      "description": "System is unsupported because the operating system in use is not tested or maintained for use with Supervisor. Use the link to which operating systems are supported and how to fix this."
+      "description": "System is unsupported because the operating system in use is not tested or maintained for use with Supervisor. For information about supported operating systems and how to fix this, select Learn more."
     },
     "unsupported_os_agent": {
       "title": "Unsupported system - OS-Agent issues",
@@ -242,6 +250,10 @@
     "unsupported_os_version": {
       "title": "Unsupported system - Home Assistant OS version",
       "description": "System is unsupported because the Home Assistant OS version in use is not supported. For troubleshooting information, select Learn more."
+    },
+    "unsupported_home_assistant_core_version": {
+      "title": "Unsupported system - Home Assistant Core version",
+      "description": "System is unsupported because the Home Assistant Core version in use is not supported. For troubleshooting information, select Learn more."
     }
   },
   "entity": {
