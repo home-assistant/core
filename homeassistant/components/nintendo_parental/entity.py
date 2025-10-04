@@ -38,3 +38,4 @@ class NintendoDevice(CoordinatorEntity[NintendoUpdateCoordinator]):
     async def async_will_remove_from_hass(self) -> None:
         """When will be removed from HASS."""
         self._device.remove_device_callback(self.async_write_ha_state)
+        await super().async_will_remove_from_hass()
