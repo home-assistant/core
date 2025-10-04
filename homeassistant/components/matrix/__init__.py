@@ -11,7 +11,7 @@ import re
 from typing import Final, NewType, Required, TypedDict
 
 import aiofiles.os
-from nio import AsyncClient, Event, MatrixRoom
+from nio import AsyncClient, AsyncClientConfig, Event, MatrixRoom
 from nio.events.room_events import RoomMessageText
 from nio.responses import (
     ErrorResponse,
@@ -30,6 +30,7 @@ import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.const import (
+    CONF_DEVICE_ID,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -102,6 +103,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
                 vol.Required(CONF_USERNAME): cv.matches_regex(CONF_USERNAME_REGEX),
                 vol.Required(CONF_PASSWORD): cv.string,
+                vol.Optional(CONF_DEVICE_ID, default="Home Assistant"): cv.string,
                 vol.Optional(CONF_ROOMS, default=[]): vol.All(
                     cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
                 ),
@@ -118,14 +120,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     config = config[DOMAIN]
 
     hass.data[DOMAIN] = MatrixBot(
-        hass,
-        os.path.join(hass.config.path(), SESSION_FILE),
-        config[CONF_HOMESERVER],
-        config[CONF_VERIFY_SSL],
-        config[CONF_USERNAME],
-        config[CONF_PASSWORD],
-        config[CONF_ROOMS],
-        config[CONF_COMMANDS],
+        hass=hass,
+        config_file=os.path.join(hass.config.path(), SESSION_FILE),
+        homeserver=config[CONF_HOMESERVER],
+        verify_ssl=config[CONF_VERIFY_SSL],
+        username=config[CONF_USERNAME],
+        password=config[CONF_PASSWORD],
+        device_id=config[CONF_DEVICE_ID],
+        listening_rooms=config[CONF_ROOMS],
+        commands=config[CONF_COMMANDS],
     )
 
     async_setup_services(hass)
@@ -146,6 +149,7 @@ class MatrixBot:
         verify_ssl: bool,
         username: str,
         password: str,
+        device_id: str,
         listening_rooms: list[RoomAnyID],
         commands: list[ConfigCommand],
     ) -> None:
@@ -159,9 +163,29 @@ class MatrixBot:
         self._verify_tls = verify_ssl
         self._mx_id = username
         self._password = password
+        self._device_id = device_id
+
+        store_path = os.path.join(
+            os.path.dirname(self._session_filepath), ".matrix_store"
+        )
+        os.makedirs(store_path, exist_ok=True)
+
+        config = AsyncClientConfig(
+            max_limit_exceeded=30,
+            max_timeouts=30,
+            backoff_factor=0.1,
+            store_sync_tokens=True,
+            store_name="ha_matrix_store",
+            encryption_enabled=True,
+        )
 
         self._client = AsyncClient(
-            homeserver=self._homeserver, user=self._mx_id, ssl=self._verify_tls
+            homeserver=self._homeserver,
+            user=self._mx_id,
+            device_id=self._device_id,
+            store_path=store_path,
+            ssl=self._verify_tls,
+            config=config,
         )
 
         self._listening_rooms: dict[RoomAnyID, RoomID] = {}
@@ -356,11 +380,7 @@ class MatrixBot:
         # If we have an access token
         if (token := self._access_tokens.get(self._mx_id)) is not None:
             _LOGGER.debug("Restoring login from stored access token")
-            self._client.restore_login(
-                user_id=self._client.user_id,
-                device_id=self._client.device_id,
-                access_token=token,
-            )
+            self._client.access_token = token
             response = await self._client.whoami()
             if isinstance(response, WhoamiError):
                 _LOGGER.warning(
@@ -377,6 +397,11 @@ class MatrixBot:
                     response.user_id,
                     response.device_id,
                 )
+            self._client.restore_login(
+                user_id=self._client.user_id,
+                device_id=self._client.device_id,
+                access_token=token,
+            )
 
         # If the token login did not succeed
         if not self._client.logged_in:
