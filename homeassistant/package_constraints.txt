@@ -35,7 +35,7 @@ file-read-backwards==2.0.0
 fnv-hash-fast==1.5.0
 go2rtc-client==0.2.1
 ha-ffmpeg==3.2.2
-habluetooth==5.6.4
+habluetooth==5.7.0
 hass-nabucasa==1.2.0
 hassil==3.2.0
 home-assistant-bluetooth==1.13.1
