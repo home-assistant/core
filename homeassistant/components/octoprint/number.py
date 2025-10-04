@@ -19,13 +19,16 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def is_extruder(tool_name: str) -> bool:
     """Return True if the tool name indicates an extruder."""
     return tool_name.startswith("tool") and any(char.isdigit() for char in tool_name)
 
+
 def is_bed(tool_name: str) -> bool:
     """Return True if the tool name indicates a bed."""
     return tool_name == "bed"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -69,6 +72,7 @@ async def async_setup_entry(
 
     if coordinator.data["printer"]:
         async_add_tool_numbers()
+
 
 class OctoPrintTemperatureNumber(
     CoordinatorEntity[OctoprintDataUpdateCoordinator], NumberEntity

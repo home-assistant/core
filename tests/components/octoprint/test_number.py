@@ -23,7 +23,10 @@ async def test_numbers(
             "flags": {"printing": True},
             "text": "Operational",
         },
-        "temperature": {"tool0": {"actual": 18.83136, "target": 37.83136}, "bed": {"actual": 25.5, "target": 60.0}},
+        "temperature": {
+            "tool0": {"actual": 18.83136, "target": 37.83136},
+            "bed": {"actual": 25.5, "target": 60.0},
+        },
     }
     job = __standard_job()
     freezer.move_to(datetime(2020, 2, 20, 9, 10, 13, 543, tzinfo=UTC))
@@ -95,7 +98,9 @@ async def test_set_tool_temperature(
     job = __standard_job()
     freezer.move_to(datetime(2020, 2, 20, 9, 10, 0))
 
-    with patch("pyoctoprintapi.OctoprintClient.set_tool_temperature") as mock_set_tool_temp:
+    with patch(
+        "pyoctoprintapi.OctoprintClient.set_tool_temperature"
+    ) as mock_set_tool_temp:
         mock_set_tool_temp.return_value = AsyncMock()
         await init_integration(hass, "number", printer=printer, job=job)
 
@@ -127,7 +132,9 @@ async def test_set_bed_temperature(
     job = __standard_job()
     freezer.move_to(datetime(2020, 2, 20, 9, 10, 0))
 
-    with patch("pyoctoprintapi.OctoprintClient.set_bed_temperature") as mock_set_bed_temp:
+    with patch(
+        "pyoctoprintapi.OctoprintClient.set_bed_temperature"
+    ) as mock_set_bed_temp:
         mock_set_bed_temp.return_value = AsyncMock()
         await init_integration(hass, "number", printer=printer, job=job)
 
