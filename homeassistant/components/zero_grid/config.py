@@ -11,8 +11,7 @@ class ControllableLoadConfig:
     min_toggle_interval_seconds: int = 60
     min_throttle_interval_seconds: int = 10
     load_amps_entity: str
-    switch_entity: str | None = None
-    can_switch: bool = False
+    switch_entity: str
     throttle_amps_entity: str | None = None
     can_throttle: bool = False
 

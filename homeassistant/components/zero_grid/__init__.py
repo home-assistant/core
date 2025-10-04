@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 from datetime import datetime, timedelta
 import logging
 
@@ -13,10 +14,12 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
 )
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import bind_hass
 
 from .config import Config, ControllableLoadConfig
 from .const import DOMAIN
-from .state import ControllableLoadState, State
+from .helpers import parse_entity_domain
+from .state import ControllableLoadState, State, PlanState, ControllableLoadPlanState
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +27,7 @@ _PLATFORMS: list[Platform] = []
 
 CONFIG = Config()
 STATE = State()
+PLAN = PlanState()
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -62,10 +66,10 @@ def parse_config(domain_config):
     CONFIG.allow_solar_consumption = CONFIG.solar_generation_kw_entity is not None
 
     control_options = domain_config.get("controllable_loads", [])
-    for control in control_options:
+    for priority, control in enumerate(control_options):
         control_config = ControllableLoadConfig()
         control_config.name = control.get("name")
-        control_config.priority = control.get("priority", 0)
+        control_config.priority = priority
         control_config.max_controllable_load_amps = control.get(
             "max_controllable_load_amps"
         )
@@ -80,7 +84,6 @@ def parse_config(domain_config):
         )
         control_config.load_amps_entity = control.get("load_amps_entity")
         control_config.switch_entity = control.get("switch_entity")
-        control_config.can_switch = control_config.switch_entity is not None
         control_config.throttle_amps_entity = control.get("throttle_amps_entity", None)
         control_config.can_throttle = control_config.throttle_amps_entity is not None
         CONFIG.controllable_loads[control_config.name] = control_config
@@ -114,13 +117,8 @@ def initialise_state(hass: HomeAssistant):
 
     # match to controllable loads
     for control in CONFIG.controllable_loads.values():
-        load_state = ControllableLoadState()
-        load_state.current_load_amps = 0
-        load_state.is_on = False
-        load_state.is_on_load_control = False
-        load_state.last_throttled = None
-        load_state.last_toggled = None
-        STATE.controllable_loads[control.name] = load_state
+        STATE.controllable_loads[control.name] = ControllableLoadState()
+        PLAN.controllable_loads[control.name] = ControllableLoadPlanState()
 
     _LOGGER.debug("Initialised state: %s", STATE)
 
@@ -143,8 +141,7 @@ def subscribe_to_entity_changes(hass: HomeAssistant):
         # if control.throttle_amps_entity is not None:
         #     entity_ids.append(control.throttle_amps_entity)
 
-    @callback
-    def state_automation_listener(event: Event[EventStateChangedData]) -> None:
+    async def state_automation_listener(event: Event[EventStateChangedData]) -> None:
         if event.event_type != "state_changed":
             return
 
@@ -210,10 +207,11 @@ def subscribe_to_entity_changes(hass: HomeAssistant):
                             control.name
                         ].is_on = True  # Assume on if unavailable
 
-        recalculate_load_control(hass)
+        await recalculate_load_control(hass)
 
-    def state_time_listener(now: datetime) -> None:
-        recalculate_load_control(hass)
+    async def state_time_listener(now: datetime) -> None:
+        _LOGGER.debug("Time listener fired")
+        await recalculate_load_control(hass)
 
     _LOGGER.debug("Subscribing... %s", entity_ids)
     async_track_state_change_event(hass, entity_ids, state_automation_listener)
@@ -222,9 +220,11 @@ def subscribe_to_entity_changes(hass: HomeAssistant):
     async_track_time_interval(hass, state_time_listener, interval)
 
 
-def recalculate_load_control(hass: HomeAssistant):
+@bind_hass
+async def recalculate_load_control(hass: HomeAssistant):
     """The core of the loac control algorithm."""
     now = datetime.now()
+    new_plan = PlanState()
 
     # Determine how much power we have to work with
     # Grid power is what is left of the house fuse after house consumption
@@ -249,28 +249,32 @@ def recalculate_load_control(hass: HomeAssistant):
             solar_available_amps - safety_margin_amps
         )  # Can only use solar power
 
+    # If the available load we have to play with has not changed meaningfully, do nothing
+    available_amps_delta = abs(PLAN.available_amps - available_amps)
+    if available_amps_delta < CONFIG.hysteresis_amps:
+        return
+
+    new_plan.available_amps = available_amps
     hass.states.async_set("zero_grid.available_amps", str(available_amps))
     _LOGGER.debug("Available amps: %f", available_amps)
 
-    # Sort the controllable loads by priority (highest first)
+    # Build priority list (lower number == more important)
     prioritised_loads = sorted(
         CONFIG.controllable_loads.copy(),
         key=lambda k: CONFIG.controllable_loads[k].priority,
+        reverse=True,
     )
     _LOGGER.debug("Priority: %s", prioritised_loads)
 
     if available_amps > CONFIG.hysteresis_amps:
-        load_increase_budget = available_amps + CONFIG.hysteresis_amps
+        load_increase_budget = available_amps
         _LOGGER.debug("Load increase budget: %s", load_increase_budget)
 
-        # Turn on loads in priority order until we run out of budget
-        for load_name in prioritised_loads:
+        # Figure out what the
+        for load_name in CONFIG.controllable_loads:  # pylint: disable=consider-using-dict-items
             config = CONFIG.controllable_loads[load_name]
             state = STATE.controllable_loads[load_name]
-
-            if not config.can_switch and not config.can_throttle:
-                _LOGGER.warning("Load %s cannot be controlled", load_name)
-                continue
+            plan = new_plan.controllable_loads[load_name] = ControllableLoadPlanState()
 
             if state.is_on and not config.can_throttle:
                 _LOGGER.debug("Load %s already on and cannot throttle", load_name)
@@ -297,12 +301,11 @@ def recalculate_load_control(hass: HomeAssistant):
                     + timedelta(seconds=config.min_toggle_interval_seconds)
                     <= now
                 ):
-                    # Turn on the load
-                    hass.services.call(
-                        "switch", "turn_on", {"entity_id": config.switch_entity}
-                    )
-                    state.last_toggled = now
-                    state.is_on_load_control = True
+                    plan.is_on = True
+                    expected_amps =
+
+                    plan.expected_load_amps = max(config.min_controllable_load_amps, config.max_controllable_load_amps)
+
                 else:
                     _LOGGER.debug(
                         "Unable to turn on load %s due to rate limit", load_name
@@ -316,11 +319,16 @@ def recalculate_load_control(hass: HomeAssistant):
                     <= now
                 ):
                     # Set the throttling current
-                    # Resolve correct service type
+                    state.last_throttled = now
+
+                    number_domain = parse_entity_domain(config.throttle_amps_entity)
                     hass.services.call(
-                        "input_number",
-                        "set",
-                        {"entity_id": config.switch_entity, "value": will_consume_amps},
+                        number_domain,
+                        "set_value",
+                        {
+                            "entity_id": config.throttle_amps_entity,
+                            "value": will_consume_amps,
+                        },
                     )
                     state.last_throttled = now
                     state.is_on_load_control = True
@@ -336,6 +344,76 @@ def recalculate_load_control(hass: HomeAssistant):
 
     else:
         _LOGGER.debug("No load available, within safety margin:")
+
+    await execute_plan(hass, new_plan)
+
+
+@bind_hass
+async def execute_plan(hass: HomeAssistant, plan: PlanState):
+    """Changes entity states to acheive laod control plan."""
+    now = datetime.now()
+
+    for load_name in plan.controllable_loads:  # pylint: disable=consider-using-dict-items
+        config = CONFIG.controllable_loads[load_name]
+        state = STATE.controllable_loads[load_name]
+        previous_plan = PLAN.controllable_loads[load_name]
+        new_plan = plan.controllable_loads[load_name]
+
+        # Turn on or off load only when we need to
+        switch_domain = parse_entity_domain(config.switch_entity)
+        if new_plan.is_on and not previous_plan.is_on and not state.is_on:
+            _LOGGER.info("Turning on %s due to available load", config.switch_entity)
+            state.last_toggled = now
+            state.is_on_load_control = True
+
+            await hass.services.async_call(
+                switch_domain,
+                "turn_on",
+                {"entity_id": config.switch_entity},
+                blocking=False,
+            )
+        elif not new_plan.is_on and not previous_plan.is_on and state.is_on:
+            _LOGGER.info("Turning off %s due to available load", config.switch_entity)
+            state.last_toggled = now
+            state.is_on_load_control = False
+
+            await hass.services.async_call(
+                switch_domain,
+                "turn_off",
+                {"entity_id": config.switch_entity},
+                blocking=False,
+            )
+
+        # Adjust load throttling
+        if config.can_throttle:
+            # Make sure the delta is significant enough before issuing command
+            throttle_delta = previous_plan.throttle_amps - new_plan.throttle_amps
+            if abs(throttle_delta) > CONFIG.hysteresis_amps:
+                if state.is_on_load_control:
+                    _LOGGER.info(
+                        "Throttling %s to %d due to available load",
+                        config.throttle_amps_entity,
+                        new_plan.throttle_amps,
+                    )
+                    number_domain = parse_entity_domain(config.throttle_amps_entity)
+                    state.last_throttled = now
+
+                    hass.services.call(
+                        number_domain,
+                        "set_value",
+                        {
+                            "entity_id": config.throttle_amps_entity,
+                            "value": str(new_plan.throttle_amps),
+                        },
+                        blocking=False,
+                    )
+            else:
+                # Since we never changed the throttle, update the plan
+                new_plan.throttle_amps = previous_plan.throttle_amps
+
+        # Update current plan with new plan
+        PLAN.available_amps = plan.available_amps
+        PLAN.controllable_loads = plan.controllable_loads
 
 
 def abort_load_control():

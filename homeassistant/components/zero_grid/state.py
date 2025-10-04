@@ -3,6 +3,17 @@
 from datetime import datetime
 
 
+class ControllableLoadPlanState:
+    is_on: bool = False
+    throttle_amps: int = 0
+    expected_load_amps: int = 0
+
+
+class PlanState:
+    available_amps: float = 0
+    controllable_loads: dict[str, ControllableLoadPlanState] = {}
+
+
 class ControllableLoadState:
     """Represents the current state of a controllable load."""
 
