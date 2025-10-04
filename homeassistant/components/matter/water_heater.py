@@ -59,7 +59,8 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_WATER_HEATER_BOOST,
         schema={
-            vol.Required("duration"): vol.All(cv.positive_int),
+            # duration >=1
+            vol.Required("duration"): vol.All(vol.Coerce(int), vol.Range(min=1)),
             vol.Optional("emergency_boost"): cv.boolean,
             vol.Optional("temporary_setpoint"): vol.All(
                 vol.Coerce(int), vol.Range(min=30, max=65)
@@ -109,14 +110,6 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
             raise HomeAssistantError from err
         self._update_from_device()
 
-    # Fields=[
-    #     ClusterObjectFieldDescriptor(Label="duration", Tag=0, Type=uint),
-    #     ClusterObjectFieldDescriptor(Label="oneShot", Tag=1, Type=typing.Optional[bool]),
-    #     ClusterObjectFieldDescriptor(Label="emergencyBoost", Tag=2, Type=typing.Optional[bool]),
-    #     ClusterObjectFieldDescriptor(Label="temporarySetpoint", Tag=3, Type=typing.Optional[int]),
-    #     ClusterObjectFieldDescriptor(Label="targetPercentage", Tag=4, Type=typing.Optional[uint]),
-    #     ClusterObjectFieldDescriptor(Label="targetReheat", Tag=5, Type=typing.Optional[uint]),
-    # ])
     async def async_set_boost(
         self,
         duration: int,
