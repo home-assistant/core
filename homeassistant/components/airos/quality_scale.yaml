@@ -32,11 +32,11 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable: todo
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
-  parallel-updates: todo
-  reauthentication-flow: todo
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
@@ -48,9 +48,9 @@ rules:
   docs-examples: todo
   docs-known-limitations: done
   docs-supported-devices: done
-  docs-supported-functions: todo
+  docs-supported-functions: done
   docs-troubleshooting: done
-  docs-use-cases: todo
+  docs-use-cases: done
   dynamic-devices: todo
   entity-category: done
   entity-device-class: done
