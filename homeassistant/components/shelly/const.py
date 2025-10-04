@@ -308,3 +308,7 @@ DEVICE_UNIT_MAP = {
 MAX_SCRIPT_SIZE = 5120
 
 All_LIGHT_TYPES = ("cct", "light", "rgb", "rgbw")
+
+# Shelly-X specific models
+MODEL_NEO_WATER_VALVE = "NeoWaterValve"
+MODEL_FRANKEVER_WATER_VALVE = "WaterValve"

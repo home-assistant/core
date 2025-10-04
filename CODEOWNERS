@@ -910,6 +910,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/luci/ @mzdrale
 /homeassistant/components/luftdaten/ @fabaff @frenck
 /tests/components/luftdaten/ @fabaff @frenck
+/homeassistant/components/lunatone/ @MoonDevLT
+/tests/components/lunatone/ @MoonDevLT
 /homeassistant/components/lupusec/ @majuss @suaveolent
 /tests/components/lupusec/ @majuss @suaveolent
 /homeassistant/components/lutron/ @cdheiser @wilburCForce
@@ -1194,8 +1196,6 @@ build.json @home-assistant/supervisor
 /tests/components/plex/ @jjlawren
 /homeassistant/components/plugwise/ @CoMPaTech @bouwew
 /tests/components/plugwise/ @CoMPaTech @bouwew
-/homeassistant/components/plum_lightpad/ @ColinHarrington @prystupa
-/tests/components/plum_lightpad/ @ColinHarrington @prystupa
 /homeassistant/components/point/ @fredrike
 /tests/components/point/ @fredrike
 /homeassistant/components/pooldose/ @lmaertin
