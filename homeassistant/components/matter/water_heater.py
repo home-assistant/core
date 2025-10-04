@@ -130,7 +130,9 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         ] = clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct(
             duration=self.duration,
             emergencyBoost=emergency_boost,
-            temporarySetpoint=temporary_setpoint,
+            temporarySetpoint=temporary_setpoint * TEMPERATURE_SCALING_FACTOR
+            if temporary_setpoint is not Nullable
+            else Nullable,
         )
         try:
             await self.send_device_command(
