@@ -63,9 +63,62 @@ async def test_migrations(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.version == 3
+    assert entry.version == 4
     assert CONF_HOST not in entry.data
     assert CONF_API_KEY not in entry.data
     assert entry.data[CONF_URL] == "http://test_host"
     assert entry.data[CONF_API_TOKEN] == "test_key"
     assert entry.data[CONF_VERIFY_SSL] is True
+
+
+async def test_device_migration(hass: HomeAssistant) -> None:
+    """Test migration of device identifiers from v3 to v4."""
+    from homeassistant.helpers import device_registry as dr
+
+    # Create a mock config entry at version 3
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_URL: "http://test_host",
+            CONF_API_TOKEN: "test_key",
+            CONF_VERIFY_SSL: True,
+        },
+        unique_id="1",
+        version=3,
+    )
+    entry.add_to_hass(hass)
+
+    # Create device registry entries to simulate old format
+    device_registry = dr.async_get(hass)
+    
+    # Create endpoint device
+    endpoint_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, f"{entry.entry_id}_endpoint1")},
+        name="Test Endpoint",
+        model="Endpoint",
+    )
+    
+    # Create container device with old format identifier
+    container_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, f"{entry.entry_id}_test_container")},
+        name="Test Container",
+        model="Container",
+        via_device_id=endpoint_device.id,
+    )
+    
+    # Verify old format
+    assert container_device.identifiers == {(DOMAIN, f"{entry.entry_id}_test_container")}
+    
+    # Run migration by setting up the entry
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    
+    # Verify migration occurred
+    assert entry.version == 4
+    
+    # Check that device identifier was updated
+    updated_device = device_registry.async_get(container_device.id)
+    expected_identifier = f"{entry.entry_id}_endpoint1_test_container"
+    assert updated_device.identifiers == {(DOMAIN, expected_identifier)}
