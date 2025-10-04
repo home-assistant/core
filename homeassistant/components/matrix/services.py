@@ -47,7 +47,7 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
 async def _handle_send_message(call: ServiceCall) -> None:
     """Handle the send_message service call."""
     matrix_bot: MatrixBot = call.hass.data[DOMAIN]
-    await matrix_bot.handle_send_message(call)
+    await matrix_bot.handle_send_message(call.data)
 
 
 @callback
