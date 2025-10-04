@@ -1,18 +1,8 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "data": {
-          "username": "[%key:common::config_flow::data::email%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+  "issues": {
+    "integration_removed": {
+      "title": "The Plum Lightpad integration has been removed",
+      "description": "The Plum Lightpad integration has been removed from Home Assistant.\n\nThe required cloud services are no longer available since the Plum servers have been shut down. To resolve this issue, please remove the (now defunct) integration entries from your Home Assistant setup. [Click here to see your existing Plum Lightpad integration entries]({entries})."
     }
   }
 }

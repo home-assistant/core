@@ -499,7 +499,6 @@ FLOWS = {
         "playstation_network",
         "plex",
         "plugwise",
-        "plum_lightpad",
         "point",
         "pooldose",
         "poolsense",

@@ -1196,8 +1196,6 @@ build.json @home-assistant/supervisor
 /tests/components/plex/ @jjlawren
 /homeassistant/components/plugwise/ @CoMPaTech @bouwew
 /tests/components/plugwise/ @CoMPaTech @bouwew
-/homeassistant/components/plum_lightpad/ @ColinHarrington @prystupa
-/tests/components/plum_lightpad/ @ColinHarrington @prystupa
 /homeassistant/components/point/ @fredrike
 /tests/components/point/ @fredrike
 /homeassistant/components/pooldose/ @lmaertin
