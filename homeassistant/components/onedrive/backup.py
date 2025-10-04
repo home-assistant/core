@@ -169,6 +169,8 @@ class OneDriveBackupAgent(BackupAgent):
         upload_chunk_size = round(upload_chunk_size / (320 * 1024)) * (320 * 1024)
         # limit to max chunk size
         upload_chunk_size = min(upload_chunk_size, MAX_CHUNK_SIZE)
+        # ensure minimum chunk size of 320KB
+        upload_chunk_size = max(upload_chunk_size, 320 * 1024)
 
         try:
             backup_file = await LargeFileUploadClient.upload(
