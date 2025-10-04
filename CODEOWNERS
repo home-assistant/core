@@ -492,6 +492,8 @@ build.json @home-assistant/supervisor
 /tests/components/filesize/ @gjohansson-ST
 /homeassistant/components/filter/ @dgomes
 /tests/components/filter/ @dgomes
+/homeassistant/components/firefly_iii/ @erwindouna
+/tests/components/firefly_iii/ @erwindouna
 /homeassistant/components/fireservicerota/ @cyberjunky
 /tests/components/fireservicerota/ @cyberjunky
 /homeassistant/components/firmata/ @DaAwesomeP
@@ -908,6 +910,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/luci/ @mzdrale
 /homeassistant/components/luftdaten/ @fabaff @frenck
 /tests/components/luftdaten/ @fabaff @frenck
+/homeassistant/components/lunatone/ @MoonDevLT
+/tests/components/lunatone/ @MoonDevLT
 /homeassistant/components/lupusec/ @majuss @suaveolent
 /tests/components/lupusec/ @majuss @suaveolent
 /homeassistant/components/lutron/ @cdheiser @wilburCForce
@@ -953,6 +957,8 @@ build.json @home-assistant/supervisor
 /tests/components/met_eireann/ @DylanGore
 /homeassistant/components/meteo_france/ @hacf-fr @oncleben31 @Quentame
 /tests/components/meteo_france/ @hacf-fr @oncleben31 @Quentame
+/homeassistant/components/meteo_lt/ @xE1H
+/tests/components/meteo_lt/ @xE1H
 /homeassistant/components/meteoalarm/ @rolfberkenbosch
 /homeassistant/components/meteoclimatic/ @adrianmo
 /tests/components/meteoclimatic/ @adrianmo
@@ -1190,8 +1196,6 @@ build.json @home-assistant/supervisor
 /tests/components/plex/ @jjlawren
 /homeassistant/components/plugwise/ @CoMPaTech @bouwew
 /tests/components/plugwise/ @CoMPaTech @bouwew
-/homeassistant/components/plum_lightpad/ @ColinHarrington @prystupa
-/tests/components/plum_lightpad/ @ColinHarrington @prystupa
 /homeassistant/components/point/ @fredrike
 /tests/components/point/ @fredrike
 /homeassistant/components/pooldose/ @lmaertin

@@ -25,6 +25,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -34,6 +35,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from . import (
     init_integration,
     inject_rpc_device_event,
+    patch_platforms,
     register_device,
     register_entity,
     register_sub_device,
@@ -46,6 +48,15 @@ LIGHT_BLOCK_ID = 2
 RELAY_BLOCK_ID = 0
 GAS_VALVE_BLOCK_ID = 6
 MOTION_BLOCK_ID = 3
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms(
+        [Platform.SWITCH, Platform.CLIMATE, Platform.VALVE, Platform.LIGHT]
+    ):
+        yield
 
 
 async def test_block_device_services(

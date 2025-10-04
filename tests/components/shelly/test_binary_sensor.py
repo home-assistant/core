@@ -10,7 +10,13 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.shelly.const import UPDATE_PERIOD_MULTIPLIER
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -19,6 +25,7 @@ from . import (
     init_integration,
     mock_rest_update,
     mutate_rpc_device_status,
+    patch_platforms,
     register_device,
     register_entity,
     register_sub_device,
@@ -28,6 +35,13 @@ from tests.common import mock_restore_cache
 
 RELAY_BLOCK_ID = 0
 SENSOR_BLOCK_ID = 3
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms([Platform.BINARY_SENSOR]):
+        yield
 
 
 async def test_block_binary_sensor(
