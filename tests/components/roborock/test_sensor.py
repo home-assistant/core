@@ -4,6 +4,10 @@ from unittest.mock import patch
 
 import pytest
 from roborock import DeviceData, HomeDataDevice
+from roborock.const import (
+    CLEANING_BRUSH_REPLACE_TIME,
+    STRAINER_REPLACE_TIME,
+)
 from roborock.roborock_message import RoborockMessage, RoborockMessageProtocol
 from roborock.version_1_apis import RoborockMqttClientV1
 
@@ -23,7 +27,10 @@ def platforms() -> list[Platform]:
 
 async def test_sensors(hass: HomeAssistant, setup_entry: MockConfigEntry) -> None:
     """Test sensors and check test values are correctly set."""
-    assert len(hass.states.async_all("sensor")) == 42
+    assert len(hass.states.async_all("sensor")) == 46
+    assert hass.states.get("sensor.roborock_s7_maxv_main_brush_time_left").state == str(
+        MAIN_BRUSH_REPLACE_TIME - 74382
+    )
     assert (
         hass.states.get("sensor.roborock_s7_maxv_main_brush_time_left").state
         == "279.338333333333"
@@ -40,6 +47,13 @@ async def test_sensors(hass: HomeAssistant, setup_entry: MockConfigEntry) -> Non
         hass.states.get("sensor.roborock_s7_maxv_sensor_time_left").state
         == "9.33833333333333"
     )
+    assert hass.states.get(
+        "sensor.roborock_s7_2_dock_maintenance_brush_time_left"
+    ).state == str(CLEANING_BRUSH_REPLACE_TIME - 65)
+    assert hass.states.get("sensor.roborock_s7_2_dock_strainer_time_left").state == str(
+        STRAINER_REPLACE_TIME - 65
+    )
+
     assert hass.states.get("sensor.roborock_s7_maxv_cleaning_time").state == "19.6"
     assert (
         hass.states.get("sensor.roborock_s7_maxv_total_cleaning_time").state
