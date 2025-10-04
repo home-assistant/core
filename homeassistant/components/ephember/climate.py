@@ -58,7 +58,7 @@ EPH_TO_HA_STATE = {
 class EPHBoilerStates(IntEnum):
     """Boiler states for a zone given by the api."""
 
-    FIXME = 0
+    UNKNOWN = 0
     OFF = 1
     ON = 2
 
