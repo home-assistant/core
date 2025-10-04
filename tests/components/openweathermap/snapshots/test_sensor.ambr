@@ -41,7 +41,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'aqi',
-      'friendly_name': 'openweathermap Air quality index',
+      'friendly_name': 'OpenWeatherMap Air quality index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -94,7 +94,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'carbon_monoxide',
-      'friendly_name': 'openweathermap Carbon monoxide',
+      'friendly_name': 'OpenWeatherMap Carbon monoxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
@@ -148,7 +148,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'nitrogen_dioxide',
-      'friendly_name': 'openweathermap Nitrogen dioxide',
+      'friendly_name': 'OpenWeatherMap Nitrogen dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
@@ -202,7 +202,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'nitrogen_monoxide',
-      'friendly_name': 'openweathermap Nitrogen monoxide',
+      'friendly_name': 'OpenWeatherMap Nitrogen monoxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
@@ -256,7 +256,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'ozone',
-      'friendly_name': 'openweathermap Ozone',
+      'friendly_name': 'OpenWeatherMap Ozone',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
@@ -310,7 +310,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'pm10',
-      'friendly_name': 'openweathermap PM10',
+      'friendly_name': 'OpenWeatherMap PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
@@ -364,7 +364,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'pm25',
-      'friendly_name': 'openweathermap PM2.5',
+      'friendly_name': 'OpenWeatherMap PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
@@ -418,7 +418,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'sulphur_dioxide',
-      'friendly_name': 'openweathermap Sulphur dioxide',
+      'friendly_name': 'OpenWeatherMap Sulphur dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
@@ -471,7 +471,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
-      'friendly_name': 'openweathermap Cloud coverage',
+      'friendly_name': 'OpenWeatherMap Cloud coverage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -522,7 +522,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
-      'friendly_name': 'openweathermap Condition',
+      'friendly_name': 'OpenWeatherMap Condition',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_condition',
@@ -577,7 +577,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'temperature',
-      'friendly_name': 'openweathermap Dew Point',
+      'friendly_name': 'OpenWeatherMap Dew Point',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -634,7 +634,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'temperature',
-      'friendly_name': 'openweathermap Feels like temperature',
+      'friendly_name': 'OpenWeatherMap Feels like temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -688,7 +688,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'humidity',
-      'friendly_name': 'openweathermap Humidity',
+      'friendly_name': 'OpenWeatherMap Humidity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -739,7 +739,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
-      'friendly_name': 'openweathermap Precipitation kind',
+      'friendly_name': 'OpenWeatherMap Precipitation kind',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_precipitation_kind',
@@ -794,7 +794,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'pressure',
-      'friendly_name': 'openweathermap Pressure',
+      'friendly_name': 'OpenWeatherMap Pressure',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
     }),
@@ -851,7 +851,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'precipitation_intensity',
-      'friendly_name': 'openweathermap Rain',
+      'friendly_name': 'OpenWeatherMap Rain',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
@@ -908,7 +908,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'precipitation_intensity',
-      'friendly_name': 'openweathermap Snow',
+      'friendly_name': 'OpenWeatherMap Snow',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
@@ -965,7 +965,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'temperature',
-      'friendly_name': 'openweathermap Temperature',
+      'friendly_name': 'OpenWeatherMap Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -1018,7 +1018,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
-      'friendly_name': 'openweathermap UV Index',
+      'friendly_name': 'OpenWeatherMap UV Index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'UV index',
     }),
@@ -1075,7 +1075,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'distance',
-      'friendly_name': 'openweathermap Visibility',
+      'friendly_name': 'OpenWeatherMap Visibility',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
     }),
@@ -1126,7 +1126,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
-      'friendly_name': 'openweathermap Weather',
+      'friendly_name': 'OpenWeatherMap Weather',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_weather',
@@ -1175,7 +1175,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
-      'friendly_name': 'openweathermap Weather Code',
+      'friendly_name': 'OpenWeatherMap Weather Code',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_weather_code',
@@ -1227,7 +1227,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'wind_direction',
-      'friendly_name': 'openweathermap Wind bearing',
+      'friendly_name': 'OpenWeatherMap Wind bearing',
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
       'unit_of_measurement': '°',
     }),
@@ -1287,7 +1287,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'wind_speed',
-      'friendly_name': 'openweathermap Wind gust',
+      'friendly_name': 'OpenWeatherMap Wind gust',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -1347,7 +1347,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'wind_speed',
-      'friendly_name': 'openweathermap Wind speed',
+      'friendly_name': 'OpenWeatherMap Wind speed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -1400,7 +1400,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
-      'friendly_name': 'openweathermap Cloud coverage',
+      'friendly_name': 'OpenWeatherMap Cloud coverage',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -1451,7 +1451,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
-      'friendly_name': 'openweathermap Condition',
+      'friendly_name': 'OpenWeatherMap Condition',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_condition',
@@ -1506,7 +1506,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'temperature',
-      'friendly_name': 'openweathermap Dew Point',
+      'friendly_name': 'OpenWeatherMap Dew Point',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -1563,7 +1563,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'temperature',
-      'friendly_name': 'openweathermap Feels like temperature',
+      'friendly_name': 'OpenWeatherMap Feels like temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -1617,7 +1617,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'humidity',
-      'friendly_name': 'openweathermap Humidity',
+      'friendly_name': 'OpenWeatherMap Humidity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
@@ -1668,7 +1668,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
-      'friendly_name': 'openweathermap Precipitation kind',
+      'friendly_name': 'OpenWeatherMap Precipitation kind',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_precipitation_kind',
@@ -1723,7 +1723,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'pressure',
-      'friendly_name': 'openweathermap Pressure',
+      'friendly_name': 'OpenWeatherMap Pressure',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
     }),
@@ -1780,7 +1780,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'precipitation_intensity',
-      'friendly_name': 'openweathermap Rain',
+      'friendly_name': 'OpenWeatherMap Rain',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
@@ -1837,7 +1837,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'precipitation_intensity',
-      'friendly_name': 'openweathermap Snow',
+      'friendly_name': 'OpenWeatherMap Snow',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
@@ -1894,7 +1894,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'temperature',
-      'friendly_name': 'openweathermap Temperature',
+      'friendly_name': 'OpenWeatherMap Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -1947,7 +1947,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
-      'friendly_name': 'openweathermap UV Index',
+      'friendly_name': 'OpenWeatherMap UV Index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'UV index',
     }),
@@ -2004,7 +2004,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'distance',
-      'friendly_name': 'openweathermap Visibility',
+      'friendly_name': 'OpenWeatherMap Visibility',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
     }),
@@ -2055,7 +2055,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
-      'friendly_name': 'openweathermap Weather',
+      'friendly_name': 'OpenWeatherMap Weather',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_weather',
@@ -2104,7 +2104,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
-      'friendly_name': 'openweathermap Weather Code',
+      'friendly_name': 'OpenWeatherMap Weather Code',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_weather_code',
@@ -2156,7 +2156,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'wind_direction',
-      'friendly_name': 'openweathermap Wind bearing',
+      'friendly_name': 'OpenWeatherMap Wind bearing',
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
       'unit_of_measurement': '°',
     }),
@@ -2216,7 +2216,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'wind_speed',
-      'friendly_name': 'openweathermap Wind gust',
+      'friendly_name': 'OpenWeatherMap Wind gust',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
@@ -2276,7 +2276,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'wind_speed',
-      'friendly_name': 'openweathermap Wind speed',
+      'friendly_name': 'OpenWeatherMap Wind speed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
