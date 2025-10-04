@@ -34,6 +34,7 @@ def async_get_calendar_event_from_pickup_event(
         pickup_items.append(f"{pickup.name} (quantity: {pickup.quantity})")
         if pickup.category == PickupCategory.ROTATING:
             rotating_category = pickup.name
+            break
 
     pickup_type_string = ", ".join(pickup_items)
     pickup_event_state = pickup_event.state.value
@@ -47,12 +48,13 @@ def async_get_calendar_event_from_pickup_event(
         if rotating_category:
             summary = f"{summary_base} ({rotating_category})"
         else:
-            summary = f"{summary_base} (not yet opted in/out)"
+            summary = f"{summary_base} ({pickup_event_state})"
     elif calendar_preference == CALENDAR_TITLE_NONE:
         # Include only a basic title for the event.
         summary = summary_base
     else:
-        summary = f"{summary_base} (Error)"
+        # Default to pickup status if no selection is made (e.g., scheduled, skipped, etc).
+        summary = f"{summary_base} ({pickup_event_state})"
 
     return CalendarEvent(
         summary=summary,
