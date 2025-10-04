@@ -65,7 +65,7 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
 
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{self.device_name}")
+                (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{self.endpoint_id}_{self.device_name}")
             },
             manufacturer=DEFAULT_NAME,
             configuration_url=URL(
