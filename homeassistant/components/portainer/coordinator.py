@@ -105,8 +105,6 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        else:
-            _LOGGER.debug("Fetched endpoints: %s", endpoints)
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
         for endpoint in endpoints:
