@@ -33,7 +33,7 @@ dependencies = [
   "aiohttp-fast-zlib==0.3.0",
   "aiohttp-asyncmdnsresolver==0.1.1",
   "aiozoneinfo==0.2.3",
-  "annotatedyaml==0.4.5",
+  "annotatedyaml==1.0.2",
   "astral==2.2",
   "async-interrupt==1.2.2",
   "attrs==25.3.0",
