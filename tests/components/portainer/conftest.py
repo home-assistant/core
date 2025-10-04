@@ -63,5 +63,17 @@ def mock_config_entry() -> MockConfigEntry:
         title="Portainer test",
         data=MOCK_TEST_CONFIG,
         entry_id="portainer_test_entry_123",
-        version=2,
+        version=4,
+    )
+
+
+@pytest.fixture
+def mock_config_entry_v3() -> MockConfigEntry:
+    """Mock a config entry at version 3 for migration testing."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Portainer test",
+        data=MOCK_TEST_CONFIG,
+        entry_id="portainer_test_entry_123",
+        version=3,
     )
