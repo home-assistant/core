@@ -2561,6 +2561,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
     'original_icon': None,
@@ -2571,7 +2574,7 @@
     'supported_features': 0,
     'translation_key': 'supply_pressure',
     'unique_id': 'gateway0_deviceSerialVitocal250A-supply_pressure',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
   })
 # ---
 # name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_supply_pressure-state]
@@ -2580,6 +2583,7 @@
       'device_class': 'pressure',
       'friendly_name': 'model0 Supply pressure',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPressure.BAR: 'bar'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.model0_supply_pressure',
