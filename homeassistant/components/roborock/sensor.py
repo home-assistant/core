@@ -115,7 +115,7 @@ SENSOR_DESCRIPTIONS = [
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
         key="cleaning_time",
         translation_key="cleaning_time",
         device_class=SensorDeviceClass.DURATION,
