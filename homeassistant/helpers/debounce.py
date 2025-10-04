@@ -55,6 +55,9 @@ class Debouncer[_R_co]:
         if self._execute_lock_owner is asyncio.current_task():
             raise RuntimeError("Debouncer lock is not re-entrant")
 
+        if self._execute_lock.locked():
+            self.logger.debug("Debouncer lock is already acquired, waiting")
+
         async with self._execute_lock:
             self._execute_lock_owner = asyncio.current_task()
             try:
