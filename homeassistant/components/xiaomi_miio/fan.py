@@ -8,6 +8,13 @@ import logging
 import math
 from typing import Any
 
+
+# declaring error message constants
+ERR_OPERATION_MODE = "Setting operation mode of the miio device failed."
+ERR_FAN_LEVEL = "Setting fan level of the miio device failed."
+ERR_FAN_SPEED_PERCENTAGE = "Setting fan speed percentage of the miio device failed."
+
+
 from miio import Device as MiioDevice
 from miio.fan_common import (
     MoveDirection as FanMoveDirection,
@@ -527,7 +534,7 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
         )
         if speed_mode:
             await self._try_command(
-                "Setting operation mode of the miio device failed.",
+                ERR_OPERATION_MODE,
                 self._device.set_mode,  # type: ignore[attr-defined]
                 self.operation_mode_class(self.SPEED_MODE_MAPPING[speed_mode]),
             )
@@ -538,7 +545,7 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
         This method is a coroutine.
         """
         if await self._try_command(
-            "Setting operation mode of the miio device failed.",
+            ERR_OPERATION_MODE,
             self._device.set_mode,  # type: ignore[attr-defined]
             self.operation_mode_class[preset_mode],
         ):
@@ -598,7 +605,7 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
         if not fan_level:
             return
         if await self._try_command(
-            "Setting fan level of the miio device failed.",
+            ERR_FAN_LEVEL,
             self._device.set_fan_level,  # type: ignore[attr-defined]
             fan_level,
         ):
@@ -664,7 +671,7 @@ class XiaomiAirPurifierMB4(XiaomiGenericAirPurifier):
         if not favorite_rpm:
             return
         if await self._try_command(
-            "Setting fan level of the miio device failed.",
+            ERR_FAN_LEVEL,
             self._device.set_favorite_rpm,  # type: ignore[attr-defined]
             favorite_rpm,
         ):
@@ -678,7 +685,7 @@ class XiaomiAirPurifierMB4(XiaomiGenericAirPurifier):
             await self.async_turn_on()
 
         if await self._try_command(
-            "Setting operation mode of the miio device failed.",
+            ERR_OPERATION_MODE,
             self._device.set_mode,  # type: ignore[attr-defined]
             self.operation_mode_class[preset_mode],
         ):
@@ -775,7 +782,7 @@ class XiaomiAirFresh(XiaomiGenericAirPurifier):
         )
         if speed_mode:
             if await self._try_command(
-                "Setting operation mode of the miio device failed.",
+                ERR_OPERATION_MODE,
                 self._device.set_mode,  # type: ignore[attr-defined]
                 AirfreshOperationMode(self.SPEED_MODE_MAPPING[speed_mode]),
             ):
@@ -790,7 +797,7 @@ class XiaomiAirFresh(XiaomiGenericAirPurifier):
         This method is a coroutine.
         """
         if await self._try_command(
-            "Setting operation mode of the miio device failed.",
+            ERR_OPERATION_MODE,
             self._device.set_mode,  # type: ignore[attr-defined]
             self.operation_mode_class[preset_mode],
         ):
@@ -874,7 +881,7 @@ class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
         if not favorite_speed:
             return
         if await self._try_command(
-            "Setting fan level of the miio device failed.",
+            ERR_FAN_LEVEL,
             self._device.set_favorite_speed,  # type: ignore[attr-defined]
             favorite_speed,
         ):
@@ -884,7 +891,7 @@ class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan. This method is a coroutine."""
         if await self._try_command(
-            "Setting operation mode of the miio device failed.",
+            ERR_OPERATION_MODE,
             self._device.set_mode,  # type: ignore[attr-defined]
             self.operation_mode_class[preset_mode],
         ):
@@ -1064,13 +1071,13 @@ class XiaomiFan(XiaomiGenericFan):
 
         if self._nature_mode:
             await self._try_command(
-                "Setting fan speed percentage of the miio device failed.",
+                ERR_FAN_SPEED_PERCENTAGE,
                 self._device.set_natural_speed,  # type: ignore[attr-defined]
                 percentage,
             )
         else:
             await self._try_command(
-                "Setting fan speed percentage of the miio device failed.",
+                ERR_FAN_SPEED_PERCENTAGE,
                 self._device.set_direct_speed,  # type: ignore[attr-defined]
                 percentage,
             )
@@ -1120,7 +1127,7 @@ class XiaomiFanP5(XiaomiGenericFan):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         await self._try_command(
-            "Setting operation mode of the miio device failed.",
+            ERR_OPERATION_MODE,
             self._device.set_mode,  # type: ignore[attr-defined]
             self.operation_mode_class[preset_mode],
         )
@@ -1135,7 +1142,7 @@ class XiaomiFanP5(XiaomiGenericFan):
             return
 
         await self._try_command(
-            "Setting fan speed percentage of the miio device failed.",
+            ERR_FAN_SPEED_PERCENTAGE,
             self._device.set_speed,  # type: ignore[attr-defined]
             percentage,
         )
@@ -1173,7 +1180,7 @@ class XiaomiFanMiot(XiaomiGenericFan):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         await self._try_command(
-            "Setting operation mode of the miio device failed.",
+            ERR_OPERATION_MODE,
             self._device.set_mode,  # type: ignore[attr-defined]
             self.operation_mode_class[preset_mode],
         )
@@ -1188,7 +1195,7 @@ class XiaomiFanMiot(XiaomiGenericFan):
             return
 
         result = await self._try_command(
-            "Setting fan speed percentage of the miio device failed.",
+            ERR_FAN_SPEED_PERCENTAGE,
             self._device.set_speed,  # type: ignore[attr-defined]
             percentage,
         )
@@ -1253,7 +1260,7 @@ class XiaomiFan1C(XiaomiFanMiot):
             await self.async_turn_on()
 
         result = await self._try_command(
-            "Setting fan speed percentage of the miio device failed.",
+            ERR_FAN_SPEED_PERCENTAGE,
             self._device.set_speed,  # type: ignore[attr-defined]
             speed,
         )
