@@ -12,7 +12,7 @@ from .const import DOMAIN
 
 class TelegramBotEntity(Entity):
     """Base entity."""
-
+    _attr_has_entity_name = True
     def __init__(self, config_entry: TelegramBotConfigEntry) -> None:
         """Initialize the entity."""
 
