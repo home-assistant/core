@@ -1106,7 +1106,7 @@ greeclimate==2.1.0
 greeneye_monitor==3.0.3
 
 # homeassistant.components.green_planet_energy
-greenplanet-energy-api==0.1.3
+greenplanet-energy-api==0.1.4
 
 # homeassistant.components.greenwave
 greenwavereality==0.5.1
