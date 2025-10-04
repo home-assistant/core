@@ -345,7 +345,7 @@ async def test_templates_with_yaml(
 
 
 async def test_config_from_old_yaml(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: Recorder, hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test the SQL sensor from old yaml config does not create any entity."""
     config = {
@@ -366,6 +366,9 @@ async def test_config_from_old_yaml(
 
     state = hass.states.get("sensor.count_tables")
     assert not state
+    issue = issue_registry.async_get_issue(DOMAIN, "sensor_platform_yaml_not_supported")
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
 
 
 @pytest.mark.parametrize(
