@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
-        domain="nintendo_parental",
+        domain=DOMAIN,
         data={"session_token": "valid_token"},
         unique_id="aabbccddee112233",
     )
