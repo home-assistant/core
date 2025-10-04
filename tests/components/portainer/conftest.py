@@ -8,13 +8,13 @@ from pyportainer.models.portainer import Endpoint
 import pytest
 
 from homeassistant.components.portainer.const import DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
 
 from tests.common import MockConfigEntry, load_json_array_fixture
 
 MOCK_TEST_CONFIG = {
-    CONF_HOST: "https://127.0.0.1:9000/",
-    CONF_API_KEY: "test_api_key",
+    CONF_URL: "https://127.0.0.1:9000/",
+    CONF_API_TOKEN: "test_api_token",
     CONF_VERIFY_SSL: True,
 }
 
@@ -49,6 +49,8 @@ def mock_portainer_client() -> Generator[AsyncMock]:
             DockerContainer.from_dict(container)
             for container in load_json_array_fixture("containers.json", DOMAIN)
         ]
+        client.start_container = AsyncMock(return_value=None)
+        client.stop_container = AsyncMock(return_value=None)
 
         yield client
 
@@ -61,4 +63,5 @@ def mock_config_entry() -> MockConfigEntry:
         title="Portainer test",
         data=MOCK_TEST_CONFIG,
         entry_id="portainer_test_entry_123",
+        version=2,
     )
