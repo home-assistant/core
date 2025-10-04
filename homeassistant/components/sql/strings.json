@@ -168,8 +168,8 @@
       "description": "The query `{query}` contains the keyword `entity_id` but does not reference the `states_meta` table. This will cause a full table scan and database instability. Please check the documentation and use `states_meta.entity_id` instead."
     },
     "platform_yaml_not_supported": {
-      "title": "Platform YAML is not supported for SQL",
-      "description": "Platform YAML setup is not supported.\nChange from configuring it in the `sensor:` key to use the `sql:` key directly in configuration.yaml.\nClick on learn more to see the documentation for details."
+      "title": "Platform YAML is not supported in SQL",
+      "description": "Platform YAML setup is not supported.\nChange from configuring it in the `sensor:` key to using the `sql:` key directly in configuration.yaml.\nTo see the detailed documentation, select Learn more."
     }
   }
 }
