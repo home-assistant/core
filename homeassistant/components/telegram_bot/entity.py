@@ -17,6 +17,8 @@ class TelegramBotEntity(Entity):
         """Initialize the entity."""
 
         self.bot_id = config_entry.runtime_data.bot.id
+        self.config_entry = config_entry
+        self.service = config_entry.runtime_data
 
         self._attr_device_info = DeviceInfo(
             name=config_entry.title,
@@ -26,6 +28,3 @@ class TelegramBotEntity(Entity):
             sw_version=telegram.__version__,
             identifiers={(DOMAIN, f"{self.bot_id}")},
         )
-
-        self.config_entry = config_entry
-        self.service = config_entry.runtime_data
