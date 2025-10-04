@@ -20,12 +20,16 @@ from .entity import (
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
     async_setup_entry_rpc,
+    rpc_call,
 )
 from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
     get_virtual_component_ids,
+    is_view_for_platform,
 )
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -37,7 +41,9 @@ RPC_SELECT_ENTITIES: Final = {
     "enum": RpcSelectDescription(
         key="enum",
         sub_key="value",
-        has_entity_name=True,
+        removal_condition=lambda config, _status, key: not is_view_for_platform(
+            config, key, SELECT_PLATFORM
+        ),
     ),
 }
 
@@ -75,6 +81,7 @@ class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
     """Represent a RPC select entity."""
 
     entity_description: RpcSelectDescription
+    _id: int
 
     def __init__(
         self,
@@ -96,8 +103,9 @@ class RpcSelect(ShellyRpcAttributeEntity, SelectEntity):
 
         return self.option_map[self.attribute_value]
 
+    @rpc_call
     async def async_select_option(self, option: str) -> None:
         """Change the value."""
-        await self.call_rpc(
-            "Enum.Set", {"id": self._id, "value": self.reversed_option_map[option]}
+        await self.coordinator.device.enum_set(
+            self._id, self.reversed_option_map[option]
         )

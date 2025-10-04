@@ -27,6 +27,7 @@
     'original_name': 'Air filter polluted',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'air_filter_polluted',
     'unique_id': '0000-0001-air_filter_polluted',

@@ -396,12 +396,16 @@ async def async_setup_entry(
                 TessieEnergyLiveSensorEntity(energysite, description)
                 for energysite in entry.runtime_data.energysites
                 for description in ENERGY_LIVE_DESCRIPTIONS
-                if description.key in energysite.live_coordinator.data
-                or description.key == "percentage_charged"
+                if energysite.live_coordinator is not None
+                and (
+                    description.key in energysite.live_coordinator.data
+                    or description.key == "percentage_charged"
+                )
             ),
             (  # Add wall connectors
                 TessieWallConnectorSensorEntity(energysite, din, description)
                 for energysite in entry.runtime_data.energysites
+                if energysite.live_coordinator is not None
                 for din in energysite.live_coordinator.data.get("wall_connectors", {})
                 for description in WALL_CONNECTOR_DESCRIPTIONS
             ),
@@ -446,6 +450,7 @@ class TessieEnergyLiveSensorEntity(TessieEnergyEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
+        assert data.live_coordinator is not None
         super().__init__(data, data.live_coordinator, description.key)
 
     def _async_update_attrs(self) -> None:

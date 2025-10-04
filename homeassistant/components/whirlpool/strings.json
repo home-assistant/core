@@ -13,19 +13,23 @@
           "brand": "Brand"
         },
         "data_description": {
-          "brand": "Please choose the brand of the mobile app you use, or the brand of the appliances in your account"
+          "username": "The username or email address you use to log in to the Whirlpool/Maytag app",
+          "password": "The password you use to log in to the Whirlpool/Maytag app",
+          "region": "The region where your appliances where purchased",
+          "brand": "The brand of the mobile app you use, or the brand of the appliances in your account"
         }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "For 'brand', please choose the brand of the mobile app you use, or the brand of the appliances in your account",
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
-          "region": "Region",
-          "brand": "Brand"
+          "region": "[%key:component::whirlpool::config::step::user::data::region%]",
+          "brand": "[%key:component::whirlpool::config::step::user::data::brand%]"
         },
         "data_description": {
-          "brand": "Please choose the brand of the mobile app you use, or the brand of the appliances in your account"
+          "password": "[%key:component::whirlpool::config::step::user::data_description::password%]",
+          "brand": "[%key:component::whirlpool::config::step::user::data_description::brand%]",
+          "region": "[%key:component::whirlpool::config::step::user::data_description::region%]"
         }
       }
     },
@@ -44,6 +48,7 @@
   "entity": {
     "sensor": {
       "washer_state": {
+        "name": "State",
         "state": {
           "standby": "[%key:common::state::standby%]",
           "setting": "Setting",
@@ -69,11 +74,11 @@
           "cycle_sensing": "Cycle sensing",
           "cycle_soaking": "Cycle soaking",
           "cycle_spinning": "Cycle spinning",
-          "cycle_washing": "Cycle washing",
-          "door_open": "Door open"
+          "cycle_washing": "Cycle washing"
         }
       },
       "dryer_state": {
+        "name": "[%key:component::whirlpool::entity::sensor::washer_state::name%]",
         "state": {
           "standby": "[%key:common::state::standby%]",
           "setting": "[%key:component::whirlpool::entity::sensor::washer_state::state::setting%]",
@@ -99,15 +104,14 @@
           "cycle_sensing": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_sensing%]",
           "cycle_soaking": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_soaking%]",
           "cycle_spinning": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_spinning%]",
-          "cycle_washing": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_washing%]",
-          "door_open": "[%key:component::whirlpool::entity::sensor::washer_state::state::door_open%]"
+          "cycle_washing": "[%key:component::whirlpool::entity::sensor::washer_state::state::cycle_washing%]"
         }
       },
       "whirlpool_tank": {
         "name": "Detergent level",
         "state": {
           "unknown": "Unknown",
-          "empty": "Empty",
+          "empty": "[%key:common::state::empty%]",
           "25": "25%",
           "50": "50%",
           "100": "100%",
@@ -122,6 +126,12 @@
   "exceptions": {
     "account_locked": {
       "message": "[%key:component::whirlpool::common::account_locked_error%]"
+    },
+    "appliances_fetch_failed": {
+      "message": "Failed to fetch appliances"
+    },
+    "request_failed": {
+      "message": "Request failed"
     }
   }
 }

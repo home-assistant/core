@@ -12,12 +12,17 @@ from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 
 from .const import _LOGGER, DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
 from .coordinator import VodafoneConfigEntry
+from .utils import async_client_session
 
 
 def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
@@ -38,15 +43,15 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
+    session = await async_client_session(hass)
     api = VodafoneStationSercommApi(
-        data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD]
+        data[CONF_HOST], data[CONF_USERNAME], data[CONF_PASSWORD], session
     )
 
     try:
         await api.login()
     finally:
         await api.logout()
-        await api.close()
 
     return {"title": data[CONF_HOST]}
 
@@ -156,8 +161,6 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
 
-        errors = {}
-
         try:
             await validate_input(self.hass, user_input)
         except aiovodafone_exceptions.AlreadyLogged:
@@ -181,7 +184,7 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class VodafoneStationOptionsFlowHandler(OptionsFlow):
+class VodafoneStationOptionsFlowHandler(OptionsFlowWithReload):
     """Handle a option flow."""
 
     async def async_step_init(

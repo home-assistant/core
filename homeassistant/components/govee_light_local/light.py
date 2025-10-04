@@ -157,9 +157,6 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        if not self.is_on or not kwargs:
-            await self.coordinator.turn_on(self._device)
-
         if ATTR_BRIGHTNESS in kwargs:
             brightness: int = int((float(kwargs[ATTR_BRIGHTNESS]) / 255.0) * 100.0)
             await self.coordinator.set_brightness(self._device, brightness)
@@ -186,6 +183,9 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
                     self._attr_effect = effect
                     self._save_last_color_state()
                     await self.coordinator.set_scene(self._device, effect)
+
+        if not self.is_on or not kwargs:
+            await self.coordinator.turn_on(self._device)
 
         self.async_write_ha_state()
 

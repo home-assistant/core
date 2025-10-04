@@ -1,0 +1,112 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions.
+  appropriate-polling:
+    status: exempt
+    comment: This integration does not poll.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not have any custom actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Entities of this integration does not explicitly subscribe to events.
+  entity-unique-id:
+    status: exempt
+    comment: This integration does not have entities.
+  has-entity-name:
+    status: exempt
+    comment: This integration does not have entities.
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not have an options flow.
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: This integration does not have entities.
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates:
+    status: exempt
+    comment: This integration does not poll.
+  reauthentication-flow: todo
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: exempt
+    comment: This integration does not have entities.
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: S3 is a cloud service that is not discovered on the network.
+  discovery:
+    status: exempt
+    comment: S3 is a cloud service that is not discovered on the network.
+  docs-data-update:
+    status: exempt
+    comment: This integration does not poll.
+  docs-examples:
+    status: exempt
+    comment: The integration extends core functionality and does not require examples.
+  docs-known-limitations:
+    status: exempt
+    comment: No known limitations.
+  docs-supported-devices:
+    status: exempt
+    comment: This integration does not support physical devices.
+  docs-supported-functions: done
+  docs-troubleshooting:
+    status: exempt
+    comment: There are no more detailed troubleshooting instructions available than what is already included in strings.json.
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: This integration does not have devices.
+  entity-category:
+    status: exempt
+    comment: This integration does not have entities.
+  entity-device-class:
+    status: exempt
+    comment: This integration does not have entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: This integration does not have entities.
+  entity-translations:
+    status: exempt
+    comment: This integration does not have entities.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: This integration does not use icons.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: There are no issues which can be repaired.
+  stale-devices:
+    status: exempt
+    comment: This integration does not have devices.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: todo
+  strict-typing: todo

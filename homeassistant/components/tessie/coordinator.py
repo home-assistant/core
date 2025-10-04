@@ -102,7 +102,11 @@ class TessieEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     config_entry: TessieConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: TessieConfigEntry, api: EnergySite
+        self,
+        hass: HomeAssistant,
+        config_entry: TessieConfigEntry,
+        api: EnergySite,
+        data: dict[str, Any],
     ) -> None:
         """Initialize Tessie Energy Site Live coordinator."""
         super().__init__(
@@ -113,6 +117,12 @@ class TessieEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=TESSIE_FLEET_API_SYNC_INTERVAL,
         )
         self.api = api
+
+        # Convert Wall Connectors from array to dict
+        data["wall_connectors"] = {
+            wc["din"]: wc for wc in (data.get("wall_connectors") or [])
+        }
+        self.data = data
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Tessie API."""

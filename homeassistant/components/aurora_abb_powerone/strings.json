@@ -4,8 +4,8 @@
       "user": {
         "description": "The inverter must be connected via an RS485 adaptor, please select serial port and the inverter's address as configured on the LCD panel",
         "data": {
-          "port": "RS485 or USB-RS485 Adaptor Port",
-          "address": "Inverter Address"
+          "port": "RS485 or USB-RS485 adaptor port",
+          "address": "Inverter address"
         }
       }
     },
@@ -16,7 +16,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_serial_ports": "No com ports found.  Need a valid RS485 device to communicate."
+      "no_serial_ports": "No com ports found. The integration needs a valid RS485 device to communicate."
     }
   },
   "entity": {

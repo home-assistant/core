@@ -10,11 +10,12 @@ import voluptuous as vol
 from homeassistant.components import conversation
 from homeassistant.components.conversation import (
     ConversationInput,
+    async_get_agent,
     async_handle_intents,
     async_handle_sentence_triggers,
     default_agent,
 )
-from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
+from homeassistant.components.conversation.const import HOME_ASSISTANT_AGENT
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -28,8 +29,6 @@ from tests.typing import ClientSessionGenerator
 
 AGENT_ID_OPTIONS = [
     None,
-    # Old value of conversation.HOME_ASSISTANT_AGENT,
-    "homeassistant",
     # Current value of conversation.HOME_ASSISTANT_AGENT,
     "conversation.home_assistant",
 ]
@@ -144,13 +143,13 @@ async def test_custom_agent(
     )
 
 
-async def test_prepare_reload(hass: HomeAssistant, init_components) -> None:
+@pytest.mark.usefixtures("init_components")
+async def test_prepare_reload(hass: HomeAssistant) -> None:
     """Test calling the reload service."""
     language = hass.config.language
+    agent = async_get_agent(hass)
 
     # Load intents
-    agent = hass.data[DATA_DEFAULT_ENTITY]
-    assert isinstance(agent, default_agent.DefaultAgent)
     await agent.async_prepare(language)
 
     # Confirm intents are loaded
@@ -171,14 +170,12 @@ async def test_prepare_reload(hass: HomeAssistant, init_components) -> None:
     assert not agent._lang_intents.get(language)
 
 
+@pytest.mark.usefixtures("init_components")
 async def test_prepare_fail(hass: HomeAssistant) -> None:
     """Test calling prepare with a non-existent language."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
+    agent = async_get_agent(hass)
 
     # Load intents
-    agent = hass.data[DATA_DEFAULT_ENTITY]
-    assert isinstance(agent, default_agent.DefaultAgent)
     await agent.async_prepare("not-a-language")
 
     # Confirm no intents were loaded
@@ -205,8 +202,8 @@ async def test_get_agent_info(
     """Test get agent info."""
     agent_info = conversation.async_get_agent_info(hass)
     # Test it's the default
-    assert conversation.async_get_agent_info(hass, "homeassistant") == agent_info
-    assert conversation.async_get_agent_info(hass, "homeassistant") == snapshot
+    assert conversation.async_get_agent_info(hass, HOME_ASSISTANT_AGENT) == agent_info
+    assert conversation.async_get_agent_info(hass, HOME_ASSISTANT_AGENT) == snapshot
     assert (
         conversation.async_get_agent_info(hass, mock_conversation_agent.agent_id)
         == snapshot
@@ -219,6 +216,13 @@ async def test_get_agent_info(
 
     agent_info = conversation.async_get_agent_info(hass)
     assert agent_info == snapshot
+
+    default_agent = conversation.async_get_agent(hass)
+    default_agent._attr_supports_streaming = True
+    assert (
+        conversation.async_get_agent_info(hass, HOME_ASSISTANT_AGENT).supports_streaming
+        is True
+    )
 
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
@@ -273,6 +277,7 @@ async def test_async_handle_sentence_triggers(
             conversation_id=None,
             agent_id=conversation.HOME_ASSISTANT_AGENT,
             device_id=device_id,
+            satellite_id=None,
             language=hass.config.language,
         ),
     )
@@ -310,6 +315,7 @@ async def test_async_handle_intents(hass: HomeAssistant) -> None:
             agent_id=conversation.HOME_ASSISTANT_AGENT,
             conversation_id=None,
             device_id=None,
+            satellite_id=None,
             language=hass.config.language,
         ),
     )
@@ -327,6 +333,7 @@ async def test_async_handle_intents(hass: HomeAssistant) -> None:
             context=Context(),
             conversation_id=None,
             device_id=None,
+            satellite_id=None,
             language=hass.config.language,
         ),
     )

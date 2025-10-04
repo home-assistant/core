@@ -37,7 +37,10 @@ from .utils import (
     get_virtual_component_ids,
     is_block_exclude_from_relay,
     is_rpc_exclude_from_relay,
+    is_view_for_platform,
 )
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -87,6 +90,9 @@ RPC_SWITCHES = {
     "boolean": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
+        removal_condition=lambda config, _status, key: not is_view_for_platform(
+            config, key, SWITCH_PLATFORM
+        ),
         is_on=lambda status: bool(status["value"]),
         method_on="Boolean.Set",
         method_off="Boolean.Set",
@@ -289,7 +295,6 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
     """Entity that controls a switch on RPC based Shelly devices."""
 
     entity_description: RpcSwitchDescription
-    _attr_has_entity_name = True
 
     @property
     def is_on(self) -> bool:
@@ -313,9 +318,6 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
 
 class RpcRelaySwitch(RpcSwitch):
     """Entity that controls a switch on RPC based Shelly devices."""
-
-    # False to avoid double naming as True is inerithed from base class
-    _attr_has_entity_name = False
 
     def __init__(
         self,

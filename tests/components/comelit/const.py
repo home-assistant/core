@@ -20,14 +20,27 @@ from aiocomelit.const import (
 
 BRIDGE_HOST = "fake_bridge_host"
 BRIDGE_PORT = 80
-BRIDGE_PIN = 1234
+BRIDGE_PIN = "1234"
 
 VEDO_HOST = "fake_vedo_host"
 VEDO_PORT = 8080
-VEDO_PIN = 5678
+VEDO_PIN = "5678"
 
-FAKE_PIN = 0000
+FAKE_PIN = "0000"
+BAD_PIN = "abcd"
 
+LIGHT0 = ComelitSerialBridgeObject(
+    index=0,
+    name="Light0",
+    status=0,
+    human_status="off",
+    type="light",
+    val=0,
+    protected=0,
+    zone="Bathroom",
+    power=0.0,
+    power_unit=WATT,
+)
 BRIDGE_DEVICE_QUERY = {
     CLIMATE: {
         0: ComelitSerialBridgeObject(
@@ -38,7 +51,7 @@ BRIDGE_DEVICE_QUERY = {
             type="climate",
             val=[
                 [221, 0, "U", "M", 50, 0, 0, "U"],
-                [650, 0, "O", "M", 500, 0, 0, "N"],
+                [650, 0, "U", "M", 500, 0, 0, "U"],
                 [0, 0],
             ],
             protected=0,
@@ -62,18 +75,7 @@ BRIDGE_DEVICE_QUERY = {
         )
     },
     LIGHT: {
-        0: ComelitSerialBridgeObject(
-            index=0,
-            name="Light0",
-            status=0,
-            human_status="off",
-            type="light",
-            val=0,
-            protected=0,
-            zone="Bathroom",
-            power=0.0,
-            power_unit=WATT,
-        )
+        0: LIGHT0,
     },
     OTHER: {
         0: ComelitSerialBridgeObject(
@@ -93,6 +95,13 @@ BRIDGE_DEVICE_QUERY = {
     SCENARIO: {},
 }
 
+ZONE0 = ComelitVedoZoneObject(
+    index=0,
+    name="Zone0",
+    status_api="0x000",
+    status=0,
+    human_status=AlarmZoneState.REST,
+)
 VEDO_DEVICE_QUERY = AlarmDataObject(
     alarm_areas={
         0: ComelitVedoAreaObject(
@@ -112,12 +121,6 @@ VEDO_DEVICE_QUERY = AlarmDataObject(
         )
     },
     alarm_zones={
-        0: ComelitVedoZoneObject(
-            index=0,
-            name="Zone0",
-            status_api="0x000",
-            status=0,
-            human_status=AlarmZoneState.REST,
-        )
+        0: ZONE0,
     },
 )

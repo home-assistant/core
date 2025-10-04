@@ -43,22 +43,42 @@
     },
     "error": {
       "auth_missing": "[%key:component::samsungtv::config::abort::auth_missing%]",
+      "invalid_host": "Host is invalid, please try again.",
       "invalid_pin": "PIN is invalid, please try again."
     },
     "abort": {
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Check your TV's External Device Manager settings to authorize Home Assistant.",
-      "id_missing": "This Samsung device doesn't have a SerialNumber.",
+      "id_missing": "This Samsung device doesn't have a serial number to identify it.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "not_supported": "This Samsung device is currently not supported.",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "device_automation": {
     "trigger_type": {
       "samsungtv.turn_on": "Device is requested to turn on"
+    }
+  },
+  "exceptions": {
+    "unhandled_trigger_type": {
+      "message": "Unhandled trigger type {trigger_type}."
+    },
+    "service_unsupported": {
+      "message": "Entity {entity} does not support this action."
+    },
+    "source_unsupported": {
+      "message": "Entity {entity} does not support source {source}."
+    },
+    "error_set_volume": {
+      "message": "Unable to set volume level on {host}: {error}"
+    },
+    "error_sending_command": {
+      "message": "Unable to send command to {host}: {error}"
+    },
+    "encrypted_mode_auth_failed": {
+      "message": "Token and session ID are required in encrypted mode."
     }
   }
 }

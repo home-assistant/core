@@ -9,17 +9,23 @@ from functools import partial
 import logging
 from operator import attrgetter
 from types import MappingProxyType
-from typing import Any
+from typing import Any, cast
 
 from aiohomekit import Controller
 from aiohomekit.controller import TransportType
+from aiohomekit.controller.ble.discovery import BleDiscovery
 from aiohomekit.exceptions import (
     AccessoryDisconnectedError,
     AccessoryNotFoundError,
     EncryptionError,
 )
 from aiohomekit.model import Accessories, Accessory, Transport
-from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
+from aiohomekit.model.characteristics import (
+    EVENT_CHARACTERISTICS,
+    Characteristic,
+    CharacteristicPermissions,
+    CharacteristicsTypes,
+)
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.thread import async_get_preferred_dataset
@@ -51,7 +57,10 @@ from .utils import IidTuple, unique_id_to_iids
 
 RETRY_INTERVAL = 60  # seconds
 MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
-
+# HomeKit accessories have varying limits on how many characteristics
+# they can handle per request. Since we don't know each device's specific limit,
+# we batch requests to a conservative size to avoid overwhelming any device.
+MAX_CHARACTERISTICS_PER_REQUEST = 49
 
 BLE_AVAILABILITY_CHECK_INTERVAL = 1800  # seconds
 
@@ -178,6 +187,21 @@ class HKDevice:
         for aid_iid in characteristics:
             self.pollable_characteristics.discard(aid_iid)
 
+    def get_all_pollable_characteristics(self) -> set[tuple[int, int]]:
+        """Get all characteristics that can be polled.
+
+        This is used during startup to poll all readable characteristics
+        before entities have registered what they care about.
+        """
+        return {
+            (accessory.aid, char.iid)
+            for accessory in self.entity_map.accessories
+            for service in accessory.services
+            for char in service.characteristics
+            if CharacteristicPermissions.paired_read in char.perms
+            and char.type not in EVENT_CHARACTERISTICS
+        }
+
     def add_watchable_characteristics(
         self, characteristics: list[tuple[int, int]]
     ) -> None:
@@ -227,7 +251,9 @@ class HKDevice:
         _LOGGER.debug(
             "Called async_set_available_state with %s for %s", available, self.unique_id
         )
-        if self.available == available:
+        # Don't mark entities as unavailable during shutdown to preserve their last known state
+        # Also skip if the availability state hasn't changed
+        if (self.hass.is_stopping and not available) or self.available == available:
             return
         self.available = available
         for callback_ in self._availability_callbacks:
@@ -293,7 +319,6 @@ class HKDevice:
             await self.pairing.async_populate_accessories_state(
                 force_update=True, attempts=attempts
             )
-            self._async_start_polling()
 
         entry.async_on_unload(pairing.dispatcher_connect(self.process_new_events))
         entry.async_on_unload(
@@ -304,7 +329,28 @@ class HKDevice:
         )
         entry.async_on_unload(self._async_cancel_subscription_timer)
 
+        if transport != Transport.BLE:
+            # Although async_populate_accessories_state fetched the accessory database,
+            # the /accessories endpoint may return cached values from the accessory's
+            # perspective. For example, Ecobee thermostats may report stale temperature
+            # values (like 100°C) in their /accessories response after restarting.
+            # We need to explicitly poll characteristics to get fresh sensor readings
+            # before processing the entity map and creating devices.
+            # Use poll_all=True since entities haven't registered their characteristics yet.
+            try:
+                await self.async_update(poll_all=True)
+            except ValueError as exc:
+                _LOGGER.debug(
+                    "Accessory %s responded with unparsable response, first update was skipped: %s",
+                    self.unique_id,
+                    exc,
+                )
+
         await self.async_process_entity_map()
+
+        if transport != Transport.BLE:
+            # Start regular polling after entity map is processed
+            self._async_start_polling()
 
         # If everything is up to date, we can create the entities
         # since we know the data is not stale.
@@ -372,6 +418,16 @@ class HKDevice:
         if not self.unreliable_serial_numbers:
             identifiers.add((IDENTIFIER_SERIAL_NUMBER, accessory.serial_number))
 
+        connections: set[tuple[str, str]] = set()
+        if self.pairing.transport == Transport.BLE and (
+            discovery := self.pairing.controller.discoveries.get(
+                normalize_hkid(self.unique_id)
+            )
+        ):
+            connections = {
+                (dr.CONNECTION_BLUETOOTH, cast(BleDiscovery, discovery).device.address),
+            }
+
         device_info = DeviceInfo(
             identifiers={
                 (
@@ -379,6 +435,7 @@ class HKDevice:
                     f"{self.unique_id}:aid:{accessory.aid}",
                 )
             },
+            connections=connections,
             name=accessory.name,
             manufacturer=accessory.manufacturer,
             model=accessory.model,
@@ -699,9 +756,11 @@ class HKDevice:
         """Stop interacting with device and prepare for removal from hass."""
         await self.pairing.shutdown()
 
-        await self.hass.config_entries.async_unload_platforms(
-            self.config_entry, self.platforms
-        )
+        # Skip platform unloading during shutdown to preserve entity states
+        if not self.hass.is_stopping:
+            await self.hass.config_entries.async_unload_platforms(
+                self.config_entry, self.platforms
+            )
 
     def process_config_changed(self, config_num: int) -> None:
         """Handle a config change notification from the pairing."""
@@ -842,9 +901,25 @@ class HKDevice:
         """Request an debounced update from the accessory."""
         await self._debounced_update.async_call()
 
-    async def async_update(self, now: datetime | None = None) -> None:
-        """Poll state of all entities attached to this bridge/accessory."""
-        to_poll = self.pollable_characteristics
+    async def async_update(
+        self, now: datetime | None = None, *, poll_all: bool = False
+    ) -> None:
+        """Poll state of all entities attached to this bridge/accessory.
+
+        Args:
+            now: The current time (used by time interval callbacks).
+            poll_all: If True, poll all readable characteristics instead
+                     of just the registered ones.
+                     This is useful during initial setup before entities have
+                     registered their characteristics.
+        """
+        if poll_all:
+            # Poll all readable characteristics during initial startup
+            # excluding device trigger characteristics (buttons, doorbell, etc.)
+            to_poll = self.get_all_pollable_characteristics()
+        else:
+            to_poll = self.pollable_characteristics
+
         if not to_poll:
             self.async_update_available_state()
             _LOGGER.debug(
@@ -877,20 +952,26 @@ class HKDevice:
         async with self._polling_lock:
             _LOGGER.debug("Starting HomeKit device update: %s", self.unique_id)
 
-            try:
-                new_values_dict = await self.get_characteristics(to_poll)
-            except AccessoryNotFoundError:
-                # Not only did the connection fail, but also the accessory is not
-                # visible on the network.
-                self.async_set_available_state(False)
-                return
-            except (AccessoryDisconnectedError, EncryptionError):
-                # Temporary connection failure. Device may still available but our
-                # connection was dropped or we are reconnecting
-                self._poll_failures += 1
-                if self._poll_failures >= MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE:
+            new_values_dict: dict[tuple[int, int], dict[str, Any]] = {}
+            to_poll_list = list(to_poll)
+
+            for i in range(0, len(to_poll_list), MAX_CHARACTERISTICS_PER_REQUEST):
+                batch = to_poll_list[i : i + MAX_CHARACTERISTICS_PER_REQUEST]
+                try:
+                    batch_values = await self.get_characteristics(batch)
+                    new_values_dict.update(batch_values)
+                except AccessoryNotFoundError:
+                    # Not only did the connection fail, but also the accessory is not
+                    # visible on the network.
                     self.async_set_available_state(False)
-                return
+                    return
+                except (AccessoryDisconnectedError, EncryptionError):
+                    # Temporary connection failure. Device may still available but our
+                    # connection was dropped or we are reconnecting
+                    self._poll_failures += 1
+                    if self._poll_failures >= MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE:
+                        self.async_set_available_state(False)
+                    return
 
             self._poll_failures = 0
             self.process_new_events(new_values_dict)

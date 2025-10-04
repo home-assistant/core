@@ -13,6 +13,12 @@
           "on": "mdi:car"
         }
       },
+      "non-motor_vehicle": {
+        "default": "mdi:motorbike-off",
+        "state": {
+          "on": "mdi:motorbike"
+        }
+      },
       "pet": {
         "default": "mdi:dog-side-off",
         "state": {
@@ -172,7 +178,31 @@
       "floodlight_brightness": {
         "default": "mdi:spotlight-beam"
       },
+      "floodlight_event_brightness": {
+        "default": "mdi:spotlight-beam"
+      },
+      "ir_brightness": {
+        "default": "mdi:led-off"
+      },
+      "floodlight_event_on_time": {
+        "default": "mdi:spotlight-beam"
+      },
+      "floodlight_event_flash_time": {
+        "default": "mdi:spotlight-beam"
+      },
       "volume": {
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-off"
+        }
+      },
+      "volume_speak": {
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-off"
+        }
+      },
+      "volume_doorbell": {
         "default": "mdi:volume-high",
         "state": {
           "0": "mdi:volume-off"
@@ -208,6 +238,9 @@
       "ai_vehicle_sensitivity": {
         "default": "mdi:car"
       },
+      "ai_non_motor_vehicle_sensitivity": {
+        "default": "mdi:bicycle"
+      },
       "ai_package_sensitivity": {
         "default": "mdi:gift-outline"
       },
@@ -216,6 +249,9 @@
       },
       "ai_animal_sensitivity": {
         "default": "mdi:paw"
+      },
+      "cry_sensitivity": {
+        "default": "mdi:emoticon-cry-outline"
       },
       "crossline_sensitivity": {
         "default": "mdi:fence"
@@ -240,6 +276,9 @@
       },
       "ai_vehicle_delay": {
         "default": "mdi:car"
+      },
+      "ai_non_motor_vehicle_delay": {
+        "default": "mdi:bicycle"
       },
       "ai_package_delay": {
         "default": "mdi:gift-outline"
@@ -294,10 +333,22 @@
       },
       "image_hue": {
         "default": "mdi:image-edit"
+      },
+      "pre_record_time": {
+        "default": "mdi:history"
+      },
+      "pre_record_battery_stop": {
+        "default": "mdi:history"
+      },
+      "silent_time": {
+        "default": "mdi:volume-off"
       }
     },
     "select": {
       "floodlight_mode": {
+        "default": "mdi:spotlight-beam"
+      },
+      "floodlight_event_mode": {
         "default": "mdi:spotlight-beam"
       },
       "day_night_mode": {
@@ -378,8 +429,23 @@
       "sub_bit_rate": {
         "default": "mdi:play-speed"
       },
+      "main_encoding": {
+        "default": "mdi:video-image"
+      },
+      "sub_encoding": {
+        "default": "mdi:video-image"
+      },
       "scene_mode": {
         "default": "mdi:view-list"
+      },
+      "packing_time": {
+        "default": "mdi:record-rec"
+      },
+      "pre_record_fps": {
+        "default": "mdi:history"
+      },
+      "post_rec_time": {
+        "default": "mdi:record-rec"
       }
     },
     "sensor": {
@@ -393,7 +459,12 @@
         "default": "mdi:thermometer"
       },
       "battery_state": {
-        "default": "mdi:battery-charging"
+        "default": "mdi:battery-unknown",
+        "state": {
+          "discharging": "mdi:battery-minus-variant",
+          "charging": "mdi:battery-charging",
+          "chargecomplete": "mdi:battery-check"
+        }
       },
       "day_night_state": {
         "default": "mdi:theme-light-dark"
@@ -409,6 +480,15 @@
       },
       "sd_storage": {
         "default": "mdi:micro-sd"
+      },
+      "person_type": {
+        "default": "mdi:account"
+      },
+      "vehicle_type": {
+        "default": "mdi:car"
+      },
+      "animal_type": {
+        "default": "mdi:paw"
       }
     },
     "siren": {
@@ -453,11 +533,20 @@
       "manual_record": {
         "default": "mdi:record-rec"
       },
+      "pre_record": {
+        "default": "mdi:history"
+      },
       "hub_ringtone_on_event": {
         "default": "mdi:music-note"
       },
       "doorbell_button_sound": {
         "default": "mdi:volume-high"
+      },
+      "hardwired_chime_enabled": {
+        "default": "mdi:bell",
+        "state": {
+          "off": "mdi:bell-off"
+        }
       },
       "hdr": {
         "default": "mdi:hdr"
@@ -472,6 +561,12 @@
         "default": "mdi:lightning-bolt-circle"
       },
       "privacy_mode": {
+        "default": "mdi:eye",
+        "state": {
+          "on": "mdi:eye-off"
+        }
+      },
+      "privacy_mask": {
         "default": "mdi:eye",
         "state": {
           "on": "mdi:eye-off"

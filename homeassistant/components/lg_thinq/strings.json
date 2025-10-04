@@ -70,11 +70,14 @@
       },
       "display_light": {
         "name": "Lighting"
+      },
+      "air_clean_operation_mode": {
+        "name": "[%key:component::lg_thinq::entity::climate::climate_air_conditioner::state_attributes::preset_mode::state::air_clean%]"
       }
     },
     "binary_sensor": {
       "eco_friendly_mode": {
-        "name": "Eco friendly"
+        "name": "Eco-friendly"
       },
       "power_save_enabled": {
         "name": "Power saving mode"
@@ -120,10 +123,10 @@
             "state": {
               "slow": "Slow",
               "low": "[%key:common::state::low%]",
-              "mid": "[%key:common::state::medium%]",
+              "medium": "[%key:common::state::medium%]",
               "high": "[%key:common::state::high%]",
               "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
-              "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]"
+              "auto": "[%key:common::state::auto%]"
             }
           },
           "preset_mode": {
@@ -149,7 +152,7 @@
               "cliff_error": "Fall prevention sensor has an error",
               "clutch_error": "Clutch error",
               "compressor_error": "Compressor error",
-              "dispensing_error": "Dispensor error",
+              "dispensing_error": "Dispenser error",
               "door_close_error": "Door closed error",
               "door_lock_error": "Door lock error",
               "door_open_error": "Door open",
@@ -178,7 +181,7 @@
               "no_battery_error": "Robot cleaner's battery is low",
               "no_dust_bin_error": "Dust bin is not installed",
               "no_filter_error": "[%key:component::lg_thinq::entity::event::error::state_attributes::event_type::state::filter_clogging_error%]",
-              "out_of_balance_error": "Out of balance load",
+              "out_of_balance_error": "Out-of-balance load",
               "overfill_error": "Overfill error",
               "part_malfunction_error": "AIE error",
               "power_code_connection_error": "Power cord connection error",
@@ -220,7 +223,7 @@
               "error_during_cleaning": "Cleaning stopped due to an error",
               "error_during_washing": "An error has occurred in the washing machine",
               "error_has_occurred": "An error has occurred",
-              "frozen_is_complete": "Ice plus is done",
+              "frozen_is_complete": "Ice Plus is done",
               "homeguard_is_stopped": "Home Guard has stopped",
               "lack_of_water": "There is no water in the water tank",
               "motion_is_detected": "Photograph is sent as movement is detected during Home Guard",
@@ -233,12 +236,14 @@
               "styling_is_complete": "Styling is completed",
               "time_to_change_filter": "It is time to replace the filter",
               "time_to_change_water_filter": "You need to replace water filter",
-              "time_to_clean": "Need to selfcleaning",
+              "time_to_clean": "Need for self-cleaning",
               "time_to_clean_filter": "It is time to clean the filter",
               "timer_is_complete": "Timer has been completed",
               "washing_is_complete": "Washing is completed",
               "water_is_full": "Water is full",
-              "water_leak_has_occurred": "The dishwasher has detected a water leak"
+              "water_leak_has_occurred": "The dishwasher has detected a water leak",
+              "filter_reset_complete": "The filter lifetime has been reset",
+              "water_filter_reset_complete": "The water filter lifetime has been reset"
             }
           }
         }
@@ -333,6 +338,19 @@
           "very_bad": "Poor"
         }
       },
+      "carbon_dioxide": {
+        "name": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
+        "state": {
+          "invalid": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::invalid%]",
+          "good": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::good%]",
+          "normal": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::normal%]",
+          "moderate": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::normal%]",
+          "bad": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::bad%]",
+          "unhealthy": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::bad%]",
+          "very_bad": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::very_bad%]",
+          "poor": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::very_bad%]"
+        }
+      },
       "monitoring_enabled": {
         "name": "Air quality sensor",
         "state": {
@@ -343,7 +361,7 @@
       "growth_mode": {
         "name": "Mode",
         "state": {
-          "standard": "Auto",
+          "standard": "[%key:common::state::auto%]",
           "ext_leaf": "Vegetables",
           "ext_herb": "Herbs",
           "ext_flower": "Flowers",
@@ -353,7 +371,7 @@
       "growth_mode_for_location": {
         "name": "{location} mode",
         "state": {
-          "standard": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "standard": "[%key:common::state::auto%]",
           "ext_leaf": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::ext_leaf%]",
           "ext_herb": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::ext_herb%]",
           "ext_flower": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::ext_flower%]",
@@ -581,7 +599,7 @@
         "name": "[%key:component::lg_thinq::entity::binary_sensor::one_touch_filter::name%]",
         "state": {
           "off": "[%key:common::state::off%]",
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "auto": "[%key:common::state::auto%]",
           "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
           "replace": "Replace filter",
           "smart_power": "Smart safe storage",
@@ -592,14 +610,29 @@
       "filter_lifetime": {
         "name": "Filter remaining"
       },
+      "top_filter_remain_percent": {
+        "name": "Upper filter remaining"
+      },
       "used_time": {
         "name": "Water filter used"
+      },
+      "water_filter_state": {
+        "name": "Water filter"
+      },
+      "water_filter_1_remain_percent": {
+        "name": "[%key:component::lg_thinq::entity::sensor::water_filter_state::name%]"
+      },
+      "water_filter_2_remain_percent": {
+        "name": "Water filter stage 2"
+      },
+      "water_filter_3_remain_percent": {
+        "name": "Water filter stage 3"
       },
       "current_job_mode": {
         "name": "Operating mode",
         "state": {
           "air_clean": "Purify",
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "auto": "[%key:common::state::auto%]",
           "clothes_dry": "Laundry",
           "edge": "Edge cleaning",
           "heat_pump": "Heat pump",
@@ -649,7 +682,7 @@
       "current_dish_washing_course": {
         "name": "Current cycle",
         "state": {
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "auto": "[%key:common::state::auto%]",
           "heavy": "Intensive",
           "delicate": "Delicate",
           "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",
@@ -771,8 +804,46 @@
       "hop_oil_info": {
         "name": "Hops"
       },
+      "hop_oil_capsule_1": {
+        "name": "First hop",
+        "state": {
+          "cascade": "Cascade",
+          "chinook": "Chinook",
+          "goldings": "Goldings",
+          "fuggles": "Fuggles",
+          "hallertau": "Hallertau",
+          "citrussy": "Citrussy"
+        }
+      },
+      "hop_oil_capsule_2": {
+        "name": "Second hop",
+        "state": {
+          "cascade": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::cascade%]",
+          "chinook": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::chinook%]",
+          "goldings": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::goldings%]",
+          "fuggles": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::fuggles%]",
+          "hallertau": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::hallertau%]",
+          "citrussy": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::citrussy%]"
+        }
+      },
       "flavor_info": {
         "name": "Flavor"
+      },
+      "flavor_capsule_1": {
+        "name": "First flavor",
+        "state": {
+          "coriander": "Coriander",
+          "coriander_seed": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::coriander%]",
+          "orange": "Orange"
+        }
+      },
+      "flavor_capsule_2": {
+        "name": "Second flavor",
+        "state": {
+          "coriander": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::coriander%]",
+          "coriander_seed": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::coriander%]",
+          "orange": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::orange%]"
+        }
       },
       "beer_remain": {
         "name": "Recipe progress"
@@ -780,10 +851,10 @@
       "battery_level": {
         "name": "Battery",
         "state": {
-          "high": "Full",
+          "high": "[%key:common::state::full%]",
           "mid": "[%key:common::state::medium%]",
           "low": "[%key:common::state::low%]",
-          "warning": "Empty"
+          "warning": "[%key:common::state::empty%]"
         }
       },
       "relative_to_start": {
@@ -869,6 +940,15 @@
       },
       "cycle_count_for_location": {
         "name": "{location} cycles"
+      },
+      "energy_usage_yesterday": {
+        "name": "Energy yesterday"
+      },
+      "energy_usage_this_month": {
+        "name": "Energy this month"
+      },
+      "energy_usage_last_month": {
+        "name": "Energy last month"
       }
     },
     "select": {
@@ -881,7 +961,7 @@
           "high": "[%key:common::state::high%]",
           "power": "Turbo",
           "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "auto": "[%key:common::state::auto%]",
           "wind_1": "Step 1",
           "wind_2": "Step 2",
           "wind_3": "Step 3",
@@ -901,11 +981,19 @@
           "always": "[%key:component::lg_thinq::entity::sensor::monitoring_enabled::state::always%]"
         }
       },
+      "current_job_mode_ventilator": {
+        "name": "Operating mode",
+        "state": {
+          "vent_auto": "[%key:common::state::auto%]",
+          "vent_nature": "Bypass",
+          "vent_heat_exchange": "Heat exchange"
+        }
+      },
       "current_job_mode": {
         "name": "Operating mode",
         "state": {
           "air_clean": "Purifying",
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "auto": "[%key:common::state::auto%]",
           "baby_care": "[%key:component::lg_thinq::entity::sensor::personalization_mode::state::baby%]",
           "circulator": "Booster",
           "clean": "Single",
@@ -1016,7 +1104,7 @@
         "name": "[%key:component::lg_thinq::entity::binary_sensor::one_touch_filter::name%]",
         "state": {
           "off": "[%key:common::state::off%]",
-          "auto": "[%key:component::lg_thinq::entity::sensor::growth_mode::state::standard%]",
+          "auto": "[%key:common::state::auto%]",
           "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
           "replace": "[%key:component::lg_thinq::entity::sensor::fresh_air_filter::state::replace%]",
           "smart_power": "[%key:component::lg_thinq::entity::sensor::fresh_air_filter::state::smart_power%]",
@@ -1033,6 +1121,11 @@
           "normal": "[%key:component::lg_thinq::entity::sensor::current_dish_washing_course::state::delicate%]"
         }
       }
+    }
+  },
+  "exceptions": {
+    "failed_to_connect_mqtt": {
+      "message": "Failed to connect MQTT: {error}"
     }
   }
 }

@@ -6,7 +6,7 @@ from aiovodafone import CannotAuthenticate
 from aiovodafone.exceptions import AlreadyLogged, CannotConnect
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.vodafone_station.const import LINE_TYPES, SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform

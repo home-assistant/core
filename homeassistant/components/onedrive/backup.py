@@ -35,7 +35,7 @@ from .const import CONF_DELETE_PERMANENTLY, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from .coordinator import OneDriveConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
-UPLOAD_CHUNK_SIZE = 16 * 320 * 1024  # 5.2MB
+UPLOAD_CHUNK_SIZE = 32 * 320 * 1024  # 10.4MB
 TIMEOUT = ClientTimeout(connect=10, total=43200)  # 12 hours
 METADATA_VERSION = 2
 CACHE_TTL = 300
@@ -163,7 +163,10 @@ class OneDriveBackupAgent(BackupAgent):
         )
         try:
             backup_file = await LargeFileUploadClient.upload(
-                self._token_function, file, session=async_get_clientsession(self._hass)
+                self._token_function,
+                file,
+                upload_chunk_size=UPLOAD_CHUNK_SIZE,
+                session=async_get_clientsession(self._hass),
             )
         except HashMismatchError as err:
             raise BackupAgentError(
@@ -174,11 +177,15 @@ class OneDriveBackupAgent(BackupAgent):
         description = dumps(backup.as_dict())
         _LOGGER.debug("Creating metadata: %s", description)
         metadata_filename = filename.rsplit(".", 1)[0] + ".metadata.json"
-        metadata_file = await self._client.upload_file(
-            self._folder_id,
-            metadata_filename,
-            description,
-        )
+        try:
+            metadata_file = await self._client.upload_file(
+                self._folder_id,
+                metadata_filename,
+                description,
+            )
+        except OneDriveException:
+            await self._client.delete_drive_item(backup_file.id)
+            raise
 
         # add metadata to the metadata file
         metadata_description = {
@@ -186,10 +193,15 @@ class OneDriveBackupAgent(BackupAgent):
             "backup_id": backup.backup_id,
             "backup_file_id": backup_file.id,
         }
-        await self._client.update_drive_item(
-            path_or_id=metadata_file.id,
-            data=ItemUpdate(description=dumps(metadata_description)),
-        )
+        try:
+            await self._client.update_drive_item(
+                path_or_id=metadata_file.id,
+                data=ItemUpdate(description=dumps(metadata_description)),
+            )
+        except OneDriveException:
+            await self._client.delete_drive_item(backup_file.id)
+            await self._client.delete_drive_item(metadata_file.id)
+            raise
         self._cache_expiration = time()
 
     @handle_backup_errors
@@ -235,8 +247,12 @@ class OneDriveBackupAgent(BackupAgent):
 
         items = await self._client.list_drive_items(self._folder_id)
 
-        async def download_backup_metadata(item_id: str) -> AgentBackup:
-            metadata_stream = await self._client.download_drive_item(item_id)
+        async def download_backup_metadata(item_id: str) -> AgentBackup | None:
+            try:
+                metadata_stream = await self._client.download_drive_item(item_id)
+            except OneDriveException as err:
+                _LOGGER.warning("Error downloading metadata for %s: %s", item_id, err)
+                return None
             metadata_json = loads(await metadata_stream.read())
             return AgentBackup.from_dict(metadata_json)
 
@@ -246,6 +262,8 @@ class OneDriveBackupAgent(BackupAgent):
                 metadata_description_json := unescape(item.description)
             ):
                 backup = await download_backup_metadata(item.id)
+                if backup is None:
+                    continue
                 metadata_description = loads(metadata_description_json)
                 backups[backup.backup_id] = OneDriveBackup(
                     backup=backup,

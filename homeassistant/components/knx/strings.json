@@ -1,6 +1,13 @@
 {
   "config": {
     "step": {
+      "reconfigure": {
+        "title": "KNX connection settings",
+        "menu_options": {
+          "connection_type": "Reconfigure KNX connection",
+          "secure_knxkeys": "Import KNX keyring file"
+        }
+      },
       "connection_type": {
         "title": "KNX connection",
         "description": "'Automatic' performs a gateway scan on start, to find a KNX IP interface. It will connect via a tunnel. (Not available if a gateway scan was not successful.)\n\n'Tunneling' will connect to a specific KNX IP interface over a tunnel.\n\n'Routing' will use Multicast to communicate with KNX IP routers.",
@@ -65,7 +72,7 @@
       },
       "secure_knxkeys": {
         "title": "Import KNX Keyring",
-        "description": "The Keyring is used to encrypt and decrypt KNX IP Secure communication.",
+        "description": "The keyring is used to encrypt and decrypt KNX IP Secure communication. You can import a new keyring file or re-import to update existing keys if your configuration has changed.",
         "data": {
           "knxkeys_file": "Keyring file",
           "knxkeys_password": "Keyring password"
@@ -85,7 +92,7 @@
         }
       },
       "secure_tunnel_manual": {
-        "title": "Secure tunnelling",
+        "title": "Secure tunneling",
         "description": "Please enter your IP Secure information.",
         "data": {
           "user_id": "User ID",
@@ -129,9 +136,12 @@
         }
       }
     },
+    "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal numbers expected.",
+      "invalid_backbone_key": "Invalid backbone key. 32 hexadecimal digits expected.",
       "invalid_individual_address": "Value does not match pattern for KNX individual address.\n'area.line.device'",
       "invalid_ip_address": "Invalid IPv4 address.",
       "keyfile_invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
@@ -140,21 +150,27 @@
       "keyfile_not_found": "The specified `.knxkeys` file was not found in the path config/.storage/knx/",
       "no_router_discovered": "No KNXnet/IP router was discovered on the network.",
       "no_tunnel_discovered": "Could not find a KNX tunneling server on your network.",
-      "unsupported_tunnel_type": "Selected tunnelling type not supported by gateway."
+      "unsupported_tunnel_type": "Selected tunneling type not supported by gateway."
+    }
+  },
+  "exceptions": {
+    "integration_not_loaded": {
+      "message": "KNX integration is not loaded."
+    },
+    "service_exposure_remove_not_found": {
+      "message": "Could not find exposure for `{group_address}` to remove."
+    },
+    "service_send_invalid_payload": {
+      "message": "Invalid payload for `knx.send` service. {error}"
+    },
+    "service_send_invalid_type": {
+      "message": "Invalid type for `knx.send` service: {type}"
     }
   },
   "options": {
     "step": {
-      "init": {
-        "title": "KNX Settings",
-        "menu_options": {
-          "connection_type": "Configure KNX interface",
-          "communication_settings": "Communication settings",
-          "secure_knxkeys": "Import a `.knxkeys` file"
-        }
-      },
       "communication_settings": {
-        "title": "[%key:component::knx::options::step::init::menu_options::communication_settings%]",
+        "title": "Communication settings",
         "data": {
           "state_updater": "State updater",
           "rate_limit": "Rate limit",
@@ -165,147 +181,7 @@
           "rate_limit": "Maximum outgoing telegrams per second.\n`0` to disable limit. Recommended: `0` or between `20` and `40`",
           "telegram_log_size": "Telegrams to keep in memory for KNX panel group monitor. Maximum: {telegram_log_size_max}"
         }
-      },
-      "connection_type": {
-        "title": "[%key:component::knx::config::step::connection_type::title%]",
-        "description": "[%key:component::knx::config::step::connection_type::description%]",
-        "data": {
-          "connection_type": "[%key:component::knx::config::step::connection_type::data::connection_type%]"
-        },
-        "data_description": {
-          "connection_type": "[%key:component::knx::config::step::connection_type::data_description::connection_type%]"
-        }
-      },
-      "tunnel": {
-        "title": "[%key:component::knx::config::step::tunnel::title%]",
-        "data": {
-          "gateway": "[%key:component::knx::config::step::tunnel::data::gateway%]"
-        },
-        "data_description": {
-          "gateway": "[%key:component::knx::config::step::tunnel::data_description::gateway%]"
-        }
-      },
-      "tcp_tunnel_endpoint": {
-        "title": "[%key:component::knx::config::step::tcp_tunnel_endpoint::title%]",
-        "data": {
-          "tunnel_endpoint_ia": "[%key:component::knx::config::step::tcp_tunnel_endpoint::data::tunnel_endpoint_ia%]"
-        },
-        "data_description": {
-          "tunnel_endpoint_ia": "[%key:component::knx::config::step::tcp_tunnel_endpoint::data_description::tunnel_endpoint_ia%]"
-        }
-      },
-      "manual_tunnel": {
-        "title": "[%key:component::knx::config::step::manual_tunnel::title%]",
-        "description": "[%key:component::knx::config::step::manual_tunnel::description%]",
-        "data": {
-          "tunneling_type": "[%key:component::knx::config::step::manual_tunnel::data::tunneling_type%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "host": "[%key:common::config_flow::data::host%]",
-          "route_back": "[%key:component::knx::config::step::manual_tunnel::data::route_back%]",
-          "local_ip": "[%key:component::knx::config::step::manual_tunnel::data::local_ip%]"
-        },
-        "data_description": {
-          "tunneling_type": "[%key:component::knx::config::step::manual_tunnel::data_description::tunneling_type%]",
-          "port": "[%key:component::knx::config::step::manual_tunnel::data_description::port%]",
-          "host": "[%key:component::knx::config::step::manual_tunnel::data_description::host%]",
-          "route_back": "[%key:component::knx::config::step::manual_tunnel::data_description::route_back%]",
-          "local_ip": "[%key:component::knx::config::step::manual_tunnel::data_description::local_ip%]"
-        }
-      },
-      "secure_key_source_menu_tunnel": {
-        "title": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::title%]",
-        "description": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::description%]",
-        "menu_options": {
-          "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::menu_options::secure_knxkeys%]",
-          "secure_tunnel_manual": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::menu_options::secure_tunnel_manual%]"
-        }
-      },
-      "secure_key_source_menu_routing": {
-        "title": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::title%]",
-        "description": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::description%]",
-        "menu_options": {
-          "secure_knxkeys": "[%key:component::knx::config::step::secure_key_source_menu_tunnel::menu_options::secure_knxkeys%]",
-          "secure_routing_manual": "[%key:component::knx::config::step::secure_key_source_menu_routing::menu_options::secure_routing_manual%]"
-        }
-      },
-      "secure_knxkeys": {
-        "title": "[%key:component::knx::config::step::secure_knxkeys::title%]",
-        "description": "[%key:component::knx::config::step::secure_knxkeys::description%]",
-        "data": {
-          "knxkeys_file": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_file%]",
-          "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_password%]"
-        },
-        "data_description": {
-          "knxkeys_file": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_file%]",
-          "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_password%]"
-        }
-      },
-      "knxkeys_tunnel_select": {
-        "title": "[%key:component::knx::config::step::tcp_tunnel_endpoint::title%]",
-        "data": {
-          "tunnel_endpoint_ia": "[%key:component::knx::config::step::tcp_tunnel_endpoint::data::tunnel_endpoint_ia%]"
-        },
-        "data_description": {
-          "tunnel_endpoint_ia": "[%key:component::knx::config::step::tcp_tunnel_endpoint::data_description::tunnel_endpoint_ia%]"
-        }
-      },
-      "secure_tunnel_manual": {
-        "title": "[%key:component::knx::config::step::secure_tunnel_manual::title%]",
-        "description": "[%key:component::knx::config::step::secure_tunnel_manual::description%]",
-        "data": {
-          "user_id": "[%key:component::knx::config::step::secure_tunnel_manual::data::user_id%]",
-          "user_password": "[%key:component::knx::config::step::secure_tunnel_manual::data::user_password%]",
-          "device_authentication": "[%key:component::knx::config::step::secure_tunnel_manual::data::device_authentication%]"
-        },
-        "data_description": {
-          "user_id": "[%key:component::knx::config::step::secure_tunnel_manual::data_description::user_id%]",
-          "user_password": "[%key:component::knx::config::step::secure_tunnel_manual::data_description::user_password%]",
-          "device_authentication": "[%key:component::knx::config::step::secure_tunnel_manual::data_description::device_authentication%]"
-        }
-      },
-      "secure_routing_manual": {
-        "title": "[%key:component::knx::config::step::secure_routing_manual::title%]",
-        "description": "[%key:component::knx::config::step::secure_tunnel_manual::description%]",
-        "data": {
-          "backbone_key": "[%key:component::knx::config::step::secure_routing_manual::data::backbone_key%]",
-          "sync_latency_tolerance": "[%key:component::knx::config::step::secure_routing_manual::data::sync_latency_tolerance%]"
-        },
-        "data_description": {
-          "backbone_key": "[%key:component::knx::config::step::secure_routing_manual::data_description::backbone_key%]",
-          "sync_latency_tolerance": "[%key:component::knx::config::step::secure_routing_manual::data_description::sync_latency_tolerance%]"
-        }
-      },
-      "routing": {
-        "title": "[%key:component::knx::config::step::routing::title%]",
-        "description": "[%key:component::knx::config::step::routing::description%]",
-        "data": {
-          "individual_address": "[%key:component::knx::config::step::routing::data::individual_address%]",
-          "routing_secure": "[%key:component::knx::config::step::routing::data::routing_secure%]",
-          "multicast_group": "[%key:component::knx::config::step::routing::data::multicast_group%]",
-          "multicast_port": "[%key:component::knx::config::step::routing::data::multicast_port%]",
-          "local_ip": "[%key:component::knx::config::step::manual_tunnel::data::local_ip%]"
-        },
-        "data_description": {
-          "individual_address": "[%key:component::knx::config::step::routing::data_description::individual_address%]",
-          "routing_secure": "[%key:component::knx::config::step::routing::data_description::routing_secure%]",
-          "multicast_group": "[%key:component::knx::config::step::routing::data_description::multicast_group%]",
-          "multicast_port": "[%key:component::knx::config::step::routing::data_description::multicast_port%]",
-          "local_ip": "[%key:component::knx::config::step::manual_tunnel::data_description::local_ip%]"
-        }
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_backbone_key": "[%key:component::knx::config::error::invalid_backbone_key%]",
-      "invalid_individual_address": "[%key:component::knx::config::error::invalid_individual_address%]",
-      "invalid_ip_address": "[%key:component::knx::config::error::invalid_ip_address%]",
-      "keyfile_no_backbone_key": "[%key:component::knx::config::error::keyfile_no_backbone_key%]",
-      "keyfile_invalid_signature": "[%key:component::knx::config::error::keyfile_invalid_signature%]",
-      "keyfile_no_tunnel_for_host": "[%key:component::knx::config::error::keyfile_no_tunnel_for_host%]",
-      "keyfile_not_found": "[%key:component::knx::config::error::keyfile_not_found%]",
-      "no_router_discovered": "[%key:component::knx::config::error::no_router_discovered%]",
-      "no_tunnel_discovered": "[%key:component::knx::config::error::no_tunnel_discovered%]",
-      "unsupported_tunnel_type": "[%key:component::knx::config::error::unsupported_tunnel_type%]"
     }
   },
   "entity": {
@@ -315,7 +191,7 @@
           "preset_mode": {
             "name": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::name%]",
             "state": {
-              "auto": "Auto",
+              "auto": "[%key:common::state::auto%]",
               "building_protection": "Building protection",
               "comfort": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::comfort%]",
               "economy": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::eco%]",
@@ -462,6 +338,276 @@
     "reload": {
       "name": "[%key:common::action::reload%]",
       "description": "Reloads the KNX integration."
+    }
+  },
+  "config_panel": {
+    "entities": {
+      "create": {
+        "type_selection": {
+          "title": "Select entity type",
+          "header": "Create KNX entity"
+        },
+        "header": "Create new entity",
+        "_": {
+          "entity": {
+            "title": "Entity configuration",
+            "description": "Home Assistant specific settings.",
+            "name_title": "Device and entity name",
+            "name_description": "Define how the entity should be named in Home Assistant.",
+            "device_description": "A device allows to group multiple entities. Select the device this entity belongs to or create a new one.",
+            "entity_label": "Entity name",
+            "entity_description": "Optional if a device is selected, otherwise required. If the entity is assigned to a device, the device name is used as prefix.",
+            "entity_category_title": "Entity category",
+            "entity_category_description": "Classification of a non-primary entity. Leave empty for standard behaviour."
+          },
+          "knx": {
+            "title": "KNX configuration",
+            "knx_group_address": {
+              "dpt": "Datapoint type",
+              "send_address": "Send address",
+              "state_address": "State address",
+              "passive_addresses": "Passive addresses",
+              "valid_dpts": "Valid DPTs"
+            },
+            "sync_state": {
+              "title": "State updater",
+              "description": "Actively request state updates from KNX bus for state addresses.",
+              "strategy": "Strategy",
+              "options": {
+                "true": "Use integration default",
+                "false": "Never",
+                "init": "Once when connection established",
+                "expire": "Expire after last value update",
+                "every": "Scheduled every"
+              }
+            }
+          }
+        },
+        "binary_sensor": {
+          "description": "Read-only entity for binary datapoints. Window or door states etc.",
+          "knx": {
+            "section_binary_sensor": {
+              "title": "Binary sensor",
+              "description": "DPT 1 group addresses representing binary states."
+            },
+            "invert": {
+              "label": "Invert",
+              "description": "Invert payload before processing."
+            },
+            "section_advanced_options": {
+              "title": "State properties",
+              "description": "Properties of the binary sensor state."
+            },
+            "ignore_internal_state": {
+              "label": "Force update",
+              "description": "Write each update to the state machine, even if the data is the same."
+            },
+            "context_timeout": {
+              "label": "Context timeout",
+              "description": "The time in seconds between multiple identical telegram payloads would count towards an internal counter. This can be used to automate on multi-clicks of a button. `0` to disable this feature."
+            },
+            "reset_after": {
+              "label": "Reset after",
+              "description": "Reset back to “off” state after specified seconds."
+            }
+          }
+        },
+        "cover": {
+          "description": "The KNX cover platform is used as an interface to shutter actuators.",
+          "knx": {
+            "section_binary_control": {
+              "title": "Open/Close control",
+              "description": "DPT 1 group addresses triggering full movement."
+            },
+            "ga_up_down": {
+              "label": "Open/Close"
+            },
+            "invert_updown": {
+              "label": "Invert",
+              "description": "Default is UP (0) to open a cover and DOWN (1) to close a cover. Enable this to invert the open/close commands from/to your KNX actuator."
+            },
+            "section_stop_control": {
+              "title": "Stop",
+              "description": "DPT 1 group addresses for stopping movement."
+            },
+            "ga_stop": {
+              "label": "Stop"
+            },
+            "ga_step": {
+              "label": "Stepwise move"
+            },
+            "section_position_control": {
+              "title": "Position",
+              "description": "DPT 5 group addresses for cover position."
+            },
+            "ga_position_set": {
+              "label": "Set position"
+            },
+            "ga_position_state": {
+              "label": "Current position"
+            },
+            "invert_position": {
+              "label": "Invert",
+              "description": "Invert payload before processing. Enable if KNX reports 0% as fully closed."
+            },
+            "section_tilt_control": {
+              "title": "Tilt",
+              "description": "DPT 5 group addresses for slat tilt angle."
+            },
+            "ga_angle": {
+              "label": "Tilt angle"
+            },
+            "invert_angle": {
+              "label": "[%key:component::knx::config_panel::entities::create::cover::knx::invert_position::label%]",
+              "description": "[%key:component::knx::config_panel::entities::create::cover::knx::invert_position::description%]"
+            },
+            "section_travel_time": {
+              "title": "Travel time",
+              "description": "Used to calculate intermediate positions of the cover while traveling."
+            },
+            "travelling_time_up": {
+              "label": "Travel time for opening",
+              "description": "Time the cover needs to fully open in seconds."
+            },
+            "travelling_time_down": {
+              "label": "Travel time for closing",
+              "description": "Time the cover needs to fully close in seconds."
+            }
+          }
+        },
+        "light": {
+          "description": "The KNX light platform is used as an interface to dimming actuators, LED controllers, DALI gateways and similar.",
+          "knx": {
+            "section_switch": {
+              "title": "Switch",
+              "description": "Turn the light on/off."
+            },
+            "ga_switch": {
+              "label": "Switch"
+            },
+            "section_brightness": {
+              "title": "Brightness",
+              "description": "Control the brightness of the light."
+            },
+            "ga_brightness": {
+              "label": "Brightness"
+            },
+            "section_color_temp": {
+              "title": "Color temperature",
+              "description": "Control the color temperature of the light."
+            },
+            "ga_color_temp": {
+              "label": "Color temperature",
+              "options": {
+                "5_001": "Percent",
+                "7_600": "Kelvin",
+                "9": "2-byte floating point"
+              }
+            },
+            "color_temp_min": {
+              "label": "Warmest possible color temperature"
+            },
+            "color_temp_max": {
+              "label": "Coldest possible color temperature"
+            },
+            "color": {
+              "title": "Color",
+              "description": "Control the color of the light.",
+              "options": {
+                "single_address": {
+                  "label": "Single address",
+                  "description": "RGB, RGBW or XYY color controlled by a single group address."
+                },
+                "individual_addresses": {
+                  "label": "Individual addresses",
+                  "description": "RGB(W) using individual state and brightness group addresses."
+                },
+                "hsv_addresses": {
+                  "label": "HSV",
+                  "description": "Hue, saturation and brightness using individual group addresses."
+                }
+              },
+              "ga_color": {
+                "label": "Color",
+                "options": {
+                  "232_600": "RGB",
+                  "242_600": "XYY",
+                  "251_600": "RGBW"
+                }
+              },
+              "section_red": {
+                "title": "Red",
+                "description": "Controls the light's red color component. Brightness group address is required."
+              },
+              "ga_red_switch": {
+                "label": "Red switch"
+              },
+              "ga_red_brightness": {
+                "label": "Red brightness"
+              },
+              "section_green": {
+                "title": "Green",
+                "description": "Controls the light's green color component. Brightness group address is required."
+              },
+              "ga_green_switch": {
+                "label": "Green switch"
+              },
+              "ga_green_brightness": {
+                "label": "Green brightness"
+              },
+              "section_blue": {
+                "title": "Blue",
+                "description": "Controls the light's blue color component. Brightness group address is required."
+              },
+              "ga_blue_switch": {
+                "label": "Blue switch"
+              },
+              "ga_blue_brightness": {
+                "label": "Blue brightness"
+              },
+              "section_white": {
+                "title": "White",
+                "description": "Controls the light's white color component. Brightness group address is required."
+              },
+              "ga_white_switch": {
+                "label": "White switch"
+              },
+              "ga_white_brightness": {
+                "label": "White brightness"
+              },
+              "ga_hue": {
+                "label": "Hue",
+                "description": "Controls the light's hue."
+              },
+              "ga_saturation": {
+                "label": "Saturation",
+                "description": "Controls the light's saturation."
+              }
+            }
+          }
+        },
+        "switch": {
+          "description": "The KNX switch platform is used as an interface to switching actuators.",
+          "knx": {
+            "section_switch": {
+              "title": "Switching",
+              "description": "DPT 1 group addresses controlling the switch function."
+            },
+            "ga_switch": {
+              "label": "Switch",
+              "description": "Group address to switch the device on/off."
+            },
+            "invert": {
+              "label": "Invert",
+              "description": "Invert payloads before processing or sending."
+            },
+            "respond_to_read": {
+              "label": "Respond to read",
+              "description": "Respond to GroupValueRead telegrams received to the configured send address."
+            }
+          }
+        }
+      }
     }
   }
 }

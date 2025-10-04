@@ -102,6 +102,9 @@
       },
       "volume": {
         "name": "Volume"
+      },
+      "water_amount": {
+        "name": "Water flow level"
       }
     },
     "sensor": {
@@ -152,8 +155,10 @@
       "station_state": {
         "name": "Station state",
         "state": {
+          "drying_mop": "Drying mop",
           "idle": "[%key:common::state::idle%]",
-          "emptying_dustbin": "Emptying dustbin"
+          "emptying_dustbin": "Emptying dustbin",
+          "washing_mop": "Washing mop"
         }
       },
       "stats_area": {
@@ -174,7 +179,7 @@
     },
     "select": {
       "water_amount": {
-        "name": "Water flow level",
+        "name": "[%key:component::ecovacs::entity::number::water_amount::name%]",
         "state": {
           "high": "[%key:common::state::high%]",
           "low": "[%key:common::state::low%]",
@@ -229,9 +234,9 @@
         "state_attributes": {
           "fan_speed": {
             "state": {
+              "normal": "[%key:common::state::normal%]",
               "max": "Max",
               "max_plus": "Max+",
-              "normal": "Normal",
               "quiet": "Quiet"
             }
           },

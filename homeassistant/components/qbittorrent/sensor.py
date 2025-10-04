@@ -39,6 +39,7 @@ SENSOR_TYPE_ALL_TORRENTS = "all_torrents"
 SENSOR_TYPE_PAUSED_TORRENTS = "paused_torrents"
 SENSOR_TYPE_ACTIVE_TORRENTS = "active_torrents"
 SENSOR_TYPE_INACTIVE_TORRENTS = "inactive_torrents"
+SENSOR_TYPE_ERRORED_TORRENTS = "errored_torrents"
 
 
 def get_state(coordinator: QBittorrentDataCoordinator) -> str:
@@ -218,7 +219,14 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         key=SENSOR_TYPE_PAUSED_TORRENTS,
         translation_key="paused_torrents",
         value_fn=lambda coordinator: count_torrents_in_states(
-            coordinator, ["pausedDL", "pausedUP"]
+            coordinator, ["stoppedDL", "stoppedUP"]
+        ),
+    ),
+    QBittorrentSensorEntityDescription(
+        key=SENSOR_TYPE_ERRORED_TORRENTS,
+        translation_key="errored_torrents",
+        value_fn=lambda coordinator: count_torrents_in_states(
+            coordinator, ["error", "missingFiles"]
         ),
     ),
 )

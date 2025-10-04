@@ -433,7 +433,13 @@ def test_get_unit_system_invalid(key: str) -> None:
             UnitOfVolume.CENTUM_CUBIC_FEET,
             UnitOfVolume.CUBIC_METERS,
         ),
+        (
+            SensorDeviceClass.GAS,
+            UnitOfVolume.MILLE_CUBIC_FEET,
+            UnitOfVolume.CUBIC_METERS,
+        ),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
+        (SensorDeviceClass.GAS, UnitOfVolume.LITERS, None),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, None),
         (SensorDeviceClass.GAS, "very_much", None),
         # Test precipitation conversion
@@ -509,6 +515,11 @@ def test_get_unit_system_invalid(key: str) -> None:
             UnitOfVolume.CENTUM_CUBIC_FEET,
             UnitOfVolume.CUBIC_METERS,
         ),
+        (
+            SensorDeviceClass.VOLUME,
+            UnitOfVolume.MILLE_CUBIC_FEET,
+            UnitOfVolume.CUBIC_METERS,
+        ),
         (SensorDeviceClass.VOLUME, UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
         (SensorDeviceClass.VOLUME, UnitOfVolume.FLUID_OUNCES, UnitOfVolume.MILLILITERS),
         (SensorDeviceClass.VOLUME, UnitOfVolume.GALLONS, UnitOfVolume.LITERS),
@@ -520,6 +531,11 @@ def test_get_unit_system_invalid(key: str) -> None:
         (
             SensorDeviceClass.WATER,
             UnitOfVolume.CENTUM_CUBIC_FEET,
+            UnitOfVolume.CUBIC_METERS,
+        ),
+        (
+            SensorDeviceClass.WATER,
+            UnitOfVolume.MILLE_CUBIC_FEET,
             UnitOfVolume.CUBIC_METERS,
         ),
         (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
@@ -573,7 +589,10 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         UnitOfLength.METERS,
         UnitOfLength.MILLIMETERS,
     ),
-    SensorDeviceClass.GAS: (UnitOfVolume.CUBIC_METERS,),
+    SensorDeviceClass.GAS: (
+        UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.LITERS,
+    ),
     SensorDeviceClass.PRECIPITATION: (
         UnitOfLength.CENTIMETERS,
         UnitOfLength.MILLIMETERS,
@@ -595,6 +614,7 @@ UNCONVERTED_UNITS_METRIC_SYSTEM = {
         UnitOfSpeed.BEAUFORT,
         UnitOfSpeed.KILOMETERS_PER_HOUR,
         UnitOfSpeed.KNOTS,
+        UnitOfSpeed.METERS_PER_MINUTE,
         UnitOfSpeed.METERS_PER_SECOND,
         UnitOfSpeed.MILLIMETERS_PER_SECOND,
         UnitOfVolumetricFlux.MILLIMETERS_PER_DAY,
@@ -686,7 +706,9 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
         (SensorDeviceClass.DISTANCE, "very_long", None),
         # Test gas meter conversion
         (SensorDeviceClass.GAS, UnitOfVolume.CENTUM_CUBIC_FEET, None),
+        (SensorDeviceClass.GAS, UnitOfVolume.MILLE_CUBIC_FEET, None),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
+        (SensorDeviceClass.GAS, UnitOfVolume.LITERS, UnitOfVolume.CUBIC_FEET),
         (SensorDeviceClass.GAS, UnitOfVolume.CUBIC_FEET, None),
         (SensorDeviceClass.GAS, "very_much", None),
         # Test precipitation conversion
@@ -765,6 +787,7 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
         (SensorDeviceClass.VOLUME, UnitOfVolume.LITERS, UnitOfVolume.GALLONS),
         (SensorDeviceClass.VOLUME, UnitOfVolume.MILLILITERS, UnitOfVolume.FLUID_OUNCES),
         (SensorDeviceClass.VOLUME, UnitOfVolume.CENTUM_CUBIC_FEET, None),
+        (SensorDeviceClass.VOLUME, UnitOfVolume.MILLE_CUBIC_FEET, None),
         (SensorDeviceClass.VOLUME, UnitOfVolume.CUBIC_FEET, None),
         (SensorDeviceClass.VOLUME, UnitOfVolume.FLUID_OUNCES, None),
         (SensorDeviceClass.VOLUME, UnitOfVolume.GALLONS, None),
@@ -773,6 +796,7 @@ def test_metric_converted_units(device_class: SensorDeviceClass) -> None:
         (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_METERS, UnitOfVolume.CUBIC_FEET),
         (SensorDeviceClass.WATER, UnitOfVolume.LITERS, UnitOfVolume.GALLONS),
         (SensorDeviceClass.WATER, UnitOfVolume.CENTUM_CUBIC_FEET, None),
+        (SensorDeviceClass.WATER, UnitOfVolume.MILLE_CUBIC_FEET, None),
         (SensorDeviceClass.WATER, UnitOfVolume.CUBIC_FEET, None),
         (SensorDeviceClass.WATER, UnitOfVolume.GALLONS, None),
         (SensorDeviceClass.WATER, "very_much", None),
@@ -823,7 +847,11 @@ UNCONVERTED_UNITS_US_SYSTEM = {
         UnitOfLength.MILES,
         UnitOfLength.YARDS,
     ),
-    SensorDeviceClass.GAS: (UnitOfVolume.CENTUM_CUBIC_FEET, UnitOfVolume.CUBIC_FEET),
+    SensorDeviceClass.GAS: (
+        UnitOfVolume.CENTUM_CUBIC_FEET,
+        UnitOfVolume.MILLE_CUBIC_FEET,
+        UnitOfVolume.CUBIC_FEET,
+    ),
     SensorDeviceClass.PRECIPITATION: (UnitOfLength.INCHES,),
     SensorDeviceClass.PRECIPITATION_INTENSITY: (
         UnitOfVolumetricFlux.INCHES_PER_DAY,
@@ -841,12 +869,14 @@ UNCONVERTED_UNITS_US_SYSTEM = {
     ),
     SensorDeviceClass.VOLUME: (
         UnitOfVolume.CENTUM_CUBIC_FEET,
+        UnitOfVolume.MILLE_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.FLUID_OUNCES,
         UnitOfVolume.GALLONS,
     ),
     SensorDeviceClass.WATER: (
         UnitOfVolume.CENTUM_CUBIC_FEET,
+        UnitOfVolume.MILLE_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.GALLONS,
     ),

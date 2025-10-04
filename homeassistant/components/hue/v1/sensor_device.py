@@ -3,11 +3,7 @@
 from homeassistant.helpers import entity
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from ..const import (
-    CONF_ALLOW_UNREACHABLE,
-    DEFAULT_ALLOW_UNREACHABLE,
-    DOMAIN as HUE_DOMAIN,
-)
+from ..const import CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE, DOMAIN
 
 
 class GenericHueDevice(entity.Entity):  # pylint: disable=hass-enforce-class-module
@@ -55,10 +51,10 @@ class GenericHueDevice(entity.Entity):  # pylint: disable=hass-enforce-class-mod
         Links individual entities together in the hass device registry.
         """
         return DeviceInfo(
-            identifiers={(HUE_DOMAIN, self.device_id)},
+            identifiers={(DOMAIN, self.device_id)},
             manufacturer=self.primary_sensor.manufacturername,
             model=(self.primary_sensor.productname or self.primary_sensor.modelid),
             name=self.primary_sensor.name,
             sw_version=self.primary_sensor.swversion,
-            via_device=(HUE_DOMAIN, self.bridge.api.config.bridgeid),
+            via_device=(DOMAIN, self.bridge.api.config.bridgeid),
         )

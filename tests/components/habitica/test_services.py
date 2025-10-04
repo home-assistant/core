@@ -28,6 +28,7 @@ from homeassistant.components.habitica.const import (
     ATTR_ALIAS,
     ATTR_CLEAR_DATE,
     ATTR_CLEAR_REMINDER,
+    ATTR_COLLAPSE_CHECKLIST,
     ATTR_CONFIG_ENTRY,
     ATTR_COST,
     ATTR_COUNTER_DOWN,
@@ -89,7 +90,7 @@ from .conftest import (
     ERROR_TOO_MANY_REQUESTS,
 )
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 REQUEST_EXCEPTION_MSG = "Unable to connect to Habitica: reason"
 RATE_LIMIT_EXCEPTION_MSG = "Rate limit exceeded, try again in 5 seconds"
@@ -1111,7 +1112,7 @@ async def test_update_reward(
     task_id = "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b"
 
     habitica.update_task.return_value = HabiticaTaskResponse.from_json(
-        load_fixture("task.json", DOMAIN)
+        await async_load_fixture(hass, "task.json", DOMAIN)
     )
     await hass.services.async_call(
         DOMAIN,
@@ -1498,6 +1499,18 @@ async def test_create_habit(
             },
             Task(alias="ALIAS"),
         ),
+        (
+            {
+                ATTR_COLLAPSE_CHECKLIST: "collapsed",
+            },
+            Task(collapseChecklist=True),
+        ),
+        (
+            {
+                ATTR_COLLAPSE_CHECKLIST: "expanded",
+            },
+            Task(collapseChecklist=False),
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_uuid4")
@@ -1595,6 +1608,20 @@ async def test_update_todo(
                 ATTR_ALIAS: "ALIAS",
             },
             Task(type=TaskType.TODO, text="TITLE", alias="ALIAS"),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_COLLAPSE_CHECKLIST: "collapsed",
+            },
+            Task(type=TaskType.TODO, text="TITLE", collapseChecklist=True),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_COLLAPSE_CHECKLIST: "expanded",
+            },
+            Task(type=TaskType.TODO, text="TITLE", collapseChecklist=False),
         ),
     ],
 )

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any, cast
 
 from aioshelly.block_device import Block
@@ -17,9 +18,12 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import RPC_COVER_UPDATE_TIME_SEC
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import ShellyBlockEntity, ShellyRpcEntity
 from .utils import get_device_entry_gen, get_rpc_key_ids
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -156,6 +160,7 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
         """Initialize rpc cover."""
         super().__init__(coordinator, f"cover:{id_}")
         self._id = id_
+        self._update_task: asyncio.Task | None = None
         if self.status["pos_control"]:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
         if coordinator.device.config[f"cover:{id_}"].get("slat", {}).get("enable"):
@@ -196,6 +201,33 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
     def is_opening(self) -> bool:
         """Return if the cover is opening."""
         return cast(bool, self.status["state"] == "opening")
+
+    def launch_update_task(self) -> None:
+        """Launch the update position task if needed."""
+        if not self._update_task or self._update_task.done():
+            self._update_task = (
+                self.coordinator.config_entry.async_create_background_task(
+                    self.hass,
+                    self.update_position(),
+                    f"Shelly cover update [{self._id} - {self.name}]",
+                )
+            )
+
+    async def update_position(self) -> None:
+        """Update the cover position every second."""
+        try:
+            while self.is_closing or self.is_opening:
+                await self.coordinator.device.update_status()
+                self.async_write_ha_state()
+                await asyncio.sleep(RPC_COVER_UPDATE_TIME_SEC)
+        finally:
+            self._update_task = None
+
+    def _update_callback(self) -> None:
+        """Handle device update. Use a task when opening/closing is in progress."""
+        super()._update_callback()
+        if self.is_closing or self.is_opening:
+            self.launch_update_task()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""

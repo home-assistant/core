@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from matter_server.client.models.node import MatterNode
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
@@ -17,7 +17,8 @@ from .common import (
 )
 
 
-@pytest.mark.usefixtures("matter_devices")
+@pytest.mark.freeze_time("2025-01-01T14:00:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "matter_devices")
 async def test_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -156,7 +157,7 @@ async def test_battery_sensor_voltage(
     matter_node: MatterNode,
 ) -> None:
     """Test battery voltage sensor."""
-    entity_id = "sensor.eve_door_voltage"
+    entity_id = "sensor.eve_door_battery_voltage"
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "3.558"
@@ -230,6 +231,26 @@ async def test_eve_thermo_sensor(
     state = hass.states.get("sensor.eve_thermo_temperature")
     assert state
     assert state.state == "18.0"
+
+
+@pytest.mark.parametrize("node_fixture", ["thermostat"])
+async def test_thermostat_outdoor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test OutdoorTemperature."""
+    # OutdoorTemperature
+    state = hass.states.get("sensor.longan_link_hvac_outdoor_temperature")
+    assert state
+    assert state.state == "12.5"
+
+    set_node_attribute(matter_node, 1, 513, 1, -550)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.longan_link_hvac_outdoor_temperature")
+    assert state
+    assert state.state == "-5.5"
 
 
 @pytest.mark.parametrize("node_fixture", ["pressure_sensor"])
@@ -381,6 +402,21 @@ async def test_draft_electrical_measurement_sensor(
     assert state.state == "unknown"
 
 
+@pytest.mark.freeze_time("2025-01-01T14:00:00+00:00")
+@pytest.mark.parametrize("node_fixture", ["microwave_oven"])
+async def test_countdown_time_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test CountdownTime sensor."""
+    # OperationalState Cluster / CountdownTime (1/96/2)
+    state = hass.states.get("sensor.microwave_oven_estimated_end_time")
+    assert state
+    # 1/96/2 = 30 seconds, so 30 s should be added to the current time.
+    assert state.state == "2025-01-01T14:00:30+00:00"
+
+
 @pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])
 async def test_list_sensor(
     hass: HomeAssistant,
@@ -467,3 +503,123 @@ async def test_evse_sensor(
     state = hass.states.get("sensor.evse_user_max_charge_current")
     assert state
     assert state.state == "63.0"
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
+async def test_water_heater(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test water heater sensor."""
+    # TankVolume
+    state = hass.states.get("sensor.water_heater_tank_volume")
+    assert state
+    assert state.state == "200"
+
+    set_node_attribute(matter_node, 2, 148, 2, 100)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.water_heater_tank_volume")
+    assert state
+    assert state.state == "100"
+
+    # EstimatedHeatRequired
+    state = hass.states.get("sensor.water_heater_required_heating_energy")
+    assert state
+    assert state.state == "4.0"
+
+    set_node_attribute(matter_node, 2, 148, 3, 1000000)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.water_heater_required_heating_energy")
+    assert state
+    assert state.state == "1.0"
+
+    # TankPercentage
+    state = hass.states.get("sensor.water_heater_hot_water_level")
+    assert state
+    assert state.state == "40"
+
+    set_node_attribute(matter_node, 2, 148, 4, 50)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.water_heater_hot_water_level")
+    assert state
+    assert state.state == "50"
+
+    # DeviceEnergyManagement -> ESAState attribute
+    state = hass.states.get("sensor.water_heater_appliance_energy_state")
+    assert state
+    assert state.state == "online"
+
+    set_node_attribute(matter_node, 2, 152, 2, 0)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.water_heater_appliance_energy_state")
+    assert state
+    assert state.state == "offline"
+
+    # DeviceEnergyManagement -> OptOutState attribute
+    state = hass.states.get("sensor.water_heater_energy_optimization_opt_out")
+    assert state
+    assert state.state == "no_opt_out"
+
+    set_node_attribute(matter_node, 2, 152, 7, 3)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.water_heater_energy_optimization_opt_out")
+    assert state
+    assert state.state == "opt_out"
+
+
+@pytest.mark.parametrize("node_fixture", ["pump"])
+async def test_pump(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test pump sensors."""
+    # ControlMode
+    state = hass.states.get("sensor.mock_pump_control_mode")
+    assert state
+    assert state.state == "constant_temperature"
+
+    set_node_attribute(matter_node, 1, 512, 33, 7)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_pump_control_mode")
+    assert state
+    assert state.state == "automatic"
+
+    # Speed
+    state = hass.states.get("sensor.mock_pump_rotation_speed")
+    assert state
+    assert state.state == "1000"
+
+    set_node_attribute(matter_node, 1, 512, 20, 500)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_pump_rotation_speed")
+    assert state
+    assert state.state == "500"
+
+
+@pytest.mark.parametrize("node_fixture", ["vacuum_cleaner"])
+async def test_vacuum_actions(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test vacuum sensors."""
+    # EstimatedEndTime
+    state = hass.states.get("sensor.mock_vacuum_estimated_end_time")
+    assert state
+    assert state.state == "2025-08-29T21:00:00+00:00"
+
+    set_node_attribute(matter_node, 1, 336, 4, 1756502000)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.mock_vacuum_estimated_end_time")
+    assert state
+    assert state.state == "2025-08-29T21:13:20+00:00"

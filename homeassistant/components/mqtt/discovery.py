@@ -254,7 +254,7 @@ def _generate_device_config(
     comp_config = config[CONF_COMPONENTS]
     for platform, discover_id in mqtt_data.discovery_already_discovered:
         ids = discover_id.split(" ")
-        component_node_id = ids.pop(0)
+        component_node_id = f"{ids.pop(1)} {ids.pop(0)}" if len(ids) > 2 else ids.pop(0)
         component_object_id = " ".join(ids)
         if not ids:
             continue

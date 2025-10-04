@@ -9,6 +9,7 @@ from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import CLIMATE
 
 from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -17,12 +18,12 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import PRESET_MODE_AUTO, PRESET_MODE_AUTO_TARGET_TEMP, PRESET_MODE_MANUAL
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
+from .entity import ComelitBridgeBaseEntity
+from .utils import bridge_api_call, cleanup_stale_entity, load_api_data
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -40,11 +41,13 @@ class ClimaComelitMode(StrEnum):
 class ClimaComelitCommand(StrEnum):
     """Serial Bridge clima commands."""
 
+    AUTO = "auto"
+    MANUAL = "man"
     OFF = "off"
     ON = "on"
-    MANUAL = "man"
     SET = "set"
-    AUTO = "auto"
+    SNOW = "lower"
+    SUN = "upper"
 
 
 class ClimaComelitApiStatus(TypedDict):
@@ -66,11 +69,15 @@ API_STATUS: dict[str, ClimaComelitApiStatus] = {
     ),
 }
 
-MODE_TO_ACTION: dict[HVACMode, ClimaComelitCommand] = {
+HVACMODE_TO_ACTION: dict[HVACMode, ClimaComelitCommand] = {
     HVACMode.OFF: ClimaComelitCommand.OFF,
-    HVACMode.AUTO: ClimaComelitCommand.AUTO,
-    HVACMode.COOL: ClimaComelitCommand.MANUAL,
-    HVACMode.HEAT: ClimaComelitCommand.MANUAL,
+    HVACMode.COOL: ClimaComelitCommand.SNOW,
+    HVACMode.HEAT: ClimaComelitCommand.SUN,
+}
+
+PRESET_MODE_TO_ACTION: dict[str, ClimaComelitCommand] = {
+    PRESET_MODE_MANUAL: ClimaComelitCommand.MANUAL,
+    PRESET_MODE_AUTO: ClimaComelitCommand.AUTO,
 }
 
 
@@ -83,27 +90,42 @@ async def async_setup_entry(
 
     coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
 
-    async_add_entities(
-        ComelitClimateEntity(coordinator, device, config_entry.entry_id)
-        for device in coordinator.data[CLIMATE].values()
-    )
+    entities: list[ClimateEntity] = []
+    for device in coordinator.data[CLIMATE].values():
+        values = load_api_data(device, CLIMATE_DOMAIN)
+        if values[0] == 0 and values[4] == 0:
+            # No climate data, device is only a humidifier/dehumidifier
+
+            await cleanup_stale_entity(
+                hass, config_entry, f"{config_entry.entry_id}-{device.index}", device
+            )
+
+            continue
+
+        entities.append(
+            ComelitClimateEntity(coordinator, device, config_entry.entry_id)
+        )
+
+    async_add_entities(entities)
 
 
-class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity):
+class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
     """Climate device."""
 
-    _attr_hvac_modes = [HVACMode.AUTO, HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]
+    _attr_hvac_modes = [HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]
+    _attr_preset_modes = [PRESET_MODE_AUTO, PRESET_MODE_MANUAL]
     _attr_max_temp = 30
     _attr_min_temp = 5
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.PRESET_MODE
     )
     _attr_target_temperature_step = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_has_entity_name = True
     _attr_name = None
+    _attr_translation_key = "thermostat"
 
     def __init__(
         self,
@@ -112,47 +134,29 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         config_entry_entry_id: str,
     ) -> None:
         """Init light entity."""
-        self._api = coordinator.api
-        self._device = device
-        super().__init__(coordinator)
-        # Use config_entry.entry_id as base for unique_id
-        # because no serial number or mac is available
-        self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
-        self._attr_device_info = coordinator.platform_device_info(device, device.type)
+        super().__init__(coordinator, device, config_entry_entry_id)
         self._update_attributes()
 
     def _update_attributes(self) -> None:
         """Update class attributes."""
         device = self.coordinator.data[CLIMATE][self._device.index]
-        if not isinstance(device.val, list):
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="invalid_clima_data"
-            )
-
-        # CLIMATE has a 2 item tuple:
-        # - first  for Clima
-        # - second for Humidifier
-        values = device.val[0]
+        values = load_api_data(device, CLIMATE_DOMAIN)
 
         _active = values[1]
         _mode = values[2]  # Values from API: "O", "L", "U"
         _automatic = values[3] == ClimaComelitMode.AUTO
 
+        self._attr_preset_mode = PRESET_MODE_AUTO if _automatic else PRESET_MODE_MANUAL
+
         self._attr_current_temperature = values[0] / 10
 
         self._attr_hvac_action = None
-        if _mode == ClimaComelitMode.OFF:
-            self._attr_hvac_action = HVACAction.OFF
         if not _active:
             self._attr_hvac_action = HVACAction.IDLE
-        if _mode in API_STATUS:
+        elif _mode in API_STATUS:
             self._attr_hvac_action = API_STATUS[_mode]["hvac_action"]
 
         self._attr_hvac_mode = None
-        if _mode == ClimaComelitMode.OFF:
-            self._attr_hvac_mode = HVACMode.OFF
-        if _automatic:
-            self._attr_hvac_mode = HVACMode.AUTO
         if _mode in API_STATUS:
             self._attr_hvac_mode = API_STATUS[_mode]["hvac_mode"]
 
@@ -164,31 +168,48 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         self._update_attributes()
         super()._handle_coordinator_update()
 
+    @bridge_api_call
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (
-            target_temp := kwargs.get(ATTR_TEMPERATURE)
-        ) is None or self.hvac_mode == HVACMode.OFF:
+            (target_temp := kwargs.get(ATTR_TEMPERATURE)) is None
+            or self.hvac_mode == HVACMode.OFF
+            or self._attr_preset_mode == PRESET_MODE_AUTO
+        ):
             return
 
-        await self.coordinator.api.set_clima_status(
-            self._device.index, ClimaComelitCommand.MANUAL
-        )
         await self.coordinator.api.set_clima_status(
             self._device.index, ClimaComelitCommand.SET, target_temp
         )
         self._attr_target_temperature = target_temp
         self.async_write_ha_state()
 
+    @bridge_api_call
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
 
-        if hvac_mode != HVACMode.OFF:
+        if self._attr_hvac_mode == HVACMode.OFF:
             await self.coordinator.api.set_clima_status(
                 self._device.index, ClimaComelitCommand.ON
             )
         await self.coordinator.api.set_clima_status(
-            self._device.index, MODE_TO_ACTION[hvac_mode]
+            self._device.index, HVACMODE_TO_ACTION[hvac_mode]
         )
         self._attr_hvac_mode = hvac_mode
+        self.async_write_ha_state()
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new target preset mode."""
+
+        if self._attr_hvac_mode == HVACMode.OFF:
+            return
+
+        await self.coordinator.api.set_clima_status(
+            self._device.index, PRESET_MODE_TO_ACTION[preset_mode]
+        )
+        self._attr_preset_mode = preset_mode
+
+        if preset_mode == PRESET_MODE_AUTO:
+            self._attr_target_temperature = PRESET_MODE_AUTO_TARGET_TEMP
+
         self.async_write_ha_state()

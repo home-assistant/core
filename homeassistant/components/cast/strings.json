@@ -10,12 +10,12 @@
           "known_hosts": "Add known host"
         },
         "data_description": {
-          "known_hosts": "Hostnames or IP-addresses of cast devices, use if mDNS discovery is not working"
+          "known_hosts": "Hostnames or IP addresses of cast devices, use if mDNS discovery is not working"
         }
       }
     },
     "error": {
-      "invalid_known_hosts": "Known hosts must be a comma separated list of hosts."
+      "invalid_known_hosts": "Known hosts must be a comma-separated list of hosts."
     }
   },
   "options": {

@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
-from .entity import SwitchbotEntity
+from .entity import SwitchbotEntity, exception_handler
 
 # Initialize the logger
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +35,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbot curtain based on a config entry."""
     coordinator = entry.runtime_data
-    if isinstance(coordinator.device, switchbot.SwitchbotBlindTilt):
+    if isinstance(coordinator.device, switchbot.SwitchbotGarageDoorOpener):
+        async_add_entities([SwitchbotGarageDoorOpenerEntity(coordinator)])
+    elif isinstance(coordinator.device, switchbot.SwitchbotBlindTilt):
         async_add_entities([SwitchBotBlindTiltEntity(coordinator)])
     elif isinstance(coordinator.device, switchbot.SwitchbotRollerShade):
         async_add_entities([SwitchBotRollerShadeEntity(coordinator)])
@@ -76,6 +78,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         if self._attr_current_cover_position is not None:
             self._attr_is_closed = self._attr_current_cover_position <= 20
 
+    @exception_handler
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the curtain."""
 
@@ -85,6 +88,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
+    @exception_handler
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the curtain."""
 
@@ -94,6 +98,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
+    @exception_handler
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the moving of this device."""
 
@@ -103,6 +108,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
+    @exception_handler
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover shutter to a specific position."""
         position = kwargs.get(ATTR_POSITION)
@@ -161,6 +167,7 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
                 _tilt > self.CLOSED_UP_THRESHOLD
             )
 
+    @exception_handler
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the tilt."""
 
@@ -168,6 +175,7 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._last_run_success = bool(await self._device.open())
         self.async_write_ha_state()
 
+    @exception_handler
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the tilt."""
 
@@ -175,6 +183,7 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._last_run_success = bool(await self._device.close())
         self.async_write_ha_state()
 
+    @exception_handler
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the moving of this device."""
 
@@ -182,6 +191,7 @@ class SwitchBotBlindTiltEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._last_run_success = bool(await self._device.stop())
         self.async_write_ha_state()
 
+    @exception_handler
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         position = kwargs.get(ATTR_TILT_POSITION)
@@ -237,6 +247,7 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         if self._attr_current_cover_position is not None:
             self._attr_is_closed = self._attr_current_cover_position <= 20
 
+    @exception_handler
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the roller shade."""
 
@@ -246,6 +257,7 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
+    @exception_handler
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the roller shade."""
 
@@ -255,6 +267,7 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
+    @exception_handler
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the moving of roller shade."""
 
@@ -264,6 +277,7 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
+    @exception_handler
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
 
@@ -282,4 +296,31 @@ class SwitchBotRollerShadeEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         self._attr_current_cover_position = self.parsed_data["position"]
         self._attr_is_closed = self.parsed_data["position"] <= 20
 
+        self.async_write_ha_state()
+
+
+class SwitchbotGarageDoorOpenerEntity(SwitchbotEntity, CoverEntity):
+    """Representation of a Switchbot garage door."""
+
+    _device: switchbot.SwitchbotGarageDoorOpener
+    _attr_device_class = CoverDeviceClass.GARAGE
+    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+    _attr_translation_key = "garage_door"
+    _attr_name = None
+
+    @property
+    def is_closed(self) -> bool | None:
+        """Return true if cover is closed, else False."""
+        return not self._device.door_open()
+
+    @exception_handler
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the garage door."""
+        await self._device.open()
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the garage door."""
+        await self._device.close()
         self.async_write_ha_state()

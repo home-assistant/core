@@ -5,7 +5,6 @@ from __future__ import annotations
 from asyncio import sleep as asyncio_sleep
 from collections import defaultdict
 from collections.abc import Callable
-from contextlib import suppress
 from dataclasses import dataclass
 import logging
 from typing import Any, cast
@@ -42,10 +41,18 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import API_DEFAULT_RETRY_AFTER, APPLIANCES_WITH_PROGRAMS, DOMAIN
+from .const import (
+    API_DEFAULT_RETRY_AFTER,
+    APPLIANCES_WITH_PROGRAMS,
+    BSH_OPERATION_STATE_PAUSE,
+    DOMAIN,
+)
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
+
+MAX_EXECUTIONS_TIME_WINDOW = 60 * 60  # 1 hour
+MAX_EXECUTIONS = 8
 
 type HomeConnectConfigEntry = ConfigEntry[HomeConnectCoordinator]
 
@@ -64,6 +71,7 @@ class HomeConnectApplianceData:
 
     def update(self, other: HomeConnectApplianceData) -> None:
         """Update data with data from other instance."""
+        self.commands.clear()
         self.commands.update(other.commands)
         self.events.update(other.events)
         self.info.connected = other.info.connected
@@ -114,6 +122,7 @@ class HomeConnectCoordinator(
         ] = {}
         self.device_registry = dr.async_get(self.hass)
         self.data = {}
+        self._execution_tracker: dict[str, list[float]] = defaultdict(list)
 
     @cached_property
     def context_listeners(self) -> dict[tuple[str, EventKey], list[CALLBACK_TYPE]]:
@@ -133,11 +142,8 @@ class HomeConnectCoordinator(
         self.__dict__.pop("context_listeners", None)
 
         def remove_listener_and_invalidate_context_listeners() -> None:
-            # There are cases where the remove_listener will be called
-            # although it has been already removed somewhere else
-            with suppress(KeyError):
-                remove_listener()
-                self.__dict__.pop("context_listeners", None)
+            remove_listener()
+            self.__dict__.pop("context_listeners", None)
 
         return remove_listener_and_invalidate_context_listeners
 
@@ -172,7 +178,7 @@ class HomeConnectCoordinator(
             f"home_connect-events_listener_task-{self.config_entry.entry_id}",
         )
 
-    async def _event_listener(self) -> None:
+    async def _event_listener(self) -> None:  # noqa: C901
         """Match event with listener for event type."""
         retry_time = 10
         while True:
@@ -201,6 +207,28 @@ class HomeConnectCoordinator(
                                         raw_key=status_key.value,
                                         value=event.value,
                                     )
+                                if (
+                                    status_key == StatusKey.BSH_COMMON_OPERATION_STATE
+                                    and event.value == BSH_OPERATION_STATE_PAUSE
+                                    and CommandKey.BSH_COMMON_RESUME_PROGRAM
+                                    not in (
+                                        commands := self.data[
+                                            event_message_ha_id
+                                        ].commands
+                                    )
+                                ):
+                                    # All the appliances that can be paused
+                                    # should have the resume command available.
+                                    commands.add(CommandKey.BSH_COMMON_RESUME_PROGRAM)
+                                    for (
+                                        listener,
+                                        context,
+                                    ) in self._special_listeners.values():
+                                        if (
+                                            EventKey.BSH_COMMON_APPLIANCE_DEPAIRED
+                                            not in context
+                                        ):
+                                            listener()
                             self._call_event_listener(event_message)
 
                         case EventType.NOTIFY:
@@ -208,7 +236,7 @@ class HomeConnectCoordinator(
                             events = self.data[event_message_ha_id].events
                             for event in event_message.data.items:
                                 event_key = event.key
-                                if event_key in SettingKey:
+                                if event_key in SettingKey.__members__.values():  # type: ignore[comparison-overlap]
                                     setting_key = SettingKey(event_key)
                                     if setting_key in settings:
                                         settings[setting_key].value = event.value
@@ -238,6 +266,9 @@ class HomeConnectCoordinator(
                             self._call_event_listener(event_message)
 
                         case EventType.CONNECTED | EventType.PAIRED:
+                            if self.refreshed_too_often_recently(event_message_ha_id):
+                                continue
+
                             appliance_info = await self.client.get_specific_appliance(
                                 event_message_ha_id
                             )
@@ -245,9 +276,7 @@ class HomeConnectCoordinator(
                             appliance_data = await self._get_appliance_data(
                                 appliance_info, self.data.get(appliance_info.ha_id)
                             )
-                            if event_message_ha_id in self.data:
-                                self.data[event_message_ha_id].update(appliance_data)
-                            else:
+                            if event_message_ha_id not in self.data:
                                 self.data[event_message_ha_id] = appliance_data
                             for listener, context in self._special_listeners.values():
                                 if (
@@ -592,3 +621,41 @@ class HomeConnectCoordinator(
                 [],
             ):
                 listener()
+
+    def refreshed_too_often_recently(self, appliance_ha_id: str) -> bool:
+        """Check if the appliance data hasn't been refreshed too often recently."""
+
+        now = self.hass.loop.time()
+
+        execution_tracker = self._execution_tracker[appliance_ha_id]
+        initial_len = len(execution_tracker)
+
+        execution_tracker = self._execution_tracker[appliance_ha_id] = [
+            timestamp
+            for timestamp in execution_tracker
+            if now - timestamp < MAX_EXECUTIONS_TIME_WINDOW
+        ]
+
+        execution_tracker.append(now)
+
+        if len(execution_tracker) >= MAX_EXECUTIONS:
+            if initial_len < MAX_EXECUTIONS:
+                _LOGGER.warning(
+                    'Too many connected/paired events for appliance "%s" '
+                    "(%s times in less than %s minutes), updates have been disabled "
+                    "and they will be enabled again whenever the connection stabilizes. "
+                    "Consider trying to unplug the appliance "
+                    "for a while to perform a soft reset",
+                    self.data[appliance_ha_id].info.name,
+                    MAX_EXECUTIONS,
+                    MAX_EXECUTIONS_TIME_WINDOW // 60,
+                )
+            return True
+        if initial_len >= MAX_EXECUTIONS:
+            _LOGGER.info(
+                'Connected/paired events from the appliance "%s" have stabilized,'
+                " updates have been re-enabled",
+                self.data[appliance_ha_id].info.name,
+            )
+
+        return False

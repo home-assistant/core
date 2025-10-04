@@ -5,6 +5,7 @@ import time
 from unittest.mock import AsyncMock, patch
 
 from pysmartthings import (
+    DeviceHealth,
     DeviceResponse,
     DeviceStatus,
     LocationResponse,
@@ -12,6 +13,7 @@ from pysmartthings import (
     SceneResponse,
     Subscription,
 )
+from pysmartthings.models import HealthStatus
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -86,16 +88,21 @@ def mock_smartthings() -> Generator[AsyncMock]:
         client.create_subscription.return_value = Subscription.from_json(
             load_fixture("subscription.json", DOMAIN)
         )
+        client.get_device_health.return_value = DeviceHealth.from_json(
+            load_fixture("device_health.json", DOMAIN)
+        )
         yield client
 
 
 @pytest.fixture(
     params=[
+        "aq_sensor_3_ikea",
         "da_ac_airsensor_01001",
         "da_ac_rac_000001",
         "da_ac_rac_000003",
         "da_ac_rac_100001",
         "da_ac_rac_01001",
+        "da_ac_cac_01001",
         "multipurpose_sensor",
         "contact_sensor",
         "base_electric_meter",
@@ -107,17 +114,26 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "centralite",
         "da_ref_normal_000001",
         "da_ref_normal_01011",
+        "da_ref_normal_01011_onedoor",
+        "da_ref_normal_01001",
         "vd_network_audio_002s",
+        "vd_network_audio_003s",
         "vd_sensor_light_2023",
         "iphone",
         "da_sac_ehs_000001_sub",
+        "da_sac_ehs_000001_sub_1",
+        "da_sac_ehs_000002_sub",
+        "da_ac_ehs_01001",
         "da_wm_dw_000001",
         "da_wm_wd_000001",
         "da_wm_wd_000001_1",
+        "da_wm_wm_01011",
+        "da_wm_wm_100001",
         "da_wm_wm_000001",
         "da_wm_wm_000001_1",
         "da_wm_sc_000001",
         "da_rvc_normal_000001",
+        "da_rvc_map_01011",
         "da_ks_microwave_0101x",
         "da_ks_cooktop_31001",
         "da_ks_range_0101x",
@@ -134,6 +150,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "ecobee_sensor",
         "ecobee_thermostat",
         "ecobee_thermostat_offline",
+        "sensi_thermostat",
         "fake_fan",
         "generic_fan_3_speed",
         "heatit_ztrm3_thermostat",
@@ -141,11 +158,15 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "generic_ef00_v1",
         "bosch_radiator_thermostat_ii",
         "im_speaker_ai_0001",
+        "im_smarttag2_ble_uwb",
         "abl_light_b_001",
         "tplink_p110",
         "ikea_kadrilj",
         "aux_ac",
         "hw_q80r_soundbar",
+        "gas_meter",
+        "lumi",
+        "tesla_powerwall",
     ]
 )
 def device_fixture(
@@ -165,6 +186,13 @@ def devices(mock_smartthings: AsyncMock, device_fixture: str) -> Generator[Async
         load_fixture(f"device_status/{device_fixture}.json", DOMAIN)
     ).components
     return mock_smartthings
+
+
+@pytest.fixture
+def unavailable_device(devices: AsyncMock) -> AsyncMock:
+    """Mock an unavailable device."""
+    devices.get_device_health.return_value.state = HealthStatus.OFFLINE
+    return devices
 
 
 @pytest.fixture

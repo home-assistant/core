@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from itertools import chain
 from typing import Any
 
 from tesla_fleet_api.const import AutoSeat, Scope
+from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
 
 from homeassistant.components.switch import (
@@ -24,7 +24,7 @@ from . import TeslemetryConfigEntry
 from .entity import (
     TeslemetryEnergyInfoEntity,
     TeslemetryRootEntity,
-    TeslemetryVehicleEntity,
+    TeslemetryVehiclePollingEntity,
     TeslemetryVehicleStreamEntity,
 )
 from .helpers import handle_command, handle_vehicle_command
@@ -37,15 +37,15 @@ PARALLEL_UPDATES = 0
 class TeslemetrySwitchEntityDescription(SwitchEntityDescription):
     """Describes Teslemetry Switch entity."""
 
-    on_func: Callable
-    off_func: Callable
+    polling: bool = False
+    on_func: Callable[[Vehicle], Awaitable[dict[str, Any]]]
+    off_func: Callable[[Vehicle], Awaitable[dict[str, Any]]]
     scopes: list[Scope]
     value_func: Callable[[StateType], bool] = bool
     streaming_listener: Callable[
-        [TeslemetryStreamVehicle, Callable[[StateType], None]],
+        [TeslemetryStreamVehicle, Callable[[bool | None], None]],
         Callable[[], None],
     ]
-    streaming_value_fn: Callable[[StateType], bool] = bool
     streaming_firmware: str = "2024.26"
     unique_id: str | None = None
 
@@ -53,15 +53,31 @@ class TeslemetrySwitchEntityDescription(SwitchEntityDescription):
 VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     TeslemetrySwitchEntityDescription(
         key="vehicle_state_sentry_mode",
-        streaming_listener=lambda x, y: x.listen_SentryMode(y),
-        streaming_value_fn=lambda x: x != "Off",
+        polling=True,
+        streaming_listener=lambda vehicle, callback: vehicle.listen_SentryMode(
+            lambda value: callback(None if value is None else value != "Off")
+        ),
         on_func=lambda api: api.set_sentry_mode(on=True),
         off_func=lambda api: api.set_sentry_mode(on=False),
         scopes=[Scope.VEHICLE_CMDS],
     ),
     TeslemetrySwitchEntityDescription(
+        key="vehicle_state_valet_mode",
+        polling=True,
+        streaming_listener=lambda vehicle, value: vehicle.listen_ValetModeEnabled(
+            value
+        ),
+        streaming_firmware="2024.44.25",
+        on_func=lambda api: api.set_valet_mode(on=True, password=""),
+        off_func=lambda api: api.set_valet_mode(on=False, password=""),
+        scopes=[Scope.VEHICLE_CMDS],
+    ),
+    TeslemetrySwitchEntityDescription(
         key="climate_state_auto_seat_climate_left",
-        streaming_listener=lambda x, y: x.listen_AutoSeatClimateLeft(y),
+        polling=True,
+        streaming_listener=lambda vehicle, callback: vehicle.listen_AutoSeatClimateLeft(
+            callback
+        ),
         on_func=lambda api: api.remote_auto_seat_climate_request(
             AutoSeat.FRONT_LEFT, True
         ),
@@ -72,7 +88,9 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
     TeslemetrySwitchEntityDescription(
         key="climate_state_auto_seat_climate_right",
-        streaming_listener=lambda x, y: x.listen_AutoSeatClimateRight(y),
+        polling=True,
+        streaming_listener=lambda vehicle,
+        callback: vehicle.listen_AutoSeatClimateRight(callback),
         on_func=lambda api: api.remote_auto_seat_climate_request(
             AutoSeat.FRONT_RIGHT, True
         ),
@@ -83,7 +101,9 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
     TeslemetrySwitchEntityDescription(
         key="climate_state_auto_steering_wheel_heat",
-        streaming_listener=lambda x, y: x.listen_HvacSteeringWheelHeatAuto(y),
+        polling=True,
+        streaming_listener=lambda vehicle,
+        callback: vehicle.listen_HvacSteeringWheelHeatAuto(callback),
         on_func=lambda api: api.remote_auto_steering_wheel_heat_climate_request(
             on=True
         ),
@@ -94,8 +114,10 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
     TeslemetrySwitchEntityDescription(
         key="climate_state_defrost_mode",
-        streaming_listener=lambda x, y: x.listen_DefrostMode(y),
-        streaming_value_fn=lambda x: x != "Off",
+        polling=True,
+        streaming_listener=lambda vehicle, callback: vehicle.listen_DefrostMode(
+            lambda value: callback(None if value is None else value != "Off")
+        ),
         on_func=lambda api: api.set_preconditioning_max(on=True, manual_override=False),
         off_func=lambda api: api.set_preconditioning_max(
             on=False, manual_override=False
@@ -104,13 +126,28 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
     TeslemetrySwitchEntityDescription(
         key="charge_state_charging_state",
+        polling=True,
         unique_id="charge_state_user_charge_enable_request",
         value_func=lambda state: state in {"Starting", "Charging"},
-        streaming_listener=lambda x, y: x.listen_DetailedChargeState(y),
-        streaming_value_fn=lambda x: x in {"Starting", "Charging"},
+        streaming_listener=lambda vehicle, callback: vehicle.listen_DetailedChargeState(
+            lambda value: callback(
+                None if value is None else value in {"Starting", "Charging"}
+            )
+        ),
         on_func=lambda api: api.charge_start(),
         off_func=lambda api: api.charge_stop(),
         scopes=[Scope.VEHICLE_CMDS, Scope.VEHICLE_CHARGING_CMDS],
+    ),
+    TeslemetrySwitchEntityDescription(
+        key="guest_mode_enabled",
+        polling=False,
+        unique_id="guest_mode_enabled",
+        streaming_listener=lambda vehicle, callback: vehicle.listen_GuestModeEnabled(
+            callback
+        ),
+        on_func=lambda api: api.guest_mode(True),
+        off_func=lambda api: api.guest_mode(False),
+        scopes=[Scope.VEHICLE_CMDS],
     ),
 )
 
@@ -122,41 +159,46 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry Switch platform from a config entry."""
 
-    async_add_entities(
-        chain(
-            (
-                TeslemetryPollingVehicleSwitchEntity(
-                    vehicle, description, entry.runtime_data.scopes
+    entities: list[SwitchEntity] = []
+
+    for vehicle in entry.runtime_data.vehicles:
+        for description in VEHICLE_DESCRIPTIONS:
+            if vehicle.poll or vehicle.firmware < description.streaming_firmware:
+                if description.polling:
+                    entities.append(
+                        TeslemetryVehiclePollingVehicleSwitchEntity(
+                            vehicle, description, entry.runtime_data.scopes
+                        )
+                    )
+            else:
+                entities.append(
+                    TeslemetryStreamingVehicleSwitchEntity(
+                        vehicle, description, entry.runtime_data.scopes
+                    )
                 )
-                if vehicle.api.pre2021
-                or vehicle.firmware < description.streaming_firmware
-                else TeslemetryStreamingVehicleSwitchEntity(
-                    vehicle, description, entry.runtime_data.scopes
-                )
-                for vehicle in entry.runtime_data.vehicles
-                for description in VEHICLE_DESCRIPTIONS
-            ),
-            (
-                TeslemetryChargeFromGridSwitchEntity(
-                    energysite,
-                    entry.runtime_data.scopes,
-                )
-                for energysite in entry.runtime_data.energysites
-                if energysite.info_coordinator.data.get("components_battery")
-                and energysite.info_coordinator.data.get("components_solar")
-            ),
-            (
-                TeslemetryStormModeSwitchEntity(energysite, entry.runtime_data.scopes)
-                for energysite in entry.runtime_data.energysites
-                if energysite.info_coordinator.data.get("components_storm_mode_capable")
-            ),
+
+    entities.extend(
+        TeslemetryChargeFromGridSwitchEntity(
+            energysite,
+            entry.runtime_data.scopes,
         )
+        for energysite in entry.runtime_data.energysites
+        if energysite.info_coordinator.data.get("components_battery")
+        and energysite.info_coordinator.data.get("components_solar")
     )
+    entities.extend(
+        TeslemetryStormModeSwitchEntity(energysite, entry.runtime_data.scopes)
+        for energysite in entry.runtime_data.energysites
+        if energysite.info_coordinator.data.get("components_storm_mode_capable")
+    )
+
+    async_add_entities(entities)
 
 
 class TeslemetryVehicleSwitchEntity(TeslemetryRootEntity, SwitchEntity):
     """Base class for all Teslemetry switch entities."""
 
+    api: Vehicle
     _attr_device_class = SwitchDeviceClass.SWITCH
     entity_description: TeslemetrySwitchEntityDescription
 
@@ -175,8 +217,8 @@ class TeslemetryVehicleSwitchEntity(TeslemetryRootEntity, SwitchEntity):
         self.async_write_ha_state()
 
 
-class TeslemetryPollingVehicleSwitchEntity(
-    TeslemetryVehicleEntity, TeslemetryVehicleSwitchEntity
+class TeslemetryVehiclePollingVehicleSwitchEntity(
+    TeslemetryVehiclePollingEntity, TeslemetryVehicleSwitchEntity
 ):
     """Base class for Teslemetry polling vehicle switch entities."""
 
@@ -239,11 +281,9 @@ class TeslemetryStreamingVehicleSwitchEntity(
             )
         )
 
-    def _value_callback(self, value: StateType) -> None:
+    def _value_callback(self, value: bool | None) -> None:
         """Update the value of the entity."""
-        self._attr_is_on = (
-            None if value is None else self.entity_description.streaming_value_fn(value)
-        )
+        self._attr_is_on = value
         self.async_write_ha_state()
 
 

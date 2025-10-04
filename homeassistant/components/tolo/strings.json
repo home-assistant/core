@@ -16,7 +16,8 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {
@@ -59,7 +60,7 @@
         "name": "Lamp mode",
         "state": {
           "automatic": "Automatic",
-          "manual": "Manual"
+          "manual": "[%key:common::state::manual%]"
         }
       },
       "aroma_therapy_slot": {

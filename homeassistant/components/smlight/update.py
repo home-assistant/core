@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 from .coordinator import SmConfigEntry, SmFirmwareUpdateCoordinator, SmFwData
 from .entity import SmEntity
 
@@ -210,7 +210,13 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
     def _update_failed(self, event: MessageEvent) -> None:
         self._update_done()
         self.coordinator.in_progress = False
-        raise HomeAssistantError(f"Update failed for {self.name}")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="firmware_update_failed",
+            translation_placeholders={
+                "device_name": str(self.name),
+            },
+        )
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any

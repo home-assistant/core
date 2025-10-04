@@ -1,5 +1,10 @@
 {
   "entity": {
+    "binary_sensor": {
+      "water_running": {
+        "default": "mdi:waves-arrow-right"
+      }
+    },
     "number": {
       "config_volume": {
         "default": "mdi:volume-high"
@@ -22,9 +27,19 @@
         "default": "mdi:gauge"
       }
     },
+    "select": {
+      "sprinkler_mode": {
+        "default": "mdi:auto-mode"
+      }
+    },
     "switch": {
       "manipulator_state": {
         "default": "mdi:pipe"
+      }
+    },
+    "valve": {
+      "sprinkler_valve": {
+        "default": "mdi:sprinkler-variant"
       }
     }
   },

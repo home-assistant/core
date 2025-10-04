@@ -7,8 +7,6 @@ import random
 import string
 from typing import TYPE_CHECKING
 
-from deebot_client.events.station import State
-
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
@@ -32,7 +30,7 @@ def get_client_device_id(hass: HomeAssistant, self_hosted: bool) -> str:
     )
 
 
-def get_supported_entitites(
+def get_supported_entities(
     controller: EcovacsController,
     entity_class: type[EcovacsDescriptionEntity],
     descriptions: tuple[EcovacsCapabilityEntityDescription, ...],
@@ -49,9 +47,6 @@ def get_supported_entitites(
 @callback
 def get_name_key(enum: Enum) -> str:
     """Return the lower case name of the enum."""
-    if enum is State.EMPTYING:
-        # Will be fixed in the next major release of deebot-client
-        return "emptying_dustbin"
     return enum.name.lower()
 
 

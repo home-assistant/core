@@ -5,12 +5,23 @@ from python_picnic_api2 import PicnicAPI
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY_CODE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_API, CONF_COORDINATOR, DOMAIN
 from .coordinator import PicnicUpdateCoordinator
-from .services import async_register_services
+from .services import async_setup_services
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.SENSOR, Platform.TODO]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Picnic integration."""
+
+    async_setup_services(hass)
+
+    return True
 
 
 def create_picnic_client(entry: ConfigEntry):
@@ -36,9 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # Register the services
-    await async_register_services(hass)
 
     return True
 

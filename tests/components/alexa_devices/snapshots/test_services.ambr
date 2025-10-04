@@ -1,0 +1,85 @@
+# serializer version: 1
+# name: test_send_sound_service
+  _Call(
+    tuple(
+      dict({
+        'account_name': 'Echo Test',
+        'capabilities': list([
+          'AUDIO_PLAYER',
+          'MICROPHONE',
+        ]),
+        'device_cluster_members': list([
+          'echo_test_serial_number',
+        ]),
+        'device_family': 'mine',
+        'device_owner_customer_id': 'amazon_ower_id',
+        'device_type': 'echo',
+        'endpoint_id': 'G1234567890123456789012345678A',
+        'entity_id': '11111111-2222-3333-4444-555555555555',
+        'household_device': False,
+        'online': True,
+        'sensors': dict({
+          'dnd': dict({
+            'error': False,
+            'name': 'dnd',
+            'scale': None,
+            'value': False,
+          }),
+          'temperature': dict({
+            'error': False,
+            'name': 'temperature',
+            'scale': 'CELSIUS',
+            'value': '22.5',
+          }),
+        }),
+        'serial_number': 'echo_test_serial_number',
+        'software_version': 'echo_test_software_version',
+      }),
+      'bell_02',
+    ),
+    dict({
+    }),
+  )
+# ---
+# name: test_send_text_service
+  _Call(
+    tuple(
+      dict({
+        'account_name': 'Echo Test',
+        'capabilities': list([
+          'AUDIO_PLAYER',
+          'MICROPHONE',
+        ]),
+        'device_cluster_members': list([
+          'echo_test_serial_number',
+        ]),
+        'device_family': 'mine',
+        'device_owner_customer_id': 'amazon_ower_id',
+        'device_type': 'echo',
+        'endpoint_id': 'G1234567890123456789012345678A',
+        'entity_id': '11111111-2222-3333-4444-555555555555',
+        'household_device': False,
+        'online': True,
+        'sensors': dict({
+          'dnd': dict({
+            'error': False,
+            'name': 'dnd',
+            'scale': None,
+            'value': False,
+          }),
+          'temperature': dict({
+            'error': False,
+            'name': 'temperature',
+            'scale': 'CELSIUS',
+            'value': '22.5',
+          }),
+        }),
+        'serial_number': 'echo_test_serial_number',
+        'software_version': 'echo_test_software_version',
+      }),
+      'Play B.B.C. radio on TuneIn',
+    ),
+    dict({
+    }),
+  )
+# ---

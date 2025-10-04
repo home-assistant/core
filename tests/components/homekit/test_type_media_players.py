@@ -6,6 +6,7 @@ from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import (
     ATTR_KEY_NAME,
     ATTR_VALUE,
+    CHAR_CONFIGURED_NAME,
     CHAR_REMOTE_KEY,
     CONF_FEATURE_LIST,
     EVENT_HOMEKIT_TV_REMOTE_KEY_PRESSED,
@@ -14,6 +15,7 @@ from homeassistant.components.homekit.const import (
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
     KEY_ARROW_RIGHT,
+    SERV_SWITCH,
 )
 from homeassistant.components.homekit.type_media_players import (
     MediaPlayer,
@@ -73,6 +75,10 @@ async def test_media_player_set_state(
 
     assert acc.aid == 2
     assert acc.category == 8  # Switch
+
+    switch_service = acc.get_service(SERV_SWITCH)
+    configured_name_char = switch_service.get_characteristic(CHAR_CONFIGURED_NAME)
+    assert configured_name_char.value == "Power"
 
     assert acc.chars[FEATURE_ON_OFF].value is False
     assert acc.chars[FEATURE_PLAY_PAUSE].value is False

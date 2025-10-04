@@ -160,9 +160,18 @@ async def test_unsupported_websocket(
     assert resp.get("error", {}).get("code") == "not_found"
 
 
+@pytest.mark.parametrize(
+    ("new_item_name"),
+    [
+        ("New item"),
+        ("New item   "),
+        ("  New item"),
+    ],
+)
 async def test_add_item_service(
     hass: HomeAssistant,
     test_entity: TodoListEntity,
+    new_item_name: str,
 ) -> None:
     """Test adding an item in a To-do list."""
 
@@ -171,7 +180,7 @@ async def test_add_item_service(
     await hass.services.async_call(
         DOMAIN,
         TodoServices.ADD_ITEM,
-        {ATTR_ITEM: "New item"},
+        {ATTR_ITEM: new_item_name},
         target={ATTR_ENTITY_ID: "todo.entity1"},
         blocking=True,
     )
@@ -209,6 +218,7 @@ async def test_add_item_service_raises(
     [
         ({}, vol.Invalid, "required key not provided"),
         ({ATTR_ITEM: ""}, vol.Invalid, "length of value must be at least 1"),
+        ({ATTR_ITEM: "    "}, vol.Invalid, "length of value must be at least 1"),
         (
             {ATTR_ITEM: "Submit forms", ATTR_DESCRIPTION: "Submit tax forms"},
             ServiceValidationError,
@@ -331,9 +341,18 @@ async def test_add_item_service_extended_fields(
     assert item == expected_item
 
 
+@pytest.mark.parametrize(
+    ("new_item_name"),
+    [
+        ("Updated item"),
+        ("Updated item  "),
+        ("  Updated item "),
+    ],
+)
 async def test_update_todo_item_service_by_id(
     hass: HomeAssistant,
     test_entity: TodoListEntity,
+    new_item_name: str,
 ) -> None:
     """Test updating an item in a To-do list."""
 
@@ -342,7 +361,7 @@ async def test_update_todo_item_service_by_id(
     await hass.services.async_call(
         DOMAIN,
         TodoServices.UPDATE_ITEM,
-        {ATTR_ITEM: "1", ATTR_RENAME: "Updated item", ATTR_STATUS: "completed"},
+        {ATTR_ITEM: "1", ATTR_RENAME: new_item_name, ATTR_STATUS: "completed"},
         target={ATTR_ENTITY_ID: "todo.entity1"},
         blocking=True,
     )

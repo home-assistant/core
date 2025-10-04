@@ -11,6 +11,18 @@
     "automatic_backup_failed_upload_agents": {
       "title": "Automatic backup could not be uploaded to the configured locations",
       "description": "The automatic backup could not be uploaded to the configured locations {failed_agents}. Please check the logs for more information. Another attempt will be made at the next scheduled time if a backup schedule is configured."
+    },
+    "automatic_backup_failed_addons": {
+      "title": "Not all add-ons could be included in automatic backup",
+      "description": "Add-ons {failed_addons} could not be included in automatic backup. Please check the Supervisor logs for more information. Another attempt will be made at the next scheduled time if a backup schedule is configured."
+    },
+    "automatic_backup_failed_agents_addons_folders": {
+      "title": "Automatic backup was created with errors",
+      "description": "The automatic backup was created with errors:\n* Locations which the backup could not be uploaded to: {failed_agents}\n* Add-ons which could not be backed up: {failed_addons}\n* Folders which could not be backed up: {failed_folders}\n\nPlease check the Core and Supervisor logs for more information. Another attempt will be made at the next scheduled time if a backup schedule is configured."
+    },
+    "automatic_backup_failed_folders": {
+      "title": "Not all folders could be included in automatic backup",
+      "description": "Folders {failed_folders} could not be included in automatic backup. Please check the Supervisor logs for more information. Another attempt will be made at the next scheduled time if a backup schedule is configured."
     }
   },
   "services": {
@@ -24,6 +36,22 @@
     }
   },
   "entity": {
+    "event": {
+      "automatic_backup_event": {
+        "name": "Automatic backup",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "completed": "Completed successfully",
+              "failed": "Failed",
+              "in_progress": "In progress"
+            }
+          },
+          "backup_stage": { "name": "Backup stage" },
+          "failed_reason": { "name": "Failure reason" }
+        }
+      }
+    },
     "sensor": {
       "backup_manager_state": {
         "name": "Backup Manager state",
@@ -36,6 +64,9 @@
       },
       "next_scheduled_automatic_backup": {
         "name": "Next scheduled automatic backup"
+      },
+      "last_attempted_automatic_backup": {
+        "name": "Last attempted automatic backup"
       },
       "last_successful_automatic_backup": {
         "name": "Last successful automatic backup"

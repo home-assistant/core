@@ -9,7 +9,6 @@ from homeassistant.components.calendar import (
     CalendarEntityFeature,
     CalendarEvent,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -17,11 +16,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    DOMAIN as DOMAIN_RACHIO,
-    KEY_ADDRESS,
     KEY_DURATION_SECONDS,
     KEY_ID,
-    KEY_LOCALITY,
     KEY_PROGRAM_ID,
     KEY_PROGRAM_NAME,
     KEY_RUN_SUMMARIES,
@@ -33,18 +29,18 @@ from .const import (
     KEY_VALVE_NAME,
 )
 from .coordinator import RachioScheduleUpdateCoordinator
-from .device import RachioPerson
+from .device import RachioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RachioConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry for Rachio smart hose timer calendar."""
-    person: RachioPerson = hass.data[DOMAIN_RACHIO][config_entry.entry_id]
+    person = config_entry.runtime_data
     async_add_entities(
         RachioCalendarEntity(base_station.schedule_coordinator, base_station)
         for base_station in person.base_stations
@@ -67,7 +63,6 @@ class RachioCalendarEntity(
         super().__init__(coordinator)
         self.base_station = base_station
         self._event: CalendarEvent | None = None
-        self._location = coordinator.base_station[KEY_ADDRESS][KEY_LOCALITY]
         self._attr_translation_placeholders = {
             "base": coordinator.base_station[KEY_SERIAL_NUMBER]
         }
@@ -89,7 +84,6 @@ class RachioCalendarEntity(
             end=dt_util.as_local(start_time)
             + timedelta(seconds=int(event[KEY_TOTAL_RUN_DURATION])),
             description=valves,
-            location=self._location,
         )
 
     def _handle_upcoming_event(self) -> dict[str, Any] | None:
@@ -157,7 +151,6 @@ class RachioCalendarEntity(
                     start=event_start,
                     end=event_end,
                     description=valves,
-                    location=self._location,
                     uid=f"{run[KEY_PROGRAM_ID]}/{run[KEY_START_TIME]}",
                 )
                 event_list.append(event)

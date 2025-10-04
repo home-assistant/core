@@ -1,5 +1,7 @@
 """Test the DHCP discovery integration."""
 
+from __future__ import annotations
+
 from collections.abc import Awaitable, Callable
 import datetime
 import threading
@@ -24,6 +26,7 @@ from homeassistant.components.device_tracker import (
     SourceType,
 )
 from homeassistant.components.dhcp.const import DOMAIN
+from homeassistant.components.dhcp.models import DHCPData
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
@@ -147,13 +150,14 @@ async def _async_get_handle_dhcp_packet(
     integration_matchers: dhcp.DhcpMatchers,
     address_data: dict | None = None,
 ) -> Callable[[Any], Awaitable[None]]:
+    """Make a handler for a dhcp packet."""
     if address_data is None:
         address_data = {}
     dhcp_watcher = dhcp.DHCPWatcher(
         hass,
-        address_data,
-        integration_matchers,
+        DHCPData(integration_matchers, set(), address_data),
     )
+
     with patch("aiodhcpwatcher.async_start"):
         await dhcp_watcher.async_start()
 
@@ -166,6 +170,53 @@ async def _async_get_handle_dhcp_packet(
         handler(packet)
 
     return cast("Callable[[Any], Awaitable[None]]", _async_handle_dhcp_packet)
+
+
+async def test_dhcp_start_using_multiple_interfaces(
+    hass: HomeAssistant,
+) -> None:
+    """Test start using multiple interfaces."""
+
+    def _generate_mock_adapters():
+        return [
+            {
+                "index": 1,
+                "auto": False,
+                "default": False,
+                "enabled": True,
+                "ipv4": [{"address": "192.168.0.1", "network_prefix": 24}],
+                "ipv6": [],
+                "name": "eth0",
+            },
+            {
+                "index": 2,
+                "auto": True,
+                "default": True,
+                "enabled": True,
+                "ipv4": [{"address": "192.168.1.1", "network_prefix": 24}],
+                "ipv6": [],
+                "name": "eth1",
+            },
+        ]
+
+    integration_matchers = dhcp.async_index_integration_matchers(
+        [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}]
+    )
+    dhcp_watcher = dhcp.DHCPWatcher(
+        hass,
+        DHCPData(integration_matchers, set(), {}),
+    )
+
+    with (
+        patch("aiodhcpwatcher.async_start") as mock_start,
+        patch(
+            "homeassistant.components.dhcp.network.async_get_adapters",
+            return_value=_generate_mock_adapters(),
+        ),
+    ):
+        await dhcp_watcher.async_start()
+
+    mock_start.assert_called_with(dhcp_watcher._async_process_dhcp_request, [1, 2])
 
 
 async def test_dhcp_match_hostname_and_macaddress(hass: HomeAssistant) -> None:
@@ -666,6 +717,45 @@ async def test_setup_fails_with_broken_libpcap(
     )
 
 
+def _make_device_tracker_watcher(
+    hass: HomeAssistant, matchers: list[dhcp.DHCPMatcher]
+) -> dhcp.DeviceTrackerWatcher:
+    return dhcp.DeviceTrackerWatcher(
+        hass,
+        DHCPData(
+            dhcp.async_index_integration_matchers(matchers),
+            set(),
+            {},
+        ),
+    )
+
+
+def _make_device_tracker_registered_watcher(
+    hass: HomeAssistant, matchers: list[dhcp.DHCPMatcher]
+) -> dhcp.DeviceTrackerRegisteredWatcher:
+    return dhcp.DeviceTrackerRegisteredWatcher(
+        hass,
+        DHCPData(
+            dhcp.async_index_integration_matchers(matchers),
+            set(),
+            {},
+        ),
+    )
+
+
+def _make_network_watcher(
+    hass: HomeAssistant, matchers: list[dhcp.DHCPMatcher]
+) -> dhcp.NetworkWatcher:
+    return dhcp.NetworkWatcher(
+        hass,
+        DHCPData(
+            dhcp.async_index_integration_matchers(matchers),
+            set(),
+            {},
+        ),
+    )
+
+
 async def test_device_tracker_hostname_and_macaddress_exists_before_start(
     hass: HomeAssistant,
 ) -> None:
@@ -682,18 +772,15 @@ async def test_device_tracker_hostname_and_macaddress_exists_before_start(
     )
 
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        device_tracker_watcher = dhcp.DeviceTrackerWatcher(
+        device_tracker_watcher = _make_device_tracker_watcher(
             hass,
-            {},
-            dhcp.async_index_integration_matchers(
-                [
-                    {
-                        "domain": "mock-domain",
-                        "hostname": "connect",
-                        "macaddress": "B8B7F1*",
-                    }
-                ]
-            ),
+            [
+                {
+                    "domain": "mock-domain",
+                    "hostname": "connect",
+                    "macaddress": "B8B7F1*",
+                }
+            ],
         )
         device_tracker_watcher.async_start()
         await hass.async_block_till_done()
@@ -716,18 +803,15 @@ async def test_device_tracker_hostname_and_macaddress_exists_before_start(
 async def test_device_tracker_registered(hass: HomeAssistant) -> None:
     """Test matching based on hostname and macaddress when registered."""
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        device_tracker_watcher = dhcp.DeviceTrackerRegisteredWatcher(
+        device_tracker_watcher = _make_device_tracker_registered_watcher(
             hass,
-            {},
-            dhcp.async_index_integration_matchers(
-                [
-                    {
-                        "domain": "mock-domain",
-                        "hostname": "connect",
-                        "macaddress": "B8B7F1*",
-                    }
-                ]
-            ),
+            [
+                {
+                    "domain": "mock-domain",
+                    "hostname": "connect",
+                    "macaddress": "B8B7F1*",
+                }
+            ],
         )
         device_tracker_watcher.async_start()
         await hass.async_block_till_done()
@@ -756,18 +840,15 @@ async def test_device_tracker_registered(hass: HomeAssistant) -> None:
 async def test_device_tracker_registered_hostname_none(hass: HomeAssistant) -> None:
     """Test handle None hostname."""
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        device_tracker_watcher = dhcp.DeviceTrackerRegisteredWatcher(
+        device_tracker_watcher = _make_device_tracker_watcher(
             hass,
-            {},
-            dhcp.async_index_integration_matchers(
-                [
-                    {
-                        "domain": "mock-domain",
-                        "hostname": "connect",
-                        "macaddress": "B8B7F1*",
-                    }
-                ]
-            ),
+            [
+                {
+                    "domain": "mock-domain",
+                    "hostname": "connect",
+                    "macaddress": "B8B7F1*",
+                }
+            ],
         )
         device_tracker_watcher.async_start()
         await hass.async_block_till_done()
@@ -789,18 +870,15 @@ async def test_device_tracker_hostname_and_macaddress_after_start(
     """Test matching based on hostname and macaddress after start."""
 
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        device_tracker_watcher = dhcp.DeviceTrackerWatcher(
+        device_tracker_watcher = _make_device_tracker_watcher(
             hass,
-            {},
-            dhcp.async_index_integration_matchers(
-                [
-                    {
-                        "domain": "mock-domain",
-                        "hostname": "connect",
-                        "macaddress": "B8B7F1*",
-                    }
-                ]
-            ),
+            [
+                {
+                    "domain": "mock-domain",
+                    "hostname": "connect",
+                    "macaddress": "B8B7F1*",
+                }
+            ],
         )
         device_tracker_watcher.async_start()
         await hass.async_block_till_done()
@@ -837,18 +915,15 @@ async def test_device_tracker_hostname_and_macaddress_after_start_not_home(
     """Test matching based on hostname and macaddress after start but not home."""
 
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        device_tracker_watcher = dhcp.DeviceTrackerWatcher(
+        device_tracker_watcher = _make_device_tracker_watcher(
             hass,
-            {},
-            dhcp.async_index_integration_matchers(
-                [
-                    {
-                        "domain": "mock-domain",
-                        "hostname": "connect",
-                        "macaddress": "B8B7F1*",
-                    }
-                ]
-            ),
+            [
+                {
+                    "domain": "mock-domain",
+                    "hostname": "connect",
+                    "macaddress": "B8B7F1*",
+                }
+            ],
         )
         device_tracker_watcher.async_start()
         await hass.async_block_till_done()
@@ -875,9 +950,8 @@ async def test_device_tracker_hostname_and_macaddress_after_start_not_router(
     """Test matching based on hostname and macaddress after start but not router."""
 
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        device_tracker_watcher = dhcp.DeviceTrackerWatcher(
+        device_tracker_watcher = _make_device_tracker_watcher(
             hass,
-            {},
             [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
         )
         device_tracker_watcher.async_start()
@@ -905,9 +979,8 @@ async def test_device_tracker_hostname_and_macaddress_after_start_hostname_missi
     """Test matching based on hostname and macaddress after start but missing hostname."""
 
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        device_tracker_watcher = dhcp.DeviceTrackerWatcher(
+        device_tracker_watcher = _make_device_tracker_watcher(
             hass,
-            {},
             [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
         )
         device_tracker_watcher.async_start()
@@ -934,9 +1007,8 @@ async def test_device_tracker_invalid_ip_address(
     """Test an invalid ip address."""
 
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        device_tracker_watcher = dhcp.DeviceTrackerWatcher(
+        device_tracker_watcher = _make_device_tracker_watcher(
             hass,
-            {},
             [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
         )
         device_tracker_watcher.async_start()
@@ -974,18 +1046,15 @@ async def test_device_tracker_ignore_self_assigned_ips_before_start(
     )
 
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
-        device_tracker_watcher = dhcp.DeviceTrackerWatcher(
+        device_tracker_watcher = _make_device_tracker_watcher(
             hass,
-            {},
-            dhcp.async_index_integration_matchers(
-                [
-                    {
-                        "domain": "mock-domain",
-                        "hostname": "connect",
-                        "macaddress": "B8B7F1*",
-                    }
-                ]
-            ),
+            [
+                {
+                    "domain": "mock-domain",
+                    "hostname": "connect",
+                    "macaddress": "B8B7F1*",
+                }
+            ],
         )
         device_tracker_watcher.async_start()
         await hass.async_block_till_done()
@@ -1010,18 +1079,15 @@ async def test_aiodiscover_finds_new_hosts(hass: HomeAssistant) -> None:
             ],
         ),
     ):
-        device_tracker_watcher = dhcp.NetworkWatcher(
+        device_tracker_watcher = _make_network_watcher(
             hass,
-            {},
-            dhcp.async_index_integration_matchers(
-                [
-                    {
-                        "domain": "mock-domain",
-                        "hostname": "connect",
-                        "macaddress": "B8B7F1*",
-                    }
-                ]
-            ),
+            [
+                {
+                    "domain": "mock-domain",
+                    "hostname": "connect",
+                    "macaddress": "B8B7F1*",
+                }
+            ],
         )
         device_tracker_watcher.async_start()
         await hass.async_block_till_done()
@@ -1073,18 +1139,15 @@ async def test_aiodiscover_does_not_call_again_on_shorter_hostname(
             ],
         ),
     ):
-        device_tracker_watcher = dhcp.NetworkWatcher(
+        device_tracker_watcher = _make_network_watcher(
             hass,
-            {},
-            dhcp.async_index_integration_matchers(
-                [
-                    {
-                        "domain": "mock-domain",
-                        "hostname": "irobot-*",
-                        "macaddress": "B8B7F1*",
-                    }
-                ]
-            ),
+            [
+                {
+                    "domain": "mock-domain",
+                    "hostname": "irobot-*",
+                    "macaddress": "B8B7F1*",
+                }
+            ],
         )
         device_tracker_watcher.async_start()
         await hass.async_block_till_done()
@@ -1123,19 +1186,17 @@ async def test_aiodiscover_finds_new_hosts_after_interval(hass: HomeAssistant) -
             return_value=[],
         ),
     ):
-        device_tracker_watcher = dhcp.NetworkWatcher(
+        device_tracker_watcher = _make_network_watcher(
             hass,
-            {},
-            dhcp.async_index_integration_matchers(
-                [
-                    {
-                        "domain": "mock-domain",
-                        "hostname": "connect",
-                        "macaddress": "B8B7F1*",
-                    }
-                ]
-            ),
+            [
+                {
+                    "domain": "mock-domain",
+                    "hostname": "connect",
+                    "macaddress": "B8B7F1*",
+                }
+            ],
         )
+
         device_tracker_watcher.async_start()
         await hass.async_block_till_done()
 
@@ -1235,7 +1296,7 @@ async def test_dhcp_rediscover(
         hass, integration_matchers, address_data
     )
     rediscovery_watcher = dhcp.RediscoveryWatcher(
-        hass, address_data, integration_matchers
+        hass, DHCPData(integration_matchers, set(), address_data)
     )
     rediscovery_watcher.async_start()
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:
@@ -1329,7 +1390,7 @@ async def test_dhcp_rediscover_no_match(
         hass, integration_matchers, address_data
     )
     rediscovery_watcher = dhcp.RediscoveryWatcher(
-        hass, address_data, integration_matchers
+        hass, DHCPData(integration_matchers, set(), address_data)
     )
     rediscovery_watcher.async_start()
     with patch.object(hass.config_entries.flow, "async_init") as mock_init:

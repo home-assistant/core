@@ -9,6 +9,7 @@ import logging
 
 from awesomeversion import AwesomeVersion
 from synology_dsm import SynologyDSM
+from synology_dsm.api.core.external_usb import SynoCoreExternalUSB
 from synology_dsm.api.core.security import SynoCoreSecurity
 from synology_dsm.api.core.system import SynoCoreSystem
 from synology_dsm.api.core.upgrade import SynoCoreUpgrade
@@ -78,6 +79,7 @@ class SynoApi:
         self.system: SynoCoreSystem | None = None
         self.upgrade: SynoCoreUpgrade | None = None
         self.utilisation: SynoCoreUtilization | None = None
+        self.external_usb: SynoCoreExternalUSB | None = None
 
         # Should we fetch them
         self._fetching_entities: dict[str, set[str]] = {}
@@ -90,6 +92,7 @@ class SynoApi:
         self._with_system = True
         self._with_upgrade = True
         self._with_utilisation = True
+        self._with_external_usb = True
 
         self._login_future: asyncio.Future[None] | None = None
 
@@ -261,6 +264,9 @@ class SynoApi:
         self._with_information = bool(
             self._fetching_entities.get(SynoDSMInformation.API_KEY)
         )
+        self._with_external_usb = bool(
+            self._fetching_entities.get(SynoCoreExternalUSB.API_KEY)
+        )
 
         # Reset not used API, information is not reset since it's used in device_info
         if not self._with_security:
@@ -322,6 +328,15 @@ class SynoApi:
                 self.dsm.reset(self.utilisation)
             self.utilisation = None
 
+        if not self._with_external_usb:
+            LOGGER.debug(
+                "Disable external usb api from being updated for '%s'",
+                self._entry.unique_id,
+            )
+            if self.external_usb:
+                self.dsm.reset(self.external_usb)
+            self.external_usb = None
+
     async def _fetch_device_configuration(self) -> None:
         """Fetch initial device config."""
         self.network = self.dsm.network
@@ -365,6 +380,12 @@ class SynoApi:
                 self._entry.unique_id,
             )
             self.surveillance_station = self.dsm.surveillance_station
+
+        if self._with_external_usb:
+            LOGGER.debug(
+                "Enable external usb api updates for '%s'", self._entry.unique_id
+            )
+            self.external_usb = self.dsm.external_usb
 
     async def _syno_api_executer(self, api_call: Callable) -> None:
         """Synology api call wrapper."""

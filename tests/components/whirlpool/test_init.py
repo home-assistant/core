@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
+import pytest
 from whirlpool.auth import AccountLockedError
 from whirlpool.backendselector import Brand, Region
 
@@ -75,17 +76,35 @@ async def test_setup_brand_fallback(
     mock_backend_selector_api.assert_called_once_with(Brand.Whirlpool, region[1])
 
 
-async def test_setup_http_exception(
+async def test_setup_no_appliances(
+    hass: HomeAssistant, mock_appliances_manager_api: MagicMock
+) -> None:
+    """Test setup when there are no appliances available."""
+    mock_appliances_manager_api.return_value.aircons = []
+    mock_appliances_manager_api.return_value.washers = []
+    mock_appliances_manager_api.return_value.dryers = []
+    await init_integration(hass)
+    assert len(hass.states.async_all()) == 0
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_entry_state"),
+    [
+        (aiohttp.ClientConnectionError(), ConfigEntryState.SETUP_RETRY),
+        (AccountLockedError, ConfigEntryState.SETUP_ERROR),
+    ],
+)
+async def test_setup_auth_exception(
     hass: HomeAssistant,
     mock_auth_api: MagicMock,
+    exception: Exception,
+    expected_entry_state: ConfigEntryState,
 ) -> None:
-    """Test setup with an http exception."""
-    mock_auth_api.return_value.do_auth = AsyncMock(
-        side_effect=aiohttp.ClientConnectionError()
-    )
+    """Test setup with an exception during authentication."""
+    mock_auth_api.return_value.do_auth.side_effect = exception
     entry = await init_integration(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is expected_entry_state
 
 
 async def test_setup_auth_failed(
@@ -100,17 +119,6 @@ async def test_setup_auth_failed(
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_setup_auth_account_locked(
-    hass: HomeAssistant,
-    mock_auth_api: MagicMock,
-) -> None:
-    """Test setup with failed auth due to account being locked."""
-    mock_auth_api.return_value.do_auth.side_effect = AccountLockedError
-    entry = await init_integration(hass)
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state is ConfigEntryState.SETUP_ERROR
-
-
 async def test_setup_fetch_appliances_failed(
     hass: HomeAssistant,
     mock_appliances_manager_api: MagicMock,
@@ -119,7 +127,7 @@ async def test_setup_fetch_appliances_failed(
     mock_appliances_manager_api.return_value.fetch_appliances.return_value = False
     entry = await init_integration(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:

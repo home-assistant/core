@@ -38,6 +38,17 @@ from .common import (
 
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
 
+CONFIG_LOG_FILE = get_test_config_dir("home-assistant.log")
+ARG_LOG_FILE = "test.log"
+
+
+def cleanup_log_files() -> None:
+    """Remove all log files."""
+    for f in glob.glob(f"{CONFIG_LOG_FILE}*"):
+        os.remove(f)
+    for f in glob.glob(f"{ARG_LOG_FILE}*"):
+        os.remove(f)
+
 
 @pytest.fixture(autouse=True)
 def disable_installed_check() -> Generator[None]:
@@ -85,6 +96,12 @@ async def test_async_enable_logging(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test to ensure logging is migrated to the queue handlers."""
+
+    # Ensure we start with a clean slate
+    cleanup_log_files()
+    assert len(glob.glob(CONFIG_LOG_FILE)) == 0
+    assert len(glob.glob(ARG_LOG_FILE)) == 0
+
     with (
         patch("logging.getLogger"),
         patch(
@@ -97,6 +114,8 @@ async def test_async_enable_logging(
     ):
         await bootstrap.async_enable_logging(hass)
         mock_async_activate_log_queue_handler.assert_called_once()
+        assert len(glob.glob(CONFIG_LOG_FILE)) > 0
+
         mock_async_activate_log_queue_handler.reset_mock()
         await bootstrap.async_enable_logging(
             hass,
@@ -104,12 +123,61 @@ async def test_async_enable_logging(
             log_file="test.log",
         )
         mock_async_activate_log_queue_handler.assert_called_once()
-        for f in glob.glob("test.log*"):
-            os.remove(f)
-        for f in glob.glob("testing_config/home-assistant.log*"):
-            os.remove(f)
+        assert len(glob.glob(ARG_LOG_FILE)) > 0
 
     assert "Error rolling over log file" in caplog.text
+
+    cleanup_log_files()
+
+
+async def test_async_enable_logging_supervisor(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test to ensure the default log file is not created on Supervisor installations."""
+
+    # Ensure we start with a clean slate
+    cleanup_log_files()
+    assert len(glob.glob(CONFIG_LOG_FILE)) == 0
+    assert len(glob.glob(ARG_LOG_FILE)) == 0
+
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": "1"}),
+        patch(
+            "homeassistant.bootstrap.async_activate_log_queue_handler"
+        ) as mock_async_activate_log_queue_handler,
+        patch("logging.getLogger"),
+    ):
+        await bootstrap.async_enable_logging(hass)
+        assert len(glob.glob(CONFIG_LOG_FILE)) == 0
+        mock_async_activate_log_queue_handler.assert_called_once()
+        mock_async_activate_log_queue_handler.reset_mock()
+
+        # Check that if the log file exists, it is renamed
+        def write_log_file():
+            with open(
+                get_test_config_dir("home-assistant.log"), "w", encoding="utf8"
+            ) as f:
+                f.write("test")
+
+        await hass.async_add_executor_job(write_log_file)
+        assert len(glob.glob(CONFIG_LOG_FILE)) == 1
+        assert len(glob.glob(f"{CONFIG_LOG_FILE}.old")) == 0
+        await bootstrap.async_enable_logging(hass)
+        assert len(glob.glob(CONFIG_LOG_FILE)) == 0
+        assert len(glob.glob(f"{CONFIG_LOG_FILE}.old")) == 1
+        mock_async_activate_log_queue_handler.assert_called_once()
+        mock_async_activate_log_queue_handler.reset_mock()
+
+        await bootstrap.async_enable_logging(
+            hass,
+            log_rotate_days=5,
+            log_file="test.log",
+        )
+        mock_async_activate_log_queue_handler.assert_called_once()
+        # Even on Supervisor, the log file should be created if it is explicitly specified
+        assert len(glob.glob(ARG_LOG_FILE)) > 0
+
+    cleanup_log_files()
 
 
 async def test_load_hassio(hass: HomeAssistant) -> None:
@@ -703,8 +771,8 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
         return True
 
     with (
-        patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.1),
-        patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.05),
+        patch.object(bootstrap, "LOG_SLOW_STARTUP_INTERVAL", 0.005),
+        patch.object(bootstrap, "SLOW_STARTUP_CHECK_INTERVAL", 0.005),
         patch(
             "homeassistant.components.frontend.async_setup",
             side_effect=_async_setup_that_blocks_startup,
@@ -924,7 +992,7 @@ async def test_setup_hass_invalid_core_config(
                 "external_url": "https://abcdef.ui.nabu.casa",
             },
             "map": {},
-            "person": {"invalid": True},
+            "frontend": {"invalid": True},
         }
     ],
 )
@@ -1560,6 +1628,11 @@ async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> 
         # we remove the platform YAML schema support for sensors
         "websocket_api": {"sensor.py"},
     }
+    # person is a special case because it is a base platform
+    # in the sense that it creates entities in its namespace
+    # but its not used by other integrations to create entities
+    # so we want to make sure it is not loaded before the recorder
+    base_platforms = BASE_PLATFORMS | {"person"}
 
     integrations_before_recorder: set[str] = set()
     for _, integrations, _ in bootstrap.STAGE_0_INTEGRATIONS:
@@ -1592,7 +1665,7 @@ async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> 
     problems: dict[str, set[str]] = {}
     for domain in integrations:
         domain_with_base_platforms_deps = (
-            integrations_all_dependencies[domain] & BASE_PLATFORMS
+            integrations_all_dependencies[domain] & base_platforms
         )
         if domain_with_base_platforms_deps:
             problems[domain] = domain_with_base_platforms_deps
@@ -1600,7 +1673,7 @@ async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> 
         f"Integrations that are setup before recorder have base platforms in their dependencies: {problems}"
     )
 
-    base_platform_py_files = {f"{base_platform}.py" for base_platform in BASE_PLATFORMS}
+    base_platform_py_files = {f"{base_platform}.py" for base_platform in base_platforms}
 
     for domain, integration in all_integrations.items():
         integration_base_platforms_files = (
@@ -1613,3 +1686,36 @@ async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> 
     assert not problems, (
         f"Integrations that are setup before recorder implement base platforms: {problems}"
     )
+
+
+async def test_recorder_not_promoted(hass: HomeAssistant) -> None:
+    """Verify that recorder is not promoted to earlier than its own stage."""
+    integrations_before_recorder: set[str] = set()
+    for _, integrations, _ in bootstrap.STAGE_0_INTEGRATIONS:
+        if "recorder" in integrations:
+            break
+        integrations_before_recorder |= integrations
+    else:
+        pytest.fail("recorder not in stage 0")
+
+    integrations_or_excs = await loader.async_get_integrations(
+        hass, integrations_before_recorder
+    )
+    integrations: dict[str, Integration] = {}
+    for domain, integration in integrations_or_excs.items():
+        assert not isinstance(integrations_or_excs, Exception)
+        integrations[domain] = integration
+
+    integrations_all_dependencies = (
+        await loader.resolve_integrations_after_dependencies(
+            hass, integrations.values(), ignore_exceptions=True
+        )
+    )
+    all_integrations = integrations.copy()
+    all_integrations.update(
+        (domain, loader.async_get_loaded_integration(hass, domain))
+        for domains in integrations_all_dependencies.values()
+        for domain in domains
+    )
+
+    assert "recorder" not in all_integrations

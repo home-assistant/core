@@ -65,7 +65,7 @@
             "normal": "[%key:common::state::normal%]",
             "home": "[%key:common::state::home%]",
             "away": "[%key:common::state::not_home%]",
-            "auto": "Auto",
+            "auto": "[%key:common::state::auto%]",
             "baby": "Baby",
             "boost": "Boost",
             "comfort": "Comfort",
