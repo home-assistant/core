@@ -369,6 +369,7 @@ async def test_thermostat_occupancy(
         0,
     )
     await trigger_subscription_callback(hass, matter_client)
+
     state = hass.states.get("binary_sensor.longan_link_hvac_occupancy")
     assert state
     assert state.state == "off"
