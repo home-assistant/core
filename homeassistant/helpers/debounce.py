@@ -47,6 +47,11 @@ class Debouncer[_R_co]:
         self._shutdown_requested = False
 
     @property
+    def lock(self) -> asyncio.Lock:
+        """Return the lock used to ensure only one call is running at a time."""
+        return self._execute_lock
+
+    @property
     def function(self) -> Callable[[], _R_co] | None:
         """Return the function being wrapped by the Debouncer."""
         return self._function

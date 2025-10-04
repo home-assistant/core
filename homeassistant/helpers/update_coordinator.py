@@ -128,10 +128,10 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 logger,
                 cooldown=REQUEST_REFRESH_DEFAULT_COOLDOWN,
                 immediate=REQUEST_REFRESH_DEFAULT_IMMEDIATE,
-                function=self.async_refresh,
+                function=self._async_refresh,
             )
         else:
-            request_refresh_debouncer.function = self.async_refresh
+            request_refresh_debouncer.function = self._async_refresh
 
         self._debounced_refresh = request_refresh_debouncer
 
@@ -277,7 +277,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     async def _handle_refresh_interval(self, _now: datetime | None = None) -> None:
         """Handle a refresh interval occurrence."""
         self._unsub_refresh = None
-        await self._async_refresh(log_failures=True, scheduled=True)
+        async with self._debounced_refresh.lock:
+            await self._async_refresh(log_failures=True, scheduled=True)
 
     async def async_request_refresh(self) -> None:
         """Request a refresh.
@@ -293,6 +294,16 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         return await self.update_method()
 
     async def async_config_entry_first_refresh(self) -> None:
+        """Refresh data for the first time when a config entry is setup.
+
+        Will automatically raise ConfigEntryNotReady if the refresh
+        fails. Additionally logging is handled by config entry setup
+        to ensure that multiple retries do not cause log spam.
+        """
+        async with self._debounced_refresh.lock:
+            await self._async_config_entry_first_refresh()
+
+    async def _async_config_entry_first_refresh(self) -> None:
         """Refresh data for the first time when a config entry is setup.
 
         Will automatically raise ConfigEntryNotReady if the refresh
@@ -365,7 +376,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
     async def async_refresh(self) -> None:
         """Refresh data and log errors."""
-        await self._async_refresh(log_failures=True)
+        async with self._debounced_refresh.lock:
+            await self._async_refresh(log_failures=True)
 
     async def _async_refresh(  # noqa: C901
         self,
