@@ -8,7 +8,10 @@ from matter_server.common.helpers.util import create_attribute_path_from_attribu
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.matter.const import SERVICE_WATER_HEATER_BOOST
+from homeassistant.components.matter.const import (
+    SERVICE_WATER_HEATER_BOOST,
+    SERVICE_WATER_HEATER_CANCEL_BOOST,
+)
 from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_HIGH_DEMAND,
@@ -274,7 +277,7 @@ async def test_water_heater_turn_on_off(
 
 
 @pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
-async def test_async_set_boost_success(
+async def test_async_boost_actions(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
@@ -309,5 +312,22 @@ async def test_async_set_boost_success(
                 targetReheat=None,
             )
         ),
+    )
+    matter_client.send_device_command.reset_mock()
+
+    # Cancel boost
+    await hass.services.async_call(
+        "matter",
+        SERVICE_WATER_HEATER_CANCEL_BOOST,
+        {
+            "entity_id": "water_heater.water_heater",
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=2,
+        command=clusters.WaterHeaterManagement.Commands.CancelBoost(),
     )
     matter_client.send_device_command.reset_mock()
