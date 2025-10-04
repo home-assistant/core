@@ -33,7 +33,7 @@ async def test_numbers(
     await init_integration(hass, "number", printer=printer, job=job)
 
     # Test tool0 temperature number entity
-    state = hass.states.get("number.octoprint_set_tool0_temperature")
+    state = hass.states.get("number.octoprint_set_tool0_temp")
     assert state is not None
     assert state.state == "37.83"
     assert state.name == "OctoPrint set tool0 temperature"
@@ -41,11 +41,11 @@ async def test_numbers(
     assert state.attributes.get("min") == 0
     assert state.attributes.get("max") == 300
     assert state.attributes.get("step") == 1
-    entry = entity_registry.async_get("number.octoprint_set_tool0_temperature")
+    entry = entity_registry.async_get("number.octoprint_set_tool0_temp")
     assert entry.unique_id == "set-tool0-temp-uuid"
 
     # Test bed temperature number entity
-    state = hass.states.get("number.octoprint_set_bed_temperature")
+    state = hass.states.get("number.octoprint_set_bed_temp")
     assert state is not None
     assert state.state == "60.0"
     assert state.name == "OctoPrint set bed temperature"
@@ -53,7 +53,7 @@ async def test_numbers(
     assert state.attributes.get("min") == 0
     assert state.attributes.get("max") == 300
     assert state.attributes.get("step") == 1
-    entry = entity_registry.async_get("number.octoprint_set_bed_temperature")
+    entry = entity_registry.async_get("number.octoprint_set_bed_temp")
     assert entry.unique_id == "set-bed-temp-uuid"
 
 
@@ -73,15 +73,15 @@ async def test_numbers_no_target_temp(
     freezer.move_to(datetime(2020, 2, 20, 9, 10, 0))
     await init_integration(hass, "number", printer=printer)
 
-    state = hass.states.get("number.octoprint_set_tool0_temperature")
+    state = hass.states.get("number.octoprint_set_tool0_temp")
     assert state is not None
     assert state.state == STATE_UNKNOWN
     assert state.name == "OctoPrint set tool0 temperature"
-    entry = entity_registry.async_get("number.octoprint_set_tool0_temperature")
+    entry = entity_registry.async_get("number.octoprint_set_tool0_temp")
     assert entry.unique_id == "set-tool0-temp-uuid"
 
 
-async def test_set_tool_temperature(
+async def test_set_tool_temp(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -99,7 +99,7 @@ async def test_set_tool_temperature(
     freezer.move_to(datetime(2020, 2, 20, 9, 10, 0))
 
     with patch(
-        "pyoctoprintapi.OctoprintClient.set_tool_temperature"
+        "pyoctoprintapi.OctoprintClient.set_tool_temp"
     ) as mock_set_tool_temp:
         mock_set_tool_temp.return_value = AsyncMock()
         await init_integration(hass, "number", printer=printer, job=job)
@@ -108,14 +108,14 @@ async def test_set_tool_temperature(
         await hass.services.async_call(
             "number",
             "set_value",
-            {"entity_id": "number.octoprint_set_tool0_temperature", "value": 200.0},
+            {"entity_id": "number.octoprint_set_tool0_temp", "value": 200.0},
             blocking=True,
         )
 
         mock_set_tool_temp.assert_called_once_with("tool0", 200.0)
 
 
-async def test_set_bed_temperature(
+async def test_set_bed_temp(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
@@ -133,7 +133,7 @@ async def test_set_bed_temperature(
     freezer.move_to(datetime(2020, 2, 20, 9, 10, 0))
 
     with patch(
-        "pyoctoprintapi.OctoprintClient.set_bed_temperature"
+        "pyoctoprintapi.OctoprintClient.set_bed_temp"
     ) as mock_set_bed_temp:
         mock_set_bed_temp.return_value = AsyncMock()
         await init_integration(hass, "number", printer=printer, job=job)
@@ -142,7 +142,7 @@ async def test_set_bed_temperature(
         await hass.services.async_call(
             "number",
             "set_value",
-            {"entity_id": "number.octoprint_set_bed_temperature", "value": 80.0},
+            {"entity_id": "number.octoprint_set_bed_temp", "value": 80.0},
             blocking=True,
         )
 
@@ -160,10 +160,10 @@ async def test_numbers_printer_disconnected(
     await init_integration(hass, "number", printer=None, job=job)
 
     # When printer is disconnected, no number entities should be created
-    state = hass.states.get("number.octoprint_set_tool0_temperature")
+    state = hass.states.get("number.octoprint_set_tool0_temp")
     assert state is None
 
-    state = hass.states.get("number.octoprint_set_bed_temperature")
+    state = hass.states.get("number.octoprint_set_bed_temp")
     assert state is None
 
 
