@@ -1722,9 +1722,6 @@ plexwebsocket==0.0.14
 # homeassistant.components.plugwise
 plugwise==1.7.8
 
-# homeassistant.components.plum_lightpad
-plumlightpad==0.0.11
-
 # homeassistant.components.serial_pm
 pmsensor==0.4
 
