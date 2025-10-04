@@ -67,7 +67,7 @@ class PortainerContainerEntity(PortainerCoordinatorEntity):
             identifiers={
                 (
                     DOMAIN,
-                    f"{self.coordinator.config_entry.entry_id}_{self.device_name}",
+                    f"{self.coordinator.config_entry.entry_id}_{self.endpoint_id}_{self.device_name}",
                 )
             },
             manufacturer=DEFAULT_NAME,
