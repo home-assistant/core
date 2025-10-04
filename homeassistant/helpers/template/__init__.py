@@ -561,15 +561,16 @@ class Template:
             finally:
                 self.hass.loop.call_soon_threadsafe(finish_event.set)
 
+        template_render_thread = ThreadWithException(target=_render_template)
         try:
-            template_render_thread = ThreadWithException(target=_render_template)
             template_render_thread.start()
             async with asyncio.timeout(timeout):
                 await finish_event.wait()
             if self._exc_info:
                 raise TemplateError(self._exc_info[1].with_traceback(self._exc_info[2]))
         except TimeoutError:
-            template_render_thread.raise_exc(TimeoutError)
+            if template_render_thread.is_alive():
+                template_render_thread.raise_exc(TimeoutError)
             return True
         finally:
             template_render_thread.join()
