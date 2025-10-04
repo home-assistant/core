@@ -29,6 +29,8 @@ from homeassistant.components.zwave_js.const import (
     CONF_ADDON_S2_ACCESS_CONTROL_KEY,
     CONF_ADDON_S2_AUTHENTICATED_KEY,
     CONF_ADDON_S2_UNAUTHENTICATED_KEY,
+    CONF_ADDON_SOCKET,
+    CONF_SOCKET_PATH,
     CONF_USB_PATH,
     DOMAIN,
 )
@@ -36,6 +38,7 @@ from homeassistant.components.zwave_js.helpers import SERVER_VERSION_TIMEOUT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -48,6 +51,13 @@ ADDON_DISCOVERY_INFO = {
     "port": 3001,
 }
 
+
+ESPHOME_DISCOVERY_INFO = ESPHomeServiceInfo(
+    name="mock-name",
+    zwave_home_id=1234,
+    ip_address="192.168.1.100",
+    port=6053,
+)
 
 USB_DISCOVERY_INFO = UsbServiceInfo(
     device="/dev/zwave",
@@ -239,6 +249,7 @@ async def test_manual(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "url": "ws://localhost:3000",
         "usb_path": None,
+        "socket_path": None,
         "s0_legacy_key": None,
         "s2_access_control_key": None,
         "s2_authenticated_key": None,
@@ -433,6 +444,7 @@ async def test_supervisor_discovery(
     assert result["data"] == {
         "url": "ws://host1:3001",
         "usb_path": "/test",
+        "socket_path": None,
         "s0_legacy_key": "new123",
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
@@ -539,6 +551,7 @@ async def test_clean_discovery_on_user_create(
     assert result["data"] == {
         "url": "ws://localhost:3000",
         "usb_path": None,
+        "socket_path": None,
         "s0_legacy_key": None,
         "s2_access_control_key": None,
         "s2_authenticated_key": None,
@@ -754,6 +767,7 @@ async def test_usb_discovery(
     assert result["data"] == {
         "url": "ws://host1:3001",
         "usb_path": device,
+        "socket_path": None,
         "s0_legacy_key": "new123",
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
@@ -866,6 +880,7 @@ async def test_usb_discovery_addon_not_running(
     assert result["data"] == {
         "url": "ws://host1:3001",
         "usb_path": USB_DISCOVERY_INFO.device,
+        "socket_path": None,
         "s0_legacy_key": "new123",
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
@@ -976,7 +991,12 @@ async def test_usb_discovery_migration(
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
     assert set_addon_options.call_args == call(
-        "core_zwave_js", AddonsOptions(config={"device": USB_DISCOVERY_INFO.device})
+        "core_zwave_js",
+        AddonsOptions(
+            config={
+                CONF_ADDON_DEVICE: USB_DISCOVERY_INFO.device,
+            }
+        ),
     )
 
     await hass.async_block_till_done()
@@ -1006,6 +1026,7 @@ async def test_usb_discovery_migration(
     assert result["reason"] == "migration_successful"
     assert entry.data["url"] == "ws://host1:3001"
     assert entry.data["usb_path"] == USB_DISCOVERY_INFO.device
+    assert entry.data["socket_path"] is None
     assert entry.data["use_addon"] is True
     assert "keep_old_devices" not in entry.data
     assert entry.unique_id == "3245146787"
@@ -1104,7 +1125,12 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
     assert set_addon_options.call_args == call(
-        "core_zwave_js", AddonsOptions(config={"device": USB_DISCOVERY_INFO.device})
+        "core_zwave_js",
+        AddonsOptions(
+            config={
+                "device": USB_DISCOVERY_INFO.device,
+            }
+        ),
     )
 
     await hass.async_block_till_done()
@@ -1135,9 +1161,367 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
     assert result["reason"] == "migration_successful"
     assert entry.data["url"] == "ws://host1:3001"
     assert entry.data["usb_path"] == USB_DISCOVERY_INFO.device
+    assert entry.data["socket_path"] is None
     assert entry.data["use_addon"] is True
     assert entry.unique_id == "1234"
     assert "keep_old_devices" in entry.data
+
+
+@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+async def test_esphome_discovery_intent_custom(
+    hass: HomeAssistant,
+    install_addon: AsyncMock,
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
+) -> None:
+    """Test ESPHome discovery success path."""
+    # Make sure it works only on hassio
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.is_hassio", return_value=False
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ESPHOME},
+            data=ESPHOME_DISCOVERY_INFO,
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_hassio"
+
+    # Test working version
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+    assert result["menu_options"] == ["intent_recommended", "intent_custom"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
+    )
+
+    assert result["step_id"] == "install_addon"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+    # Make sure the flow continues when the progress task is done.
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert install_addon.call_args == call("core_zwave_js")
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "network_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "network_type": "existing",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_security_keys"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "s0_legacy_key": "new123",
+            "s2_access_control_key": "new456",
+            "s2_authenticated_key": "new789",
+            "s2_unauthenticated_key": "new987",
+            "lr_s2_access_control_key": "new654",
+            "lr_s2_authenticated_key": "new321",
+        },
+    )
+
+    assert set_addon_options.call_args == call(
+        "core_zwave_js",
+        AddonsOptions(
+            config={
+                "socket": "esphome://192.168.1.100:6053",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            }
+        ),
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert start_addon.call_args == call("core_zwave_js")
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TITLE
+    assert result["result"].unique_id == str(ESPHOME_DISCOVERY_INFO.zwave_home_id)
+    assert result["data"] == {
+        "url": "ws://host1:3001",
+        "usb_path": None,
+        "socket_path": "esphome://192.168.1.100:6053",
+        "s0_legacy_key": "new123",
+        "s2_access_control_key": "new456",
+        "s2_authenticated_key": "new789",
+        "s2_unauthenticated_key": "new987",
+        "lr_s2_access_control_key": "new654",
+        "lr_s2_authenticated_key": "new321",
+        "use_addon": True,
+        "integration_created_addon": True,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("supervisor", "addon_installed", "addon_running", "addon_info")
+async def test_esphome_discovery_intent_recommended(
+    hass: HomeAssistant,
+    set_addon_options: AsyncMock,
+    addon_options: dict,
+) -> None:
+    """Test ESPHome discovery success path."""
+    addon_options.update(
+        {
+            CONF_ADDON_DEVICE: "/dev/ttyUSB0",
+            CONF_ADDON_SOCKET: None,
+            "s0_legacy_key": "new123",
+            "s2_access_control_key": "new456",
+            "s2_authenticated_key": "new789",
+            "s2_unauthenticated_key": "new987",
+            "lr_s2_access_control_key": "new654",
+            "lr_s2_authenticated_key": "new321",
+        }
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+    assert result["menu_options"] == ["intent_recommended", "intent_custom"]
+
+    with (
+        patch(
+            "homeassistant.components.zwave_js.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "intent_recommended"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TITLE
+    assert result["result"].unique_id == str(ESPHOME_DISCOVERY_INFO.zwave_home_id)
+    assert result["data"] == {
+        "url": "ws://host1:3001",
+        "usb_path": None,
+        "socket_path": "esphome://192.168.1.100:6053",
+        "s0_legacy_key": "new123",
+        "s2_access_control_key": "new456",
+        "s2_authenticated_key": "new789",
+        "s2_unauthenticated_key": "new987",
+        "lr_s2_access_control_key": "new654",
+        "lr_s2_authenticated_key": "new321",
+        "use_addon": True,
+        "integration_created_addon": False,
+    }
+    assert set_addon_options.call_args == call(
+        "core_zwave_js",
+        AddonsOptions(
+            config={
+                "socket": "esphome://192.168.1.100:6053",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            }
+        ),
+    )
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("supervisor", "addon_installed", "addon_info")
+async def test_esphome_discovery_already_configured(
+    hass: HomeAssistant,
+    set_addon_options: AsyncMock,
+    addon_options: dict[str, Any],
+) -> None:
+    """Test ESPHome discovery success path."""
+    addon_options[CONF_ADDON_SOCKET] = "esphome://existing-device:6053"
+    addon_options["another_key"] = "should_not_be_touched"
+
+    entry = MockConfigEntry(
+        entry_id="mock-entry-id",
+        domain=DOMAIN,
+        data={
+            CONF_SOCKET_PATH: "esphome://existing-device:6053",
+            "use_addon": True,
+            "integration_created_addon": True,
+        },
+        title=TITLE,
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ESPHOME},
+            data=ESPHOME_DISCOVERY_INFO,
+        )
+
+    mock_reload.assert_called_once_with(entry.entry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Addon got updated
+    assert set_addon_options.call_args == call(
+        "core_zwave_js",
+        AddonsOptions(
+            config={
+                "socket": "esphome://192.168.1.100:6053",
+                "another_key": "should_not_be_touched",
+            }
+        ),
+    )
+
+
+@pytest.mark.usefixtures("supervisor", "addon_not_installed", "addon_info")
+async def test_esphome_discovery_usb_same_home_id(
+    hass: HomeAssistant,
+    install_addon: AsyncMock,
+    set_addon_options: AsyncMock,
+    start_addon: AsyncMock,
+) -> None:
+    """Test ESPHome discovery works if USB stick with same home ID is configured."""
+    entry = MockConfigEntry(
+        entry_id="mock-entry-id",
+        domain=DOMAIN,
+        data={
+            CONF_USB_PATH: "/dev/ttyUSB0",
+            "use_addon": True,
+            "integration_created_addon": True,
+        },
+        title=TITLE,
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+    assert result["menu_options"] == ["intent_recommended", "intent_custom"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
+    )
+
+    assert result["step_id"] == "install_addon"
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+    # Make sure the flow continues when the progress task is done.
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert install_addon.call_args == call("core_zwave_js")
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "network_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "network_type": "existing",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_security_keys"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "s0_legacy_key": "new123",
+            "s2_access_control_key": "new456",
+            "s2_authenticated_key": "new789",
+            "s2_unauthenticated_key": "new987",
+            "lr_s2_access_control_key": "new654",
+            "lr_s2_authenticated_key": "new321",
+        },
+    )
+
+    assert set_addon_options.call_args == call(
+        "core_zwave_js",
+        AddonsOptions(
+            config={
+                "socket": "esphome://192.168.1.100:6053",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            }
+        ),
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert start_addon.call_args == call("core_zwave_js")
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "migration_successful"
+    assert entry.data == {
+        "url": "ws://host1:3001",
+        "usb_path": None,
+        "socket_path": "esphome://192.168.1.100:6053",
+        "s0_legacy_key": "new123",
+        "s2_access_control_key": "new456",
+        "s2_authenticated_key": "new789",
+        "s2_unauthenticated_key": "new987",
+        "lr_s2_access_control_key": "new654",
+        "lr_s2_authenticated_key": "new321",
+        "use_addon": True,
+        "integration_created_addon": True,
+    }
 
 
 @pytest.mark.usefixtures("supervisor", "addon_installed")
@@ -1239,6 +1623,7 @@ async def test_discovery_addon_not_running(
     assert result["data"] == {
         "url": "ws://host1:3001",
         "usb_path": "/test",
+        "socket_path": None,
         "s0_legacy_key": "new123",
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
@@ -1358,6 +1743,7 @@ async def test_discovery_addon_not_installed(
     assert result["data"] == {
         "url": "ws://host1:3001",
         "usb_path": "/test",
+        "socket_path": None,
         "s0_legacy_key": "new123",
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
@@ -1552,6 +1938,7 @@ async def test_not_addon(hass: HomeAssistant) -> None:
     assert result["data"] == {
         "url": "ws://localhost:3000",
         "usb_path": None,
+        "socket_path": None,
         "s0_legacy_key": None,
         "s2_access_control_key": None,
         "s2_authenticated_key": None,
@@ -1612,6 +1999,7 @@ async def test_addon_running(
     assert result["data"] == {
         "url": "ws://host1:3001",
         "usb_path": "/test",
+        "socket_path": None,
         "s0_legacy_key": "new123",
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
@@ -1772,6 +2160,7 @@ async def test_addon_running_already_configured(
     assert result["reason"] == "already_configured"
     assert entry.data["url"] == "ws://host1:3001"
     assert entry.data["usb_path"] == "/test_new"
+    assert entry.data["socket_path"] is None
     assert entry.data["s0_legacy_key"] == "new123"
     assert entry.data["s2_access_control_key"] == "new456"
     assert entry.data["s2_authenticated_key"] == "new789"
@@ -1879,6 +2268,7 @@ async def test_addon_installed(
     assert result["data"] == {
         "url": "ws://host1:3001",
         "usb_path": "/test",
+        "socket_path": None,
         "s0_legacy_key": "new123",
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
@@ -2307,6 +2697,7 @@ async def test_addon_installed_already_configured(
     assert result["reason"] == "already_configured"
     assert entry.data["url"] == "ws://host1:3001"
     assert entry.data["usb_path"] == "/new"
+    assert entry.data["socket_path"] is None
     assert entry.data["s0_legacy_key"] == "new123"
     assert entry.data["s2_access_control_key"] == "new456"
     assert entry.data["s2_authenticated_key"] == "new789"
@@ -2424,6 +2815,7 @@ async def test_addon_not_installed(
     assert result["data"] == {
         "url": "ws://host1:3001",
         "usb_path": "/test",
+        "socket_path": None,
         "s0_legacy_key": "new123",
         "s2_access_control_key": "new456",
         "s2_authenticated_key": "new789",
@@ -2717,6 +3109,7 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
     (
         "entry_data",
         "old_addon_options",
+        "form_data",
         "new_addon_options",
         "disconnect_calls",
     ),
@@ -2735,6 +3128,15 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
             },
             {
                 "usb_path": "/new",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            {
+                "device": "/new",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -2765,6 +3167,15 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             },
+            {
+                "device": "/new",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
             1,
         ),
     ],
@@ -2778,6 +3189,7 @@ async def test_reconfigure_addon_running(
     restart_addon: AsyncMock,
     entry_data: dict[str, Any],
     old_addon_options: dict[str, Any],
+    form_data: dict[str, Any],
     new_addon_options: dict[str, Any],
     disconnect_calls: int,
 ) -> None:
@@ -2812,11 +3224,9 @@ async def test_reconfigure_addon_running(
     assert result["step_id"] == "configure_addon_reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        new_addon_options,
+        result["flow_id"], form_data
     )
 
-    new_addon_options["device"] = new_addon_options.pop("usb_path")
     assert set_addon_options.call_args == call(
         "core_zwave_js",
         AddonsOptions(config=new_addon_options),
@@ -2835,7 +3245,8 @@ async def test_reconfigure_addon_running(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data["url"] == "ws://host1:3001"
-    assert entry.data["usb_path"] == new_addon_options["device"]
+    assert entry.data["usb_path"] == new_addon_options.get("device")
+    assert entry.data["socket_path"] == new_addon_options.get("socket")
     assert entry.data["s0_legacy_key"] == new_addon_options["s0_legacy_key"]
     assert (
         entry.data["s2_access_control_key"]
@@ -2864,7 +3275,7 @@ async def test_reconfigure_addon_running(
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
 @pytest.mark.parametrize(
-    ("entry_data", "old_addon_options", "new_addon_options"),
+    ("entry_data", "old_addon_options", "form_data", "new_addon_options"),
     [
         (
             {},
@@ -2887,6 +3298,15 @@ async def test_reconfigure_addon_running(
                 "lr_s2_access_control_key": "old654",
                 "lr_s2_authenticated_key": "old321",
             },
+            {
+                "device": "/test",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
+            },
         ),
     ],
 )
@@ -2899,6 +3319,7 @@ async def test_reconfigure_addon_running_no_changes(
     restart_addon: AsyncMock,
     entry_data: dict[str, Any],
     old_addon_options: dict[str, Any],
+    form_data: dict[str, Any],
     new_addon_options: dict[str, Any],
 ) -> None:
     """Test reconfigure flow without changes, and add-on already running on Supervisor."""
@@ -2932,19 +3353,18 @@ async def test_reconfigure_addon_running_no_changes(
     assert result["step_id"] == "configure_addon_reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        new_addon_options,
+        result["flow_id"], form_data
     )
     await hass.async_block_till_done()
 
-    new_addon_options["device"] = new_addon_options.pop("usb_path")
     assert set_addon_options.call_count == 0
     assert restart_addon.call_count == 0
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data["url"] == "ws://host1:3001"
-    assert entry.data["usb_path"] == new_addon_options["device"]
+    assert entry.data["usb_path"] == new_addon_options.get("device")
+    assert entry.data["socket_path"] == new_addon_options.get("socket")
     assert entry.data["s0_legacy_key"] == new_addon_options["s0_legacy_key"]
     assert (
         entry.data["s2_access_control_key"]
@@ -2987,6 +3407,7 @@ async def different_device_server_version(*args):
     (
         "entry_data",
         "old_addon_options",
+        "form_data",
         "new_addon_options",
         "disconnect_calls",
         "server_version_side_effect",
@@ -3013,6 +3434,48 @@ async def different_device_server_version(*args):
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             },
+            {
+                "device": "/new",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            0,
+            different_device_server_version,
+        ),
+        (
+            {},
+            {
+                "device": "/test",
+                "network_key": "old123",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
+            },
+            {
+                "socket_path": "esphome://mock-host:6053",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            {
+                "socket": "esphome://mock-host:6053",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
             0,
             different_device_server_version,
         ),
@@ -3027,6 +3490,7 @@ async def test_reconfigure_different_device(
     restart_addon: AsyncMock,
     entry_data: dict[str, Any],
     old_addon_options: dict[str, Any],
+    form_data: dict[str, Any],
     new_addon_options: dict[str, Any],
     disconnect_calls: int,
 ) -> None:
@@ -3062,12 +3526,10 @@ async def test_reconfigure_different_device(
     assert result["step_id"] == "configure_addon_reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        new_addon_options,
+        result["flow_id"], form_data
     )
 
     assert set_addon_options.call_count == 1
-    new_addon_options["device"] = new_addon_options.pop("usb_path")
     assert set_addon_options.call_args == call(
         "core_zwave_js", AddonsOptions(config=new_addon_options)
     )
@@ -3114,6 +3576,7 @@ async def test_reconfigure_different_device(
     (
         "entry_data",
         "old_addon_options",
+        "form_data",
         "new_addon_options",
         "disconnect_calls",
         "restart_addon_side_effect",
@@ -3133,6 +3596,15 @@ async def test_reconfigure_different_device(
             },
             {
                 "usb_path": "/new",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            {
+                "device": "/new",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -3164,6 +3636,15 @@ async def test_reconfigure_different_device(
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             },
+            {
+                "device": "/new",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
             0,
             [
                 SupervisorError(),
@@ -3181,6 +3662,7 @@ async def test_reconfigure_addon_restart_failed(
     restart_addon: AsyncMock,
     entry_data: dict[str, Any],
     old_addon_options: dict[str, Any],
+    form_data: dict[str, Any],
     new_addon_options: dict[str, Any],
     disconnect_calls: int,
 ) -> None:
@@ -3216,12 +3698,10 @@ async def test_reconfigure_addon_restart_failed(
     assert result["step_id"] == "configure_addon_reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        new_addon_options,
+        result["flow_id"], form_data
     )
 
     assert set_addon_options.call_count == 1
-    new_addon_options["device"] = new_addon_options.pop("usb_path")
     assert set_addon_options.call_args == call(
         "core_zwave_js", AddonsOptions(config=new_addon_options)
     )
@@ -3319,8 +3799,7 @@ async def test_reconfigure_addon_running_server_info_failure(
     assert result["step_id"] == "configure_addon_reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        new_addon_options,
+        result["flow_id"], new_addon_options
     )
     await hass.async_block_till_done()
 
@@ -3337,6 +3816,7 @@ async def test_reconfigure_addon_running_server_info_failure(
     (
         "entry_data",
         "old_addon_options",
+        "form_data",
         "new_addon_options",
         "disconnect_calls",
     ),
@@ -3355,6 +3835,15 @@ async def test_reconfigure_addon_running_server_info_failure(
             },
             {
                 "usb_path": "/new",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            {
+                "device": "/new",
                 "s0_legacy_key": "new123",
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
@@ -3385,6 +3874,15 @@ async def test_reconfigure_addon_running_server_info_failure(
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             },
+            {
+                "device": "/new",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
             1,
         ),
     ],
@@ -3399,6 +3897,7 @@ async def test_reconfigure_addon_not_installed(
     start_addon: AsyncMock,
     entry_data: dict[str, Any],
     old_addon_options: dict[str, Any],
+    form_data: dict[str, Any],
     new_addon_options: dict[str, Any],
     disconnect_calls: int,
 ) -> None:
@@ -3443,11 +3942,9 @@ async def test_reconfigure_addon_not_installed(
     assert result["step_id"] == "configure_addon_reconfigure"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        new_addon_options,
+        result["flow_id"], form_data
     )
 
-    new_addon_options["device"] = new_addon_options.pop("usb_path")
     assert set_addon_options.call_args == call(
         "core_zwave_js", AddonsOptions(config=new_addon_options)
     )
@@ -3468,7 +3965,7 @@ async def test_reconfigure_addon_not_installed(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data["url"] == "ws://host1:3001"
-    assert entry.data["usb_path"] == new_addon_options["device"]
+    assert entry.data["usb_path"] == new_addon_options.get("device")
     assert entry.data["s0_legacy_key"] == new_addon_options["s0_legacy_key"]
     assert entry.data["use_addon"] is True
     assert entry.data["integration_created_addon"] is True
@@ -3513,6 +4010,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["data"] == {
         "url": "ws://127.0.0.1:3000",
         "usb_path": None,
+        "socket_path": None,
         "s0_legacy_key": None,
         "s2_access_control_key": None,
         "s2_authenticated_key": None,
@@ -3578,14 +4076,30 @@ async def test_reconfigure_migrate_low_sdk_version(
 @pytest.mark.usefixtures("supervisor", "addon_running")
 @pytest.mark.parametrize(
     (
+        "form_data",
+        "new_addon_options",
         "restore_server_version_side_effect",
         "final_unique_id",
         "keep_old_devices",
         "device_entry_count",
     ),
     [
-        (None, "3245146787", False, 2),
-        (aiohttp.ClientError("Boom"), "5678", True, 4),
+        (
+            {CONF_USB_PATH: "/test"},
+            {CONF_ADDON_DEVICE: "/test"},
+            None,
+            "3245146787",
+            False,
+            2,
+        ),
+        (
+            {CONF_SOCKET_PATH: "esphome://1.2.3.4:1234"},
+            {CONF_ADDON_SOCKET: "esphome://1.2.3.4:1234"},
+            aiohttp.ClientError("Boom"),
+            "5678",
+            True,
+            4,
+        ),
     ],
 )
 async def test_reconfigure_migrate_with_addon(
@@ -3598,6 +4112,8 @@ async def test_reconfigure_migrate_with_addon(
     addon_options: dict[str, Any],
     set_addon_options: AsyncMock,
     get_server_version: AsyncMock,
+    form_data: dict[str, Any],
+    new_addon_options: dict,
     restore_server_version_side_effect: Exception | None,
     final_unique_id: str,
     keep_old_devices: bool,
@@ -3714,26 +4230,17 @@ async def test_reconfigure_migrate_with_addon(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_serial_port"
-    data_schema = result["data_schema"]
-    assert data_schema is not None
-    assert data_schema.schema[CONF_USB_PATH]
-    # Ensure the old usb path is not in the list of options
-    with pytest.raises(InInvalid):
-        data_schema.schema[CONF_USB_PATH](addon_options["device"])
 
     version_info.home_id = 5678
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_USB_PATH: "/test",
-        },
+        result["flow_id"], form_data
     )
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
     assert set_addon_options.call_args == call(
-        "core_zwave_js", AddonsOptions(config={"device": "/test"})
+        "core_zwave_js", AddonsOptions(config=new_addon_options)
     )
 
     # Simulate the new connected controller hardware labels.
@@ -3751,17 +4258,19 @@ async def test_reconfigure_migrate_with_addon(
 
     assert restart_addon.call_args == call("core_zwave_js")
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    # Ensure add-on running would migrate the old settings back into the config entry
+    with patch("homeassistant.components.zwave_js.async_ensure_addon_running"):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert entry.unique_id == "5678"
-    get_server_version.side_effect = restore_server_version_side_effect
-    version_info.home_id = 3245146787
+        assert entry.unique_id == "5678"
+        get_server_version.side_effect = restore_server_version_side_effect
+        version_info.home_id = 3245146787
 
-    assert result["type"] is FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "restore_nvm"
-    assert client.connect.call_count == 2
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["step_id"] == "restore_nvm"
+        assert client.connect.call_count == 2
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
     assert client.connect.call_count == 4
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert client.driver.controller.async_restore_nvm.call_count == 1
@@ -3774,7 +4283,8 @@ async def test_reconfigure_migrate_with_addon(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "migration_successful"
     assert entry.data["url"] == "ws://host1:3001"
-    assert entry.data["usb_path"] == "/test"
+    assert entry.data[CONF_USB_PATH] == new_addon_options.get(CONF_ADDON_DEVICE)
+    assert entry.data[CONF_SOCKET_PATH] == new_addon_options.get(CONF_ADDON_SOCKET)
     assert entry.data["use_addon"] is True
     assert ("keep_old_devices" in entry.data) is keep_old_devices
     assert entry.unique_id == final_unique_id
@@ -3931,6 +4441,7 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
     assert result["reason"] == "migration_successful"
     assert entry.data["url"] == "ws://host1:3001"
     assert entry.data["usb_path"] == "/test"
+    assert entry.data["socket_path"] is None
     assert entry.data["use_addon"] is True
     assert "keep_old_devices" in entry.data
     assert entry.unique_id == "1234"
@@ -4443,8 +4954,9 @@ async def test_intent_recommended_user(
     assert result["step_id"] == "configure_addon_user"
     data_schema = result["data_schema"]
     assert data_schema is not None
-    assert len(data_schema.schema) == 1
+    assert len(data_schema.schema) == 2
     assert data_schema.schema.get(CONF_USB_PATH) is not None
+    assert data_schema.schema.get(CONF_SOCKET_PATH) is not None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -4491,6 +5003,7 @@ async def test_intent_recommended_user(
     assert result["data"] == {
         "url": "ws://host1:3001",
         "usb_path": "/test",
+        "socket_path": None,
         "s0_legacy_key": "",
         "s2_access_control_key": "",
         "s2_authenticated_key": "",
@@ -4601,6 +5114,7 @@ async def test_recommended_usb_discovery(
     assert result["data"] == {
         "url": "ws://host1:3001",
         "usb_path": device,
+        "socket_path": None,
         "s0_legacy_key": "",
         "s2_access_control_key": "",
         "s2_authenticated_key": "",
@@ -4860,6 +5374,7 @@ async def test_addon_rf_region_migrate_network(
     assert result["reason"] == "migration_successful"
     assert entry.data["url"] == "ws://host1:3001"
     assert entry.data["usb_path"] == "/test"
+    assert entry.data["socket_path"] is None
     assert entry.data["use_addon"] is True
     assert entry.unique_id == "3245146787"
     assert client.driver.controller.home_id == 3245146787

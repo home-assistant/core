@@ -552,8 +552,15 @@ def percentage_to_brightness(percentage: int) -> int:
 
 def mac_address_from_name(name: str) -> str | None:
     """Convert a name to a mac address."""
-    mac = name.partition(".")[0].partition("-")[-1]
-    return mac.upper() if len(mac) == 12 else None
+    base = name.split(".", 1)[0]
+    if "-" not in base:
+        return None
+
+    mac = base.rsplit("-", 1)[-1]
+    if len(mac) != 12 or not all(char in "0123456789abcdefABCDEF" for char in mac):
+        return None
+
+    return mac.upper()
 
 
 def get_release_url(gen: int, model: str, beta: bool) -> str | None:
@@ -648,7 +655,10 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
         ids.extend(
             k
             for k, v in config.items()
-            if k.startswith(comp_type) and v["meta"]["ui"]["view"] in component["modes"]
+            if k.startswith(comp_type)
+            # default to button view if not set, workaround for Wall Display
+            and v.get("meta", {"ui": {"view": "button"}})["ui"]["view"]
+            in component["modes"]
         )
 
     return ids
@@ -915,3 +925,8 @@ def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
             dev_reg.async_update_device(
                 device.id, remove_config_entry_id=entry.entry_id
             )
+
+
+def format_ble_addr(ble_addr: str) -> str:
+    """Format BLE address to use in unique_id."""
+    return ble_addr.replace(":", "").upper()

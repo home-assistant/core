@@ -58,6 +58,7 @@ base_platforms: &base_platforms
 # Extra components that trigger the full suite
 components: &components
   - homeassistant/components/alexa/**
+  - homeassistant/components/analytics/**
   - homeassistant/components/application_credentials/**
   - homeassistant/components/assist_pipeline/**
   - homeassistant/components/auth/**
