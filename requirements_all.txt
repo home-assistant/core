@@ -185,7 +185,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.1
 
 # homeassistant.components.alexa_devices
-aioamazondevices==6.2.7
+aioamazondevices==6.2.8
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -663,7 +663,7 @@ bluetooth-auto-recovery==1.5.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.28.2
+bluetooth-data-tools==1.28.3
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -1218,9 +1218,6 @@ iaqualink==0.6.0
 # homeassistant.components.ibeacon
 ibeacon-ble==1.2.0
 
-# homeassistant.components.watson_iot
-ibmiotf==0.3.4
-
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
@@ -1361,7 +1358,7 @@ letpot==0.6.2
 libpyfoscamcgi==0.0.7
 
 # homeassistant.components.vivotek
-libpyvivotek==0.4.0
+libpyvivotek==0.6.1
 
 # homeassistant.components.libre_hardware_monitor
 librehardwaremonitor-api==1.4.0
@@ -1724,9 +1721,6 @@ plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
 plugwise==1.7.8
-
-# homeassistant.components.plum_lightpad
-plumlightpad==0.0.11
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -2219,7 +2213,7 @@ pynina==0.3.6
 pynobo==1.8.1
 
 # homeassistant.components.nordpool
-pynordpool==0.3.0
+pynordpool==0.3.1
 
 # homeassistant.components.nuki
 pynuki==1.6.3
