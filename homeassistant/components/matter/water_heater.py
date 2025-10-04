@@ -106,8 +106,9 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
                 clusters.WaterHeaterManagement.Commands.CancelBoost()
             )
         except MatterError as err:
-            # self.logger.error("Error sending CancelBoost command: %s", err)
-            raise HomeAssistantError from err
+            raise HomeAssistantError(
+                f"Error sending CancelBoost command: {err}"
+            ) from err
         self._update_from_device()
 
     async def async_set_boost(
@@ -132,8 +133,7 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
                 clusters.WaterHeaterManagement.Commands.Boost(boostInfo=boost_info)
             )
         except MatterError as err:
-            # self.logger.error("Error sending boost command: %s", err)
-            raise HomeAssistantError from err
+            raise HomeAssistantError(f"Error sending Boost command: {err}") from err
         self._update_from_device()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
