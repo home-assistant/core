@@ -12,6 +12,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+from .const import ACCOUNT_ID, API_TOKEN, LOGIN_URL
 
 async def test_full_flow(
     hass: HomeAssistant,
@@ -26,22 +27,23 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert "link" in result["description_placeholders"]
+    assert result["description_placeholders"]["link"] == LOGIN_URL
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_API_TOKEN: "aaaabbbbcccc"}
+        result["flow_id"], user_input={CONF_API_TOKEN: API_TOKEN}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "aabbccddee112233"
-    assert result["data"][CONF_SESSION_TOKEN] == "valid_token"
-    assert result["result"].unique_id == "aabbccddee112233"
+    assert result["title"] == ACCOUNT_ID
+    assert result["data"][CONF_SESSION_TOKEN] == API_TOKEN
+    assert result["result"].unique_id == ACCOUNT_ID
 
 
 async def test_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_nintendo_authenticator: AsyncMock,
-):
+) -> None:
     """Test that the flow aborts if the account is already configured."""
     mock_config_entry.add_to_hass(hass)
 
@@ -52,7 +54,7 @@ async def test_already_configured(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_API_TOKEN: "aaaabbbbcccc"}
+        result["flow_id"], user_input={CONF_API_TOKEN: API_TOKEN}
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -84,3 +86,15 @@ async def test_invalid_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_auth"}
+
+    # Now ensure that the flow can be recovered
+    mock_nintendo_authenticator.complete_login.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_TOKEN: API_TOKEN}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == ACCOUNT_ID
+    assert result["data"][CONF_SESSION_TOKEN] == API_TOKEN
+    assert result["result"].unique_id == ACCOUNT_ID

@@ -9,14 +9,17 @@ import pytest
 
 from tests.common import MockConfigEntry
 
+from homeassistant.components.nintendo_parental.const import DOMAIN
+
+from .const import ACCOUNT_ID, API_TOKEN, LOGIN_URL
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={"session_token": "valid_token"},
-        unique_id="aabbccddee112233",
+        data={"session_token": API_TOKEN},
+        unique_id=ACCOUNT_ID,
     )
 
 
@@ -46,11 +49,11 @@ def mock_nintendo_authenticator() -> Generator[MagicMock]:
         ),
     ):
         mock_auth = MagicMock()
-        mock_auth._id_token = "valid_token"
+        mock_auth._id_token = API_TOKEN
         mock_auth._at_expiry = datetime(2099, 12, 31, 23, 59, 59)
-        mock_auth.account_id = "aabbccddee112233"
-        mock_auth.login_url = "http://example.com"
-        mock_auth.get_session_token = "valid_token"
+        mock_auth.account_id = ACCOUNT_ID
+        mock_auth.login_url = LOGIN_URL
+        mock_auth.get_session_token = API_TOKEN
         # Patch complete_login as an AsyncMock on both instance and class as this is a class method
         mock_auth.complete_login = AsyncMock()
         type(mock_auth).complete_login = mock_auth.complete_login
