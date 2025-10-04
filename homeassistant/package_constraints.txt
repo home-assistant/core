@@ -32,7 +32,7 @@ cronsim==2.6
 cryptography==46.0.2
 dbus-fast==2.44.3
 file-read-backwards==2.0.0
-fnv-hash-fast==1.5.0
+fnv-hash-fast==1.6.0
 go2rtc-client==0.2.1
 ha-ffmpeg==3.2.2
 habluetooth==5.7.0
