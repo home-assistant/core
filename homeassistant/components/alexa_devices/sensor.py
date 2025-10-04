@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import LIGHT_LUX, UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -30,6 +31,9 @@ class AmazonSensorEntityDescription(SensorEntityDescription):
     """Amazon Devices sensor entity description."""
 
     native_unit_of_measurement_fn: Callable[[AmazonDevice, str], str] | None = None
+    is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
+        device.online and device.sensors[key].error is False
+    )
 
 
 SENSORS: Final = (
@@ -41,11 +45,13 @@ SENSORS: Final = (
             if device.sensors[_key].scale == "CELSIUS"
             else UnitOfTemperature.FAHRENHEIT
         ),
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AmazonSensorEntityDescription(
         key="illuminance",
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -59,12 +65,22 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        AmazonSensorEntity(coordinator, serial_num, sensor_desc)
-        for sensor_desc in SENSORS
-        for serial_num in coordinator.data
-        if coordinator.data[serial_num].sensors.get(sensor_desc.key) is not None
-    )
+    known_devices: set[str] = set()
+
+    def _check_device() -> None:
+        current_devices = set(coordinator.data)
+        new_devices = current_devices - known_devices
+        if new_devices:
+            known_devices.update(new_devices)
+            async_add_entities(
+                AmazonSensorEntity(coordinator, serial_num, sensor_desc)
+                for sensor_desc in SENSORS
+                for serial_num in new_devices
+                if coordinator.data[serial_num].sensors.get(sensor_desc.key) is not None
+            )
+
+    _check_device()
+    entry.async_on_unload(coordinator.async_add_listener(_check_device))
 
 
 class AmazonSensorEntity(AmazonEntity, SensorEntity):
@@ -86,3 +102,13 @@ class AmazonSensorEntity(AmazonEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.device.sensors[self.entity_description.key].value
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            self.entity_description.is_available_fn(
+                self.device, self.entity_description.key
+            )
+            and super().available
+        )

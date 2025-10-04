@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "1752690839034sq255y",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bf79ca977d67322eb2o68m",
   "name": "X5 Zigbee Gateway",
   "category": "wg2",
   "product_id": "nwxr8qcu4seltoro",

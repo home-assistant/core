@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 import logging
 from typing import Any
 
-from habiticalib import ContentData, HabiticaClass, TaskData, UserData, ha
+from habiticalib import ContentData, GroupData, HabiticaClass, TaskData, UserData, ha
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -20,15 +21,20 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
+from . import HABITICA_KEY
 from .const import ASSETS_URL
 from .coordinator import HabiticaConfigEntry
-from .entity import HabiticaBase
+from .entity import HabiticaBase, HabiticaPartyBase
 from .util import (
+    collected_quest_items,
     get_attribute_points,
     get_attributes_total,
     inventory_list,
     pending_damage,
     pending_quest_items,
+    quest_attributes,
+    quest_boss,
+    rage_attributes,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,11 +54,22 @@ PARALLEL_UPDATES = 1
 class HabiticaSensorEntityDescription(SensorEntityDescription):
     """Habitica Sensor Description."""
 
-    value_fn: Callable[[UserData, ContentData], StateType]
+    value_fn: Callable[[UserData, ContentData], StateType | datetime]
     attributes_fn: Callable[[UserData, ContentData], dict[str, Any] | None] | None = (
         None
     )
     entity_picture: str | None = None
+
+
+@dataclass(kw_only=True, frozen=True)
+class HabiticaPartySensorEntityDescription(SensorEntityDescription):
+    """Habitica Party Sensor Description."""
+
+    value_fn: Callable[[GroupData, ContentData], StateType]
+    entity_picture: Callable[[GroupData], str | None] | str | None = None
+    attributes_fn: Callable[[GroupData, ContentData], dict[str, Any] | None] | None = (
+        None
+    )
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -89,6 +106,16 @@ class HabiticaSensorEntity(StrEnum):
     QUEST_SCROLLS = "quest_scrolls"
     PENDING_DAMAGE = "pending_damage"
     PENDING_QUEST_ITEMS = "pending_quest_items"
+    MEMBER_COUNT = "member_count"
+    GROUP_LEADER = "group_leader"
+    QUEST = "quest"
+    BOSS = "boss"
+    BOSS_HP = "boss_hp"
+    BOSS_HP_REMAINING = "boss_hp_remaining"
+    COLLECTED_ITEMS = "collected_items"
+    BOSS_RAGE = "boss_rage"
+    BOSS_RAGE_LIMIT = "boss_rage_limit"
+    LAST_CHECKIN = "last_checkin"
 
 
 SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
@@ -259,6 +286,96 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         translation_key=HabiticaSensorEntity.PENDING_QUEST_ITEMS,
         value_fn=pending_quest_items,
     ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.LAST_CHECKIN,
+        translation_key=HabiticaSensorEntity.LAST_CHECKIN,
+        value_fn=(
+            lambda user, _: dt_util.as_local(last)
+            if (last := user.auth.timestamps.loggedin)
+            else None
+        ),
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+)
+
+
+SENSOR_DESCRIPTIONS_PARTY: tuple[HabiticaPartySensorEntityDescription, ...] = (
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.MEMBER_COUNT,
+        translation_key=HabiticaSensorEntity.MEMBER_COUNT,
+        value_fn=lambda party, _: party.memberCount,
+        entity_picture=ha.PARTY,
+    ),
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.GROUP_LEADER,
+        translation_key=HabiticaSensorEntity.GROUP_LEADER,
+        value_fn=lambda party, _: party.leader.profile.name,
+    ),
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.QUEST,
+        translation_key=HabiticaSensorEntity.QUEST,
+        value_fn=lambda p, c: c.quests[p.quest.key].text if p.quest.key else None,
+        attributes_fn=quest_attributes,
+        entity_picture=(
+            lambda party: f"inventory_quest_scroll_{party.quest.key}.png"
+            if party.quest.key
+            else None
+        ),
+    ),
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.BOSS,
+        translation_key=HabiticaSensorEntity.BOSS,
+        value_fn=lambda p, c: boss.name if (boss := quest_boss(p, c)) else None,
+    ),
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.BOSS_HP,
+        translation_key=HabiticaSensorEntity.BOSS_HP,
+        value_fn=lambda p, c: boss.hp if (boss := quest_boss(p, c)) else None,
+        entity_picture=ha.HP,
+        suggested_display_precision=0,
+    ),
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.BOSS_HP_REMAINING,
+        translation_key=HabiticaSensorEntity.BOSS_HP_REMAINING,
+        value_fn=lambda p, _: p.quest.progress.hp,
+        entity_picture=ha.HP,
+        suggested_display_precision=2,
+    ),
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.COLLECTED_ITEMS,
+        translation_key=HabiticaSensorEntity.COLLECTED_ITEMS,
+        value_fn=(
+            lambda p, _: sum(n for n in p.quest.progress.collect.values())
+            if p.quest.progress.collect
+            else None
+        ),
+        attributes_fn=collected_quest_items,
+        entity_picture=(
+            lambda p: f"quest_{p.quest.key}_{k}.png"
+            if p.quest.progress.collect
+            and (k := next(iter(p.quest.progress.collect), None))
+            else None
+        ),
+    ),
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.BOSS_RAGE,
+        translation_key=HabiticaSensorEntity.BOSS_RAGE,
+        value_fn=lambda p, _: p.quest.progress.rage,
+        entity_picture=ha.RAGE,
+        suggested_display_precision=2,
+    ),
+    HabiticaPartySensorEntityDescription(
+        key=HabiticaSensorEntity.BOSS_RAGE_LIMIT,
+        translation_key=HabiticaSensorEntity.BOSS_RAGE_LIMIT,
+        value_fn=(
+            lambda p, c: boss.rage.value
+            if (boss := quest_boss(p, c)) and boss.rage
+            else None
+        ),
+        entity_picture=ha.RAGE,
+        suggested_display_precision=0,
+        attributes_fn=rage_attributes,
+    ),
 )
 
 
@@ -275,6 +392,18 @@ async def async_setup_entry(
         HabiticaSensor(coordinator, description) for description in SENSOR_DESCRIPTIONS
     )
 
+    if party := coordinator.data.user.party.id:
+        party_coordinator = hass.data[HABITICA_KEY][party]
+        async_add_entities(
+            HabiticaPartySensor(
+                party_coordinator,
+                config_entry,
+                description,
+                coordinator.content,
+            )
+            for description in SENSOR_DESCRIPTIONS_PARTY
+        )
+
 
 class HabiticaSensor(HabiticaBase, SensorEntity):
     """A generic Habitica sensor."""
@@ -282,7 +411,7 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
     entity_description: HabiticaSensorEntityDescription
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the device."""
 
         return self.entity_description.value_fn(
@@ -316,4 +445,44 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
                 else f"{ASSETS_URL}{entity_picture}"
             )
 
+        return None
+
+
+class HabiticaPartySensor(HabiticaPartyBase, SensorEntity):
+    """Habitica party sensor."""
+
+    entity_description: HabiticaPartySensorEntityDescription
+
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the device."""
+
+        return self.entity_description.value_fn(
+            self.coordinator.data.party, self.content
+        )
+
+    @property
+    def entity_picture(self) -> str | None:
+        """Return the entity picture to use in the frontend, if any."""
+        pic = self.entity_description.entity_picture
+
+        entity_picture = (
+            pic
+            if isinstance(pic, str) or pic is None
+            else pic(self.coordinator.data.party)
+        )
+
+        return (
+            None
+            if not entity_picture
+            else entity_picture
+            if entity_picture.startswith("data:image")
+            else f"{ASSETS_URL}{entity_picture}"
+        )
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return entity specific state attributes."""
+        if func := self.entity_description.attributes_fn:
+            return func(self.coordinator.data.party, self.content)
         return None

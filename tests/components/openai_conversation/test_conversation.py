@@ -252,7 +252,11 @@ async def test_function_call(
         # Initial conversation
         (
             # Wait for the model to think
-            *create_reasoning_item(id="rs_A", output_index=0),
+            *create_reasoning_item(
+                id="rs_A",
+                output_index=0,
+                reasoning_summary=[["Thinking"], ["Thinking ", "more"]],
+            ),
             # First tool call
             *create_function_tool_call_item(
                 id="fc_1",
@@ -288,15 +292,10 @@ async def test_function_call(
         agent_id="conversation.openai_conversation",
     )
 
-    assert mock_create_stream.call_args.kwargs["input"][2] == {
-        "id": "rs_A",
-        "summary": [],
-        "type": "reasoning",
-        "encrypted_content": "AAABBB",
-    }
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     # Don't test the prompt, as it's not deterministic
     assert mock_chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["input"][1:] == snapshot
 
 
 async def test_function_call_without_reasoning(
@@ -436,6 +435,7 @@ async def test_web_search(
     mock_init_component,
     mock_create_stream,
     mock_chat_log: MockChatLog,  # noqa: F811
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test web_search_tool."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -488,6 +488,21 @@ async def test_web_search(
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.speech["plain"]["speech"] == message, result.response.speech
 
+    # Test follow-up message in multi-turn conversation
+    mock_create_stream.return_value = [
+        (*create_message_item(id="msg_B", text="You are welcome!", output_index=1),)
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Thank you!",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.openai_conversation",
+    )
+
+    assert mock_create_stream.mock_calls[1][2]["input"][1:] == snapshot
+
 
 async def test_code_interpreter(
     hass: HomeAssistant,
@@ -495,6 +510,7 @@ async def test_code_interpreter(
     mock_init_component,
     mock_create_stream,
     mock_chat_log: MockChatLog,  # noqa: F811
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test code_interpreter tool."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -514,6 +530,7 @@ async def test_code_interpreter(
             *create_code_interpreter_item(
                 id="ci_A",
                 code=["import", " math", "\n", "math", ".sqrt", "(", "555", "55", ")"],
+                logs="235.70108188126758\n",
                 output_index=0,
             ),
             *create_message_item(id="msg_A", text=message, output_index=1),
@@ -533,3 +550,18 @@ async def test_code_interpreter(
     ]
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.speech["plain"]["speech"] == message, result.response.speech
+
+    # Test follow-up message in multi-turn conversation
+    mock_create_stream.return_value = [
+        (*create_message_item(id="msg_B", text="You are welcome!", output_index=1),)
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Thank you!",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.openai_conversation",
+    )
+
+    assert mock_create_stream.mock_calls[1][2]["input"][1:] == snapshot

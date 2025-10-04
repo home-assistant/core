@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bf252b8ee16b2e78bdoxlp",
   "name": "Pokerlamp 1",
   "category": "dj",
   "product_id": "tmsloaroqavbucgn",

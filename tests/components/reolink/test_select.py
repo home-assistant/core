@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import TEST_NVR_NAME
+from .conftest import TEST_CAM_NAME, TEST_NVR_NAME
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -38,7 +38,7 @@ async def test_floodlight_mode_select(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.SELECT}.{TEST_NVR_NAME}_floodlight_mode"
+    entity_id = f"{Platform.SELECT}.{TEST_CAM_NAME}_floodlight_mode"
     assert hass.states.get(entity_id).state == "auto"
 
     await hass.services.async_call(
@@ -88,7 +88,7 @@ async def test_play_quick_reply_message(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.SELECT}.{TEST_NVR_NAME}_play_quick_reply_message"
+    entity_id = f"{Platform.SELECT}.{TEST_CAM_NAME}_play_quick_reply_message"
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
     await hass.services.async_call(
@@ -149,6 +149,7 @@ async def test_host_scene_select(
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
+@pytest.mark.parametrize("channel", [0, None])
 async def test_chime_select(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -156,8 +157,11 @@ async def test_chime_select(
     reolink_host: MagicMock,
     reolink_chime: Chime,
     entity_registry: er.EntityRegistry,
+    channel: int | None,
 ) -> None:
     """Test chime select entity."""
+    reolink_chime.channel = channel
+
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SELECT]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -197,6 +201,7 @@ async def test_chime_select(
 
     # Test unavailable
     reolink_chime.event_info = {}
+    reolink_chime.update_enums()
     freezer.tick(DEVICE_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
