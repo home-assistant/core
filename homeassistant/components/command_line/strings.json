@@ -7,8 +7,8 @@
   },
   "issues": {
     "platform_yaml_not_supported": {
-      "title": "Platform YAML is not supported for Command Line",
-      "description": "Platform YAML setup is not supported.\nChange from configuring it in the `{platform}:` key to use the `command_line:` key directly in configuration.yaml.\nSee the documentation for details."
+      "title": "Platform YAML is not supported in Command Line",
+      "description": "Platform YAML setup is not supported.\nChange from configuring it in the `sensor:` key to using the `command_line:` key directly in configuration.yaml.\nTo see the detailed documentation, select Learn more."
     }
   }
 }
