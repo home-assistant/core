@@ -46,30 +46,37 @@ def mock_update_empty_fixture(routes_mock: AsyncMock) -> AsyncMock:
 @pytest.mark.usefixtures("routes_mock", "mock_config")
 async def test_sensor(hass: HomeAssistant) -> None:
     """Test that sensor works."""
-    assert hass.states.get("sensor.google_travel_time").state == "27"
+    assert hass.states.get("sensor.google_travel_time_duration").state == "27"
     assert (
-        hass.states.get("sensor.google_travel_time").attributes["attribution"]
+        hass.states.get("sensor.google_travel_time_duration").attributes["attribution"]
         == "Powered by Google"
     )
     assert (
-        hass.states.get("sensor.google_travel_time").attributes["duration"] == "26 mins"
+        hass.states.get("sensor.google_travel_time_duration").attributes["duration"]
+        == "26 mins"
     )
     assert (
-        hass.states.get("sensor.google_travel_time").attributes["duration_in_traffic"]
+        hass.states.get("sensor.google_travel_time_duration").attributes[
+            "duration_in_traffic"
+        ]
         == "27 mins"
     )
     assert (
-        hass.states.get("sensor.google_travel_time").attributes["distance"] == "21.3 km"
+        hass.states.get("sensor.google_travel_time_duration").attributes["distance"]
+        == "21.3 km"
     )
     assert (
-        hass.states.get("sensor.google_travel_time").attributes["origin"] == "location1"
+        hass.states.get("sensor.google_travel_time_duration").attributes["origin"]
+        == "location1"
     )
     assert (
-        hass.states.get("sensor.google_travel_time").attributes["destination"]
+        hass.states.get("sensor.google_travel_time_duration").attributes["destination"]
         == "49.983862755708444,8.223882827079068"
     )
     assert (
-        hass.states.get("sensor.google_travel_time").attributes["unit_of_measurement"]
+        hass.states.get("sensor.google_travel_time_duration").attributes[
+            "unit_of_measurement"
+        ]
         == "min"
     )
 
@@ -81,7 +88,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
 )
 async def test_sensor_empty_response(hass: HomeAssistant) -> None:
     """Test that sensor works for an empty response."""
-    assert hass.states.get("sensor.google_travel_time").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.google_travel_time_duration").state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
@@ -99,7 +106,7 @@ async def test_sensor_empty_response(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("routes_mock", "mock_config")
 async def test_sensor_departure_time(hass: HomeAssistant) -> None:
     """Test that sensor works for departure time."""
-    assert hass.states.get("sensor.google_travel_time").state == "27"
+    assert hass.states.get("sensor.google_travel_time_duration").state == "27"
 
 
 @pytest.mark.parametrize(
@@ -120,7 +127,7 @@ async def test_sensor_departure_time(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("routes_mock", "mock_config")
 async def test_sensor_arrival_time(hass: HomeAssistant) -> None:
     """Test that sensor works for arrival time."""
-    assert hass.states.get("sensor.google_travel_time").state == "27"
+    assert hass.states.get("sensor.google_travel_time_duration").state == "27"
 
 
 @pytest.mark.parametrize(
@@ -169,7 +176,7 @@ async def test_sensor_exception(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.google_travel_time").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.google_travel_time_duration").state == STATE_UNKNOWN
     assert "Error getting travel time" in caplog.text
 
 
@@ -190,7 +197,7 @@ async def test_sensor_routes_api_disabled(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.google_travel_time").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.google_travel_time_duration").state == STATE_UNKNOWN
     assert "Routes API is disabled for this API key" in caplog.text
 
     assert len(issue_registry.issues) == 1

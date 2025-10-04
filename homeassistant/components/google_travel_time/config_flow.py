@@ -208,7 +208,7 @@ async def validate_input(
 class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Google Maps Travel Time."""
 
-    VERSION = 2
+    VERSION = 3
 
     @staticmethod
     @callback

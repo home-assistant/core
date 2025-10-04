@@ -41,6 +41,7 @@ from homeassistant.helpers.location import find_coordinates
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    ATTR_DURATION,
     ATTRIBUTION,
     CONF_ARRIVAL_TIME,
     CONF_AVOID,
@@ -94,7 +95,7 @@ def convert_time(time_str: str) -> timestamp_pb2.Timestamp | None:
 
 SENSOR_DESCRIPTIONS = [
     SensorEntityDescription(
-        key="duration",
+        key=ATTR_DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -111,14 +112,13 @@ async def async_setup_entry(
     api_key = config_entry.data[CONF_API_KEY]
     origin = config_entry.data[CONF_ORIGIN]
     destination = config_entry.data[CONF_DESTINATION]
-    name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
 
     client_options = ClientOptions(api_key=api_key)
     client = RoutesAsyncClient(client_options=client_options)
 
     sensors = [
         GoogleTravelTimeSensor(
-            config_entry, name, api_key, origin, destination, client, sensor_description
+            config_entry, api_key, origin, destination, client, sensor_description
         )
         for sensor_description in SENSOR_DESCRIPTIONS
     ]
@@ -134,7 +134,6 @@ class GoogleTravelTimeSensor(SensorEntity):
     def __init__(
         self,
         config_entry: ConfigEntry,
-        name: str,
         api_key: str,
         origin: str,
         destination: str,
@@ -143,8 +142,10 @@ class GoogleTravelTimeSensor(SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         self.entity_description = sensor_description
-        self._attr_name = name
-        self._attr_unique_id = config_entry.entry_id
+        self._attr_name = (
+            f"{config_entry.data.get(CONF_NAME, DEFAULT_NAME)} {sensor_description.key}"
+        )
+        self._attr_unique_id = f"{config_entry.entry_id}_{sensor_description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, api_key)},

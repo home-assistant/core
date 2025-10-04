@@ -106,6 +106,10 @@
     "routes_api_disabled": {
       "title": "The Routes API must be enabled",
       "description": "Your Google Travel Time integration `{entry_title}` uses an API key which does not have the Routes API enabled.\n\n Please follow the instructions to [enable the API for your project]({enable_api_url}) and make sure your [API key restrictions]({api_key_restrictions_url}) allow access to the Routes API.\n\n After enabling the API this issue will be resolved automatically."
+    },
+    "unique_id_migration": {
+      "title": "entity_id has changed",
+      "description": "The entity_id of the Google Travel Time sensor has changed from `{old_entity_id}` to `{new_entity_id}`.\n\nIf you have automations using {old_entity_id}, please update them to use {new_entity_id}."
     }
   }
 }

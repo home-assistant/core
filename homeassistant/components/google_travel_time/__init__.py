@@ -5,9 +5,12 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_TIME
+from .config_flow import GoogleTravelTimeConfigFlow
+from .const import ATTR_DURATION, CONF_TIME, DOMAIN
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -28,12 +31,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate an old config entry."""
 
-    if config_entry.version == 1:
+    if config_entry.version != GoogleTravelTimeConfigFlow.VERSION:
         _LOGGER.debug(
             "Migrating from version %s.%s",
             config_entry.version,
             config_entry.minor_version,
         )
+
+    if config_entry.version == 1:
         options = dict(config_entry.options)
         if options.get(CONF_TIME) == "now":
             options[CONF_TIME] = None
@@ -51,9 +56,46 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     )
                     options[CONF_TIME] = None
         hass.config_entries.async_update_entry(config_entry, options=options, version=2)
-        _LOGGER.debug(
-            "Migration to version %s.%s successful",
-            config_entry.version,
-            config_entry.minor_version,
-        )
+    if config_entry.version == 2:
+        entity_registry = er.async_get(hass)
+        old_unique_id = config_entry.entry_id
+        new_unique_id = f"{config_entry.entry_id}_{ATTR_DURATION}"
+
+        if old_entity_id := entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, old_unique_id
+        ):
+            new_entity_id = f"{old_entity_id}_{ATTR_DURATION}"
+
+            _LOGGER.debug(
+                "Migrating unique_id from '%s' to '%s' and entity_id from '%s' to '%s'",
+                old_unique_id,
+                new_unique_id,
+                old_entity_id,
+                new_entity_id,
+            )
+            entity_registry.async_update_entity(
+                old_entity_id,
+                new_entity_id=new_entity_id,
+                new_unique_id=new_unique_id,
+            )
+            async_create_issue(
+                hass,
+                DOMAIN,
+                f"google_travel_time_unique_id_migration_{config_entry.entry_id}",
+                is_fixable=False,
+                is_persistent=True,
+                severity=IssueSeverity.WARNING,
+                translation_key="unique_id_migration",
+                translation_placeholders={
+                    "old_entity_id": old_entity_id,
+                    "new_entity_id": new_entity_id,
+                },
+            )
+        hass.config_entries.async_update_entry(config_entry, version=3)
+
+    _LOGGER.debug(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
     return True
