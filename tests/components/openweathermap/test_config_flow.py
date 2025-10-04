@@ -40,10 +40,7 @@ CONFIG = {
 USER_INPUT = {
     CONF_NAME: "openweathermap",
     CONF_API_KEY: "foo",
-    CONF_LOCATION: {
-        CONF_LATITUDE: LATITUDE,
-        CONF_LONGITUDE: LONGITUDE
-    },
+    CONF_LOCATION: {CONF_LATITUDE: LATITUDE, CONF_LONGITUDE: LONGITUDE},
     CONF_LANGUAGE: DEFAULT_LANGUAGE,
     CONF_MODE: OWM_MODE_V30,
 }
@@ -65,7 +62,8 @@ async def test_successful_config_flow(
 
     # create entry
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
+        result["flow_id"], 
+        USER_INPUT,
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
