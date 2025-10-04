@@ -16,6 +16,7 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
@@ -173,7 +174,7 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Subentry user flow."""
         config_entry: PlaystationNetworkConfigEntry = self._get_entry()
-        if config_entry.disabled_by:
+        if config_entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="config_entry_disabled")
         friends_list = config_entry.runtime_data.user_data.psn.friends_list
 
