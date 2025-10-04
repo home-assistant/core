@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_LANGUAGE,
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
@@ -36,6 +37,17 @@ CONFIG = {
     CONF_MODE: OWM_MODE_V30,
 }
 
+USER_INPUT = {
+    CONF_NAME: "openweathermap",
+    CONF_API_KEY: "foo",
+    CONF_LOCATION: {
+        CONF_LATITUDE: LATITUDE,
+        CONF_LONGITUDE: LONGITUDE
+    },
+    CONF_LANGUAGE: DEFAULT_LANGUAGE,
+    CONF_MODE: OWM_MODE_V30,
+}
+
 VALID_YAML_CONFIG = {CONF_API_KEY: "foo"}
 
 
@@ -47,30 +59,30 @@ async def test_successful_config_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+    # create entry
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
     )
-
     await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == USER_INPUT[CONF_NAME]
+    assert result["data"][CONF_LATITUDE] == USER_INPUT[CONF_LOCATION][CONF_LATITUDE]
+    assert result["data"][CONF_LONGITUDE] == USER_INPUT[CONF_LOCATION][CONF_LONGITUDE]
+    assert result["data"][CONF_API_KEY] == USER_INPUT[CONF_API_KEY]
 
+    # validate entry state
     conf_entries = hass.config_entries.async_entries(DOMAIN)
     entry = conf_entries[0]
     assert entry.state is ConfigEntryState.LOADED
 
+    # unload entry
     await hass.config_entries.async_unload(conf_entries[0].entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == CONFIG[CONF_NAME]
-    assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
-    assert result["data"][CONF_LONGITUDE] == CONFIG[CONF_LONGITUDE]
-    assert result["data"][CONF_API_KEY] == CONFIG[CONF_API_KEY]
 
 
 @pytest.mark.parametrize("mode", [OWM_MODE_V30], indirect=True)
@@ -84,13 +96,14 @@ async def test_abort_config_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], CONFIG)
-
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT,
+    )
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
 
 
@@ -156,19 +169,26 @@ async def test_form_invalid_api_key(
     owm_client_mock: AsyncMock,
 ) -> None:
     """Test that the form is served with no input."""
-    owm_client_mock.validate_key.return_value = False
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
     )
-
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+    # invalid api key
+    owm_client_mock.validate_key.return_value = False
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_api_key"}
-
+    # valid api key
     owm_client_mock.validate_key.return_value = True
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], USER_INPUT
     )
-
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -177,17 +197,23 @@ async def test_form_api_call_error(
     owm_client_mock: AsyncMock,
 ) -> None:
     """Test setting up with api call error."""
-    owm_client_mock.validate_key.side_effect = RequestError("oops")
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
     )
-
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+    # simulate api call error
+    owm_client_mock.validate_key.side_effect = RequestError("oops")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
-
+    # simulate successful api call
     owm_client_mock.validate_key.side_effect = None
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=CONFIG
+        result["flow_id"], USER_INPUT
     )
-
+    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
