@@ -140,6 +140,18 @@ COVERS: dict[DeviceCategory, tuple[TuyaCoverEntityDescription, ...]] = {
             device_class=CoverDeviceClass.CURTAIN,
         ),
     ),
+    # Note: Not documented
+    # If the returned standard product is an early product with a category
+    # code of qt, it might no longer be supported. If you need to integrate
+    # with it, please submit a ticket for confirmation.
+    "qt": (
+        TuyaCoverEntityDescription(
+            key=DPCode.CONTROL,
+            translation_key="blind",
+            current_state=DPCode.CONTROL,
+            device_class=CoverDeviceClass.BLIND,
+        ),
+    ),
 }
 
 
