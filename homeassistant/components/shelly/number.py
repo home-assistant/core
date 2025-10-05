@@ -145,7 +145,7 @@ class RpcCureIntensityNumber(RpcNumber):
         if TYPE_CHECKING:
             assert method is not None
 
-        await method(self._id, slot=self._slot, value=value)
+        await method(self._id, slot=self._slot, intensity=round(value))
 
 
 class RpcBluTrvNumber(RpcNumber):
