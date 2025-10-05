@@ -37,4 +37,7 @@ NON_THINKING_MODELS = [
 
 WEB_SEARCH_UNSUPPORTED_MODELS = [
     "claude-3-haiku",
+    "claude-3-opus",
+    "claude-3-5-sonnet-20240620",
+    "claude-3-5-sonnet-20241022",
 ]
