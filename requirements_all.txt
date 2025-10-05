@@ -100,7 +100,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.0
 
 # homeassistant.components.vicare
-PyViCare==2.51.0
+PyViCare==2.52.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -247,7 +247,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==41.11.0
+aioesphomeapi==41.12.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -271,7 +271,7 @@ aiohasupervisor==0.3.3
 aiohomeconnect==0.20.0
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.19
+aiohomekit==3.2.20
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -325,7 +325,7 @@ aionanoleaf==0.2.1
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.6.0
+aiontfy==0.6.1
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -453,7 +453,7 @@ airgradient==0.9.2
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.5.4
+airos==0.5.5
 
 # homeassistant.components.airthings_ble
 airthings-ble==1.1.1
@@ -627,7 +627,7 @@ bimmer-connected[china]==0.17.3
 bizkaibus==0.1.1
 
 # homeassistant.components.esphome
-bleak-esphome==3.3.0
+bleak-esphome==3.4.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.4.3
@@ -663,7 +663,7 @@ bluetooth-auto-recovery==1.5.3
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.28.2
+bluetooth-data-tools==1.28.3
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -712,7 +712,7 @@ btsmarthub-devicelist==0.2.3
 buienradar==1.0.6
 
 # homeassistant.components.dhcp
-cached-ipaddress==0.10.0
+cached-ipaddress==1.0.1
 
 # homeassistant.components.caldav
 caldav==1.6.0
@@ -770,7 +770,7 @@ datadog==0.52.0
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==2.44.3
+dbus-fast==2.44.5
 
 # homeassistant.components.debugpy
 debugpy==1.8.16
@@ -972,7 +972,7 @@ flux-led==1.2.0
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
-fnv-hash-fast==1.5.0
+fnv-hash-fast==1.6.0
 
 # homeassistant.components.foobot
 foobot_async==1.0.0
@@ -1142,7 +1142,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.4.5
 
 # homeassistant.components.bluetooth
-habluetooth==5.6.4
+habluetooth==5.7.0
 
 # homeassistant.components.cloud
 hass-nabucasa==1.2.0
@@ -1358,7 +1358,7 @@ letpot==0.6.2
 libpyfoscamcgi==0.0.7
 
 # homeassistant.components.vivotek
-libpyvivotek==0.4.0
+libpyvivotek==0.6.1
 
 # homeassistant.components.libre_hardware_monitor
 librehardwaremonitor-api==1.4.0
@@ -1458,7 +1458,7 @@ microBeesPy==0.3.5
 mill-local==0.3.0
 
 # homeassistant.components.mill
-millheater==0.13.1
+millheater==0.14.0
 
 # homeassistant.components.minio
 minio==7.1.12
@@ -1652,7 +1652,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.15.5
+opower==0.15.6
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1721,9 +1721,6 @@ plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
 plugwise==1.7.8
-
-# homeassistant.components.plum_lightpad
-plumlightpad==0.0.11
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -1939,7 +1936,7 @@ pycsspeechtts==1.0.8
 pycync==0.4.1
 
 # homeassistant.components.daikin
-pydaikin==2.16.0
+pydaikin==2.17.1
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -2617,7 +2614,7 @@ pyvera==0.3.16
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==3.0.0
+pyvesync==3.1.0
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
@@ -3066,7 +3063,7 @@ universal-silabs-flasher==0.0.35
 upb-lib==0.6.1
 
 # homeassistant.components.upcloud
-upcloud-api==2.8.0
+upcloud-api==2.9.0
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
@@ -3232,7 +3229,7 @@ zamg==0.3.6
 zcc-helper==3.7
 
 # homeassistant.components.zeroconf
-zeroconf==0.147.2
+zeroconf==0.148.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2

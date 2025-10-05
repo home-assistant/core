@@ -22,6 +22,7 @@ from tests.common import MockConfigEntry, snapshot_platform
         ("type:boiler", "vicare/Vitodens300W.json"),
         ("type:heatpump", "vicare/Vitocal250A.json"),
         ("type:ventilation", "vicare/ViAir300F.json"),
+        ("type:ess", "vicare/VitoChargeVX3.json"),
         (None, "vicare/VitoValor.json"),
     ],
 )
