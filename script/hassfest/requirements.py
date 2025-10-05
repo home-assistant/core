@@ -44,19 +44,23 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "typing_extensions": "SemVer",
     "urllib3": "SemVer",
     "yarl": "SemVer",
+    "zeroconf": "SemVer",
 }
 PACKAGE_CHECK_PREPARE_UPDATE: dict[str, int] = {
     # In the form dict("dependencyX": n+1)
     # - dependencyX should be the name of the referenced dependency
     # - current major version +1
     # Pandas will only fully support Python 3.14 in v3.
+    # Zeroconf will switch to v1 soon, without any breaking changes.
     "pandas": 3,
+    "zeroconf": 1,
 }
 PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # In the form dict("domain": {"package": {"dependency1", "dependency2"}})
     # - domain is the integration domain
     # - package is the package (can be transitive) referencing the dependency
     # - dependencyX should be the name of the referenced dependency
+    "altruist": {"altruistclient": {"zeroconf"}},
     "geocaching": {
         # scipy version closely linked to numpy
         # geocachingapi > reverse_geocode > scipy > numpy
@@ -73,6 +77,9 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "stiebel_eltron": {
         # Current has an upper bound on major >=3.10.0,<4.0.0
         "pystiebeleltron": {"pymodbus"}
+    },
+    "xiaomi_miio": {
+        "python-miio": {"zeroconf"},
     },
 }
 
