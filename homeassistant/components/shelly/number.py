@@ -125,18 +125,6 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
 class RpcCureIntensityNumber(RpcNumber):
     """Represent a RPC Cure Intensity entity."""
 
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcNumberDescription,
-    ) -> None:
-        """Initialize sensor."""
-        super().__init__(coordinator, key, attribute, description)
-
-        self._slot = description.slot
-
     @rpc_call
     async def async_set_native_value(self, value: float) -> None:
         """Change the value."""
@@ -145,7 +133,9 @@ class RpcCureIntensityNumber(RpcNumber):
         if TYPE_CHECKING:
             assert method is not None
 
-        await method(self._id, slot=self._slot, intensity=round(value))
+        await method(
+            self._id, slot=self.entity_description.slot, intensity=round(value)
+        )
 
 
 class RpcBluTrvNumber(RpcNumber):
