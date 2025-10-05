@@ -7,10 +7,8 @@ from collections import OrderedDict
 import contextlib
 from dataclasses import dataclass
 from datetime import timedelta
-import io
 import logging
 import secrets
-import wave
 
 from aiohttp import web
 
@@ -28,13 +26,16 @@ _LOGGER = logging.getLogger(__name__)
 PCM_SAMPLE_RATE = 24000
 PCM_SAMPLE_WIDTH = 2
 PCM_CHANNELS = 1
-PCM_MIME = "audio/wav"
+PCM_MIME = "audio/L16"
 PCM_EXTENSION = ".pcm"
-MAX_DURATION_SECONDS = 50
-TRANSCODE_TIMEOUT_SECONDS = MAX_DURATION_SECONDS + 10
+WARNING_DURATION_SECONDS = 40
+FFMPEG_MAX_DURATION_SECONDS = 10 * 60
+TRANSCODE_TIMEOUT_SECONDS = WARNING_DURATION_SECONDS + 10
 _TRUNCATION_EPSILON = 1 / PCM_SAMPLE_RATE
 ENTRY_TTL = timedelta(minutes=5)
 MAX_STORED_ENTRIES = 8
+
+PCM_FRAME_BYTES = PCM_SAMPLE_WIDTH * PCM_CHANNELS
 
 DATA_AUDIO_MANAGER = "audio_manager"
 
@@ -71,11 +72,17 @@ class SmartThingsAudioManager(HomeAssistantView):
         if not pcm:
             raise SmartThingsAudioError("Converted audio is empty")
 
-        if truncated or duration > MAX_DURATION_SECONDS:
+        if truncated:
             _LOGGER.warning(
                 "SmartThings audio notification truncated to %s seconds (output length %.1fs); longer sources may be cut off",
-                MAX_DURATION_SECONDS,
+                FFMPEG_MAX_DURATION_SECONDS,
                 duration,
+            )
+        elif duration > WARNING_DURATION_SECONDS:
+            _LOGGER.warning(
+                "SmartThings audio notification is %.1fs; playback over %s seconds may be cut off",
+                duration,
+                WARNING_DURATION_SECONDS,
             )
 
         token = secrets.token_urlsafe(16)
@@ -138,7 +145,7 @@ class SmartThingsAudioManager(HomeAssistantView):
         return response
 
     async def _transcode_to_pcm(self, source_url: str) -> tuple[bytes, float, bool]:
-        """Use ffmpeg to convert the source media to 24kHz mono PCM WAV."""
+        """Use ffmpeg to convert the source media to 24kHz mono PCM."""
         manager = ffmpeg.get_ffmpeg_manager(self.hass)
         command = [
             manager.binary,
@@ -155,9 +162,9 @@ class SmartThingsAudioManager(HomeAssistantView):
             "-c:a",
             "pcm_s16le",
             "-t",
-            str(MAX_DURATION_SECONDS),
+            str(FFMPEG_MAX_DURATION_SECONDS),
             "-f",
-            "wav",
+            "s16le",
             "pipe:1",
         ]
 
@@ -200,35 +207,20 @@ class SmartThingsAudioManager(HomeAssistantView):
         if not stdout:
             return b"", 0.0, False
 
-        wav_io = io.BytesIO(stdout)
-        try:
-            with wave.open(wav_io) as wav_in:
-                frame_rate = wav_in.getframerate()
-                frames = wav_in.getnframes()
-                channels = wav_in.getnchannels()
-                sample_width = wav_in.getsampwidth()
-                if (
-                    frame_rate != PCM_SAMPLE_RATE
-                    or channels != PCM_CHANNELS
-                    or sample_width != PCM_SAMPLE_WIDTH
-                ):
-                    _LOGGER.debug(
-                        "SmartThings audio conversion produced unexpected format: %sHz %s channel(s) width=%s",
-                        frame_rate,
-                        channels,
-                        sample_width,
-                    )
-        except (wave.Error, EOFError) as err:
-            _LOGGER.error(
-                "Converted SmartThings audio is not a valid PCM WAV: %s",
-                err,
+        frame_count, remainder = divmod(len(stdout), PCM_FRAME_BYTES)
+        if remainder:
+            _LOGGER.debug(
+                "SmartThings audio conversion produced misaligned PCM: dropping %s extra byte(s)",
+                remainder,
             )
-            raise SmartThingsAudioError(
-                "Unable to convert audio to PCM for SmartThings"
-            ) from err
+            stdout = stdout[: len(stdout) - remainder]
+            frame_count = len(stdout) // PCM_FRAME_BYTES
 
-        duration = frames / frame_rate if frame_rate else 0
-        truncated = duration >= (MAX_DURATION_SECONDS - _TRUNCATION_EPSILON)
+        if frame_count == 0:
+            return b"", 0.0, False
+
+        duration = frame_count / PCM_SAMPLE_RATE
+        truncated = duration >= (FFMPEG_MAX_DURATION_SECONDS - _TRUNCATION_EPSILON)
         return stdout, duration, truncated
 
     def _cleanup(self, now: float) -> None:
