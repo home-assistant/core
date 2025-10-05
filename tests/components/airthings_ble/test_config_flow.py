@@ -75,7 +75,12 @@ async def test_bluetooth_discovery_no_BLEDevice(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("exc", "reason"), [(Exception(), "unknown"), (BleakError(), "cannot_connect")]
+    ("exc", "reason"),
+    [
+        (Exception(), "unknown"),
+        (BleakError(), "cannot_connect"),
+        (UnsupportedDeviceError(), "unsupported_device"),
+    ],
 )
 async def test_bluetooth_discovery_airthings_ble_update_failed(
     hass: HomeAssistant, exc: Exception, reason: str
@@ -364,3 +369,17 @@ async def test_step_user_firmware_required(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "firmware_upgrade_required"
+
+
+async def test_discovering_unsupported_devices(hass: HomeAssistant) -> None:
+    """Test discovering unsupported devices."""
+    # async_step_user will abort if no supported devices are found
+    with patch(
+        "homeassistant.components.airthings_ble.config_flow.async_discovered_service_info",
+        return_value=[UNKNOWN_AIRTHINGS_SERVICE_INFO, UNKNOWN_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
