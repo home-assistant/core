@@ -32,7 +32,7 @@ class AmazonSensorEntityDescription(SensorEntityDescription):
 
     native_unit_of_measurement_fn: Callable[[AmazonDevice, str], str] | None = None
     is_available_fn: Callable[[AmazonDevice, str], bool] = lambda device, key: (
-        device.online and device.sensors[key].error is False
+        device.online and key in device.sensors and device.sensors[key].error is False
     )
 
 
