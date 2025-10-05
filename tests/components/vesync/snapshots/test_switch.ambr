@@ -723,39 +723,6 @@
       'unique_id': 'smarttowerfan-display',
       'unit_of_measurement': None,
     }),
-    EntityRegistryEntrySnapshot({
-      'aliases': set({
-      }),
-      'area_id': None,
-      'capabilities': None,
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'device_class': None,
-      'device_id': <ANY>,
-      'disabled_by': None,
-      'domain': 'switch',
-      'entity_category': None,
-      'entity_id': 'switch.smarttowerfan_oscillation',
-      'has_entity_name': True,
-      'hidden_by': None,
-      'icon': None,
-      'id': <ANY>,
-      'labels': set({
-      }),
-      'name': None,
-      'options': dict({
-      }),
-      'original_device_class': None,
-      'original_icon': None,
-      'original_name': 'Oscillation',
-      'platform': 'vesync',
-      'previous_unique_id': None,
-      'suggested_object_id': None,
-      'supported_features': 0,
-      'translation_key': 'oscillation',
-      'unique_id': 'smarttowerfan-oscillation',
-      'unit_of_measurement': None,
-    }),
   ])
 # ---
 # name: test_switch_state[SmartTowerFan][switch.smarttowerfan_display]
@@ -769,19 +736,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
-  })
-# ---
-# name: test_switch_state[SmartTowerFan][switch.smarttowerfan_oscillation]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'SmartTowerFan Oscillation',
-    }),
-    'context': <ANY>,
-    'entity_id': 'switch.smarttowerfan_oscillation',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
   })
 # ---
 # name: test_switch_state[Temperature Light][devices]
