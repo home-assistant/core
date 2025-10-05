@@ -143,7 +143,7 @@ async def test_vacuum_actions(
     matter_client.send_device_command.reset_mock()
 
 
-@pytest.mark.parametrize("node_fixture", ["switchbot_K11"])
+@pytest.mark.parametrize("node_fixture", ["switchbot_k11_plus"])
 async def test_k11_vacuum_actions(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -208,7 +208,7 @@ async def test_k11_vacuum_actions(
     assert response == expected_data
 
 
-@pytest.mark.parametrize("node_fixture", ["switchbot_K11"])
+@pytest.mark.parametrize("node_fixture", ["switchbot_k11_plus"])
 async def test_k11_vacuum_service_area(
     hass: HomeAssistant,
     matter_client: MagicMock,

@@ -2676,7 +2676,7 @@
     'state': 'previous',
   })
 # ---
-# name: test_selects[switchbot_K11][select.k11_clean_mode-entry]
+# name: test_selects[switchbot_k11_plus][select.k11_clean_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2719,7 +2719,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[switchbot_K11][select.k11_clean_mode-state]
+# name: test_selects[switchbot_k11_plus][select.k11_clean_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'K11+ Clean mode',
