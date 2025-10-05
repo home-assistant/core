@@ -114,7 +114,11 @@ class WazeTravelTimeSensor(CoordinatorEntity[WazeTravelTimeCoordinator], SensorE
         """Initialize the Waze travel time sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{unique_id_prefix}_{description.key}"
+        self._attr_unique_id = (
+            unique_id_prefix
+            if description.key == ATTR_DURATION
+            else f"{unique_id_prefix}_{description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             name=name,
