@@ -56,7 +56,7 @@ _DESCRIPTIONS: tuple[VolvoButtonDescription, ...] = (
 
 
 async def async_setup_entry(
-    _: HomeAssistant,
+    hass: HomeAssistant,
     entry: VolvoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
