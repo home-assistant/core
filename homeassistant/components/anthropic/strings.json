@@ -37,7 +37,7 @@
             "recommended": "Recommended model settings",
             "thinking_budget": "Thinking budget",
             "web_search": "Enable web search",
-            "web_search_max_uses": "Maximum web searches per conversation",
+            "web_search_max_uses": "Maximum web searches",
             "user_location": "Include home location"
           },
           "data_description": {
