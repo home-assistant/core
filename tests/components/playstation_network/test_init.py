@@ -157,8 +157,8 @@ async def test_trophy_title_coordinator_auth_failed(
 
     freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(True)
+    await hass.async_block_till_done(True)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -194,8 +194,8 @@ async def test_trophy_title_coordinator_update_data_failed(
 
     freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(True)
+    await hass.async_block_till_done(True)
 
     runtime_data: PlaystationNetworkRuntimeData = config_entry.runtime_data
     assert runtime_data.trophy_titles.last_update_success is False
@@ -254,8 +254,8 @@ async def test_trophy_title_coordinator_play_new_game(
 
     freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(True)
+    await hass.async_block_till_done(True)
 
     assert len(mock_psnawpapi.user.return_value.trophy_titles.mock_calls) == 2
 
