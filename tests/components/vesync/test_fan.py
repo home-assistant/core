@@ -138,19 +138,33 @@ async def test_turn_on_off_raises_error(
     ("api_response", "expectation"),
     [(True, NoException), (False, pytest.raises(HomeAssistantError))],
 )
+@pytest.mark.parametrize(
+    ("preset_mode", "patch_target"),
+    [
+        ("normal", "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_normal_mode"),
+        (
+            "advancedSleep",
+            "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_advanced_sleep_mode",
+        ),
+        ("turbo", "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_turbo_mode"),
+        ("auto", "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_auto_mode"),
+    ],
+)
 async def test_set_preset_mode(
     hass: HomeAssistant,
     fan_config_entry: MockConfigEntry,
     api_response: bool,
     expectation,
+    preset_mode: str,
+    patch_target: str,
 ) -> None:
     """Test handling of value in set_preset_mode method. Does this via turn on as it increases test coverage."""
 
-    # If VeSyncTowerFan.normal_mode fails (returns False), then HomeAssistantError is raised
+    # If VeSyncTowerFan.mode fails (returns False), then HomeAssistantError is raised
     with (
         expectation,
         patch(
-            "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_normal_mode",
+            patch_target,
             return_value=api_response,
         ) as method_mock,
     ):
@@ -160,7 +174,7 @@ async def test_set_preset_mode(
             await hass.services.async_call(
                 FAN_DOMAIN,
                 SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PRESET_MODE: "normal"},
+                {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PRESET_MODE: preset_mode},
                 blocking=True,
             )
 
