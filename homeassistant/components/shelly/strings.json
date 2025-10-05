@@ -118,6 +118,17 @@
     }
   },
   "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "frost_protection": "Frost protection"
+            }
+          }
+        }
+      }
+    },
     "event": {
       "input": {
         "state_attributes": {

@@ -1,10 +1,11 @@
 """Tests for the Shelly integration."""
 
 from collections.abc import Mapping, Sequence
+from contextlib import contextmanager
 from copy import deepcopy
 from datetime import timedelta
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from aioshelly.const import MODEL_25
 from freezegun.api import FrozenDateTimeFactory
@@ -12,6 +13,11 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
+from homeassistant.components.shelly import (
+    BLOCK_SLEEPING_PLATFORMS,
+    PLATFORMS,
+    RPC_SLEEPING_PLATFORMS,
+)
 from homeassistant.components.shelly.const import (
     CONF_GEN,
     CONF_SLEEP_PERIOD,
@@ -20,7 +26,7 @@ from homeassistant.components.shelly.const import (
     RPC_SENSORS_POLLING_INTERVAL,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MODEL
+from homeassistant.const import CONF_HOST, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
@@ -204,3 +210,23 @@ async def force_uptime_value(
     """Force time to a specific point."""
     await hass.config.async_set_time_zone("UTC")
     freezer.move_to("2025-05-26 16:04:00+00:00")
+
+
+@contextmanager
+def patch_platforms(platforms: list[Platform]):
+    """Only allow given platforms to be loaded."""
+    with (
+        patch(
+            "homeassistant.components.shelly.PLATFORMS",
+            list(set(PLATFORMS) & set(platforms)),
+        ),
+        patch(
+            "homeassistant.components.shelly.BLOCK_SLEEPING_PLATFORMS",
+            list(set(BLOCK_SLEEPING_PLATFORMS) & set(platforms)),
+        ),
+        patch(
+            "homeassistant.components.shelly.RPC_SLEEPING_PLATFORMS",
+            list(set(RPC_SLEEPING_PLATFORMS) & set(platforms)),
+        ),
+    ):
+        yield

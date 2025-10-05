@@ -1,4 +1,4 @@
-"""Tests for the Portainer switch platform."""
+"""Tests for the Portainer button platform."""
 
 from __future__ import annotations
 
@@ -12,11 +12,7 @@ from pyportainer.exceptions import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.switch import (
-    DOMAIN as SWITCH_DOMAIN,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
+from homeassistant.components.button import SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -26,18 +22,20 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
+BUTTON_DOMAIN = "button"
 
-@pytest.mark.usefixtures("mock_portainer_client")
-async def test_all_switch_entities_snapshot(
+
+async def test_all_button_entities_snapshot(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
+    mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Snapshot test for all Portainer switch entities."""
+    """Snapshot test for all Portainer button entities."""
     with patch(
         "homeassistant.components.portainer._PLATFORMS",
-        [Platform.SWITCH],
+        [Platform.BUTTON],
     ):
         await setup_integration(hass, mock_config_entry)
         await snapshot_platform(
@@ -46,81 +44,71 @@ async def test_all_switch_entities_snapshot(
 
 
 @pytest.mark.parametrize(
-    ("service_call", "client_method"),
+    ("action", "client_method"),
     [
-        (SERVICE_TURN_ON, "start_container"),
-        (SERVICE_TURN_OFF, "stop_container"),
+        ("restart", "restart_container"),
     ],
 )
-async def test_turn_off_on(
+async def test_buttons(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    service_call: str,
+    action: str,
     client_method: str,
 ) -> None:
-    """Test the switches. Have you tried to turn it off and on again?"""
+    """Test pressing a Portainer container action button triggers client call. Click, click!"""
     with patch(
         "homeassistant.components.portainer._PLATFORMS",
-        [Platform.SWITCH],
+        [Platform.BUTTON],
     ):
         await setup_integration(hass, mock_config_entry)
 
-    entity_id = "switch.practical_morse_container"
+    entity_id = f"button.practical_morse_{action}_container"
     method_mock = getattr(mock_portainer_client, client_method)
+    pre_calls = len(method_mock.mock_calls)
 
     await hass.services.async_call(
-        SWITCH_DOMAIN,
-        service_call,
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
-    # Matches the endpoint ID and container ID
-    method_mock.assert_called_once_with(
-        1, "ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf"
-    )
+    assert len(method_mock.mock_calls) == pre_calls + 1
 
 
 @pytest.mark.parametrize(
-    ("service_call", "client_method"),
+    ("exception", "client_method"),
     [
-        (SERVICE_TURN_ON, "start_container"),
-        (SERVICE_TURN_OFF, "stop_container"),
+        (PortainerAuthenticationError("auth"), "restart_container"),
+        (PortainerConnectionError("conn"), "restart_container"),
+        (PortainerTimeoutError("timeout"), "restart_container"),
     ],
 )
-@pytest.mark.parametrize(
-    ("raise_exception", "expected_exception"),
-    [
-        (PortainerAuthenticationError, HomeAssistantError),
-        (PortainerConnectionError, HomeAssistantError),
-        (PortainerTimeoutError, HomeAssistantError),
-    ],
-)
-async def test_turn_off_on_exceptions(
+async def test_buttons_exceptions(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    service_call: str,
+    exception: Exception,
     client_method: str,
-    raise_exception: Exception,
-    expected_exception: Exception,
 ) -> None:
-    """Test the switches. Have you tried to turn it off and on again? This time they will do boom!"""
+    """Test that Portainer buttons, but this time when they will do boom for sure."""
     with patch(
         "homeassistant.components.portainer._PLATFORMS",
-        [Platform.SWITCH],
+        [Platform.BUTTON],
     ):
         await setup_integration(hass, mock_config_entry)
 
-    entity_id = "switch.practical_morse_container"
-    method_mock = getattr(mock_portainer_client, client_method)
+    action = client_method.split("_")[0]
+    entity_id = f"button.practical_morse_{action}_container"
 
-    method_mock.side_effect = raise_exception
-    with pytest.raises(expected_exception):
+    method_mock = getattr(mock_portainer_client, client_method)
+    method_mock.side_effect = exception
+
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            SWITCH_DOMAIN,
-            service_call,
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
