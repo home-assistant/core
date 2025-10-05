@@ -90,7 +90,7 @@ RPC_RELAY_SWITCHES = {
         is_on=lambda status: bool(status["output"]),
         method_on="switch_set",
         method_off="switch_set",
-        method_params_fn=lambda id, value: {"id", id, "on", value},
+        method_params_fn=lambda id, value: {"id": id, "on": value},
     ),
 }
 
