@@ -404,6 +404,7 @@ async def test_rpc_device_services(
     )
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
+    mock_rpc_device.switch_set.assert_called_once_with(0, True)
 
     monkeypatch.setitem(mock_rpc_device.status["switch:0"], "output", False)
     await hass.services.async_call(
@@ -415,6 +416,7 @@ async def test_rpc_device_services(
     mock_rpc_device.mock_update()
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
+    mock_rpc_device.switch_set.assert_called_with(0, False)
 
 
 async def test_rpc_device_unique_ids(
@@ -653,6 +655,7 @@ async def test_rpc_device_virtual_switch(
     mock_rpc_device.mock_update()
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
+    mock_rpc_device.boolean_set.assert_called_once_with(200, False)
 
     monkeypatch.setitem(mock_rpc_device.status["boolean:200"], "value", True)
     await hass.services.async_call(
@@ -664,6 +667,7 @@ async def test_rpc_device_virtual_switch(
     mock_rpc_device.mock_update()
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
+    mock_rpc_device.boolean_set.assert_called_with(200, True)
 
 
 @pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
@@ -811,6 +815,7 @@ async def test_rpc_device_script_switch(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
+    mock_rpc_device.script_stop.assert_called_once_with(1)
 
     monkeypatch.setitem(mock_rpc_device.status[key], "running", True)
     await hass.services.async_call(
@@ -823,3 +828,4 @@ async def test_rpc_device_script_switch(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
+    mock_rpc_device.script_start.assert_called_once_with(1)
