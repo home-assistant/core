@@ -38,24 +38,29 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "pillow": "SemVer",
     "pydantic": "SemVer",
     "pyjwt": "SemVer",
+    "pymodbus": "Custom",
     "pytz": "CalVer",
     "requests": "SemVer",
     "typing_extensions": "SemVer",
     "urllib3": "SemVer",
     "yarl": "SemVer",
+    "zeroconf": "SemVer",
 }
 PACKAGE_CHECK_PREPARE_UPDATE: dict[str, int] = {
     # In the form dict("dependencyX": n+1)
     # - dependencyX should be the name of the referenced dependency
     # - current major version +1
     # Pandas will only fully support Python 3.14 in v3.
+    # Zeroconf will switch to v1 soon, without any breaking changes.
     "pandas": 3,
+    "zeroconf": 1,
 }
 PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # In the form dict("domain": {"package": {"dependency1", "dependency2"}})
     # - domain is the integration domain
     # - package is the package (can be transitive) referencing the dependency
     # - dependencyX should be the name of the referenced dependency
+    "altruist": {"altruistclient": {"zeroconf"}},
     "geocaching": {
         # scipy version closely linked to numpy
         # geocachingapi > reverse_geocode > scipy > numpy
@@ -64,6 +69,17 @@ PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "noaa_tides": {
         # https://github.com/GClunies/noaa_coops/pull/69
         "noaa-coops": {"pandas"}
+    },
+    "smarty": {
+        # Current has an upper bound on major >=3.11.0,<4.0.0
+        "pysmarty2": {"pymodbus"}
+    },
+    "stiebel_eltron": {
+        # Current has an upper bound on major >=3.10.0,<4.0.0
+        "pystiebeleltron": {"pymodbus"}
+    },
+    "xiaomi_miio": {
+        "python-miio": {"zeroconf"},
     },
 }
 
@@ -98,11 +114,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "ampio": {"asmog": {"async-timeout"}},
     "apache_kafka": {"aiokafka": {"async-timeout"}},
     "apple_tv": {"pyatv": {"async-timeout"}},
-    "azure_devops": {
-        # https://github.com/timmo001/aioazuredevops/issues/67
-        # aioazuredevops > incremental > setuptools
-        "incremental": {"setuptools"}
-    },
     "blackbird": {
         # https://github.com/koolsb/pyblackbird/issues/12
         # pyblackbird > pyserial-asyncio
@@ -112,11 +123,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4
         # pycmus > pbr > setuptools
-        "pbr": {"setuptools"}
-    },
-    "concord232": {
-        # https://bugs.launchpad.net/python-stevedore/+bug/2111694
-        # concord232 > stevedore > pbr > setuptools
         "pbr": {"setuptools"}
     },
     "delijn": {"pydelijn": {"async-timeout"}},
@@ -174,7 +180,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # universal-silabs-flasher > zigpy > pyserial-asyncio
         "zigpy": {"pyserial-asyncio"},
     },
-    "homekit": {"hap-python": {"async-timeout"}},
     "homewizard": {"python-homewizard-energy": {"async-timeout"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
     "influxdb": {
@@ -204,11 +209,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "async-upnp-client": {"async-timeout"},
     },
     "loqed": {"loqedapi": {"async-timeout"}},
-    "lyric": {
-        # https://github.com/timmo001/aiolyric/issues/115
-        # aiolyric > incremental > setuptools
-        "incremental": {"setuptools"}
-    },
     "matter": {"python-matter-server": {"async-timeout"}},
     "mediaroom": {"pymediaroom": {"async-timeout"}},
     "met": {"pymetno": {"async-timeout"}},
@@ -236,11 +236,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
-    "nx584": {
-        # https://bugs.launchpad.net/python-stevedore/+bug/2111694
-        # pynx584 > stevedore > pbr > setuptools
-        "pbr": {"setuptools"}
-    },
     "opengarage": {"open-garage": {"async-timeout"}},
     "openhome": {"async-upnp-client": {"async-timeout"}},
     "opensensemap": {"opensensemap-api": {"async-timeout"}},

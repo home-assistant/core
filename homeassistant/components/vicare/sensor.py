@@ -41,6 +41,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    VICARE_BAR,
     VICARE_CUBIC_METER,
     VICARE_KW,
     VICARE_KWH,
@@ -62,20 +63,22 @@ from .utils import (
 _LOGGER = logging.getLogger(__name__)
 
 VICARE_UNIT_TO_DEVICE_CLASS = {
-    VICARE_WH: SensorDeviceClass.ENERGY,
-    VICARE_KWH: SensorDeviceClass.ENERGY,
-    VICARE_W: SensorDeviceClass.POWER,
-    VICARE_KW: SensorDeviceClass.POWER,
+    VICARE_BAR: SensorDeviceClass.PRESSURE,
     VICARE_CUBIC_METER: SensorDeviceClass.GAS,
+    VICARE_KW: SensorDeviceClass.POWER,
+    VICARE_KWH: SensorDeviceClass.ENERGY,
+    VICARE_WH: SensorDeviceClass.ENERGY,
+    VICARE_W: SensorDeviceClass.POWER,
 }
 
 VICARE_UNIT_TO_HA_UNIT = {
+    VICARE_BAR: UnitOfPressure.BAR,
+    VICARE_CUBIC_METER: UnitOfVolume.CUBIC_METERS,
+    VICARE_KW: UnitOfPower.KILO_WATT,
+    VICARE_KWH: UnitOfEnergy.KILO_WATT_HOUR,
     VICARE_PERCENT: PERCENTAGE,
     VICARE_W: UnitOfPower.WATT,
-    VICARE_KW: UnitOfPower.KILO_WATT,
     VICARE_WH: UnitOfEnergy.WATT_HOUR,
-    VICARE_KWH: UnitOfEnergy.KILO_WATT_HOUR,
-    VICARE_CUBIC_METER: UnitOfVolume.CUBIC_METERS,
 }
 
 
@@ -192,6 +195,15 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getHotWaterStorageTemperatureTop(),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
+        key="dhw_storage_middle_temperature",
+        translation_key="dhw_storage_middle_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getDomesticHotWaterStorageTemperatureMiddle(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
         key="dhw_storage_bottom_temperature",

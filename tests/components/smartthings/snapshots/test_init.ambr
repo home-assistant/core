@@ -343,6 +343,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[da_ac_cac_01001]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': 'Realtek',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '23c6d296-4656-20d8-f6eb-2ff13e041753',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'TP1X_DA-AC-CAC-01001_0000',
+    'model_id': None,
+    'name': 'Ar Varanda',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'ASA-WW-TP1-24-PACCOM_14240625',
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[da_ac_ehs_01001]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -1855,6 +1886,37 @@
     'model': None,
     'model_id': None,
     'name': 'Elliots Rum',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[tesla_powerwall]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        'd2595c45-df6e-41ac-a7af-8e275071c19b',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Powerwall',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
