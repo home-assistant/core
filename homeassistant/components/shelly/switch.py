@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
@@ -37,6 +37,7 @@ from .entity import (
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rpc,
+    rpc_call,
 )
 from .utils import (
     async_remove_orphaned_entities,
@@ -87,9 +88,9 @@ RPC_RELAY_SWITCHES = {
         sub_key="output",
         removal_condition=is_rpc_exclude_from_relay,
         is_on=lambda status: bool(status["output"]),
-        method_on="Switch.Set",
-        method_off="Switch.Set",
-        method_params_fn=lambda id, value: {"id": id, "on": value},
+        method_on="switch_set",
+        method_off="switch_set",
+        method_params_fn=lambda id, value: {"id", id, "on", value},
     ),
 }
 
@@ -101,8 +102,8 @@ RPC_SWITCHES = {
             config, key, SWITCH_PLATFORM
         ),
         is_on=lambda status: bool(status["value"]),
-        method_on="Boolean.Set",
-        method_off="Boolean.Set",
+        method_on="boolean_set",
+        method_off="boolean_set",
         method_params_fn=lambda id, value: {"id": id, "value": value},
         role="generic",
     ),
@@ -223,8 +224,8 @@ RPC_SWITCHES = {
         key="script",
         sub_key="running",
         is_on=lambda status: bool(status["running"]),
-        method_on="Script.Start",
-        method_off="Script.Stop",
+        method_on="script_start",
+        method_off="script_stop",
         method_params_fn=lambda id, _: {"id": id},
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
@@ -422,19 +423,27 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
         """If switch is on."""
         return self.entity_description.is_on(self.status)
 
+    @rpc_call
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on relay."""
-        await self.call_rpc(
-            self.entity_description.method_on,
-            self.entity_description.method_params_fn(self._id, True),
-        )
+        method = getattr(self.coordinator.device, self.entity_description.method_on)
 
+        if TYPE_CHECKING:
+            assert method is not None
+
+        params = self.entity_description.method_params_fn(self._id, True)
+        await method(params)
+
+    @rpc_call
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off relay."""
-        await self.call_rpc(
-            self.entity_description.method_off,
-            self.entity_description.method_params_fn(self._id, False),
-        )
+        method = getattr(self.coordinator.device, self.entity_description.method_off)
+
+        if TYPE_CHECKING:
+            assert method is not None
+
+        params = self.entity_description.method_params_fn(self._id, False)
+        await method(params)
 
 
 class RpcRelaySwitch(RpcSwitch):
