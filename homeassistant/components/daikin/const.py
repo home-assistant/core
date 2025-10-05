@@ -24,4 +24,4 @@ ATTR_STATE_OFF = "off"
 KEY_MAC = "mac"
 KEY_IP = "ip"
 
-TIMEOUT = 120
+TIMEOUT_SEC = 120
