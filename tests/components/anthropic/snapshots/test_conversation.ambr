@@ -405,3 +405,104 @@
     ),
   })
 # ---
+# name: test_web_search
+  list([
+    dict({
+      'attachments': None,
+      'content': "What's on the news today?",
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': "To get today's news, I'll perform a web search",
+      'native': ThinkingBlock(signature='ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==', thinking='', type='thinking'),
+      'role': 'assistant',
+      'thinking_content': "The user is asking about today's news, which requires current, real-time information. This is clearly something that requires recent information beyond my knowledge cutoff. I should use the web_search tool to find today's news.",
+      'tool_calls': list([
+        dict({
+          'external': True,
+          'id': 'srvtoolu_12345ABC',
+          'tool_args': dict({
+            'query': "today's news",
+          }),
+          'tool_name': 'web_search',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'role': 'tool_result',
+      'tool_call_id': 'srvtoolu_12345ABC',
+      'tool_name': 'web_search',
+      'tool_result': dict({
+        'content': list([
+          dict({
+            'encrypted_content': 'ABCDEFG',
+            'page_age': '2 days ago',
+            'title': "Today's News - Example.com",
+            'type': 'web_search_result',
+            'url': 'https://www.example.com/todays-news',
+          }),
+          dict({
+            'encrypted_content': 'ABCDEFG',
+            'page_age': None,
+            'title': 'Breaking News - NewsSite.com',
+            'type': 'web_search_result',
+            'url': 'https://www.newssite.com/breaking-news',
+          }),
+        ]),
+      }),
+    }),
+    dict({
+      'agent_id': 'conversation.claude_conversation',
+      'content': '''
+        Here's what I found on the web about today's news:
+        1. New Home Assistant release
+        
+        2. Something incredible happened
+        
+        Those are the main headlines making news today.
+      ''',
+      'native': dict({
+        'citation_details': list([
+          dict({
+            'citations': list([
+              dict({
+                'cited_text': 'This release iterates on some of the features we introduced in the last couple of releases, but also...',
+                'encrypted_index': 'AAA==',
+                'title': 'Home Assistant Release',
+                'type': 'web_search_result_location',
+                'url': 'https://www.example.com/todays-news',
+              }),
+            ]),
+            'index': 54,
+            'length': 27,
+          }),
+          dict({
+            'citations': list([
+              dict({
+                'cited_text': 'Breaking news from around the world today includes major events in technology, politics, and culture...',
+                'encrypted_index': 'AQE=',
+                'title': 'Breaking News',
+                'type': 'web_search_result_location',
+                'url': 'https://www.newssite.com/breaking-news',
+              }),
+              dict({
+                'cited_text': 'Well, this happened...',
+                'encrypted_index': 'AgI=',
+                'title': 'Breaking News',
+                'type': 'web_search_result_location',
+                'url': 'https://www.newssite.com/breaking-news',
+              }),
+            ]),
+            'index': 85,
+            'length': 30,
+          }),
+        ]),
+      }),
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---

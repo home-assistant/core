@@ -186,10 +186,8 @@ def _convert_content(
                     content=json.dumps(content.tool_result),
                 )
                 external_tool = False
-            if (
-                not messages or messages[-1]["role"] != "assistant"
-                if external_tool
-                else "user"
+            if not messages or messages[-1]["role"] != (
+                "assistant" if external_tool else "user"
             ):
                 messages.append(
                     MessageParam(
@@ -275,7 +273,14 @@ def _convert_content(
                             text=content.content[
                                 detail.index : detail.index + detail.length
                             ],
-                            citations=detail.citations if detail.citations else None,
+                            citations=detail.citations,
+                        )
+                        if detail.citations
+                        else TextBlockParam(
+                            type="text",
+                            text=content.content[
+                                detail.index : detail.index + detail.length
+                            ],
                         )
                     )
                     current_index = detail.index + detail.length
