@@ -3406,7 +3406,7 @@
     'state': '3105.57642',
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_phase_a_total_active_returned_energy-entry]
+# name: test_shelly_pro_3em[sensor.test_name_phase_a_energy_returned-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3421,7 +3421,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_phase_a_total_active_returned_energy',
+    'entity_id': 'sensor.test_name_phase_a_energy_returned',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3439,7 +3439,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Total active returned energy',
+    'original_name': 'Energy returned',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3449,16 +3449,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_phase_a_total_active_returned_energy-state]
+# name: test_shelly_pro_3em[sensor.test_name_phase_a_energy_returned-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Test name Phase A Total active returned energy',
+      'friendly_name': 'Test name Phase A Energy returned',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_phase_a_total_active_returned_energy',
+    'entity_id': 'sensor.test_name_phase_a_energy_returned',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3856,7 +3856,7 @@
     'state': '195.76572',
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_phase_b_total_active_returned_energy-entry]
+# name: test_shelly_pro_3em[sensor.test_name_phase_b_energy_returned-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -3871,7 +3871,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_phase_b_total_active_returned_energy',
+    'entity_id': 'sensor.test_name_phase_b_energy_returned',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3889,7 +3889,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Total active returned energy',
+    'original_name': 'Energy returned',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -3899,16 +3899,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_phase_b_total_active_returned_energy-state]
+# name: test_shelly_pro_3em[sensor.test_name_phase_b_energy_returned-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Test name Phase B Total active returned energy',
+      'friendly_name': 'Test name Phase B Energy returned',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_phase_b_total_active_returned_energy',
+    'entity_id': 'sensor.test_name_phase_b_energy_returned',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4306,7 +4306,7 @@
     'state': '2114.07205',
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_phase_c_total_active_returned_energy-entry]
+# name: test_shelly_pro_3em[sensor.test_name_phase_c_energy_returned-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4321,7 +4321,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_phase_c_total_active_returned_energy',
+    'entity_id': 'sensor.test_name_phase_c_energy_returned',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4339,7 +4339,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Total active returned energy',
+    'original_name': 'Energy returned',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4349,16 +4349,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_phase_c_total_active_returned_energy-state]
+# name: test_shelly_pro_3em[sensor.test_name_phase_c_energy_returned-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Test name Phase C Total active returned energy',
+      'friendly_name': 'Test name Phase C Energy returned',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_phase_c_total_active_returned_energy',
+    'entity_id': 'sensor.test_name_phase_c_energy_returned',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -4701,7 +4701,7 @@
     'state': '2413.825',
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_total_active_returned_energy-entry]
+# name: test_shelly_pro_3em[sensor.test_name_energy_returned-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4716,7 +4716,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_total_active_returned_energy',
+    'entity_id': 'sensor.test_name_energy_returned',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4734,7 +4734,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Total active returned energy',
+    'original_name': 'Energy returned',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4744,16 +4744,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_total_active_returned_energy-state]
+# name: test_shelly_pro_3em[sensor.test_name_energy_returned-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Test name Total active returned energy',
+      'friendly_name': 'Test name Energy returned',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_total_active_returned_energy',
+    'entity_id': 'sensor.test_name_energy_returned',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

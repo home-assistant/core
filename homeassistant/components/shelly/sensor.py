@@ -1086,7 +1086,7 @@ RPC_SENSORS: Final = {
     "total_act_ret": RpcSensorDescription(
         key="emdata",
         sub_key="total_act_ret",
-        name="Total active returned energy",
+        name="Energy returned",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: float(status),
@@ -1097,7 +1097,7 @@ RPC_SENSORS: Final = {
     "total_act_ret_energy": RpcSensorDescription(
         key="em1data",
         sub_key="total_act_ret_energy",
-        name="Total active returned energy",
+        name="Energy returned",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: float(status),
@@ -1109,7 +1109,7 @@ RPC_SENSORS: Final = {
     "a_total_act_ret_energy": RpcSensorDescription(
         key="emdata",
         sub_key="a_total_act_ret_energy",
-        name="Total active returned energy",
+        name="Energy returned",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: float(status),
@@ -1123,7 +1123,7 @@ RPC_SENSORS: Final = {
     "b_total_act_ret_energy": RpcSensorDescription(
         key="emdata",
         sub_key="b_total_act_ret_energy",
-        name="Total active returned energy",
+        name="Energy returned",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: float(status),
@@ -1137,7 +1137,7 @@ RPC_SENSORS: Final = {
     "c_total_act_ret_energy": RpcSensorDescription(
         key="emdata",
         sub_key="c_total_act_ret_energy",
-        name="Total active returned energy",
+        name="Energy returned",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: float(status),
