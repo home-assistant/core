@@ -22,6 +22,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    DEGREE,
     PERCENTAGE,
     EntityCategory,
     UnitOfElectricCurrent,
@@ -260,7 +261,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     VolvoSensorDescription(
         key="direction",
         api_field="location",
-        native_unit_of_measurement="°",
+        native_unit_of_measurement=DEGREE,
         suggested_display_precision=0,
         value_fn=_direction_value,
     ),
