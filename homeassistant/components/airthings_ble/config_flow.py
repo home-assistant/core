@@ -44,7 +44,7 @@ def get_name(device: AirthingsDevice) -> str:
 
     name = device.friendly_name()
     if identifier := device.identifier:
-        name += f" ({identifier})"
+        name += f" ({device.model.value}{identifier})"
     return name
 
 
