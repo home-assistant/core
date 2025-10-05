@@ -465,7 +465,7 @@ async def test_prompt_get(
     assert result.messages[0].content.text.endswith(EXPECTED_PROMPT_SUFFIX)
 
 
-async def test_get_unknwon_prompt(
+async def test_get_unknown_prompt(
     hass: HomeAssistant,
     setup_integration: None,
     mcp_url: str,
