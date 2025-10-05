@@ -1253,7 +1253,7 @@ microBeesPy==0.3.5
 mill-local==0.3.0
 
 # homeassistant.components.mill
-millheater==0.13.1
+millheater==0.14.0
 
 # homeassistant.components.minio
 minio==7.1.12
@@ -2175,7 +2175,7 @@ pyuptimerobot==22.2.0
 pyvera==0.3.16
 
 # homeassistant.components.vesync
-pyvesync==3.0.0
+pyvesync==3.1.0
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
