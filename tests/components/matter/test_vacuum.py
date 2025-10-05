@@ -166,7 +166,7 @@ async def test_k11_vacuum_actions(
             "areas": selected_areas,
         },
         blocking=True,
-        return_response=True,
+        return_response=False,
     )
     assert matter_client.send_device_command.call_count == 2
     assert matter_client.send_device_command.call_args_list[0] == call(

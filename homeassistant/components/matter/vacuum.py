@@ -85,7 +85,7 @@ async def async_setup_entry(
             vol.Required("areas"): vol.All(cv.ensure_list, [cv.positive_int]),
         },
         func="async_handle_clean_areas",
-        supports_response=SupportsResponse.ONLY,
+        supports_response=SupportsResponse.NONE,
     )
 
 
