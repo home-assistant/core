@@ -239,7 +239,7 @@ def async_restore_rpc_attribute_entities(
     sensors: Mapping[str, RpcEntityDescription],
     sensor_class: Callable,
 ) -> None:
-    """Restore block attributes entities."""
+    """Restore RPC attributes entities."""
     entities = []
 
     ent_reg = er.async_get(hass)
@@ -447,19 +447,11 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         self.async_write_ha_state()
 
     @rpc_call
-    async def call_rpc(
-        self, method: str, params: Any, timeout: float | None = None
-    ) -> Any:
+    async def call_rpc(self, method: str, params: Any) -> Any:
         """Call RPC method."""
         LOGGER.debug(
-            "Call RPC for entity %s, method: %s, params: %s, timeout: %s",
-            self.name,
-            method,
-            params,
-            timeout,
+            "Call RPC for entity %s, method: %s, params: %s", self.name, method, params
         )
-        if timeout:
-            return await self.coordinator.device.call_rpc(method, params, timeout)
         return await self.coordinator.device.call_rpc(method, params)
 
 
