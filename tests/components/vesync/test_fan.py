@@ -150,7 +150,7 @@ async def test_set_preset_mode(
     with (
         expectation,
         patch(
-            "pyvesync.devices.vesyncfan.VeSyncTowerFan.normal_mode",
+            "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_normal_mode",
             return_value=api_response,
         ) as method_mock,
     ):
