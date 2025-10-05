@@ -1122,7 +1122,7 @@
     'state': '25.5',
   })
 # ---
-# name: test_all_entities[type:ess-vicare/VitoChargeVX3.json][sensor.model0_energy-entry]
+# name: test_all_entities[type:ess-vicare/VitoChargeVX3.json][sensor.model0_battery_charge_total-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1137,7 +1137,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.model0_energy',
+    'entity_id': 'sensor.model0_battery_charge_total',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1152,7 +1152,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Energy',
+    'original_name': 'Battery charge total',
     'platform': 'vicare',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1162,16 +1162,16 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_all_entities[type:ess-vicare/VitoChargeVX3.json][sensor.model0_energy-state]
+# name: test_all_entities[type:ess-vicare/VitoChargeVX3.json][sensor.model0_battery_charge_total-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'model0 Energy',
+      'friendly_name': 'model0 Battery charge total',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.model0_energy',
+    'entity_id': 'sensor.model0_battery_charge_total',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
