@@ -1039,15 +1039,6 @@ class MieleAbsoluteTimeSensor(MieleRestorableSensor):
 
     _previous_value: StateType | date | datetime | Decimal = None
 
-    def _restore_last_value(
-        self, native_value: StateType | date | datetime | Decimal
-    ) -> None:
-        """Specialized restore of last value for tests only, as freezegun restores a dict."""
-        if isinstance(native_value, dict) and "isoformat" in native_value:  # type: ignore[unreachable]
-            self._attr_native_value = datetime.fromisoformat(native_value["isoformat"])  # type: ignore[unreachable]
-        else:
-            super()._restore_last_value(native_value)
-
     def _update_last_value(self) -> None:
         """Update the last value of the sensor."""
         current_value = self.entity_description.value_fn(self.device)
