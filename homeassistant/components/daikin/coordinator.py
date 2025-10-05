@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class DaikinCoordinator(DataUpdateCoordinator[None]):
             _LOGGER,
             config_entry=entry,
             name=device.values.get("name", DOMAIN),
-            update_interval=timedelta(seconds=60),
+            update_interval=timedelta(seconds=TIMEOUT),
         )
         self.device = device
 
