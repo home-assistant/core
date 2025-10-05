@@ -23,7 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.util.ssl import client_context_no_verify
 
-from .const import KEY_MAC, TIMEOUT
+from .const import KEY_MAC, TIMEOUT_SEC
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bo
     session = async_get_clientsession(hass)
     host = conf[CONF_HOST]
     try:
-        async with asyncio.timeout(TIMEOUT):
+        async with asyncio.timeout(TIMEOUT_SEC):
             device: Appliance = await DaikinFactory(
                 host,
                 session,
@@ -53,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bo
             )
         _LOGGER.debug("Connection to %s successful", host)
     except TimeoutError as err:
-        _LOGGER.debug("Connection to %s timed out in 60 seconds", host)
+        _LOGGER.debug("Connection to %s timed out in 120 seconds", host)
         raise ConfigEntryNotReady from err
     except ClientConnectionError as err:
         _LOGGER.debug("ClientConnectionError to %s", host)
