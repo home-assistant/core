@@ -7,7 +7,9 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow: done
+  config-flow:
+    status: done
+    comment: Future enhancements, 1) separate manual and discovery flows, 2) allow for discovery of multiple LMS and selection of one.
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
