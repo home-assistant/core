@@ -47,9 +47,9 @@ class ViCareEntity(Entity):
         serial = device_serial
         connections: set[tuple[str, str]] = set()
         if device_serial is not None and device_serial.startswith("zigbee-"):
-            serial = format_zigbee(device_serial.replace("zigbee-", ""))
-            connections = {(CONNECTION_ZIGBEE, serial)}
-            serial = serial.upper()
+            zigbeeIEEE = format_zigbee(device_serial.replace("zigbee-", ""))
+            connections = {(CONNECTION_ZIGBEE, zigbeeIEEE)}
+            serial = zigbeeIEEE.upper().replace(":", "-")
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, identifier)},
