@@ -259,6 +259,30 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
     assert result2["errors"] == {"base": error}
 
 
+async def test_subentry_web_search_unsupported_model(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test error when enabling web search with unsupported model."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    options = await hass.config_entries.subentries.async_configure(
+        options_flow["flow_id"],
+        {
+            "prompt": "You are a helpful assistant",
+            "max_tokens": 8192,
+            "chat_model": "claude-3-haiku-20240307",
+            "recommended": False,
+            "web_search": True,
+            "web_search_max_uses": 5,
+        },
+    )
+    await hass.async_block_till_done()
+    assert options["type"] is FlowResultType.FORM
+    assert options["errors"] == {"web_search": "web_search_unsupported_model"}
+
+
 @pytest.mark.parametrize(
     ("current_options", "new_options", "expected_options"),
     [
