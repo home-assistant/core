@@ -413,6 +413,9 @@
       },
       "mid_state": {
         "name": "MID state"
+      },
+      "admin_state": {
+        "name": "admin state"
       }
     },
     "switch": {

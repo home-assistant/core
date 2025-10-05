@@ -13996,6 +13996,54 @@
     'state': '2025-07-19T17:17:31+00:00',
   })
 # ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.collar_482520020939_admin_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.collar_482520020939_admin_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'admin state',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'admin_state',
+    'unique_id': '482520020939_admin_state_str',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[envoy_metered_batt_relay][sensor.collar_482520020939_admin_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Collar 482520020939 admin state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.collar_482520020939_admin_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ENCMN_MDE_ON_GRID',
+  })
+# ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.collar_482520020939_grid_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
