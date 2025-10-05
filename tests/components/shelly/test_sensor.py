@@ -28,6 +28,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -47,6 +48,7 @@ from . import (
     mock_polling_rpc_update,
     mock_rest_update,
     mutate_rpc_device_status,
+    patch_platforms,
     register_device,
     register_entity,
 )
@@ -56,6 +58,13 @@ from tests.common import async_fire_time_changed, mock_restore_cache_with_extra_
 RELAY_BLOCK_ID = 0
 SENSOR_BLOCK_ID = 3
 DEVICE_BLOCK_ID = 4
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms([Platform.SENSOR]):
+        yield
 
 
 async def test_block_sensor(
