@@ -370,18 +370,6 @@
           "standby": "[%key:common::state::standby%]"
         }
       },
-      "ess_charge_today": {
-        "name": "Battery charge today"
-      },
-      "ess_charge_this_week": {
-        "name": "Battery charge this week"
-      },
-      "ess_charge_this_month": {
-        "name": "Battery charge this month"
-      },
-      "ess_charge_this_year": {
-        "name": "Battery charge this year"
-      },
       "ess_charge_total": {
         "name": "Battery charge total"
       },
