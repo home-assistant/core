@@ -12,6 +12,7 @@ from airthings_ble import (
     UnsupportedDeviceError,
 )
 from bleak import BleakError
+from habluetooth import BluetoothServiceInfoBleak
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
@@ -50,7 +51,7 @@ def get_name(device: AirthingsDevice) -> str:
 
     name = device.friendly_name()
     if identifier := device.identifier:
-        name += f" ({identifier})"
+        name += f" ({device.model.value}{identifier})"
     return name
 
 
@@ -166,27 +167,32 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=discovery.name, data={})
 
         current_addresses = self._async_current_ids(include_ignore=False)
+        devices: list[BluetoothServiceInfoBleak] = []
         for discovery_info in async_discovered_service_info(self.hass):
             address = discovery_info.address
             if address in current_addresses or address in self._discovered_devices:
                 continue
-
             if MFCT_ID not in discovery_info.manufacturer_data:
                 continue
-
             if not any(uuid in SERVICE_UUIDS for uuid in discovery_info.service_uuids):
                 _LOGGER.debug(
                     "Skipping unsupported device: %s (%s)", discovery_info.name, address
                 )
                 continue
+            devices.append(discovery_info)
 
+        for discovery_info in devices:
+            address = discovery_info.address
             data = AirthingsBluetoothDeviceData(logger=_LOGGER)
-
             try:
                 device = await self._get_device(data, discovery_info)
             except AirthingsDeviceUpdateError:
                 return self.async_abort(reason="cannot_connect")
             except UnsupportedDeviceError:
+                _LOGGER.error(
+                    "Error connecting to and getting data from %s",
+                    discovery_info.address,
+                )
                 continue
             except Exception:
                 _LOGGER.exception("Unknown error occurred")

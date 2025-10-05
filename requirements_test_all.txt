@@ -256,7 +256,7 @@ aiohasupervisor==0.3.3
 aiohomeconnect==0.20.0
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.19
+aiohomekit==3.2.20
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -2080,7 +2080,7 @@ python-linkplay==0.2.12
 python-matter-server==8.1.0
 
 # homeassistant.components.melcloud
-python-melcloud==0.1.0
+python-melcloud==0.1.2
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
