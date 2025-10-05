@@ -49,9 +49,6 @@
     "sensor": {
       "image": {
         "name": "Image"
-      },
-      "status": {
-        "name": "Status"
       }
     },
     "switch": {
