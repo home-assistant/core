@@ -539,7 +539,9 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 FlowResultType.ABORT,
                 FlowResultType.CREATE_ENTRY,
             ):
-                _LOGGER.debug("Starting Z-Wave JS config flow failed: %s", zwave_result)
+                _LOGGER.debug(
+                    "Unable to continue created Z-Wave JS config flow: %s", zwave_result
+                )
             else:
                 next_flow_id = zwave_result["flow_id"]
 
