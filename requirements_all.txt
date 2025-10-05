@@ -495,7 +495,7 @@ anova-wifi==0.17.0
 anthemav==1.4.1
 
 # homeassistant.components.anthropic
-anthropic==0.62.0
+anthropic==0.69.0
 
 # homeassistant.components.mcp_server
 anyio==4.10.0
