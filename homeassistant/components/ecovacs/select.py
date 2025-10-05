@@ -159,7 +159,11 @@ class EcovacsActiveMapSelectEntity(
         if self._attr_current_option not in self._id_2_option:
             self._attr_current_option = None
 
-        self._attr_options = list(self._option_2_id.keys())
+        # Sort options with numeric ids last
+        # (maps without a name are less important as normally they have no name during building)
+        self._attr_options = sorted(
+            self._option_2_id.keys(), key=lambda x: (x.isdigit(), x.lower())
+        )
 
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
