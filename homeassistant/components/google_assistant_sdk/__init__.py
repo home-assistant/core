@@ -38,8 +38,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
     )
 
-    async_setup_services(hass)
-
     return True
 
 
@@ -62,6 +60,8 @@ async def async_setup_entry(
 
     mem_storage = InMemoryStorage(hass)
     hass.http.register_view(GoogleAssistantSDKAudioView(mem_storage))
+
+    async_setup_services(hass)
 
     entry.runtime_data = GoogleAssistantSDKRuntimeData(
         session=session, mem_storage=mem_storage

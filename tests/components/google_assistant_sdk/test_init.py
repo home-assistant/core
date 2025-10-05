@@ -37,19 +37,33 @@ async def test_setup_success(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
 ) -> None:
-    """Test successful setup and unload."""
+    """Test successful setup, unload, and re-setup."""
+    # Initial setup
     await setup_integration()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
+    assert hass.services.has_service(DOMAIN, "send_text_command")
 
-    await hass.config_entries.async_unload(entries[0].entry_id)
+    # Unload the entry
+    entry_id = entries[0].entry_id
+    await hass.config_entries.async_unload(entry_id)
     await hass.async_block_till_done()
 
     assert not hass.data.get(DOMAIN)
     assert entries[0].state is ConfigEntryState.NOT_LOADED
     assert not hass.services.async_services().get(DOMAIN, {})
+
+    # Re-setup the entry
+    assert await hass.config_entries.async_setup(entry_id)
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+    # Assert service exists again
+    assert hass.services.has_service(DOMAIN, "send_text_command")
 
 
 @pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
