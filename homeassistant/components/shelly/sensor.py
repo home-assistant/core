@@ -122,8 +122,8 @@ class RpcSensor(ShellyRpcAttributeEntity, SensorEntity):
         return self.option_map[attribute_value]
 
 
-class RpcConsumedEnergySensor(RpcSensor):
-    """Represent a RPC sensor."""
+class RpcEnergyConsumedSensor(RpcSensor):
+    """Represent a RPC energy consumed sensor."""
 
     @property
     def native_value(self) -> StateType:
@@ -926,7 +926,7 @@ RPC_SENSORS: Final = {
     "consumed_energy_switch": RpcSensorDescription(
         key="switch",
         sub_key="ret_aenergy",
-        name="Consumed energy",
+        name="Energy consumed",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: status["total"],
@@ -934,7 +934,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
-        entity_class=RpcConsumedEnergySensor,
+        entity_class=RpcEnergyConsumedSensor,
         removal_condition=lambda _, status, key: (
             status[key].get("ret_aenergy") is None
         ),
@@ -975,7 +975,7 @@ RPC_SENSORS: Final = {
     "consumed_energy_pm1": RpcSensorDescription(
         key="pm1",
         sub_key="ret_aenergy",
-        name="Consumed energy",
+        name="Energy consumed",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value=lambda status, _: status["total"],
@@ -983,7 +983,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
-        entity_class=RpcConsumedEnergySensor,
+        entity_class=RpcEnergyConsumedSensor,
     ),
     "energy_cct": RpcSensorDescription(
         key="cct",

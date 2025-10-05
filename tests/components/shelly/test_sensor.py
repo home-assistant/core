@@ -1641,7 +1641,7 @@ async def test_rpc_switch_energy_sensors(
     monkeypatch.setattr(mock_rpc_device, "status", status)
     await init_integration(hass, 3)
 
-    for entity in ("energy", "energy_returned", "consumed_energy"):
+    for entity in ("energy", "energy_returned", "energy_consumed"):
         entity_id = f"{SENSOR_DOMAIN}.test_name_test_switch_0_{entity}"
 
         state = hass.states.get(entity_id)
@@ -1671,7 +1671,7 @@ async def test_rpc_switch_no_energy_returned_sensor(
     await init_integration(hass, 3)
 
     assert hass.states.get("sensor.test_name_test_switch_0_energy_returned") is None
-    assert hass.states.get("sensor.test_name_test_switch_0_consumed_energy") is None
+    assert hass.states.get("sensor.test_name_test_switch_0_energy_consumed") is None
 
 
 async def test_rpc_shelly_ev_sensors(
@@ -1869,7 +1869,7 @@ async def test_rpc_presencezone_component(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_rpc_pm1_consumed_energy_sensor(
+async def test_rpc_pm1_energy_consumed_sensor(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     entity_registry: EntityRegistry,
@@ -1897,8 +1897,8 @@ async def test_rpc_pm1_consumed_energy_sensor(
     assert (state := hass.states.get(f"{SENSOR_DOMAIN}.test_name_energy_returned"))
     assert state.state == "1.0"
 
-    entity_id = f"{SENSOR_DOMAIN}.test_name_consumed_energy"
-    # consumed energy = energy - energy returned
+    entity_id = f"{SENSOR_DOMAIN}.test_name_energy_consumed"
+    # energy consumed = energy - energy returned
     assert (state := hass.states.get(entity_id))
     assert state.state == "2.0"
 
@@ -1908,14 +1908,14 @@ async def test_rpc_pm1_consumed_energy_sensor(
 
 @pytest.mark.parametrize(("key"), ["aenergy", "ret_aenergy"])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_rpc_pm1_consumed_energy_sensor_non_float_value(
+async def test_rpc_pm1_energy_consumed_sensor_non_float_value(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     key: str,
 ) -> None:
     """Test energy sensors for switch component."""
-    entity_id = f"{SENSOR_DOMAIN}.test_name_consumed_energy"
+    entity_id = f"{SENSOR_DOMAIN}.test_name_energy_consumed"
     status = {
         "sys": {},
         "pm1:0": {
