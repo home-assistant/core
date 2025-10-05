@@ -96,6 +96,8 @@ class MatrixAuth:
                     response.status_code,
                     response.message,
                 )
+            if client.logged_in:
+                await self.store_auth_token(client, client.access_token)
 
         if not client.logged_in:
             raise ConfigEntryAuthFailed(
