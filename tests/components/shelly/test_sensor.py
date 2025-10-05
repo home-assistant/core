@@ -1641,7 +1641,7 @@ async def test_rpc_switch_energy_sensors(
     monkeypatch.setattr(mock_rpc_device, "status", status)
     await init_integration(hass, 3)
 
-    for entity in ("energy", "returned_energy", "consumed_energy"):
+    for entity in ("energy", "energy_returned", "consumed_energy"):
         entity_id = f"{SENSOR_DOMAIN}.test_name_test_switch_0_{entity}"
 
         state = hass.states.get(entity_id)
@@ -1652,12 +1652,12 @@ async def test_rpc_switch_energy_sensors(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_rpc_switch_no_returned_energy_sensor(
+async def test_rpc_switch_no_energy_returned_sensor(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test switch component without returned energy sensor."""
+    """Test switch component without energy returned sensor."""
     status = {
         "sys": {},
         "switch:0": {
@@ -1670,7 +1670,7 @@ async def test_rpc_switch_no_returned_energy_sensor(
     monkeypatch.setattr(mock_rpc_device, "status", status)
     await init_integration(hass, 3)
 
-    assert hass.states.get("sensor.test_name_test_switch_0_returned_energy") is None
+    assert hass.states.get("sensor.test_name_test_switch_0_energy_returned") is None
     assert hass.states.get("sensor.test_name_test_switch_0_consumed_energy") is None
 
 
@@ -1894,11 +1894,11 @@ async def test_rpc_pm1_consumed_energy_sensor(
     assert (state := hass.states.get(f"{SENSOR_DOMAIN}.test_name_energy"))
     assert state.state == "3.0"
 
-    assert (state := hass.states.get(f"{SENSOR_DOMAIN}.test_name_returned_energy"))
+    assert (state := hass.states.get(f"{SENSOR_DOMAIN}.test_name_energy_returned"))
     assert state.state == "1.0"
 
     entity_id = f"{SENSOR_DOMAIN}.test_name_consumed_energy"
-    # consumed energy = energy - returned energy
+    # consumed energy = energy - energy returned
     assert (state := hass.states.get(entity_id))
     assert state.state == "2.0"
 
