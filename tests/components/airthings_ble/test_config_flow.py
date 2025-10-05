@@ -373,7 +373,6 @@ async def test_step_user_firmware_required(hass: HomeAssistant) -> None:
 
 async def test_discovering_unsupported_devices(hass: HomeAssistant) -> None:
     """Test discovering unsupported devices."""
-    # async_step_user will abort if no supported devices are found
     with patch(
         "homeassistant.components.airthings_ble.config_flow.async_discovered_service_info",
         return_value=[UNKNOWN_AIRTHINGS_SERVICE_INFO, UNKNOWN_SERVICE_INFO],
