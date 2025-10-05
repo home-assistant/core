@@ -157,7 +157,7 @@
     'state': '0',
   })
 # ---
-# name: test_cure_sensor_entity[sensor.test_name_left_slot_level-entry]
+# name: test_cury_sensor_entity[sensor.test_name_left_slot_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -194,7 +194,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_cure_sensor_entity[sensor.test_name_left_slot_level-state]
+# name: test_cury_sensor_entity[sensor.test_name_left_slot_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test name Left slot level',
@@ -209,7 +209,7 @@
     'state': '27',
   })
 # ---
-# name: test_cure_sensor_entity[sensor.test_name_left_slot_perfume-entry]
+# name: test_cury_sensor_entity[sensor.test_name_left_slot_perfume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -244,7 +244,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cure_sensor_entity[sensor.test_name_left_slot_perfume-state]
+# name: test_cury_sensor_entity[sensor.test_name_left_slot_perfume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test name Left slot perfume',
@@ -257,7 +257,7 @@
     'state': 'Forest Dream',
   })
 # ---
-# name: test_cure_sensor_entity[sensor.test_name_right_slot_level-entry]
+# name: test_cury_sensor_entity[sensor.test_name_right_slot_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -294,7 +294,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_cure_sensor_entity[sensor.test_name_right_slot_level-state]
+# name: test_cury_sensor_entity[sensor.test_name_right_slot_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test name Right slot level',
@@ -309,7 +309,7 @@
     'state': '84',
   })
 # ---
-# name: test_cure_sensor_entity[sensor.test_name_right_slot_perfume-entry]
+# name: test_cury_sensor_entity[sensor.test_name_right_slot_perfume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -344,7 +344,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cure_sensor_entity[sensor.test_name_right_slot_perfume-state]
+# name: test_cury_sensor_entity[sensor.test_name_right_slot_perfume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test name Right slot perfume',

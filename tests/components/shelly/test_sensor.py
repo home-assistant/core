@@ -1951,14 +1951,14 @@ async def test_rpc_pm1_energy_consumed_sensor_non_float_value(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_cure_sensor_entity(
+async def test_cury_sensor_entity(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test sensor entities for cure component."""
+    """Test sensor entities for cury component."""
     status = {
         "cury:0": {
             "id": 0,
