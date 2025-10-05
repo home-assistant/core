@@ -31,8 +31,9 @@ from homeassistant.components.media_player import (
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
+from homeassistant.components.tts import TTSAudioRequest
 from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, HomeAssistantError, ServiceCall
 from homeassistant.core_config import async_process_ha_core_config
 
 from .const import MOCK_MODELS, MOCK_VOICES
@@ -490,3 +491,144 @@ async def test_tts_service_speak_without_options(
         ),
         model_id="model1",
     )
+
+
+async def test_tts_supports_streaming_input(
+    hass: HomeAssistant,
+    config_data: dict[str, Any],
+    config_options: dict[str, Any],
+) -> None:
+    """Test that the TTS entity supports streaming input."""
+    await mock_config_entry_setup(hass, config_data, config_options)
+    await hass.async_block_till_done()
+
+    tts_entity = hass.data[tts.DOMAIN].get_entity("tts.mock_title")
+    assert tts_entity.async_supports_streaming_input() is True
+
+
+async def test_tts_streaming_audio(
+    hass: HomeAssistant,
+    config_data: dict[str, Any],
+    config_options: dict[str, Any],
+) -> None:
+    """Test streaming TTS audio generation."""
+    await mock_config_entry_setup(hass, config_data, config_options)
+    await hass.async_block_till_done()
+
+    tts_entity = hass.data[tts.DOMAIN].get_entity("tts.mock_title")
+
+    # Mock the streaming audio response
+    mock_audio_stream = FakeAudioGenerator()
+    tts_entity._client.text_to_speech.convert = MagicMock(
+        return_value=mock_audio_stream
+    )
+
+    # Create a mock message generator
+    async def message_generator():
+        yield "Hello, "
+        yield "this is a "
+        yield "test message."
+
+    # Create a mock TTSAudioRequest
+    request = TTSAudioRequest(
+        language="en", options={}, message_gen=message_generator()
+    )
+
+    # Test streaming TTS
+    response = await tts_entity.async_stream_tts_audio(request)
+
+    assert response.extension == "mp3"
+
+    # Verify the audio generator yields the expected data
+    audio_chunks = [chunk async for chunk in response.data_gen]
+
+    assert len(audio_chunks) == 2
+    assert audio_chunks[0] == b"audio-part-1"
+    assert audio_chunks[1] == b"audio-part-2"
+
+    # Verify the convert method was called with the complete message
+    tts_entity._client.text_to_speech.convert.assert_called_once_with(
+        text="Hello, this is a test message.",
+        voice_id="voice1",
+        voice_settings=tts_entity._voice_settings,
+        model_id="model1",
+    )
+
+
+async def test_tts_streaming_audio_with_options(
+    hass: HomeAssistant,
+    config_data: dict[str, Any],
+    config_options: dict[str, Any],
+) -> None:
+    """Test streaming TTS audio generation with custom options."""
+    await mock_config_entry_setup(hass, config_data, config_options)
+    await hass.async_block_till_done()
+
+    tts_entity = hass.data[tts.DOMAIN].get_entity("tts.mock_title")
+
+    # Mock the streaming audio response
+    mock_audio_stream = FakeAudioGenerator()
+    tts_entity._client.text_to_speech.convert = MagicMock(
+        return_value=mock_audio_stream
+    )
+
+    # Create a mock message generator
+    async def message_generator():
+        yield "Custom voice message."
+
+    # Create a mock TTSAudioRequest with custom options
+    request = TTSAudioRequest(
+        language="en",
+        options={tts.ATTR_VOICE: "voice2", ATTR_MODEL: "model2"},
+        message_gen=message_generator(),
+    )
+
+    # Test streaming TTS with custom options
+    response = await tts_entity.async_stream_tts_audio(request)
+
+    assert response.extension == "mp3"
+
+    # Verify the audio generator yields the expected data
+    audio_chunks = [chunk async for chunk in response.data_gen]
+
+    assert len(audio_chunks) == 2
+    assert audio_chunks[0] == b"audio-part-1"
+    assert audio_chunks[1] == b"audio-part-2"
+
+    # Verify the convert method was called with the custom options
+    tts_entity._client.text_to_speech.convert.assert_called_once_with(
+        text="Custom voice message.",
+        voice_id="voice2",
+        voice_settings=tts_entity._voice_settings,
+        model_id="model2",
+    )
+
+
+async def test_tts_streaming_audio_error(
+    hass: HomeAssistant,
+    config_data: dict[str, Any],
+    config_options: dict[str, Any],
+) -> None:
+    """Test streaming TTS audio generation with API error."""
+    await mock_config_entry_setup(hass, config_data, config_options)
+    await hass.async_block_till_done()
+
+    tts_entity = hass.data[tts.DOMAIN].get_entity("tts.mock_title")
+
+    # Mock the API error
+    tts_entity._client.text_to_speech.convert = MagicMock(
+        side_effect=ApiError(body="API Error")
+    )
+
+    # Create a mock message generator
+    async def message_generator():
+        yield "Error message."
+
+    # Create a mock TTSAudioRequest
+    request = TTSAudioRequest(
+        language="en", options={}, message_gen=message_generator()
+    )
+
+    # Test streaming TTS with API error
+    with pytest.raises(HomeAssistantError, match="API Error"):
+        await tts_entity.async_stream_tts_audio(request)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import AsyncGenerator, Mapping
 import logging
 from typing import Any
 
@@ -13,6 +13,8 @@ from elevenlabs.types import Model, Voice as ElevenLabsVoice, VoiceSettings
 from homeassistant.components.tts import (
     ATTR_VOICE,
     TextToSpeechEntity,
+    TTSAudioRequest,
+    TTSAudioResponse,
     TtsAudioType,
     Voice,
 )
@@ -127,6 +129,51 @@ class ElevenLabsTTSEntity(TextToSpeechEntity):
     def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""
         return self._voices
+
+    def async_supports_streaming_input(self) -> bool:
+        """Return if the TTS engine supports streaming input."""
+        return True
+
+    async def async_stream_tts_audio(
+        self, request: TTSAudioRequest
+    ) -> TTSAudioResponse:
+        """Generate speech from an incoming message stream."""
+        _LOGGER.debug("Getting streaming TTS audio")
+        _LOGGER.debug("Options: %s", request.options)
+
+        voice_id = request.options.get(ATTR_VOICE, self._default_voice_id)
+        model = request.options.get(ATTR_MODEL, self._model.model_id)
+
+        # Collect the complete message from the stream
+        message = "".join([chunk async for chunk in request.message_gen])
+
+        try:
+            # Use the streaming convert method from ElevenLabs
+            audio_stream = self._client.text_to_speech.convert(
+                text=message,
+                voice_id=voice_id,
+                voice_settings=self._voice_settings,
+                model_id=model,
+            )
+
+            async def audio_generator() -> AsyncGenerator[bytes]:
+                """Generate audio chunks from ElevenLabs stream."""
+                try:
+                    async for audio_chunk in audio_stream:
+                        yield audio_chunk
+                except Exception as e:
+                    _LOGGER.error("Error streaming audio from ElevenLabs: %s", e)
+                    raise HomeAssistantError(f"Streaming error: {e}") from e
+
+            return TTSAudioResponse("mp3", audio_generator())
+
+        except ApiError as exc:
+            _LOGGER.warning(
+                "Error during processing of streaming TTS request %s",
+                exc,
+                exc_info=True,
+            )
+            raise HomeAssistantError(str(exc)) from exc
 
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
