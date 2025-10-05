@@ -507,7 +507,7 @@ async def test_rpc_set_state_errors(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC device set state connection/call errors."""
-    monkeypatch.setattr(mock_rpc_device, "call_rpc", AsyncMock(side_effect=exc))
+    mock_rpc_device.switch_set.side_effect = exc
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
     monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
@@ -525,11 +525,7 @@ async def test_rpc_auth_error(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test RPC device set state authentication error."""
-    monkeypatch.setattr(
-        mock_rpc_device,
-        "call_rpc",
-        AsyncMock(side_effect=InvalidAuthError),
-    )
+    mock_rpc_device.switch_set.side_effect = InvalidAuthError
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
     monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     entry = await init_integration(hass, 2)
