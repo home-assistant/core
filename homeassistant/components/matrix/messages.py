@@ -44,6 +44,7 @@ class MatrixMessages:
             room_id=self._listening_rooms.get(target_room, target_room),
             message_type=message_type,
             content=content,
+            ignore_unverified_devices=True,
         )
         if isinstance(response, ErrorResponse):
             _LOGGER.error(

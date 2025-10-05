@@ -91,7 +91,7 @@ class MatrixAuth:
             _LOGGER.debug("Logging in using password")
 
             if isinstance(response, LoginError):
-                _LOGGER.warning(
+                _LOGGER.error(
                     "Login by password failed: %s, %s",
                     response.status_code,
                     response.message,
@@ -101,5 +101,3 @@ class MatrixAuth:
             raise ConfigEntryAuthFailed(
                 "Login failed, both token and username/password are invalid"
             )
-
-        await self.store_auth_token(client, client.access_token)
