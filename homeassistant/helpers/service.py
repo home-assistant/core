@@ -379,22 +379,21 @@ def async_prepare_call_from_config(
     }
 
 
-@bind_hass
+@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 def extract_entity_ids(
-    hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
+    service_call: ServiceCall, expand_group: bool = True
 ) -> set[str]:
     """Extract a list of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
     """
     return asyncio.run_coroutine_threadsafe(
-        async_extract_entity_ids(hass, service_call, expand_group), hass.loop
+        async_extract_entity_ids(service_call, expand_group), service_call.hass.loop
     ).result()
 
 
-@bind_hass
+@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 async def async_extract_entities[_EntityT: Entity](
-    hass: HomeAssistant,
     entities: Iterable[_EntityT],
     service_call: ServiceCall,
     expand_group: bool = True,
@@ -410,7 +409,7 @@ async def async_extract_entities[_EntityT: Entity](
 
     selector_data = target_helpers.TargetSelectorData(service_call.data)
     referenced = target_helpers.async_extract_referenced_entity_ids(
-        hass, selector_data, expand_group
+        service_call.hass, selector_data, expand_group
     )
     combined = referenced.referenced | referenced.indirectly_referenced
 
@@ -432,9 +431,9 @@ async def async_extract_entities[_EntityT: Entity](
     return found
 
 
-@bind_hass
+@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 async def async_extract_entity_ids(
-    hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
+    service_call: ServiceCall, expand_group: bool = True
 ) -> set[str]:
     """Extract a set of entity ids from a service call.
 
@@ -442,7 +441,7 @@ async def async_extract_entity_ids(
     """
     selector_data = target_helpers.TargetSelectorData(service_call.data)
     referenced = target_helpers.async_extract_referenced_entity_ids(
-        hass, selector_data, expand_group
+        service_call.hass, selector_data, expand_group
     )
     return referenced.referenced | referenced.indirectly_referenced
 
@@ -463,17 +462,17 @@ def async_extract_referenced_entity_ids(
     return SelectedEntities(**dataclasses.asdict(selected))
 
 
-@bind_hass
+@deprecated_hass_argument(breaks_in_ha_version="2026.10")
 async def async_extract_config_entry_ids(
-    hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
+    service_call: ServiceCall, expand_group: bool = True
 ) -> set[str]:
     """Extract referenced config entry ids from a service call."""
     selector_data = target_helpers.TargetSelectorData(service_call.data)
     referenced = target_helpers.async_extract_referenced_entity_ids(
-        hass, selector_data, expand_group
+        service_call.hass, selector_data, expand_group
     )
-    ent_reg = entity_registry.async_get(hass)
-    dev_reg = device_registry.async_get(hass)
+    ent_reg = entity_registry.async_get(service_call.hass)
+    dev_reg = device_registry.async_get(service_call.hass)
     config_entry_ids: set[str] = set()
 
     # Some devices may have no entities
@@ -762,6 +761,8 @@ async def entity_service_call(
     func: str | HassJob,
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
+    *,
+    entity_device_classes: Iterable[str | None] | None = None,
 ) -> EntityServiceResponse | None:
     """Handle an entity service call.
 
@@ -822,6 +823,17 @@ async def entity_service_call(
     entities: list[Entity] = []
     for entity in entity_candidates:
         if not entity.available:
+            continue
+
+        # Skip entities that don't have the required device class.
+        if (
+            entity_device_classes is not None
+            and entity.device_class not in entity_device_classes
+        ):
+            # If entity explicitly referenced, raise an error
+            if referenced is not None and entity.entity_id in referenced.referenced:
+                raise ServiceNotSupported(call.domain, call.service, entity.entity_id)
+
             continue
 
         # Skip entities that don't have the required feature.
@@ -1135,6 +1147,7 @@ def async_register_entity_service(
     domain: str,
     name: str,
     *,
+    entity_device_classes: Iterable[str | None] | None = None,
     entities: dict[str, Entity],
     func: str | Callable[..., Any],
     job_type: HassJobType | None,
@@ -1161,6 +1174,7 @@ def async_register_entity_service(
             hass,
             entities,
             service_func,
+            entity_device_classes=entity_device_classes,
             required_features=required_features,
         ),
         schema,
@@ -1175,6 +1189,7 @@ def async_register_platform_entity_service(
     service_domain: str,
     service_name: str,
     *,
+    entity_device_classes: Iterable[str | None] | None = None,
     entity_domain: str,
     func: str | Callable[..., Any],
     required_features: Iterable[int] | None = None,
@@ -1205,6 +1220,7 @@ def async_register_platform_entity_service(
             hass,
             get_entities,
             service_func,
+            entity_device_classes=entity_device_classes,
             required_features=required_features,
         ),
         schema,
