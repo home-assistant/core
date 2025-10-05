@@ -51,7 +51,9 @@ BINARY_SENSORS: Final = (
         ),
         is_supported=lambda device, key: device.sensors.get(key) is not None,
         is_available_fn=lambda device, key: (
-            device.online and device.sensors[key].error is False
+            device.online
+            and (sensor := device.sensors.get(key)) is not None
+            and sensor.error is False
         ),
     ),
 )
