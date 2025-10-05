@@ -41,7 +41,7 @@ class AcaiaCoordinator(DataUpdateCoordinator[None]):
         )
 
         debouncer = Debouncer(
-            hass=self.hass,
+            hass=hass,
             logger=_LOGGER,
             cooldown=UPDATE_DEBOUNCE_TIME,
             immediate=True,
