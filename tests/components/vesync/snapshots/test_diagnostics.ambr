@@ -53,7 +53,6 @@
         'device_status': 'on',
         'device_type': 'Classic200S',
         'display': 'Method',
-        'displayJSON': 'Method',
         'enabled': 'Method',
         'features': list([
           'night_light',
@@ -173,7 +172,6 @@
     'device_status': 'on',
     'device_type': 'fan',
     'display': 'Method',
-    'displayJSON': 'Method',
     'enabled': 'Method',
     'fan_levels': 'Method',
     'features': 'Method',
