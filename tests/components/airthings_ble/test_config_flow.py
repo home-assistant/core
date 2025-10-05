@@ -267,7 +267,7 @@ async def test_user_setup_unable_to_connect(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_unsupported_device(hass: HomeAssistant) -> None:
