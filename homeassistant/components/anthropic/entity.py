@@ -51,11 +51,11 @@ from .const import (
     DOMAIN,
     LOGGER,
     MIN_THINKING_BUDGET,
+    NON_THINKING_MODELS,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_THINKING_BUDGET,
-    THINKING_MODELS,
 )
 
 # Max number of back and forth with the LLM to generate a response
@@ -364,7 +364,7 @@ class AnthropicBaseLLMEntity(Entity):
         if tools:
             model_args["tools"] = tools
         if (
-            model.startswith(tuple(THINKING_MODELS))
+            not model.startswith(tuple(NON_THINKING_MODELS))
             and thinking_budget >= MIN_THINKING_BUDGET
         ):
             model_args["thinking"] = ThinkingConfigEnabledParam(
