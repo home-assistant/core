@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2025
-MINOR_VERSION: Final = 10
+MINOR_VERSION: Final = 11
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -37,7 +37,7 @@ REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
 
-# Type alias to avoid 1000 MyPy errors
+# Explicit reexport to allow other modules to import Platform directly from const
 Platform = EntityPlatforms
 
 BASE_PLATFORMS: Final = {platform.value for platform in Platform}
@@ -315,34 +315,6 @@ STATE_UNAVAILABLE: Final = "unavailable"
 STATE_OK: Final = "ok"
 STATE_PROBLEM: Final = "problem"
 
-# #### LOCK STATES ####
-# STATE_* below are deprecated as of 2024.10
-# use the LockState enum instead.
-_DEPRECATED_STATE_LOCKED: Final = DeprecatedConstant(
-    "locked",
-    "LockState.LOCKED",
-    "2025.10",
-)
-_DEPRECATED_STATE_UNLOCKED: Final = DeprecatedConstant(
-    "unlocked",
-    "LockState.UNLOCKED",
-    "2025.10",
-)
-_DEPRECATED_STATE_LOCKING: Final = DeprecatedConstant(
-    "locking",
-    "LockState.LOCKING",
-    "2025.10",
-)
-_DEPRECATED_STATE_UNLOCKING: Final = DeprecatedConstant(
-    "unlocking",
-    "LockState.UNLOCKING",
-    "2025.10",
-)
-_DEPRECATED_STATE_JAMMED: Final = DeprecatedConstant(
-    "jammed",
-    "LockState.JAMMED",
-    "2025.10",
-)
 
 # #### ALARM CONTROL PANEL STATES ####
 # STATE_ALARM_* below are deprecated as of 2024.11
