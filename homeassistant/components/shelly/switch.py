@@ -79,7 +79,7 @@ class RpcSwitchDescription(RpcEntityDescription, SwitchEntityDescription):
     is_on: Callable[[dict[str, Any]], bool]
     method_on: str
     method_off: str
-    method_params_fn: Callable[[int | None, bool], dict]
+    method_params_fn: Callable[[int | None, bool], tuple]
 
 
 RPC_RELAY_SWITCHES = {
@@ -90,7 +90,7 @@ RPC_RELAY_SWITCHES = {
         is_on=lambda status: bool(status["output"]),
         method_on="switch_set",
         method_off="switch_set",
-        method_params_fn=lambda id, value: {"id": id, "on": value},
+        method_params_fn=lambda id, value: (id, value),
     ),
 }
 
@@ -226,7 +226,7 @@ RPC_SWITCHES = {
         is_on=lambda status: bool(status["running"]),
         method_on="script_start",
         method_off="script_stop",
-        method_params_fn=lambda id, _: {"script_id": id},
+        method_params_fn=lambda id, _: (id,),
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
@@ -432,7 +432,7 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
             assert method is not None
 
         params = self.entity_description.method_params_fn(self._id, True)
-        await method(**params)
+        await method(*params)
 
     @rpc_call
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -443,7 +443,7 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
             assert method is not None
 
         params = self.entity_description.method_params_fn(self._id, False)
-        await method(**params)
+        await method(*params)
 
 
 class RpcRelaySwitch(RpcSwitch):
