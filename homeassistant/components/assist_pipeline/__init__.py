@@ -103,6 +103,7 @@ async def async_pipeline_from_audio_stream(
     wake_word_settings: WakeWordSettings | None = None,
     audio_settings: AudioSettings | None = None,
     device_id: str | None = None,
+    satellite_id: str | None = None,
     start_stage: PipelineStage = PipelineStage.STT,
     end_stage: PipelineStage = PipelineStage.TTS,
     conversation_extra_system_prompt: str | None = None,
@@ -115,6 +116,7 @@ async def async_pipeline_from_audio_stream(
         pipeline_input = PipelineInput(
             session=session,
             device_id=device_id,
+            satellite_id=satellite_id,
             stt_metadata=stt_metadata,
             stt_stream=stt_stream,
             wake_word_phrase=wake_word_phrase,
