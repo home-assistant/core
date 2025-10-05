@@ -5,12 +5,12 @@ from datetime import datetime
 
 class ControllableLoadPlanState:
     is_on: bool = False
-    throttle_amps: int = 0
     expected_load_amps: int = 0
 
 
 class PlanState:
     available_amps: float = 0
+    used_amps: float = 0
     controllable_loads: dict[str, ControllableLoadPlanState] = {}
 
 
@@ -29,6 +29,7 @@ class State:
 
     available_amps: float = 0
     house_consumption_amps: float = 0.0
+    load_control_consumption_amps: float = 0.0
     mains_voltage: float = 230.0
     allow_grid_import: bool = True
     solar_generation_kw: float = 0.0
