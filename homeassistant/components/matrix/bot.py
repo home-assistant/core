@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import os
 
-from nio import AsyncClient, AsyncClientConfig, MegolmEvent
+from nio import AsyncClient, AsyncClientConfig, MegolmEvent, SyncResponse
 from nio.events.room_events import RoomMessageText
 from nio.events.to_device import KeyVerificationEvent
 
@@ -90,38 +90,79 @@ class MatrixBot:
 
         async def handle_startup(event: HassEvent) -> None:
             """Run once when Home Assistant finished startup."""
-            await self._auth.get_auth_tokens()
-            await self._auth.login(self._client, self._mx_id, self._password)
-            await self._rooms.resolve_room_aliases(listening_rooms)
-            self._events.load_commands(commands, self._listening_rooms)
-            await self._rooms.join_rooms()
+            try:
+                _LOGGER.debug("Starting Matrix bot initialization for %s", self._mx_id)
+                await self._auth.get_auth_tokens()
+                await self._auth.login(self._client, self._mx_id, self._password)
+                await self._rooms.resolve_room_aliases(listening_rooms)
+                self._events.load_commands(commands, self._listening_rooms)
+                await self._rooms.join_rooms()
 
-            # Sync once so that we don't respond to past events.
-            _LOGGER.debug("Starting initial sync for %s", self._mx_id)
-            await self._client.sync(timeout=30_000)
-            _LOGGER.debug("Finished initial sync for %s", self._mx_id)
+                # Sync once so that we don't respond to past events.
+                _LOGGER.debug("Starting initial sync for %s", self._mx_id)
+                try:
+                    # Use a very short timeout to avoid blocking startup
+                    resp = await self._client.sync(timeout=5_000, full_state=True)
+                    if isinstance(resp, SyncResponse):
+                        _LOGGER.info(
+                            "Connected to %s as %s (%s)",
+                            self._client.homeserver,
+                            self._client.user_id,
+                            self._client.device_id,
+                        )
+                        try:
+                            key = self._client.olm.account.identity_keys["ed25519"]
+                            _LOGGER.info(
+                                'This bot\'s public fingerprint ("Session key") for one-sided verification is: %s',
+                                " ".join(
+                                    [key[i : i + 4] for i in range(0, len(key), 4)]
+                                ),
+                            )
+                        except (AttributeError, KeyError) as e:
+                            _LOGGER.debug("Could not get identity key: %s", e)
+                    _LOGGER.debug("Finished initial sync for %s", self._mx_id)
+                except (TimeoutError, RuntimeError, ValueError) as e:
+                    _LOGGER.warning(
+                        "Initial sync failed or timed out for %s: %s", self._mx_id, e
+                    )
+                    _LOGGER.debug("Continuing with background sync")
 
-            self._client.add_event_callback(
-                self._events.handle_room_message, RoomMessageText
-            )
-            self._client.add_event_callback(
-                self._events.decryption_failure, MegolmEvent
-            )
-            self._client.add_to_device_callback(
-                self._events.emoji_verification, (KeyVerificationEvent,)
-            )
+                self._client.add_event_callback(
+                    self._events.handle_room_message, RoomMessageText
+                )
+                self._client.add_event_callback(
+                    self._events.decryption_failure, MegolmEvent
+                )
+                self._client.add_to_device_callback(
+                    self._events.emoji_verification, (KeyVerificationEvent,)
+                )
 
-            _LOGGER.debug("Starting sync_forever for %s", self._mx_id)
-            # Create background task for sync_forever without awaiting it
-            self.hass.async_create_background_task(
-                self._client.sync_forever(
-                    timeout=30_000,
-                    loop_sleep_time=1_000,
-                ),  # milliseconds.
-                name=f"{self.__class__.__name__}: sync_forever for '{self._mx_id}'",
-            )
+                _LOGGER.debug("Rooms known %s", self._client.rooms)
+                _LOGGER.debug("Starting sync_forever for %s", self._mx_id)
+                # Create background task for sync_forever without awaiting it
+                self.hass.async_create_background_task(
+                    self._client.sync_forever(
+                        timeout=30_000,
+                        loop_sleep_time=1_000,
+                    ),  # milliseconds.
+                    name=f"{self.__class__.__name__}: sync_forever for '{self._mx_id}'",
+                )
 
-            _LOGGER.debug("Matrix bot startup completed for %s", self._mx_id)
+                _LOGGER.debug("Matrix bot startup completed for %s", self._mx_id)
+            except (TimeoutError, RuntimeError, ValueError, AttributeError) as e:
+                _LOGGER.error("Matrix bot startup failed for %s: %s", self._mx_id, e)
+                _LOGGER.debug("Starting background sync anyway")
+
+                # Still start the background sync even if startup failed
+                self.hass.async_create_background_task(
+                    self._client.sync_forever(
+                        timeout=30_000,
+                        loop_sleep_time=1_000,
+                        full_state=True,
+                        set_presence="online",
+                    ),
+                    name=f"{self.__class__.__name__}: sync_forever for '{self._mx_id}' (recovery)",
+                )
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
 
