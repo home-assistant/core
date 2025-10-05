@@ -552,8 +552,15 @@ def percentage_to_brightness(percentage: int) -> int:
 
 def mac_address_from_name(name: str) -> str | None:
     """Convert a name to a mac address."""
-    mac = name.partition(".")[0].partition("-")[-1]
-    return mac.upper() if len(mac) == 12 else None
+    base = name.split(".", 1)[0]
+    if "-" not in base:
+        return None
+
+    mac = base.rsplit("-", 1)[-1]
+    if len(mac) != 12 or not all(char in "0123456789abcdefABCDEF" for char in mac):
+        return None
+
+    return mac.upper()
 
 
 def get_release_url(gen: int, model: str, beta: bool) -> str | None:
@@ -630,11 +637,6 @@ def async_remove_shelly_rpc_entities(
             entity_reg.async_remove(entity_id)
 
 
-def is_rpc_thermostat_mode(ident: int, status: dict[str, Any]) -> bool:
-    """Return True if 'thermostat:<IDent>' is present in the status."""
-    return f"thermostat:{ident}" in status
-
-
 def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
     """Return a list of virtual component IDs for a platform."""
     component = VIRTUAL_COMPONENTS_MAP.get(platform)
@@ -687,11 +689,7 @@ def async_remove_orphaned_entities(
     entity_reg = er.async_get(hass)
     device_reg = dr.async_get(hass)
 
-    if not (
-        devices := device_reg.devices.get_devices_for_config_entry_id(config_entry_id)
-    ):
-        return
-
+    devices = device_reg.devices.get_devices_for_config_entry_id(config_entry_id)
     for device in devices:
         entities = er.async_entries_for_device(entity_reg, device.id, True)
         for entity in entities:
@@ -918,3 +916,8 @@ def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
             dev_reg.async_update_device(
                 device.id, remove_config_entry_id=entry.entry_id
             )
+
+
+def format_ble_addr(ble_addr: str) -> str:
+    """Format BLE address to use in unique_id."""
+    return ble_addr.replace(":", "").upper()
