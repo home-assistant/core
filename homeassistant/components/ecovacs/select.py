@@ -156,7 +156,7 @@ class EcovacsActiveMapSelectEntity(
             if map_info.using:
                 self._attr_current_option = name
 
-        if self._attr_current_option not in self._id_2_option:
+        if self._attr_current_option not in self._option_2_id:
             self._attr_current_option = None
 
         # Sort options with numeric ids last
