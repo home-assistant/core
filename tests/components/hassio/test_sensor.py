@@ -157,17 +157,6 @@ def _install_default_mocks(aioclient_mock: AiohttpClientMocker):
             },
         },
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/mounts",
-        json={
-            "result": "ok",
-            "data": {
-                "default_backup_mount": None,
-                "mounts": [],
-            },
-        },
-        headers={"Content-Type": "application/json"},
-    )
 
 
 @pytest.mark.parametrize(

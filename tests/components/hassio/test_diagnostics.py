@@ -154,17 +154,6 @@ def mock_all(
             },
         },
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/mounts",
-        json={
-            "result": "ok",
-            "data": {
-                "default_backup_mount": None,
-                "mounts": [],
-            },
-        },
-        headers={"Content-Type": "application/json"},
-    )
 
 
 async def test_diagnostics(
