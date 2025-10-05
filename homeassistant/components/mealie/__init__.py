@@ -48,7 +48,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
         ),
     )
     try:
-        await client.define_household_support()
         about = await client.get_about()
         version = create_version(about.version)
     except MealieAuthenticationError as error:
