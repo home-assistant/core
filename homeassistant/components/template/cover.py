@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DEVICE_CLASSES_SCHEMA,
@@ -28,6 +30,8 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
@@ -36,6 +40,7 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
@@ -213,7 +218,7 @@ def async_create_preview_cover(
     )
 
 
-class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
+class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
     """Representation of a template cover features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
@@ -290,6 +295,36 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
         None is unknown, 0 is closed, 100 is fully open.
         """
         return self._tilt_value
+
+    async def _async_handle_restored_state(self) -> None:
+        if (
+            (last_state := await self.async_get_last_state()) is not None
+            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+            and last_state.state in _VALID_STATES
+            # The trigger might have fired already while we waited for stored data,
+            # then we should not restore state
+            and self._position is None
+        ):
+            if (
+                ATTR_CURRENT_POSITION in last_state.attributes
+                and (position := last_state.attributes[ATTR_CURRENT_POSITION])
+                is not None
+            ):
+                self._position = position
+            elif last_state.state in ("true", OPEN_STATE):
+                self._position = 100
+            else:
+                self._position = 0
+
+            self._is_opening = last_state.state == OPENING_STATE
+            self._is_closing = last_state.state == CLOSING_STATE
+
+            if (
+                ATTR_CURRENT_TILT_POSITION in last_state.attributes
+                and (tilt_position := last_state.attributes[ATTR_CURRENT_TILT_POSITION])
+                is not None
+            ):
+                self._tilt_value = tilt_position
 
     @callback
     def _update_position(self, result):
@@ -462,6 +497,11 @@ class StateCoverEntity(TemplateEntity, AbstractTemplateCover):
             self.add_script(action_id, action_config, name, DOMAIN)
             self._attr_supported_features |= supported_feature
 
+    async def async_added_to_hass(self) -> None:
+        """Restore last state."""
+        await super().async_added_to_hass()
+        await self._async_handle_restored_state()
+
     @callback
     def _async_setup_templates(self) -> None:
         """Set up templates."""
@@ -525,6 +565,11 @@ class TriggerCoverEntity(TriggerEntity, AbstractTemplateCover):
             if isinstance(config.get(key), template.Template):
                 self._to_render_simple.append(key)
                 self._parse_result.add(key)
+
+    async def async_added_to_hass(self) -> None:
+        """Restore last state."""
+        await super().async_added_to_hass()
+        await self._async_handle_restored_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:
