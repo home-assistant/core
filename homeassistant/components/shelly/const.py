@@ -312,3 +312,5 @@ All_LIGHT_TYPES = ("cct", "light", "rgb", "rgbw")
 # Shelly-X specific models
 MODEL_NEO_WATER_VALVE = "NeoWaterValve"
 MODEL_FRANKEVER_WATER_VALVE = "WaterValve"
+MODEL_LINKEDGO_ST802_THERMOSTAT = "ST-802"
+MODEL_LINKEDGO_ST1820_THERMOSTAT = "ST1820"
