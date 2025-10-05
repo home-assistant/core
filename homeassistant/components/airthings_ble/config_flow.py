@@ -187,10 +187,16 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 device = await self._get_device(data, discovery_info)
             except AirthingsDeviceUpdateError:
+                _LOGGER.warning(
+                    "Error connecting to and getting data from %s (%s)",
+                    discovery_info.name,
+                    discovery_info.address,
+                )
                 continue
             except UnsupportedDeviceError:
                 _LOGGER.debug(
-                    "Error connecting to and getting data from %s",
+                    "Skipping unsupported device: %s (%s)",
+                    discovery_info.name,
                     discovery_info.address,
                 )
                 continue
