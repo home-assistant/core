@@ -31,8 +31,6 @@ async def async_setup_entry(
 class NikoHomeControlScene(NikoHomeControlEntity, BaseScene):
     """Representation of a Niko Home Control Scene."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self, action: NHCScene, controller: NHCController, unique_id: str
     ) -> None:
