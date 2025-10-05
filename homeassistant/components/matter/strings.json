@@ -562,8 +562,8 @@
       }
     },
     "water_heater_boost": {
-      "name": "Open commissioning window",
-      "description": "Water heater boost for a specific duration.",
+      "name": "Boost water heater",
+      "description": "Enables water heater boost for a specific duration.",
       "fields": {
         "duration": {
           "name": "Duration",
