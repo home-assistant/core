@@ -7,11 +7,7 @@ from dataclasses import dataclass
 
 from pyportainer.models.docker import DockerContainer
 
-from homeassistant.components.sensor import (
-    SensorEntity,
-    SensorEntityDescription,
-    StateType,
-)
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -23,7 +19,7 @@ from .entity import PortainerContainerEntity, PortainerCoordinatorData
 class PortainerSensorEntityDescription(SensorEntityDescription):
     """Class to hold Portainer sensor description."""
 
-    value_fn: Callable[[DockerContainer], StateType]
+    value_fn: Callable[[DockerContainer], str | None]
 
 
 CONTAINER_SENSORS: tuple[PortainerSensorEntityDescription, ...] = (
@@ -31,11 +27,6 @@ CONTAINER_SENSORS: tuple[PortainerSensorEntityDescription, ...] = (
         key="image",
         translation_key="image",
         value_fn=lambda data: data.image,
-    ),
-    PortainerSensorEntityDescription(
-        key="status",
-        translation_key="status",
-        value_fn=lambda data: data.status,
     ),
 )
 
@@ -80,7 +71,12 @@ class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
 
     @property
-    def native_value(self) -> StateType:
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return super().available and self.endpoint_id in self.coordinator.data
+
+    @property
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(
             self.coordinator.data[self.endpoint_id].containers[self.device_id]
