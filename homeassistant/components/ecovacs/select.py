@@ -127,8 +127,6 @@ class EcovacsActiveMapSelectEntity(
         translation_key="active_map",
         entity_category=EntityCategory.CONFIG,
     )
-    _option_2_id: dict[str, str] = {}
-    _id_2_option: dict[str, str] = {}
 
     def __init__(
         self,
@@ -138,6 +136,8 @@ class EcovacsActiveMapSelectEntity(
     ) -> None:
         """Initialize entity."""
         super().__init__(device, capability, **kwargs)
+        self._option_2_id: dict[str, str] = {}
+        self._id_2_option: dict[str, str] = {}
 
         self._handle_on_cached_map(
             device.events.get_last_event(CachedMapInfoEvent)
@@ -160,7 +160,6 @@ class EcovacsActiveMapSelectEntity(
             self._attr_current_option = None
 
         # Sort named maps first, then numeric IDs (unnamed maps during building) in ascending order.
-        # (Maps without a name are less important, as normally they have no name during building.)
         self._attr_options = sorted(
             self._option_2_id.keys(), key=lambda x: (x.isdigit(), x.lower())
         )
