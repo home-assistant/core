@@ -17,19 +17,20 @@ from homeassistant.components.fan import (
     FanEntityFeature,
     NotValidPresetModeError,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import ConfigurationStyle, async_get_flow_preview_state
 
-from tests.common import MockConfigEntry, assert_setup_component
+from tests.common import MockConfigEntry, assert_setup_component, mock_restore_cache
 from tests.components.fan import common
 from tests.typing import WebSocketGenerator
 
 TEST_OBJECT_ID = "test_fan"
 TEST_ENTITY_ID = f"fan.{TEST_OBJECT_ID}"
+TEST_STATE_ENTITY_ID = "fan.test_state"
 
 # Represent for fan's state
 _STATE_INPUT_BOOLEAN = "input_boolean.state"
@@ -42,7 +43,7 @@ TEST_STATE_TRIGGER = {
     "trigger": {
         "trigger": "state",
         "entity_id": [
-            TEST_ENTITY_ID,
+            TEST_STATE_ENTITY_ID,
             _STATE_INPUT_BOOLEAN,
             _STATE_AVAILABILITY_BOOLEAN,
             _STATE_TEST_SENSOR,
@@ -162,6 +163,12 @@ def _verify(
     assert attributes.get(ATTR_PRESET_MODE) == expected_preset_mode
 
 
+async def _trigger(hass: HomeAssistant, state: str | None = None) -> None:
+    """Ensure there's a trigger for trigger based entities."""
+    hass.states.async_set(TEST_STATE_ENTITY_ID, state)
+    await hass.async_block_till_done()
+
+
 async def async_setup_legacy_format(
     hass: HomeAssistant, count: int, fan_config: dict[str, Any]
 ) -> None:
@@ -252,14 +259,14 @@ async def setup_named_fan(
         )
 
 
-@pytest.fixture
-async def setup_state_fan(
+async def setup_state_fan_config(
     hass: HomeAssistant,
     count: int,
     style: ConfigurationStyle,
     state_template: str,
-):
-    """Do setup of fan integration using a state template."""
+    extra_config: dict,
+) -> None:
+    """Do setup of fan integration using a state template and extra configuration."""
     if style == ConfigurationStyle.LEGACY:
         await async_setup_legacy_format(
             hass,
@@ -268,6 +275,7 @@ async def setup_state_fan(
                 TEST_OBJECT_ID: {
                     **OPTIMISTIC_ON_OFF_ACTIONS,
                     "value_template": state_template,
+                    **extra_config,
                 }
             },
         )
@@ -278,6 +286,7 @@ async def setup_state_fan(
             {
                 **NAMED_ON_OFF_ACTIONS,
                 "state": state_template,
+                **extra_config,
             },
         )
     elif style == ConfigurationStyle.TRIGGER:
@@ -287,8 +296,20 @@ async def setup_state_fan(
             {
                 **NAMED_ON_OFF_ACTIONS,
                 "state": state_template,
+                **extra_config,
             },
         )
+
+
+@pytest.fixture
+async def setup_state_fan(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    state_template: str,
+) -> None:
+    """Do setup of fan integration using a state template."""
+    await setup_state_fan_config(hass, count, style, state_template, {})
 
 
 @pytest.fixture
@@ -412,6 +433,8 @@ async def setup_single_attribute_state_fan(
 @pytest.mark.usefixtures("setup_state_fan")
 async def test_missing_optional_config(hass: HomeAssistant) -> None:
     """Test: missing optional template is ok."""
+    await _trigger(hass)
+
     _verify(hass, STATE_ON, None, None, None, None)
 
 
@@ -449,6 +472,8 @@ async def test_wrong_template_config(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_state_fan")
 async def test_state_template(hass: HomeAssistant) -> None:
     """Test state template."""
+    await _trigger(hass)
+
     _verify(hass, STATE_OFF, None, None, None, None)
 
     hass.states.async_set(_STATE_INPUT_BOOLEAN, STATE_ON)
@@ -469,7 +494,7 @@ async def test_state_template(hass: HomeAssistant) -> None:
         ("{{ True }}", STATE_ON),
         ("{{ False }}", STATE_OFF),
         ("{{ x - 1 }}", STATE_UNAVAILABLE),
-        ("{{ 7.45 }}", STATE_OFF),
+        ("{{ 7.45 }}", STATE_UNKNOWN),
     ],
 )
 @pytest.mark.parametrize(
@@ -479,6 +504,8 @@ async def test_state_template(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_state_fan")
 async def test_state_template_states(hass: HomeAssistant, expected: str) -> None:
     """Test state template."""
+    await _trigger(hass)
+
     _verify(hass, expected, None, None, None, None)
 
 
@@ -501,6 +528,8 @@ async def test_state_template_states(hass: HomeAssistant, expected: str) -> None
 @pytest.mark.usefixtures("setup_single_attribute_state_fan")
 async def test_picture_template(hass: HomeAssistant) -> None:
     """Test picture template."""
+    await _trigger(hass)
+
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes.get("entity_picture") == ""
 
@@ -530,6 +559,8 @@ async def test_picture_template(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_single_attribute_state_fan")
 async def test_icon_template(hass: HomeAssistant) -> None:
     """Test icon template."""
+    await _trigger(hass)
+
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes.get("icon") == ""
 
@@ -751,7 +782,7 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
                 "value_template": "{{ 'unavailable' }}",
                 **OPTIMISTIC_ON_OFF_ACTIONS,
             },
-            [STATE_OFF, None, None, None],
+            [STATE_UNKNOWN, None, None, None],
         ),
         (
             ConfigurationStyle.MODERN,
@@ -759,7 +790,7 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
                 "state": "{{ 'unavailable' }}",
                 **OPTIMISTIC_ON_OFF_ACTIONS,
             },
-            [STATE_OFF, None, None, None],
+            [STATE_UNKNOWN, None, None, None],
         ),
         (
             ConfigurationStyle.TRIGGER,
@@ -767,7 +798,7 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
                 "state": "{{ 'unavailable' }}",
                 **OPTIMISTIC_ON_OFF_ACTIONS,
             },
-            [STATE_OFF, None, None, None],
+            [STATE_UNKNOWN, None, None, None],
         ),
         (
             ConfigurationStyle.LEGACY,
@@ -858,7 +889,7 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
                 "direction_template": "{{ 'right' }}",
                 **DIRECTION_ACTION,
             },
-            [STATE_OFF, 0, None, None],
+            [STATE_UNKNOWN, 0, None, None],
         ),
         (
             ConfigurationStyle.MODERN,
@@ -871,7 +902,7 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
                 "direction": "{{ 'right' }}",
                 **DIRECTION_ACTION,
             },
-            [STATE_OFF, 0, None, None],
+            [STATE_UNKNOWN, 0, None, None],
         ),
         (
             ConfigurationStyle.TRIGGER,
@@ -884,13 +915,14 @@ async def test_availability_template_with_entities(hass: HomeAssistant) -> None:
                 "direction": "{{ 'right' }}",
                 **DIRECTION_ACTION,
             },
-            [STATE_OFF, 0, None, None],
+            [STATE_UNKNOWN, 0, None, None],
         ),
     ],
 )
 @pytest.mark.usefixtures("setup_named_fan")
 async def test_template_with_unavailable_entities(hass: HomeAssistant, states) -> None:
     """Test unavailability with value_template."""
+    await _trigger(hass)
     _verify(hass, states[0], states[1], states[2], states[3], None)
 
 
@@ -978,6 +1010,7 @@ async def test_invalid_availability_template_keeps_component_available(
 @pytest.mark.usefixtures("setup_test_fan_with_extra_config")
 async def test_on_off(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test turn on and turn off."""
+    await _trigger(hass)
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_OFF
@@ -1036,6 +1069,7 @@ async def test_on_with_extra_attributes(
     hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test turn on and turn off."""
+    await _trigger(hass)
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_OFF
@@ -1123,6 +1157,7 @@ async def test_on_with_extra_attributes(
 async def test_set_invalid_direction_from_initial_stage(hass: HomeAssistant) -> None:
     """Test set invalid direction when fan is in initial state."""
     await common.async_set_direction(hass, TEST_ENTITY_ID, "invalid")
+    await _trigger(hass)
     _verify(hass, STATE_ON, None, None, None, None)
 
 
@@ -1161,6 +1196,7 @@ async def test_set_osc(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     expected_calls += 1
     for state in (True, False):
         await common.async_oscillate(hass, TEST_ENTITY_ID, state)
+        await _trigger(hass)
         _verify(hass, STATE_ON, None, state, None, None)
         expected_calls += 1
         assert len(calls) == expected_calls
@@ -1204,6 +1240,7 @@ async def test_set_direction(hass: HomeAssistant, calls: list[ServiceCall]) -> N
     expected_calls += 1
     for direction in (DIRECTION_FORWARD, DIRECTION_REVERSE):
         await common.async_set_direction(hass, TEST_ENTITY_ID, direction)
+        await _trigger(hass)
         _verify(hass, STATE_ON, None, None, direction, None)
         expected_calls += 1
         assert len(calls) == expected_calls
@@ -1246,6 +1283,7 @@ async def test_set_invalid_direction(
     expected_calls = 1
     for direction in (DIRECTION_FORWARD, "invalid"):
         await common.async_set_direction(hass, TEST_ENTITY_ID, direction)
+        await _trigger(hass)
         _verify(hass, STATE_ON, None, None, DIRECTION_FORWARD, None)
         assert len(calls) == expected_calls
         assert calls[-1].data["action"] == "set_direction"
@@ -1335,6 +1373,7 @@ async def test_set_percentage(hass: HomeAssistant, calls: list[ServiceCall]) -> 
         (STATE_ON, 0),
     ):
         await common.async_set_percentage(hass, TEST_ENTITY_ID, value)
+        await _trigger(hass)
         _verify(hass, state, value, None, None, None)
         expected_calls += 1
         assert len(calls) == expected_calls
@@ -1387,6 +1426,7 @@ async def test_increase_decrease_speed(
         (common.async_increase_speed, None, STATE_ON, 33),
     ):
         await func(hass, TEST_ENTITY_ID, extra)
+        await _trigger(hass)
         _verify(hass, state, value, None, None, None)
 
 
@@ -1479,8 +1519,12 @@ async def test_optimistic_state(hass: HomeAssistant, calls: list[ServiceCall]) -
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
-    "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    ("style", "initial_state"),
+    [
+        (ConfigurationStyle.LEGACY, STATE_ON),
+        (ConfigurationStyle.MODERN, STATE_ON),
+        (ConfigurationStyle.TRIGGER, STATE_UNKNOWN),
+    ],
 )
 @pytest.mark.parametrize(
     ("extra_config", "attribute", "action", "verify_attr", "coro", "value"),
@@ -1527,12 +1571,13 @@ async def test_optimistic_attributes(
     verify_attr: str,
     coro,
     value: Any,
+    initial_state: str,
     calls: list[ServiceCall],
 ) -> None:
     """Test setting percentage with optimistic template."""
 
     await coro(hass, TEST_ENTITY_ID, value)
-    _verify(hass, STATE_ON, **{verify_attr: value})
+    _verify(hass, initial_state, **{verify_attr: value})
 
     assert len(calls) == 1
     assert calls[-1].data["action"] == action
@@ -1578,6 +1623,7 @@ async def test_increase_decrease_speed_default_speed_count(
         (common.async_decrease_speed, None, STATE_ON, 66),
     ):
         await func(hass, TEST_ENTITY_ID, extra)
+        await _trigger(hass)
         _verify(hass, state, value, None, None, None)
 
 
@@ -1615,6 +1661,7 @@ async def test_set_invalid_osc_from_initial_state(
     await common.async_turn_on(hass, TEST_ENTITY_ID)
     with pytest.raises(vol.Invalid):
         await common.async_oscillate(hass, TEST_ENTITY_ID, "invalid")
+    await _trigger(hass)
     _verify(hass, STATE_ON, None, None, None, None)
 
 
@@ -1649,13 +1696,16 @@ async def test_set_invalid_osc(hass: HomeAssistant, calls: list[ServiceCall]) ->
     """Test set invalid oscillating when fan has valid osc."""
     await common.async_turn_on(hass, TEST_ENTITY_ID)
     await common.async_oscillate(hass, TEST_ENTITY_ID, True)
+    await _trigger(hass)
     _verify(hass, STATE_ON, None, True, None, None)
 
     await common.async_oscillate(hass, TEST_ENTITY_ID, False)
+    await _trigger(hass)
     _verify(hass, STATE_ON, None, False, None, None)
 
     with pytest.raises(vol.Invalid):
         await common.async_oscillate(hass, TEST_ENTITY_ID, None)
+    await _trigger(hass)
     _verify(hass, STATE_ON, None, False, None, None)
 
 
@@ -1913,6 +1963,7 @@ async def test_not_optimistic(hass: HomeAssistant) -> None:
         {"entity_id": TEST_ENTITY_ID},
         blocking=True,
     )
+    await _trigger(hass)
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == STATE_OFF
@@ -1971,3 +2022,187 @@ async def test_flow_preview(
     )
 
     assert state["state"] == STATE_ON
+
+
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("restored_state", "initial_state"),
+    [
+        (
+            STATE_ON,
+            STATE_ON,
+        ),
+        (
+            STATE_OFF,
+            STATE_OFF,
+        ),
+        (
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ),
+        (
+            STATE_UNKNOWN,
+            STATE_UNKNOWN,
+        ),
+        (
+            "faulty_state",
+            STATE_UNKNOWN,
+        ),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    restored_state: str,
+    initial_state: str,
+) -> None:
+    """Test restoring template fan."""
+
+    fake_state = State(
+        TEST_ENTITY_ID,
+        restored_state,
+        {},
+    )
+    mock_restore_cache(hass, (fake_state,))
+
+    await setup_state_fan_config(
+        hass,
+        1,
+        style,
+        "{{ states('fan.test_state') }}",
+        {},
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == initial_state
+
+
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    (
+        "attribute",
+        "extra_config",
+        "restored_state",
+        "initial_state",
+        "restored_value",
+        "initial_value",
+    ),
+    [
+        (
+            ATTR_PERCENTAGE,
+            PERCENTAGE_ACTION,
+            STATE_OFF,
+            STATE_OFF,
+            0,
+            0,
+        ),
+        (
+            ATTR_PERCENTAGE,
+            PERCENTAGE_ACTION,
+            STATE_ON,
+            STATE_ON,
+            1,
+            1,
+        ),
+        (
+            ATTR_PERCENTAGE,
+            PERCENTAGE_ACTION,
+            STATE_ON,
+            STATE_ON,
+            50,
+            50,
+        ),
+        (
+            ATTR_PERCENTAGE,
+            PERCENTAGE_ACTION,
+            STATE_ON,
+            STATE_ON,
+            100,
+            100,
+        ),
+        (
+            ATTR_DIRECTION,
+            OPTIMISTIC_DIRECTION_CONFIG,
+            STATE_ON,
+            STATE_ON,
+            DIRECTION_FORWARD,
+            DIRECTION_FORWARD,
+        ),
+        (
+            ATTR_DIRECTION,
+            OPTIMISTIC_DIRECTION_CONFIG,
+            STATE_ON,
+            STATE_ON,
+            DIRECTION_REVERSE,
+            DIRECTION_REVERSE,
+        ),
+        (
+            ATTR_DIRECTION,
+            OPTIMISTIC_DIRECTION_CONFIG,
+            STATE_ON,
+            STATE_ON,
+            None,
+            None,
+        ),
+        (
+            ATTR_OSCILLATING,
+            OPTIMISTIC_OSCILLATE_CONFIG,
+            STATE_ON,
+            STATE_ON,
+            True,
+            True,
+        ),
+        (
+            ATTR_OSCILLATING,
+            OPTIMISTIC_OSCILLATE_CONFIG,
+            STATE_ON,
+            STATE_ON,
+            False,
+            False,
+        ),
+        (
+            ATTR_OSCILLATING,
+            OPTIMISTIC_OSCILLATE_CONFIG,
+            STATE_ON,
+            STATE_ON,
+            None,
+            None,
+        ),
+    ],
+)
+async def test_restore_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: str,
+    extra_config: dict,
+    restored_state: str,
+    initial_state: str,
+    restored_value: str,
+    initial_value: str,
+) -> None:
+    """Test restoring template fan attributes."""
+
+    fake_state = State(
+        TEST_ENTITY_ID,
+        restored_state,
+        {attribute: restored_value},
+    )
+    mock_restore_cache(hass, (fake_state,))
+
+    await setup_state_fan_config(
+        hass,
+        1,
+        style,
+        "{{ states('fan.test_state') }}",
+        {attribute: "{{ states('sensor.attribute') }}", **extra_config},
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == initial_state
+    assert state.attributes.get(attribute) == initial_value
