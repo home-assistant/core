@@ -20,6 +20,7 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "firmware_upgrade_required": "Your device requires a firmware upgrade. Please use the Airthings app (Android/iOS) to upgrade it.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
