@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import cast
 
-from pyoctoprintapi import OctoprintPrinterInfo
+from pyoctoprintapi import OctoprintClient, OctoprintPrinterInfo
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
@@ -39,6 +39,7 @@ async def async_setup_entry(
     coordinator: OctoprintDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]["coordinator"]
+    client: OctoprintClient = hass.data[DOMAIN][config_entry.entry_id]["client"]
     device_id = config_entry.unique_id
 
     assert device_id is not None
@@ -62,6 +63,7 @@ async def async_setup_entry(
             new_numbers.append(
                 OctoPrintTemperatureNumber(
                     coordinator,
+                    client,
                     tool.name,
                     device_id,
                 )
@@ -89,6 +91,7 @@ class OctoPrintTemperatureNumber(
     def __init__(
         self,
         coordinator: OctoprintDataUpdateCoordinator,
+        client: OctoprintClient,
         tool: str,
         device_id: str,
     ) -> None:
@@ -99,6 +102,7 @@ class OctoPrintTemperatureNumber(
         self._attr_name = f"OctoPrint set {tool} temp"
         self._attr_unique_id = f"set-{tool}-temp-{device_id}"
         self._attr_device_info = coordinator.device_info
+        self._client = client
 
     @property
     def native_value(self) -> float | None:
@@ -118,16 +122,15 @@ class OctoPrintTemperatureNumber(
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self.coordinator.last_update_success and self.coordinator.data["printer"]
+        return self.coordinator.last_update_success and self._client
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the target temperature."""
-        client = self.coordinator._octoprint
 
         if is_bed(self._api_tool):
-            await client.set_bed_temperature(int(value))
+            await self._client.set_bed_temperature(int(value))
         elif is_extruder(self._api_tool):
-            await client.set_tool_temperature(self._api_tool, int(value))
+            await self._client.set_tool_temperature(self._api_tool, int(value))
 
         # Request coordinator update to reflect the change
         await self.coordinator.async_request_refresh()
