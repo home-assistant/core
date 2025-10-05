@@ -40,9 +40,9 @@ SENSORS: Final = (
     AmazonSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement_fn=lambda device, _key: (
+        native_unit_of_measurement_fn=lambda device, key: (
             UnitOfTemperature.CELSIUS
-            if device.sensors[_key].scale == "CELSIUS"
+            if key in device.sensors and device.sensors[key].scale == "CELSIUS"
             else UnitOfTemperature.FAHRENHEIT
         ),
         state_class=SensorStateClass.MEASUREMENT,
