@@ -139,10 +139,10 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=self.context["title_placeholders"]["name"], data={}
             )
 
+        self._set_confirm_only()
         return self.async_show_form(
             step_id="bluetooth_confirm",
             description_placeholders=self.context["title_placeholders"],
-            last_step=True,
         )
 
     async def async_step_user(
