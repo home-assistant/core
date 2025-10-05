@@ -9,6 +9,7 @@ from anthropic import (
     AuthenticationError,
     BadRequestError,
     InternalServerError,
+    types,
 )
 from httpx import URL, Request, Response
 import pytest
@@ -281,6 +282,79 @@ async def test_subentry_web_search_unsupported_model(
     await hass.async_block_till_done()
     assert options["type"] is FlowResultType.FORM
     assert options["errors"] == {"web_search": "web_search_unsupported_model"}
+
+
+async def test_subentry_web_search_user_location(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test fetching user location."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    hass.config.country = "US"
+    hass.config.time_zone = "America/Los_Angeles"
+    hass.states.async_set(
+        "zone.home", "0", {"latitude": 37.7749, "longitude": -122.4194}
+    )
+
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        return_value=types.Message(
+            type="message",
+            id="mock_message_id",
+            role="assistant",
+            model="claude-sonnet-4-0",
+            usage=types.Usage(input_tokens=100, output_tokens=100),
+            content=[
+                types.TextBlock(
+                    type="text", text='"city": "San Francisco", "region": "California"}'
+                )
+            ],
+        ),
+    ) as mock_create:
+        options = await hass.config_entries.subentries.async_configure(
+            options_flow["flow_id"],
+            {
+                "prompt": "You are a helpful assistant",
+                "max_tokens": 8192,
+                "chat_model": "claude-sonnet-4-5",
+                "recommended": False,
+                "web_search": True,
+                "web_search_max_uses": 5,
+                "user_location": True,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert (
+        mock_create.call_args.kwargs["messages"][0]["content"] == "Where are the "
+        "following coordinates located: (37.7749, -122.4194)? Please respond only "
+        "with a JSON object using the following schema:\n"
+        "{'type': 'object', 'properties': {'city': {'type': 'string', 'description': "
+        "'Free text input for the city, e.g. `San Francisco`'}, 'region': {'type': "
+        "'string', 'description': 'Free text input for the region, e.g. `California`'"
+        "}}, 'required': []}"
+    )
+    assert options["type"] is FlowResultType.ABORT
+    assert options["reason"] == "reconfigure_successful"
+    assert subentry.data == {
+        "chat_model": "claude-sonnet-4-5",
+        "city": "San Francisco",
+        "country": "US",
+        "max_tokens": 8192,
+        "prompt": "You are a helpful assistant",
+        "recommended": False,
+        "region": "California",
+        "temperature": 1.0,
+        "thinking_budget": 0,
+        "timezone": "America/Los_Angeles",
+        "user_location": True,
+        "web_search": True,
+        "web_search_max_uses": 5,
+    }
 
 
 @pytest.mark.parametrize(
