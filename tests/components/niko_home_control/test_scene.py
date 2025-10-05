@@ -38,13 +38,14 @@ async def test_activate_scene(
     mock_niko_home_control_connection: AsyncMock,
     mock_config_entry: MockConfigEntry,
     scene_id: int,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test activating the scene."""
     await setup_integration(hass, mock_config_entry)
 
     # Resolve the created scene entity dynamically
     entity_entries = er.async_entries_for_config_entry(
-        er.async_get(hass), mock_config_entry.entry_id
+        entity_registry, mock_config_entry.entry_id
     )
     scene_entities = [e for e in entity_entries if e.domain == SCENE_DOMAIN]
     assert scene_entities, "No scene entities registered"
