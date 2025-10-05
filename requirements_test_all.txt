@@ -310,7 +310,7 @@ aionanoleaf==0.2.1
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.6.0
+aiontfy==0.6.1
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -438,7 +438,7 @@ airgradient==0.9.2
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.5.4
+airos==0.5.5
 
 # homeassistant.components.airthings_ble
 airthings-ble==1.1.1
@@ -1632,7 +1632,7 @@ pycsspeechtts==1.0.8
 pycync==0.4.1
 
 # homeassistant.components.daikin
-pydaikin==2.17.0
+pydaikin==2.17.1
 
 # homeassistant.components.deako
 pydeako==0.6.0
@@ -2540,7 +2540,7 @@ universal-silabs-flasher==0.0.35
 upb-lib==0.6.1
 
 # homeassistant.components.upcloud
-upcloud-api==2.8.0
+upcloud-api==2.9.0
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
