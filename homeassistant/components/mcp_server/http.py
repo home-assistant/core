@@ -242,8 +242,8 @@ class ModelContextProtocolStreamableView(HomeAssistantView):
             raise HTTPBadRequest(text=f"Client must accept {CONTENT_TYPE_JSON}")
         if request.content_type != CONTENT_TYPE_JSON:
             raise HTTPBadRequest(text=f"Content-Type must be {CONTENT_TYPE_JSON}")
-        json_data = await request.json()
         try:
+            json_data = await request.json()
             message = types.JSONRPCMessage.model_validate(json_data)
         except ValueError as err:
             _LOGGER.debug("Failed to parse message as JSON-RPC message: %s", err)
