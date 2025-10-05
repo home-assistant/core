@@ -476,6 +476,19 @@ def get_rpc_key_ids(keys_dict: dict[str, Any], key: str) -> list[int]:
     return [int(k.split(":")[1]) for k in keys_dict if k.startswith(f"{key}:")]
 
 
+def get_rpc_key_by_role(keys_dict: dict[str, Any], role: str) -> str | None:
+    """Return key by role for RPC device from a dict."""
+    for key, value in keys_dict.items():
+        if value.get("role") == role:
+            return key
+    return None
+
+
+def id_from_key(key: str) -> int:
+    """Return id from key."""
+    return int(key.split(":")[-1])
+
+
 def is_rpc_momentary_input(
     config: dict[str, Any], status: dict[str, Any], key: str
 ) -> bool:
@@ -637,11 +650,6 @@ def async_remove_shelly_rpc_entities(
             entity_reg.async_remove(entity_id)
 
 
-def is_rpc_thermostat_mode(ident: int, status: dict[str, Any]) -> bool:
-    """Return True if 'thermostat:<IDent>' is present in the status."""
-    return f"thermostat:{ident}" in status
-
-
 def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
     """Return a list of virtual component IDs for a platform."""
     component = VIRTUAL_COMPONENTS_MAP.get(platform)
@@ -694,11 +702,7 @@ def async_remove_orphaned_entities(
     entity_reg = er.async_get(hass)
     device_reg = dr.async_get(hass)
 
-    if not (
-        devices := device_reg.devices.get_devices_for_config_entry_id(config_entry_id)
-    ):
-        return
-
+    devices = device_reg.devices.get_devices_for_config_entry_id(config_entry_id)
     for device in devices:
         entities = er.async_entries_for_device(entity_reg, device.id, True)
         for entity in entities:
