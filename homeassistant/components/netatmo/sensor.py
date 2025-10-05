@@ -563,7 +563,7 @@ class NetatmoCommonSensor(NetatmoModuleEntity, SensorEntity):
                 "%s (%s) has been found as '%s' for module '%s'",
                 self.entity_description.translation_key,
                 self.entity_description.netatmo_name,
-                value,
+                raw_value,
                 module.name,
             )
 

@@ -127,6 +127,8 @@ EVENT_TYPE_CAMERA_PERSON = "person"
 EVENT_TYPE_CAMERA_PERSON_AWAY = "person_away"
 EVENT_TYPE_CAMERA_VEHICLE = "vehicle"
 EVENT_TYPE_LIGHT_MODE = "light_mode"
+EVENT_TYPE_MODULE_CONNECT = "module_connect"
+EVENT_TYPE_MODULE_DISCONNECT = "module_disconnect"
 # Door tags
 EVENT_TYPE_ALARM_STARTED = "alarm_started"
 EVENT_TYPE_DOOR_TAG_BIG_MOVE = "tag_big_move"
@@ -160,6 +162,8 @@ CLIMATE_TRIGGERS = [
 EVENT_ID_MAP = {
     EVENT_TYPE_ALARM_STARTED: "device_id",
     EVENT_TYPE_CAMERA_ANIMAL: "device_id",
+    EVENT_TYPE_CAMERA_CONNECTION: "device_id",
+    EVENT_TYPE_CAMERA_DISCONNECTION: "devoce_id",
     EVENT_TYPE_CAMERA_HUMAN: "device_id",
     EVENT_TYPE_CAMERA_MOVEMENT: "device_id",
     EVENT_TYPE_CAMERA_OUTDOOR: "device_id",
@@ -171,6 +175,8 @@ EVENT_ID_MAP = {
     EVENT_TYPE_DOOR_TAG_OPEN: "device_id",
     EVENT_TYPE_DOOR_TAG_SMALL_MOVE: "device_id",
     EVENT_TYPE_LIGHT_MODE: "device_id",
+    EVENT_TYPE_MODULE_CONNECT: "module_id",
+    EVENT_TYPE_MODULE_DISCONNECT: "module_id",
     EVENT_TYPE_SET_POINT: "room_id",
     EVENT_TYPE_THERM_MODE: "home_id",
 }

@@ -27,8 +27,11 @@ from .const import (
     CONF_URL_WEATHER,
     DATA_DEVICE_IDS,
     DOMAIN,
+    EVENT_TYPE_CAMERA_DISCONNECTION,
     EVENT_TYPE_DOOR_TAG_BIG_MOVE,
     EVENT_TYPE_DOOR_TAG_SMALL_MOVE,
+    EVENT_TYPE_MODULE_CONNECT,
+    EVENT_TYPE_MODULE_DISCONNECT,
     NETATMO_CREATE_BINARY_SENSOR,
 )
 from .data_handler import HOME, SIGNAL_NAME, NetatmoDevice
@@ -386,8 +389,11 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         await super().async_added_to_hass()
 
         for event_type in (
+            EVENT_TYPE_CAMERA_DISCONNECTION,
             EVENT_TYPE_DOOR_TAG_BIG_MOVE,
             EVENT_TYPE_DOOR_TAG_SMALL_MOVE,
+            EVENT_TYPE_MODULE_CONNECT,
+            EVENT_TYPE_MODULE_DISCONNECT,
         ):
             self.async_on_remove(
                 async_dispatcher_connect(
@@ -493,14 +499,47 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
                 EVENT_TYPE_DOOR_TAG_SMALL_MOVE,
                 EVENT_TYPE_DOOR_TAG_BIG_MOVE,
             ]:
+                if self.entity_description.key == "opening":
+                    _LOGGER.debug(
+                        "Module %s has detected door tag move event",
+                        data["module_id"],
+                    )
+
+                    if not self._attr_is_on:
+                        self._attr_is_on = True
+                        _LOGGER.debug(
+                            "Toggling %s sensor state to open", self.device.name
+                        )
+                        self.async_write_ha_state()
+
+            elif event_type in [EVENT_TYPE_MODULE_DISCONNECT]:
                 _LOGGER.debug(
-                    "Module %s has detected door tag open event",
+                    "Module %s has detected disconnect event",
                     data["module_id"],
                 )
 
-                if not self._attr_is_on:
-                    self._attr_is_on = True
-                    _LOGGER.debug("Toggling %s sensor state to open", self.device.name)
+                if self._attr_is_on or self.available:
+                    if self.entity_description.key == "reachable":
+                        self._attr_is_on = False
+                    else:
+                        self._attr_is_on = None
+                    self._attr_available = False
+                    _LOGGER.debug(
+                        "Toggling %s sensor state to unavailable", self.device.name
+                    )
+                    self.async_write_ha_state()
+            elif event_type in [EVENT_TYPE_MODULE_CONNECT]:
+                _LOGGER.debug(
+                    "Module %s has detected connect event",
+                    data["module_id"],
+                )
+
+                if not self.available:
+                    if self.entity_description.key == "reachable":
+                        self._attr_is_on = True
+                    else:
+                        self._attr_is_on = None
+                    self._attr_available = True
                     self.async_write_ha_state()
             else:
                 _LOGGER.debug(
@@ -508,6 +547,22 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
                     data["module_id"],
                     event_type,
                 )
+        elif (
+            data["home_id"] == self.home.entity_id
+            and data["device_id"] == self.device.bridge
+        ):
+            if event_type in [EVENT_TYPE_CAMERA_DISCONNECTION]:
+                _LOGGER.debug(
+                    "Bridge (camera) %s has disconnect event",
+                    data["device_id"],
+                )
 
+                if self._attr_is_on or self.available:
+                    self._attr_is_on = False
+                    self._attr_available = False
+                    _LOGGER.debug(
+                        "Toggling %s sensor state to unavailable", self.device.name
+                    )
+                    self.async_write_ha_state()
             self.async_write_ha_state()
             return
