@@ -189,7 +189,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             except AirthingsDeviceUpdateError:
                 continue
             except UnsupportedDeviceError:
-                _LOGGER.error(
+                _LOGGER.debug(
                     "Error connecting to and getting data from %s",
                     discovery_info.address,
                 )
