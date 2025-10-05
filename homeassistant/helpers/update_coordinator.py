@@ -443,19 +443,11 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             # We can only honor a retry_after, after the config entry has been set up
             # Basically meaning that the retry after can't be used when coming from a async_config_entry_first_refresh
             if err.retry_after is not None and not raise_on_entry_error:
-                # Store the delay (seconds) – not the absolute timestamp – so the
-                # scheduler can uniformly apply it regardless of current loop time.
-                if err.retry_after <= 0:
-                    self.logger.debug(
-                        "Retry after hint %s is not positive; ignoring",
-                        err.retry_after,
-                    )
-                else:
-                    self._retry_after = err.retry_after
-                    self.logger.debug(
-                        "Retry after triggered. Delaying next update in %s second(s)",
-                        err.retry_after,
-                    )
+                self._retry_after = err.retry_after
+                self.logger.debug(
+                    "Retry after triggered. Delaying next update in %s second(s)",
+                    err.retry_after,
+                )
 
             if self.last_update_success:
                 if log_failures:
