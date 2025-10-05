@@ -10,13 +10,12 @@ from simplipy.system.v3 import SystemV3
 from simplipy.websocket import EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED, WebsocketEvent
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SimpliSafe
-from .const import DOMAIN, LOGGER
+from . import SimpliSafe, SimpliSafeConfigEntry
+from .const import LOGGER
 from .entity import SimpliSafeEntity
 
 ATTR_LOCK_LOW_BATTERY = "lock_low_battery"
@@ -32,11 +31,11 @@ WEBSOCKET_EVENTS_TO_LISTEN_FOR = (EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SimpliSafeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SimpliSafe locks based on a config entry."""
-    simplisafe = hass.data[DOMAIN][entry.entry_id]
+    simplisafe = entry.runtime_data
     locks: list[SimpliSafeLock] = []
 
     for system in simplisafe.systems.values():

@@ -11,23 +11,22 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SimpliSafe
-from .const import DOMAIN, LOGGER
+from . import SimpliSafe, SimpliSafeConfigEntry
+from .const import LOGGER
 from .entity import SimpliSafeEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SimpliSafeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SimpliSafe freeze sensors based on a config entry."""
-    simplisafe = hass.data[DOMAIN][entry.entry_id]
+    simplisafe = entry.runtime_data
     sensors: list[SimplisafeFreezeSensor] = []
 
     for system in simplisafe.systems.values():

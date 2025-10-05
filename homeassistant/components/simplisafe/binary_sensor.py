@@ -10,13 +10,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SimpliSafe
-from .const import DOMAIN, LOGGER
+from . import SimpliSafe, SimpliSafeConfigEntry
+from .const import LOGGER
 from .entity import SimpliSafeEntity
 
 SUPPORTED_BATTERY_SENSOR_TYPES = [
@@ -58,11 +57,11 @@ TRIGGERED_SENSOR_TYPES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SimpliSafeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SimpliSafe binary sensors based on a config entry."""
-    simplisafe = hass.data[DOMAIN][entry.entry_id]
+    simplisafe = entry.runtime_data
 
     sensors: list[BatteryBinarySensor | TriggeredBinarySensor] = []
 
