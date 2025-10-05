@@ -567,6 +567,8 @@ build.json @home-assistant/supervisor
 /tests/components/geonetnz_quakes/ @exxamalte
 /homeassistant/components/geonetnz_volcano/ @exxamalte
 /tests/components/geonetnz_volcano/ @exxamalte
+/homeassistant/components/getsequence/ @DellanX
+/tests/components/getsequence/ @DellanX
 /homeassistant/components/gios/ @bieniu
 /tests/components/gios/ @bieniu
 /homeassistant/components/github/ @timmo001 @ludeeus
