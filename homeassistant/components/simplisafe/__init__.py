@@ -226,9 +226,11 @@ def _async_get_system_for_service_call(
     system_id = int(system_id_str)
 
     for entry_id in base_station_device_entry.config_entries:
-        if (simplisafe := hass.data[DOMAIN].get(entry_id)) is None:
-            continue
-        return cast(SystemType, simplisafe.systems[system_id])
+        config_entry: SimpliSafeConfigEntry | None = (
+            hass.config_entries.async_get_entry(entry_id)
+        )
+        if config_entry is not None:
+            return cast(SystemType, config_entry.runtime_data.systems[system_id])
 
     raise ValueError(f"No system for device ID: {device_id}")
 
