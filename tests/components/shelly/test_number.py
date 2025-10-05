@@ -614,4 +614,4 @@ async def test_cury_number_entity(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    mock_rpc_device.cury_set.assert_called_once_with(0, "left", 80)
+    mock_rpc_device.cury_set.assert_called_once_with(0, slot="left", intensity=80)
