@@ -61,6 +61,7 @@ from .common import (
 
 from tests.common import MockPlatform, MockUser, mock_platform
 from tests.typing import RecorderInstanceContextManager, WebSocketGenerator
+from tests.util.test_unit_conversion import _ALL_CONVERTERS
 
 
 @pytest.fixture
@@ -846,8 +847,8 @@ async def test_statistics_duplicated(
         ("recorder", "sensor.total_energy_import", async_import_statistics),
     ],
 )
+@pytest.mark.usefixtures("recorder_mock")
 async def test_import_statistics(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -3739,4 +3740,25 @@ async def test_get_statistics_service_missing_mandatory_keys(
             service_args,
             return_response=True,
             blocking=True,
+        )
+
+
+# The STATISTIC_UNIT_TO_UNIT_CONVERTER keys are sorted to ensure that pytest runs are
+# consistent and avoid `different tests were collected between gw0 and gw1`
+@pytest.mark.parametrize(
+    "uom", sorted(STATISTIC_UNIT_TO_UNIT_CONVERTER, key=lambda x: (x is None, x))
+)
+def test_STATISTIC_UNIT_TO_UNIT_CONVERTER(uom: str) -> None:
+    """Ensure unit does not belong to multiple converters."""
+    unit_converter = STATISTIC_UNIT_TO_UNIT_CONVERTER[uom]
+    if other := next(
+        (
+            c
+            for c in _ALL_CONVERTERS
+            if unit_converter is not c and uom in c.VALID_UNITS
+        ),
+        None,
+    ):
+        pytest.fail(
+            f"{uom} is present in both {other.__name__} and {unit_converter.__name__}"
         )

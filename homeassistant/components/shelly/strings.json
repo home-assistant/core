@@ -118,6 +118,17 @@
     }
   },
   "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "frost_protection": "Frost protection"
+            }
+          }
+        }
+      }
+    },
     "event": {
       "input": {
         "state_attributes": {
@@ -141,6 +152,18 @@
       }
     },
     "sensor": {
+      "charger_state": {
+        "state": {
+          "charger_charging": "[%key:common::state::charging%]",
+          "charger_end": "Charge completed",
+          "charger_fault": "Error while charging",
+          "charger_free": "[%key:component::binary_sensor::entity_component::plug::state::off%]",
+          "charger_free_fault": "Can not release plug",
+          "charger_insert": "[%key:component::binary_sensor::entity_component::plug::state::on%]",
+          "charger_pause": "Charging paused by charger",
+          "charger_wait": "Charging paused by vehicle"
+        }
+      },
       "detected_objects": {
         "unit_of_measurement": "objects"
       },
