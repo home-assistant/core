@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "TIS Control Bridge",
+        "description": "Please enter the port number for your TIS Control bridge.",
+        "data": {
+          "port": "Port"
+        },
+        "data_description": {
+          "port": "The port number used by the TIS Control bridge."
+        }
+      },
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    },
+    "error": {
+      "invalid_port": "The port is invalid. It must be a number between 1 and 65535."
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  }
+}
