@@ -370,6 +370,9 @@
           "standby": "[%key:common::state::standby%]"
         }
       },
+      "ess_charge_total": {
+        "name": "Battery charge total"
+      },
       "ess_discharge_today": {
         "name": "Battery discharge today"
       },

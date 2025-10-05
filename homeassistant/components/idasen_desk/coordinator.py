@@ -8,12 +8,15 @@ from idasen_ha import Desk
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 type IdasenDeskConfigEntry = ConfigEntry[IdasenDeskCoordinator]
+
+UPDATE_DEBOUNCE_TIME = 0.2
 
 
 class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):
@@ -33,9 +36,22 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):
             hass, _LOGGER, config_entry=config_entry, name=config_entry.title
         )
         self.address = address
-        self._expected_connected = False
+        self.desk = Desk(self._async_handle_update)
 
-        self.desk = Desk(self.async_set_updated_data)
+        self._expected_connected = False
+        self._height: int | None = None
+
+        @callback
+        def async_update_data() -> None:
+            self.async_set_updated_data(self._height)
+
+        self._debouncer = Debouncer(
+            hass=self.hass,
+            logger=_LOGGER,
+            cooldown=UPDATE_DEBOUNCE_TIME,
+            immediate=True,
+            function=async_update_data,
+        )
 
     async def async_connect(self) -> bool:
         """Connect to desk."""
@@ -60,3 +76,9 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):
         """Ensure that the desk is connected if that is the expected state."""
         if self._expected_connected:
             await self.async_connect()
+
+    @callback
+    def _async_handle_update(self, height: int | None) -> None:
+        """Handle an update from the desk."""
+        self._height = height
+        self._debouncer.async_schedule_call()
