@@ -8,6 +8,7 @@ from anthropic import RateLimitError
 from anthropic.types import (
     CitationsDelta,
     CitationsWebSearchResultLocation,
+    CitationWebSearchResultLocationParam,
     InputJSONDelta,
     Message,
     MessageDeltaUsage,
@@ -39,6 +40,7 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
+from homeassistant.components.anthropic.entity import CitationDetails, ContentDetails
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -965,7 +967,7 @@ async def test_web_search(
                     ),
                     *create_content_block(
                         5,
-                        ["New Home Assistant release\n"],
+                        ["New Home Assistant release"],
                         citations=[
                             CitationsWebSearchResultLocation(
                                 type="web_search_result_location",
@@ -979,7 +981,7 @@ async def test_web_search(
                     *create_content_block(6, ["\n2. "]),
                     *create_content_block(
                         7,
-                        ["Something incredible happened\n"],
+                        ["Something incredible happened"],
                         citations=[
                             CitationsWebSearchResultLocation(
                                 type="web_search_result_location",
@@ -1096,6 +1098,93 @@ async def test_web_search(
             conversation.chat_log.AssistantContent(
                 agent_id="conversation.claude_conversation",
                 content="Should I add milk to the shopping list?",
+            ),
+        ],
+        [
+            conversation.chat_log.SystemContent("You are a helpful assistant."),
+            conversation.chat_log.UserContent("What's on the news today?"),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation",
+                content="To get today's news, I'll perform a web search",
+                thinking_content="The user is asking about today's news, which requires current, real-time information. This is clearly something that requires recent information beyond my knowledge cutoff. I should use the web_search tool to find today's news.",
+                native=ThinkingBlock(
+                    signature="ErU/V+ayA==", thinking="", type="thinking"
+                ),
+                tool_calls=[
+                    llm.ToolInput(
+                        id="srvtoolu_12345ABC",
+                        tool_name="web_search",
+                        tool_args={"query": "today's news"},
+                        external=True,
+                    ),
+                ],
+            ),
+            conversation.chat_log.ToolResultContent(
+                agent_id="conversation.claude_conversation",
+                tool_call_id="srvtoolu_12345ABC",
+                tool_name="web_search",
+                tool_result={
+                    "content": [
+                        {
+                            "type": "web_search_result",
+                            "title": "Today's News - Example.com",
+                            "url": "https://www.example.com/todays-news",
+                            "page_age": "2 days ago",
+                            "encrypted_content": "ABCDEFG",
+                        },
+                        {
+                            "type": "web_search_result",
+                            "title": "Breaking News - NewsSite.com",
+                            "url": "https://www.newssite.com/breaking-news",
+                            "page_age": None,
+                            "encrypted_content": "ABCDEFG",
+                        },
+                    ]
+                },
+            ),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation",
+                content="Here's what I found on the web about today's news:\n"
+                "1. New Home Assistant release\n"
+                "2. Something incredible happened\n"
+                "Those are the main headlines making news today.",
+                native=ContentDetails(
+                    citation_details=[
+                        CitationDetails(
+                            index=54,
+                            length=26,
+                            citations=[
+                                CitationWebSearchResultLocationParam(
+                                    type="web_search_result_location",
+                                    cited_text="This release iterates on some of the features we introduced in the last couple of releases, but also...",
+                                    encrypted_index="AAA==",
+                                    title="Home Assistant Release",
+                                    url="https://www.example.com/todays-news",
+                                ),
+                            ],
+                        ),
+                        CitationDetails(
+                            index=84,
+                            length=29,
+                            citations=[
+                                CitationWebSearchResultLocationParam(
+                                    type="web_search_result_location",
+                                    cited_text="Breaking news from around the world today includes major events in technology, politics, and culture...",
+                                    encrypted_index="AQE=",
+                                    title="Breaking News",
+                                    url="https://www.newssite.com/breaking-news",
+                                ),
+                                CitationWebSearchResultLocationParam(
+                                    type="web_search_result_location",
+                                    cited_text="Well, this happened...",
+                                    encrypted_index="AgI=",
+                                    title="Breaking News",
+                                    url="https://www.newssite.com/breaking-news",
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
             ),
         ],
     ],
