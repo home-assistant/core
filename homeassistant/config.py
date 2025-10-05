@@ -188,13 +188,14 @@ def _write_default_config(config_dir: str) -> bool:
             with open(automation_yaml_path, "w", encoding="utf8") as automation_file:
                 automation_file.write("[]")
 
-        if not os.path.isfile(script_yaml_path):
-            with open(script_yaml_path, "w", encoding="utf8"):
-                pass
+       if not os.path.isfile(script_yaml_path):
+    with open(script_yaml_path, "w", encoding="utf8"):
+        logger.debug("Created empty script.yaml file")
 
-        if not os.path.isfile(scene_yaml_path):
-            with open(scene_yaml_path, "w", encoding="utf8"):
-                pass
+if not os.path.isfile(scene_yaml_path):
+    with open(scene_yaml_path, "w", encoding="utf8"):
+        logger.debug("Created empty scene.yaml file")
+
     except OSError:
         print(  # noqa: T201
             f"Unable to create default configuration file {config_path}"
