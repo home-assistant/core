@@ -56,7 +56,6 @@ TIMEOUT = 60  # Seconds
 
 # Content types
 CONTENT_TYPE_JSON = "application/json"
-CONTENT_TYPE_SSE = "text/event-stream"
 
 # Legacy SSE endpoint
 SSE_API = f"/{DOMAIN}/sse"
