@@ -253,6 +253,7 @@ class ModbusHub:
         self._client: (
             AsyncModbusSerialClient | AsyncModbusTcpClient | AsyncModbusUdpClient | None
         ) = None
+        self._lock = asyncio.Lock()        
         self.event_connected = asyncio.Event()
         self.hass = hass
         self.name = client_config[CONF_NAME]
@@ -413,9 +414,11 @@ class ModbusHub:
         use_call: str,
     ) -> ModbusPDU | None:
         """Convert async to sync pymodbus call."""
-        if not self._client:
-            return None
-        result = await self.low_level_pb_call(unit, address, value, use_call)
-        if self._msg_wait:
-            await asyncio.sleep(self._msg_wait)
-        return result
+        async with self._lock:
+            if not self._client:
+                return None
+            result = await self.low_level_pb_call(unit, address, value, use_call)
+            if self._msg_wait:
+                # small delay until next request/response
+                await asyncio.sleep(self._msg_wait)
+            return result
