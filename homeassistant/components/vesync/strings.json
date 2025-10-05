@@ -68,9 +68,6 @@
     "switch": {
       "display": {
         "name": "Display"
-      },
-      "oscillation": {
-        "name": "Oscillation"
       }
     },
     "select": {
