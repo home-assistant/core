@@ -1963,7 +1963,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "splunk",
     "spotify",
     "sql",
-    "squeezebox",
     "srp_energy",
     "ssdp",
     "starline",
