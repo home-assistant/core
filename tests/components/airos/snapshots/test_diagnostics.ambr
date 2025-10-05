@@ -632,6 +632,10 @@
       }),
     }),
     'entry_data': dict({
+      'advanced_settings': dict({
+        'ssl': True,
+        'verify_ssl': False,
+      }),
       'host': '**REDACTED**',
       'password': '**REDACTED**',
       'username': 'ubnt',
