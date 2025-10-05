@@ -402,7 +402,7 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     if key in device.config and key != "em:0":
         # workaround for Pro 3EM, we don't want to get name for em:0
         if component_name := device.config[key].get("name"):
-            if component in (*VIRTUAL_COMPONENTS, "script"):
+            if component in (*VIRTUAL_COMPONENTS, "presencezone", "script"):
                 return cast(str, component_name)
 
             return cast(str, component_name) if instances == 1 else None
