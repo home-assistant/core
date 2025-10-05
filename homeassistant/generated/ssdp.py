@@ -10,6 +10,13 @@ SSDP = {
             "manufacturer": "ARCAM",
         },
     ],
+    "asuswrt": [
+        {
+            "deviceType": "urn:schemas-wifialliance-org:device:WFADevice:1",
+            "modelDescription": "ASUS WPS Router",
+            "st": "urn:schemas-wifialliance-org:service:WFAWLANConfig:1",
+        },
+    ],
     "axis": [
         {
             "manufacturer": "AXIS",
