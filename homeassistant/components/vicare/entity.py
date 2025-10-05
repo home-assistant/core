@@ -6,10 +6,11 @@ from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
+from .utils import format_zigbee
 
 
 class ViCareEntity(Entity):
@@ -43,9 +44,16 @@ class ViCareEntity(Entity):
         if component:
             self._attr_unique_id += f"-{component.id}"
 
+        serial = device_serial
+        connections: set[tuple[str, str]] = set()
+        if device_serial is not None and device_serial.startswith("zigbee-"):
+            serial = format_zigbee(device_serial.replace("zigbee-", ""))
+            connections = {(CONNECTION_ZIGBEE, serial)}
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, identifier)},
-            serial_number=device_serial,
+            serial_number=serial,
+            connections=connections,
             name=model,
             manufacturer="Viessmann",
             model=model,
