@@ -17,6 +17,8 @@ from .const import DEFAULT_RETRY_COUNT, DEFAULT_RETRY_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
+type ToloConfigEntry = ConfigEntry[ToloSaunaUpdateCoordinator]
+
 
 class ToloSaunaData(NamedTuple):
     """Compound class for reflecting full state (status and info) of a TOLO Sauna."""
