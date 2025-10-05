@@ -35,14 +35,14 @@
             "temperature": "Temperature",
             "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
             "recommended": "Recommended model settings",
-            "thinking_budget_tokens": "Thinking budget",
+            "thinking_budget": "Thinking budget",
             "web_search": "Enable web search",
             "web_search_max_uses": "Maximum web searches per conversation",
             "user_location": "Include home location"
           },
           "data_description": {
             "prompt": "Instruct how the LLM should respond. This can be a template.",
-            "thinking_budget_tokens": "The number of tokens the model can use to think about the response out of the total maximum number of tokens. Set to 1024 or greater to enable extended thinking.",
+            "thinking_budget": "The number of tokens the model can use to think about the response out of the total maximum number of tokens. Set to 1024 or greater to enable extended thinking.",
             "web_search": "The web search tool gives Claude direct access to real-time web content, allowing it to answer questions with up-to-date information beyond its knowledge cutoff",
             "web_search_max_uses": "Limit the number of searches performed per response",
             "user_location": "Localize search results based on home location"
