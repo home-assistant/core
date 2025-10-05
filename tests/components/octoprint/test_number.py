@@ -65,8 +65,10 @@ async def test_numbers_no_target_temp(
             "flags": {"printing": True, "paused": False},
             "text": "Operational",
         },
-        "temperature": {"tool0": {"actual": 18.83136, "target": None}},
-        "temperature": {"bed": {"actual": 25.5, "target": None}},
+        "temperature": {
+            "tool0": {"actual": 18.83136, "target": None},
+            "bed": {"actual": 25.5, "target": None}
+        },
     }
     freezer.move_to(datetime(2020, 2, 20, 9, 10, 0))
     await init_integration(hass, "number", printer=printer)
