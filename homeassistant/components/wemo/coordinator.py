@@ -193,7 +193,9 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
         _LOGGER.debug(
             "async_set_options old(%s) new(%s)", repr(self.options), repr(options)
         )
-        for field in fields(options):
+        # Use the dataclass *type* here so static type checkers (mypy/pyright)
+        # know we are iterating over the dataclass fields.
+        for field in fields(Options):
             new_value = getattr(options, field.name)
             if self.options is None or getattr(self.options, field.name) != new_value:
                 # The value changed, call the _async_set_* method for the option.
