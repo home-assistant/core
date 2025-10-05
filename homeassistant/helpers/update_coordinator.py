@@ -42,9 +42,14 @@ _DataT = TypeVar("_DataT", default=dict[str, Any])
 class UpdateFailed(HomeAssistantError):
     """Raised when an update has failed."""
 
-    def __init__(self, retry_after: int | None = None) -> None:
+    def __init__(
+        self,
+        retry_after: int | None = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
         """Initialize exception."""
-        super().__init__(retry_after)
+        super().__init__(*args, **kwargs)
         self.retry_after = retry_after
 
 
@@ -259,7 +264,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         update_interval = self._update_interval_seconds
         if self._retry_after:
             self.logger.debug(
-                "Retry after triggered. Retrying next update in %s seconds",
+                "Retry after triggered. Retrying next update by %s seconds",
                 self._retry_after,
             )
             update_interval = self._retry_after
@@ -334,7 +339,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 log_failures=False,
                 raise_on_auth_failed=True,
                 raise_on_entry_error=True,
-                from_config_entry=True,
             )
             if self.last_update_success:
                 return
@@ -390,7 +394,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         raise_on_auth_failed: bool = False,
         scheduled: bool = False,
         raise_on_entry_error: bool = False,
-        from_config_entry: bool = False,
     ) -> None:
         """Refresh data."""
         self._async_unsub_refresh()
@@ -437,8 +440,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
         except UpdateFailed as err:
             self.last_exception = err
-            # We can only honor a retry_after, after the config entry has been set up.
-            if err.retry_after and not from_config_entry:
+            # We can only honor a retry_after, after the config entry has been set up
+            # Basically meaning that the retry after can't be used when coming from a async_config_entry_first_refresh
+            if err.retry_after and not raise_on_entry_error:
                 # Store the delay (seconds) – not the absolute timestamp – so the
                 # scheduler can uniformly apply it regardless of current loop time.
                 self._retry_after = err.retry_after

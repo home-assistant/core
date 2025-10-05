@@ -1053,3 +1053,116 @@ async def test_listener_unsubscribe_releases_coordinator(hass: HomeAssistant) ->
 
     # Ensure the coordinator is released
     assert weak_ref() is None
+
+
+@pytest.mark.parametrize(
+    "err_msg",
+    [
+        *KNOWN_ERRORS,
+        (Exception(), Exception, "Unknown exception"),
+        (
+            update_coordinator.UpdateFailed(retry_after=60),
+            update_coordinator.UpdateFailed,
+            "Error fetching test data",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "method",
+    ["update_method", "setup_method"],
+)
+async def test_update_failed_retry_after(
+    hass: HomeAssistant,
+    err_msg: tuple[Exception, type[Exception], str],
+    method: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test async_config_entry_first_refresh raises ConfigEntryNotReady on failure.
+
+    Verify we do not log the exception since raising ConfigEntryNotReady
+    will be caught by config_entries.async_setup which will log it with
+    a decreasing level of logging once the first message is logged.
+    """
+    entry = MockConfigEntry()
+    entry._async_set_state(
+        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, None
+    )
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
+    setattr(crd, method, AsyncMock(side_effect=err_msg[0]))
+
+    with pytest.raises(ConfigEntryNotReady):
+        await crd.async_config_entry_first_refresh()
+
+    assert crd.last_update_success is False
+    assert isinstance(crd.last_exception, err_msg[1])
+    assert err_msg[2] not in caplog.text
+
+    # Only to check the retry_after wasn't hit
+    assert crd._retry_after is None
+
+
+@pytest.mark.parametrize(
+    "err_msg",
+    [
+        *KNOWN_ERRORS,
+        (
+            update_coordinator.UpdateFailed(retry_after=60),
+            update_coordinator.UpdateFailed,
+            "Error fetching test data",
+        ),
+    ],
+)
+async def test_refresh_known_errors_retry_after(
+    err_msg: tuple[Exception, type[Exception], str],
+    crd: update_coordinator.DataUpdateCoordinator[int],
+    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant,
+) -> None:
+    """Test raising known errors, this time with retry_after."""
+    unsub = crd.async_add_listener(lambda: None)
+
+    crd.update_method = AsyncMock(side_effect=err_msg[0])
+
+    # Not sure if I mocked to properly. But it did the job
+    with (
+        patch.object(hass.loop, "time", return_value=1_000.0),
+        patch.object(hass.loop, "call_at") as mock_call_at,
+    ):
+        await crd.async_refresh()
+
+        assert crd.data is None
+        assert crd.last_update_success is False
+        assert isinstance(crd.last_exception, err_msg[1])
+        assert err_msg[2] in caplog.text
+
+        when = mock_call_at.call_args[0][0]
+        # Filter out retry after, so I can demonstrate based on current KNOWN_ERROS without retry_after
+        is_retry_after = isinstance(
+            err_msg[0], update_coordinator.UpdateFailed
+        ) and getattr(err_msg[0], "retry_after", None)
+
+        # I am keeping this separate, with the kNOWN_ERRORS, to demonstrate that without the retry_after the normal reschedule time (10s from the mock default) is used again
+        # This test can be optimized later on, just proof of concept code
+        if is_retry_after:
+            expected = 1_000.0 + crd._microsecond + err_msg[0].retry_after
+            assert abs(when - expected) < 0.005, (when, expected)
+
+            # Check it got reset/consumed (should be a one-timer in the current design)
+            assert crd._retry_after is None
+
+            # Next schedule should fall back to regular update_interval
+            mock_call_at.reset_mock()
+            crd._schedule_refresh()
+            when2 = mock_call_at.call_args[0][0]
+            expected_cancelled = (
+                1_000.0 + crd._microsecond + crd.update_interval.total_seconds()
+            )
+            assert abs(when2 - expected_cancelled) < 0.005, (when2, expected_cancelled)
+        else:
+            # Non-retry_after should end here
+            expected = 1_000.0 + crd._microsecond + crd.update_interval.total_seconds()
+            assert abs(when - expected) < 0.005, (when, expected)
+
+    # Cleanup to avoid lingering timers
+    unsub()
+    crd._unschedule_refresh()
