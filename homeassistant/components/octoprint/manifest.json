@@ -13,6 +13,5 @@
       "deviceType": "urn:schemas-upnp-org:device:Basic:1"
     }
   ],
-  "zeroconf": ["_octoprint._tcp.local."],
-  "version": "2025.10.026"
+  "zeroconf": ["_octoprint._tcp.local."]
 }
