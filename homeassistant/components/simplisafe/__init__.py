@@ -314,8 +314,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
     except SimplipyError as err:
         raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = simplisafe
+    entry.runtime_data = simplisafe
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
