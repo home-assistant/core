@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from airpatrol.api import AirPatrolAPI, AirPatrolAuthenticationError, AirPatrolError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -14,8 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
-if TYPE_CHECKING:
-    from . import AirPatrolConfigEntry
+type AirPatrolConfigEntry = ConfigEntry[AirPatrolDataUpdateCoordinator]
 
 
 class AirPatrolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
@@ -35,7 +35,7 @@ class AirPatrolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, A
             config_entry=config_entry,
         )
 
-    async def _async_setup(self):
+    async def _async_setup(self) -> None:
         try:
             await self._setup_client()
         except AirPatrolError as api_err:
@@ -87,15 +87,15 @@ class AirPatrolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, A
 
     async def _setup_client(self) -> None:
         """Set up the AirPatrol API client from stored access_token."""
+        # Assuming that access token and unique_id has already been set in the config step.
+        session = async_get_clientsession(self.hass)
+        api = AirPatrolAPI(
+            session,
+            self.config_entry.data[CONF_ACCESS_TOKEN],
+            self.config_entry.unique_id,
+        )
         try:
-            # Assuming that access token and unique_id has already been set in the config step.
-            session = async_get_clientsession(self.hass)
-            api = AirPatrolAPI(
-                session,
-                self.config_entry.data[CONF_ACCESS_TOKEN],
-                self.config_entry.unique_id,
-            )
             await api.get_data()
-            self.api = api
         except AirPatrolAuthenticationError:
             await self._update_token()
+        self.api = api

@@ -1,6 +1,7 @@
 """Common fixtures for the AirPatrol tests."""
 
-from unittest.mock import MagicMock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from airpatrol.api import AirPatrolAPI
 import pytest
@@ -13,42 +14,49 @@ from tests.conftest import MockConfigEntry
 
 
 @pytest.fixture
-def mock_api_response():
-    """Mock AirPatrol API response."""
-    with patch(
-        "airpatrol.api.AirPatrolAPI.get_data",
-    ) as mock_response:
-        yield mock_response
+def _mock_airpatrol_client_config_flow(get_data) -> Generator[AsyncMock, AsyncMock]:
+    """Mock an AirPatrol client and config."""
+    with (
+        patch(
+            "homeassistant.components.airpatrol.coordinator.AirPatrolAPI",
+            autospec=True,
+        ) as mock_coordinator_client,
+        patch(
+            "homeassistant.components.airpatrol.config_flow.AirPatrolAPI",
+            autospec=True,
+        ) as mock_config_flow_client,
+    ):
+        client_instance = MagicMock(spec=AirPatrolAPI)
+        client_instance.get_unique_id.return_value = "test_user_id"
+        client_instance.get_access_token.return_value = "test_access_token"
+        client_instance.get_data.return_value = get_data()
+        client_instance.set_unit_climate_data.return_value = AsyncMock()
+        mock_coordinator_client.return_value = client_instance
+        mock_coordinator_client.authenticate = AsyncMock(return_value=client_instance)
+        mock_config_flow_client.authenticate = AsyncMock(return_value=client_instance)
+        yield client_instance, mock_config_flow_client, mock_coordinator_client
 
 
 @pytest.fixture
-def mock_api_set_climate_data():
-    """Mock AirPatrol API set temperature."""
-    with patch(
-        "airpatrol.api.AirPatrolAPI.set_unit_climate_data",
-    ) as mock_set_temp:
-        yield mock_set_temp
+def mock_airpatrol_client_coordinator(_mock_airpatrol_client_config_flow) -> AsyncMock:
+    """Mock an AirPatrol coordinator client."""
+    return _mock_airpatrol_client_config_flow[2]
 
 
 @pytest.fixture
-def mock_api_authentication(mock_api):
-    """Mock AirPatrol API authentication success."""
-    with patch("airpatrol.api.AirPatrolAPI.authenticate", autospec=True) as mock_auth:
-        mock_auth.return_value = mock_api
-        yield mock_auth
+def mock_airpatrol_client_config_flow(_mock_airpatrol_client_config_flow) -> AsyncMock:
+    """Mock an AirPatrol config flow client."""
+    return _mock_airpatrol_client_config_flow[1]
 
 
 @pytest.fixture
-def mock_api():
-    """Mock AirPatrol API."""
-    api = MagicMock(spec=AirPatrolAPI)
-    api.get_unique_id.return_value = "test_user_id"
-    api.get_access_token.return_value = "test_access_token"
-    return api
+def mock_airpatrol_client(_mock_airpatrol_client_config_flow) -> AsyncMock:
+    """Mock an AirPatrol client."""
+    return _mock_airpatrol_client_config_flow[0]
 
 
 @pytest.fixture
-def mock_config_entry():
+def mock_config_entry() -> MockConfigEntry:
     """Mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,

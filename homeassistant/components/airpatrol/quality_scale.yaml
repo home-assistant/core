@@ -4,18 +4,21 @@ rules:
     status: exempt
     comment: Integration does not register custom actions.
   appropriate-polling: done
-  brands:
-    status: exempt
-    comment: Basic integration that does not need to be in the brands registry.
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not provide custom actions
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities doesn't subscribe to events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -24,19 +27,21 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions:
+    status: exempt
+    comment: Integration does not provide custom actions.
   config-entry-unloading: done
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: done
+  log-when-unavailable: todo
   parallel-updates: done
-  reauthentication-flow: todo
-  test-coverage: todo
+  reauthentication-flow: done
+  test-coverage: done
 
   # Gold
-  devices: todo
+  devices: done
   diagnostics: todo
   discovery-update-info: todo
   discovery: todo
@@ -47,7 +52,9 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: todo
+  dynamic-devices:
+    status: exempt
+    comment: Integration discovers devices only during initial setup, no dynamic addition needed.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: todo

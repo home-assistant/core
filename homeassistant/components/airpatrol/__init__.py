@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import PLATFORMS
-from .coordinator import AirPatrolDataUpdateCoordinator
-
-type AirPatrolConfigEntry = ConfigEntry[AirPatrolDataUpdateCoordinator]
+from .coordinator import AirPatrolConfigEntry, AirPatrolDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirPatrolConfigEntry) -> bool:

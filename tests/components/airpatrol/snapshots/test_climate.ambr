@@ -1,0 +1,39 @@
+# serializer version: 1
+# name: test_async_setup_entry_adds_entities
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 45.0,
+      'current_temperature': 22.5,
+      'fan_mode': 'high',
+      'fan_modes': list([
+        'low',
+        'high',
+        'auto',
+      ]),
+      'friendly_name': 'Unit 1',
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 16.0,
+      'supported_features': <ClimateEntityFeature: 425>,
+      'swing_mode': 'off',
+      'swing_modes': list([
+        'on',
+        'off',
+      ]),
+      'temperature': 22.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.unit_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cool',
+  })
+# ---
+# name: test_async_setup_entry_adds_entities.1
+  None
+# ---
