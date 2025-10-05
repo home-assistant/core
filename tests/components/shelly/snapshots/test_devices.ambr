@@ -767,7 +767,7 @@
     'state': '36.4',
   })
 # ---
-# name: test_shelly_2pm_gen3_cover[sensor.test_name_total_energy-entry]
+# name: test_shelly_2pm_gen3_cover[sensor.test_name_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -782,7 +782,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_total_energy',
+    'entity_id': 'sensor.test_name_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -800,7 +800,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Total energy',
+    'original_name': 'Energy',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -810,16 +810,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_shelly_2pm_gen3_cover[sensor.test_name_total_energy-state]
+# name: test_shelly_2pm_gen3_cover[sensor.test_name_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Test name Total energy',
+      'friendly_name': 'Test name Energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_total_energy',
+    'entity_id': 'sensor.test_name_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2085,7 +2085,7 @@
     'state': '40.6',
   })
 # ---
-# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_0_total_energy-entry]
+# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_0_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2100,7 +2100,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_switch_0_total_energy',
+    'entity_id': 'sensor.test_name_switch_0_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2118,7 +2118,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Total energy',
+    'original_name': 'Energy',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2128,16 +2128,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_0_total_energy-state]
+# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_0_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Test name Switch 0 Total energy',
+      'friendly_name': 'Test name Switch 0 Energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_switch_0_total_energy',
+    'entity_id': 'sensor.test_name_switch_0_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2542,7 +2542,7 @@
     'state': '40.6',
   })
 # ---
-# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_1_total_energy-entry]
+# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_1_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2557,7 +2557,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_switch_1_total_energy',
+    'entity_id': 'sensor.test_name_switch_1_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2575,7 +2575,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Total energy',
+    'original_name': 'Energy',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2585,16 +2585,16 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_1_total_energy-state]
+# name: test_shelly_2pm_gen3_no_relay_names[sensor.test_name_switch_1_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Test name Switch 1 Total energy',
+      'friendly_name': 'Test name Switch 1 Energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_switch_1_total_energy',
+    'entity_id': 'sensor.test_name_switch_1_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

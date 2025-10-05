@@ -1649,7 +1649,7 @@ async def test_rpc_switch_energy_sensors(
     monkeypatch.setattr(mock_rpc_device, "status", status)
     await init_integration(hass, 3)
 
-    for entity in ("total_energy", "returned_energy", "consumed_energy"):
+    for entity in ("energy", "returned_energy", "consumed_energy"):
         entity_id = f"{SENSOR_DOMAIN}.test_name_test_switch_0_{entity}"
 
         state = hass.states.get(entity_id)
@@ -1899,14 +1899,14 @@ async def test_rpc_pm1_consumed_energy_sensor(
     monkeypatch.setattr(mock_rpc_device, "status", status)
     await init_integration(hass, 3)
 
-    assert (state := hass.states.get(f"{SENSOR_DOMAIN}.test_name_total_energy"))
+    assert (state := hass.states.get(f"{SENSOR_DOMAIN}.test_name_energy"))
     assert state.state == "3.0"
 
     assert (state := hass.states.get(f"{SENSOR_DOMAIN}.test_name_returned_energy"))
     assert state.state == "1.0"
 
     entity_id = f"{SENSOR_DOMAIN}.test_name_consumed_energy"
-    # consumed energy = total energy - returned energy
+    # consumed energy = energy - returned energy
     assert (state := hass.states.get(entity_id))
     assert state.state == "2.0"
 
