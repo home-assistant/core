@@ -1668,7 +1668,7 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         available=lambda status: status["left"]["vial"]["level"] != -1,
     ),
-    "cury_left_scent": RpcSensorDescription(
+    "cury_left_perfume": RpcSensorDescription(
         key="cury",
         sub_key="slots",
         name="Left slot perfume",
@@ -1687,7 +1687,7 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         available=lambda status: status["right"]["vial"]["level"] != -1,
     ),
-    "cury_right_scent": RpcSensorDescription(
+    "cury_right_perfume": RpcSensorDescription(
         key="cury",
         sub_key="slots",
         name="Right slot perfume",
