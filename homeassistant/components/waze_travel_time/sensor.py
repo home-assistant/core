@@ -69,6 +69,14 @@ class WazeTravelTimeSensor(CoordinatorEntity[WazeTravelTimeCoordinator], SensorE
         return None
 
     @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return (
+            self.coordinator.data is not None
+            and self.coordinator.data.duration is not None
+        )
+
+    @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the last update."""
         if self.coordinator.data is None:
