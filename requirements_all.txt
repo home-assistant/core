@@ -100,7 +100,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.0
 
 # homeassistant.components.vicare
-PyViCare==2.51.0
+PyViCare==2.52.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -247,7 +247,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==41.11.0
+aioesphomeapi==41.12.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -770,7 +770,7 @@ datadog==0.52.0
 datapoint==0.12.1
 
 # homeassistant.components.bluetooth
-dbus-fast==2.44.3
+dbus-fast==2.44.5
 
 # homeassistant.components.debugpy
 debugpy==1.8.16
@@ -972,7 +972,7 @@ flux-led==1.2.0
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
-fnv-hash-fast==1.5.0
+fnv-hash-fast==1.6.0
 
 # homeassistant.components.foobot
 foobot_async==1.0.0
@@ -1458,7 +1458,7 @@ microBeesPy==0.3.5
 mill-local==0.3.0
 
 # homeassistant.components.mill
-millheater==0.13.1
+millheater==0.14.0
 
 # homeassistant.components.minio
 minio==7.1.12
@@ -1652,7 +1652,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.15.5
+opower==0.15.6
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1936,7 +1936,7 @@ pycsspeechtts==1.0.8
 pycync==0.4.1
 
 # homeassistant.components.daikin
-pydaikin==2.16.0
+pydaikin==2.17.0
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -2614,7 +2614,7 @@ pyvera==0.3.16
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==3.0.0
+pyvesync==3.1.0
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
@@ -3229,7 +3229,7 @@ zamg==0.3.6
 zcc-helper==3.7
 
 # homeassistant.components.zeroconf
-zeroconf==0.147.2
+zeroconf==0.148.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2

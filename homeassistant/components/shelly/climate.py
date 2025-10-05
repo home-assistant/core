@@ -333,8 +333,7 @@ class BlockSleepingClimate(
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (current_temp := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
+        target_temp = kwargs[ATTR_TEMPERATURE]
 
         # Shelly TRV accepts target_t in Fahrenheit or Celsius, but you must
         # send the units that the device expects
@@ -344,13 +343,13 @@ class BlockSleepingClimate(
             ]
             LOGGER.debug("Themostat settings: %s", therm)
             if therm.get("target_t", {}).get("units", "C") == "F":
-                current_temp = TemperatureConverter.convert(
-                    cast(float, current_temp),
+                target_temp = TemperatureConverter.convert(
+                    cast(float, target_temp),
                     UnitOfTemperature.CELSIUS,
                     UnitOfTemperature.FAHRENHEIT,
                 )
 
-        await self.set_state_full_path(target_t_enabled=1, target_t=f"{current_temp}")
+        await self.set_state_full_path(target_t_enabled=1, target_t=f"{target_temp}")
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
@@ -367,9 +366,6 @@ class BlockSleepingClimate(
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
-        if not self._preset_modes:
-            return
-
         preset_index = self._preset_modes.index(preset_mode)
 
         if preset_index == 0:
@@ -523,12 +519,9 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (target_temp := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
-
         await self.call_rpc(
             "Thermostat.SetConfig",
-            {"config": {"id": self._id, "target_C": target_temp}},
+            {"config": {"id": self._id, "target_C": kwargs[ATTR_TEMPERATURE]}},
         )
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -589,9 +582,6 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
     @rpc_call
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (target_temp := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
-
         await self.coordinator.device.blu_trv_set_target_temperature(
-            self._id, target_temp
+            self._id, kwargs[ATTR_TEMPERATURE]
         )
