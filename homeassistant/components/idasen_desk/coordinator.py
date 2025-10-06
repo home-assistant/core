@@ -41,16 +41,12 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):
         self._expected_connected = False
         self._height: int | None = None
 
-        @callback
-        def async_update_data() -> None:
-            self.async_set_updated_data(self._height)
-
         self._debouncer = Debouncer(
             hass=self.hass,
             logger=_LOGGER,
             cooldown=UPDATE_DEBOUNCE_TIME,
             immediate=True,
-            function=async_update_data,
+            function=callback(lambda: self.async_set_updated_data(self._height)),
         )
 
     async def async_connect(self) -> bool:
