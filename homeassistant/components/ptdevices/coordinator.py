@@ -8,7 +8,9 @@ from typing import Final
 import aioptdevices
 from aioptdevices.interface import PTDevicesResponse
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
@@ -23,15 +25,26 @@ from .device import ptdevices_get_data
 _LOGGER = logging.getLogger(__name__)
 REFRESH_COOLDOWN: Final = 10
 
+type PTDevicesConfigEntry = ConfigEntry[PTDevicesCoordinator]
+
 
 class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
     """Class for interacting with PTDevices get_data."""
 
-    def __init__(self, hass: HomeAssistant, deviceId: str, authToken: str) -> None:
+    config_entry: PTDevicesConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: PTDevicesConfigEntry,
+        deviceId: str,
+        authToken: str,
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=UPDATE_INTERVAL,
             request_refresh_debouncer=Debouncer(
@@ -46,28 +59,45 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
         self._authToken = authToken
         self._deviceId = deviceId
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the DeviceInfo from PTDevices."""
+
+        device_id: str = self.data.get("body", {}).get("id", "")
+
+        configuration_url: str = (
+            f"https://www.ptdevices.com/device/level/{device_id}" if device_id else ""
+        )
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, device_id)},
+            configuration_url=configuration_url,
+            manufacturer="ParemTech inc.",
+            sw_version=self.data.get("body", {}).get("version", None),
+            name=self.data.get("body", {}).get("title", ""),
+        )
+
     async def _async_update_data(self) -> PTDevicesResponse:
         try:
             data = await ptdevices_get_data(self._hass, self._authToken, self._deviceId)
 
         except aioptdevices.PTDevicesRequestError as err:
-            _LOGGER.warning("Failed to connect to PTDevices server")
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": repr(err)},
+            ) from err
         except aioptdevices.PTDevicesUnauthorizedError as err:
-            _LOGGER.warning("Unable, to read device data because of bad token")
-            raise UpdateFailed(err) from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_api_key",
+                translation_placeholders={"error": repr(err)},
+            ) from err
         except aioptdevices.PTDevicesForbiddenError as err:
-            _LOGGER.warning("Unable, device does not belong to the token holder")
-            raise UpdateFailed(err) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={"error": repr(err)},
+            ) from err
         else:
             return data
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the DeviceInfo of this APC UPS, if serial number is available."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.data["body"]["id"])},
-            configuration_url=f"https://www.ptdevices.com/device/level/{self.data["body"]["id"]}",
-            manufacturer="ParemTech inc.",
-            name=self.data["body"]["title"],
-        )

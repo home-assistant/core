@@ -22,7 +22,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     deviceId: str = config_entry.data[CONF_DEVICE_ID]
     authToken: str = config_entry.data[CONF_API_TOKEN]
 
-    coordinator = PTDevicesCoordinator(hass, deviceId, authToken)
+    coordinator = PTDevicesCoordinator(hass, config_entry, deviceId, authToken)
+    await coordinator.async_config_entry_first_refresh()
+    config_entry.runtime_data = coordinator
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinator

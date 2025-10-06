@@ -5,5 +5,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ptdevices",
   "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
   "requirements": ["aioptdevices==2024.7.1"]
 }

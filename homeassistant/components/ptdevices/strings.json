@@ -7,15 +7,33 @@
           "api_token": "[%key:common::config_flow::data::api_token%]"
         },
         "description": "Enter the Device ID or MAC address of the device to connect to and your token API key from ParemTech"
+      },
+      "reconfigure": {
+        "data": {
+          "device_id": "Device ID",
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "description": "Enter your new token API key from ParemTech to reconfigure your device"
+      },
+      "reauth_confirm": {
+        "title": "PTDevices reauth",
+        "description": "Your API key seem to be expired. Enter your new token API key from ParemTech to reconfigure your device",
+        "data": {
+          "api_token": "[%key:common::config_flow::data::api_token%]"
+        }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "entity": {
