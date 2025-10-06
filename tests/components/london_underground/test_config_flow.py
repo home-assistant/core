@@ -24,6 +24,9 @@ async def test_validate_input_success(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == None
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_LINE: ["Bakerloo", "Central"]},
