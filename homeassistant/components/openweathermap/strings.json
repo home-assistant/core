@@ -43,6 +43,61 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "weather": {
+        "name": "Weather"
+      },
+      "dew_point": {
+        "name": "Dew Point"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "feels_like_temperature": {
+        "name": "Feels like temperature"
+      },
+      "wind_speed": {
+        "name": "Wind speed"
+      },
+      "wind_gust": {
+        "name": "Wind gust"
+      },
+      "wind_bearing": {
+        "name": "Wind bearing"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "pressure": {
+        "name": "Pressure"
+      },
+      "clouds": {
+        "name": "Cloud coverage"
+      },
+      "rain": {
+        "name": "Rain"
+      },
+      "snow": {
+        "name": "Snow"
+      },
+      "precipitation_kind": {
+        "name": "Precipitation kind"
+      },
+      "uv_index": {
+        "name": "UV Index"
+      },
+      "visibility_distance": {
+        "name": "Visibility"
+      },
+      "condition": {
+        "name": "Condition"
+      },
+      "weather_code": {
+        "name": "Weather code"
+      }
+    }
+  },
   "issues": {
     "deprecated_v25": {
       "title": "OpenWeatherMap API V2.5 deprecated",
