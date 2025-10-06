@@ -23,7 +23,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -68,12 +68,13 @@ async def async_send_text_commands(
 ) -> list[CommandResponse]:
     """Send text commands to Google Assistant Service."""
     # There can only be 1 entry (config_flow has single_instance_allowed)
-    entry: GoogleAssistantSDKConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
-    if entry.state != ConfigEntryState.LOADED:
+    entries = hass.config_entries.async_loaded_entries(DOMAIN)
+    if not entries:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="entry_not_loaded",
         )
+    entry: GoogleAssistantSDKConfigEntry = entries[0]
 
     session = entry.runtime_data.session
     try:
