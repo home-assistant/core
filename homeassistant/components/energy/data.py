@@ -29,10 +29,10 @@ async def async_get_manager(hass: HomeAssistant) -> EnergyManager:
 class FlowFromGridSourceType(TypedDict):
     """Dictionary describing the 'from' stat for the grid source."""
 
-    # statistic_id of a an energy meter (kWh)
+    # statistic_id of an energy meter (kWh)
     stat_energy_from: str
 
-    # statistic_id of a an power meter (kW)
+    # statistic_id of an power meter (kW)
     stat_power_from: str | None
 
     # statistic_id of costs ($) incurred from the energy meter
