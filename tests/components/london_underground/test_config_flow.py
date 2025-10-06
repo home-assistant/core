@@ -117,6 +117,29 @@ async def test_validate_input_exceptions(
     assert result["options"] == {CONF_LINE: DEFAULT_LINES}
 
 
+async def test_already_configured(
+    hass: HomeAssistant, mock_london_underground_client, mock_setup_entry
+) -> None:
+    """Try (and fail) setting up a config entry when one already exists."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={CONF_LINE: ["Metropolitan"]},
+        title="London Underground",
+    )
+    # Add and set up the entry
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    # Try to start the flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
 async def test_yaml_import(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
