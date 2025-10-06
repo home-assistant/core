@@ -42,7 +42,8 @@ async def test_async_setup_entry_errors(
         patch("fluss_api.FlussApiClient", side_effect=side_effect),
         pytest.raises(expected_exception),
     ):
-        await async_setup_entry(hass, mock_config_entry)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.asyncio
@@ -53,7 +54,8 @@ async def test_async_setup_entry_success(
 ) -> None:
     """Test successful setup."""
     with patch("fluss_api.FlussApiClient", return_value=mock_api_client):
-        assert await async_setup_entry(hass, mock_config_entry)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert mock_config_entry.state is ConfigEntryState.LOADED
         hass.config_entries.async_forward_entry_setups.assert_called_once_with(
             mock_config_entry, PLATFORMS
         )
@@ -81,7 +83,8 @@ async def test_platforms_forwarded(
 ) -> None:
     """Test platforms are forwarded correctly."""
     with patch("fluss_api.FlussApiClient", return_value=mock_api_client):
-        await async_setup_entry(hass, mock_config_entry)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert mock_config_entry.state is ConfigEntryState.LOADED
         hass.config_entries.async_forward_entry_setups.assert_called_with(
             mock_config_entry, [Platform.BUTTON]
         )
