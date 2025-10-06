@@ -32,7 +32,7 @@ class HausbusConfig:
     gateway: HausbusGateway
 
 
-HausbusConfigEntry = ConfigEntry[HausbusConfig]
+type HausbusConfigEntry = ConfigEntry[HausbusConfig]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> bool:
