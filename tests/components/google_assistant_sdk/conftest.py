@@ -68,7 +68,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
 async def mock_setup_integration(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    setup_credentials,
+    setup_credentials: None,
 ) -> Callable[[], Coroutine[Any, Any, None]]:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
