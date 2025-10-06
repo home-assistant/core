@@ -43,7 +43,7 @@ rules:
   strict-typing: done
 ```
 
-**When Reviewing/Creating Code**: Always check the integration's quality scale level and exemption status before applying rules.
+**When Reviewing/Creating Code**: Always check the integration's quality scale level and exemption status before applying rules. Make sure to verify if the quality_scale.yaml is up to date with the introduced changes. A PR adding a new feature might also require updating the quality scale file, e.g. an integration previously being `exempt` status in `actions-exceptions` because it only had read only platforms (like sensors and binary sensors) might introduce a platform that contains actions (a switch for example) and therefore this rule would need to change to `todo` or `done`, depending on if the feature has been implemented in the PR or not.
 
 ## Code Review Guidelines
 
@@ -472,6 +472,7 @@ rules:
   except AuthFailed as ex:
       raise ConfigEntryAuthFailed(f"Credentials expired for {device.name}") from ex
   ```
+- **Action Exceptions (Silver)**: In this quality scale item, ensure that all actions, both in services and entity services (e.g. `async_turn_on` action in a switch entity), raise `ServiceValidationError` for user input errors and `HomeAssistantError` for operational errors.
 
 ### Logging
 - **Format Guidelines**:
