@@ -39,8 +39,8 @@ async def async_setup_entry(
     ent_reg = er.async_get(hass)
     for entry in er.async_entries_for_config_entry(ent_reg, config_entry.entry_id):
         if entry.domain == "sensor" and entry.unique_id not in uids:
-            entities.append(ONVIFSensor(entry.unique_id, device, entry=entry))
             uids.add(entry.unique_id)
+            entities.append(ONVIFSensor(entry.unique_id, device, entry=entry))
 
     async_add_entities(entities)
     uids_by_platform = device.events.get_uids_by_platform("sensor")
