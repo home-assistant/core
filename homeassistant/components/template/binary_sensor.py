@@ -372,6 +372,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
     def _set_state(self, state, _=None):
         """Set up auto off."""
         self._attr_is_on = state
+        self._delay_cancel = None
         self.async_write_ha_state()
 
         if not state:
@@ -395,10 +396,6 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
 
         auto_off_time = dt_util.utcnow() + auto_off_delay
         self._set_auto_off(auto_off_time)
-
-        if self._delay_cancel:
-            self._delay_cancel()
-            self._delay_cancel = None
 
     def _set_auto_off(self, auto_off_time: datetime) -> None:
         @callback
