@@ -952,6 +952,15 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getFuelNeed(),
         unit_getter=lambda api: api.getFuelUnit(),
     ),
+    ViCareSensorEntityDescription(
+        key="hydraulic_separator_temperature",
+        translation_key="hydraulic_separator_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getHydraulicSeparatorTemperature(),
+    ),
 )
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
