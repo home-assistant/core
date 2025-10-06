@@ -160,9 +160,6 @@
     },
     "get_areas": {
       "service": "mdi:map"
-    },
-    "select_areas": {
-      "service": "mdi:map"
     }
   }
 }

@@ -237,10 +237,6 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             )
             # Start the vacuum cleaner after selecting areas.
             await self.async_start()
-            # Return response indicating selected areas.
-            return cast(
-                ServiceResponse, {"status": "cleaning areas selected", "areas": areas}
-            )
         except MatterError as err:
             raise MatterError(f"Failed to start cleaning areas {areas}: {err}") from err
 
