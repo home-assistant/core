@@ -18,5 +18,4 @@ FEATUREMAP_ATTRIBUTE_ID = 65532
 
 # vacuum entity service actions
 SERVICE_GET_AREAS = "get_areas"  # get SupportedAreas and SupportedMaps
-SERVICE_SELECT_AREAS = "select_areas"  # call SelectAreas Matter command
 SERVICE_CLEAN_AREAS = "clean_areas"  # call SelectAreas Matter command and start RVC
