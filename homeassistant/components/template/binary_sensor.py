@@ -349,7 +349,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
 
         # state without delay.
         if self._attr_is_on == state or delay is None:
-            self._set_state(state)
+            self._set_state(state, remove_delay=False)
             return
 
         if not isinstance(delay, timedelta):
@@ -365,11 +365,13 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
         self._last_delay_from = self._attr_is_on
         self._last_delay_to = state
         self._delay_cancel = async_call_later(
-            self.hass, delay.total_seconds(), partial(self._set_state, state, True)
+            self.hass,
+            delay.total_seconds(),
+            partial(self._set_state, state, remove_delay=True),
         )
 
     @callback
-    def _set_state(self, state, remove_delay: bool = False, _=None):
+    def _set_state(self, state, _=None, *, remove_delay: bool = False):
         """Set up auto off."""
         self._attr_is_on = state
         self.async_write_ha_state()
