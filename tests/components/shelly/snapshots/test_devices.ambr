@@ -4421,7 +4421,7 @@
     'state': '230.2',
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_phase_n_current-entry]
+# name: test_shelly_pro_3em[sensor.test_name_neutral_current-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4436,7 +4436,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_name_phase_n_current',
+    'entity_id': 'sensor.test_name_neutral_current',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4451,7 +4451,7 @@
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
-    'original_name': 'Phase N current',
+    'original_name': 'Neutral current',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4461,16 +4461,16 @@
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
-# name: test_shelly_pro_3em[sensor.test_name_phase_n_current-state]
+# name: test_shelly_pro_3em[sensor.test_name_neutral_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'current',
-      'friendly_name': 'Test name Phase N current',
+      'friendly_name': 'Test name Neutral current',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_phase_n_current',
+    'entity_id': 'sensor.test_name_neutral_current',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
