@@ -45,35 +45,17 @@
   },
   "entity": {
     "sensor": {
-      "weather": {
-        "name": "Weather"
-      },
       "dew_point": {
-        "name": "Dew Point"
-      },
-      "temperature": {
-        "name": "Temperature"
+        "name": "[%key:component::weather::entity_component::_::state_attributes::dew_point::name%]"
       },
       "feels_like_temperature": {
-        "name": "Feels like temperature"
-      },
-      "wind_speed": {
-        "name": "Wind speed"
+        "name": "[%key:component::weather::entity_component::_::state_attributes::apparent_temperature::name%]"
       },
       "wind_gust": {
-        "name": "Wind gust"
-      },
-      "wind_bearing": {
-        "name": "Wind bearing"
-      },
-      "humidity": {
-        "name": "Humidity"
-      },
-      "pressure": {
-        "name": "Pressure"
+        "name": "[%key:component::weather::entity_component::_::state_attributes::wind_gust_speed::name%]"
       },
       "clouds": {
-        "name": "Cloud coverage"
+        "name": "[%key:component::weather::entity_component::_::state_attributes::cloud_coverage::name%]"
       },
       "rain": {
         "name": "Rain"
@@ -85,10 +67,10 @@
         "name": "Precipitation kind"
       },
       "uv_index": {
-        "name": "UV Index"
+        "name": "[%key:component::weather::entity_component::_::state_attributes::uv_index::name%]"
       },
       "visibility_distance": {
-        "name": "Visibility"
+        "name": "[%key:component::weather::entity_component::_::state_attributes::visibility::name%]"
       },
       "condition": {
         "name": "Condition"
