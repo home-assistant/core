@@ -38,6 +38,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
     )
 
+    async_setup_services(hass)
+
     return True
 
 
@@ -61,8 +63,6 @@ async def async_setup_entry(
     mem_storage = InMemoryStorage(hass)
     hass.http.register_view(GoogleAssistantSDKAudioView(mem_storage))
 
-    async_setup_services(hass)
-
     entry.runtime_data = GoogleAssistantSDKRuntimeData(
         session=session, mem_storage=mem_storage
     )
@@ -76,10 +76,6 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleAssistantSDKConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        for service_name in hass.services.async_services_for_domain(DOMAIN):
-            hass.services.async_remove(DOMAIN, service_name)
-
     conversation.async_unset_agent(hass, entry)
 
     return True

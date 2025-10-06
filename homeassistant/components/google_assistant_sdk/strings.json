@@ -67,6 +67,9 @@
   "exceptions": {
     "grpc_error": {
       "message": "Failed to communicate with Google Assistant"
+    },
+    "entry_not_loaded": {
+      "message": "Entry not loaded"
     }
   }
 }
