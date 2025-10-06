@@ -42,5 +42,5 @@ If something doesn’t work as expected, enable debug logging in configuration.y
   ```yaml
   logger:
     logs:
-      custom_components.hegel: debug
+      homeassistant.components.hegel: debug
   ```

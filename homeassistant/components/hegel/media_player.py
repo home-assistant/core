@@ -195,7 +195,14 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     @property
     def unique_id(self) -> str | None:
-        return self._unique_id or f"hegel-{self._entry.data.get(CONF_HOST)}"
+        """Return a unique ID for this entity."""
+        # Prefer device-specific identifiers over IP-based ones
+        if self._unique_id:
+            return self._unique_id
+        if self._mac:
+            return f"hegel_{self._mac.replace(':', '')}"
+        # Fallback to entry ID for consistency across reboots
+        return f"hegel_{self._entry.entry_id}"
 
     @property
     def device_info(self):

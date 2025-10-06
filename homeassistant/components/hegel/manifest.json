@@ -2,7 +2,7 @@
   "domain": "hegel",
   "name": "Hegel Amplifier",
   "version": "0.1.0",
-  "documentation": "https://example.invalid/hegel-ha",
+  "documentation": "https://www.home-assistant.io/integrations/hegel/",
   "requirements": [],
   "codeowners": [
     "@boazca"
@@ -10,10 +10,10 @@
   "iot_class": "local_push",
   "icon": "mdi:audio-video",
   "config_flow": true,
-  "issue_tracker": "https://example.invalid/hegel-ha/issues",
   "integration_type": "device",
+  "quality_scale": "bronze",
   "loggers": [
-    "custom_components.hegel"
+    "homeassistant.components.hegel"
   ],
   "ssdp": [
     {
