@@ -1,7 +1,7 @@
 """Test the Home Assistant Connect ZBT-2 config flow."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 
@@ -34,6 +34,16 @@ def mock_supervisor_fixture() -> Generator[None]:
         yield
 
 
+@pytest.fixture(name="setup_entry", autouse=True)
+def setup_entry_fixture() -> Generator[AsyncMock]:
+    """Mock entry setup."""
+    with patch(
+        "homeassistant.components.homeassistant_connect_zbt2.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
 async def test_config_flow_zigbee(
     hass: HomeAssistant,
 ) -> None:
@@ -62,6 +72,13 @@ async def test_config_flow_zigbee(
         step_id: str,
         next_step_id: str,
     ) -> ConfigFlowResult:
+        self._probed_firmware_info = FirmwareInfo(
+            device=usb_data.device,
+            firmware_type=expected_installed_firmware_type,
+            firmware_version=fw_version,
+            owners=[],
+            source="probe",
+        )
         return await getattr(self, f"async_step_{next_step_id}")()
 
     with (
@@ -69,16 +86,6 @@ async def test_config_flow_zigbee(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow._install_firmware_step",
             autospec=True,
             side_effect=mock_install_firmware_step,
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
-            return_value=FirmwareInfo(
-                device=usb_data.device,
-                firmware_type=fw_type,
-                firmware_version=fw_version,
-                owners=[],
-                source="probe",
-            ),
         ),
     ):
         pick_result = await hass.config_entries.flow.async_configure(
@@ -147,6 +154,13 @@ async def test_config_flow_thread(
         step_id: str,
         next_step_id: str,
     ) -> ConfigFlowResult:
+        self._probed_firmware_info = FirmwareInfo(
+            device=usb_data.device,
+            firmware_type=expected_installed_firmware_type,
+            firmware_version=fw_version,
+            owners=[],
+            source="probe",
+        )
         return await getattr(self, f"async_step_{next_step_id}")()
 
     with (
@@ -154,16 +168,6 @@ async def test_config_flow_thread(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow._install_firmware_step",
             autospec=True,
             side_effect=mock_install_firmware_step,
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
-            return_value=FirmwareInfo(
-                device=usb_data.device,
-                firmware_type=fw_type,
-                firmware_version=fw_version,
-                owners=[],
-                source="probe",
-            ),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -177,19 +181,12 @@ async def test_config_flow_thread(
         # Make sure the flow continues when the progress task is done.
         await hass.async_block_till_done()
 
-        confirm_result = await hass.config_entries.flow.async_configure(
+        create_result = await hass.config_entries.flow.async_configure(
             result["flow_id"]
         )
 
-        assert start_addon.call_count == 1
-        assert start_addon.call_args == call("core_openthread_border_router")
-        assert confirm_result["type"] is FlowResultType.FORM
-        assert confirm_result["step_id"] == "confirm_otbr"
-
-        create_result = await hass.config_entries.flow.async_configure(
-            confirm_result["flow_id"], user_input={}
-        )
-
+    assert start_addon.call_count == 1
+    assert start_addon.call_args == call("core_openthread_border_router")
     assert create_result["type"] is FlowResultType.CREATE_ENTRY
     config_entry = create_result["result"]
     assert config_entry.data == {
@@ -246,16 +243,18 @@ async def test_options_flow(
     assert description_placeholders["firmware_type"] == "spinel"
     assert description_placeholders["model"] == model
 
-    async def mock_install_firmware_step(
-        self,
-        fw_update_url: str,
-        fw_type: str,
-        firmware_name: str,
-        expected_installed_firmware_type: ApplicationType,
-        step_id: str,
-        next_step_id: str,
-    ) -> ConfigFlowResult:
-        return await getattr(self, f"async_step_{next_step_id}")()
+    mock_update_client = AsyncMock()
+    mock_manifest = Mock()
+    mock_firmware = Mock()
+    mock_firmware.filename = "zbt2_zigbee_ncp_7.4.4.0.gbl"
+    mock_firmware.metadata = {
+        "ezsp_version": "7.4.4.0",
+        "fw_type": "zbt2_zigbee_ncp",
+        "metadata_version": 2,
+    }
+    mock_manifest.firmwares = [mock_firmware]
+    mock_update_client.async_update_data.return_value = mock_manifest
+    mock_update_client.async_fetch_firmware.return_value = b"firmware_data"
 
     with (
         patch(
@@ -263,12 +262,11 @@ async def test_options_flow(
             return_value=[],
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareOptionsFlow._install_firmware_step",
-            autospec=True,
-            side_effect=mock_install_firmware_step,
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.FirmwareUpdateClient",
+            return_value=mock_update_client,
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.async_flash_silabs_firmware",
             return_value=FirmwareInfo(
                 device=usb_data.device,
                 firmware_type=ApplicationType.EZSP,
@@ -276,6 +274,30 @@ async def test_options_flow(
                 owners=[],
                 source="probe",
             ),
+        ) as flash_mock,
+        patch(
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
+            side_effect=[
+                # First call: probe before installation (returns current SPINEL firmware)
+                FirmwareInfo(
+                    device=usb_data.device,
+                    firmware_type=ApplicationType.SPINEL,
+                    firmware_version="2.4.4.0",
+                    owners=[],
+                    source="probe",
+                ),
+                # Second call: probe after installation (returns new EZSP firmware)
+                FirmwareInfo(
+                    device=usb_data.device,
+                    firmware_type=ApplicationType.EZSP,
+                    firmware_version="7.4.4.0 build 0",
+                    owners=[],
+                    source="probe",
+                ),
+            ],
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
         ),
     ):
         pick_result = await hass.config_entries.options.async_configure(
@@ -303,6 +325,10 @@ async def test_options_flow(
         "serial_number": usb_data.serial_number,
         "vid": usb_data.vid,
     }
+
+    # Verify async_flash_silabs_firmware was called with ZBT-2's reset methods
+    assert flash_mock.call_count == 1
+    assert flash_mock.mock_calls[0].kwargs["bootloader_reset_methods"] == ["rts_dtr"]
 
 
 async def test_duplicate_discovery(hass: HomeAssistant) -> None:

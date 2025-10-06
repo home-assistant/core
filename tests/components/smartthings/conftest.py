@@ -99,7 +99,6 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "aq_sensor_3_ikea",
         "da_ac_airsensor_01001",
         "da_ac_rac_000001",
-        "da_ac_rac_000002",
         "da_ac_rac_000003",
         "da_ac_rac_100001",
         "da_ac_rac_01001",
@@ -167,6 +166,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "hw_q80r_soundbar",
         "gas_meter",
         "lumi",
+        "tesla_powerwall",
     ]
 )
 def device_fixture(

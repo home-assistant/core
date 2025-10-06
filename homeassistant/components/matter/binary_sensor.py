@@ -91,6 +91,17 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
+            key="ThermostatOccupancySensor",
+            device_class=BinarySensorDeviceClass.OCCUPANCY,
+            # The first bit = if occupied
+            device_to_ha=lambda x: (x & 1 == 1) if x is not None else None,
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.Thermostat.Attributes.Occupancy,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
             key="BatteryChargeLevel",
             device_class=BinarySensorDeviceClass.BATTERY,
             entity_category=EntityCategory.DIAGNOSTIC,

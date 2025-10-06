@@ -22,19 +22,23 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
+    SOURCE_ESPHOME,
     SOURCE_IGNORE,
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    FlowType,
     OptionsFlow,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import AbortFlow, FlowResultType
+from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -57,6 +61,7 @@ from .manager import async_replace_device
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
 ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
+ERROR_INVALID_PASSWORD_AUTH = "invalid_auth"
 _LOGGER = logging.getLogger(__name__)
 
 ZERO_NOISE_PSK = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
@@ -74,6 +79,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize flow."""
         self._host: str | None = None
+        self._connected_address: str | None = None
         self.__name: str | None = None
         self._port: int | None = None
         self._password: str | None = None
@@ -136,6 +142,11 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         ):
             self._password = ""
             return await self._async_authenticate_or_add()
+
+        if error == ERROR_INVALID_PASSWORD_AUTH or (
+            error is None and self._device_info and self._device_info.uses_password
+        ):
+            return await self.async_step_authenticate()
 
         if error is None and entry_data.get(CONF_NOISE_PSK):
             # Device was configured with encryption but now connects without it.
@@ -492,18 +503,55 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.hass.config_entries.async_remove(
             self._entry_with_name_conflict.entry_id
         )
-        return self._async_create_entry()
+        return await self._async_create_entry()
 
-    @callback
-    def _async_create_entry(self) -> ConfigFlowResult:
+    async def _async_create_entry(self) -> ConfigFlowResult:
         """Create the config entry."""
         assert self._name is not None
+        assert self._device_info is not None
+
+        # Check if Z-Wave capabilities are present and start discovery flow
+        next_flow_id: str | None = None
+        if self._device_info.zwave_proxy_feature_flags:
+            assert self._connected_address is not None
+            assert self._port is not None
+
+            # Start Z-Wave discovery flow and get the flow ID
+            zwave_result = await self.hass.config_entries.flow.async_init(
+                "zwave_js",
+                context={
+                    "source": SOURCE_ESPHOME,
+                    "discovery_key": discovery_flow.DiscoveryKey(
+                        domain=DOMAIN,
+                        key=self._device_info.mac_address,
+                        version=1,
+                    ),
+                },
+                data=ESPHomeServiceInfo(
+                    name=self._device_info.name,
+                    zwave_home_id=self._device_info.zwave_home_id or None,
+                    ip_address=self._connected_address,
+                    port=self._port,
+                    noise_psk=self._noise_psk,
+                ),
+            )
+            if zwave_result["type"] in (
+                FlowResultType.ABORT,
+                FlowResultType.CREATE_ENTRY,
+            ):
+                _LOGGER.debug(
+                    "Unable to continue created Z-Wave JS config flow: %s", zwave_result
+                )
+            else:
+                next_flow_id = zwave_result["flow_id"]
+
         return self.async_create_entry(
             title=self._name,
             data=self._async_make_config_data(),
             options={
                 CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
             },
+            next_flow=(FlowType.CONFIG_FLOW, next_flow_id) if next_flow_id else None,
         )
 
     @callback
@@ -550,7 +598,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             if entry.data.get(CONF_DEVICE_NAME) == self._device_name:
                 self._entry_with_name_conflict = entry
                 return await self.async_step_name_conflict()
-        return self._async_create_entry()
+        return await self._async_create_entry()
 
     async def _async_reauth_validated_connection(self) -> ConfigFlowResult:
         """Handle reauth validated connection."""
@@ -690,13 +738,16 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         cli = APIClient(
             host,
             port or DEFAULT_PORT,
-            "",
+            self._password or "",
             zeroconf_instance=zeroconf_instance,
             noise_psk=noise_psk,
         )
         try:
             await cli.connect()
             self._device_info = await cli.device_info()
+            self._connected_address = cli.connected_address
+        except InvalidAuthAPIError:
+            return ERROR_INVALID_PASSWORD_AUTH
         except RequiresEncryptionAPIError:
             return ERROR_REQUIRES_ENCRYPTION_KEY
         except InvalidEncryptionKeyAPIError as ex:

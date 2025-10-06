@@ -165,13 +165,15 @@
             "name": "[%key:common::config_flow::data::name%]",
             "configuration_url": "Configuration URL",
             "model": "Model",
-            "model_id": "Model ID"
+            "model_id": "Model ID",
+            "manufacturer": "Manufacturer"
           },
           "data_description": {
             "name": "The name of the manually added MQTT device.",
             "configuration_url": "A link to the webpage that can manage the configuration of this device. Can be either a 'http://', 'https://' or an internal 'homeassistant://' URL.",
             "model": "E.g. 'Cleanmaster Pro'.",
-            "model_id": "E.g. '123NK2PRO'."
+            "model_id": "E.g. '123NK2PRO'.",
+            "manufacturer": "E.g. Cleanmaster Ltd."
           },
           "sections": {
             "advanced_settings": {
@@ -1235,6 +1237,7 @@
         "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
         "ph": "[%key:component::sensor::entity_component::ph::name%]",
         "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
+        "pm4": "[%key:component::sensor::entity_component::pm4::name%]",
         "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
         "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
         "power": "[%key:component::sensor::entity_component::power::name%]",
@@ -1242,6 +1245,7 @@
         "precipitation": "[%key:component::sensor::entity_component::precipitation::name%]",
         "precipitation_intensity": "[%key:component::sensor::entity_component::precipitation_intensity::name%]",
         "pressure": "[%key:component::sensor::entity_component::pressure::name%]",
+        "reactive_energy": "[%key:component::sensor::entity_component::reactive_energy::name%]",
         "reactive_power": "[%key:component::sensor::entity_component::reactive_power::name%]",
         "signal_strength": "[%key:component::sensor::entity_component::signal_strength::name%]",
         "sound_pressure": "[%key:component::sensor::entity_component::sound_pressure::name%]",
