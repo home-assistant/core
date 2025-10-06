@@ -185,7 +185,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.1
 
 # homeassistant.components.alexa_devices
-aioamazondevices==6.2.8
+aioamazondevices==6.2.9
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -217,7 +217,7 @@ aiobafi6==0.9.0
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
-aiocomelit==0.12.3
+aiocomelit==1.1.1
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.2.1
@@ -271,7 +271,7 @@ aiohasupervisor==0.3.3
 aiohomeconnect==0.20.0
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.19
+aiohomekit==3.2.20
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -310,7 +310,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==0.11.0
+aiomealie==1.0.0
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -325,7 +325,7 @@ aionanoleaf==0.2.1
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.6.0
+aiontfy==0.6.1
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -453,7 +453,7 @@ airgradient==0.9.2
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.5.4
+airos==0.5.5
 
 # homeassistant.components.airthings_ble
 airthings-ble==1.1.1
@@ -495,7 +495,7 @@ anova-wifi==0.17.0
 anthemav==1.4.1
 
 # homeassistant.components.anthropic
-anthropic==0.62.0
+anthropic==0.69.0
 
 # homeassistant.components.mcp_server
 anyio==4.10.0
@@ -2387,7 +2387,7 @@ pysmappee==0.2.29
 pysmarlaapi==0.9.2
 
 # homeassistant.components.smartthings
-pysmartthings==3.3.0
+pysmartthings==3.3.1
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
@@ -2504,7 +2504,7 @@ python-linkplay==0.2.12
 python-matter-server==8.1.0
 
 # homeassistant.components.melcloud
-python-melcloud==0.1.0
+python-melcloud==0.1.2
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2689,7 +2689,7 @@ raincloudy==0.0.7
 rapt-ble==0.1.2
 
 # homeassistant.components.raspyrfm
-raspyrfm-client==1.2.8
+raspyrfm-client==1.2.9
 
 # homeassistant.components.refoss
 refoss-ha==1.2.5
@@ -3063,7 +3063,7 @@ universal-silabs-flasher==0.0.35
 upb-lib==0.6.1
 
 # homeassistant.components.upcloud
-upcloud-api==2.8.0
+upcloud-api==2.9.0
 
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
@@ -3092,7 +3092,7 @@ velbus-aio==2025.8.0
 venstarcolortouch==0.21
 
 # homeassistant.components.victron_remote_monitoring
-victron-vrm==0.1.7
+victron-vrm==0.1.8
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0

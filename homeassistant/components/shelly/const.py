@@ -26,6 +26,7 @@ from aioshelly.const import (
     MODEL_VINTAGE_V2,
     MODEL_WALL_DISPLAY,
     MODEL_WALL_DISPLAY_X2,
+    MODEL_WALL_DISPLAY_XL,
 )
 
 from homeassistant.components.number import NumberMode
@@ -261,6 +262,7 @@ GEN2_BETA_RELEASE_URL = f"{GEN2_RELEASE_URL}#unreleased"
 DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
     MODEL_WALL_DISPLAY,
     MODEL_WALL_DISPLAY_X2,
+    MODEL_WALL_DISPLAY_XL,
     MODEL_MOTION,
     MODEL_MOTION_2,
     MODEL_VALVE,
@@ -268,15 +270,7 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
 
 CONF_GEN = "gen"
 
-VIRTUAL_COMPONENTS = (
-    "boolean",
-    "button",
-    "enum",
-    "input",
-    "number",
-    "presencezone",
-    "text",
-)
+VIRTUAL_COMPONENTS = ("boolean", "button", "enum", "input", "number", "text")
 VIRTUAL_COMPONENTS_MAP = {
     "binary_sensor": {"types": ["boolean"], "modes": ["label"]},
     "button": {"types": ["button"], "modes": ["button"]},

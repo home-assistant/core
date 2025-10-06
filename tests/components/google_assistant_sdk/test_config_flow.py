@@ -26,7 +26,7 @@ async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials,
+    setup_credentials: None,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -87,7 +87,7 @@ async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials,
+    setup_credentials: None,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test the reauthentication case updates the existing config entry."""
@@ -151,7 +151,7 @@ async def test_single_instance_allowed(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    setup_credentials,
+    setup_credentials: None,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test case where config flow allows a single test."""

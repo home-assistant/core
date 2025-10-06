@@ -60,6 +60,7 @@ SENSORS_WITH_ARG = {
     "disk_": "disk_arguments",
     "ipv": "network_arguments",
     **dict.fromkeys(NET_IO_TYPES, "network_arguments"),
+    "process_num_fds": "processes",
 }
 
 
@@ -444,6 +445,9 @@ async def async_setup_entry(
 
     startup_arguments = await hass.async_add_executor_job(get_arguments)
     startup_arguments["cpu_temperature"] = cpu_temperature
+    startup_arguments["processes"] = entry.options.get(BINARY_SENSOR_DOMAIN, {}).get(
+        CONF_PROCESS, []
+    )
 
     _LOGGER.debug("Setup from options %s", entry.options)
     for _type, sensor_description in SENSOR_TYPES.items():
@@ -499,38 +503,6 @@ async def async_setup_entry(
             )
             continue
 
-        if _type == "process_num_fds":
-            # Create sensors for processes configured in binary_sensor section
-            processes = entry.options.get(BINARY_SENSOR_DOMAIN, {}).get(
-                CONF_PROCESS, []
-            )
-            _LOGGER.debug(
-                "Creating process_num_fds sensors for processes: %s", processes
-            )
-            for process in processes:
-                argument = process
-                is_enabled = check_legacy_resource(
-                    f"{_type}_{argument}", legacy_resources
-                )
-                unique_id = slugify(f"{_type}_{argument}")
-                loaded_resources.add(unique_id)
-                _LOGGER.debug(
-                    "Creating process_num_fds sensor: type=%s, process=%s, unique_id=%s, enabled=%s",
-                    _type,
-                    process,
-                    unique_id,
-                    is_enabled,
-                )
-                entities.append(
-                    SystemMonitorSensor(
-                        coordinator,
-                        sensor_description,
-                        entry.entry_id,
-                        argument,
-                        is_enabled,
-                    )
-                )
-            continue
     # Ensure legacy imported disk_* resources are loaded if they are not part
     # of mount points automatically discovered
     for resource in legacy_resources:
