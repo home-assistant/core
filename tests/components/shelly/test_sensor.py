@@ -1080,12 +1080,12 @@ async def test_rpc_device_virtual_text_sensor(
 
 
 @pytest.mark.parametrize(
-    ("old_id", "new_id", "device_class"),
+    ("old_id", "new_id", "role"),
     [
-        ("enum", "enum_generic", SensorDeviceClass.ENUM),
+        ("enum", "enum_generic", None),
         ("number", "number_generic", None),
-        ("number", "number_current_humidity", SensorDeviceClass.HUMIDITY),
-        ("number", "number_current_temperature", SensorDeviceClass.TEMPERATURE),
+        ("number", "number_current_humidity", "current_humidity"),
+        ("number", "number_current_temperature", "current_temperature"),
         ("text", "text_generic", None),
     ],
 )
@@ -1094,15 +1094,24 @@ async def test_migrate_unique_id_virtual_components_roles(
     mock_rpc_device: Mock,
     entity_registry: EntityRegistry,
     caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
     old_id: str,
     new_id: str,
-    device_class: SensorDeviceClass | None,
+    role: str | None,
 ) -> None:
     """Test migration of unique_id for virtual components to include role."""
     entry = await init_integration(hass, 3, skip_setup=True)
     unique_base = f"{MOCK_MAC}-{old_id}:200"
     old_unique_id = f"{unique_base}-{old_id}"
     new_unique_id = f"{unique_base}-{new_id}"
+    config = deepcopy(mock_rpc_device.config)
+    if role:
+        config[f"{old_id}:200"] = {
+            "role": role,
+        }
+    else:
+        config[f"{old_id}:200"] = {}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
 
     entity = entity_registry.async_get_or_create(
         suggested_object_id="test_name_test_sensor",
@@ -1111,7 +1120,6 @@ async def test_migrate_unique_id_virtual_components_roles(
         platform=DOMAIN,
         unique_id=old_unique_id,
         config_entry=entry,
-        original_device_class=device_class,
     )
     assert entity.unique_id == old_unique_id
 

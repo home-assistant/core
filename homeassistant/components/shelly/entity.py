@@ -29,6 +29,7 @@ from .utils import (
     get_rpc_device_info,
     get_rpc_entity_name,
     get_rpc_key_instances,
+    get_rpc_role_by_key,
 )
 
 
@@ -189,9 +190,9 @@ def async_setup_rpc_attribute_entities(
             if description.models and coordinator.model not in description.models:
                 continue
 
-            if description.role and description.role != coordinator.device.config[
-                key
-            ].get("role", "generic"):
+            if description.role and description.role != get_rpc_role_by_key(
+                coordinator.device.config, key
+            ):
                 continue
 
             if description.sub_key not in coordinator.device.status[

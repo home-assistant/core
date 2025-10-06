@@ -331,7 +331,7 @@ async def test_rpc_device_virtual_number(
     assert state.attributes.get(ATTR_MODE) is mode
 
     assert (entry := entity_registry.async_get(entity_id))
-    assert entry.unique_id == "123456789ABC-number:203-number"
+    assert entry.unique_id == "123456789ABC-number:203-number_generic"
 
     monkeypatch.setitem(mock_rpc_device.status["number:203"], "value", 78.9)
     mock_rpc_device.mock_update()
@@ -380,7 +380,7 @@ async def test_rpc_remove_virtual_number_when_mode_label(
         hass,
         NUMBER_DOMAIN,
         "test_name_number_200",
-        "number:200-number",
+        "number:200-number_generic",
         config_entry,
         device_id=device_entry.id,
     )
@@ -404,7 +404,7 @@ async def test_rpc_remove_virtual_number_when_orphaned(
         hass,
         NUMBER_DOMAIN,
         "test_name_number_200",
-        "number:200-number",
+        "number:200-number_generic",
         config_entry,
         device_id=device_entry.id,
     )

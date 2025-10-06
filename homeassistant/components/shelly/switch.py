@@ -21,6 +21,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .const import (
+    MODEL_FRANKEVER_IRRIGATION_CONTROLLER,
+    MODEL_LINKEDGO_ST802_THERMOSTAT,
+    MODEL_LINKEDGO_ST1820_THERMOSTAT,
+    MODEL_NEO_WATER_VALVE,
+    MODEL_TOP_EV_CHARGER_EVE01,
+)
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -87,7 +94,7 @@ RPC_RELAY_SWITCHES = {
 }
 
 RPC_SWITCHES = {
-    "boolean": RpcSwitchDescription(
+    "boolean_generic": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
         removal_condition=lambda config, _status, key: not is_view_for_platform(
@@ -97,6 +104,120 @@ RPC_SWITCHES = {
         method_on="Boolean.Set",
         method_off="Boolean.Set",
         method_params_fn=lambda id, value: {"id": id, "value": value},
+        role="generic",
+    ),
+    "boolean_anti_freeze": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        entity_registry_enabled_default=False,
+        is_on=lambda status: bool(status["value"]),
+        method_on="Boolean.Set",
+        method_off="Boolean.Set",
+        method_params_fn=lambda id, value: {"id": id, "value": value},
+        role="anti_freeze",
+        models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
+    ),
+    "boolean_child_lock": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        is_on=lambda status: bool(status["value"]),
+        method_on="Boolean.Set",
+        method_off="Boolean.Set",
+        method_params_fn=lambda id, value: {"id": id, "value": value},
+        role="child_lock",
+        models={MODEL_LINKEDGO_ST1820_THERMOSTAT},
+    ),
+    "boolean_enable": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        entity_registry_enabled_default=False,
+        is_on=lambda status: bool(status["value"]),
+        method_on="Boolean.Set",
+        method_off="Boolean.Set",
+        method_params_fn=lambda id, value: {"id": id, "value": value},
+        role="enable",
+        models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
+    ),
+    "boolean_start_charging": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        is_on=lambda status: bool(status["value"]),
+        method_on="Boolean.Set",
+        method_off="Boolean.Set",
+        method_params_fn=lambda id, value: {"id": id, "value": value},
+        role="start_charging",
+        models={MODEL_TOP_EV_CHARGER_EVE01},
+    ),
+    "boolean_state": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        entity_registry_enabled_default=False,
+        is_on=lambda status: bool(status["value"]),
+        method_on="Boolean.Set",
+        method_off="Boolean.Set",
+        method_params_fn=lambda id, value: {"id": id, "value": value},
+        role="state",
+        models={MODEL_NEO_WATER_VALVE},
+    ),
+    "boolean_zone0": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        is_on=lambda status: bool(status["value"]),
+        method_on="Boolean.Set",
+        method_off="Boolean.Set",
+        method_params_fn=lambda id, value: {"id": id, "value": value},
+        role="zone0",
+        models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
+    ),
+    "boolean_zone1": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        is_on=lambda status: bool(status["value"]),
+        method_on="Boolean.Set",
+        method_off="Boolean.Set",
+        method_params_fn=lambda id, value: {"id": id, "value": value},
+        role="zone1",
+        models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
+    ),
+    "boolean_zone2": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        is_on=lambda status: bool(status["value"]),
+        method_on="Boolean.Set",
+        method_off="Boolean.Set",
+        method_params_fn=lambda id, value: {"id": id, "value": value},
+        role="zone2",
+        models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
+    ),
+    "boolean_zone3": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        is_on=lambda status: bool(status["value"]),
+        method_on="Boolean.Set",
+        method_off="Boolean.Set",
+        method_params_fn=lambda id, value: {"id": id, "value": value},
+        role="zone3",
+        models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
+    ),
+    "boolean_zone4": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        is_on=lambda status: bool(status["value"]),
+        method_on="Boolean.Set",
+        method_off="Boolean.Set",
+        method_params_fn=lambda id, value: {"id": id, "value": value},
+        role="zone4",
+        models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
+    ),
+    "boolean_zone5": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        is_on=lambda status: bool(status["value"]),
+        method_on="Boolean.Set",
+        method_off="Boolean.Set",
+        method_params_fn=lambda id, value: {"id": id, "value": value},
+        role="zone5",
+        models={MODEL_FRANKEVER_IRRIGATION_CONTROLLER},
     ),
     "script": RpcSwitchDescription(
         key="script",
