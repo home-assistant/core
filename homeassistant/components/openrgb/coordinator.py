@@ -12,7 +12,6 @@ from openrgb.orgb import Device
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -62,7 +61,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 DEFAULT_CLIENT_NAME,
             )
         except CONNECTION_ERRORS as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
                 translation_placeholders={
