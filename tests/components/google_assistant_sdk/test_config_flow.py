@@ -30,7 +30,7 @@ async def test_full_flow(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        "google_assistant_sdk", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -88,25 +88,14 @@ async def test_reauth(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     setup_credentials,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test the reauthentication case updates the existing config entry."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "token": {
-                "access_token": "mock-access-token",
-            },
-        },
-    )
     config_entry.add_to_hass(hass)
 
-    config_entry.async_start_reauth(hass)
-    await hass.async_block_till_done()
+    result = await config_entry.start_reauth_flow(hass)
 
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    result = flows[0]
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -163,20 +152,13 @@ async def test_single_instance_allowed(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     setup_credentials,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test case where config flow allows a single test."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "token": {
-                "access_token": "mock-access-token",
-            },
-        },
-    )
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        "google_assistant_sdk", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result.get("type") is FlowResultType.ABORT
