@@ -18,7 +18,7 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
-from .common import is_fan, is_purifier
+from .common import is_fan, is_purifier, rgetattr
 from .const import (
     DOMAIN,
     VS_COORDINATOR,
@@ -90,10 +90,25 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     _attr_name = None
     _attr_translation_key = "vesync"
 
+    def __init__(
+        self,
+        device: VeSyncBaseDevice,
+        coordinator: VeSyncDataCoordinator,
+    ) -> None:
+        """Initialize the fan."""
+        super().__init__(device, coordinator)
+        if rgetattr(device, "state.oscillation_status") is not None:
+            self._attr_supported_features |= FanEntityFeature.OSCILLATE
+
     @property
     def is_on(self) -> bool:
         """Return True if device is on."""
         return self.device.state.device_status == "on"
+
+    @property
+    def oscillating(self) -> bool:
+        """Return True if device is oscillating."""
+        return rgetattr(self.device, "state.oscillation_status") == "on"
 
     @property
     def percentage(self) -> int | None:
@@ -245,6 +260,13 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         success = await self.device.turn_off()
+        if not success:
+            raise HomeAssistantError(self.device.last_response.message)
+        self.schedule_update_ha_state()
+
+    async def async_oscillate(self, oscillating: bool) -> None:
+        """Set oscillation."""
+        success = await self.device.toggle_oscillation(oscillating)
         if not success:
             raise HomeAssistantError(self.device.last_response.message)
         self.schedule_update_ha_state()
