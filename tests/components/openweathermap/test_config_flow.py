@@ -100,7 +100,6 @@ async def test_abort_config_flow(
         result["flow_id"],
         USER_INPUT,
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
 
 
@@ -178,7 +177,6 @@ async def test_form_invalid_api_key(
         result["flow_id"],
         USER_INPUT,
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_api_key"}
     # valid api key
@@ -187,7 +185,6 @@ async def test_form_invalid_api_key(
         result["flow_id"],
         USER_INPUT,
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -207,7 +204,6 @@ async def test_form_api_call_error(
         result["flow_id"],
         USER_INPUT,
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
     # simulate successful api call
@@ -216,5 +212,4 @@ async def test_form_api_call_error(
         result["flow_id"],
         USER_INPUT,
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY

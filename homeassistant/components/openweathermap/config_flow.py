@@ -40,7 +40,7 @@ from .utils import build_data_and_options, validate_api_key
 USER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_LOCATION): LocationSelector(
-            LocationSelectorConfig(radius=False, icon="")
+            LocationSelectorConfig(radius=False)
         ),
         vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
             LanguageSelectorConfig(languages=LANGUAGES, native_name=True)
