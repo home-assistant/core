@@ -24,8 +24,3 @@ water_heater_boost:
           step: 1
           mode: slider
       default: 65
-
-water_heater_cancel_boost:
-  target:
-    entity:
-      domain: water_heater
