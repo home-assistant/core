@@ -72,7 +72,7 @@ class WazeTravelTimeSensor(CoordinatorEntity[WazeTravelTimeCoordinator], SensorE
     def available(self) -> bool:
         """Return if entity is available."""
         return (
-            self.coordinator.data is not None
+            super().available
             and self.coordinator.data.duration is not None
         )
 
