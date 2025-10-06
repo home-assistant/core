@@ -239,6 +239,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             await self.async_start()
         except MatterError as err:
             raise MatterError(f"Failed to start cleaning areas {areas}: {err}") from err
+        return None
 
     @callback
     def _update_from_device(self) -> None:
