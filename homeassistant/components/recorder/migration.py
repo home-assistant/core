@@ -2964,7 +2964,12 @@ class EventIDPostMigration(BaseRunTimeMigration):
                     _drop_foreign_key_constraints(
                         session_maker, instance.engine, TABLE_STATES, "event_id"
                     )
-                except (InternalError, OperationalError):
+                except (InternalError, OperationalError) as err:
+                    _LOGGER.debug(
+                        "Could not drop foreign key constraint on states.event_id, "
+                        "will try again later",
+                        exc_info=err,
+                    )
                     fk_remove_ok = False
                 else:
                     fk_remove_ok = True
