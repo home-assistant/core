@@ -65,6 +65,9 @@
     }
   },
   "exceptions": {
+    "reauth_required": {
+      "message": "OAuth session is not valid, re-authentication required"
+    },
     "grpc_error": {
       "message": "Failed to communicate with Google Assistant"
     }

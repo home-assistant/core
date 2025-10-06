@@ -54,7 +54,7 @@ async def async_setup_entry(
     except aiohttp.ClientResponseError as err:
         if 400 <= err.status < 500:
             raise ConfigEntryAuthFailed(
-                "OAuth session is not valid, reauth required"
+                translation_domain=DOMAIN, translation_key="reauth_required"
             ) from err
         raise ConfigEntryNotReady from err
     except aiohttp.ClientError as err:
