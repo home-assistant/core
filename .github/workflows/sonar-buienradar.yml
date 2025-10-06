@@ -1,5 +1,6 @@
 name: SonarCloud - buienradar
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'homeassistant/components/buienradar/**'
@@ -10,7 +11,7 @@ on:
     paths:
       - 'homeassistant/components/buienradar/**'
       - 'tests/components/buienradar/**'
-
+      
 jobs:
   sonar:
     runs-on: ubuntu-latest
