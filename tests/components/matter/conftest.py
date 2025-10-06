@@ -120,6 +120,7 @@ async def integration_fixture(
         "silabs_water_heater",
         "smoke_detector",
         "solar_power",
+        "speaker",
         "switch_unit",
         "switchbot_k11_plus",
         "temperature_sensor",

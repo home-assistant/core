@@ -65,8 +65,14 @@
     }
   },
   "exceptions": {
+    "entry_not_loaded": {
+      "message": "Entry not loaded"
+    },
     "grpc_error": {
       "message": "Failed to communicate with Google Assistant"
+    },
+    "reauth_required": {
+      "message": "Credentials are invalid, re-authentication required"
     }
   }
 }

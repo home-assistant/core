@@ -15,7 +15,7 @@ astral==2.2
 async-interrupt==1.2.2
 async-upnp-client==0.45.0
 atomicwrites-homeassistant==1.4.1
-attrs==25.3.0
+attrs==25.4.0
 audioop-lts==0.2.1
 av==13.1.0
 awesomeversion==25.5.0
@@ -74,7 +74,7 @@ voluptuous-openapi==0.1.0
 voluptuous-serialize==2.7.0
 voluptuous==0.15.2
 webrtc-models==0.3.0
-yarl==1.20.1
+yarl==1.22.0
 zeroconf==0.148.0
 
 # Constrain pycryptodome to avoid vulnerability
