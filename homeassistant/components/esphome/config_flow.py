@@ -512,7 +512,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Check if Z-Wave capabilities are present and start discovery flow
         next_flow_id: str | None = None
-        if self._device_info.zwave_proxy_feature_flags:
+        if (
+            self._device_info.zwave_proxy_feature_flags
+            and self._device_info.zwave_home_id
+        ):
             assert self._connected_address is not None
             assert self._port is not None
 

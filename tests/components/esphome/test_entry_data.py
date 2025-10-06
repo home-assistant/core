@@ -8,6 +8,8 @@ from aioesphomeapi import (
     SensorInfo,
     SensorState,
 )
+from aioesphomeapi.api_pb2 import ZWaveProxyRequest as ZWaveProxyRequestPb
+from aioesphomeapi.model import ZWaveProxyRequest
 
 from homeassistant.components.esphome import DOMAIN
 from homeassistant.components.esphome.entry_data import RuntimeEntryData
@@ -95,28 +97,34 @@ async def test_discover_zwave() -> None:
     )
     device_info.name = "mock-device-infoname"
 
+    entry_data.async_on_connect(
+        hass,
+        device_info,
+        None,
+    )
+
+    pb_request_home_id_change = ZWaveProxyRequestPb(type=2, data=b"1234")
+    request_home_id_change = ZWaveProxyRequest.from_pb(pb_request_home_id_change)
+
     with patch(
         "homeassistant.helpers.discovery_flow.async_create_flow"
     ) as mock_create_flow:
-        entry_data.async_on_connect(
-            hass,
-            device_info,
-            None,
-        )
-        mock_create_flow.assert_called_once_with(
-            hass,
-            "zwave_js",
-            {"source": "esphome"},
-            ESPHomeServiceInfo(
-                name="mock-device-infoname",
-                zwave_home_id=1234,
-                ip_address="mock-client-address",
-                port=1234,
-                noise_psk=None,
-            ),
-            discovery_key=discovery_flow.DiscoveryKey(
-                domain="esphome",
-                key="mock-device-info-mac",
-                version=1,
-            ),
-        )
+        entry_data._async_on_zwave_proxy_request(hass, request_home_id_change)
+
+    mock_create_flow.assert_called_once_with(
+        hass,
+        "zwave_js",
+        {"source": "esphome"},
+        ESPHomeServiceInfo(
+            name="mock-device-infoname",
+            zwave_home_id=825373492,
+            ip_address="mock-client-address",
+            port=1234,
+            noise_psk=None,
+        ),
+        discovery_key=discovery_flow.DiscoveryKey(
+            domain="esphome",
+            key="mock-device-info-mac",
+            version=1,
+        ),
+    )

@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from functools import partial
 import logging
 from operator import delitem
+import struct
 from typing import TYPE_CHECKING, Any, Final, TypedDict, cast
 
 from aioesphomeapi import (
@@ -46,7 +47,7 @@ from aioesphomeapi import (
     ValveInfo,
     build_unique_id,
 )
-from aioesphomeapi.model import ButtonInfo
+from aioesphomeapi.model import ButtonInfo, ZWaveProxyRequest, ZWaveProxyRequestType
 from bleak_esphome.backend.device import ESPHomeBluetoothDevice
 
 from homeassistant import config_entries
@@ -489,22 +490,38 @@ class RuntimeEntryData:
         if not device_info.zwave_proxy_feature_flags:
             return
 
+        self.client.subscribe_zwave_proxy_request(
+            partial(self._async_on_zwave_proxy_request, hass)
+        )
+
+    @callback
+    def _async_on_zwave_proxy_request(
+        self, hass: HomeAssistant, msg: ZWaveProxyRequest
+    ) -> None:
+        """Handle Z-Wave Proxy requests."""
+
+        if msg.type != ZWaveProxyRequestType.HOME_ID_CHANGE:
+            return
+
+        assert self.device_info
         assert self.client.connected_address
+
+        home_id = struct.unpack(">I", msg.data)[0]
 
         discovery_flow.async_create_flow(
             hass,
             "zwave_js",
             {"source": config_entries.SOURCE_ESPHOME},
             ESPHomeServiceInfo(
-                name=device_info.name,
-                zwave_home_id=device_info.zwave_home_id or None,
+                name=self.device_info.name,
+                zwave_home_id=home_id or None,
                 ip_address=self.client.connected_address,
                 port=self.client.port,
                 noise_psk=self.client.noise_psk,
             ),
             discovery_key=discovery_flow.DiscoveryKey(
                 domain=DOMAIN,
-                key=device_info.mac_address,
+                key=self.device_info.mac_address,
                 version=1,
             ),
         )
