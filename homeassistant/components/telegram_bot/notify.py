@@ -45,7 +45,7 @@ class TelegramBotNotifyEntity(TelegramBotEntity, NotifyEntity):
             config_entry, NotifyEntityDescription(key=subentry.data[CONF_CHAT_ID])
         )
         self.chat_id = subentry.data[CONF_CHAT_ID]
-        self.name = subentry.title
+        self._attr_name = subentry.title
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
