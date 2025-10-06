@@ -828,7 +828,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[speaker][switch.audiolink_power-entry]
+# name: test_switches[speaker][switch.mock_speaker_mute-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -841,7 +841,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.audiolink_power',
+    'entity_id': 'switch.mock_speaker_mute',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -851,30 +851,29 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Power',
+    'original_name': 'Mute',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power',
-    'unique_id': '00000000000004D2-000000000000006B-MatterNodeDevice-1-MatterPowerToggle-6-0',
+    'translation_key': 'speaker_mute',
+    'unique_id': '00000000000004D2-000000000000006B-MatterNodeDevice-1-MatterMuteToggle-6-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[speaker][switch.audiolink_power-state]
+# name: test_switches[speaker][switch.mock_speaker_mute-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'AudioLink Power',
+      'friendly_name': 'Mock speaker Mute',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.audiolink_power',
+    'entity_id': 'switch.mock_speaker_mute',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_switches[switch_unit][switch.mock_switchunit-entry]

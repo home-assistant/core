@@ -23,13 +23,25 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.components.shelly.const import RPC_COVER_UPDATE_TIME_SEC
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration, mock_polling_rpc_update, mutate_rpc_device_status
+from . import (
+    init_integration,
+    mock_polling_rpc_update,
+    mutate_rpc_device_status,
+    patch_platforms,
+)
 
 ROLLER_BLOCK_ID = 1
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms([Platform.COVER]):
+        yield
 
 
 async def test_block_device_services(
