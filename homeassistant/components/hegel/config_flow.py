@@ -34,7 +34,7 @@ class HegelFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._errors: dict[str, str] = {}
 
     async def async_step_user(
-            self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manual setup or after discovery confirmation."""
         errors: dict[str, str] = {}
@@ -83,7 +83,7 @@ class HegelFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_reconfigure(
-            self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Reconfigure a config entry."""
         reconfigure_entry = self._get_reconfigure_entry()
@@ -149,7 +149,7 @@ class HegelFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(
-            self, discovery_info: SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle SSDP discovery and pre-fill the user form."""
         upnp = getattr(discovery_info, "upnp", {}) or {}
@@ -212,7 +212,7 @@ class HegelFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         mac_match = re.search(r"([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})", text)
         if mac_match:
             mac = mac_match.group(0).lower()
-            return f"mac:{mac.replace(':','')}", mac
+            return f"mac:{mac.replace(':', '')}", mac
 
         # Parse XML for serialNumber or UDN
         try:

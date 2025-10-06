@@ -245,7 +245,11 @@ class HegelClient:
             while not self._reader.at_eof() and not self._stopping:
                 try:
                     line = await self._reader.readuntil(separator=b"\r")
-                except (asyncio.IncompleteReadError, ConnectionResetError, OSError) as err:
+                except (
+                    asyncio.IncompleteReadError,
+                    ConnectionResetError,
+                    OSError,
+                ) as err:
                     # connection closed/RESET by peer — break and allow manager to reconnect
                     _LOGGER.error("Listen loop failed: %s", err)
                     break

@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-        hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
     """Set up the Hegel media player from a config entry."""
     host = entry.data[CONF_HOST]
@@ -156,15 +156,15 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     _attr_should_poll = False
 
     def __init__(
-            self,
-            config_entry: ConfigEntry,
-            name: str,
-            client: HegelClient,
-            source_map: dict[int, str],
-            state: dict[str, Any],
-            mac: str | None,
-            unique_id: str | None,
-            coordinator: HegelSlowPollCoordinator,
+        self,
+        config_entry: ConfigEntry,
+        name: str,
+        client: HegelClient,
+        source_map: dict[int, str],
+        state: dict[str, Any],
+        mac: str | None,
+        unique_id: str | None,
+        coordinator: HegelSlowPollCoordinator,
     ) -> None:
         CoordinatorEntity.__init__(self, coordinator)
         MediaPlayerEntity.__init__(self)
@@ -180,12 +180,12 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
         # supported features
         self._attr_supported_features = (
-                MediaPlayerEntityFeature.VOLUME_SET
-                | MediaPlayerEntityFeature.VOLUME_MUTE
-                | MediaPlayerEntityFeature.VOLUME_STEP
-                | MediaPlayerEntityFeature.SELECT_SOURCE
-                | MediaPlayerEntityFeature.TURN_ON
-                | MediaPlayerEntityFeature.TURN_OFF
+            MediaPlayerEntityFeature.VOLUME_SET
+            | MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_STEP
+            | MediaPlayerEntityFeature.SELECT_SOURCE
+            | MediaPlayerEntityFeature.TURN_ON
+            | MediaPlayerEntityFeature.TURN_OFF
         )
 
         # Entity categorization for better organization
