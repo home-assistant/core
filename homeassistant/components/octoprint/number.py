@@ -107,15 +107,14 @@ class OctoPrintTemperatureNumber(
     @property
     def native_value(self) -> float | None:
         """Return the current target temperature."""
-        printer: OctoprintPrinterInfo = self.coordinator.data["printer"]
-        if not printer:
+        if not self.coordinator.data["printer"]:
             return None
-
-        for temp in printer.temperatures:
-            if temp.name == self._api_tool:
-                if temp.target_temp is None:
-                    return None
-                return round(temp.target_temp, 1)
+        for tool in [
+            tool
+            for tool in self.coordinator.data["printer"].temperatures
+            if tool.name == self._api_tool and tool.target_temp is not None
+        ]:
+            return round(tool.target_temp, 2)
 
         return None
 

@@ -242,21 +242,22 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
     @property
     def native_value(self):
         """Return sensor state."""
-        printer: OctoprintPrinterInfo = self.coordinator.data["printer"]
-        if not printer:
+        if not self.coordinator.data["printer"]:
             return None
+        for tool in [
+            tool
+            for tool in self.coordinator.data["printer"].temperatures
+            if tool.name == self._api_tool
+        ]:
+            val = (
+                tool.actual_temp
+                if self._temp_type == "actual"
+                else tool.target_temp
+            )
+            if val is None:
+                return None
 
-        for temp in printer.temperatures:
-            if temp.name == self._api_tool:
-                val = (
-                    temp.actual_temp
-                    if self._temp_type == "actual"
-                    else temp.target_temp
-                )
-                if val is None:
-                    return None
-
-                return round(val, 2)
+            return round(val, 2)
 
         return None
 
