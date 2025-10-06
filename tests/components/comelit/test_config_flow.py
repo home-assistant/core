@@ -6,6 +6,7 @@ from aiocomelit import CannotAuthenticate, CannotConnect
 from aiocomelit.const import BRIDGE, VEDO
 import pytest
 
+from homeassistant.components.comelit.config_flow import InvalidPin
 from homeassistant.components.comelit.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
@@ -97,7 +98,7 @@ async def test_flow_vedo(
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
         (ConnectionResetError, "unknown"),
-        (ValueError, "invalid_pin"),
+        (InvalidPin, "invalid_pin"),
     ],
 )
 async def test_exception_connection(
@@ -182,7 +183,7 @@ async def test_reauth_successful(
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
         (ConnectionResetError, "unknown"),
-        (ValueError, "invalid_pin"),
+        (InvalidPin, "invalid_pin"),
     ],
 )
 async def test_reauth_not_successful(
@@ -263,7 +264,7 @@ async def test_reconfigure_successful(
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
         (ConnectionResetError, "unknown"),
-        (ValueError, "invalid_pin"),
+        (InvalidPin, "invalid_pin"),
     ],
 )
 async def test_reconfigure_fails(

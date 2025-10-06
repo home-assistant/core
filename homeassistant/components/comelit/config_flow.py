@@ -51,8 +51,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     api: ComelitCommonApi
 
-    if not re.fullmatch(r"^[0-9]{4,10}$", data[CONF_PIN]):
-        raise ValueError("PIN must be 4-10 digits")
+    if not re.fullmatch(r"[0-9]{4,10}", data[CONF_PIN]):
+        raise InvalidPin
 
     session = await async_client_session(hass)
     if data.get(CONF_TYPE, BRIDGE) == BRIDGE:
@@ -104,7 +104,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except ValueError:
+        except InvalidPin:
             errors["base"] = "invalid_pin"
         except Exception:  # noqa: BLE001
             _LOGGER.exception("Unexpected exception")
@@ -147,7 +147,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except ValueError:
+            except InvalidPin:
                 errors["base"] = "invalid_pin"
             except Exception:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception")
@@ -192,7 +192,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
-        except ValueError:
+        except InvalidPin:
             errors["base"] = "invalid_pin"
         except Exception:  # noqa: BLE001
             _LOGGER.exception("Unexpected exception")
@@ -215,3 +215,7 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class InvalidPin(HomeAssistantError):
+    """Error to indicate an invalid pin."""
