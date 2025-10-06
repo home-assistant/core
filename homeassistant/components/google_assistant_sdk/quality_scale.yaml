@@ -61,9 +61,7 @@ rules:
     comment: No entities to update.
   docs-examples: done
   docs-known-limitations: done
-  docs-supported-devices:
-    status: exempt
-    comment: This integration does not integrate with specific devices but with the Google Assistant service itself.
+  docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
@@ -84,9 +82,7 @@ rules:
     comment: No entities.
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: exempt
-    comment: Connection details are handled by OAuth and re-authentication. Other settings are managed via an options flow.
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No repairs.
