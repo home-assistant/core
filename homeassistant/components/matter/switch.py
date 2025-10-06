@@ -203,7 +203,6 @@ DISCOVERY_SCHEMAS = [
             device_types.Refrigerator,
             device_types.RoboticVacuumCleaner,
             device_types.RoomAirConditioner,
-            device_types.Speaker,
         ),
     ),
     MatterDiscoverySchema(
@@ -241,6 +240,24 @@ DISCOVERY_SCHEMAS = [
             device_types.RoomAirConditioner,
             device_types.Speaker,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
+            key="MatterMuteToggle",
+            translation_key="speaker_mute",
+            device_to_ha={
+                True: False,  # True means volume is on, so HA should show mute as off
+                False: True,  # False means volume is off (muted), so HA should show mute as on
+            }.get,
+            ha_to_device={
+                False: True,  # HA showing mute as off means volume is on, so send True
+                True: False,  # HA showing mute as on means volume is off (muted), so send False
+            }.get,
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(clusters.OnOff.Attributes.OnOff,),
+        device_type=(device_types.Speaker,),
     ),
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
