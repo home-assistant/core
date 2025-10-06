@@ -8,9 +8,10 @@ from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.const import ATTR_IDENTIFIERS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
+from .const import CONF_SERVICE_CODE
 from .coordinator import PlenticoreConfigEntry
 
-TO_REDACT = {CONF_PASSWORD}
+TO_REDACT = {CONF_PASSWORD, CONF_SERVICE_CODE}
 
 
 async def async_get_config_entry_diagnostics(
@@ -32,6 +33,32 @@ async def async_get_config_entry_diagnostics(
             module_id: [str(setting) for setting in settings]
             for module_id, settings in available_settings_data.items()
         },
+    }
+
+    # Add important information how the inverter is configured
+    string_count_setting = await plenticore.client.get_setting_values(
+        "devices:local", "Properties:StringCnt"
+    )
+    try:
+        string_count = int(
+            string_count_setting["devices:local"]["Properties:StringCnt"]
+        )
+    except ValueError:
+        string_count = 0
+
+    configuration_settings = await plenticore.client.get_setting_values(
+        "devices:local",
+        (
+            "EnergySensor:SensorPosition",
+            "EnergySensor:InstalledSensor",
+            "Battery:Type",
+            *(f"Properties:String{idx}Features" for idx in range(string_count)),
+        ),
+    )
+
+    data["configuration"] = {
+        "string_count": string_count,
+        **configuration_settings,
     }
 
     device_info = {**plenticore.device_info}
