@@ -16,12 +16,17 @@ from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
+type LondonUndergroundConfigEntry = ConfigEntry[LondonTubeCoordinator]
+
 
 class LondonTubeCoordinator(DataUpdateCoordinator[dict[str, dict[str, str]]]):
     """London Underground sensor coordinator."""
 
     def __init__(
-        self, hass: HomeAssistant, data: TubeData, config_entry: LondonUndergroundConfigEntry
+        self,
+        hass: HomeAssistant,
+        data: TubeData,
+        config_entry: LondonUndergroundConfigEntry,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(

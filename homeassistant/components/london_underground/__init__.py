@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN as DOMAIN
-from .coordinator import LondonTubeCoordinator, TubeData
+from .coordinator import LondonTubeCoordinator, LondonUndergroundConfigEntry, TubeData
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-type LondonUndergroundConfigEntry = ConfigEntry[LondonTubeCoordinator]
 
 
 async def async_setup_entry(
