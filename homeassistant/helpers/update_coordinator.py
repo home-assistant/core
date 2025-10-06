@@ -445,7 +445,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             if err.retry_after is not None and not raise_on_entry_error:
                 self._retry_after = err.retry_after
                 self.logger.debug(
-                    "Retry after triggered. Delaying next update in %s second(s)",
+                    "Retry after triggered. Scheduling next update in %s second(s)",
                     err.retry_after,
                 )
 
