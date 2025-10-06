@@ -93,7 +93,9 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception(
                 "Unexpected error trying to connect before importing config, aborting import "
             )
-            raise ex from None
+            self.async_abort(
+                reason=f"Error trying to connect before importing YAML config: {ex}"
+            )
         _LOGGER.warning(
             "Importing London Underground config from configuration.yaml: %s",
             import_data,
