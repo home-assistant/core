@@ -11,7 +11,7 @@ from homeassistant.components.london_underground.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -162,7 +162,7 @@ async def test_yaml_import(
     assert len(entries) == 1
 
     # Verify a warning was issued about YAML deprecation
-    assert issue_registry.async_get_issue(DOMAIN, "yaml_deprecated")
+    assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
 
     # Check the state after setup completes
     state = hass.states.get("sensor.london_underground_metropolitan")
@@ -222,4 +222,9 @@ async def test_failed_yaml_import(
     assert not any(
         "migrated to a config entry and can be safely removed" in record.message
         for record in caplog.records
+    )
+
+    # Verify a warning was issued about YAML not being imported
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
     )

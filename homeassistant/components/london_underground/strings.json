@@ -30,9 +30,9 @@
     }
   },
   "issues": {
-    "yaml_deprecated": {
-      "title": "YAML configuration is deprecated",
-      "description": "The London Underground integration no longer supports configuration via YAML. Your configuration in configuration.yaml has been imported into a config entry and can safely be removed."
+    "deprecated_yaml_import_issue": {
+      "title": "London Underground YAML configuration deprecated",
+      "description": "Configuring London Underground using YAML sensor platform is deprecated.\n\nWhile importing your configuration, an error occurred when trying to connect to the Transport for London API. Please restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI."
     }
   }
 }

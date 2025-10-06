@@ -89,13 +89,11 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             async with asyncio.timeout(10):
                 await data.update()
-        except Exception as ex:
+        except Exception:
             _LOGGER.exception(
                 "Unexpected error trying to connect before importing config, aborting import "
             )
-            return self.async_abort(
-                reason=f"Error trying to connect before importing YAML config: {ex}"
-            )
+            return self.async_abort(reason="cannot_connect")
 
         _LOGGER.warning(
             "Importing London Underground config from configuration.yaml: %s",

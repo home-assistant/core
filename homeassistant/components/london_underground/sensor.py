@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -46,7 +46,23 @@ async def async_setup_platform(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=config
     )
-    if result["type"] is FlowResultType.ABORT:
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_issue",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "London Underground",
+            },
+        )
         return
 
     _LOGGER.warning(
@@ -55,12 +71,16 @@ async def async_setup_platform(
     )
     ir.async_create_issue(
         hass,
-        DOMAIN,
-        "yaml_deprecated",
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
         is_fixable=False,
+        issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
-        translation_key="yaml_deprecated",
-        learn_more_url="https://www.home-assistant.io/integrations/london_underground",
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "London Underground",
+        },
     )
 
 
