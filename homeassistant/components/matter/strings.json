@@ -565,16 +565,6 @@
       "name": "Get areas",
       "description": "Returns a list of available areas and maps for robot vacuum cleaners."
     },
-    "select_areas": {
-      "name": "Select areas",
-      "description": "Selects the specified areas for cleaning. The areas must be specified as a list of area IDs.",
-      "fields": {
-        "areas": {
-          "name": "Areas",
-          "description": "A list of area IDs to select."
-        }
-      }
-    },
     "clean_areas": {
       "name": "Clean areas",
       "description": "Instructs the Matter vacuum cleaner to clean the specified areas.",
