@@ -79,6 +79,7 @@ async def test_step_user_errors(
     """Test error cases for user step with recovery."""
     user_input: dict[str, Any] = {CONF_API_KEY: "some_api_key"}
 
+    # Test error case
     with patch(
         "fluss_api.FlussApiClient",
         side_effect=exception,
@@ -90,6 +91,18 @@ async def test_step_user_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": expected_error}
+
+    # Test recovery from error
+    with patch("fluss_api.FlussApiClient") as mock_client:
+        mock_client.return_value = None
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_API_KEY: "valid_api_key"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "My Fluss+ Devices"
+    assert result["data"] == {"api_key": "valid_api_key"}
 
 
 async def test_abort_if_already_configured(hass: HomeAssistant) -> None:
