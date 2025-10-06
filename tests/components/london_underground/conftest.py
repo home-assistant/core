@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 import json
 from unittest.mock import AsyncMock, patch
 
-from london_tube_status import API_URL, parse_api_response
+from london_tube_status import parse_api_response
 import pytest
 
 from homeassistant.components.london_underground.const import DOMAIN
@@ -45,14 +45,6 @@ async def mock_london_underground_client(
         # Load the fixture text
         fixture_text = await async_load_fixture(hass, "line_status.json", DOMAIN)
         fixture_data = parse_api_response(json.loads(fixture_text))
+        client.data = fixture_data
 
-        # Mock the aiohttp request
-        aioclient_mock.get(API_URL, text=fixture_text)
-
-        # Define async side effect: when .update() is awaited, it populates .data
-        async def _update():
-            client.data = fixture_data
-            return client.data
-
-        client.update = AsyncMock(side_effect=_update)
         yield client
