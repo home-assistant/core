@@ -1,4 +1,23 @@
 {
+  "entity": {
+    "sensor": {
+      "precipitation_kind": {
+        "default": "mdi:weather-snowy-rainy"
+      },
+      "rain": {
+        "default": "mdi:weather-rainy"
+      },
+      "snow": {
+        "default": "mdi:weather-snowy"
+      },
+      "visibility": {
+        "default": "mdi:eye"
+      },
+      "weather_code": {
+        "default": "mdi:barcode"
+      }
+    }
+  },
   "services": {
     "get_minute_forecast": {
       "service": "mdi:weather-snowy-rainy"
