@@ -6,7 +6,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, Generic
 
-from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, LitterRobot4, Robot
+from pylitterbot import FeederRobot, LitterRobot, LitterRobot4
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -35,8 +35,8 @@ class RobotSwitchEntityDescription(SwitchEntityDescription, Generic[_WhiskerEnti
     entity_category: EntityCategory = EntityCategory.CONFIG
     set_fn: Callable[[_WhiskerEntityT, bool], Coroutine[Any, Any, bool]]
     value_fn: Callable[[_WhiskerEntityT], bool]
-    types: list[type[_WhiskerEntityT]]
-    type_breaks_in_ha_version: dict[type[_WhiskerEntityT], str] = {}
+    types: list[_WhiskerEntityT]
+    type_breaks_in_ha_version: dict[_WhiskerEntityT, str] | None
 
 
 SWITCH_LIST: list[RobotSwitchEntityDescription] = [
@@ -47,7 +47,7 @@ SWITCH_LIST: list[RobotSwitchEntityDescription] = [
         set_fn=lambda robot, value: robot.set_power_status(value),
         value_fn=lambda robot: robot.power_status != "NC",
         types=[
-            LitterRobot
+            LitterRobot,
         ],
     ),
     RobotSwitchEntityDescription[FeederRobot](
@@ -84,6 +84,7 @@ SWITCH_LIST: list[RobotSwitchEntityDescription] = [
     ),
 ]
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LitterRobotConfigEntry,
@@ -101,6 +102,7 @@ async def async_setup_entry(
         (robot, description, breaks_in_ha_version)
         for robot in coordinator.account.robots
         for description in SWITCH_LIST
+        if description.type_breaks_in_ha_version
         for deprecated_type, breaks_in_ha_version in description.type_breaks_in_ha_version.items()
         if isinstance(robot, deprecated_type)
     ]
@@ -141,7 +143,9 @@ async def async_setup_entry(
                 )
 
     for robot, description, breaks_in_ha_version in deprecated_entities:
-        add_deprecated_entity(robot, description, RobotSwitchEntity, breaks_in_ha_version)
+        add_deprecated_entity(
+            robot, description, RobotSwitchEntity, breaks_in_ha_version
+        )
 
     async_add_entities(entities)
 
