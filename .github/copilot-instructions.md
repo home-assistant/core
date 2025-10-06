@@ -43,7 +43,11 @@ rules:
   strict-typing: done
 ```
 
-**When Reviewing/Creating Code**: Always check the integration's quality scale level and exemption status before applying rules. Make sure to verify if the quality_scale.yaml is up to date with the introduced changes. A PR adding a new feature might also require updating the quality scale file, e.g. an integration previously being `exempt` status in `actions-exceptions` because it only had read only platforms (like sensors and binary sensors) might introduce a platform that contains actions (a switch for example) and therefore this rule would need to change to `todo` or `done`, depending on if the feature has been implemented in the PR or not.
+**When Reviewing/Creating Code**: 
+- Always check the integration's quality scale level and exemption status before applying rules. 
+- Make sure to verify if the quality_scale.yaml is up to date with the introduced changes. 
+- A PR adding a new feature might also require updating the quality scale file
+  - Example: An integration previously being `exempt` status in `actions-exceptions` because it only had read only platforms (like sensors and binary sensors) might introduce a platform that contains actions (a switch for example) and therefore this rule would need to change to `todo` or `done`, depending on if the feature has been implemented in the PR or not.
 
 ## Code Review Guidelines
 
