@@ -41,7 +41,7 @@ HUB_DATA = {
 
 
 @pytest.fixture(autouse=True)
-def mock_vegehub() -> Generator[Any, Any, Any]:
+def mock_vegehub() -> Generator[Any]:
     """Mock the VegeHub library."""
     with patch(
         "homeassistant.components.vegehub.config_flow.VegeHub", autospec=True

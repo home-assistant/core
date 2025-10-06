@@ -1433,28 +1433,50 @@ async def test_subscribe_unsubscribe_entities(
     }
 
 
+@pytest.mark.parametrize("unserializable_states", [[], ["light.cannot_serialize"]])
 async def test_subscribe_unsubscribe_entities_specific_entities(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
     hass_admin_user: MockUser,
+    unserializable_states: list[str],
 ) -> None:
     """Test subscribe/unsubscribe entities with a list of entity ids."""
 
+    class CannotSerializeMe:
+        """Cannot serialize this."""
+
+        def __init__(self) -> None:
+            """Init cannot serialize this."""
+
+    for entity_id in unserializable_states:
+        hass.states.async_set(
+            entity_id,
+            "off",
+            {"color": "red", "cannot_serialize": CannotSerializeMe()},
+        )
+
     hass.states.async_set("light.permitted", "off", {"color": "red"})
-    hass.states.async_set("light.not_intrested", "off", {"color": "blue"})
+    hass.states.async_set("light.not_interested", "off", {"color": "blue"})
     original_state = hass.states.get("light.permitted")
     assert isinstance(original_state, State)
     hass_admin_user.groups = []
     hass_admin_user.mock_policy(
         {
             "entities": {
-                "entity_ids": {"light.permitted": True, "light.not_intrested": True}
+                "entity_ids": {
+                    "light.permitted": True,
+                    "light.not_interested": True,
+                    "light.cannot_serialize": True,
+                }
             }
         }
     )
 
     await websocket_client.send_json_auto_id(
-        {"type": "subscribe_entities", "entity_ids": ["light.permitted"]}
+        {
+            "type": "subscribe_entities",
+            "entity_ids": ["light.permitted", "light.cannot_serialize"],
+        }
     )
 
     msg = await websocket_client.receive_json()
@@ -1476,7 +1498,7 @@ async def test_subscribe_unsubscribe_entities_specific_entities(
             }
         }
     }
-    hass.states.async_set("light.not_intrested", "on", {"effect": "help"})
+    hass.states.async_set("light.not_interested", "on", {"effect": "help"})
     hass.states.async_set("light.not_permitted", "on")
     hass.states.async_set("light.permitted", "on", {"color": "blue"})
 
@@ -1497,12 +1519,28 @@ async def test_subscribe_unsubscribe_entities_specific_entities(
     }
 
 
+@pytest.mark.parametrize("unserializable_states", [[], ["light.cannot_serialize"]])
 async def test_subscribe_unsubscribe_entities_with_filter(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
     hass_admin_user: MockUser,
+    unserializable_states: list[str],
 ) -> None:
     """Test subscribe/unsubscribe entities with an entity filter."""
+
+    class CannotSerializeMe:
+        """Cannot serialize this."""
+
+        def __init__(self) -> None:
+            """Init cannot serialize this."""
+
+    for entity_id in unserializable_states:
+        hass.states.async_set(
+            entity_id,
+            "off",
+            {"color": "red", "cannot_serialize": CannotSerializeMe()},
+        )
+
     hass.states.async_set("switch.not_included", "off")
     hass.states.async_set("light.include", "off")
     await websocket_client.send_json_auto_id(

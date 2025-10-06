@@ -1,5 +1,7 @@
 """Coordinator module for managing Growatt data fetching."""
 
+from __future__ import annotations
+
 import datetime
 import json
 import logging
@@ -186,7 +188,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return self.data.get("currency")
 
     def get_data(
-        self, entity_description: "GrowattSensorEntityDescription"
+        self, entity_description: GrowattSensorEntityDescription
     ) -> str | int | float | None:
         """Get the data."""
         variable = entity_description.api_key
