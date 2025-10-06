@@ -51,7 +51,7 @@ from .types import MCPServerConfigEntry
 _LOGGER = logging.getLogger(__name__)
 
 # Streamable HTTP endpoint
-STREAMABLE_API = f"/api/{DOMAIN}"
+STREAMABLE_API = "/api/mcp"
 TIMEOUT = 60  # Seconds
 
 # Content types
