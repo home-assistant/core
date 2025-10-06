@@ -1271,7 +1271,7 @@ async def test_template_trigger_delay_on_and_auto_off(
     ],
 )
 @pytest.mark.usefixtures("setup_binary_sensor")
-async def test_template_state_delay_on(
+async def test_template_multiple_states_delay_on(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
