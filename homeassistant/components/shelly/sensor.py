@@ -892,7 +892,7 @@ RPC_SENSORS: Final = {
     "total_current": RpcSensorDescription(
         key="em",
         sub_key="total_current",
-        name="Total current",
+        name="Current",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
