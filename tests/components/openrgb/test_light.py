@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from openrgb.utils import OpenRGBDisconnected, RGBColor
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -19,6 +20,7 @@ from homeassistant.components.openrgb.const import (
     DEFAULT_COLOR,
     DOMAIN,
     OFF_COLOR,
+    SCAN_INTERVAL,
     OpenRGBMode,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -35,7 +37,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -275,6 +277,7 @@ async def test_turn_on_restores_previous_values(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_openrgb_device: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test turning on after off restores previous brightness, color, and mode."""
     # Start with device in Direct mode with blue color
@@ -302,8 +305,10 @@ async def test_turn_on_restores_previous_values(
 
     # Now device is in Off mode
     mock_openrgb_device.active_mode = 1
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.test_rgb_device")
     assert state
@@ -328,6 +333,7 @@ async def test_previous_values_updated_on_refresh(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_openrgb_device: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that previous values are updated when device state changes externally."""
     # Start with device in Direct mode with red color at full brightness
@@ -352,8 +358,11 @@ async def test_previous_values_updated_on_refresh(
     # (e.g., via the OpenRGB application)
     mock_openrgb_device.active_mode = 3  # Breathing mode
     mock_openrgb_device.colors = [RGBColor(0, 128, 0), RGBColor(0, 128, 0)]
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     # Verify new state
     state = hass.states.get("light.test_rgb_device")
@@ -365,7 +374,11 @@ async def test_previous_values_updated_on_refresh(
 
     # Simulate external change to Off mode
     mock_openrgb_device.active_mode = 1
-    await coordinator.async_refresh()
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     # Verify light is off
     state = hass.states.get("light.test_rgb_device")
@@ -524,6 +537,7 @@ async def test_dynamic_device_addition(
     mock_config_entry: MockConfigEntry,
     mock_openrgb_client: MagicMock,
     mock_openrgb_device: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that new devices are added dynamically."""
     mock_config_entry.add_to_hass(hass)
@@ -560,9 +574,10 @@ async def test_dynamic_device_addition(
 
     mock_openrgb_client.devices = [mock_openrgb_device, new_device]
 
-    # Manually trigger coordinator refresh
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     # Check that second light entity was added
     state = hass.states.get("light.new_rgb_device")
@@ -574,6 +589,7 @@ async def test_light_availability(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_openrgb_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test light becomes unavailable when device is unplugged."""
     state = hass.states.get("light.test_rgb_device")
@@ -583,9 +599,11 @@ async def test_light_availability(
     # Simulate device disconnection
     mock_openrgb_client.devices = []
 
-    # Manually trigger coordinator refresh
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     state = hass.states.get("light.test_rgb_device")
     assert state

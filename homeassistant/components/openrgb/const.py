@@ -1,5 +1,6 @@
 """Constants for the OpenRGB integration."""
 
+from datetime import timedelta
 from enum import StrEnum
 import socket
 
@@ -15,6 +16,9 @@ DOMAIN = "openrgb"
 # Defaults
 DEFAULT_PORT = 6742
 DEFAULT_CLIENT_NAME = "Home Assistant"
+
+# Update interval
+SCAN_INTERVAL = timedelta(seconds=15)
 
 DEFAULT_COLOR = (255, 255, 255)
 DEFAULT_BRIGHTNESS = 255

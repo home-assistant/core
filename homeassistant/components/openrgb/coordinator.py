@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
 import logging
 
 from openrgb import OpenRGBClient
@@ -15,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONNECTION_ERRORS, DEFAULT_CLIENT_NAME, DOMAIN
+from .const import CONNECTION_ERRORS, DEFAULT_CLIENT_NAME, DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +36,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=15),
+            update_interval=SCAN_INTERVAL,
             config_entry=config_entry,
             request_refresh_debouncer=Debouncer(
                 hass, _LOGGER, cooldown=0.5, immediate=False
