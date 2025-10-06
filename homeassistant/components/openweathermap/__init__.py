@@ -25,7 +25,6 @@ type OpenweathermapConfigEntry = ConfigEntry[OpenweathermapData]
 class OpenweathermapData:
     """Runtime data definition."""
 
-    name: str
     mode: str
     coordinator: OWMUpdateCoordinator
 
@@ -34,7 +33,6 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: OpenweathermapConfigEntry
 ) -> bool:
     """Set up OpenWeatherMap as config entry."""
-    name = entry.title
     api_key = entry.data[CONF_API_KEY]
     language = entry.options[CONF_LANGUAGE]
     mode = entry.options[CONF_MODE]
@@ -51,7 +49,7 @@ async def async_setup_entry(
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
-    entry.runtime_data = OpenweathermapData(name, mode, owm_coordinator)
+    entry.runtime_data = OpenweathermapData(mode, owm_coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
