@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from openrgb.utils import ControllerParsingError, OpenRGBDisconnected, SDKVersionError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.openrgb.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -37,6 +38,7 @@ async def test_entry_setup_unload(
 @pytest.mark.usefixtures("mock_openrgb_client")
 async def test_server_device_registry(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
@@ -52,12 +54,7 @@ async def test_server_device_registry(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
 
-    assert server_device
-    assert server_device.name == "Test Computer"
-    assert server_device.manufacturer == "OpenRGB"
-    assert server_device.model == "OpenRGB SDK Server"
-    assert server_device.sw_version == "4 (Protocol)"
-    assert server_device.entry_type is dr.DeviceEntryType.SERVICE
+    assert server_device == snapshot
 
 
 @pytest.mark.parametrize(
