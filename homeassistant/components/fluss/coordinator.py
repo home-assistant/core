@@ -27,12 +27,7 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self, hass: HomeAssistant, config_entry: ConfigEntry, api_key: str
     ) -> None:
         """Initialize the coordinator."""
-        try:
-            self.api = FlussApiClient(api_key)
-        except FlussApiClientAuthenticationError as e:
-            raise ConfigEntryAuthFailed from e
-        except (FlussApiClientCommunicationError, FlussApiClientError) as e:
-            raise ConfigEntryNotReady from e
+        self.api = FlussApiClient(api_key)
         super().__init__(
             hass,
             LOGGER,
@@ -48,8 +43,4 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except FlussApiClientError as err:
             raise UpdateFailed(f"Error fetching Fluss devices: {err}") from err
 
-        return {
-            device["deviceId"]: device
-            for device in devices.get("devices", [])
-            if isinstance(device, dict) and "deviceId" in device
-        }
+        return {device["deviceId"]: device for device in devices.get("devices", [])}
