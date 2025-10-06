@@ -37,8 +37,8 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             serial_number=device_id,
-            name=appliance_type or device.tech_type,
-            translation_key=appliance_type,
+            name=device.device_name or appliance_type or device.tech_type,
+            translation_key=None if device.device_name else appliance_type,
             manufacturer=MANUFACTURER,
             model=device.tech_type,
             hw_version=device.xkm_tech_type,
