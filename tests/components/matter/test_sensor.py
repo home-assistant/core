@@ -636,7 +636,7 @@ async def test_vacuum_operational_error_sensor(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test RVC Operational Error sensor, using a dishwasher fixture."""
+    """Test RVC Operational Error sensor, using a vacuum cleaner fixture."""
     # RvcOperationalState Cluster / OperationalError attribute (1/97/5)
     state = hass.states.get("sensor.mock_vacuum_operational_error")
     assert state
