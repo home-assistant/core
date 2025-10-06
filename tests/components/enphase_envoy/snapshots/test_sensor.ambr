@@ -14021,7 +14021,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'admin state',
+    'original_name': 'Admin state',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -14034,14 +14034,14 @@
 # name: test_sensor[envoy_metered_batt_relay][sensor.collar_482520020939_admin_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Collar 482520020939 admin state',
+      'friendly_name': 'Collar 482520020939 Admin state',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.collar_482520020939_admin_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'ENCMN_MDE_ON_GRID',
+    'state': 'on_grid',
   })
 # ---
 # name: test_sensor[envoy_metered_batt_relay][sensor.collar_482520020939_grid_status-entry]

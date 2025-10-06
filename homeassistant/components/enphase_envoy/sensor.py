@@ -799,6 +799,12 @@ class EnvoyCollarSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[EnvoyCollar], datetime.datetime | int | float | str]
 
 
+# translations don't accept uppercase
+ADMIN_STATE_MAP = {
+    "ENCMN_MDE_ON_GRID": "on_grid",
+    "ENCMN_MDE_OFF_GRID": "off_grid",
+}
+
 COLLAR_SENSORS = (
     EnvoyCollarSensorEntityDescription(
         key="temperature",
@@ -820,10 +826,13 @@ COLLAR_SENSORS = (
         value_fn=lambda collar: collar.grid_state,
     ),
     # grid_status off-grid shows in admin_state rather than in grid_state
+    # map values as translations don't accept uppercase which these are
     EnvoyCollarSensorEntityDescription(
         key="admin_state_str",
         translation_key="admin_state",
-        value_fn=lambda collar: collar.admin_state_str,
+        value_fn=lambda collar: ADMIN_STATE_MAP.get(
+            collar.admin_state_str, collar.admin_state_str
+        ),
     ),
     EnvoyCollarSensorEntityDescription(
         key="mid_state",
