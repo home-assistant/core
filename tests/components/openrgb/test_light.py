@@ -100,8 +100,8 @@ async def test_light_with_black_leds(
     state = hass.states.get("light.test_rgb_device")
     assert state
     assert state.state == STATE_OFF
-    assert state.attributes.get("rgb_color") is None
-    assert state.attributes.get("brightness") is None
+    assert state.attributes.get(ATTR_RGB_COLOR) is None
+    assert state.attributes.get(ATTR_BRIGHTNESS) is None
 
 
 @pytest.mark.usefixtures("mock_openrgb_client")
@@ -125,8 +125,8 @@ async def test_light_with_one_non_black_led(
     state = hass.states.get("light.test_rgb_device")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get("rgb_color") == (255, 0, 0)
-    assert state.attributes.get("brightness") == 255
+    assert state.attributes.get(ATTR_RGB_COLOR) == (255, 0, 0)
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 255
 
 
 @pytest.mark.usefixtures("mock_openrgb_client")
@@ -149,8 +149,8 @@ async def test_light_with_non_color_mode(
     state = hass.states.get("light.test_rgb_device")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get("rgb_color") == DEFAULT_COLOR
-    assert state.attributes.get("brightness") == DEFAULT_BRIGHTNESS
+    assert state.attributes.get(ATTR_RGB_COLOR) == DEFAULT_COLOR
+    assert state.attributes.get(ATTR_BRIGHTNESS) == DEFAULT_BRIGHTNESS
 
 
 # Test basic turn on/off functionality
@@ -344,9 +344,9 @@ async def test_previous_values_updated_on_refresh(
     state = hass.states.get("light.test_rgb_device")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get("rgb_color") == (255, 0, 0)
-    assert state.attributes.get("brightness") == 255
-    assert state.attributes.get("effect") == EFFECT_OFF  # Direct mode
+    assert state.attributes.get(ATTR_RGB_COLOR) == (255, 0, 0)
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 255
+    assert state.attributes.get(ATTR_EFFECT) == EFFECT_OFF  # Direct mode
 
     # Simulate external change to green at 50% brightness in Breathing mode
     # (e.g., via the OpenRGB application)
@@ -359,9 +359,9 @@ async def test_previous_values_updated_on_refresh(
     state = hass.states.get("light.test_rgb_device")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get("rgb_color") == (0, 255, 0)  # Green
-    assert state.attributes.get("brightness") == 128  # 50% brightness
-    assert state.attributes.get("effect") == "Breathing"
+    assert state.attributes.get(ATTR_RGB_COLOR) == (0, 255, 0)  # Green
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 128  # 50% brightness
+    assert state.attributes.get(ATTR_EFFECT) == "Breathing"
 
     # Simulate external change to Off mode
     mock_openrgb_device.active_mode = 1
