@@ -75,6 +75,9 @@
       "condition": {
         "name": "Condition"
       },
+      "weather": {
+        "name": "[%key:component::weather::title%]"
+      },
       "weather_code": {
         "name": "Weather code"
       }

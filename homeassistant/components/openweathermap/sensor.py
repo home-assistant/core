@@ -64,6 +64,7 @@ from .coordinator import OWMUpdateCoordinator
 WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_API_WEATHER,
+        translation_key=ATTR_API_WEATHER,
     ),
     SensorEntityDescription(
         key=ATTR_API_DEW_POINT,
