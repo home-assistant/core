@@ -217,7 +217,7 @@ aiobafi6==0.9.0
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
-aiocomelit==0.12.3
+aiocomelit==1.1.1
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.2.1
@@ -2209,6 +2209,9 @@ pynetio==0.1.9.1
 # homeassistant.components.nina
 pynina==0.3.6
 
+# homeassistant.components.nintendo_parental
+pynintendoparental==1.0.1
+
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
 
@@ -3092,7 +3095,7 @@ velbus-aio==2025.8.0
 venstarcolortouch==0.21
 
 # homeassistant.components.victron_remote_monitoring
-victron-vrm==0.1.7
+victron-vrm==0.1.8
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0
