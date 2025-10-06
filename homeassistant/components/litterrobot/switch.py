@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Generic
 
 from pylitterbot import FeederRobot, LitterRobot, LitterRobot4
@@ -36,7 +36,7 @@ class RobotSwitchEntityDescription(SwitchEntityDescription, Generic[_WhiskerEnti
     set_fn: Callable[[_WhiskerEntityT, bool], Coroutine[Any, Any, bool]]
     value_fn: Callable[[_WhiskerEntityT], bool]
     types: list[_WhiskerEntityT]
-    type_breaks_in_ha_version: dict[_WhiskerEntityT, str] | None
+    type_breaks_in_ha_version: dict[_WhiskerEntityT, str] = field(default_factory=dict)
 
 
 SWITCH_LIST: list[RobotSwitchEntityDescription] = [
