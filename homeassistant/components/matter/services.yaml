@@ -3,12 +3,14 @@
 get_areas:
   target:
     entity:
-      domain: matter
+      integration: matter
+      domain: vacuum
 
 clean_areas:
   target:
     entity:
-      domain: matter
+      integration: matter
+      domain: vacuum
   fields:
     areas:
       required: true
