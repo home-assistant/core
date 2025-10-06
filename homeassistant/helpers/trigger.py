@@ -28,8 +28,10 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
     HassJob,
+    HassJobType,
     HomeAssistant,
     callback,
+    get_hassjob_callable_job_type,
     is_callback,
 )
 from homeassistant.exceptions import HomeAssistantError, TemplateError
@@ -218,22 +220,21 @@ class Trigger(abc.ABC):
 
     async def async_attach_action(
         self,
-        action: TriggerActionType,
+        action: Callable[[dict[str, Any], Context | None], Coroutine[Any, Any, Any]],
         action_payload_builder: TriggerActionPayloadBuilder,
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action."""
-        job = HassJob(action)
 
         @callback
         def run_action(
             description: str,
             extra_trigger_payload: dict[str, Any],
             context: Context | None = None,
-        ) -> asyncio.Future[Any] | None:
+        ) -> asyncio.Task[Any]:
             """Run action with trigger variables."""
 
             payload = action_payload_builder(description, extra_trigger_payload)
-            return self._hass.async_run_hass_job(job, payload, context)
+            return self._hass.async_create_task(action(payload, context))
 
         return await self.async_attach_runner(run_action)
 
@@ -288,11 +289,10 @@ class TriggerActionRunner(Protocol):
         description: str,
         extra_trigger_payload: dict[str, Any],
         context: Context | None = None,
-    ) -> asyncio.Future[Any] | None:
+    ) -> asyncio.Task[Any]:
         """Define trigger action runner type.
 
-        :return: A future that allows awaiting for the action to finish if it is a
-        coroutine function, or None if the action is a callback.
+        :return: A Task that allows awaiting for the action to finish.
         """
 
 
@@ -567,6 +567,33 @@ async def _async_attach_trigger_cls(
             trigger_variables = conf[CONF_VARIABLES]
             payload.update(trigger_variables.async_render(hass, payload))
         return payload
+
+    # Wrap sync action so that it is always async.
+    # This should be removed when sync actions are no longer supported.
+    match get_hassjob_callable_job_type(action):
+        case HassJobType.Executor:
+            original_action = action
+
+            async def wrapped_executor_action(
+                run_variables: dict[str, Any], context: Context | None = None
+            ) -> asyncio.Future[Any]:
+                """Wrap sync action to be called in executor."""
+                return await hass.async_add_executor_job(
+                    original_action, run_variables, context
+                )
+
+            action = wrapped_executor_action
+
+        case HassJobType.Callback:
+            original_action = action
+
+            async def wrapped_callback_action(
+                run_variables: dict[str, Any], context: Context | None = None
+            ) -> None:
+                """Wrap callback action to be awaitable."""
+                original_action(run_variables, context)
+
+            action = wrapped_callback_action
 
     trigger = trigger_cls(
         hass,
