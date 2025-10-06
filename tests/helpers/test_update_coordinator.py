@@ -1141,7 +1141,7 @@ async def test_refresh_known_errors_retry_after(
             err_msg[0], update_coordinator.UpdateFailed
         ) and getattr(err_msg[0], "retry_after", None)
 
-        # I am keeping this separate, with the kNOWN_ERRORS, to demonstrate that without the retry_after the normal reschedule time (10s from the mock default) is used again
+        # I am keeping this separate, with the KNOWN_ERRORS, to demonstrate that without the retry_after the normal reschedule time (10s from the mock default) is used again
         # This test can be optimized later on, just proof of concept code
         if is_retry_after:
             expected = 1_000.0 + crd._microsecond + err_msg[0].retry_after
