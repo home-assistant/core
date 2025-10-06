@@ -15,12 +15,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
-    CoordinatorEntity,
 )
 
-from .const import COMMANDS, MODEL_INPUTS, DOMAIN, SLOW_POLL_INTERVAL, CONF_MODEL
+from .const import COMMANDS, CONF_MODEL, DOMAIN, MODEL_INPUTS, SLOW_POLL_INTERVAL
 from .hegel_client import HegelClient
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +48,12 @@ async def async_setup_entry(
     await client.start()
 
     # initial shared state container (shared between coordinator & entity)
-    state: dict[str, Any] = {"power": False, "volume": 0.0, "mute": False, "input": None}
+    state: dict[str, Any] = {
+        "power": False,
+        "volume": 0.0,
+        "mute": False,
+        "input": None,
+    }
 
     # Coordinator for slow background poll fallback
     coordinator = HegelSlowPollCoordinator(hass, client, state)
@@ -183,12 +188,19 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                 | MediaPlayerEntityFeature.TURN_OFF
         )
 
+        # Entity categorization for better organization
+        self._attr_entity_category = None  # Primary device - no category needed
+        self._attr_has_entity_name = True
+
         # Background tasks
         self._connected_watcher_task: asyncio.Task | None = None
 
         # register push handler (schedule coroutine)
         # the client expects a synchronous callable; schedule a coroutine safely
-        self._client.add_push_callback(lambda m: asyncio.create_task(self._async_handle_push(m)))
+        def push_handler(msg: str) -> None:
+            asyncio.create_task(self._async_handle_push(msg))
+
+        self._client.add_push_callback(push_handler)
 
         # start a watcher task to refresh state on reconnect
         self._connected_watcher_task = asyncio.create_task(self._connected_watcher())
@@ -334,7 +346,9 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     async def async_mute_volume(self, mute: bool) -> None:
         try:
-            await self._client.send(COMMANDS["mute_on" if mute else "mute_off"], expect_reply=False)
+            await self._client.send(
+                COMMANDS["mute_on" if mute else "mute_off"], expect_reply=False
+            )
         except Exception as err:
             _LOGGER.warning("Failed to set mute: %s", err)
             return

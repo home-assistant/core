@@ -1,0 +1,16 @@
+send_command:
+  name: Send Raw Command
+  description: Send a raw command to the Hegel amplifier for advanced control.
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          integration: hegel
+          domain: media_player
+    command:
+      required: true
+      example: "-p.1"
+      selector:
+        text:
+      description: Raw command to send to the amplifier (e.g., "-p.1" for power on, "-v.50" for volume 50%)

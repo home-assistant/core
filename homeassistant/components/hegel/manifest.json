@@ -11,7 +11,10 @@
   "icon": "mdi:audio-video",
   "config_flow": true,
   "integration_type": "device",
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
+  "ha_platforms": [
+    "media_player"
+  ],
   "loggers": [
     "homeassistant.components.hegel"
   ],
