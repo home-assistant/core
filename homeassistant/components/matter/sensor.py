@@ -1139,7 +1139,7 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.DIAGNOSTIC,
             options=list(OPERATIONAL_STATE_ERROR_MAP.values()),
             device_to_ha=lambda x: (
-                # Determine the error label for the RVC operational state:
+                # Determine the error label for the operational state:
                 # 1. If errorStateID is known in the mapping, return the mapped value.
                 # 2. If errorStateID is in the manufacturer range (0x80 to 0xBF) and errorStateLabel is present, return that label.
                 # 3. Otherwise, return "unknown".
