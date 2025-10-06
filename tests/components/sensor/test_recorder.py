@@ -65,6 +65,8 @@ from tests.components.recorder.common import (
     assert_multiple_states_equal_without_context_and_last_changed,
     async_recorder_block_till_done,
     async_wait_recording_done,
+    db_state_attributes_to_native,
+    db_state_to_native,
     do_adhoc_statistics,
     get_start_time,
     statistics_during_period,
@@ -4941,9 +4943,15 @@ async def async_record_states(
             POWER_SENSOR_ATTRIBUTES,
             "W",
             "kW",
-            "GW, MW, TW, W, kW, mW",
+            "BTU/h, GW, MW, TW, W, kW, mW",
         ),
-        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "GW, MW, TW, W, kW, mW"),
+        (
+            METRIC_SYSTEM,
+            POWER_SENSOR_ATTRIBUTES,
+            "W",
+            "kW",
+            "BTU/h, GW, MW, TW, W, kW, mW",
+        ),
         (
             US_CUSTOMARY_SYSTEM,
             TEMPERATURE_SENSOR_ATTRIBUTES,
@@ -5159,9 +5167,15 @@ async def test_validate_statistics_unit_ignore_device_class(
             POWER_SENSOR_ATTRIBUTES,
             "W",
             "kW",
-            "GW, MW, TW, W, kW, mW",
+            "BTU/h, GW, MW, TW, W, kW, mW",
         ),
-        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "GW, MW, TW, W, kW, mW"),
+        (
+            METRIC_SYSTEM,
+            POWER_SENSOR_ATTRIBUTES,
+            "W",
+            "kW",
+            "BTU/h, GW, MW, TW, W, kW, mW",
+        ),
         (
             US_CUSTOMARY_SYSTEM,
             TEMPERATURE_SENSOR_ATTRIBUTES,
@@ -5189,7 +5203,7 @@ async def test_validate_statistics_unit_ignore_device_class(
             BATTERY_SENSOR_ATTRIBUTES,
             "%",
             None,
-            "%, <None>",
+            "%, <None>, ppb, ppm",
         ),
     ],
 )
@@ -6153,8 +6167,8 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
                 .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
             ):
                 db_state.entity_id = db_states_meta.entity_id
-                state = db_state.to_native()
-                state.attributes = db_state_attributes.to_native()
+                state = db_state_to_native(db_state)
+                state.attributes = db_state_attributes_to_native(db_state_attributes)
                 native_states.append(state)
             return native_states
 

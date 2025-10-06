@@ -52,10 +52,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
 
     try:
         info = await async_interview(host)
+    except TimeoutError as exc:
+        raise ConfigEntryNotReady(f"Timed out interviewing: {host}") from exc
     except OSError as exc:
-        raise ConfigEntryNotReady(f"Unable to connect to: {host}") from exc
-    if info is None:
-        raise ConfigEntryNotReady(f"Unable to connect to: {host}")
+        raise ConfigEntryNotReady(f"Unexpected exception interviewing: {host}") from exc
 
     manager = ReceiverManager(hass, entry, info)
 

@@ -11,13 +11,20 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration, register_device, register_entity
+from . import init_integration, patch_platforms, register_device, register_entity
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms([Platform.BUTTON]):
+        yield
 
 
 async def test_block_button(
@@ -33,7 +40,7 @@ async def test_block_button(
     assert state.state == STATE_UNKNOWN
 
     assert (entry := entity_registry.async_get(entity_id))
-    assert entry.unique_id == "123456789ABC_reboot"
+    assert entry.unique_id == "123456789ABC-reboot"
 
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -136,9 +143,9 @@ async def test_rpc_button_reauth_error(
 @pytest.mark.parametrize(
     ("gen", "old_unique_id", "new_unique_id", "migration"),
     [
-        (2, "test_name_reboot", "123456789ABC_reboot", True),
-        (1, "test_name_reboot", "123456789ABC_reboot", True),
-        (2, "123456789ABC_reboot", "123456789ABC_reboot", False),
+        (2, "123456789ABC_reboot", "123456789ABC-reboot", True),
+        (1, "123456789ABC_reboot", "123456789ABC-reboot", True),
+        (2, "123456789ABC-reboot", "123456789ABC-reboot", False),
     ],
 )
 async def test_migrate_unique_id(
@@ -342,3 +349,71 @@ async def test_rpc_remove_virtual_button_when_orphaned(
 
     entry = entity_registry.async_get(entity_id)
     assert not entry
+
+
+async def test_wall_display_virtual_button(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test a Wall Display virtual button.
+
+    Wall display does not have "meta" key in the config and defaults to "button" view.
+    """
+    config = deepcopy(mock_rpc_device.config)
+    config["button:200"] = {"name": "Button"}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["button:200"] = {"value": None}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+    entity_id = "button.test_name_button"
+
+    assert (state := hass.states.get(entity_id))
+    assert state == snapshot(name=f"{entity_id}-state")
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry == snapshot(name=f"{entity_id}-entry")
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.button_trigger.assert_called_once_with(200, "single_push")
+
+
+async def test_migrate_unique_id_blu_trv(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    entity_registry: EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test migration of unique_id for BLU TRV button."""
+    entry = await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3, skip_setup=True)
+
+    old_unique_id = "f8:44:77:25:f0:dd_calibrate"
+
+    entity = entity_registry.async_get_or_create(
+        suggested_object_id="trv_name_calibrate",
+        disabled_by=None,
+        domain=BUTTON_DOMAIN,
+        platform=DOMAIN,
+        unique_id=old_unique_id,
+        config_entry=entry,
+    )
+    assert entity.unique_id == old_unique_id
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get("button.trv_name_calibrate")
+    assert entity_entry
+    assert entity_entry.unique_id == "F8447725F0DD-blutrv:200-calibrate"
+
+    assert "Migrating unique_id for button.trv_name_calibrate" in caplog.text

@@ -6,6 +6,7 @@ from enum import StrEnum
 from functools import partial
 from typing import TYPE_CHECKING, Final
 
+from .generated.entity_platforms import EntityPlatforms
 from .helpers.deprecation import (
     DeprecatedConstant,
     DeprecatedConstantEnum,
@@ -24,7 +25,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2025
-MINOR_VERSION: Final = 10
+MINOR_VERSION: Final = 11
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -36,54 +37,8 @@ REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
 
-
-class Platform(StrEnum):
-    """Available entity platforms."""
-
-    AI_TASK = "ai_task"
-    AIR_QUALITY = "air_quality"
-    ALARM_CONTROL_PANEL = "alarm_control_panel"
-    ASSIST_SATELLITE = "assist_satellite"
-    BINARY_SENSOR = "binary_sensor"
-    BUTTON = "button"
-    CALENDAR = "calendar"
-    CAMERA = "camera"
-    CLIMATE = "climate"
-    CONVERSATION = "conversation"
-    COVER = "cover"
-    DATE = "date"
-    DATETIME = "datetime"
-    DEVICE_TRACKER = "device_tracker"
-    EVENT = "event"
-    FAN = "fan"
-    GEO_LOCATION = "geo_location"
-    HUMIDIFIER = "humidifier"
-    IMAGE = "image"
-    IMAGE_PROCESSING = "image_processing"
-    LAWN_MOWER = "lawn_mower"
-    LIGHT = "light"
-    LOCK = "lock"
-    MEDIA_PLAYER = "media_player"
-    NOTIFY = "notify"
-    NUMBER = "number"
-    REMOTE = "remote"
-    SCENE = "scene"
-    SELECT = "select"
-    SENSOR = "sensor"
-    SIREN = "siren"
-    STT = "stt"
-    SWITCH = "switch"
-    TEXT = "text"
-    TIME = "time"
-    TODO = "todo"
-    TTS = "tts"
-    UPDATE = "update"
-    VACUUM = "vacuum"
-    VALVE = "valve"
-    WAKE_WORD = "wake_word"
-    WATER_HEATER = "water_heater"
-    WEATHER = "weather"
-
+# Explicit reexport to allow other modules to import Platform directly from const
+Platform = EntityPlatforms
 
 BASE_PLATFORMS: Final = {platform.value for platform in Platform}
 
@@ -231,6 +186,7 @@ CONF_MONITORED_VARIABLES: Final = "monitored_variables"
 CONF_NAME: Final = "name"
 CONF_OFFSET: Final = "offset"
 CONF_OPTIMISTIC: Final = "optimistic"
+CONF_OPTIONS: Final = "options"
 CONF_PACKAGES: Final = "packages"
 CONF_PARALLEL: Final = "parallel"
 CONF_PARAMS: Final = "params"
@@ -359,34 +315,6 @@ STATE_UNAVAILABLE: Final = "unavailable"
 STATE_OK: Final = "ok"
 STATE_PROBLEM: Final = "problem"
 
-# #### LOCK STATES ####
-# STATE_* below are deprecated as of 2024.10
-# use the LockState enum instead.
-_DEPRECATED_STATE_LOCKED: Final = DeprecatedConstant(
-    "locked",
-    "LockState.LOCKED",
-    "2025.10",
-)
-_DEPRECATED_STATE_UNLOCKED: Final = DeprecatedConstant(
-    "unlocked",
-    "LockState.UNLOCKED",
-    "2025.10",
-)
-_DEPRECATED_STATE_LOCKING: Final = DeprecatedConstant(
-    "locking",
-    "LockState.LOCKING",
-    "2025.10",
-)
-_DEPRECATED_STATE_UNLOCKING: Final = DeprecatedConstant(
-    "unlocking",
-    "LockState.UNLOCKING",
-    "2025.10",
-)
-_DEPRECATED_STATE_JAMMED: Final = DeprecatedConstant(
-    "jammed",
-    "LockState.JAMMED",
-    "2025.10",
-)
 
 # #### ALARM CONTROL PANEL STATES ####
 # STATE_ALARM_* below are deprecated as of 2024.11
@@ -943,6 +871,7 @@ class UnitOfSpeed(StrEnum):
     BEAUFORT = "Beaufort"
     FEET_PER_SECOND = "ft/s"
     INCHES_PER_SECOND = "in/s"
+    METERS_PER_MINUTE = "m/min"
     METERS_PER_SECOND = "m/s"
     KILOMETERS_PER_HOUR = "km/h"
     KNOTS = "kn"
