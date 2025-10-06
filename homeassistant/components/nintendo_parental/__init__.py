@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pynintendoparental import Authenticator
+from pynintendoparental.authenticator import Authenticator
 from pynintendoparental.exceptions import (
     InvalidOAuthConfigurationException,
     InvalidSessionTokenException,
@@ -16,7 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_SESSION_TOKEN, DOMAIN
 from .coordinator import NintendoParentalConfigEntry, NintendoUpdateCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.SENSOR]
+_PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.TIME]
 
 
 async def async_setup_entry(
