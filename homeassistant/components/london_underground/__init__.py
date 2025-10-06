@@ -12,7 +12,7 @@ from .coordinator import LondonTubeCoordinator, TubeData
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-LondonUndergroundConfigEntry = ConfigEntry[LondonTubeCoordinator]
+type LondonUndergroundConfigEntry = ConfigEntry[LondonTubeCoordinator]
 
 
 async def async_setup_entry(
