@@ -17,6 +17,7 @@ TUBE_LINES = [
     "Elizabeth line",
     "Hammersmith & City",
     "Jubilee",
+    "London Overground",  # no longer supported
     "Metropolitan",
     "Northern",
     "Piccadilly",

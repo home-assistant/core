@@ -103,6 +103,11 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         # Extract lines from the sensor platform config
         lines = import_data.get(CONF_LINE, DEFAULT_LINES)
+        if "London Overground" in lines:
+            _LOGGER.warning(
+                "London Overground was removed from the configuration as the line has been divided and renamed"
+            )
+            lines.remove("London Overground")
         return await self.async_step_user({CONF_LINE: lines})
 
 
