@@ -126,10 +126,14 @@ class OctoPrintTemperatureNumber(
     async def async_set_native_value(self, value: float) -> None:
         """Set the target temperature."""
 
-        if is_bed(self._api_tool):
-            await self._client.set_bed_temperature(int(value))
-        elif is_extruder(self._api_tool):
-            await self._client.set_tool_temperature(self._api_tool, int(value))
+        try:
+            if is_bed(self._api_tool):
+                await self._client.set_bed_temperature(int(value))
+            elif is_extruder(self._api_tool):
+                await self._client.set_tool_temperature(self._api_tool, int(value))
+        except ApiError as err:
+            _LOGGER.error("Error setting target temperature: %s", err)
+            return
 
         # Request coordinator update to reflect the change
         await self.coordinator.async_request_refresh()
