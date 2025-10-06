@@ -484,6 +484,11 @@ def get_rpc_key_by_role(keys_dict: dict[str, Any], role: str) -> str | None:
     return None
 
 
+def get_rpc_role_by_key(keys_dict: dict[str, Any], key: str) -> str:
+    """Return role by key for RPC device from a dict."""
+    return cast(str, keys_dict[key].get("role", "generic"))
+
+
 def id_from_key(key: str) -> int:
     """Return id from key."""
     return int(key.split(":")[-1])
