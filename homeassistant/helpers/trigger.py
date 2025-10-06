@@ -292,7 +292,8 @@ class TriggerActionRunner(Protocol):
     ) -> asyncio.Task[Any]:
         """Define trigger action runner type.
 
-        :return: A Task that allows awaiting for the action to finish.
+        Returns:
+            A Task that allows awaiting for the action to finish.
         """
 
 
@@ -576,7 +577,7 @@ async def _async_attach_trigger_cls(
 
             async def wrapped_executor_action(
                 run_variables: dict[str, Any], context: Context | None = None
-            ) -> asyncio.Future[Any]:
+            ) -> Any:
                 """Wrap sync action to be called in executor."""
                 return await hass.async_add_executor_job(
                     original_action, run_variables, context
@@ -589,9 +590,9 @@ async def _async_attach_trigger_cls(
 
             async def wrapped_callback_action(
                 run_variables: dict[str, Any], context: Context | None = None
-            ) -> None:
+            ) -> Any:
                 """Wrap callback action to be awaitable."""
-                original_action(run_variables, context)
+                return original_action(run_variables, context)
 
             action = wrapped_callback_action
 
