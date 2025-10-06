@@ -3,13 +3,14 @@
 from datetime import UTC, datetime
 
 from freezegun.api import FrozenDateTimeFactory
+from homeassistant.components import number
+from unittest.mock import patch
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-
 
 async def test_numbers(
     hass: HomeAssistant,
@@ -93,10 +94,6 @@ async def test_set_tool_temp(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setting tool temperature via number entity."""
-    from unittest.mock import patch
-
-    from homeassistant.components import number
-
     printer = {
         "state": {
             "flags": {"printing": False},
@@ -127,10 +124,6 @@ async def test_set_bed_temp(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setting bed temperature via number entity."""
-    from unittest.mock import patch
-
-    from homeassistant.components import number
-
     printer = {
         "state": {
             "flags": {"printing": False},
