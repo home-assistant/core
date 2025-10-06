@@ -37,6 +37,9 @@ class ConversationInput:
     device_id: str | None
     """Unique identifier for the device."""
 
+    satellite_id: str | None
+    """Unique identifier for the satellite."""
+
     language: str
     """Language of the request."""
 
@@ -53,6 +56,7 @@ class ConversationInput:
             "context": self.context.as_dict(),
             "conversation_id": self.conversation_id,
             "device_id": self.device_id,
+            "satellite_id": self.satellite_id,
             "language": self.language,
             "agent_id": self.agent_id,
             "extra_system_prompt": self.extra_system_prompt,

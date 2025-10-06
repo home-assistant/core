@@ -250,6 +250,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "update",
+            {"installed_version": "{{ states('update.one') }}"},
+            "off",
+            {"one": "2.0", "two": "1.0"},
+            {},
+            {"latest_version": "{{ '2.0' }}"},
+            {"latest_version": "{{ '2.0' }}"},
+            {},
+        ),
+        (
             "vacuum",
             {"state": "{{ states('vacuum.one') }}"},
             "docked",
@@ -439,6 +449,12 @@ async def test_config_flow(
             {"state": "{{ states('select.one') }}"},
             {"options": "{{ ['off', 'on', 'auto'] }}"},
             {"options": "{{ ['off', 'on', 'auto'] }}"},
+        ),
+        (
+            "update",
+            {"installed_version": "{{ states('update.one') }}"},
+            {"latest_version": "{{ '2.0' }}"},
+            {"latest_version": "{{ '2.0' }}"},
         ),
         (
             "vacuum",
@@ -714,6 +730,16 @@ async def test_config_flow_device(
             {},
             {},
             "value_template",
+        ),
+        (
+            "update",
+            {"installed_version": "{{ states('update.one') }}"},
+            {"installed_version": "{{ states('update.two') }}"},
+            ["off", "on"],
+            {"one": "2.0", "two": "1.0"},
+            {"latest_version": "{{ '2.0' }}"},
+            {"latest_version": "{{ '2.0' }}"},
+            "installed_version",
         ),
         (
             "vacuum",
@@ -1569,6 +1595,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"value_template": "{{ false }}"},
             {},
             {},
+        ),
+        (
+            "update",
+            {"installed_version": "{{ states('update.one') }}"},
+            {"latest_version": "{{ '2.0' }}"},
+            {"latest_version": "{{ '2.0' }}"},
         ),
         (
             "vacuum",

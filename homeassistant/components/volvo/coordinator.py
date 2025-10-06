@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import abstractmethod
 import asyncio
 from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Any, cast
@@ -29,11 +30,27 @@ from .const import DATA_BATTERY_CAPACITY, DOMAIN
 VERY_SLOW_INTERVAL = 60
 SLOW_INTERVAL = 15
 MEDIUM_INTERVAL = 2
+FAST_INTERVAL = 1
 
 _LOGGER = logging.getLogger(__name__)
 
 
-type VolvoConfigEntry = ConfigEntry[tuple[VolvoBaseCoordinator, ...]]
+@dataclass
+class VolvoContext:
+    """Volvo context."""
+
+    api: VolvoCarsApi
+    vehicle: VolvoCarsVehicle
+
+
+@dataclass
+class VolvoRuntimeData:
+    """Volvo runtime data."""
+
+    interval_coordinators: tuple[VolvoBaseIntervalCoordinator, ...]
+
+
+type VolvoConfigEntry = ConfigEntry[VolvoRuntimeData]
 type CoordinatorData = dict[str, VolvoCarsApiBaseModel | None]
 
 
@@ -47,7 +64,7 @@ def _is_invalid_api_field(field: VolvoCarsApiBaseModel | None) -> bool:
     return False
 
 
-class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
+class VolvoBaseCoordinator[T: dict = dict[str, Any]](DataUpdateCoordinator[T]):
     """Volvo base coordinator."""
 
     config_entry: VolvoConfigEntry
@@ -56,9 +73,8 @@ class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self,
         hass: HomeAssistant,
         entry: VolvoConfigEntry,
-        api: VolvoCarsApi,
-        vehicle: VolvoCarsVehicle,
-        update_interval: timedelta,
+        context: VolvoContext,
+        update_interval: timedelta | None,
         name: str,
     ) -> None:
         """Initialize the coordinator."""
@@ -71,8 +87,34 @@ class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
             update_interval=update_interval,
         )
 
-        self.api = api
-        self.vehicle = vehicle
+        self.context = context
+
+    def get_api_field(self, api_field: str | None) -> VolvoCarsApiBaseModel | None:
+        """Get the API field based on the entity description."""
+
+        return self.data.get(api_field) if api_field else None
+
+
+class VolvoBaseIntervalCoordinator(VolvoBaseCoordinator[CoordinatorData]):
+    """Volvo base interval coordinator."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: VolvoConfigEntry,
+        context: VolvoContext,
+        update_interval: timedelta,
+        name: str,
+    ) -> None:
+        """Initialize the coordinator."""
+
+        super().__init__(
+            hass,
+            entry,
+            context,
+            update_interval,
+            name,
+        )
 
         self._api_calls: list[Callable[[], Coroutine[Any, Any, Any]]] = []
 
@@ -150,11 +192,6 @@ class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
 
         return data
 
-    def get_api_field(self, api_field: str | None) -> VolvoCarsApiBaseModel | None:
-        """Get the API field based on the entity description."""
-
-        return self.data.get(api_field) if api_field else None
-
     @abstractmethod
     async def _async_determine_api_calls(
         self,
@@ -162,23 +199,21 @@ class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
         raise NotImplementedError
 
 
-class VolvoVerySlowIntervalCoordinator(VolvoBaseCoordinator):
+class VolvoVerySlowIntervalCoordinator(VolvoBaseIntervalCoordinator):
     """Volvo coordinator with very slow update rate."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         entry: VolvoConfigEntry,
-        api: VolvoCarsApi,
-        vehicle: VolvoCarsVehicle,
+        context: VolvoContext,
     ) -> None:
         """Initialize the coordinator."""
 
         super().__init__(
             hass,
             entry,
-            api,
-            vehicle,
+            context,
             timedelta(minutes=VERY_SLOW_INTERVAL),
             "Volvo very slow interval coordinator",
         )
@@ -186,43 +221,47 @@ class VolvoVerySlowIntervalCoordinator(VolvoBaseCoordinator):
     async def _async_determine_api_calls(
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
+        api = self.context.api
+
         return [
-            self.api.async_get_diagnostics,
-            self.api.async_get_odometer,
-            self.api.async_get_statistics,
+            api.async_get_brakes_status,
+            api.async_get_diagnostics,
+            api.async_get_engine_warnings,
+            api.async_get_odometer,
+            api.async_get_statistics,
+            api.async_get_tyre_states,
+            api.async_get_warnings,
         ]
 
     async def _async_update_data(self) -> CoordinatorData:
         data = await super()._async_update_data()
 
         # Add static values
-        if self.vehicle.has_battery_engine():
+        if self.context.vehicle.has_battery_engine():
             data[DATA_BATTERY_CAPACITY] = VolvoCarsValue.from_dict(
                 {
-                    "value": self.vehicle.battery_capacity_kwh,
+                    "value": self.context.vehicle.battery_capacity_kwh,
                 }
             )
 
         return data
 
 
-class VolvoSlowIntervalCoordinator(VolvoBaseCoordinator):
+class VolvoSlowIntervalCoordinator(VolvoBaseIntervalCoordinator):
     """Volvo coordinator with slow update rate."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         entry: VolvoConfigEntry,
-        api: VolvoCarsApi,
-        vehicle: VolvoCarsVehicle,
+        context: VolvoContext,
     ) -> None:
         """Initialize the coordinator."""
 
         super().__init__(
             hass,
             entry,
-            api,
-            vehicle,
+            context,
             timedelta(minutes=SLOW_INTERVAL),
             "Volvo slow interval coordinator",
         )
@@ -230,32 +269,32 @@ class VolvoSlowIntervalCoordinator(VolvoBaseCoordinator):
     async def _async_determine_api_calls(
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
-        if self.vehicle.has_combustion_engine():
+        api = self.context.api
+
+        if self.context.vehicle.has_combustion_engine():
             return [
-                self.api.async_get_command_accessibility,
-                self.api.async_get_fuel_status,
+                api.async_get_command_accessibility,
+                api.async_get_fuel_status,
             ]
 
-        return [self.api.async_get_command_accessibility]
+        return [api.async_get_command_accessibility]
 
 
-class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
+class VolvoMediumIntervalCoordinator(VolvoBaseIntervalCoordinator):
     """Volvo coordinator with medium update rate."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         entry: VolvoConfigEntry,
-        api: VolvoCarsApi,
-        vehicle: VolvoCarsVehicle,
+        context: VolvoContext,
     ) -> None:
         """Initialize the coordinator."""
 
         super().__init__(
             hass,
             entry,
-            api,
-            vehicle,
+            context,
             timedelta(minutes=MEDIUM_INTERVAL),
             "Volvo medium interval coordinator",
         )
@@ -265,19 +304,30 @@ class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
     async def _async_determine_api_calls(
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
-        if self.vehicle.has_battery_engine():
-            capabilities = await self.api.async_get_energy_capabilities()
+        api_calls: list[Any] = []
+        api = self.context.api
+        vehicle = self.context.vehicle
+
+        if vehicle.has_battery_engine():
+            capabilities = await api.async_get_energy_capabilities()
 
             if capabilities.get("isSupported", False):
+
+                def _normalize_key(key: str) -> str:
+                    return "chargingStatus" if key == "chargingSystemStatus" else key
+
                 self._supported_capabilities = [
-                    key
+                    _normalize_key(key)
                     for key, value in capabilities.items()
                     if isinstance(value, dict) and value.get("isSupported", False)
                 ]
 
-                return [self._async_get_energy_state]
+                api_calls.append(self._async_get_energy_state)
 
-        return []
+        if vehicle.has_combustion_engine():
+            api_calls.append(api.async_get_engine_status)
+
+        return api_calls
 
     async def _async_get_energy_state(
         self,
@@ -290,10 +340,40 @@ class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
 
             return field
 
-        energy_state = await self.api.async_get_energy_state()
+        energy_state = await self.context.api.async_get_energy_state()
 
         return {
             key: _mark_ok(value)
             for key, value in energy_state.items()
             if key in self._supported_capabilities
         }
+
+
+class VolvoFastIntervalCoordinator(VolvoBaseIntervalCoordinator):
+    """Volvo coordinator with fast update rate."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: VolvoConfigEntry,
+        context: VolvoContext,
+    ) -> None:
+        """Initialize the coordinator."""
+
+        super().__init__(
+            hass,
+            entry,
+            context,
+            timedelta(minutes=FAST_INTERVAL),
+            "Volvo fast interval coordinator",
+        )
+
+    async def _async_determine_api_calls(
+        self,
+    ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
+        api = self.context.api
+
+        return [
+            api.async_get_doors_status,
+            api.async_get_window_states,
+        ]
