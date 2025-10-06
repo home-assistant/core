@@ -1261,6 +1261,58 @@ async def test_template_trigger_delay_on_and_auto_off(
     [
         (
             1,
+            ConfigurationStyle.MODERN,
+            "{{ states('binary_sensor.test_state') }}",
+            {
+                "device_class": "motion",
+                "delay_on": "00:00:02",
+            },
+        )
+    ],
+)
+@pytest.mark.usefixtures("setup_binary_sensor")
+async def test_template_state_delay_on(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test binary sensor template with delay_on and multiple state changes."""
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
+
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+
+    # State should be off
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
+
+    for _ in range(5):
+        # Now wait for the on delay
+        freezer.tick(timedelta(seconds=2))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        state = hass.states.get(TEST_ENTITY_ID)
+        assert state.state == STATE_ON
+
+        freezer.tick(timedelta(seconds=1))
+        hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OFF)
+        await hass.async_block_till_done()
+
+        freezer.tick(timedelta(seconds=1))
+        hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
+        await hass.async_block_till_done()
+
+        # State should still be off
+        state = hass.states.get(TEST_ENTITY_ID)
+        assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("count", "style", "state_template", "extra_config"),
+    [
+        (
+            1,
             ConfigurationStyle.TRIGGER,
             "{{ True }}",
             {
