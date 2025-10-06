@@ -2387,7 +2387,7 @@ pysmappee==0.2.29
 pysmarlaapi==0.9.2
 
 # homeassistant.components.smartthings
-pysmartthings==3.3.0
+pysmartthings==3.3.1
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
@@ -3092,7 +3092,7 @@ velbus-aio==2025.8.0
 venstarcolortouch==0.21
 
 # homeassistant.components.victron_remote_monitoring
-victron-vrm==0.1.7
+victron-vrm==0.1.8
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0
