@@ -402,7 +402,7 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     if key in device.config and key != "em:0":
         # workaround for Pro 3EM, we don't want to get name for em:0
         if component_name := device.config[key].get("name"):
-            if component in (*VIRTUAL_COMPONENTS, "script"):
+            if component in (*VIRTUAL_COMPONENTS, "presencezone", "script"):
                 return cast(str, component_name)
 
             return cast(str, component_name) if instances == 1 else None
@@ -474,6 +474,19 @@ def get_rpc_key_instances(
 def get_rpc_key_ids(keys_dict: dict[str, Any], key: str) -> list[int]:
     """Return list of key ids for RPC device from a dict."""
     return [int(k.split(":")[1]) for k in keys_dict if k.startswith(f"{key}:")]
+
+
+def get_rpc_key_by_role(keys_dict: dict[str, Any], role: str) -> str | None:
+    """Return key by role for RPC device from a dict."""
+    for key, value in keys_dict.items():
+        if value.get("role") == role:
+            return key
+    return None
+
+
+def id_from_key(key: str) -> int:
+    """Return id from key."""
+    return int(key.split(":")[-1])
 
 
 def is_rpc_momentary_input(
@@ -552,8 +565,15 @@ def percentage_to_brightness(percentage: int) -> int:
 
 def mac_address_from_name(name: str) -> str | None:
     """Convert a name to a mac address."""
-    mac = name.partition(".")[0].partition("-")[-1]
-    return mac.upper() if len(mac) == 12 else None
+    base = name.split(".", 1)[0]
+    if "-" not in base:
+        return None
+
+    mac = base.rsplit("-", 1)[-1]
+    if len(mac) != 12 or not all(char in "0123456789abcdefABCDEF" for char in mac):
+        return None
+
+    return mac.upper()
 
 
 def get_release_url(gen: int, model: str, beta: bool) -> str | None:
@@ -630,11 +650,6 @@ def async_remove_shelly_rpc_entities(
             entity_reg.async_remove(entity_id)
 
 
-def is_rpc_thermostat_mode(ident: int, status: dict[str, Any]) -> bool:
-    """Return True if 'thermostat:<IDent>' is present in the status."""
-    return f"thermostat:{ident}" in status
-
-
 def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
     """Return a list of virtual component IDs for a platform."""
     component = VIRTUAL_COMPONENTS_MAP.get(platform)
@@ -687,11 +702,7 @@ def async_remove_orphaned_entities(
     entity_reg = er.async_get(hass)
     device_reg = dr.async_get(hass)
 
-    if not (
-        devices := device_reg.devices.get_devices_for_config_entry_id(config_entry_id)
-    ):
-        return
-
+    devices = device_reg.devices.get_devices_for_config_entry_id(config_entry_id)
     for device in devices:
         entities = er.async_entries_for_device(entity_reg, device.id, True)
         for entity in entities:
