@@ -32,6 +32,9 @@ class FlowFromGridSourceType(TypedDict):
     # statistic_id of a an energy meter (kWh)
     stat_energy_from: str
 
+    # statistic_id of a an power meter (kW)
+    stat_power_from: str | None
+
     # statistic_id of costs ($) incurred from the energy meter
     # If set to None and entity_energy_price or number_energy_price are configured,
     # an EnergyCostSensor will be automatically created
@@ -47,6 +50,9 @@ class FlowToGridSourceType(TypedDict):
 
     # kWh meter
     stat_energy_to: str
+
+    # kW meter
+    stat_power_to: str | None
 
     # statistic_id of compensation ($) received for contributing back
     # If set to None and entity_energy_price or number_energy_price are configured,
@@ -75,6 +81,7 @@ class SolarSourceType(TypedDict):
     type: Literal["solar"]
 
     stat_energy_from: str
+    stat_power_from: str | None
     config_entry_solar_forecast: list[str] | None
 
 
@@ -85,6 +92,8 @@ class BatterySourceType(TypedDict):
 
     stat_energy_from: str
     stat_energy_to: str
+    stat_power_from: str | None
+    stat_power_to: str | None
 
 
 class GasSourceType(TypedDict):
@@ -136,6 +145,9 @@ class DeviceConsumption(TypedDict):
     # This is an ever increasing value
     stat_consumption: str
 
+    # optional power meter
+    stat_power: str | None
+
     # An optional custom name for display in energy graphs
     name: str | None
 
@@ -172,6 +184,7 @@ FLOW_FROM_GRID_SOURCE_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required("stat_energy_from"): str,
+            vol.Optional("stat_power_from"): str,
             vol.Optional("stat_cost"): vol.Any(str, None),
             # entity_energy_from was removed in HA Core 2022.10
             vol.Remove("entity_energy_from"): vol.Any(str, None),
@@ -186,6 +199,7 @@ FLOW_FROM_GRID_SOURCE_SCHEMA = vol.All(
 FLOW_TO_GRID_SOURCE_SCHEMA = vol.Schema(
     {
         vol.Required("stat_energy_to"): str,
+        vol.Optional("stat_power_to"): str,
         vol.Optional("stat_compensation"): vol.Any(str, None),
         # entity_energy_to was removed in HA Core 2022.10
         vol.Remove("entity_energy_to"): vol.Any(str, None),
@@ -231,6 +245,7 @@ SOLAR_SOURCE_SCHEMA = vol.Schema(
     {
         vol.Required("type"): "solar",
         vol.Required("stat_energy_from"): str,
+        vol.Optional("stat_power_from"): str,
         vol.Optional("config_entry_solar_forecast"): vol.Any([str], None),
     }
 )
@@ -239,6 +254,8 @@ BATTERY_SOURCE_SCHEMA = vol.Schema(
         vol.Required("type"): "battery",
         vol.Required("stat_energy_from"): str,
         vol.Required("stat_energy_to"): str,
+        vol.Optional("stat_power_from"): str,
+        vol.Optional("stat_power_to"): str,
     }
 )
 GAS_SOURCE_SCHEMA = vol.Schema(
@@ -294,6 +311,7 @@ ENERGY_SOURCE_SCHEMA = vol.All(
 DEVICE_CONSUMPTION_SCHEMA = vol.Schema(
     {
         vol.Required("stat_consumption"): str,
+        vol.Optional("stat_power"): str,
         vol.Optional("name"): str,
         vol.Optional("included_in_stat"): str,
     }
