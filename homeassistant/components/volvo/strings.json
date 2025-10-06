@@ -321,8 +321,8 @@
     }
   },
   "exceptions": {
-    "command_error": {
-      "message": "Command failed."
+    "command_failure": {
+      "message": "Command {command} failed. Status: {status}. Message: {message}"
     },
     "no_vehicle": {
       "message": "Unable to retrieve vehicle details."

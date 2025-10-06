@@ -79,29 +79,43 @@ class VolvoButton(VolvoBaseEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Handle the button press."""
 
-        _LOGGER.debug("Command %s executing", self.entity_description.api_command)
+        command = self.entity_description.api_command
+        _LOGGER.debug("Command %s executing", command)
 
         try:
             result = await self.entry.runtime_data.context.api.async_execute_command(
                 self.entity_description.api_command
             )
         except VolvoApiException as ex:
-            _LOGGER.debug("Command %s error", self.entity_description.api_command)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="command_error"
-            ) from ex
+            _LOGGER.debug("Command '%s' error", command)
+            self._raise(command, message=ex.message, exception=ex)
 
         status = result.invoke_status if result else ""
 
-        _LOGGER.debug(
-            "Command %s result: %s",
-            self.entity_description.api_command,
-            status,
+        if status != "COMPLETED":
+            self._raise(
+                command, status=status, message=result.message if result else ""
+            )
+
+    def _raise(
+        self,
+        command: str,
+        *,
+        status: str = "",
+        message: str = "",
+        exception: Exception | None = None,
+    ) -> None:
+        error = HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_failure",
+            translation_placeholders={
+                "command": command,
+                "status": status,
+                "message": message,
+            },
         )
 
-        if status != "COMPLETED":
-            _LOGGER.warning(
-                "Command %s not successful: %s",
-                self.entity_description.api_command,
-                status,
-            )
+        if exception:
+            raise error from exception
+
+        raise error
