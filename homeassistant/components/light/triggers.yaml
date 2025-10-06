@@ -11,6 +11,7 @@ state:
           options:
             - "off"
             - "on"
+          translation_key: state
     behavior:
       required: true
       default: any
@@ -20,3 +21,4 @@ state:
             - first
             - last
             - any
+          translation_key: behavior
