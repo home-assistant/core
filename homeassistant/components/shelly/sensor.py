@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from functools import partial
-from typing import Any, Final, cast
+from typing import Final, cast
 
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
@@ -37,13 +36,12 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 
-from .const import CONF_SLEEP_PERIOD, LOGGER
+from .const import CONF_SLEEP_PERIOD
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -1663,39 +1661,6 @@ RPC_SENSORS: Final = {
 }
 
 
-@callback
-def async_migrate_unique_ids(
-    coordinator: ShellyRpcCoordinator,
-    entity_entry: er.RegistryEntry,
-) -> dict[str, Any] | None:
-    """Migrate sensor unique IDs to include role."""
-    if not entity_entry.entity_id.startswith("sensor."):
-        return None
-
-    for sensor_id in ("text", "number", "enum"):
-        old_unique_id = entity_entry.unique_id
-        if old_unique_id.endswith(f"-{sensor_id}"):
-            if entity_entry.original_device_class == SensorDeviceClass.HUMIDITY:
-                new_unique_id = f"{old_unique_id}_current_humidity"
-            elif entity_entry.original_device_class == SensorDeviceClass.TEMPERATURE:
-                new_unique_id = f"{old_unique_id}_current_temperature"
-            else:
-                new_unique_id = f"{old_unique_id}_generic"
-            LOGGER.debug(
-                "Migrating unique_id for %s entity from [%s] to [%s]",
-                entity_entry.entity_id,
-                old_unique_id,
-                new_unique_id,
-            )
-            return {
-                "new_unique_id": entity_entry.unique_id.replace(
-                    old_unique_id, new_unique_id
-                )
-            }
-
-    return None
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
@@ -1714,12 +1679,6 @@ async def async_setup_entry(
         else:
             coordinator = config_entry.runtime_data.rpc
             assert coordinator
-
-            await er.async_migrate_entries(
-                hass,
-                config_entry.entry_id,
-                partial(async_migrate_unique_ids, coordinator),
-            )
 
             async_setup_entry_rpc(
                 hass, config_entry, async_add_entities, RPC_SENSORS, RpcSensor
