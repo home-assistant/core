@@ -1104,7 +1104,6 @@ async def test_update_failed_retry_after(
 @pytest.mark.parametrize(
     "err_msg",
     [
-        *KNOWN_ERRORS,
         (
             update_coordinator.UpdateFailed(retry_after=60),
             update_coordinator.UpdateFailed,
@@ -1123,7 +1122,6 @@ async def test_refresh_known_errors_retry_after(
 
     crd.update_method = AsyncMock(side_effect=err_msg[0])
 
-    # Not sure if I mocked to properly. But it did the job
     with (
         patch.object(hass.loop, "time", return_value=1_000.0),
         patch.object(hass.loop, "call_at") as mock_call_at,
@@ -1136,33 +1134,20 @@ async def test_refresh_known_errors_retry_after(
         assert err_msg[2] in caplog.text
 
         when = mock_call_at.call_args[0][0]
-        # Filter out retry after, so I can demonstrate based on current KNOWN_ERROS without retry_after
-        is_retry_after = isinstance(
-            err_msg[0], update_coordinator.UpdateFailed
-        ) and getattr(err_msg[0], "retry_after", None)
 
-        # I am keeping this separate, with the KNOWN_ERRORS, to demonstrate that without the retry_after the normal reschedule time (10s from the mock default) is used again
-        # This test can be optimized later on, just proof of concept code
-        if is_retry_after:
-            expected = 1_000.0 + crd._microsecond + err_msg[0].retry_after
-            assert abs(when - expected) < 0.005, (when, expected)
+        expected = 1_000.0 + crd._microsecond + err_msg[0].retry_after
+        assert abs(when - expected) < 0.005, (when, expected)
 
-            # Check it got reset/consumed (should be a one-timer in the current design)
-            assert crd._retry_after is None
+        assert crd._retry_after is None
 
-            # Next schedule should fall back to regular update_interval
-            mock_call_at.reset_mock()
-            crd._schedule_refresh()
-            when2 = mock_call_at.call_args[0][0]
-            expected_cancelled = (
-                1_000.0 + crd._microsecond + crd.update_interval.total_seconds()
-            )
-            assert abs(when2 - expected_cancelled) < 0.005, (when2, expected_cancelled)
-        else:
-            # Non-retry_after should end here
-            expected = 1_000.0 + crd._microsecond + crd.update_interval.total_seconds()
-            assert abs(when - expected) < 0.005, (when, expected)
+        # Next schedule should fall back to regular update_interval
+        mock_call_at.reset_mock()
+        crd._schedule_refresh()
+        when2 = mock_call_at.call_args[0][0]
+        expected_cancelled = (
+            1_000.0 + crd._microsecond + crd.update_interval.total_seconds()
+        )
+        assert abs(when2 - expected_cancelled) < 0.005, (when2, expected_cancelled)
 
-    # Cleanup to avoid lingering timers
     unsub()
     crd._unschedule_refresh()

@@ -263,10 +263,6 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
 
         update_interval = self._update_interval_seconds
         if self._retry_after is not None:
-            self.logger.debug(
-                "Retry after triggered. Retrying next update by %s seconds",
-                self._retry_after,
-            )
             update_interval = self._retry_after
             self._retry_after = None
 
@@ -441,7 +437,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         except UpdateFailed as err:
             self.last_exception = err
             # We can only honor a retry_after, after the config entry has been set up
-            # Basically meaning that the retry after can't be used when coming from a async_config_entry_first_refresh
+            # Basically meaning that the retry after can't be used when coming
+            # from an async_config_entry_first_refresh
             if err.retry_after is not None and not raise_on_entry_error:
                 self._retry_after = err.retry_after
                 self.logger.debug(
