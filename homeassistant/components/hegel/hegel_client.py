@@ -129,10 +129,11 @@ class HegelClient:
                     # create background connect task attached to manager
                     if not self._manager_task or self._manager_task.done():
                         # if manager not running, start it
-                        self._manager_task = asyncio.create_task(self._manage_connection())
-                    else:
-                        # ask manager to try connect immediately by scheduling _open_connection
-                        asyncio.create_task(self._open_connection())
+                        self._manager_task = asyncio.create_task(
+                            self._manage_connection()
+                        )
+                    # If manager is already running, just wait for the connection event
+                    # The manager will handle connection attempts with proper backoff
         try:
             await asyncio.wait_for(self._connected_event.wait(), timeout=timeout)
         except asyncio.TimeoutError:
