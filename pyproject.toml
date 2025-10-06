@@ -36,7 +36,7 @@ dependencies = [
   "annotatedyaml==1.0.2",
   "astral==2.2",
   "async-interrupt==1.2.2",
-  "attrs==25.3.0",
+  "attrs==25.4.0",
   "atomicwrites-homeassistant==1.4.1",
   "audioop-lts==0.2.1",
   "awesomeversion==25.5.0",
