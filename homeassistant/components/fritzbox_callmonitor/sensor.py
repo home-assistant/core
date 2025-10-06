@@ -9,7 +9,7 @@ import logging
 import queue
 from threading import Event as ThreadingEvent, Lock, Thread
 from time import sleep
-from typing import Any, cast
+from typing import cast
 
 from fritzconnection.core.fritzmonitor import FritzMonitor
 
