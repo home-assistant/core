@@ -21,7 +21,7 @@ class LondonTubeCoordinator(DataUpdateCoordinator[dict[str, dict[str, str]]]):
     """London Underground sensor coordinator."""
 
     def __init__(
-        self, hass: HomeAssistant, data: TubeData, config_entry: ConfigEntry
+        self, hass: HomeAssistant, data: TubeData, config_entry: LondonUndergroundConfigEntry
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
