@@ -30,7 +30,7 @@ async def test_validate_input_success(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "London Underground"
     assert result["data"] == {}
     assert result["options"] == {CONF_LINE: ["Bakerloo", "Central"]}
