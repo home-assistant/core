@@ -8,11 +8,10 @@ from homeassistant.components.device_tracker.config_entry import (
     TrackerEntity,
     TrackerEntityDescription,
 )
-from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import VolvoBaseCoordinator, VolvoConfigEntry
+from .coordinator import VolvoConfigEntry
 from .entity import VolvoEntity, VolvoEntityDescription
 
 PARALLEL_UPDATES = 0
@@ -52,25 +51,8 @@ class VolvoDeviceTracker(VolvoEntity, TrackerEntity):
 
     entity_description: VolvoTrackerDescription
 
-    def __init__(
-        self,
-        coordinator: VolvoBaseCoordinator,
-        description: VolvoTrackerDescription,
-    ) -> None:
-        """Initialize entity."""
-        self._attr_extra_state_attributes = {}
-        super().__init__(coordinator, description)
-
-        vehicle = self.coordinator.context.vehicle
-
-        if vehicle.images and vehicle.images.exterior_image_url:
-            self._attr_extra_state_attributes[ATTR_ENTITY_PICTURE] = (
-                vehicle.images.exterior_image_url
-            )
-
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
-        if not isinstance(api_field, VolvoCarsLocation):
-            return
+        assert isinstance(api_field, VolvoCarsLocation)
 
         if api_field.geometry.coordinates and len(api_field.geometry.coordinates) > 1:
             self._attr_longitude = api_field.geometry.coordinates[0]
