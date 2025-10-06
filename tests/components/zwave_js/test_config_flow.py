@@ -1524,6 +1524,24 @@ async def test_esphome_discovery_usb_same_home_id(
     }
 
 
+@pytest.mark.usefixtures("supervisor")
+async def test_esphome_discovery_no_home_id(hass: HomeAssistant) -> None:
+    """Test ESPHome discovery aborts when home ID is missing."""
+    discovery_info_no_home_id = ESPHomeServiceInfo(
+        name="mock-name",
+        zwave_home_id=None,
+        ip_address="192.168.1.100",
+        port=6053,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=discovery_info_no_home_id,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_home_id"
+
+
 @pytest.mark.usefixtures("supervisor", "addon_installed")
 async def test_discovery_addon_not_running(
     hass: HomeAssistant,

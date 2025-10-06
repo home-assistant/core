@@ -1501,6 +1501,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if not is_hassio(self.hass):
             return self.async_abort(reason="not_hassio")
 
+        if not discovery_info.zwave_home_id:
+            return self.async_abort(reason="no_home_id")
+
         if (
             discovery_info.zwave_home_id
             and (
