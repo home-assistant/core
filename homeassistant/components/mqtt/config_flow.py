@@ -66,6 +66,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
     ATTR_HW_VERSION,
+    ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_MODEL_ID,
     ATTR_NAME,
@@ -3050,6 +3051,7 @@ MQTT_DEVICE_PLATFORM_FIELDS = {
     ),
     ATTR_MODEL: PlatformField(selector=TEXT_SELECTOR, required=False),
     ATTR_MODEL_ID: PlatformField(selector=TEXT_SELECTOR, required=False),
+    ATTR_MANUFACTURER: PlatformField(selector=TEXT_SELECTOR, required=False),
     ATTR_CONFIGURATION_URL: PlatformField(
         selector=TEXT_SELECTOR, required=False, validator=cv.url, error="invalid_url"
     ),
