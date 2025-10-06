@@ -63,7 +63,10 @@ async def test_on_off_commands(
 
     data = {ATTR_ENTITY_ID: entity_id}
 
-    services = ((SERVICE_TURN_ON, STATE_ON, on_value), (SERVICE_TURN_OFF, STATE_OFF, off_value))
+    services = (
+        (SERVICE_TURN_ON, STATE_ON, on_value),
+        (SERVICE_TURN_OFF, STATE_OFF, off_value),
+    )
     for count, (service, new_state, new_value) in enumerate(services):
         await hass.services.async_call(PLATFORM_DOMAIN, service, data, blocking=True)
         robot._update_data({updated_field: new_value}, partial=True)

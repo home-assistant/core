@@ -35,47 +35,54 @@ class RobotSwitchEntityDescription(SwitchEntityDescription, Generic[_WhiskerEnti
     entity_category: EntityCategory = EntityCategory.CONFIG
     set_fn: Callable[[_WhiskerEntityT, bool], Coroutine[Any, Any, bool]]
     value_fn: Callable[[_WhiskerEntityT], bool]
+    types: list[type[_WhiskerEntityT]]
+    type_breaks_in_ha_version: dict[type[_WhiskerEntityT], str] = {}
 
 
-NIGHT_LIGHT_MODE_ENTITY_DESCRIPTION = RobotSwitchEntityDescription[
-    LitterRobot | FeederRobot
-](
-    key="night_light_mode_enabled",
-    translation_key="night_light_mode",
-    set_fn=lambda robot, value: robot.set_night_light(value),
-    value_fn=lambda robot: robot.night_light_mode_enabled,
-)
-
-SWITCH_MAP: dict[type[Robot], tuple[RobotSwitchEntityDescription, ...]] = {
-    FeederRobot: (
-        RobotSwitchEntityDescription[FeederRobot](
-            key="gravity_mode",
-            translation_key="gravity_mode",
-            set_fn=lambda robot, value: robot.set_gravity_mode(value),
-            value_fn=lambda robot: robot.gravity_mode_enabled,
-        ),
-        NIGHT_LIGHT_MODE_ENTITY_DESCRIPTION,
+SWITCH_LIST: list[RobotSwitchEntityDescription] = [
+    RobotSwitchEntityDescription[LitterRobot](
+        key="power",
+        translation_key="power",
+        entity_registry_enabled_default=False,
+        set_fn=lambda robot, value: robot.set_power_status(value),
+        value_fn=lambda robot: robot.power_status != "NC",
+        types=[
+            LitterRobot
+        ],
     ),
-    LitterRobot3: (NIGHT_LIGHT_MODE_ENTITY_DESCRIPTION,),
-    Robot: (  # type: ignore[type-abstract]  # only used for isinstance check
-        RobotSwitchEntityDescription[LitterRobot | FeederRobot](
-            key="panel_lock_enabled",
-            translation_key="panel_lockout",
-            set_fn=lambda robot, value: robot.set_panel_lockout(value),
-            value_fn=lambda robot: robot.panel_lock_enabled,
-        ),
+    RobotSwitchEntityDescription[FeederRobot](
+        key="gravity_mode",
+        translation_key="gravity_mode",
+        set_fn=lambda robot, value: robot.set_gravity_mode(value),
+        value_fn=lambda robot: robot.gravity_mode_enabled,
+        types=[
+            FeederRobot,
+        ],
     ),
-    LitterRobot: (
-        RobotSwitchEntityDescription[LitterRobot](
-            key="power",
-            translation_key="power",
-            set_fn=lambda robot, value: robot.set_power_status(value),
-            value_fn=lambda robot: robot.power_status != "NC",
-            entity_registry_enabled_default=False,
-        ),
+    RobotSwitchEntityDescription[LitterRobot | FeederRobot](
+        key="panel_lock_enabled",
+        translation_key="panel_lockout",
+        set_fn=lambda robot, value: robot.set_panel_lockout(value),
+        value_fn=lambda robot: robot.panel_lock_enabled,
+        types=[
+            LitterRobot,
+            FeederRobot,
+        ],
     ),
-}
-
+    RobotSwitchEntityDescription[LitterRobot | FeederRobot](
+        key="night_light_mode_enabled",
+        translation_key="night_light_mode",
+        set_fn=lambda robot, value: robot.set_night_light(value),
+        value_fn=lambda robot: robot.night_light_mode_enabled,
+        types=[
+            LitterRobot,
+            FeederRobot,
+        ],
+        type_breaks_in_ha_version={
+            LitterRobot4: "2026.4.0",
+        },
+    ),
+]
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -87,17 +94,24 @@ async def async_setup_entry(
     entities = [
         RobotSwitchEntity(robot=robot, coordinator=coordinator, description=description)
         for robot in coordinator.account.robots
-        for robot_type, entity_descriptions in SWITCH_MAP.items()
-        if isinstance(robot, robot_type)
-        for description in entity_descriptions
+        for description in SWITCH_LIST
+        if any(isinstance(robot, robot_type) for robot_type in description.types)
+    ]
+    deprecated_entities = [
+        (robot, description, breaks_in_ha_version)
+        for robot in coordinator.account.robots
+        for description in SWITCH_LIST
+        for deprecated_type, breaks_in_ha_version in description.type_breaks_in_ha_version.items()
+        if isinstance(robot, deprecated_type)
     ]
 
     ent_reg = er.async_get(hass)
 
     def add_deprecated_entity(
-        robot: LitterRobot4,
+        robot: type[_WhiskerEntityT],
         description: RobotSwitchEntityDescription,
         entity_cls: type[RobotSwitchEntity],
+        breaks_in_ha_version: str,
     ) -> None:
         """Add deprecated entities."""
         unique_id = f"{robot.serial}-{description.key}"
@@ -116,7 +130,7 @@ async def async_setup_entry(
                     hass,
                     DOMAIN,
                     f"deprecated_entity_{unique_id}",
-                    breaks_in_ha_version="2026.4.0",
+                    breaks_in_ha_version=breaks_in_ha_version,
                     is_fixable=False,
                     severity=IssueSeverity.WARNING,
                     translation_key="deprecated_entity",
@@ -126,10 +140,8 @@ async def async_setup_entry(
                     },
                 )
 
-    for robot in coordinator.account.get_robots(LitterRobot4):
-        add_deprecated_entity(
-            robot, NIGHT_LIGHT_MODE_ENTITY_DESCRIPTION, RobotSwitchEntity
-        )
+    for robot, description, breaks_in_ha_version in deprecated_entities:
+        add_deprecated_entity(robot, description, RobotSwitchEntity, breaks_in_ha_version)
 
     async_add_entities(entities)
 
