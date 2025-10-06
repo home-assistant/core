@@ -23,7 +23,6 @@ Other Hegel models with the same IP control protocol may also work.
 - State restoration on reconnect
 - Automatic reconnect with exponential backoff
 - Background slow poll (for resiliency if push updates are missed)
--
 
 ## Configuration
 
