@@ -32,6 +32,31 @@ from .entity import SmhiFireEntity, SmhiWeatherEntity
 
 PARALLEL_UPDATES = 0
 
+FWI_INDEX_MAP = {
+    "1": "very_low",
+    "2": "low",
+    "3": "moderate",
+    "4": "high",
+    "5": "very_high",
+    "6": "extreme",
+}
+GRASSFIRE_MAP = {
+    "1": "snow_cover",
+    "2": "season_over",
+    "3": "low",
+    "4": "moderate",
+    "5": "high",
+    "6": "very_high",
+}
+FORESTDRY_MAP = {
+    "1": "very_wet",
+    "2": "wet",
+    "3": "moderate_wet",
+    "4": "dry",
+    "5": "very_dry",
+    "6": "extremely_dry",
+}
+
 
 def get_percentage_values(entity: SMHIWeatherSensor, key: str) -> int | None:
     """Return percentage values in correct range."""
@@ -43,12 +68,12 @@ def get_percentage_values(entity: SMHIWeatherSensor, key: str) -> int | None:
     return None
 
 
-def get_fire_index_value(entity: SMHIFireSensor, key: str) -> str | None:
+def get_fire_index_value(entity: SMHIFireSensor, key: str) -> str:
     """Return index value as string."""
     value: int | None = entity.coordinator.fire_current.get(key)  # type: ignore[assignment]
     if value is not None and value > 0:
         return str(int(value))
-    return None
+    return "0"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -120,29 +145,30 @@ FIRE_SENSOR_DESCRIPTIONS: tuple[SMHIFireEntityDescription, ...] = (
     SMHIFireEntityDescription(
         key="fwiindex",
         translation_key="fwiindex",
-        value_fn=lambda entity: get_fire_index_value(entity, "fwiindex"),
+        value_fn=(
+            lambda entity: FWI_INDEX_MAP.get(get_fire_index_value(entity, "fwiindex"))
+        ),
         device_class=SensorDeviceClass.ENUM,
-        options=["1", "2", "3", "4", "5", "6"],
-        state_class=SensorStateClass.MEASUREMENT,
+        options=[*FWI_INDEX_MAP.values()],
         entity_registry_enabled_default=False,
     ),
     SMHIFireEntityDescription(
-        key="fwi",
-        translation_key="fwi",
+        key="fire_weather_index",
+        translation_key="fire_weather_index",
         value_fn=lambda entity: entity.coordinator.fire_current.get("fwi"),
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
     SMHIFireEntityDescription(
-        key="isi",
-        translation_key="isi",
+        key="initial_spread_index",
+        translation_key="initial_spread_index",
         value_fn=lambda entity: entity.coordinator.fire_current.get("isi"),
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
     SMHIFireEntityDescription(
-        key="bui",  # codespell:ignore bui
-        translation_key="bui",  # codespell:ignore bui
+        key="build_up_index",
+        translation_key="build_up_index",
         value_fn=(
             lambda entity: entity.coordinator.fire_current.get(
                 "bui"  # codespell:ignore bui
@@ -152,22 +178,22 @@ FIRE_SENSOR_DESCRIPTIONS: tuple[SMHIFireEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     SMHIFireEntityDescription(
-        key="ffmc",
-        translation_key="ffmc",
+        key="fine_fuel_moisture_code",
+        translation_key="fine_fuel_moisture_code",
         value_fn=lambda entity: entity.coordinator.fire_current.get("ffmc"),
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
     SMHIFireEntityDescription(
-        key="dmc",
-        translation_key="dmc",
+        key="duff_moisture_code",
+        translation_key="duff_moisture_code",
         value_fn=lambda entity: entity.coordinator.fire_current.get("dmc"),
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
     SMHIFireEntityDescription(
-        key="dc",
-        translation_key="dc",
+        key="drought_code",
+        translation_key="drought_code",
         value_fn=lambda entity: entity.coordinator.fire_current.get("dc"),
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
@@ -175,15 +201,16 @@ FIRE_SENSOR_DESCRIPTIONS: tuple[SMHIFireEntityDescription, ...] = (
     SMHIFireEntityDescription(
         key="grassfire",
         translation_key="grassfire",
-        value_fn=lambda entity: get_fire_index_value(entity, "grassfire"),
+        value_fn=(
+            lambda entity: GRASSFIRE_MAP.get(get_fire_index_value(entity, "grassfire"))
+        ),
         device_class=SensorDeviceClass.ENUM,
-        options=["1", "2", "3", "4", "5", "6"],
-        state_class=SensorStateClass.MEASUREMENT,
+        options=[*GRASSFIRE_MAP.values()],
         entity_registry_enabled_default=False,
     ),
     SMHIFireEntityDescription(
-        key="rn",
-        translation_key="rn",
+        key="rate_of_spread",
+        translation_key="rate_of_spread",
         value_fn=lambda entity: entity.coordinator.fire_current.get("rn"),
         device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
@@ -193,10 +220,11 @@ FIRE_SENSOR_DESCRIPTIONS: tuple[SMHIFireEntityDescription, ...] = (
     SMHIFireEntityDescription(
         key="forestdry",
         translation_key="forestdry",
-        value_fn=lambda entity: get_fire_index_value(entity, "forestdry"),
+        value_fn=(
+            lambda entity: FORESTDRY_MAP.get(get_fire_index_value(entity, "forestdry"))
+        ),
         device_class=SensorDeviceClass.ENUM,
-        options=["1", "2", "3", "4", "5", "6"],
-        state_class=SensorStateClass.MEASUREMENT,
+        options=[*FORESTDRY_MAP.values()],
         entity_registry_enabled_default=False,
     ),
 )

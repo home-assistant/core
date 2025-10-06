@@ -31,8 +31,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'bui',
-    'unique_id': '59.32624, 17.84197-bui',
+    'translation_key': 'build_up_index',
+    'unique_id': '59.32624, 17.84197-build_up_index',
     'unit_of_measurement': None,
   })
 # ---
@@ -83,8 +83,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'dc',
-    'unique_id': '59.32624, 17.84197-dc',
+    'translation_key': 'drought_code',
+    'unique_id': '59.32624, 17.84197-drought_code',
     'unit_of_measurement': None,
   })
 # ---
@@ -135,8 +135,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'dmc',
-    'unique_id': '59.32624, 17.84197-dmc',
+    'translation_key': 'duff_moisture_code',
+    'unique_id': '59.32624, 17.84197-duff_moisture_code',
     'unit_of_measurement': None,
   })
 # ---
@@ -187,8 +187,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'ffmc',
-    'unique_id': '59.32624, 17.84197-ffmc',
+    'translation_key': 'fine_fuel_moisture_code',
+    'unique_id': '59.32624, 17.84197-fine_fuel_moisture_code',
     'unit_of_measurement': None,
   })
 # ---
@@ -239,8 +239,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'fwi',
-    'unique_id': '59.32624, 17.84197-fwi',
+    'translation_key': 'fire_weather_index',
+    'unique_id': '59.32624, 17.84197-fire_weather_index',
     'unit_of_measurement': None,
   })
 # ---
@@ -315,7 +315,14 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'options': list([
+        'very_wet',
+        'wet',
+        'moderate_wet',
+        'dry',
+        'very_dry',
+        'extremely_dry',
+      ]),
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -352,14 +359,21 @@
       'attribution': 'Swedish weather institute (SMHI)',
       'device_class': 'enum',
       'friendly_name': 'Test Fuel drying',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'options': list([
+        'very_wet',
+        'wet',
+        'moderate_wet',
+        'dry',
+        'very_dry',
+        'extremely_dry',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_fuel_drying',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': 'moderate_wet',
   })
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_fwi_index-entry]
@@ -368,7 +382,14 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'options': list([
+        'very_low',
+        'low',
+        'moderate',
+        'high',
+        'very_high',
+        'extreme',
+      ]),
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -405,14 +426,21 @@
       'attribution': 'Swedish weather institute (SMHI)',
       'device_class': 'enum',
       'friendly_name': 'Test FWI-index',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'options': list([
+        'very_low',
+        'low',
+        'moderate',
+        'high',
+        'very_high',
+        'extreme',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_fwi_index',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2',
+    'state': 'low',
   })
 # ---
 # name: test_sensor_setup[load_platforms0][sensor.test_high_cloud_coverage-entry]
@@ -471,7 +499,14 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'options': list([
+        'snow_cover',
+        'season_over',
+        'low',
+        'moderate',
+        'high',
+        'very_high',
+      ]),
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -508,7 +543,14 @@
       'attribution': 'Swedish weather institute (SMHI)',
       'device_class': 'enum',
       'friendly_name': 'Test Highest grass fire risk',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'options': list([
+        'snow_cover',
+        'season_over',
+        'low',
+        'moderate',
+        'high',
+        'very_high',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_highest_grass_fire_risk',
@@ -550,8 +592,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'isi',
-    'unique_id': '59.32624, 17.84197-isi',
+    'translation_key': 'initial_spread_index',
+    'unique_id': '59.32624, 17.84197-initial_spread_index',
     'unit_of_measurement': None,
   })
 # ---
@@ -705,8 +747,8 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'rn',
-    'unique_id': '59.32624, 17.84197-rn',
+    'translation_key': 'rate_of_spread',
+    'unique_id': '59.32624, 17.84197-rate_of_spread',
     'unit_of_measurement': <UnitOfSpeed.METERS_PER_MINUTE: 'm/min'>,
   })
 # ---

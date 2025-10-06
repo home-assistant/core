@@ -109,6 +109,27 @@
       },
       "total_cloud": {
         "name": "Total cloud coverage"
+      },
+      "fire_weather_index": {
+        "name": "Fire Weather Index"
+      },
+      "initial_spread_index": {
+        "name": "Initial Spread Index"
+      },
+      "build_up_index": {
+        "name": "Build Up Index"
+      },
+      "fine_fuel_moisture_code": {
+        "name": "Fine Fuel Moisture Code"
+      },
+      "duff_moisture_code": {
+        "name": "Duff Moisture Code"
+      },
+      "drought_code": {
+        "name": "Drought Code"
+      },
+      "rate_of_spread": {
+        "name": "Potential rate of spread"
       }
     }
   }

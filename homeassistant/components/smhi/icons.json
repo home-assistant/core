@@ -43,7 +43,25 @@
       "precipitation_category": {
         "default": "mdi:weather-pouring"
       },
-      "rn": {
+      "fire_weather_index": {
+        "default": "mdi:pine-tree-fire"
+      },
+      "initial_spread_index": {
+        "default": "mdi:grass"
+      },
+      "build_up_index": {
+        "default": "mdi:grass"
+      },
+      "fine_fuel_moisture_code": {
+        "default": "mdi:grass"
+      },
+      "duff_moisture_code": {
+        "default": "mdi:grass"
+      },
+      "drought_code": {
+        "default": "mdi:grass"
+      },
+      "rate_of_spread": {
         "default": "mdi:grass"
       },
       "thunder": {
