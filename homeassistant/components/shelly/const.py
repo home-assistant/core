@@ -26,10 +26,11 @@ from aioshelly.const import (
     MODEL_VINTAGE_V2,
     MODEL_WALL_DISPLAY,
     MODEL_WALL_DISPLAY_X2,
+    MODEL_WALL_DISPLAY_XL,
 )
 
 from homeassistant.components.number import NumberMode
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import UnitOfVolumeFlowRate
 
 DOMAIN: Final = "shelly"
 
@@ -231,6 +232,7 @@ class BLEScannerMode(StrEnum):
 
 
 BLE_SCANNER_MIN_FIRMWARE = "1.5.1"
+WALL_DISPLAY_MIN_FIRMWARE = "2.3.0"
 
 MAX_PUSH_UPDATE_FAILURES = 5
 PUSH_UPDATE_ISSUE_ID = "push_update_{unique}"
@@ -242,6 +244,9 @@ FIRMWARE_UNSUPPORTED_ISSUE_ID = "firmware_unsupported_{unique}"
 BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID = "ble_scanner_firmware_unsupported_{unique}"
 OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID = (
     "outbound_websocket_incorrectly_enabled_{unique}"
+)
+WALL_DISPLAY_FIRMWARE_UNSUPPORTED_ISSUE_ID = (
+    "wall_display_firmware_unsupported_{unique}"
 )
 
 GAS_VALVE_OPEN_STATES = ("opening", "opened")
@@ -257,6 +262,7 @@ GEN2_BETA_RELEASE_URL = f"{GEN2_RELEASE_URL}#unreleased"
 DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
     MODEL_WALL_DISPLAY,
     MODEL_WALL_DISPLAY_X2,
+    MODEL_WALL_DISPLAY_XL,
     MODEL_MOTION,
     MODEL_MOTION_2,
     MODEL_VALVE,
@@ -264,9 +270,10 @@ DEVICES_WITHOUT_FIRMWARE_CHANGELOG = (
 
 CONF_GEN = "gen"
 
-VIRTUAL_COMPONENTS = ("boolean", "enum", "input", "number", "text")
+VIRTUAL_COMPONENTS = ("boolean", "button", "enum", "input", "number", "text")
 VIRTUAL_COMPONENTS_MAP = {
     "binary_sensor": {"types": ["boolean"], "modes": ["label"]},
+    "button": {"types": ["button"], "modes": ["button"]},
     "number": {"types": ["number"], "modes": ["field", "slider"]},
     "select": {"types": ["enum"], "modes": ["dropdown"]},
     "sensor": {"types": ["enum", "number", "text"], "modes": ["label"]},
@@ -284,9 +291,10 @@ API_WS_URL = "/api/shelly/ws"
 
 COMPONENT_ID_PATTERN = re.compile(r"[a-z\d]+:\d+")
 
-ROLE_TO_DEVICE_CLASS_MAP = {
-    "current_humidity": SensorDeviceClass.HUMIDITY,
-    "current_temperature": SensorDeviceClass.TEMPERATURE,
+# Mapping for units that require conversion to a Home Assistant recognized unit
+# e.g. "m3/min" to "m³/min"
+DEVICE_UNIT_MAP = {
+    "m3/min": UnitOfVolumeFlowRate.CUBIC_METERS_PER_MINUTE,
 }
 
 # We want to check only the first 5 KB of the script if it contains emitEvent()
@@ -294,3 +302,9 @@ ROLE_TO_DEVICE_CLASS_MAP = {
 MAX_SCRIPT_SIZE = 5120
 
 All_LIGHT_TYPES = ("cct", "light", "rgb", "rgbw")
+
+# Shelly-X specific models
+MODEL_NEO_WATER_VALVE = "NeoWaterValve"
+MODEL_FRANKEVER_WATER_VALVE = "WaterValve"
+MODEL_LINKEDGO_ST802_THERMOSTAT = "ST-802"
+MODEL_LINKEDGO_ST1820_THERMOSTAT = "ST1820"

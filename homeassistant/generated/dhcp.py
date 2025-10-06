@@ -27,6 +27,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "E84F25*",
     },
     {
+        "domain": "aladdin_connect",
+        "hostname": "gdocntl-*",
+    },
+    {
         "domain": "august",
         "hostname": "connect",
         "macaddress": "D86162*",
@@ -558,6 +562,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "playstation_network",
         "macaddress": "84E657*",
+    },
+    {
+        "domain": "pooldose",
+        "hostname": "kommspot",
     },
     {
         "domain": "powerwall",

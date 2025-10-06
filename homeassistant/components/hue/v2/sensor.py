@@ -9,13 +9,16 @@ from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.sensors import (
     DevicePowerController,
+    GroupedLightLevelController,
     LightLevelController,
     SensorsController,
     TemperatureController,
     ZigbeeConnectivityController,
 )
 from aiohue.v2.models.device_power import DevicePower
+from aiohue.v2.models.grouped_light_level import GroupedLightLevel
 from aiohue.v2.models.light_level import LightLevel
+from aiohue.v2.models.resource import ResourceTypes
 from aiohue.v2.models.temperature import Temperature
 from aiohue.v2.models.zigbee_connectivity import ZigbeeConnectivity
 
@@ -27,18 +30,48 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from ..bridge import HueBridge, HueConfigEntry
+from ..const import DOMAIN
 from .entity import HueBaseEntity
 
-type SensorType = DevicePower | LightLevel | Temperature | ZigbeeConnectivity
+type SensorType = (
+    DevicePower | LightLevel | Temperature | ZigbeeConnectivity | GroupedLightLevel
+)
 type ControllerType = (
     DevicePowerController
     | LightLevelController
     | TemperatureController
     | ZigbeeConnectivityController
+    | GroupedLightLevelController
 )
+
+
+def _resource_valid(
+    resource: SensorType, controller: ControllerType, api: HueBridgeV2
+) -> bool:
+    """Return True if the resource is valid."""
+    if isinstance(resource, GroupedLightLevel):
+        # filter out GroupedLightLevel sensors that are not linked to a valid group/parent
+        if resource.owner.rtype not in (
+            ResourceTypes.ROOM,
+            ResourceTypes.ZONE,
+            ResourceTypes.SERVICE_GROUP,
+        ):
+            return False
+        # guard against GroupedLightLevel without parent (should not happen, but just in case)
+        parent_id = resource.owner.rid
+        parent = api.groups.get(parent_id) or api.config.get(parent_id)
+        if not parent:
+            return False
+        # filter out GroupedLightLevel sensors that have only one member, because Hue creates one
+        # default grouped LightLevel sensor per zone/room, which is not useful to expose in HA
+        if len(parent.children) <= 1:
+            return False
+    # default/other checks can go here (none for now)
+    return True
 
 
 async def async_setup_entry(
@@ -58,10 +91,16 @@ async def async_setup_entry(
         @callback
         def async_add_sensor(event_type: EventType, resource: SensorType) -> None:
             """Add Hue Sensor."""
+            if not _resource_valid(resource, controller, api):
+                return
             async_add_entities([make_sensor_entity(resource)])
 
         # add all current items in controller
-        async_add_entities(make_sensor_entity(sensor) for sensor in controller)
+        async_add_entities(
+            make_sensor_entity(sensor)
+            for sensor in controller
+            if _resource_valid(sensor, controller, api)
+        )
 
         # register listener for new sensors
         config_entry.async_on_unload(
@@ -75,6 +114,7 @@ async def async_setup_entry(
     register_items(ctrl_base.light_level, HueLightLevelSensor)
     register_items(ctrl_base.device_power, HueBatterySensor)
     register_items(ctrl_base.zigbee_connectivity, HueZigbeeConnectivitySensor)
+    register_items(api.sensors.grouped_light_level, HueGroupedLightLevelSensor)
 
 
 # pylint: disable-next=hass-enforce-class-module
@@ -138,6 +178,31 @@ class HueLightLevelSensor(HueSensorBase):
         return {
             "light_level": self.resource.light.value,
         }
+
+
+# pylint: disable-next=hass-enforce-class-module
+class HueGroupedLightLevelSensor(HueLightLevelSensor):
+    """Representation of a LightLevel (illuminance) sensor from a Hue GroupedLightLevel resource."""
+
+    controller: GroupedLightLevelController
+    resource: GroupedLightLevel
+
+    def __init__(
+        self,
+        bridge: HueBridge,
+        controller: GroupedLightLevelController,
+        resource: GroupedLightLevel,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(bridge, controller, resource)
+        # link the GroupedLightLevel sensor to the parent the sensor is associated with
+        # which can either be a special ServiceGroup or a Zone/Room
+        api = self.bridge.api
+        parent_id = resource.owner.rid
+        parent = api.groups.get(parent_id) or api.config.get(parent_id)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, parent.id)},
+        )
 
 
 # pylint: disable-next=hass-enforce-class-module

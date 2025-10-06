@@ -163,7 +163,7 @@ SENSOR_DESCRIPTIONS: tuple[NtfySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_SIZE,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
-        suggested_display_precision=0,
+        suggested_display_precision=2,
     ),
     NtfySensorEntityDescription(
         key=NtfySensor.ATTACHMENT_TOTAL_SIZE_REMAINING,
@@ -172,7 +172,7 @@ SENSOR_DESCRIPTIONS: tuple[NtfySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_SIZE,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
-        suggested_display_precision=0,
+        suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
     NtfySensorEntityDescription(

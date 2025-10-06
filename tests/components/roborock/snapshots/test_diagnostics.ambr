@@ -32,8 +32,6 @@
     'coordinators': dict({
       '**REDACTED-0**': dict({
         'api': dict({
-          'misc_info': dict({
-          }),
         }),
         'roborock_device_info': dict({
           'device': dict({
@@ -218,9 +216,9 @@
               'squareMeterCleanArea': 1159.2,
             }),
             'consumable': dict({
-              'cleaningBrushTimeLeft': 1079935,
+              'cleaningBrushTimeLeft': 235,
               'cleaningBrushWorkTimes': 65,
-              'dustCollectionTimeLeft': 80975,
+              'dustCollectionTimeLeft': 65,
               'dustCollectionWorkTimes': 25,
               'filterElementWorkTime': 0,
               'filterTimeLeft': 465618,
@@ -231,7 +229,7 @@
               'sensorTimeLeft': 33618,
               'sideBrushTimeLeft': 645618,
               'sideBrushWorkTime': 74382,
-              'strainerTimeLeft': 539935,
+              'strainerTimeLeft': 85,
               'strainerWorkTimes': 65,
             }),
             'lastCleanRecord': dict({
@@ -319,8 +317,6 @@
       }),
       '**REDACTED-1**': dict({
         'api': dict({
-          'misc_info': dict({
-          }),
         }),
         'roborock_device_info': dict({
           'device': dict({
@@ -505,9 +501,9 @@
               'squareMeterCleanArea': 1159.2,
             }),
             'consumable': dict({
-              'cleaningBrushTimeLeft': 1079935,
+              'cleaningBrushTimeLeft': 235,
               'cleaningBrushWorkTimes': 65,
-              'dustCollectionTimeLeft': 80975,
+              'dustCollectionTimeLeft': 65,
               'dustCollectionWorkTimes': 25,
               'filterElementWorkTime': 0,
               'filterTimeLeft': 465618,
@@ -518,7 +514,7 @@
               'sensorTimeLeft': 33618,
               'sideBrushTimeLeft': 645618,
               'sideBrushWorkTime': 74382,
-              'strainerTimeLeft': 539935,
+              'strainerTimeLeft': 85,
               'strainerWorkTimes': 65,
             }),
             'lastCleanRecord': dict({
@@ -606,8 +602,6 @@
       }),
       '**REDACTED-2**': dict({
         'api': dict({
-          'misc_info': dict({
-          }),
         }),
         'roborock_device_info': dict({
           'device': dict({
@@ -969,8 +963,6 @@
       }),
       '**REDACTED-3**': dict({
         'api': dict({
-          'misc_info': dict({
-          }),
         }),
         'roborock_device_info': dict({
           'device': dict({

@@ -31,6 +31,17 @@
         "default": "mdi:stop"
       }
     },
+    "climate": {
+      "air_conditioner": {
+        "state_attributes": {
+          "fan_mode": {
+            "state": {
+              "turbo": "mdi:wind-power"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "washer_rinse_cycles": {
         "default": "mdi:waves-arrow-up"
