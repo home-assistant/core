@@ -300,10 +300,8 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             self._current_state is not None
             and (current_state := self.device.status.get(self._current_state))
             is not None
+            and current_state != "stop"
         ):
-            if current_state == "stop":
-                # If the cover is stopped, we can't know if it's open or closed
-                return None
             return self.entity_description.current_state_inverse is not (
                 current_state in (True, "close", "fully_close")
             )
