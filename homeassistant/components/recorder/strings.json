@@ -96,6 +96,25 @@
           "description": "Optional unit conversion mapping."
         }
       }
+    },
+    "get_history": {
+      "name": "Get history",
+      "description": "Retrieves history data for entities within a specific time period.",
+      "fields": {
+        "end_time": {
+          "name": "End time",
+          "description": "The end time for the history query. If omitted, returns all history from start time onward."
+        },
+
+        "start_time": {
+          "name": "Start time",
+          "description": "The start time for the history query."
+        },
+        "history_ids": {
+          "name": "History IDs",
+          "description": "The entity IDs or history IDs to return history for."
+        }
+      }
     }
   }
 }

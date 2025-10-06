@@ -12,6 +12,7 @@ from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
+    State,
     SupportsResponse,
     callback,
 )
@@ -26,6 +27,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import ATTR_APPLY_FILTER, ATTR_KEEP_DAYS, ATTR_REPACK, DOMAIN
+from .history import state_changes_during_period
 from .statistics import statistics_during_period
 from .tasks import PurgeEntitiesTask, PurgeTask
 
@@ -34,6 +36,7 @@ SERVICE_PURGE_ENTITIES = "purge_entities"
 SERVICE_ENABLE = "enable"
 SERVICE_DISABLE = "disable"
 SERVICE_GET_STATISTICS = "get_statistics"
+SERVICE_GET_HISTORY = "get_history"
 
 SERVICE_PURGE_SCHEMA = vol.Schema(
     {
@@ -83,6 +86,14 @@ SERVICE_GET_STATISTICS_SCHEMA = vol.Schema(
             [vol.In(["change", "last_reset", "max", "mean", "min", "state", "sum"])],
         ),
         vol.Optional("units"): vol.Schema({cv.string: cv.string}),
+    }
+)
+
+SERVICE_GET_HISTORY_SCHEMA = vol.Schema(
+    {
+        vol.Required("start_time"): cv.datetime,
+        vol.Optional("end_time"): cv.datetime,
+        vol.Required("history_ids"): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
@@ -178,6 +189,70 @@ async def _async_handle_get_statistics_service(
     return {"statistics": formatted_result}
 
 
+async def _async_handle_get_history_service(
+    service: ServiceCall,
+) -> ServiceResponse:
+    """Handle calls to the get_history service."""
+    hass = service.hass
+    start_time = dt_util.as_utc(service.data["start_time"])
+    end_time = (
+        dt_util.as_utc(service.data["end_time"]) if "end_time" in service.data else None
+    )
+
+    history_ids = service.data["history_ids"]
+    # Note that the state_changes_during_period specifically returns the LazyState subclass
+    result: dict[str, list[State]] = {}
+    for history_id in history_ids:
+        result.update(
+            await hass.data[DATA_INSTANCE].async_add_executor_job(
+                state_changes_during_period,
+                hass,
+                start_time,
+                end_time,
+                history_id,
+                True,
+                False,
+                None,
+                True,
+            )
+        )
+
+    formatted_result: JsonObjectType = {}
+    for history_id, history_states_with_dups in result.items():
+        # Remove consecutive states that are the same, this can occur due to restarts
+        history_states: list[State] = []
+        for index, state in enumerate(history_states_with_dups):
+            if index == 0:
+                history_states.append(state)
+                continue
+            if history_states_with_dups[index - 1].state == state.state:
+                continue
+            history_states.append(state)
+
+        formatted_history_states: JsonArrayType = []
+
+        for index, state in enumerate(history_states):
+            if index == len(history_states) - 1:
+                end = end_time or dt_util.utcnow()
+            else:
+                end = dt_util.utc_from_timestamp(
+                    history_states[index + 1].last_updated_timestamp
+                )
+            formatted_state: JsonObjectType = {
+                "start": dt_util.utc_from_timestamp(
+                    state.last_updated_timestamp
+                ).isoformat(),
+                "end": end.isoformat(),
+                "state": state.state,
+            }
+
+            formatted_history_states.append(formatted_state)
+
+        formatted_result[history_id] = formatted_history_states
+
+    return {"history": formatted_result}
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register recorder services."""
@@ -219,5 +294,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_GET_STATISTICS,
         _async_handle_get_statistics_service,
         schema=SERVICE_GET_STATISTICS_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_GET_HISTORY,
+        _async_handle_get_history_service,
+        schema=SERVICE_GET_HISTORY_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
