@@ -12,6 +12,7 @@ from openrgb.orgb import Device
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -53,12 +54,22 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
     async def _async_setup(self) -> None:
         """Set up the coordinator by connecting to the OpenRGB SDK server."""
-        self.client = await self.hass.async_add_executor_job(
-            OpenRGBClient,
-            self.host,
-            self.port,
-            DEFAULT_CLIENT_NAME,
-        )
+        try:
+            self.client = await self.hass.async_add_executor_job(
+                OpenRGBClient,
+                self.host,
+                self.port,
+                DEFAULT_CLIENT_NAME,
+            )
+        except CONNECTION_ERRORS as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={
+                    "server_address": self.server_address,
+                    "error": str(err),
+                },
+            ) from err
 
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch data from OpenRGB."""
