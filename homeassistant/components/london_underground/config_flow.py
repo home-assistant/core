@@ -84,6 +84,16 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: ConfigType) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
+        session = async_get_clientsession(self.hass)
+        data = TubeData(session)
+        try:
+            async with asyncio.timeout(10):
+                await data.update()
+        except Exception as ex:
+            _LOGGER.exception(
+                "Unexpected error trying to connect before importing config, aborting import "
+            )
+            raise ex from None
         _LOGGER.warning(
             "Importing London Underground config from configuration.yaml: %s",
             import_data,
