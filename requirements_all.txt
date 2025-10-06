@@ -2689,7 +2689,7 @@ raincloudy==0.0.7
 rapt-ble==0.1.2
 
 # homeassistant.components.raspyrfm
-raspyrfm-client==1.2.8
+raspyrfm-client==1.2.9
 
 # homeassistant.components.refoss
 refoss-ha==1.2.5
