@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
-from typing import Any, cast
+from typing import Any
 
 from simplipy import API
 from simplipy.errors import (
@@ -229,8 +229,8 @@ def _async_get_system_for_service_call(
         config_entry: SimpliSafeConfigEntry | None = (
             hass.config_entries.async_get_entry(entry_id)
         )
-        if config_entry is not None:
-            return cast(SystemType, config_entry.runtime_data.systems[system_id])
+        if config_entry is not None and system_id in config_entry.runtime_data.systems:
+            return config_entry.runtime_data.systems[system_id]
 
     raise ValueError(f"No system for device ID: {device_id}")
 
@@ -241,10 +241,11 @@ def _async_register_base_station(
 ) -> None:
     """Register a new bridge."""
     device_registry = dr.async_get(hass)
+    system_id = str(system.system_id)
 
     base_station = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, str(system.system_id))},
+        identifiers={(DOMAIN, system_id)},
         manufacturer="SimpliSafe",
         model=system.version,
         name=system.address,
@@ -252,7 +253,7 @@ def _async_register_base_station(
 
     # Check for an old system ID format and remove it:
     if old_base_station := device_registry.async_get_device(
-        identifiers={(DOMAIN, system.system_id)}
+        identifiers={(DOMAIN, system_id)}
     ):
         # Update the new base station with any properties the user might have configured
         # on the old base station:
@@ -405,15 +406,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: SimpliSafeConfigEntry) -> bool:
     """Unload a SimpliSafe config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        # If this is the last loaded instance of SimpliSafe, deregister any services
-        # defined during integration setup:
-        for service_name in SERVICES:
-            hass.services.async_remove(DOMAIN, service_name)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class SimpliSafe:

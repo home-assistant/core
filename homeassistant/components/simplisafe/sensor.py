@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 from simplipy.device import DeviceTypes
 from simplipy.device.sensor.v3 import SensorV3
 from simplipy.system.v3 import SystemV3
@@ -35,7 +37,9 @@ async def async_setup_entry(
             continue
 
         sensors.extend(
-            SimplisafeFreezeSensor(simplisafe, system, sensor)
+            SimplisafeFreezeSensor(
+                simplisafe, cast(SystemV3, system), cast(SensorV3, sensor)
+            )
             for sensor in system.sensors.values()
             if sensor.type == DeviceTypes.TEMPERATURE
         )

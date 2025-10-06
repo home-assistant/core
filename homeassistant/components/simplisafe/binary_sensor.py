@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 from simplipy.device import DeviceTypes, DeviceV3
 from simplipy.device.sensor.v3 import SensorV3
 from simplipy.system.v3 import SystemV3
@@ -70,7 +72,10 @@ async def async_setup_entry(
             LOGGER.warning("Skipping sensor setup for V2 system: %s", system.system_id)
             continue
 
+        system = cast(SystemV3, system)
+
         for sensor in system.sensors.values():
+            sensor = cast(SensorV3, sensor)
             if sensor.type in TRIGGERED_SENSOR_TYPES:
                 sensors.append(
                     TriggeredBinarySensor(
