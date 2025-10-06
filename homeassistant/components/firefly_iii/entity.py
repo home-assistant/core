@@ -21,13 +21,7 @@ class FireflyCoordinatorEntity(CoordinatorEntity[FireflyDataUpdateCoordinator]):
 
 
 class FireflyBaseEntity(FireflyCoordinatorEntity):
-    """Base class for Firefly III entity.
-
-    Represents the integration service itself. Account entities override
-    the device info to point at their specific account.
-    """
-
-    _attr_has_entity_name = True
+    """Base class for Firefly III entity."""
 
     def __init__(
         self,

@@ -15,6 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import ACCOUNT_ROLE_MAPPING
 from .coordinator import FireflyConfigEntry, FireflyDataUpdateCoordinator
 from .entity import FireflyAccountBaseEntity, FireflyCategoryBaseEntity
 
@@ -117,20 +118,13 @@ class FireflyAccountRoleSensor(FireflyAccountBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return account role."""
-        # Mapping is needed for translation keys
-        mapping = {
-            "defaultAsset": "default_asset",
-            "sharedAsset": "shared_asset",
-            "savingAsset": "saving_asset",
-            "ccAsset": "cc_asset",
-            "cashWalletAsset": "cash_wallet_asset",
-        }
+
         # An account can be empty and then should resort to Unknown
         account_role: str | None = self._account.attributes.account_role
         if account_role is None:
             return None
 
-        return mapping.get(account_role, account_role)
+        return ACCOUNT_ROLE_MAPPING.get(account_role, account_role)
 
 
 class FireflyAccountTypeSensor(FireflyAccountBaseEntity, SensorEntity):
