@@ -136,20 +136,23 @@ async def test_request_sync(hass: HomeAssistant) -> None:
         )
 
         provider = config_entry.runtime_data.provider
+        coordinator = config_entry.runtime_data.coordinator
 
-        # Mimic request sync event
-        state_data = {
-            "type": "requestSync",
-        }
-        provider.listen.mock_calls[0].args[0](None, state_data)
-        await hass.async_block_till_done(wait_background_tasks=True)
-        await asyncio.gather(*asyncio.all_tasks() - {asyncio.current_task()})
-        await asyncio.sleep(0.01)
+        with patch.object(
+            coordinator.hass.config_entries, "async_reload"
+        ) as async_reload_mock:
+            # Mimic request sync event
+            state_data = {
+                "type": "requestSync",
+            }
+            # async reload should not be called yet
+            async_reload_mock.assert_not_called()
+            # Send the request sync
+            provider.listen.mock_calls[0].args[0](None, state_data)
+            # Wait for the request to be processed
+            await hass.async_block_till_done(wait_background_tasks=True)
+            await asyncio.gather(*asyncio.all_tasks() - {asyncio.current_task()})
+            await asyncio.sleep(0.01)
 
-        # Check that the button names reflect the new values
-        button_names = {"New Button 1", "New Button 2", "New Button 3"}
-        comp = er.async_get(hass)
-        registered_button_names = {b.original_name for b in comp.entities.values()}
-        assert button_names == registered_button_names, (
-            "Expected button names to change"
-        )
+            # Now async reload should have been called
+            async_reload_mock.assert_called()
