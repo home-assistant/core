@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
@@ -42,13 +43,11 @@ async def async_setup_platform(
 
     # If configuration.yaml config exists, trigger the import flow.
     # If the config entry already exists, this will not be triggered as only one config is allowed.
-    try:
-        await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    except Exception as ex:
-        _LOGGER.exception("Unexpected error initiating config flow from import")
-        raise ex from None
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
+    if result["type"] is FlowResultType.ABORT:
+        return
 
     _LOGGER.warning(
         "Loading London Underground via platform (YAML) config is deprecated; The configuration"
