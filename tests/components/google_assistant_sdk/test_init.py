@@ -14,7 +14,7 @@ from homeassistant.components.google_assistant_sdk import DOMAIN
 from homeassistant.components.google_assistant_sdk.const import SUPPORTED_LANGUAGE_CODES
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -37,19 +37,29 @@ async def test_setup_success(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
 ) -> None:
-    """Test successful setup and unload."""
+    """Test successful setup, unload, and re-setup."""
+    # Initial setup
     await setup_integration()
-
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
+    assert hass.services.has_service(DOMAIN, "send_text_command")
 
-    await hass.config_entries.async_unload(entries[0].entry_id)
+    # Unload the entry
+    entry_id = entries[0].entry_id
+    await hass.config_entries.async_unload(entry_id)
     await hass.async_block_till_done()
-
     assert not hass.data.get(DOMAIN)
     assert entries[0].state is ConfigEntryState.NOT_LOADED
-    assert not hass.services.async_services().get(DOMAIN, {})
+    assert hass.services.has_service(DOMAIN, "send_text_command")
+
+    # Re-setup the entry
+    assert await hass.config_entries.async_setup(entry_id)
+    await hass.async_block_till_done()
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+    assert hass.services.has_service(DOMAIN, "send_text_command")
 
 
 @pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
@@ -133,6 +143,12 @@ async def test_setup_client_error(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            DOMAIN, "send_text_command", {"command": "some command"}, blocking=True
+        )
+    assert exc.value.translation_key == "entry_not_loaded"
 
 
 @pytest.mark.parametrize(
