@@ -2,7 +2,7 @@
 # name: test_entry_diagnostics
   dict({
     'about': dict({
-      'version': 'v1.10.2',
+      'version': 'v2.0.0',
     }),
     'mealplans': dict({
       'breakfast': list([
