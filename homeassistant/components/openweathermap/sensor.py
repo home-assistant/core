@@ -67,6 +67,7 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key=ATTR_API_DEW_POINT,
+        translation_key=ATTR_API_DEW_POINT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -79,6 +80,7 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key=ATTR_API_FEELS_LIKE_TEMPERATURE,
+        translation_key=ATTR_API_FEELS_LIKE_TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -91,6 +93,7 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key=ATTR_API_WIND_GUST,
+        translation_key=ATTR_API_WIND_GUST,
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
@@ -115,40 +118,48 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key=ATTR_API_CLOUDS,
+        translation_key=ATTR_API_CLOUDS,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_RAIN,
+        translation_key=ATTR_API_RAIN,
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_SNOW,
+        translation_key=ATTR_API_SNOW,
         native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_PRECIPITATION_KIND,
+        translation_key=ATTR_API_PRECIPITATION_KIND,
     ),
     SensorEntityDescription(
         key=ATTR_API_UV_INDEX,
+        translation_key=ATTR_API_UV_INDEX,
         native_unit_of_measurement=UV_INDEX,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_VISIBILITY_DISTANCE,
+        translation_key=ATTR_API_VISIBILITY_DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_CONDITION,
+        translation_key=ATTR_API_CONDITION,
     ),
     SensorEntityDescription(
         key=ATTR_API_WEATHER_CODE,
+        translation_key=ATTR_API_WEATHER_CODE,
     ),
 )
 
