@@ -1,62 +1,19 @@
 """Tests for the ElevenLabs STT integration."""
 
-from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from elevenlabs.core import ApiError
-from elevenlabs.types import GetVoicesResponse
 import pytest
 
 from homeassistant.components import stt
 from homeassistant.components.elevenlabs.const import (
     CONF_MODEL,
     CONF_STT_AUTO_LANGUAGE,
-    CONF_STT_MODEL,
     CONF_VOICE,
-    DOMAIN,
 )
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
-from .const import MOCK_MODELS, MOCK_VOICES
-
-from tests.common import MockConfigEntry
-
 # === Fixtures ===
-
-
-@pytest.fixture(name="config_options_auto_language")
-def config_options_auto_language() -> dict:
-    """Override default config options with auto language enabled."""
-    return {
-        CONF_VOICE: "voice1",
-        CONF_MODEL: "model1",
-        CONF_STT_AUTO_LANGUAGE: True,
-    }
-
-
-@pytest.fixture(name="setup")
-async def setup_fixture(
-    hass: HomeAssistant,
-    config_data: dict[str, Any],
-    config_options: dict[str, Any],
-    config_options_auto_language: dict[str, Any],
-    request: pytest.FixtureRequest,
-    mock_async_client: AsyncMock,
-) -> AsyncMock:
-    """Set up the STT integration with mocked ElevenLabs client."""
-
-    param = getattr(request, "param", "mock_config_entry_setup")
-    if param == "mock_config_entry_setup":
-        await mock_config_entry_setup(hass, config_data, config_options)
-    elif param == "mock_config_entry_setup_auto_language":
-        await mock_config_entry_setup(hass, config_data, config_options_auto_language)
-    else:
-        raise RuntimeError("Invalid setup fixture")
-
-    await hass.async_block_till_done()
-
-    return mock_async_client
 
 
 @pytest.fixture
@@ -149,40 +106,6 @@ def opus_metadata() -> stt.SpeechMetadata:
     )
 
 
-async def mock_config_entry_setup(
-    hass: HomeAssistant, config_data: dict[str, Any], config_options: dict[str, Any]
-) -> None:
-    """Mock config entry setup."""
-    default_config_data = {
-        CONF_API_KEY: "api_key",
-    }
-    default_config_options = {
-        CONF_VOICE: "voice1",
-        CONF_MODEL: "model1",
-        CONF_STT_MODEL: "stt_model1",
-        CONF_STT_AUTO_LANGUAGE: False,
-    }
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=default_config_data | config_data,
-        options=default_config_options | config_options,
-    )
-    config_entry.add_to_hass(hass)
-    client_mock = AsyncMock()
-    client_mock.voices.get_all.return_value = GetVoicesResponse(voices=MOCK_VOICES)
-    client_mock.models.list.return_value = MOCK_MODELS
-    stt_mock = AsyncMock()
-    stt_mock.convert.return_value = AsyncMock(
-        text="hello world", language_code="en", language_probability=0.95
-    )
-    client_mock.speech_to_text = stt_mock
-
-    with patch(
-        "homeassistant.components.elevenlabs.AsyncElevenLabs", return_value=client_mock
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-
-
 # === SUCCESS TESTS ===
 
 
@@ -193,7 +116,8 @@ async def test_stt_transcription_success(
     two_chunk_stream,
 ) -> None:
     """Test successful transcription with valid PCM/WAV input."""
-    entity = hass.data[stt.DOMAIN].get_entity("stt.elevenlabs_speech_to_text")
+    entity = stt.async_get_speech_to_text_engine(hass, "stt.elevenlabs_speech_to_text")
+    assert entity is not None
     result = await entity.async_process_audio_stream(
         default_metadata, two_chunk_stream()
     )
@@ -203,7 +127,14 @@ async def test_stt_transcription_success(
 
 
 @pytest.mark.parametrize(
-    "setup", ["mock_config_entry_setup_auto_language"], indirect=True
+    "config_options",
+    [
+        {
+            CONF_VOICE: "voice1",
+            CONF_MODEL: "model1",
+            CONF_STT_AUTO_LANGUAGE: True,
+        }
+    ],
 )
 async def test_stt_transcription_success_auto_language(
     hass: HomeAssistant,
@@ -219,7 +150,8 @@ async def test_stt_transcription_success_auto_language(
         channel=stt.AudioChannels.CHANNEL_MONO,
         bit_rate=stt.AudioBitRates.BITRATE_16,
     )
-    entity = hass.data[stt.DOMAIN].get_entity("stt.elevenlabs_speech_to_text")
+    entity = stt.async_get_speech_to_text_engine(hass, "stt.elevenlabs_speech_to_text")
+    assert entity is not None
     result = await entity.async_process_audio_stream(metadata, simple_stream())
     assert result.result == stt.SpeechResultState.SUCCESS
     assert result.text == "hello world"
@@ -229,7 +161,6 @@ async def test_stt_transcription_success_auto_language(
 # === ERROR CASES (PARAMETRIZED) ===
 
 
-@pytest.mark.parametrize("config_options", ["config_options_disabled"], indirect=True)
 @pytest.mark.parametrize(
     ("metadata_fixture", "stream_fixture"),
     [
@@ -246,7 +177,8 @@ async def test_stt_edge_cases(
     stream_fixture: str,
 ) -> None:
     """Test various error scenarios like unsupported language or bad format."""
-    entity = hass.data[stt.DOMAIN].get_entity("stt.elevenlabs_speech_to_text")
+    entity = stt.async_get_speech_to_text_engine(hass, "stt.elevenlabs_speech_to_text")
+    assert entity is not None
     metadata = request.getfixturevalue(metadata_fixture)
     stream = request.getfixturevalue(stream_fixture)
     assert not entity._auto_detect_language
@@ -262,7 +194,8 @@ async def test_stt_convert_api_error(
     simple_stream,
 ) -> None:
     """Test that API errors during convert are handled properly."""
-    entity = hass.data[stt.DOMAIN].get_entity("stt.elevenlabs_speech_to_text")
+    entity = stt.async_get_speech_to_text_engine(hass, "stt.elevenlabs_speech_to_text")
+    assert entity is not None
     entity._client.speech_to_text.convert.side_effect = ApiError()
     result = await entity.async_process_audio_stream(default_metadata, simple_stream())
     assert result.result == stt.SpeechResultState.ERROR
@@ -277,7 +210,8 @@ async def test_supported_properties(
     setup: AsyncMock,
 ) -> None:
     """Test the advertised capabilities of the ElevenLabs STT entity."""
-    entity = hass.data[stt.DOMAIN].get_entity("stt.elevenlabs_speech_to_text")
+    entity = stt.async_get_speech_to_text_engine(hass, "stt.elevenlabs_speech_to_text")
+    assert entity is not None
     assert set(entity.supported_formats) == {stt.AudioFormats.WAV, stt.AudioFormats.OGG}
     assert set(entity.supported_codecs) == {stt.AudioCodecs.PCM, stt.AudioCodecs.OPUS}
     assert set(entity.supported_bit_rates) == {stt.AudioBitRates.BITRATE_16}
