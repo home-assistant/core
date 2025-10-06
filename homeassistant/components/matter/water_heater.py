@@ -31,7 +31,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SERVICE_WATER_HEATER_BOOST
+from .const import (
+    ATTR_DURATION,
+    ATTR_EMERGENCY_BOOST,
+    ATTR_TEMPORARY_SETPOINT,
+    SERVICE_WATER_HEATER_BOOST,
+)
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
@@ -60,9 +65,9 @@ async def async_setup_entry(
         SERVICE_WATER_HEATER_BOOST,
         schema={
             # duration >=1
-            vol.Required("duration"): vol.All(vol.Coerce(int), vol.Range(min=1)),
-            vol.Optional("emergency_boost"): cv.boolean,
-            vol.Optional("temporary_setpoint"): vol.All(
+            vol.Required(ATTR_DURATION): vol.All(vol.Coerce(int), vol.Range(min=1)),
+            vol.Optional(ATTR_EMERGENCY_BOOST): cv.boolean,
+            vol.Optional(ATTR_TEMPORARY_SETPOINT): vol.All(
                 vol.Coerce(int), vol.Range(min=30, max=65)
             ),
         },
