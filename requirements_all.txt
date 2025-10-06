@@ -2209,6 +2209,9 @@ pynetio==0.1.9.1
 # homeassistant.components.nina
 pynina==0.3.6
 
+# homeassistant.components.nintendo_parental
+pynintendoparental==1.0.1
+
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
 
