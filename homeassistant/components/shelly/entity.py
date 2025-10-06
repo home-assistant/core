@@ -29,6 +29,7 @@ from .utils import (
     get_rpc_device_info,
     get_rpc_entity_name,
     get_rpc_key_instances,
+    get_rpc_role_by_key,
 )
 
 
@@ -186,9 +187,12 @@ def async_setup_rpc_attribute_entities(
 
         for key in key_instances:
             # Filter non-existing sensors
-            if description.role and description.role != coordinator.device.config[
-                key
-            ].get("role", "generic"):
+            if description.models and coordinator.model not in description.models:
+                continue
+
+            if description.role and description.role != get_rpc_role_by_key(
+                coordinator.device.config, key
+            ):
                 continue
 
             if description.sub_key not in coordinator.device.status[
@@ -236,7 +240,7 @@ def async_restore_rpc_attribute_entities(
     sensors: Mapping[str, RpcEntityDescription],
     sensor_class: Callable,
 ) -> None:
-    """Restore block attributes entities."""
+    """Restore RPC attributes entities."""
     entities = []
 
     ent_reg = er.async_get(hass)
@@ -316,6 +320,7 @@ class RpcEntityDescription(EntityDescription):
     options_fn: Callable[[dict], list[str]] | None = None
     entity_class: Callable | None = None
     role: str | None = None
+    models: set[str] | None = None
 
 
 @dataclass(frozen=True)
@@ -443,19 +448,11 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         self.async_write_ha_state()
 
     @rpc_call
-    async def call_rpc(
-        self, method: str, params: Any, timeout: float | None = None
-    ) -> Any:
+    async def call_rpc(self, method: str, params: Any) -> Any:
         """Call RPC method."""
         LOGGER.debug(
-            "Call RPC for entity %s, method: %s, params: %s, timeout: %s",
-            self.name,
-            method,
-            params,
-            timeout,
+            "Call RPC for entity %s, method: %s, params: %s", self.name, method, params
         )
-        if timeout:
-            return await self.coordinator.device.call_rpc(method, params, timeout)
         return await self.coordinator.device.call_rpc(method, params)
 
 
