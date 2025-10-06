@@ -69,7 +69,7 @@
       "message": "Failed to communicate with Google Assistant"
     },
     "reauth_required": {
-      "message": "OAuth session is not valid, re-authentication required"
+      "message": "Credentials are invalid, re-authentication required"
     }
   }
 }
