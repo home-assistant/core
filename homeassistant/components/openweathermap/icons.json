@@ -1,6 +1,9 @@
 {
   "entity": {
     "sensor": {
+      "clouds": {
+        "default": "mdi:weather-cloudy"
+      },
       "precipitation_kind": {
         "default": "mdi:weather-snowy-rainy"
       },
@@ -9,6 +12,9 @@
       },
       "snow": {
         "default": "mdi:weather-snowy"
+      },
+      "uv_index": {
+        "default": "mdi:weather-sunny"
       },
       "visibility": {
         "default": "mdi:eye"
