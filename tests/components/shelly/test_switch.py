@@ -25,6 +25,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -34,8 +35,10 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from . import (
     init_integration,
     inject_rpc_device_event,
+    patch_platforms,
     register_device,
     register_entity,
+    register_sub_device,
 )
 
 from tests.common import async_fire_time_changed, mock_restore_cache
@@ -45,6 +48,15 @@ LIGHT_BLOCK_ID = 2
 RELAY_BLOCK_ID = 0
 GAS_VALVE_BLOCK_ID = 6
 MOTION_BLOCK_ID = 3
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms(
+        [Platform.SWITCH, Platform.CLIMATE, Platform.VALVE, Platform.LIGHT]
+    ):
+        yield
 
 
 async def test_block_device_services(
@@ -658,6 +670,7 @@ async def test_rpc_device_virtual_switch(
     assert state.state == STATE_ON
 
 
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_rpc_device_virtual_binary_sensor(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -679,6 +692,7 @@ async def test_rpc_device_virtual_binary_sensor(
     assert hass.states.get(entity_id) is None
 
 
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_rpc_remove_virtual_switch_when_mode_label(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
@@ -720,8 +734,10 @@ async def test_rpc_remove_virtual_switch_when_orphaned(
 ) -> None:
     """Check whether the virtual switch will be removed if it has been removed from the device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
+
+    # create orphaned entity on main device
     device_entry = register_device(device_registry, config_entry)
-    entity_id = register_entity(
+    entity_id1 = register_entity(
         hass,
         SWITCH_DOMAIN,
         "test_name_boolean_200",
@@ -730,10 +746,29 @@ async def test_rpc_remove_virtual_switch_when_orphaned(
         device_id=device_entry.id,
     )
 
+    # create orphaned entity on sub device
+    sub_device_entry = register_sub_device(
+        device_registry,
+        config_entry,
+        "boolean:201-boolean",
+    )
+    entity_id2 = register_entity(
+        hass,
+        SWITCH_DOMAIN,
+        "boolean_201",
+        "boolean:201-boolean",
+        config_entry,
+        device_id=sub_device_entry.id,
+    )
+
+    assert entity_registry.async_get(entity_id1) is not None
+    assert entity_registry.async_get(entity_id2) is not None
+
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entity_registry.async_get(entity_id) is None
+    assert entity_registry.async_get(entity_id1) is None
+    assert entity_registry.async_get(entity_id2) is None
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

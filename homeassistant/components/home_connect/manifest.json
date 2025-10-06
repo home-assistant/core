@@ -22,6 +22,6 @@
   "iot_class": "cloud_push",
   "loggers": ["aiohomeconnect"],
   "quality_scale": "platinum",
-  "requirements": ["aiohomeconnect==0.18.1"],
+  "requirements": ["aiohomeconnect==0.20.0"],
   "zeroconf": ["_homeconnect._tcp.local."]
 }

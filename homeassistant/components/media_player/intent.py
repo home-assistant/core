@@ -14,6 +14,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     STATE_PLAYING,
 )
@@ -27,6 +28,7 @@ from .browse_media import SearchMedia
 from .const import (
     ATTR_MEDIA_FILTER_CLASSES,
     ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
     SERVICE_PLAY_MEDIA,
     SERVICE_SEARCH_MEDIA,
@@ -39,6 +41,8 @@ INTENT_MEDIA_PAUSE = "HassMediaPause"
 INTENT_MEDIA_UNPAUSE = "HassMediaUnpause"
 INTENT_MEDIA_NEXT = "HassMediaNext"
 INTENT_MEDIA_PREVIOUS = "HassMediaPrevious"
+INTENT_PLAYER_MUTE = "HassMediaPlayerMute"
+INTENT_PLAYER_UNMUTE = "HassMediaPlayerUnmute"
 INTENT_SET_VOLUME = "HassSetVolume"
 INTENT_SET_VOLUME_RELATIVE = "HassSetVolumeRelative"
 INTENT_MEDIA_SEARCH_AND_PLAY = "HassMediaSearchAndPlay"
@@ -130,6 +134,8 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
         ),
     )
     intent.async_register(hass, MediaSetVolumeRelativeHandler())
+    intent.async_register(hass, MediaPlayerMuteUnmuteHandler(True))
+    intent.async_register(hass, MediaPlayerMuteUnmuteHandler(False))
     intent.async_register(hass, MediaSearchAndPlayHandler())
 
 
@@ -229,6 +235,42 @@ class MediaUnpauseHandler(intent.ServiceIntentHandler):
         return await super().async_handle_states(
             intent_obj, match_result, match_constraints
         )
+
+
+class MediaPlayerMuteUnmuteHandler(intent.ServiceIntentHandler):
+    """Handle Mute/Unmute intents."""
+
+    def __init__(self, is_volume_muted: bool) -> None:
+        """Initialize the mute/unmute handler objects."""
+
+        super().__init__(
+            (INTENT_PLAYER_MUTE if is_volume_muted else INTENT_PLAYER_UNMUTE),
+            DOMAIN,
+            SERVICE_VOLUME_MUTE,
+            required_domains={DOMAIN},
+            required_features=MediaPlayerEntityFeature.VOLUME_MUTE,
+            optional_slots={
+                ATTR_MEDIA_VOLUME_MUTED: intent.IntentSlotInfo(
+                    description="Whether the media player should be muted or unmuted",
+                    value_schema=vol.Boolean(),
+                ),
+            },
+            description=(
+                "Mutes a media player" if is_volume_muted else "Unmutes a media player"
+            ),
+            platforms={DOMAIN},
+            device_classes={MediaPlayerDeviceClass},
+        )
+        self.is_volume_muted = is_volume_muted
+
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
+        """Handle the intent."""
+
+        intent_obj.slots["is_volume_muted"] = {
+            "value": self.is_volume_muted,
+            "text": str(self.is_volume_muted),
+        }
+        return await super().async_handle(intent_obj)
 
 
 class MediaSearchAndPlayHandler(intent.IntentHandler):
@@ -355,7 +397,6 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
         # Success
         response = intent_obj.create_response()
         response.async_set_speech_slots({"media": first_result.as_dict()})
-        response.response_type = intent.IntentResponseType.ACTION_DONE
         return response
 
 
@@ -471,6 +512,5 @@ class MediaSetVolumeRelativeHandler(intent.IntentHandler):
             ) from err
 
         response = intent_obj.create_response()
-        response.response_type = intent.IntentResponseType.ACTION_DONE
         response.async_set_states(match_result.states)
         return response

@@ -17,6 +17,7 @@
           'required': True,
           'selector': dict({
             'object': dict({
+              'multiple': False,
             }),
           }),
         }),
@@ -71,6 +72,8 @@
           'name': 'Name',
           'selector': dict({
             'text': dict({
+              'multiline': False,
+              'multiple': False,
             }),
           }),
         }),
@@ -81,6 +84,8 @@
           'required': True,
           'selector': dict({
             'text': dict({
+              'multiline': False,
+              'multiple': False,
             }),
           }),
         }),

@@ -117,10 +117,10 @@ from .util import (
 if TYPE_CHECKING:
     from . import Recorder
 
-# Live schema migration supported starting from schema version 42 or newer
-# Schema version 41 was introduced in HA Core 2023.4
-# Schema version 42 was introduced in HA Core 2023.11
-LIVE_MIGRATION_MIN_SCHEMA_VERSION = 42
+# Live schema migration supported starting from schema version 48 or newer
+# Schema version 47 was introduced in HA Core 2024.9
+# Schema version 48 was introduced in HA Core 2025.1
+LIVE_MIGRATION_MIN_SCHEMA_VERSION = 48
 
 MIGRATION_NOTE_OFFLINE = (
     "Note: this may take several hours on large databases and slow machines. "

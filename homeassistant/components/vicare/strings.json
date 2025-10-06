@@ -182,6 +182,9 @@
       "dhw_storage_top_temperature": {
         "name": "DHW storage top temperature"
       },
+      "dhw_storage_middle_temperature": {
+        "name": "DHW storage middle temperature"
+      },
       "dhw_storage_bottom_temperature": {
         "name": "DHW storage bottom temperature"
       },
@@ -366,6 +369,9 @@
           "discharge": "[%key:common::state::discharging%]",
           "standby": "[%key:common::state::standby%]"
         }
+      },
+      "ess_charge_total": {
+        "name": "Battery charge total"
       },
       "ess_discharge_today": {
         "name": "Battery discharge today"
