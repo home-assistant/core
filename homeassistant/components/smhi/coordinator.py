@@ -22,7 +22,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER, TIMEOUT
 
-type SMHIConfigEntry = ConfigEntry[SMHIDataUpdateCoordinator]
+type SMHIConfigEntry = ConfigEntry[
+    tuple[SMHIDataUpdateCoordinator, SMHIFireDataUpdateCoordinator]
+]
 
 
 @dataclass
@@ -32,6 +34,12 @@ class SMHIForecastData:
     daily: list[SMHIForecast]
     hourly: list[SMHIForecast]
     twice_daily: list[SMHIForecast]
+
+
+@dataclass
+class SMHIFireForecastData:
+    """Dataclass for SMHI fire data."""
+
     fire_daily: list[SMHIFireForecast]
     fire_hourly: list[SMHIFireForecast]
 
@@ -55,11 +63,6 @@ class SMHIDataUpdateCoordinator(DataUpdateCoordinator[SMHIForecastData]):
             config_entry.data[CONF_LOCATION][CONF_LATITUDE],
             session=aiohttp_client.async_get_clientsession(hass),
         )
-        self._smhi_fire_api = SMHIFirePointForecast(
-            config_entry.data[CONF_LOCATION][CONF_LONGITUDE],
-            config_entry.data[CONF_LOCATION][CONF_LATITUDE],
-            session=aiohttp_client.async_get_clientsession(hass),
-        )
 
     async def _async_update_data(self) -> SMHIForecastData:
         """Fetch data from SMHI."""
@@ -70,13 +73,7 @@ class SMHIDataUpdateCoordinator(DataUpdateCoordinator[SMHIForecastData]):
                 _forecast_twice_daily = (
                     await self._smhi_api.async_get_twice_daily_forecast()
                 )
-                _forecast_fire_daily = (
-                    await self._smhi_fire_api.async_get_daily_forecast()
-                )
-                _forecast_fire_hourly = (
-                    await self._smhi_fire_api.async_get_hourly_forecast()
-                )
-        except (SmhiForecastException, SmhiFireForecastException) as ex:
+        except SmhiForecastException as ex:
             raise UpdateFailed(
                 "Failed to retrieve the forecast from the SMHI API"
             ) from ex
@@ -85,14 +82,53 @@ class SMHIDataUpdateCoordinator(DataUpdateCoordinator[SMHIForecastData]):
             daily=_forecast_daily,
             hourly=_forecast_hourly,
             twice_daily=_forecast_twice_daily,
-            fire_daily=_forecast_fire_daily,
-            fire_hourly=_forecast_fire_hourly,
         )
 
     @property
     def current(self) -> SMHIForecast:
         """Return the current metrics."""
         return self.data.daily[0]
+
+
+class SMHIFireDataUpdateCoordinator(DataUpdateCoordinator[SMHIFireForecastData]):
+    """A SMHI Fire Data Update Coordinator."""
+
+    config_entry: SMHIConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: SMHIConfigEntry) -> None:
+        """Initialize the SMHI coordinator."""
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=DEFAULT_SCAN_INTERVAL,
+        )
+        self._smhi_fire_api = SMHIFirePointForecast(
+            config_entry.data[CONF_LOCATION][CONF_LONGITUDE],
+            config_entry.data[CONF_LOCATION][CONF_LATITUDE],
+            session=aiohttp_client.async_get_clientsession(hass),
+        )
+
+    async def _async_update_data(self) -> SMHIFireForecastData:
+        """Fetch data from SMHI."""
+        try:
+            async with asyncio.timeout(TIMEOUT):
+                _forecast_fire_daily = (
+                    await self._smhi_fire_api.async_get_daily_forecast()
+                )
+                _forecast_fire_hourly = (
+                    await self._smhi_fire_api.async_get_hourly_forecast()
+                )
+        except SmhiFireForecastException as ex:
+            raise UpdateFailed(
+                "Failed to retrieve the forecast from the SMHI API"
+            ) from ex
+
+        return SMHIFireForecastData(
+            fire_daily=_forecast_fire_daily,
+            fire_hourly=_forecast_fire_hourly,
+        )
 
     @property
     def fire_current(self) -> SMHIFireForecast:
