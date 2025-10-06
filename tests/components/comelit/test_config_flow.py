@@ -10,7 +10,7 @@ from homeassistant.components.comelit.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, InvalidData
+from homeassistant.data_entry_flow import FlowResultType
 
 from .const import (
     BAD_PIN,
@@ -97,6 +97,7 @@ async def test_flow_vedo(
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
         (ConnectionResetError, "unknown"),
+        (ValueError, "invalid_pin"),
     ],
 )
 async def test_exception_connection(
@@ -181,6 +182,7 @@ async def test_reauth_successful(
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
         (ConnectionResetError, "unknown"),
+        (ValueError, "invalid_pin"),
     ],
 )
 async def test_reauth_not_successful(
@@ -261,6 +263,7 @@ async def test_reconfigure_successful(
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
         (ConnectionResetError, "unknown"),
+        (ValueError, "invalid_pin"),
     ],
 )
 async def test_reconfigure_fails(
@@ -326,16 +329,17 @@ async def test_pin_format_serial_bridge(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with pytest.raises(InvalidData):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_HOST: BRIDGE_HOST,
-                CONF_PORT: BRIDGE_PORT,
-                CONF_PIN: BAD_PIN,
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: BRIDGE_HOST,
+            CONF_PORT: BRIDGE_PORT,
+            CONF_PIN: BAD_PIN,
+        },
+    )
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_pin"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
