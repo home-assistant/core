@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -17,6 +18,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfLength,
+    UnitOfTemperature,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -43,6 +45,13 @@ RESOURCES: dict[str, SensorEntityDescription] = {
         key="inch_level",
         translation_key="level_depth",
         native_unit_of_measurement=UnitOfLength.INCHES,
+    ),
+    "probe_temperature": SensorEntityDescription(
+        key="probe_temperature",
+        translation_key="temperature_probe",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "title": SensorEntityDescription(
         key="title",

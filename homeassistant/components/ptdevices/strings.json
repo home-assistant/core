@@ -136,6 +136,9 @@
       },
       "temp_units": {
         "name": "Temperature Units"
+      },
+      "temperature_probe": {
+        "name": "Probe Temperature"
       }
     }
   }
