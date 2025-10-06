@@ -117,10 +117,10 @@ from .util import (
 if TYPE_CHECKING:
     from . import Recorder
 
-# Live schema migration supported starting from schema version 42 or newer
-# Schema version 41 was introduced in HA Core 2023.4
-# Schema version 42 was introduced in HA Core 2023.11
-LIVE_MIGRATION_MIN_SCHEMA_VERSION = 42
+# Live schema migration supported starting from schema version 48 or newer
+# Schema version 47 was introduced in HA Core 2024.9
+# Schema version 48 was introduced in HA Core 2025.1
+LIVE_MIGRATION_MIN_SCHEMA_VERSION = 48
 
 MIGRATION_NOTE_OFFLINE = (
     "Note: this may take several hours on large databases and slow machines. "
@@ -2490,7 +2490,7 @@ class BaseMigration(ABC):
         start_schema_version: int,
         migration_changes: dict[str, int],
     ) -> None:
-        """Initialize a new BaseRunTimeMigration.
+        """Initialize a new BaseMigration.
 
         :param initial_schema_version: The schema version the database was created with.
         :param start_schema_version: The schema version when starting the migration.
@@ -2964,7 +2964,12 @@ class EventIDPostMigration(BaseRunTimeMigration):
                     _drop_foreign_key_constraints(
                         session_maker, instance.engine, TABLE_STATES, "event_id"
                     )
-                except (InternalError, OperationalError):
+                except (InternalError, OperationalError) as err:
+                    _LOGGER.debug(
+                        "Could not drop foreign key constraint on states.event_id, "
+                        "will try again later",
+                        exc_info=err,
+                    )
                     fk_remove_ok = False
                 else:
                     fk_remove_ok = True

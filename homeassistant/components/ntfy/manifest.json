@@ -7,5 +7,5 @@
   "iot_class": "cloud_push",
   "loggers": ["aionfty"],
   "quality_scale": "platinum",
-  "requirements": ["aiontfy==0.6.0"]
+  "requirements": ["aiontfy==0.6.1"]
 }
