@@ -36,7 +36,7 @@ dependencies = [
   "annotatedyaml==1.0.2",
   "astral==2.2",
   "async-interrupt==1.2.2",
-  "attrs==25.3.0",
+  "attrs==25.4.0",
   "atomicwrites-homeassistant==1.4.1",
   "audioop-lts==0.2.1",
   "awesomeversion==25.5.0",
@@ -59,7 +59,7 @@ dependencies = [
   # PyJWT has loose dependency. We want the latest one.
   "cryptography==46.0.2",
   "Pillow==11.3.0",
-  "propcache==0.3.2",
+  "propcache==0.4.0",
   "pyOpenSSL==25.3.0",
   "orjson==3.11.3",
   "packaging>=23.1",
@@ -72,7 +72,7 @@ dependencies = [
   "standard-aifc==3.13.0",
   "standard-telnetlib==3.13.0",
   "typing-extensions>=4.15.0,<5.0",
-  "ulid-transform==1.4.0",
+  "ulid-transform==1.5.2",
   "urllib3>=2.0",
   "uv==0.8.9",
   "voluptuous==0.15.2",
@@ -80,7 +80,7 @@ dependencies = [
   "voluptuous-openapi==0.1.0",
   "yarl==1.20.1",
   "webrtc-models==0.3.0",
-  "zeroconf==0.147.2",
+  "zeroconf==0.148.0",
 ]
 
 [project.urls]
