@@ -2136,6 +2136,54 @@
     'state': 'unknown',
   })
 # ---
+# name: test_buttons[silabs_water_heater][button.water_heater_cancel_boost-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.water_heater_cancel_boost',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cancel boost',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cancel_boost',
+    'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-WaterHeaterManagementCancelBoost-148-65529',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[silabs_water_heater][button.water_heater_cancel_boost-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Water Heater Cancel boost',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.water_heater_cancel_boost',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_buttons[smoke_detector][button.smoke_sensor_identify-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

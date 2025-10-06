@@ -106,6 +106,9 @@
       }
     },
     "button": {
+      "cancel_boost": {
+        "name": "Cancel boost"
+      },
       "pause": {
         "name": "[%key:common::action::pause%]"
       },
