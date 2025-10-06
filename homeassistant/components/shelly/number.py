@@ -24,7 +24,16 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from .const import CONF_SLEEP_PERIOD, DOMAIN, LOGGER, VIRTUAL_NUMBER_MODE_MAP
+from .const import (
+    CONF_SLEEP_PERIOD,
+    DOMAIN,
+    LOGGER,
+    MODEL_FRANKEVER_WATER_VALVE,
+    MODEL_LINKEDGO_ST802_THERMOSTAT,
+    MODEL_LINKEDGO_ST1820_THERMOSTAT,
+    MODEL_TOP_EV_CHARGER_EVE01,
+    VIRTUAL_NUMBER_MODE_MAP,
+)
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -183,7 +192,7 @@ RPC_NUMBERS: Final = {
         method="blu_trv_set_external_temperature",
         entity_class=RpcBluTrvExtTempNumber,
     ),
-    "number": RpcNumberDescription(
+    "number_generic": RpcNumberDescription(
         key="number",
         sub_key="value",
         removal_condition=lambda config, _status, key: not is_view_for_platform(
@@ -197,6 +206,59 @@ RPC_NUMBERS: Final = {
         step_fn=lambda config: config["meta"]["ui"].get("step"),
         unit=get_virtual_component_unit,
         method="number_set",
+        role="generic",
+    ),
+    "number_current_limit": RpcNumberDescription(
+        key="number",
+        sub_key="value",
+        entity_registry_enabled_default=False,
+        max_fn=lambda config: config["max"],
+        min_fn=lambda config: config["min"],
+        mode_fn=lambda config: NumberMode.SLIDER,
+        step_fn=lambda config: config["meta"]["ui"].get("step"),
+        unit=get_virtual_component_unit,
+        method="number_set",
+        role="current_limit",
+        models={MODEL_TOP_EV_CHARGER_EVE01},
+    ),
+    "number_position": RpcNumberDescription(
+        key="number",
+        sub_key="value",
+        entity_registry_enabled_default=False,
+        max_fn=lambda config: config["max"],
+        min_fn=lambda config: config["min"],
+        mode_fn=lambda config: NumberMode.SLIDER,
+        step_fn=lambda config: config["meta"]["ui"].get("step"),
+        unit=get_virtual_component_unit,
+        method="number_set",
+        role="position",
+        models={MODEL_FRANKEVER_WATER_VALVE},
+    ),
+    "number_target_humidity": RpcNumberDescription(
+        key="number",
+        sub_key="value",
+        entity_registry_enabled_default=False,
+        max_fn=lambda config: config["max"],
+        min_fn=lambda config: config["min"],
+        mode_fn=lambda config: NumberMode.SLIDER,
+        step_fn=lambda config: config["meta"]["ui"].get("step"),
+        unit=get_virtual_component_unit,
+        method="number_set",
+        role="target_humidity",
+        models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
+    ),
+    "number_target_temperature": RpcNumberDescription(
+        key="number",
+        sub_key="value",
+        entity_registry_enabled_default=False,
+        max_fn=lambda config: config["max"],
+        min_fn=lambda config: config["min"],
+        mode_fn=lambda config: NumberMode.SLIDER,
+        step_fn=lambda config: config["meta"]["ui"].get("step"),
+        unit=get_virtual_component_unit,
+        method="number_set",
+        role="target_temperature",
+        models={MODEL_LINKEDGO_ST802_THERMOSTAT, MODEL_LINKEDGO_ST1820_THERMOSTAT},
     ),
     "valve_position": RpcNumberDescription(
         key="blutrv",
