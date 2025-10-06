@@ -31,38 +31,39 @@ async def async_setup_entry(
     events = device.events.get_platform("binary_sensor")
     entity_names = build_event_entity_names(events)
 
-    entities = {
-        event.uid: ONVIFBinarySensor(event.uid, device, name=entity_names[event.uid])
-        for event in events
-    }
+    uids = set()
+    entities = []
+    for event in events:
+        uids.add(event.uid)
+        entities.append(
+            ONVIFBinarySensor(event.uid, device, name=entity_names[event.uid])
+        )
 
     ent_reg = er.async_get(hass)
     for entry in er.async_entries_for_config_entry(ent_reg, config_entry.entry_id):
-        if entry.domain == "binary_sensor" and entry.unique_id not in entities:
-            entities[entry.unique_id] = ONVIFBinarySensor(
-                entry.unique_id, device, entry=entry
-            )
+        if entry.domain == "binary_sensor" and entry.unique_id not in uids:
+            entities.append(ONVIFBinarySensor(entry.unique_id, device, entry=entry))
+            uids.add(entry.unique_id)
 
-    async_add_entities(entities.values())
+    async_add_entities(entities)
     uids_by_platform = device.events.get_uids_by_platform("binary_sensor")
 
     @callback
     def async_check_entities() -> None:
         """Check if we have added an entity for the event."""
         nonlocal uids_by_platform
-        if not (missing := uids_by_platform.difference(entities)):
+        if not (missing := uids_by_platform.difference(uids)):
             return
 
         events = device.events.get_platform("binary_sensor")
         entity_names = build_event_entity_names(events)
 
-        new_entities: dict[str, ONVIFBinarySensor] = {
-            uid: ONVIFBinarySensor(uid, device, name=entity_names[uid])
-            for uid in missing
-        }
+        new_entities = [
+            ONVIFBinarySensor(uid, device, name=entity_names[uid]) for uid in missing
+        ]
         if new_entities:
-            entities.update(new_entities)
-            async_add_entities(new_entities.values())
+            uids.update(missing)
+            async_add_entities(new_entities)
 
     device.events.async_add_listener(async_check_entities)
 
