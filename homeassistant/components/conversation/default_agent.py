@@ -45,13 +45,18 @@ from home_assistant_intents import (
 )
 import yaml
 
-from homeassistant import core
 from homeassistant.components.homeassistant.exposed_entities import (
     async_listen_entity_updates,
     async_should_expose,
 )
 from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
-from homeassistant.core import Event, callback
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -192,7 +197,7 @@ class IntentCache:
 
 
 async def async_setup_default_agent(
-    hass: core.HomeAssistant,
+    hass: HomeAssistant,
     entity_component: EntityComponent[ConversationEntity],
     config_intents: dict[str, Any],
 ) -> None:
@@ -201,15 +206,13 @@ async def async_setup_default_agent(
     await entity_component.async_add_entities([agent])
     await get_agent_manager(hass).async_setup_default_agent(agent)
 
-    @core.callback
-    def async_entity_state_listener(
-        event: core.Event[core.EventStateChangedData],
-    ) -> None:
+    @callback
+    def async_entity_state_listener(event: Event[EventStateChangedData]) -> None:
         """Set expose flag on new entities."""
         async_should_expose(hass, DOMAIN, event.data["entity_id"])
 
-    @core.callback
-    def async_hass_started(hass: core.HomeAssistant) -> None:
+    @callback
+    def async_hass_started(hass: HomeAssistant) -> None:
         """Set expose flag on all entities."""
         for state in hass.states.async_all():
             async_should_expose(hass, DOMAIN, state.entity_id)
@@ -224,9 +227,7 @@ class DefaultAgent(ConversationEntity):
     _attr_name = "Home Assistant"
     _attr_supported_features = ConversationEntityFeature.CONTROL
 
-    def __init__(
-        self, hass: core.HomeAssistant, config_intents: dict[str, Any]
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config_intents: dict[str, Any]) -> None:
         """Initialize the default agent."""
         self.hass = hass
         self._lang_intents: dict[str, LanguageIntents | object] = {}
@@ -259,7 +260,7 @@ class DefaultAgent(ConversationEntity):
         """Return a list of supported languages."""
         return get_languages()
 
-    @core.callback
+    @callback
     def _filter_entity_registry_changes(
         self, event_data: er.EventEntityRegistryUpdatedData
     ) -> bool:
@@ -268,12 +269,12 @@ class DefaultAgent(ConversationEntity):
             field in event_data["changes"] for field in _ENTITY_REGISTRY_UPDATE_FIELDS
         )
 
-    @core.callback
-    def _filter_state_changes(self, event_data: core.EventStateChangedData) -> bool:
+    @callback
+    def _filter_state_changes(self, event_data: EventStateChangedData) -> bool:
         """Filter state changed events."""
         return not event_data["old_state"] or not event_data["new_state"]
 
-    @core.callback
+    @callback
     def _listen_clear_slot_list(self) -> None:
         """Listen for changes that can invalidate slot list."""
         assert self._unsub_clear_slot_list is None
@@ -890,7 +891,7 @@ class DefaultAgent(ConversationEntity):
     ) -> str:
         # Get first matched or unmatched state.
         # This is available in the response template as "state".
-        state1: core.State | None = None
+        state1: State | None = None
         if intent_response.matched_states:
             state1 = intent_response.matched_states[0]
         elif intent_response.unmatched_states:
@@ -1589,7 +1590,7 @@ def _get_unmatched_response(result: RecognizeResult) -> tuple[ErrorKey, dict[str
 
 
 def _get_match_error_response(
-    hass: core.HomeAssistant,
+    hass: HomeAssistant,
     match_error: intent.MatchFailedError,
 ) -> tuple[ErrorKey, dict[str, Any]]:
     """Return key and template arguments for error when target matching fails."""
