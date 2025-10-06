@@ -82,7 +82,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         assert self._client
         errors: dict[str, str] = {}
         try:
-            await self._client.request_code()
+            await self._client.request_code_v4()
         except RoborockAccountDoesNotExist:
             errors["base"] = "invalid_email"
         except RoborockUrlException:
@@ -111,7 +111,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             code = user_input[CONF_ENTRY_CODE]
             _LOGGER.debug("Logging into Roborock account using email provided code")
             try:
-                user_data = await self._client.code_login(code)
+                user_data = await self._client.code_login_v4(code)
             except RoborockInvalidCode:
                 errors["base"] = "invalid_code"
             except RoborockException:
