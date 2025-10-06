@@ -136,8 +136,8 @@ class EcovacsActiveMapSelectEntity(
     ) -> None:
         """Initialize entity."""
         super().__init__(device, capability, **kwargs)
-        self._option_2_id: dict[str, str] = {}
-        self._id_2_option: dict[str, str] = {}
+        self._option_to_id: dict[str, str] = {}
+        self._id_to_option: dict[str, str] = {}
 
         self._handle_on_cached_map(
             device.events.get_last_event(CachedMapInfoEvent)
@@ -145,23 +145,23 @@ class EcovacsActiveMapSelectEntity(
         )
 
     def _handle_on_cached_map(self, event: CachedMapInfoEvent) -> None:
-        self._id_2_option.clear()
-        self._option_2_id.clear()
+        self._id_to_option.clear()
+        self._option_to_id.clear()
 
         for map_info in event.maps:
             name = map_info.name if map_info.name else map_info.id
-            self._id_2_option[map_info.id] = name
-            self._option_2_id[name] = map_info.id
+            self._id_to_option[map_info.id] = name
+            self._option_to_id[name] = map_info.id
 
             if map_info.using:
                 self._attr_current_option = name
 
-        if self._attr_current_option not in self._option_2_id:
+        if self._attr_current_option not in self._option_to_id:
             self._attr_current_option = None
 
         # Sort named maps first, then numeric IDs (unnamed maps during building) in ascending order.
         self._attr_options = sorted(
-            self._option_2_id.keys(), key=lambda x: (x.isdigit(), x.lower())
+            self._option_to_id.keys(), key=lambda x: (x.isdigit(), x.lower())
         )
 
     async def async_added_to_hass(self) -> None:
@@ -175,7 +175,7 @@ class EcovacsActiveMapSelectEntity(
         self._subscribe(self._capability.cached_info.event, on_cached_map)
 
         async def on_major_map(event: MajorMapEvent) -> None:
-            self._attr_current_option = self._id_2_option.get(event.map_id)
+            self._attr_current_option = self._id_to_option.get(event.map_id)
             self.async_write_ha_state()
 
         self._subscribe(self._capability.major.event, on_major_map)
@@ -185,5 +185,5 @@ class EcovacsActiveMapSelectEntity(
         if TYPE_CHECKING:
             assert isinstance(self._capability.major, CapabilitySet)
         await self._device.execute_command(
-            self._capability.major.set(self._option_2_id[option])
+            self._capability.major.set(self._option_to_id[option])
         )
