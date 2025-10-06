@@ -12,11 +12,7 @@ from fluss_api import (
 )
 import pytest
 
-from homeassistant.components.fluss import (
-    PLATFORMS,
-    async_setup_entry,
-    async_unload_entry,
-)
+from homeassistant.components.fluss import PLATFORMS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -65,13 +61,17 @@ async def test_async_setup_entry_success(
 async def test_async_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MagicMock,
+    mock_api_client: FlussApiClient,
 ) -> None:
     """Test unloading entry."""
-    mock_config_entry.state = ConfigEntryState.LOADED
-    mock_config_entry.runtime_data = MagicMock()
+    # Set up the config entry first to ensure it's in LOADED state
+    with patch("fluss_api.FlussApiClient", return_value=mock_api_client):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert mock_config_entry.state is ConfigEntryState.LOADED
 
+    # Test unloading
     with patch("homeassistant.components.fluss.async_unload_platforms", return_value=True):
-        assert await async_unload_entry(hass, mock_config_entry)
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
         assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
