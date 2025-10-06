@@ -21,7 +21,7 @@ async def test_validate_input_success(
     """Test successful validation of TfL API."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
