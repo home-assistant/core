@@ -65,6 +65,24 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             )
         )
 
+        # update devices created before 2025.10.2 without unique device id
+        if legacy_device_ids := [
+            device_id
+            for device_id in self._previous_devices
+            if config_entry.entry_id not in device_id
+        ]:
+            device_registry = dr.async_get(self.hass)
+            for device_id in legacy_device_ids:
+                if device := device_registry.async_get_device(
+                    identifiers={(DOMAIN, device_id)}
+                ):
+                    device_registry.async_update_device(
+                        device_id=device.id,
+                        new_identifiers={
+                            (DOMAIN, f"{self.config_entry.entry_id}_{device_id}")
+                        },
+                    )
+
     async def _async_update_data(self) -> LibreHardwareMonitorData:
         try:
             lhm_data = await self._api.get_data()

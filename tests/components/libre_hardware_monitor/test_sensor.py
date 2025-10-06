@@ -26,6 +26,7 @@ from homeassistant.components.libre_hardware_monitor.const import (
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import init_integration
 
@@ -188,6 +189,44 @@ async def test_orphaned_devices_are_removed(
         await hass.async_block_till_done()
 
         mock_remove.assert_called_once_with(orphaned_device.id)
+
+
+async def test_legacy_device_ids_are_updated(
+    hass: HomeAssistant,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that non-unique legacy device IDs are updated."""
+    await init_integration(hass, mock_config_entry)
+
+    device_registry = dr.async_get(hass)
+    legacy_device_ids = ["amdcpu-0", "gpu-nvidia-0", "lpc-nct6687d-0"]
+    registered_device_ids = [
+        f"{mock_config_entry.entry_id}_{device_id}" for device_id in legacy_device_ids
+    ]
+
+    for index, device_id in enumerate(registered_device_ids):
+        device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+        device_registry.async_update_device(
+            device_id=device.id,
+            new_identifiers={(DOMAIN, legacy_device_ids[index])},
+        )
+
+    device_entries: list[DeviceEntry] = dr.async_entries_for_config_entry(
+        registry=dr.async_get(hass), config_entry_id=mock_config_entry.entry_id
+    )
+    assert {next(iter(device.identifiers))[1] for device in device_entries} == set(
+        legacy_device_ids
+    )
+
+    hass.config_entries.async_schedule_reload(mock_config_entry.entry_id)
+
+    device_entries: list[DeviceEntry] = dr.async_entries_for_config_entry(
+        registry=dr.async_get(hass), config_entry_id=mock_config_entry.entry_id
+    )
+    assert {next(iter(device.identifiers))[1] for device in device_entries} == set(
+        registered_device_ids
+    )
 
 
 async def test_integration_does_not_log_new_devices_on_first_refresh(
