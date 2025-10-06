@@ -3,6 +3,8 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, call, patch
 
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import YellowOptions
 import pytest
 
 from homeassistant.components.hassio import (
@@ -51,23 +53,10 @@ def mock_get_supervisor_client(supervisor_client: AsyncMock) -> Generator[None]:
         yield
 
 
-@pytest.fixture(name="get_yellow_settings")
-def mock_get_yellow_settings():
-    """Mock getting yellow settings."""
-    with patch(
-        "homeassistant.components.homeassistant_yellow.config_flow.async_get_yellow_settings",
-        return_value={"disk_led": True, "heartbeat_led": True, "power_led": True},
-    ) as get_yellow_settings:
-        yield get_yellow_settings
-
-
 @pytest.fixture(name="set_yellow_settings")
-def mock_set_yellow_settings():
+def mock_set_yellow_settings(supervisor_client: AsyncMock) -> Generator[AsyncMock]:
     """Mock setting yellow settings."""
-    with patch(
-        "homeassistant.components.homeassistant_yellow.config_flow.async_set_yellow_settings",
-    ) as set_yellow_settings:
-        yield set_yellow_settings
+    return supervisor_client.os.set_yellow_options
 
 
 @pytest.fixture(name="reboot_host")
@@ -156,9 +145,9 @@ async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
     ("reboot_menu_choice", "reboot_calls"),
     [("reboot_now", 1), ("reboot_later", 0)],
 )
+@pytest.mark.usefixtures("os_yellow_info")
 async def test_option_flow_led_settings(
     hass: HomeAssistant,
-    get_yellow_settings: AsyncMock,
     set_yellow_settings: AsyncMock,
     reboot_host: AsyncMock,
     reboot_menu_choice: str,
@@ -196,7 +185,7 @@ async def test_option_flow_led_settings(
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "reboot_menu"
     set_yellow_settings.assert_called_once_with(
-        hass, {"disk_led": False, "heartbeat_led": False, "power_led": False}
+        YellowOptions(disk_led=False, heartbeat_led=False, power_led=False)
     )
 
     result = await hass.config_entries.options.async_configure(
@@ -207,10 +196,10 @@ async def test_option_flow_led_settings(
     assert reboot_host.call_count == reboot_calls
 
 
+@pytest.mark.usefixtures("os_yellow_info")
 async def test_option_flow_led_settings_unchanged(
     hass: HomeAssistant,
-    get_yellow_settings,
-    set_yellow_settings,
+    set_yellow_settings: AsyncMock,
 ) -> None:
     """Test updating LED settings."""
     mock_integration(hass, MockModule("hassio"))
@@ -245,7 +234,10 @@ async def test_option_flow_led_settings_unchanged(
     set_yellow_settings.assert_not_called()
 
 
-async def test_option_flow_led_settings_fail_1(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("exc", [SupervisorError, TimeoutError])
+async def test_option_flow_led_settings_fail_1(
+    hass: HomeAssistant, os_yellow_info: AsyncMock, exc: type[Exception]
+) -> None:
     """Test updating LED settings."""
     mock_integration(hass, MockModule("hassio"))
     await async_setup_component(hass, HASSIO_DOMAIN, {})
@@ -265,20 +257,19 @@ async def test_option_flow_led_settings_fail_1(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "main_menu"
 
-    with patch(
-        "homeassistant.components.homeassistant_yellow.config_flow.async_get_yellow_settings",
-        side_effect=TimeoutError,
-    ):
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            {"next_step_id": "hardware_settings"},
-        )
+    os_yellow_info.side_effect = exc
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"next_step_id": "hardware_settings"},
+    )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "read_hw_settings_error"
 
 
+@pytest.mark.parametrize("exc", [SupervisorError, TimeoutError])
+@pytest.mark.usefixtures("os_yellow_info")
 async def test_option_flow_led_settings_fail_2(
-    hass: HomeAssistant, get_yellow_settings
+    hass: HomeAssistant, set_yellow_settings: AsyncMock, exc: type[Exception]
 ) -> None:
     """Test updating LED settings."""
     mock_integration(hass, MockModule("hassio"))
@@ -305,14 +296,11 @@ async def test_option_flow_led_settings_fail_2(
     )
     assert result["type"] is FlowResultType.FORM
 
-    with patch(
-        "homeassistant.components.homeassistant_yellow.config_flow.async_set_yellow_settings",
-        side_effect=TimeoutError,
-    ):
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            {"disk_led": False, "heartbeat_led": False, "power_led": False},
-        )
+    set_yellow_settings.side_effect = exc
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"disk_led": False, "heartbeat_led": False, "power_led": False},
+    )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "write_hw_settings_error"
 

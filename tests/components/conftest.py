@@ -14,10 +14,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohasupervisor.models import (
     Discovery,
+    GreenInfo,
     Repository,
     ResolutionInfo,
     StoreAddon,
     StoreInfo,
+    YellowInfo,
 )
 import pytest
 import voluptuous as vol
@@ -507,6 +509,24 @@ def resolution_suggestions_for_issue_fixture(supervisor_client: AsyncMock) -> As
     """Mock suggestions by issue from supervisor resolution."""
     supervisor_client.resolution.suggestions_for_issue.return_value = []
     return supervisor_client.resolution.suggestions_for_issue
+
+
+@pytest.fixture(name="os_yellow_info")
+def os_yellow_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock yellow info API from supervisor OS."""
+    supervisor_client.os.yellow_info.return_value = YellowInfo(
+        disk_led=True, heartbeat_led=True, power_led=True
+    )
+    return supervisor_client.os.yellow_info
+
+
+@pytest.fixture(name="os_green_info")
+def os_green_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock green info API from supervisor OS."""
+    supervisor_client.os.green_info.return_value = GreenInfo(
+        activity_led=True, power_led=True, system_health_led=True
+    )
+    return supervisor_client.os.green_info
 
 
 @pytest.fixture(name="supervisor_client")

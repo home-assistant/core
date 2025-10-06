@@ -7,13 +7,11 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, final
 
-import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.hassio import (
-    HassioAPIError,
-    async_get_yellow_settings,
-    async_set_yellow_settings,
+    SupervisorError,
+    YellowOptions,
     get_supervisor_client,
 )
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
@@ -222,21 +220,22 @@ class BaseHomeAssistantYellowOptionsFlow(OptionsFlow, ABC):
                 return self.async_create_entry(data={})
             try:
                 async with asyncio.timeout(10):
-                    await async_set_yellow_settings(self.hass, user_input)
-            except (aiohttp.ClientError, TimeoutError, HassioAPIError) as err:
+                    await self._supervisor_client.os.set_yellow_options(
+                        YellowOptions.from_dict(user_input)
+                    )
+            except (TimeoutError, SupervisorError) as err:
                 _LOGGER.warning("Failed to write hardware settings", exc_info=err)
                 return self.async_abort(reason="write_hw_settings_error")
             return await self.async_step_reboot_menu()
 
         try:
             async with asyncio.timeout(10):
-                self._hw_settings: dict[str, bool] = await async_get_yellow_settings(
-                    self.hass
-                )
-        except (aiohttp.ClientError, TimeoutError, HassioAPIError) as err:
+                yellow_info = await self._supervisor_client.os.yellow_info()
+        except (TimeoutError, SupervisorError) as err:
             _LOGGER.warning("Failed to read hardware settings", exc_info=err)
             return self.async_abort(reason="read_hw_settings_error")
 
+        self._hw_settings: dict[str, bool] = yellow_info.to_dict()
         schema = self.add_suggested_values_to_schema(
             STEP_HW_SETTINGS_SCHEMA, self._hw_settings
         )
