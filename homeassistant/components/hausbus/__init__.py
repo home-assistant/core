@@ -24,7 +24,7 @@ PLATFORMS: list[Platform] = [
 LOGGER = logging.getLogger(__name__)
 
 
-type HausbusConfigEntry = ConfigEntry[HausbusConfig]
+type HausbusConfigEntry = ConfigEntry[HausbusGateway]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> bool:
