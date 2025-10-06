@@ -204,3 +204,8 @@ async def test_failed_yaml_import(
         "Importing London Underground config from configuration.yaml" in record.message
         for record in caplog.records
     )
+
+    assert not any(
+        "migrated to a config entry and can be safely removed" in record.message
+        for record in caplog.records
+    )
