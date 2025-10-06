@@ -22,8 +22,7 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "reset_failed": "Failed to reset adapter.",
       "usb_ports_failed": "Failed to get USB devices.",
-      "not_hassio": "ESPHome discovery requires Home Assistant to configure the Z-Wave add-on.",
-      "no_home_id": "Home ID of discovered Z-Wave adapter is unknown."
+      "not_hassio": "ESPHome discovery requires Home Assistant to configure the Z-Wave add-on."
     },
     "error": {
       "addon_start_failed": "Failed to start the Z-Wave add-on. Check the configuration.",

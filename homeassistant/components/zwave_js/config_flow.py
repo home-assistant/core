@@ -1501,44 +1501,42 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if not is_hassio(self.hass):
             return self.async_abort(reason="not_hassio")
 
-        if not discovery_info.zwave_home_id:
-            return self.async_abort(reason="no_home_id")
-
-        if (
-            discovery_info.zwave_home_id
-            and (
-                current_config_entries := self._async_current_entries(
-                    include_ignore=False
+        if discovery_info.zwave_home_id:
+            if (
+                (
+                    current_config_entries := self._async_current_entries(
+                        include_ignore=False
+                    )
                 )
-            )
-            and (home_id := str(discovery_info.zwave_home_id))
-            and (
-                existing_entry := next(
-                    (
-                        entry
-                        for entry in current_config_entries
-                        if entry.unique_id == home_id
-                    ),
-                    None,
+                and (home_id := str(discovery_info.zwave_home_id))
+                and (
+                    existing_entry := next(
+                        (
+                            entry
+                            for entry in current_config_entries
+                            if entry.unique_id == home_id
+                        ),
+                        None,
+                    )
                 )
-            )
-            # Only update existing entries that are configured via sockets
-            and existing_entry.data.get(CONF_SOCKET_PATH)
-            # And use the add-on
-            and existing_entry.data.get(CONF_USE_ADDON)
-        ):
-            await self._async_set_addon_config(
-                {CONF_ADDON_SOCKET: discovery_info.socket_path}
-            )
-            # Reloading will sync add-on options to config entry data
-            self.hass.config_entries.async_schedule_reload(existing_entry.entry_id)
-            return self.async_abort(reason="already_configured")
+                # Only update existing entries that are configured via sockets
+                and existing_entry.data.get(CONF_SOCKET_PATH)
+                # And use the add-on
+                and existing_entry.data.get(CONF_USE_ADDON)
+            ):
+                await self._async_set_addon_config(
+                    {CONF_ADDON_SOCKET: discovery_info.socket_path}
+                )
+                # Reloading will sync add-on options to config entry data
+                self.hass.config_entries.async_schedule_reload(existing_entry.entry_id)
+                return self.async_abort(reason="already_configured")
 
-        # We are not aborting if home ID configured here, we just want to make sure that it's set
-        # We will update a USB based config entry automatically in `async_step_finish_addon_setup_user`
-        await self.async_set_unique_id(
-            str(discovery_info.zwave_home_id), raise_on_progress=False
-        )
+            # We are not aborting if home ID configured here, we just want to make sure that it's set
+            # We will update a USB based config entry automatically in `async_step_finish_addon_setup_user`
+            await self.async_set_unique_id(
+                str(discovery_info.zwave_home_id), raise_on_progress=False
+            )
+
         self.socket_path = discovery_info.socket_path
         self.context["title_placeholders"] = {
             CONF_NAME: f"{discovery_info.name} via ESPHome"
