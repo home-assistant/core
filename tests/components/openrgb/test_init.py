@@ -38,6 +38,7 @@ async def test_entry_setup_unload(
 async def test_server_device_registry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test server device is created in device registry."""
     mock_config_entry.add_to_hass(hass)
@@ -47,7 +48,6 @@ async def test_server_device_registry(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    device_registry = dr.async_get(hass)
     server_device = device_registry.async_get_device(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
