@@ -211,7 +211,6 @@ RPC_NUMBERS: Final = {
     "number_current_limit": RpcNumberDescription(
         key="number",
         sub_key="value",
-        entity_registry_enabled_default=False,
         max_fn=lambda config: config["max"],
         min_fn=lambda config: config["min"],
         mode_fn=lambda config: NumberMode.SLIDER,
