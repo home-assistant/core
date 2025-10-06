@@ -26,9 +26,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: Integration does not register custom actions
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -72,9 +70,7 @@ rules:
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices:
-    status: exempt
-    comment: Devices can be momentarily unplugged, users can remove them manually if desired
+  stale-devices: todo
 
   # Platinum
   async-dependency: todo
