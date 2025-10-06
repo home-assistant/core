@@ -6,6 +6,7 @@ import time
 from unittest.mock import call, patch
 
 import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 from grpc import RpcError
 import pytest
 
@@ -16,7 +17,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
 
 from .conftest import ComponentSetup, ExpectedCredentials
 
@@ -136,14 +136,18 @@ async def test_setup_client_error(
 
 
 @pytest.mark.parametrize(
-    ("configured_language_code", "expected_language_code"),
-    [("", "en-US"), ("en-US", "en-US"), ("es-ES", "es-ES")],
+    ("options", "expected_language_code"),
+    [
+        ({}, "en-US"),
+        ({"language_code": "en-US"}, "en-US"),
+        ({"language_code": "es-ES"}, "es-ES"),
+    ],
     ids=["default", "english", "spanish"],
 )
 async def test_send_text_command(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    configured_language_code: str,
+    options: dict[str, str],
     expected_language_code: str,
 ) -> None:
     """Test service call send_text_command calls TextAssistant."""
@@ -151,11 +155,11 @@ async def test_send_text_command(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].state is ConfigEntryState.LOADED
-    if configured_language_code:
-        hass.config_entries.async_update_entry(
-            entries[0], options={"language_code": configured_language_code}
-        )
+    entry = entries[0]
+    assert entry.state is ConfigEntryState.LOADED
+
+    hass.config_entries.async_update_entry(entry, options=options)
+    await hass.async_block_till_done()
 
     command = "turn on home assistant unsupported device"
     with patch(
@@ -284,6 +288,7 @@ async def test_send_text_command_media_player(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     hass_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test send_text_command with media_player."""
     await setup_integration()
@@ -348,7 +353,8 @@ async def test_send_text_command_media_player(
     assert status == http.HTTPStatus.NOT_FOUND
 
     # Assert that both audio responses can still be served before the 5 minutes expiration
-    async_fire_time_changed(hass, utcnow() + timedelta(minutes=4))
+    freezer.tick(timedelta(minutes=4, seconds=59))
+    async_fire_time_changed(hass)
     status, response = await fetch_api_url(hass_client, audio_url1)
     assert status == http.HTTPStatus.OK
     assert response == audio_response1
@@ -357,10 +363,11 @@ async def test_send_text_command_media_player(
     assert response == audio_response2
 
     # Assert that they cannot be served after the 5 minutes expiration
-    async_fire_time_changed(hass, utcnow() + timedelta(minutes=6))
-    status, response = await fetch_api_url(hass_client, audio_url1)
+    freezer.tick(timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    status, _ = await fetch_api_url(hass_client, audio_url1)
     assert status == http.HTTPStatus.NOT_FOUND
-    status, response = await fetch_api_url(hass_client, audio_url2)
+    status, _ = await fetch_api_url(hass_client, audio_url2)
     assert status == http.HTTPStatus.NOT_FOUND
 
 
