@@ -23,7 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "side_effect, expected_exception",
     [
