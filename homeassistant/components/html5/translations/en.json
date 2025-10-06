@@ -1,0 +1,27 @@
+{
+  "title": "HTML5 Push Notifications",
+  "services": {
+    "notify.html5": {
+      "name": "Send a notification with HTML5",
+      "description": "Sends a notification message using the HTML5 push service.",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "The message content to send."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Optional title of the message."
+        },
+        "target": {
+          "name": "Target",
+          "description": "Registered device(s) to send the message to."
+        },
+        "data": {
+          "name": "Data",
+          "description": "Extra data such as images, actions, etc."
+        }
+      }
+    }
+  }
+}
