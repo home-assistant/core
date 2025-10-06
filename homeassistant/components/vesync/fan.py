@@ -212,17 +212,17 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
             await self.device.turn_on()
 
         if preset_mode == VS_FAN_MODE_AUTO:
-            success = await self.device.auto_mode()
+            success = await self.device.set_auto_mode()
         elif preset_mode == VS_FAN_MODE_SLEEP:
-            success = await self.device.sleep_mode()
+            success = await self.device.set_sleep_mode()
         elif preset_mode == VS_FAN_MODE_ADVANCED_SLEEP:
-            success = await self.device.advanced_sleep_mode()
+            success = await self.device.set_advanced_sleep_mode()
         elif preset_mode == VS_FAN_MODE_PET:
-            success = await self.device.pet_mode()
+            success = await self.device.set_pet_mode()
         elif preset_mode == VS_FAN_MODE_TURBO:
-            success = await self.device.turbo_mode()
+            success = await self.device.set_turbo_mode()
         elif preset_mode == VS_FAN_MODE_NORMAL:
-            success = await self.device.normal_mode()
+            success = await self.device.set_normal_mode()
         if not success:
             raise HomeAssistantError(self.device.last_response.message)
 
