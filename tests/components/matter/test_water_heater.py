@@ -8,9 +8,7 @@ from matter_server.common.helpers.util import create_attribute_path_from_attribu
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.matter.const import (
-    SERVICE_WATER_HEATER_BOOST,
-)
+from homeassistant.components.matter.const import SERVICE_WATER_HEATER_BOOST
 from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_HIGH_DEMAND,
