@@ -14,7 +14,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
 from .entity import ComelitBridgeBaseEntity
-from .utils import bridge_api_call
+from .utils import DeviceType, bridge_api_call, new_device_listener
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -29,21 +29,19 @@ async def async_setup_entry(
 
     coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
 
-    known_devices: set[int] = set()
+    def _add_new_entities(new_devices: list[DeviceType], dev_type: str) -> None:
+        """Add entities for new monitors."""
+        entities = [
+            ComelitCoverEntity(coordinator, device, config_entry.entry_id)
+            for device in coordinator.data[dev_type].values()
+            if device in new_devices
+        ]
+        if entities:
+            async_add_entities(entities)
 
-    def _check_device() -> None:
-        current_devices = set(coordinator.data[COVER])
-        new_devices = current_devices - known_devices
-        if new_devices:
-            known_devices.update(new_devices)
-            async_add_entities(
-                ComelitCoverEntity(coordinator, device, config_entry.entry_id)
-                for device in coordinator.data[COVER].values()
-                if device.index in new_devices
-            )
-
-    _check_device()
-    config_entry.async_on_unload(coordinator.async_add_listener(_check_device))
+    config_entry.async_on_unload(
+        new_device_listener(coordinator, _add_new_entities, COVER)
+    )
 
 
 class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
