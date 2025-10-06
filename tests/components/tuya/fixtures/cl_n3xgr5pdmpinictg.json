@@ -32,7 +32,6 @@
   "status": {
     "control": "stop"
   },
-
   "set_up": true,
   "support_local": true
 }
