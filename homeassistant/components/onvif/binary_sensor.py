@@ -17,6 +17,7 @@ from homeassistant.util.enum import try_parse_enum
 from .const import DOMAIN
 from .device import ONVIFDevice
 from .entity import ONVIFBaseEntity
+from .util import build_event_entity_names
 
 
 async def async_setup_entry(
@@ -24,19 +25,22 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up a ONVIF binary sensor."""
+    """Set up ONVIF binary sensor platform."""
     device: ONVIFDevice = hass.data[DOMAIN][config_entry.unique_id]
 
+    events = device.events.get_platform("binary_sensor")
+    entity_names = build_event_entity_names(events)
+
     entities = {
-        event.uid: ONVIFBinarySensor(event.uid, device)
-        for event in device.events.get_platform("binary_sensor")
+        event.uid: ONVIFBinarySensor(event.uid, device, name=entity_names[event.uid])
+        for event in events
     }
 
     ent_reg = er.async_get(hass)
     for entry in er.async_entries_for_config_entry(ent_reg, config_entry.entry_id):
         if entry.domain == "binary_sensor" and entry.unique_id not in entities:
             entities[entry.unique_id] = ONVIFBinarySensor(
-                entry.unique_id, device, entry
+                entry.unique_id, device, entry=entry
             )
 
     async_add_entities(entities.values())
@@ -48,8 +52,13 @@ async def async_setup_entry(
         nonlocal uids_by_platform
         if not (missing := uids_by_platform.difference(entities)):
             return
+
+        events = device.events.get_platform("binary_sensor")
+        entity_names = build_event_entity_names(events)
+
         new_entities: dict[str, ONVIFBinarySensor] = {
-            uid: ONVIFBinarySensor(uid, device) for uid in missing
+            uid: ONVIFBinarySensor(uid, device, name=entity_names[uid])
+            for uid in missing
         }
         if new_entities:
             entities.update(new_entities)
@@ -65,7 +74,11 @@ class ONVIFBinarySensor(ONVIFBaseEntity, RestoreEntity, BinarySensorEntity):
     _attr_unique_id: str
 
     def __init__(
-        self, uid: str, device: ONVIFDevice, entry: er.RegistryEntry | None = None
+        self,
+        uid: str,
+        device: ONVIFDevice,
+        name: str | None = None,
+        entry: er.RegistryEntry | None = None,
     ) -> None:
         """Initialize the ONVIF binary sensor."""
         self._attr_unique_id = uid
@@ -78,12 +91,13 @@ class ONVIFBinarySensor(ONVIFBaseEntity, RestoreEntity, BinarySensorEntity):
         else:
             event = device.events.get_uid(uid)
             assert event
+            assert name
             self._attr_device_class = try_parse_enum(
                 BinarySensorDeviceClass, event.device_class
             )
             self._attr_entity_category = event.entity_category
             self._attr_entity_registry_enabled_default = event.entity_enabled
-            self._attr_name = f"{device.name} {event.name}"
+            self._attr_name = f"{device.name} {name}"
             self._attr_is_on = event.value
 
         super().__init__(device)
