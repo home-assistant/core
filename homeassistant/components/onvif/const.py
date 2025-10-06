@@ -1,7 +1,10 @@
 """Constants for the onvif component."""
 
 import asyncio
+from collections.abc import Mapping
+from enum import Enum
 import logging
+from typing import Literal
 
 import aiohttp
 from onvif.exceptions import ONVIFError
@@ -29,20 +32,6 @@ ATTR_MOVE_MODE = "move_mode"
 ATTR_CONTINUOUS_DURATION = "continuous_duration"
 ATTR_PRESET = "preset"
 
-DIR_UP = "UP"
-DIR_DOWN = "DOWN"
-DIR_LEFT = "LEFT"
-DIR_RIGHT = "RIGHT"
-ZOOM_OUT = "ZOOM_OUT"
-ZOOM_IN = "ZOOM_IN"
-PAN_FACTOR = {DIR_RIGHT: 1, DIR_LEFT: -1}
-TILT_FACTOR = {DIR_UP: 1, DIR_DOWN: -1}
-ZOOM_FACTOR = {ZOOM_IN: 1, ZOOM_OUT: -1}
-CONTINUOUS_MOVE = "ContinuousMove"
-RELATIVE_MOVE = "RelativeMove"
-ABSOLUTE_MOVE = "AbsoluteMove"
-GOTOPRESET_MOVE = "GotoPreset"
-STOP_MOVE = "Stop"
 
 SERVICE_PTZ = "ptz"
 
@@ -56,3 +45,52 @@ GET_CAPABILITIES_EXCEPTIONS = (
     asyncio.TimeoutError,
     TransportError,
 )
+
+# Literals
+MoveMode = Literal[
+    "AbsoluteMove", "ContinuousMove", "GotoPreset", "RelativeMove", "Stop"
+]
+
+ABSOLUTE_MOVE: MoveMode = "AbsoluteMove"
+CONTINUOUS_MOVE: MoveMode = "ContinuousMove"
+GOTOPRESET_MOVE: MoveMode = "GotoPreset"
+RELATIVE_MOVE: MoveMode = "RelativeMove"
+STOP_MOVE: MoveMode = "Stop"
+
+
+class MoveModeRequirement(str, Enum):
+    """Per-mode validation flags used by the service layer."""
+
+    AXES = "axes"
+    SPEED = "speed"
+    CONTINUOUS_DURATION = "duration"
+    DISTANCE = "distance"
+    PRESETS = "presets"
+
+
+MODE_REQUIREMENTS: dict[MoveMode, set[MoveModeRequirement]] = {
+    CONTINUOUS_MOVE: {
+        MoveModeRequirement.AXES,
+        MoveModeRequirement.SPEED,
+        MoveModeRequirement.CONTINUOUS_DURATION,
+    },
+    RELATIVE_MOVE: {MoveModeRequirement.AXES, MoveModeRequirement.DISTANCE},
+    ABSOLUTE_MOVE: {MoveModeRequirement.AXES},
+    GOTOPRESET_MOVE: {MoveModeRequirement.PRESETS},
+    STOP_MOVE: set(),
+}
+
+PanDir = Literal["LEFT", "RIGHT"]
+TiltDir = Literal["UP", "DOWN"]
+ZoomDir = Literal["ZOOM_IN", "ZOOM_OUT"]
+
+DIR_LEFT: PanDir = "LEFT"
+DIR_RIGHT: PanDir = "RIGHT"
+DIR_UP: TiltDir = "UP"
+DIR_DOWN: TiltDir = "DOWN"
+ZOOM_IN: ZoomDir = "ZOOM_IN"
+ZOOM_OUT: ZoomDir = "ZOOM_OUT"
+
+PAN_FACTOR: Mapping[str, float] = {DIR_RIGHT: 1.0, DIR_LEFT: -1.0}
+TILT_FACTOR: Mapping[str, float] = {DIR_UP: 1.0, DIR_DOWN: -1.0}
+ZOOM_FACTOR: Mapping[str, float] = {ZOOM_IN: 1.0, ZOOM_OUT: -1.0}

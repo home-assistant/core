@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from contextlib import suppress
 import datetime as dt
 import os
@@ -35,11 +36,17 @@ from .const import (
     GET_CAPABILITIES_EXCEPTIONS,
     GOTOPRESET_MOVE,
     LOGGER,
+    MODE_REQUIREMENTS,
     PAN_FACTOR,
     RELATIVE_MOVE,
     STOP_MOVE,
     TILT_FACTOR,
     ZOOM_FACTOR,
+    MoveMode,
+    MoveModeRequirement,
+    PanDir,
+    TiltDir,
+    ZoomDir,
 )
 from .event import EventManager
 from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
@@ -486,131 +493,245 @@ class ONVIFDevice:
         result = await media_service.GetStreamUri(req)
         return result.Uri
 
+    @staticmethod
+    def _apply_dir(
+        direction: str | None, factor_map: Mapping[str, float], scale: float | None
+    ) -> float | None:
+        """Return a signed magnitude for an axis based on a direction and a scalar.
+
+        Returns:
+            A float (signed magnitude) if both direction and scale are provided;
+            otherwise None, which signals "do not include this axis" in the request payload.
+        """
+        if direction is None or scale is None:
+            return None
+        return factor_map.get(direction, 0.0) * float(scale)
+
+    @staticmethod
+    def _supports_move_mode(move_mode: MoveMode, profile: Profile) -> bool:
+        """Check if the given move mode is supported by the profile's PTZ capabilities.
+
+        This checks capability flags only; devices may still reject a request at runtime.
+        """
+        caps = profile.ptz
+        if not caps:
+            return False
+        return (
+            (move_mode == CONTINUOUS_MOVE and caps.continuous)
+            or (move_mode == RELATIVE_MOVE and caps.relative)
+            or (move_mode == ABSOLUTE_MOVE and caps.absolute)
+            or (move_mode == GOTOPRESET_MOVE and bool(caps.presets))
+            or (move_mode == STOP_MOVE)
+        )
+
+    @staticmethod
+    def _check_move_mode_required_params(
+        move_mode: MoveMode,
+        *,
+        pan: PanDir | None,
+        tilt: TiltDir | None,
+        zoom: ZoomDir | None,
+        distance: float | None,
+        speed: float | None,
+        continuous_duration: float | None,
+        preset: str | None,
+    ) -> str | None:
+        """Validate inputs against per-mode requirements.
+
+        Rules:
+        - AXES: at least one of pan/tilt/zoom must be provided for modes that move.
+        - SPEED: required for ContinuousMove and may be optional for others.
+        - CONTINUOUS_DURATION: required for ContinuousMove; used to stop after sleeping.
+        - DISTANCE: required for modes that need a magnitude (Relative/Absolute).
+        - PRESETS: required for GotoPreset.
+
+        Returns:
+        Error message if something is missing, otherwise None.
+        """
+
+        reqs = MODE_REQUIREMENTS.get(move_mode, set())
+        missing: list[str] = []
+
+        if MoveModeRequirement.AXES in reqs and (
+            pan is None and tilt is None and zoom is None
+        ):
+            missing.append("at least one axis (pan/tilt/zoom)")
+        if MoveModeRequirement.SPEED in reqs and speed is None:
+            missing.append("speed")
+        if (
+            MoveModeRequirement.CONTINUOUS_DURATION in reqs
+            and continuous_duration is None
+        ):
+            missing.append("continuous duration")
+        if MoveModeRequirement.DISTANCE in reqs and distance is None:
+            missing.append("distance")
+        if MoveModeRequirement.PRESETS in reqs and not preset:
+            missing.append("preset")
+
+        if missing:
+            return f"{move_mode} requires: {', '.join(missing)}"
+        return None
+
     async def async_perform_ptz(
         self,
         profile: Profile,
-        distance,
-        speed,
-        move_mode,
-        continuous_duration,
-        preset,
-        pan=None,
-        tilt=None,
-        zoom=None,
+        move_mode: MoveMode,
+        distance: float | None = None,
+        speed: float | None = None,
+        continuous_duration: float | None = None,
+        preset: str | None = None,
+        pan: PanDir | None = None,
+        tilt: TiltDir | None = None,
+        zoom: ZoomDir | None = None,
     ):
-        """Perform a PTZ action on the camera."""
+        """Perform a PTZ action on the camera.
+
+        Important ONVIF nuances:
+
+        - For RelativeMove: Translation.PanTilt (Vector2D) requires both x and y
+        if the node is present; send 0.0 for the axis you don't want to change.
+
+        - For AbsoluteMove: Position.PanTilt requires both x and y if present,
+        and values are absolute in the profile space. Sending 0.0 may be interpreted
+        as "go to origin/center" on some devices. Omit the whole node if you don't want
+        to alter that part.
+        """
+
         if not self.capabilities.ptz:
             LOGGER.warning("PTZ actions are not supported on device '%s'", self.name)
             return
 
+        if not self._supports_move_mode(move_mode, profile):
+            LOGGER.warning("%s, not supported (device='%s')", move_mode, self.name)
+            return
+
+        err = self._check_move_mode_required_params(
+            move_mode,
+            pan=pan,
+            tilt=tilt,
+            zoom=zoom,
+            distance=distance,
+            speed=speed,
+            continuous_duration=continuous_duration,
+            preset=preset,
+        )
+        if err:
+            LOGGER.warning("%s (device='%s')", err, self.name)
+            return
+
         ptz_service = await self.device.create_ptz_service()
 
-        pan_val = distance * PAN_FACTOR.get(pan, 0)
-        tilt_val = distance * TILT_FACTOR.get(tilt, 0)
-        zoom_val = distance * ZOOM_FACTOR.get(zoom, 0)
-        speed_val = speed
-        preset_val = preset
-        LOGGER.debug(
-            (
-                "Calling %s PTZ | Pan = %4.2f | Tilt = %4.2f | Zoom = %4.2f | Speed ="
-                " %4.2f | Preset = %s"
-            ),
-            move_mode,
-            pan_val,
-            tilt_val,
-            zoom_val,
-            speed_val,
-            preset_val,
-        )
         try:
             req = ptz_service.create_type(move_mode)
             req.ProfileToken = profile.token
+
             if move_mode == CONTINUOUS_MOVE:
-                # Guard against unsupported operation
-                if not profile.ptz or not profile.ptz.continuous:
-                    LOGGER.warning(
-                        "ContinuousMove not supported on device '%s'", self.name
-                    )
-                    return
+                vx = self._apply_dir(pan, PAN_FACTOR, speed)
+                vy = self._apply_dir(tilt, TILT_FACTOR, speed)
+                vz = self._apply_dir(zoom, ZOOM_FACTOR, speed)
 
                 velocity = {}
-                if pan is not None or tilt is not None:
-                    velocity["PanTilt"] = {"x": pan_val, "y": tilt_val}
-                if zoom is not None:
-                    velocity["Zoom"] = {"x": zoom_val}
+                if vx is not None or vy is not None:
+                    velocity["PanTilt"] = {"x": vx or 0.0, "y": vy or 0.0}
+                if vz is not None:
+                    velocity["Zoom"] = {"x": vz}
 
                 req.Velocity = velocity
 
                 await ptz_service.ContinuousMove(req)
-                await asyncio.sleep(continuous_duration)
+
+                # Stop after the requested duration. Guard against None just in case.
+                await asyncio.sleep(float(continuous_duration or 0.0))
                 req = ptz_service.create_type("Stop")
                 req.ProfileToken = profile.token
-                await ptz_service.Stop(
-                    {"ProfileToken": req.ProfileToken, "PanTilt": True, "Zoom": False}
-                )
+                req.PanTilt = True
+                req.Zoom = True
+                await ptz_service.Stop(req)
+
             elif move_mode == RELATIVE_MOVE:
-                # Guard against unsupported operation
-                if not profile.ptz or not profile.ptz.relative:
-                    LOGGER.warning(
-                        "RelativeMove not supported on device '%s'", self.name
-                    )
-                    return
+                dx = self._apply_dir(pan, PAN_FACTOR, distance)
+                dy = self._apply_dir(tilt, TILT_FACTOR, distance)
+                dz = self._apply_dir(zoom, ZOOM_FACTOR, distance)
 
-                req.Translation = {
-                    "PanTilt": {"x": pan_val, "y": tilt_val},
-                    "Zoom": {"x": zoom_val},
-                }
-                req.Speed = {
-                    "PanTilt": {"x": speed_val, "y": speed_val},
-                    "Zoom": {"x": speed_val},
-                }
+                translation = {}
+                if dx is not None or dy is not None:
+                    translation["PanTilt"] = {
+                        "x": float(dx or 0.0),
+                        "y": float(dy or 0.0),
+                    }
+
+                if dz is not None:
+                    translation["Zoom"] = {"x": float(dz)}
+
+                req.Translation = translation
+
+                if speed is not None:
+                    req.Speed = {
+                        k: dict.fromkeys(v.keys(), speed)
+                        for k, v in translation.items()
+                    }
+
                 await ptz_service.RelativeMove(req)
-            elif move_mode == ABSOLUTE_MOVE:
-                # Guard against unsupported operation
-                if not profile.ptz or not profile.ptz.absolute:
-                    LOGGER.warning(
-                        "AbsoluteMove not supported on device '%s'", self.name
-                    )
-                    return
 
-                req.Position = {
-                    "PanTilt": {"x": pan_val, "y": tilt_val},
-                    "Zoom": {"x": zoom_val},
-                }
-                req.Speed = {
-                    "PanTilt": {"x": speed_val, "y": speed_val},
-                    "Zoom": {"x": speed_val},
-                }
+            elif move_mode == ABSOLUTE_MOVE:
+                # NOTE:
+                # At the moment, the same position (using distance as normalized coordinates) is currently reused for all selected axes (pan/tilt/zoom).
+                # You cannot specify independent absolute positions per axis. This artificially couples pan and tilt
+                # magnitudes.
+                # If PanTilt is present, both x and y are required.
+                # If an axis is not explicitly selected, it falls back to 0.0.
+                # On many devices, sending 0.0 is interpreted as "move to the center/origin"
+                # for that axis, which may be undesirable if you only intended to move the others.
+
+                dx = self._apply_dir(pan, PAN_FACTOR, distance)
+                dy = self._apply_dir(tilt, TILT_FACTOR, distance)
+                dz = self._apply_dir(zoom, ZOOM_FACTOR, distance)
+
+                position = {}
+                if dx is not None or dy is not None:
+                    position["PanTilt"] = {
+                        "x": float(dx or 0.0),
+                        "y": float(dy or 0.0),
+                    }
+
+                if dz is not None:
+                    position["Zoom"] = {"x": float(dz)}
+
+                req.Position = position
+
+                if speed is not None:
+                    req.Speed = {
+                        k: dict.fromkeys(v.keys(), speed) for k, v in position.items()
+                    }
                 await ptz_service.AbsoluteMove(req)
             elif move_mode == GOTOPRESET_MOVE:
-                # Guard against unsupported operation
-                if not profile.ptz or not profile.ptz.presets:
-                    LOGGER.warning(
-                        "Absolute Presets not supported on device '%s'", self.name
-                    )
-                    return
-                if preset_val not in profile.ptz.presets:
+                presets: list[str] = list(getattr(profile.ptz, "presets", []) or [])
+                if preset not in presets:
                     LOGGER.warning(
                         (
                             "PTZ preset '%s' does not exist on device '%s'. Available"
                             " Presets: %s"
                         ),
-                        preset_val,
+                        preset,
                         self.name,
-                        ", ".join(profile.ptz.presets),
+                        ", ".join(presets),
                     )
                     return
 
-                req.PresetToken = preset_val
-                req.Speed = {
-                    "PanTilt": {"x": speed_val, "y": speed_val},
-                    "Zoom": {"x": speed_val},
-                }
+                req.PresetToken = preset
+                if speed is not None:
+                    req.Speed = {
+                        "PanTilt": {"x": speed, "y": speed},
+                        "Zoom": {"x": speed},
+                    }
                 await ptz_service.GotoPreset(req)
             elif move_mode == STOP_MOVE:
+                req.PanTilt = True
+                req.Zoom = True
                 await ptz_service.Stop(req)
         except ONVIFError as err:
-            if "Bad Request" in err.reason:
+            reason = getattr(err, "reason", "")
+            if isinstance(reason, str) and "Bad Request" in reason:
                 LOGGER.warning("Device '%s' doesn't support PTZ", self.name)
             else:
                 LOGGER.error("Error trying to perform PTZ action: %s", err)
