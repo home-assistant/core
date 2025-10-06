@@ -47,7 +47,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
+from homeassistant.util import datetime, dt as dt_util
 
 from .common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
@@ -3737,6 +3737,181 @@ async def test_get_statistics_service_missing_mandatory_keys(
         await hass.services.async_call(
             "recorder",
             "get_statistics",
+            service_args,
+            return_response=True,
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service_args", "expected_result"),
+    [
+        (
+            {
+                "start_time": "2023-05-08 07:00:00Z",
+                "history_ids": ["sensor.i_dont_exist"],
+            },
+            {"history": {}},
+        ),
+        (
+            {
+                "start_time": "2023-05-08 06:30:00Z",
+                "history_ids": [
+                    "sensor.total_energy_import1",
+                    "sensor.total_energy_import2",
+                ],
+            },
+            {
+                "history": {
+                    "sensor.total_energy_import1": [
+                        {
+                            "end": "2023-05-08T07:00:00+00:00",
+                            "start": "2023-05-08T06:30:00+00:00",
+                            "state": "unknown",
+                        },
+                        {
+                            "end": "2023-05-08T08:00:00+00:00",
+                            "start": "2023-05-08T07:00:00+00:00",
+                            "state": "0.0",
+                        },
+                        {
+                            "end": "2023-05-08T09:00:00+00:00",
+                            "start": "2023-05-08T08:00:00+00:00",
+                            "state": "1.0",
+                        },
+                        {
+                            "end": "2023-05-08T10:00:00+00:00",
+                            "start": "2023-05-08T09:00:00+00:00",
+                            "state": "2.0",
+                        },
+                        {
+                            "end": "2023-05-08T11:00:00+00:00",
+                            "start": "2023-05-08T10:00:00+00:00",
+                            "state": "3.0",
+                        },
+                    ],
+                    "sensor.total_energy_import2": [
+                        {
+                            "end": "2023-05-08T07:00:00+00:00",
+                            "start": "2023-05-08T06:30:00+00:00",
+                            "state": "unknown",
+                        },
+                        {
+                            "end": "2023-05-08T08:00:00+00:00",
+                            "start": "2023-05-08T07:00:00+00:00",
+                            "state": "0.0",
+                        },
+                        {
+                            "end": "2023-05-08T09:00:00+00:00",
+                            "start": "2023-05-08T08:00:00+00:00",
+                            "state": "1.0",
+                        },
+                        {
+                            "end": "2023-05-08T10:00:00+00:00",
+                            "start": "2023-05-08T09:00:00+00:00",
+                            "state": "2.0",
+                        },
+                        {
+                            "end": "2023-05-08T11:00:00+00:00",
+                            "start": "2023-05-08T10:00:00+00:00",
+                            "state": "3.0",
+                        },
+                    ],
+                }
+            },
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_history_service(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    service_args: dict[str, Any],
+    expected_result: dict[str, Any],
+) -> None:
+    """Test the get_statistics service."""
+
+    assert hass.config.time_zone == "US/Pacific"
+
+    times: list[tuple[datetime, float]] = [
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-07 23:00:00")), "unknown"),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 00:00:00")), 0.0),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 01:00:00")), 1.0),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 02:00:00")), 2.0),
+        (dt_util.as_utc(dt_util.parse_datetime("2023-05-08 03:00:00")), 3.0),
+    ]
+    now = dt_util.as_utc(dt_util.parse_datetime("2023-05-08 04:00:00"))
+
+    for time, value in times:
+        hass.states.async_set(
+            entity_id="sensor.total_energy_import1",
+            new_state=value,
+            timestamp=time.timestamp(),
+        )
+        hass.states.async_set(
+            entity_id="sensor.total_energy_import2",
+            new_state=value,
+            timestamp=time.timestamp(),
+        )
+    await async_recorder_block_till_done(hass)
+
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    with patch(
+        "homeassistant.util.dt.utcnow",
+        return_value=now,
+    ):
+        result = await hass.services.async_call(
+            "recorder", "get_history", service_args, return_response=True, blocking=True
+        )
+        assert result == expected_result
+
+    with pytest.raises(exceptions.Unauthorized):
+        result = await hass.services.async_call(
+            "recorder",
+            "get_history",
+            service_args,
+            return_response=True,
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+
+
+@pytest.mark.parametrize(
+    ("service_args", "missing_key"),
+    [
+        (
+            {
+                "history_ids": ["sensor.sensor"],
+            },
+            "start_time",
+        ),
+        (
+            {
+                "start_time": "2023-05-08 07:00:00Z",
+            },
+            "history_ids",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_get_history_service_missing_mandatory_keys(
+    hass: HomeAssistant,
+    service_args: dict[str, Any],
+    missing_key: str,
+) -> None:
+    """Test the get_statistics service with missing mandatory keys."""
+
+    await async_recorder_block_till_done(hass)
+
+    with pytest.raises(
+        vol.error.MultipleInvalid,
+        match=re.escape(f"required key not provided @ data['{missing_key}']"),
+    ):
+        await hass.services.async_call(
+            "recorder",
+            "get_history",
             service_args,
             return_response=True,
             blocking=True,
