@@ -165,13 +165,15 @@
             "name": "[%key:common::config_flow::data::name%]",
             "configuration_url": "Configuration URL",
             "model": "Model",
-            "model_id": "Model ID"
+            "model_id": "Model ID",
+            "manufacturer": "Manufacturer"
           },
           "data_description": {
             "name": "The name of the manually added MQTT device.",
             "configuration_url": "A link to the webpage that can manage the configuration of this device. Can be either a 'http://', 'https://' or an internal 'homeassistant://' URL.",
             "model": "E.g. 'Cleanmaster Pro'.",
-            "model_id": "E.g. '123NK2PRO'."
+            "model_id": "E.g. '123NK2PRO'.",
+            "manufacturer": "E.g. Cleanmaster Ltd."
           },
           "sections": {
             "advanced_settings": {

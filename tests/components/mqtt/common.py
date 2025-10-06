@@ -526,6 +526,7 @@ MOCK_SUBENTRY_DEVICE_DATA = {
     "hw_version": "2.1 rev a",
     "model": "Model XL",
     "model_id": "mn002",
+    "manufacturer": "Milk Masters",
     "configuration_url": "https://example.com",
 }
 
