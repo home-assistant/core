@@ -44,6 +44,7 @@ BINARY_SENSOR_ATTRIBUTES_TO_CAPABILITIES: dict[str, str] = {
     Attribute.ACCELERATION: Capability.ACCELERATION_SENSOR,
     Attribute.CONTACT: Capability.CONTACT_SENSOR,
     Attribute.FILTER_STATUS: Capability.FILTER_STATUS,
+    Attribute.GAS: Capability.GAS_DETECTOR,
     Attribute.MOTION: Capability.MOTION_SENSOR,
     Attribute.PRESENCE: Capability.PRESENCE_SENSOR,
     Attribute.SOUND: Capability.SOUND_SENSOR,
