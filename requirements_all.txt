@@ -384,7 +384,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.11.0
+aioshelly==13.12.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -2210,7 +2210,7 @@ pynetio==0.1.9.1
 pynina==0.3.6
 
 # homeassistant.components.nintendo_parental
-pynintendoparental==1.0.1
+pynintendoparental==1.1.1
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
