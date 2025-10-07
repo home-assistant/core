@@ -69,13 +69,13 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
     _attr_name = None  # Use the device name
     _attr_color_mode = ColorMode.RGB
     _attr_supported_color_modes = {ColorMode.RGB}
-    _attr_supported_features = LightEntityFeature.EFFECT
 
     _mode: str | None = None
 
     _supports_color_modes: list[str]
     _preferred_no_effect_mode: str
     _supports_off_mode: bool
+    _supports_effects: bool
 
     _previous_brightness: int | None = None
     _previous_rgb_color: tuple[int, int, int] | None = None
@@ -113,11 +113,17 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             if check_if_mode_supports_color(mode)
         ]
         # Convert modes to effects by excluding Off and effect-off modes
-        self._attr_effect_list = [EFFECT_OFF] + [
+        effects = [
             mode
             for mode in modes
             if mode != OpenRGBMode.OFF and mode not in EFFECT_OFF_OPENRGB_MODES
         ]
+        if len(effects) > 0:
+            self._supports_effects = True
+            self._attr_supported_features = LightEntityFeature.EFFECT
+            self._attr_effect_list = [EFFECT_OFF, *effects]
+        else:
+            self._supports_effects = False
 
         self._attr_icon = DEVICE_TYPE_ICONS.get(self.device.type)
 
@@ -172,7 +178,9 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
 
         self._attr_rgb_color = rgb_color
         self._attr_brightness = brightness
-        if mode is None or mode in EFFECT_OFF_OPENRGB_MODES:
+        if not self._supports_effects:
+            self._attr_effect = None
+        elif mode is None or mode in EFFECT_OFF_OPENRGB_MODES:
             self._attr_effect = EFFECT_OFF
         else:
             self._attr_effect = mode

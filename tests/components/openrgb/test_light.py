@@ -15,6 +15,7 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     EFFECT_OFF,
+    LightEntityFeature,
 )
 from homeassistant.components.openrgb.const import (
     DEFAULT_BRIGHTNESS,
@@ -27,6 +28,7 @@ from homeassistant.components.openrgb.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -152,8 +154,41 @@ async def test_light_with_non_color_mode(
     state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == LightEntityFeature.EFFECT
+    assert state.attributes.get(ATTR_EFFECT) == "Rainbow"
     assert state.attributes.get(ATTR_RGB_COLOR) == DEFAULT_COLOR
     assert state.attributes.get(ATTR_BRIGHTNESS) == DEFAULT_BRIGHTNESS
+
+
+@pytest.mark.usefixtures("mock_openrgb_client")
+async def test_light_with_no_effects(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_device: MagicMock,
+) -> None:
+    """Test light with a device that has no effects."""
+    # Keep only no-effect modes in the device
+    mock_openrgb_device.modes = [
+        mode
+        for mode in mock_openrgb_device.modes
+        if mode.name in {OpenRGBMode.OFF, OpenRGBMode.DIRECT, OpenRGBMode.STATIC}
+    ]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Verify light entity doesn't have EFFECT feature
+    state = hass.states.get("light.ene_dram")
+    assert state
+
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 0
+    assert state.attributes.get(ATTR_EFFECT) is None
+
+    # Verify the light is still functional (can be turned on/off)
+    assert state.state == STATE_ON
 
 
 # Test basic turn on/off functionality
