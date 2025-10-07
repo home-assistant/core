@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -23,8 +23,8 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_LINE, DEFAULT_LINES, DOMAIN, TUBE_LINES
-from .coordinator import LondonTubeCoordinator
+from .const import CONF_LINE, DOMAIN, TUBE_LINES
+from .coordinator import LondonTubeCoordinator, LondonUndergroundConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,8 +88,7 @@ async def async_setup_entry(
     """Set up the London Underground sensor from config entry."""
 
     async_add_entities(
-        LondonTubeSensor(entry.runtime_data, line)
-        for line in entry.options[CONF_LINE]
+        LondonTubeSensor(entry.runtime_data, line) for line in entry.options[CONF_LINE]
     )
 
 
