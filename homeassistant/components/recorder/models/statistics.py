@@ -70,6 +70,7 @@ class StatisticMetaData(TypedDict):
     name: str | None
     source: str
     statistic_id: str
+    unit_class: str | None
     unit_of_measurement: str | None
 
 

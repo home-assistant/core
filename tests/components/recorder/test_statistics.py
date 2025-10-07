@@ -397,6 +397,7 @@ def mock_sensor_statistics():
                 "has_sum": False,
                 "name": None,
                 "statistic_id": entity_id,
+                "unit_class": None,
                 "unit_of_measurement": "dogs",
             },
             "stat": {"start": start},
@@ -841,6 +842,13 @@ async def test_statistics_duplicated(
 
 @pytest.mark.parametrize("last_reset_str", ["2022-01-01T00:00:00+02:00", None])
 @pytest.mark.parametrize(
+    ("external_metadata_extra"),
+    [
+        {},
+        {"unit_class": "energy"},
+    ],
+)
+@pytest.mark.parametrize(
     ("source", "statistic_id", "import_fn"),
     [
         ("test", "test:total_energy_import", async_add_external_statistics),
@@ -852,6 +860,7 @@ async def test_import_statistics(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
+    external_metadata_extra: dict[str, str],
     source,
     statistic_id,
     import_fn,
@@ -889,7 +898,7 @@ async def test_import_statistics(
         "source": source,
         "statistic_id": statistic_id,
         "unit_of_measurement": "kWh",
-    }
+    } | external_metadata_extra
 
     import_fn(hass, external_metadata, (external_statistics1, external_statistics2))
     await async_wait_recording_done(hass)
@@ -939,6 +948,7 @@ async def test_import_statistics(
                 "name": "Total imported energy",
                 "source": source,
                 "statistic_id": statistic_id,
+                "unit_class": "energy",
                 "unit_of_measurement": "kWh",
             },
         )
@@ -1031,6 +1041,7 @@ async def test_import_statistics(
                 "name": "Total imported energy renamed",
                 "source": source,
                 "statistic_id": statistic_id,
+                "unit_class": "energy",
                 "unit_of_measurement": "kWh",
             },
         )
