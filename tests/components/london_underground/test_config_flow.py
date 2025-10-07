@@ -106,7 +106,6 @@ async def test_validate_input_exceptions(
         result["flow_id"],
         {},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "London Underground"
