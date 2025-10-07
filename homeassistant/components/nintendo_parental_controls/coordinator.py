@@ -15,7 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
-type NintendoParentalConfigEntry = ConfigEntry[NintendoUpdateCoordinator]
+type NintendoParentalControlsConfigEntry = ConfigEntry[NintendoUpdateCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL = timedelta(seconds=60)
@@ -28,7 +28,7 @@ class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
         self,
         hass: HomeAssistant,
         authenticator: Authenticator,
-        config_entry: NintendoParentalConfigEntry,
+        config_entry: NintendoParentalControlsConfigEntry,
     ) -> None:
         """Initialize update coordinator."""
         super().__init__(

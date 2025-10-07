@@ -1,4 +1,4 @@
-"""Time platform for Nintendo Parental."""
+"""Time platform for Nintendo parental controls."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import BEDTIME_ALARM_DISABLE, BEDTIME_ALARM_MAX, BEDTIME_ALARM_MIN, DOMAIN
-from .coordinator import NintendoParentalConfigEntry, NintendoUpdateCoordinator
+from .coordinator import NintendoParentalControlsConfigEntry, NintendoUpdateCoordinator
 from .entity import Device, NintendoDevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ TIME_DESCRIPTIONS: tuple[NintendoParentalTimeEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: NintendoParentalConfigEntry,
+    entry: NintendoParentalControlsConfigEntry,
     async_add_devices: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the time platform."""

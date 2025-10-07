@@ -1065,8 +1065,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/nilu/ @hfurubotten
 /homeassistant/components/nina/ @DeerMaximum
 /tests/components/nina/ @DeerMaximum
-/homeassistant/components/nintendo_parental/ @pantherale0
-/tests/components/nintendo_parental/ @pantherale0
+/homeassistant/components/nintendo_parental_controls/ @pantherale0
+/tests/components/nintendo_parental_controls/ @pantherale0
 /homeassistant/components/nissan_leaf/ @filcole
 /homeassistant/components/noaa_tides/ @jdelaney72
 /homeassistant/components/nobo_hub/ @echoromeo @oyvindwe
