@@ -7,10 +7,10 @@ from unittest.mock import AsyncMock, patch
 from london_tube_status import parse_api_response
 import pytest
 
-from homeassistant.components.london_underground.const import DOMAIN
+from homeassistant.components.london_underground.const import CONF_LINE, DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import async_load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 from tests.conftest import AiohttpClientMocker
 
 
@@ -22,6 +22,21 @@ def mock_setup_entry():
         return_value=True,
     ) as mock_setup:
         yield mock_setup
+
+
+@pytest.fixture
+async def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Mock the config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={CONF_LINE: ["Metropolitan"]},
+        title="London Underground",
+    )
+    # Add and set up the entry
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    return entry
 
 
 @pytest.fixture

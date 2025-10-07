@@ -14,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
 
-from tests.common import MockConfigEntry
-
 
 async def test_validate_input_success(
     hass: HomeAssistant, mock_setup_entry, mock_london_underground_client
@@ -40,16 +38,11 @@ async def test_validate_input_success(
     assert result["options"] == {CONF_LINE: ["Bakerloo", "Central"]}
 
 
-async def test_options(hass: HomeAssistant, mock_setup_entry) -> None:
+async def test_options(
+    hass: HomeAssistant, mock_setup_entry, mock_config_entry
+) -> None:
     """Test updating options."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        options={CONF_LINE: DEFAULT_LINES},
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
@@ -112,18 +105,12 @@ async def test_validate_input_exceptions(
 
 
 async def test_already_configured(
-    hass: HomeAssistant, mock_london_underground_client, mock_setup_entry
+    hass: HomeAssistant,
+    mock_london_underground_client,
+    mock_setup_entry,
+    mock_config_entry,
 ) -> None:
     """Try (and fail) setting up a config entry when one already exists."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        options={CONF_LINE: ["Metropolitan"]},
-        title="London Underground",
-    )
-    # Add and set up the entry
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
 
     # Try to start the flow
     result = await hass.config_entries.flow.async_init(
@@ -183,18 +170,10 @@ async def test_failed_yaml_import_already_configured(
     issue_registry: ir.IssueRegistry,
     mock_london_underground_client,
     caplog: pytest.LogCaptureFixture,
+    mock_config_entry,
 ) -> None:
     """Test a YAML sensor is imported and becomes an operational config entry."""
     # Set up via YAML which will trigger import and set up the config entry
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        options={CONF_LINE: ["Metropolitan"]},
-        title="London Underground",
-    )
-    # Add and set up the entry
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
 
     IMPORT_DATA = {
         "platform": "london_underground",
