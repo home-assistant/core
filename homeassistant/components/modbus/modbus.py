@@ -253,7 +253,7 @@ class ModbusHub:
         self._client: (
             AsyncModbusSerialClient | AsyncModbusTcpClient | AsyncModbusUdpClient | None
         ) = None
-        self._lock = asyncio.Lock()        
+        self._lock = asyncio.Lock()
         self.event_connected = asyncio.Event()
         self.hass = hass
         self.name = client_config[CONF_NAME]
