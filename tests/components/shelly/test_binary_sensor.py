@@ -440,7 +440,7 @@ async def test_rpc_device_virtual_binary_sensor(
     assert state.state == STATE_ON
 
     assert (entry := entity_registry.async_get(entity_id))
-    assert entry.unique_id == "123456789ABC-boolean:203-boolean"
+    assert entry.unique_id == "123456789ABC-boolean:203-boolean_generic"
 
     monkeypatch.setitem(mock_rpc_device.status["boolean:203"], "value", False)
     mock_rpc_device.mock_update()
@@ -472,7 +472,7 @@ async def test_rpc_remove_virtual_binary_sensor_when_mode_toggle(
         hass,
         BINARY_SENSOR_DOMAIN,
         "test_name_boolean_200",
-        "boolean:200-boolean",
+        "boolean:200-boolean_generic",
         config_entry,
         device_id=device_entry.id,
     )
@@ -498,7 +498,7 @@ async def test_rpc_remove_virtual_binary_sensor_when_orphaned(
         hass,
         BINARY_SENSOR_DOMAIN,
         "test_name_boolean_200",
-        "boolean:200-boolean",
+        "boolean:200-boolean_generic",
         config_entry,
         device_id=device_entry.id,
     )
@@ -507,13 +507,13 @@ async def test_rpc_remove_virtual_binary_sensor_when_orphaned(
     sub_device_entry = register_sub_device(
         device_registry,
         config_entry,
-        "boolean:201-boolean",
+        "boolean:201-boolean_generic",
     )
     entity_id2 = register_entity(
         hass,
         BINARY_SENSOR_DOMAIN,
         "boolean_201",
-        "boolean:201-boolean",
+        "boolean:201-boolean_generic",
         config_entry,
         device_id=sub_device_entry.id,
     )
@@ -641,7 +641,7 @@ async def test_rpc_presencezone_component(
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
     status = deepcopy(mock_rpc_device.status)
-    status["presencezone:200"] = {"state": True, "num_objects": 3}
+    status["presencezone:200"] = {"value": True, "num_objects": 3}
     monkeypatch.setattr(mock_rpc_device, "status", status)
 
     mock_config_entry = await init_integration(hass, 4)
@@ -655,7 +655,7 @@ async def test_rpc_presencezone_component(
     assert entry.unique_id == "123456789ABC-presencezone:200-presencezone_state"
 
     mutate_rpc_device_status(
-        monkeypatch, mock_rpc_device, "presencezone:200", "state", False
+        monkeypatch, mock_rpc_device, "presencezone:200", "value", False
     )
     mock_rpc_device.mock_update()
 

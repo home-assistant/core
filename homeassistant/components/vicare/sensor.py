@@ -721,6 +721,13 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getElectricalEnergySystemOperationState(),
     ),
     ViCareSensorEntityDescription(
+        key="ess_charge_total",
+        translation_key="ess_charge_total",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getElectricalEnergySystemTransferChargeCumulatedLifeCycle(),
+        unit_getter=lambda api: api.getElectricalEnergySystemTransferChargeCumulatedUnit(),
+    ),
+    ViCareSensorEntityDescription(
         key="ess_discharge_today",
         translation_key="ess_discharge_today",
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -944,6 +951,15 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfMass.KILOGRAMS,
         value_getter=lambda api: api.getFuelNeed(),
         unit_getter=lambda api: api.getFuelUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="hydraulic_separator_temperature",
+        translation_key="hydraulic_separator_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getHydraulicSeparatorTemperature(),
     ),
 )
 
