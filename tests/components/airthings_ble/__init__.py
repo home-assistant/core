@@ -14,7 +14,11 @@ from homeassistant.components.airthings_ble.const import DOMAIN
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceRegistry
+from homeassistant.helpers.device_registry import (
+    CONNECTION_BLUETOOTH,
+    DeviceEntry,
+    DeviceRegistry,
+)
 
 from tests.common import MockConfigEntry, MockEntity
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
@@ -95,6 +99,27 @@ WAVE_SERVICE_INFO = BluetoothServiceInfoBleak(
     advertisement=generate_advertisement_data(
         manufacturer_data={820: b"\xe4/\xa5\xae\t\x00"},
         service_uuids=["b42e1c08-ade7-11e4-89d3-123b93f75cba"],
+    ),
+    connectable=True,
+    time=0,
+    tx_power=0,
+)
+
+WAVE_ENHANCE_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="cc-cc-cc-cc-cc-cc",
+    address="cc:cc:cc:cc:cc:cc",
+    device=generate_ble_device(
+        address="cc:cc:cc:cc:cc:cc",
+        name="Airthings Wave Enhance",
+    ),
+    rssi=-61,
+    manufacturer_data={820: b"\xe4/\xa5\xae\t\x00"},
+    service_data={},
+    service_uuids=[],
+    source="local",
+    advertisement=generate_advertisement_data(
+        manufacturer_data={820: b"\xe4/\xa5\xae\t\x00"},
+        service_uuids=[],
     ),
     connectable=True,
     time=0,
@@ -211,6 +236,26 @@ WAVE_DEVICE_INFO = AirthingsDevice(
     address="cc:cc:cc:cc:cc:cc",
 )
 
+WAVE_ENHANCE_DEVICE_INFO = AirthingsDevice(
+    manufacturer="Airthings AS",
+    hw_version="REV X",
+    sw_version="T-SUB-2.6.2-master+0",
+    model=AirthingsDeviceType.WAVE_ENHANCE_EU,
+    name="Airthings Wave Enhance",
+    identifier="123456",
+    sensors={
+        "lux": 25,
+        "battery": 85,
+        "humidity": 60.0,
+        "temperature": 21.0,
+        "co2": 500.0,
+        "voc": 155.0,
+        "pressure": 1020,
+        "noise": 40,
+    },
+    address="cc:cc:cc:cc:cc:cc",
+)
+
 TEMPERATURE_V1 = MockEntity(
     unique_id="Airthings Wave Plus 123456_temperature",
     name="Airthings Wave Plus 123456 Temperature",
@@ -246,6 +291,16 @@ VOC_V3 = MockEntity(
     name="Airthings Wave Plus (123456) VOC",
 )
 
+WAVE_ENHANCE_SENSOR_LUX = MockEntity(
+    unique_id="Airthings Wave Enhance (123456)_lux",
+    name="Airthings Wave Enhance (123456) Lux",
+)
+
+WAVE_ENHANCE_SENSOR_AMBIENT_NOISE = MockEntity(
+    unique_id="Airthings Wave Enhance (123456)_ambient_noise",
+    name="Airthings Wave Enhance (123456) Ambient noise",
+)
+
 
 def create_entry(
     hass: HomeAssistant,
@@ -265,12 +320,13 @@ def create_device(
     entry: ConfigEntry,
     device_registry: DeviceRegistry,
     service_info: BluetoothServiceInfoBleak,
-):
+    device_info: AirthingsDevice,
+) -> DeviceEntry:
     """Create a device for the given entry."""
     return device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(CONNECTION_BLUETOOTH, service_info.address)},
         manufacturer="Airthings AS",
-        name="Airthings Wave Plus (123456)",
-        model="Wave Plus",
+        name=f"{device_info.name} ({device_info.identifier})",
+        model=device_info.model.product_name,
     )

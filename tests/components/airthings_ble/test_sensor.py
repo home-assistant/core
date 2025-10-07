@@ -16,6 +16,10 @@ from . import (
     VOC_V2,
     VOC_V3,
     WAVE_DEVICE_INFO,
+    WAVE_ENHANCE_DEVICE_INFO,
+    WAVE_ENHANCE_SENSOR_AMBIENT_NOISE,
+    WAVE_ENHANCE_SENSOR_LUX,
+    WAVE_ENHANCE_SERVICE_INFO,
     WAVE_SERVICE_INFO,
     create_device,
     create_entry,
@@ -34,7 +38,7 @@ async def test_migration_from_v1_to_v3_unique_id(
 ) -> None:
     """Verify that we can migrate from v1 (pre 2023.9.0) to the latest unique id format."""
     entry = create_entry(hass, WAVE_SERVICE_INFO)
-    device = create_device(entry, device_registry, WAVE_SERVICE_INFO)
+    device = create_device(entry, device_registry, WAVE_SERVICE_INFO, WAVE_DEVICE_INFO)
 
     assert entry is not None
     assert device is not None
@@ -75,7 +79,7 @@ async def test_migration_from_v2_to_v3_unique_id(
 ) -> None:
     """Verify that we can migrate from v2 (introduced in 2023.9.0) to the latest unique id format."""
     entry = create_entry(hass, WAVE_SERVICE_INFO)
-    device = create_device(entry, device_registry, WAVE_SERVICE_INFO)
+    device = create_device(entry, device_registry, WAVE_SERVICE_INFO, WAVE_DEVICE_INFO)
 
     assert entry is not None
     assert device is not None
@@ -116,7 +120,7 @@ async def test_migration_from_v1_and_v2_to_v3_unique_id(
 ) -> None:
     """Test if migration works when we have both v1 (pre 2023.9.0) and v2 (introduced in 2023.9.0) unique ids."""
     entry = create_entry(hass, WAVE_SERVICE_INFO)
-    device = create_device(entry, device_registry, WAVE_SERVICE_INFO)
+    device = create_device(entry, device_registry, WAVE_SERVICE_INFO, WAVE_DEVICE_INFO)
 
     assert entry is not None
     assert device is not None
@@ -166,7 +170,7 @@ async def test_migration_with_all_unique_ids(
 ) -> None:
     """Test if migration works when we have all unique ids."""
     entry = create_entry(hass, WAVE_SERVICE_INFO)
-    device = create_device(entry, device_registry, WAVE_SERVICE_INFO)
+    device = create_device(entry, device_registry, WAVE_SERVICE_INFO, WAVE_DEVICE_INFO)
 
     assert entry is not None
     assert device is not None
@@ -215,3 +219,30 @@ async def test_migration_with_all_unique_ids(
     assert entity_registry.async_get(v1.entity_id).unique_id == VOC_V1.unique_id
     assert entity_registry.async_get(v2.entity_id).unique_id == VOC_V2.unique_id
     assert entity_registry.async_get(v3.entity_id).unique_id == VOC_V3.unique_id
+
+
+async def test_translation_strings(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that all translation strings are present."""
+    entry = create_entry(hass, WAVE_SERVICE_INFO)
+    device = create_device(
+        entry, device_registry, WAVE_ENHANCE_SERVICE_INFO, WAVE_ENHANCE_DEVICE_INFO
+    )
+
+    assert entry is not None
+    assert device is not None
+    assert device.name == "Airthings Wave Enhance (123456)"
+
+    for sensor in (WAVE_ENHANCE_SENSOR_LUX, WAVE_ENHANCE_SENSOR_AMBIENT_NOISE):
+        entity_registry.async_get_or_create(
+            domain=DOMAIN,
+            platform=Platform.SENSOR,
+            unique_id=sensor.unique_id,
+            config_entry=entry,
+            device_id=device.id,
+        )
+        await hass.async_block_till_done()
+        assert hass.states.get(f"sensor.{sensor.entity_id}") is None
