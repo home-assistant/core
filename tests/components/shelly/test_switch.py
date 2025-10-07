@@ -893,7 +893,6 @@ async def test_cury_switch_entity(
 async def test_cury_switch_availability(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
-    entity_registry: EntityRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test availability of switch entities for cury component."""
