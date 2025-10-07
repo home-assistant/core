@@ -74,6 +74,22 @@ from .helpers import async_get_blueprints, rewrite_legacy_to_modern_configs
 PACKAGE_MERGE_HINT = "list"
 
 
+def validate_binary_sensor_auto_off_has_trigger() -> Callable[[dict], dict]:
+    """Validate that a binary sensors with auto_off have trigger."""
+
+    def validate(obj: dict):
+        if CONF_TRIGGERS not in obj and (
+            binary_sensors := obj.get(DOMAIN_BINARY_SENSOR)
+        ):
+            for binary_sensor in binary_sensors:
+                if binary_sensor_platform.CONF_AUTO_OFF in binary_sensor:
+                    raise vol.Invalid("This is a placeholder")
+
+        return obj
+
+    return validate
+
+
 def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict], dict]:
     """Validate that config does not contain trigger and action."""
     domains = set(keys)
