@@ -24,6 +24,7 @@ class BaseTuyaDefinition:
     key: str
     translation_key: str
     translation_string: str
+    state_translations: dict[str, str] | None = None
     device_class: str | None = None
     entity_category: str | None = None
 
@@ -42,8 +43,6 @@ class TuyaCoverDefinition(BaseTuyaDefinition):
 @dataclass(kw_only=True)
 class TuyaSelectDefinition(BaseTuyaDefinition):
     """Definition for a select entity."""
-
-    state_translations: dict[str, str] | None = None
 
 
 @dataclass(kw_only=True)
