@@ -121,6 +121,7 @@ async def integration_fixture(
         "silabs_water_heater",
         "smoke_detector",
         "solar_power",
+        "speaker",
         "switch_unit",
         "tado_smart_radiator_thermostat_x",
         "temperature_sensor",
