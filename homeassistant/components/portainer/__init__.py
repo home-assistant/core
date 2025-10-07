@@ -78,11 +78,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
             if device.via_device_id is None:
                 continue
 
-            parent_device = device_registry.async_get(device.via_device_id)
-            assert parent_device
-            parent_device_identifiers = next(iter(parent_device.identifiers))
-            _LOGGER.debug("Parent device identifiers: %s", parent_device_identifiers)
+            parent_devices = device_registry.async_get(device.via_device_id)
+            assert parent_devices
+            for parent_device in parent_devices.identifiers:
+                if parent_device[0] == DOMAIN:
+                    parent_device_identifiers = parent_device
+                    break
 
+            _LOGGER.debug("Parent device identifiers: %s", parent_device_identifiers)
             endpoint_id = parent_device_identifiers[1].split("_")[-1]
             _LOGGER.debug("Endpoint ID: %s", endpoint_id)
             current_identifier = next(iter(device.identifiers))
