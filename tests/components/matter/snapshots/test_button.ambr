@@ -2576,7 +2576,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_buttons[temperature_sensor][button.mock_temperature_sensor_identify-entry]
+# name: test_buttons[temperature_sensor][button.mock_temperature_sensor_identify_0-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
