@@ -127,6 +127,8 @@ class AutomowerControlEntity(AutomowerBaseEntity):
 class WorkAreaAvailableEntity(AutomowerControlEntity):
     """Base entity for work areas."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         mower_id: str,
@@ -136,6 +138,13 @@ class WorkAreaAvailableEntity(AutomowerControlEntity):
         """Initialize AutomowerEntity."""
         super().__init__(mower_id, coordinator)
         self.work_area_id = work_area_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{mower_id}-{work_area_id}")},
+            manufacturer="Husqvarna",
+            name=self.work_area_attributes.name,
+            suggested_area="Garden",
+            via_device={(DOMAIN, mower_id)}
+        )
 
     @property
     def work_areas(self) -> dict[int, WorkArea]:
