@@ -64,6 +64,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_devices[aeotec_ms6]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '00f9233e-fdaa-4020-99d4-e0073e53996a',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': "Parent's Bedroom Sensor",
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_devices[aq_sensor_3_ikea]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -451,7 +482,7 @@
     'identifiers': set({
       tuple(
         'smartthings',
-        'c76d6f38-1b7f-13dd-37b5-db18d5272783',
+        '1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977',
       ),
     }),
     'labels': set({
@@ -459,7 +490,7 @@
     'manufacturer': 'Samsung Electronics',
     'model': 'ARTIK051_PRAC_20K',
     'model_id': None,
-    'name': 'Office AirFree',
+    'name': 'Clim Salon',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
