@@ -34,16 +34,6 @@ def mock_api_client() -> MagicMock:
     return client
 
 
-@pytest.fixture
-def mock_coordinator(
-    hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_api_client: MagicMock
-) -> FlussDataUpdateCoordinator:
-    """Mock Fluss coordinator."""
-    with patch("fluss_api.FlussApiClient", return_value=mock_api_client):
-        coordinator = FlussDataUpdateCoordinator(hass, mock_config_entry)
-        coordinator.async_config_entry_first_refresh = MagicMock()
-        return coordinator
-
 
 @pytest.fixture
 async def init_integration(
