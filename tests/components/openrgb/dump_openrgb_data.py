@@ -23,38 +23,23 @@ import os
 import sys
 
 import jsonpickle
-from jsonpickle import handlers
 from jsonpickle.pickler import Pickler
 from openrgb import OpenRGBClient
-from openrgb.network import NetworkClient
 
 
-class NetworkClientHandler(handlers.BaseHandler):
-    """Handler to exclude NetworkClient objects from serialization."""
-
-    def flatten(self, obj, data):
-        """Return None to exclude NetworkClient from output."""
-        return
-
-
-class PrivateAttributeFilteringPickler(Pickler):
-    """Custom pickler that filters out private attributes."""
+class IrrelevantAttributeFilteringPickler(Pickler):
+    """Custom pickler that filters out irrelevant attributes."""
 
     def _flatten_key_value_pair(self, k, v, data):
-        """Override to filter out private attributes."""
-        if isinstance(k, str) and k.startswith("_"):
+        if isinstance(k, str) and k in ("comms", "data", "_colors"):
             return data
         return super()._flatten_key_value_pair(k, v, data)
 
 
-# Register the handler to exclude NetworkClient objects
-handlers.register(NetworkClient, NetworkClientHandler)
+pickler = IrrelevantAttributeFilteringPickler(make_refs=False)
 
-# Configure encoder to sort keys
+# Sort JSON keys for consistent output
 jsonpickle.set_encoder_options("json", sort_keys=True)
-
-# Create custom pickler that filters private attributes
-pickler = PrivateAttributeFilteringPickler(make_refs=False)
 
 # Parse address and port from command line or use defaults
 address = sys.argv[1] if len(sys.argv) > 1 else "127.0.0.1"
