@@ -2,20 +2,35 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value, ValueNotification
 
-from homeassistant.components.event import DOMAIN as EVENT_DOMAIN, EventEntity
+from homeassistant.components.event import (
+    DOMAIN as EVENT_DOMAIN,
+    EventEntity,
+    EventEntityDescription,
+)
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_VALUE, DOMAIN
-from .discovery import ZwaveDiscoveryInfo
-from .entity import ZWaveBaseEntity
-from .models import ZwaveJSConfigEntry
+from .entity import ZWaveBaseEntity, ZwaveDiscoveryInfo
+from .models import (
+    NewZWaveDiscoverySchema,
+    ZwaveJSConfigEntry,
+    ZWaveValueDiscoverySchema,
+)
 
 PARALLEL_UPDATES = 0
+
+
+@dataclass(frozen=True, kw_only=True)
+class NewValueNotificationZWaveJSEntityDescription(EventEntityDescription):
+    """Represent a Z-Wave JS event entity description."""
 
 
 async def async_setup_entry(
@@ -96,3 +111,17 @@ class ZwaveEventEntity(ZWaveBaseEntity, EventEntity):
                 lambda event: self._async_handle_event(event["value_notification"]),
             )
         )
+
+
+DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
+    NewZWaveDiscoverySchema(
+        platform=Platform.EVENT,
+        primary_value=ZWaveValueDiscoverySchema(
+            stateful=False,
+        ),
+        entity_description=NewValueNotificationZWaveJSEntityDescription(
+            key="value_notification",
+        ),
+        entity_class=ZwaveEventEntity,
+    ),
+]
