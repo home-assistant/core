@@ -56,6 +56,15 @@ def catch_matter_error[_R, **P](
     return wrapper
 
 
+# Enumeration defining where to place entity labels or tags in the entity name.
+class LabelPlacement(StrEnum):
+    """Enum for label placement options."""
+
+    APPEND = "append"
+    IGNORE = "ignore"
+    RENAME = "rename"
+
+
 @dataclass(frozen=True)
 class MatterEntityLabeling(EntityDescription):
     """Data structure for Matter Tag and Label Information."""
@@ -65,12 +74,6 @@ class MatterEntityLabeling(EntityDescription):
 
     # Where to place the Tag or Label text in the entity name.
     # Can be "rename", "append", "ignore". Append by default.
-    class LabelPlacement(StrEnum):
-        """Enum for label placement options."""
-
-        APPEND = "append"
-        IGNORE = "ignore"
-        RENAME = "rename"
 
     label_placement: LabelPlacement = LabelPlacement.APPEND
 
@@ -231,7 +234,7 @@ class MatterEntity(Entity):
         if (
             not self._endpoint.node.is_bridge_device
             and self._entity_info.entity_description.label_placement
-            != MatterEntityLabeling.LabelPlacement.IGNORE
+            != LabelPlacement.IGNORE
             and any(
                 ep
                 for ep in self._endpoint.node.endpoints.values()
@@ -253,13 +256,13 @@ class MatterEntity(Entity):
         if (
             name_modifier
             and self._entity_info.entity_description.label_placement
-            == MatterEntityLabeling.LabelPlacement.RENAME
+            == LabelPlacement.RENAME
         ):
             self._attr_name = name_modifier
         elif (
             name_modifier
             and self._entity_info.entity_description.label_placement
-            == MatterEntityLabeling.LabelPlacement.APPEND
+            == LabelPlacement.APPEND
         ):
             self._name_postfix = name_modifier
 
