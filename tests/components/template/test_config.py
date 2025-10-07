@@ -47,6 +47,21 @@ from homeassistant.helpers.template import Template
                 "icon": "mdi:test",
             },
         },
+        {
+            "trigger": {"trigger": "event", "event_type": "my_event"},
+        },
+        {
+            "action": {
+                "service": "test.automation",
+                "data_template": {"caller": "{{ this.entity_id }}"},
+            },
+            "sensor": {
+                "state": "{{ states('sensor.test') }}",
+                "unique_id": "test",
+                "name": "test",
+                "icon": "mdi:test",
+            },
+        },
     ],
 )
 async def test_invalid_schema(hass: HomeAssistant, config: dict) -> None:

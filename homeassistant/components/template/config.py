@@ -92,6 +92,26 @@ def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict],
     return validate
 
 
+def ensure_trigger_format() -> Callable[[dict], dict]:
+    """Validate that config with triggers contain a domain."""
+
+    def validate(obj: dict):
+        options = set(obj.keys())
+        if CONF_TRIGGERS in options and not options.intersection(PLATFORMS):
+            raise vol.Invalid(
+                "Invalid template configuration found, trigger option is missing matching domain."
+            )
+
+        if CONF_ACTIONS in options and CONF_TRIGGERS not in options:
+            raise vol.Invalid(
+                "Invalid template configuration found, action option requires a trigger."
+            )
+
+        return obj
+
+    return validate
+
+
 def _backward_compat_schema(value: Any | None) -> Any:
     """Backward compatibility for automations."""
 
@@ -169,6 +189,7 @@ CONFIG_SECTION_SCHEMA = vol.All(
     ensure_domains_do_not_have_trigger_or_action(
         DOMAIN_BUTTON,
     ),
+    ensure_trigger_format(),
 )
 
 TEMPLATE_BLUEPRINT_SCHEMA = vol.All(
