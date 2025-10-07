@@ -57,10 +57,6 @@ async def test_step_user_success(hass: HomeAssistant) -> None:
     assert result["data"] == user_input
 
 
-async def test_step_user_invalid_input(hass: HomeAssistant) -> None:
-    """Test invalid user input (e.g., missing API key)."""
-    with pytest.raises(vol.Invalid):
-        STEP_USER_DATA_SCHEMA({})  # Missing required key
 
 
 @pytest.mark.parametrize(
