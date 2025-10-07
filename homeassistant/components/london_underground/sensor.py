@@ -89,7 +89,7 @@ async def async_setup_entry(
 
     async_add_entities(
         LondonTubeSensor(entry.runtime_data, line)
-        for line in entry.options.get(CONF_LINE, DEFAULT_LINES)
+        for line in entry.options[CONF_LINE]
     )
 
 
