@@ -27,11 +27,15 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
     CONF_BROWSE_LIMIT,
+    CONF_FLOW_TYPE,
     CONF_HTTPS,
     CONF_VOLUME_STEP,
     DEFAULT_BROWSE_LIMIT,
@@ -86,6 +90,21 @@ def _base_schema(
     return vol.Schema(base_schema)
 
 
+FLOW_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_FLOW_TYPE): SelectSelector(
+            SelectSelectorConfig(
+                mode=SelectSelectorMode.LIST,
+                options=[
+                    "Discovered",
+                    "Manual",
+                ],
+            )
+        ),
+    }
+)
+
+
 class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Squeezebox."""
 
@@ -95,6 +114,8 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize an instance of the squeezebox config flow."""
         self.data_schema = _base_schema()
         self.discovery_info: dict[str, Any] | None = None
+        self.discovery_task: asyncio.Task | None = None
+        self.discovery_failed: bool = False
 
     @staticmethod
     @callback
@@ -118,7 +139,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_PORT: int(server.port),
                     "uuid": server.uuid,
                 }
-                _LOGGER.debug("Discovered server: %s", self.discovery_info)
+                _LOGGER.critical("Discovered server: %s", self.discovery_info)
                 discovery_event.set()
 
         discovery_task = self.hass.async_create_task(
@@ -161,29 +182,80 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return None
 
+    async def discovery_start(self) -> None:
+        """Discovery Task wrapper."""
+        try:
+            async with asyncio.timeout(5):
+                await self._discover()
+                self.discovery_failed = False
+        except TimeoutError:
+            _LOGGER.debug("Discovery timed out")
+            self.discovery_failed = True
+        except asyncio.CancelledError:
+            _LOGGER.debug("Discovery cancelled")
+            self.discovery_failed = True
+
+    async def async_step_flow_type(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Choose manual or discover flow."""
+        errors: dict = {}
+
+        if user_input:
+            # update with host provided by user
+            self.data_schema = _base_schema(user_input)
+            return await self.async_step_edit()
+
+        _LOGGER.warning("Discovery Info %s", self.discovery_info)
+
+        _discovered_name = "Discovered LMS: " + "Unknown"
+
+        return self.async_show_form(
+            step_id="flow_type",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_FLOW_TYPE): SelectSelector(
+                            SelectSelectorConfig(
+                                mode=SelectSelectorMode.LIST,
+                                options=[
+                                    _discovered_name,
+                                    "Manual",
+                                ],
+                            )
+                        ),
+                    }
+                ),
+                {
+                    CONF_FLOW_TYPE: "Manual" if errors else _discovered_name,
+                },
+            ),
+            errors=errors,
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        errors = {}
         if user_input and CONF_HOST in user_input:
             # update with host provided by user
             self.data_schema = _base_schema(user_input)
             return await self.async_step_edit()
 
-        # no host specified, see if we can discover an unconfigured LMS server
-        try:
-            async with asyncio.timeout(TIMEOUT):
-                await self._discover()
-            return await self.async_step_edit()
-        except TimeoutError:
-            errors["base"] = "no_server_found"
+        if not self.discovery_task:
+            self.discovery_task = self.hass.async_create_task(self.discovery_start())
 
-        # display the form
-        return self.async_show_form(
+        if self.discovery_task.done():
+            self.discovery_task = None
+            return self.async_show_progress_done(next_step_id="flow_type")
+        return self.async_show_progress(
             step_id="user",
-            data_schema=vol.Schema({vol.Optional(CONF_HOST): str}),
-            errors=errors,
+            progress_action="discover",
+            description_placeholders={
+                "status": "Attempting to discover an LMS server",
+                "hint": "This may take upto 5 seconds.",
+            },
+            progress_task=self.discovery_task,
         )
 
     async def async_step_edit(

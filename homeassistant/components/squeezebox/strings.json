@@ -1,7 +1,19 @@
 {
   "config": {
+    "progress": {
+      "title": "Lyrion Music Server",
+      "description": "Discovering Lyrion Music Server on the network.",
+      "discover": "{status}\n\n{hint}"
+    },
     "flow_title": "{host}",
     "step": {
+      "flow_type": {
+        "data": {
+          "flow_type": "Configured discovered LMS or add manually?"
+        },
+        "description": "You can ask the setup to configure a discover LMS if one was found, or enter details manually",
+        "title": "Lyrion Music Server"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
