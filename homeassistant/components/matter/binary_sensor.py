@@ -20,7 +20,7 @@ from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import MatterEntity, MatterEntityDescription
+from .entity import MatterEntity, MatterEntityDescription, MatterEntityLabeling
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -107,7 +107,7 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.DIAGNOSTIC,
             device_to_ha=lambda x: x
             != clusters.PowerSource.Enums.BatChargeLevelEnum.kOk,
-            label_placement="ignore",  # do not use label or tag for battery sensors
+            label_placement=MatterEntityLabeling.LabelPlacement.IGNORE,  # do not use label or tag for battery sensors
         ),
         entity_class=MatterBinarySensor,
         required_attributes=(clusters.PowerSource.Attributes.BatChargeLevel,),

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from enum import IntEnum
 import functools
 import logging
 from typing import TYPE_CHECKING, Any, Concatenate, cast
@@ -64,7 +65,14 @@ class MatterEntityLabeling(EntityDescription):
 
     # Where to place the Tag or Label text in the entity name.
     # Can be "rename", "append", "ignore". Append by default.
-    label_placement: str = "append"
+    class LabelPlacement(IntEnum):
+        """Enum for label placement options."""
+
+        APPEND = 1
+        IGNORE = 2
+        RENAME = 3
+
+    label_placement: LabelPlacement = LabelPlacement.APPEND
 
     # Priority-ordered default set of labels used for locating the name modifier
     # Can override this set in an entity's discovery schema.
@@ -222,7 +230,8 @@ class MatterEntity(Entity):
         # this will get overwritten if an explicit name is set below and label_placement is "after"
         if (
             not self._endpoint.node.is_bridge_device
-            and self._entity_info.entity_description.label_placement != "ignore"
+            and self._entity_info.entity_description.label_placement
+            != MatterEntityLabeling.LabelPlacement.IGNORE
             and any(
                 ep
                 for ep in self._endpoint.node.endpoints.values()
@@ -243,12 +252,14 @@ class MatterEntity(Entity):
         name_modifier = self._entity_info.entity_description.get_name_modifier(self)
         if (
             name_modifier
-            and self._entity_info.entity_description.label_placement == "rename"
+            and self._entity_info.entity_description.label_placement
+            == MatterEntityLabeling.LabelPlacement.RENAME
         ):
             self._attr_name = name_modifier
         elif (
             name_modifier
-            and self._entity_info.entity_description.label_placement == "append"
+            and self._entity_info.entity_description.label_placement
+            == MatterEntityLabeling.LabelPlacement.APPEND
         ):
             self._name_postfix = name_modifier
 

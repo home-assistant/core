@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import ExtraStoredData
 
-from .entity import MatterEntity, MatterEntityDescription
+from .entity import MatterEntity, MatterEntityDescription, MatterEntityLabeling
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -258,7 +258,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterUpdateEntityDescription(
             key="MatterUpdate",
             device_class=UpdateDeviceClass.FIRMWARE,
-            label_placement="ignore",
+            label_placement=MatterEntityLabeling.LabelPlacement.IGNORE,  # do not use label or tag for update entity
         ),
         entity_class=MatterUpdate,
         required_attributes=(
