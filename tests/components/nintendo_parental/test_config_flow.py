@@ -77,7 +77,7 @@ async def test_invalid_auth(
 
     # Simulate invalid authentication by raising an exception
     mock_nintendo_authenticator.complete_login.side_effect = (
-        InvalidSessionTokenException
+        InvalidSessionTokenException(status_code=401, message="Test")
     )
 
     result = await hass.config_entries.flow.async_configure(
