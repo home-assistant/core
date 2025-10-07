@@ -491,7 +491,7 @@ async def test_platform_multiple_triggers(
             self, run_action: TriggerActionRunner
         ) -> CALLBACK_TYPE:
             """Attach a trigger."""
-            run_action("trigger 1 desc", {"extra": "test_trigger_1"})
+            run_action({"extra": "test_trigger_1"}, "trigger 1 desc")
 
     class MockTrigger2(MockTrigger):
         """Mock trigger 2."""
@@ -500,7 +500,7 @@ async def test_platform_multiple_triggers(
             self, run_action: TriggerActionRunner
         ) -> CALLBACK_TYPE:
             """Attach a trigger."""
-            run_action("trigger 2 desc", {"extra": "test_trigger_2"})
+            run_action({"extra": "test_trigger_2"}, "trigger 2 desc")
 
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {

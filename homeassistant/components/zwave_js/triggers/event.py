@@ -231,7 +231,7 @@ class EventTrigger(Trigger):
             description = f"{primary_desc} on {device_name}"
 
         description = f"{description} with event data: {event_data}"
-        self._action_runner(description, payload)
+        self._action_runner(payload, description)
 
     @callback
     def _async_remove(self) -> None:

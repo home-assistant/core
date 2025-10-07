@@ -150,7 +150,7 @@ async def async_attach_trigger(
             ATTR_CURRENT_VALUE_RAW: curr_value_raw,
         }
 
-        run_action(description, payload)
+        run_action(payload, description)
 
     @callback
     def async_remove() -> None:

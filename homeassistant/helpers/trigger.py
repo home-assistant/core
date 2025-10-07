@@ -220,20 +220,20 @@ class Trigger(abc.ABC):
 
     async def async_attach_action(
         self,
-        action: Callable[[dict[str, Any], Context | None], Coroutine[Any, Any, Any]],
+        action: TriggerAction,
         action_payload_builder: TriggerActionPayloadBuilder,
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action."""
 
         @callback
         def run_action(
-            description: str,
             extra_trigger_payload: dict[str, Any],
+            description: str,
             context: Context | None = None,
         ) -> asyncio.Task[Any]:
             """Run action with trigger variables."""
 
-            payload = action_payload_builder(description, extra_trigger_payload)
+            payload = action_payload_builder(extra_trigger_payload, description)
             return self._hass.async_create_task(action(payload, context))
 
         return await self.async_attach_runner(run_action)
@@ -286,8 +286,8 @@ class TriggerActionRunner(Protocol):
     @callback
     def __call__(
         self,
-        description: str,
         extra_trigger_payload: dict[str, Any],
+        description: str,
         context: Context | None = None,
     ) -> asyncio.Task[Any]:
         """Define trigger action runner type.
@@ -301,9 +301,20 @@ class TriggerActionPayloadBuilder(Protocol):
     """Protocol type for the trigger action payload builder."""
 
     def __call__(
-        self, description: str, extra_trigger_payload: dict[str, Any]
+        self, extra_trigger_payload: dict[str, Any], description: str
     ) -> dict[str, Any]:
         """Define trigger action payload builder type."""
+
+
+class TriggerAction(Protocol):
+    """Protocol type for trigger action callback."""
+
+    async def __call__(
+        self,
+        run_variables: dict[str, Any],
+        context: Context | None = None,
+    ) -> Any:
+        """Define action callback type."""
 
 
 class TriggerActionType(Protocol):
@@ -553,7 +564,7 @@ async def _async_attach_trigger_cls(
     """Initialize a new Trigger class and attach it."""
 
     def action_payload_builder(
-        description: str, extra_trigger_payload: dict[str, Any]
+        extra_trigger_payload: dict[str, Any], description: str
     ) -> dict[str, Any]:
         """Build action variables."""
         payload = {

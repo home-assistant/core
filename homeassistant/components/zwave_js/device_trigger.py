@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import voluptuous as vol
@@ -20,7 +21,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
-from homeassistant.core import CALLBACK_TYPE, Context, HassJob, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -455,14 +456,12 @@ async def async_attach_trigger(
             hass, zwave_js_config
         )
 
-        job = HassJob(action)
-
         @callback
         def run_action(
-            description: str,
             extra_trigger_payload: dict[str, Any],
+            description: str,
             context: Context | None = None,
-        ) -> None:
+        ) -> asyncio.Task[Any]:
             """Run action with trigger variables."""
 
             payload = {
@@ -474,7 +473,7 @@ async def async_attach_trigger(
                 }
             }
 
-            hass.async_run_hass_job(job, payload, context)
+            return hass.async_create_task(action(payload, context))
 
         return await attach_value_updated_trigger(
             hass, zwave_js_config[CONF_OPTIONS], run_action
