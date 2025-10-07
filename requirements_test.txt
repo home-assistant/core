@@ -15,7 +15,7 @@ license-expression==30.4.3
 mock-open==1.4.0
 mypy-dev==1.19.0a2
 pre-commit==4.2.0
-pydantic==2.11.9
+pydantic==2.12.0
 pylint==3.3.8
 pylint-per-file-ignores==1.4.0
 pipdeptree==2.26.1
