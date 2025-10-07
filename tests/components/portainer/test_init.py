@@ -74,7 +74,11 @@ async def test_migrations(hass: HomeAssistant) -> None:
     assert entry.version == 4
 
 
-async def test_migration_v3_to_v4(hass: HomeAssistant) -> None:
+async def test_migration_v3_to_v4(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test migration from v3 config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,

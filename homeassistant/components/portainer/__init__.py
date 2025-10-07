@@ -71,6 +71,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
 
     if entry.version < 4:
         device_registry = dr.async_get(hass)
+        entity_registry = er.async_get(hass)
         devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
         for device in devices:
             # This means it's an endpoint. This can be skipped, we're only interested in the containers
@@ -96,7 +97,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
             )
 
             # Now also update the underlying entities with the new unique_attr_id
-            entity_registry = er.async_get(hass)
             entities_device = er.async_entries_for_device(
                 entity_registry,
                 device.id,
