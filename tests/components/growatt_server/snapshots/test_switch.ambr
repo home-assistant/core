@@ -1,0 +1,97 @@
+# serializer version: 1
+# name: test_switch_entities[switch.min123456_ac_charge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.min123456_ac_charge',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'AC charge',
+    'platform': 'growatt_server',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ac_charge',
+    'unique_id': 'MIN123456_ac_charge',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.min123456_ac_charge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'MIN123456 AC charge',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.min123456_ac_charge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities[switch.min123456_charge_from_grid-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.min123456_charge_from_grid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charge from grid',
+    'platform': 'growatt_server',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ac_charge',
+    'unique_id': 'MIN123456_ac_charge',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[switch.min123456_charge_from_grid-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'MIN123456 Charge from grid',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.min123456_charge_from_grid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
