@@ -23,6 +23,7 @@ from tests.common import MockConfigEntry, snapshot_platform
         ("type:heatpump", "vicare/Vitocal250A.json"),
         ("type:ventilation", "vicare/ViAir300F.json"),
         ("type:ess", "vicare/VitoChargeVX3.json"),
+        (None, "vicare/VitoValor.json"),
     ],
 )
 async def test_all_entities(

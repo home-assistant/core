@@ -28,7 +28,7 @@ dependencies = [
   # change behavior based on presence of supervisor. Deprecated with #127228
   # Lib can be removed with 2025.11
   "aiohasupervisor==0.3.3",
-  "aiohttp==3.12.15",
+  "aiohttp==3.13.0",
   "aiohttp_cors==0.8.1",
   "aiohttp-fast-zlib==0.3.0",
   "aiohttp-asyncmdnsresolver==0.1.1",
@@ -36,7 +36,7 @@ dependencies = [
   "annotatedyaml==1.0.2",
   "astral==2.2",
   "async-interrupt==1.2.2",
-  "attrs==25.3.0",
+  "attrs==25.4.0",
   "atomicwrites-homeassistant==1.4.1",
   "audioop-lts==0.2.1",
   "awesomeversion==25.5.0",
@@ -78,7 +78,7 @@ dependencies = [
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.1.0",
-  "yarl==1.20.1",
+  "yarl==1.22.0",
   "webrtc-models==0.3.0",
   "zeroconf==0.148.0",
 ]

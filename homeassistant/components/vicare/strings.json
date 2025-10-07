@@ -293,6 +293,9 @@
       "energy_summary_dhw_consumption_heating_lastsevendays": {
         "name": "DHW electricity consumption last seven days"
       },
+      "hydraulic_separator_temperature": {
+        "name": "Hydraulic separator temperature"
+      },
       "power_consumption_today": {
         "name": "Electricity consumption today"
       },
