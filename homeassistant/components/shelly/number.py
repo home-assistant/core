@@ -304,7 +304,7 @@ RPC_NUMBERS: Final = {
         method="cury_set",
         slot="left",
         available=lambda status: (left := status["left"]) is not None
-        and left["vial"]["level"] != -1,
+        and left.get("vial", {}).get("level", -1) != -1,
         entity_class=RpcCuryIntensityNumber,
     ),
     "right_slot_intensity": RpcNumberDescription(
@@ -320,7 +320,7 @@ RPC_NUMBERS: Final = {
         method="cury_set",
         slot="right",
         available=lambda status: (right := status["right"]) is not None
-        and right["vial"]["level"] != -1,
+        and right.get("vial", {}).get("level", -1) != -1,
         entity_class=RpcCuryIntensityNumber,
     ),
 }

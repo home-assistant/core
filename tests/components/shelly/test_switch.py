@@ -924,6 +924,13 @@ async def test_cury_switch_availability(
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
 
+    slots["left"].pop("vial")
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cury:0", "slots", slots)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
     slots["left"] = None
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cury:0", "slots", slots)
     mock_rpc_device.mock_update()

@@ -1668,7 +1668,7 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         available=lambda status: (left := status["left"]) is not None
-        and left["vial"]["level"] != -1,
+        and left.get("vial", {}).get("level", -1) != -1,
     ),
     "cury_left_fragrance": RpcSensorDescription(
         key="cury",
@@ -1678,7 +1678,7 @@ RPC_SENSORS: Final = {
         value=lambda status, _: status["left"]["vial"]["name"],
         entity_category=EntityCategory.DIAGNOSTIC,
         available=lambda status: (left := status["left"]) is not None
-        and left["vial"]["level"] != -1,
+        and left.get("vial", {}).get("level", -1) != -1,
     ),
     "cury_right_level": RpcSensorDescription(
         key="cury",
@@ -1690,7 +1690,7 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         available=lambda status: (right := status["right"]) is not None
-        and right["vial"]["level"] != -1,
+        and right.get("vial", {}).get("level", -1) != -1,
     ),
     "cury_right_fragrance": RpcSensorDescription(
         key="cury",
@@ -1700,7 +1700,7 @@ RPC_SENSORS: Final = {
         value=lambda status, _: status["right"]["vial"]["name"],
         entity_category=EntityCategory.DIAGNOSTIC,
         available=lambda status: (right := status["right"]) is not None
-        and right["vial"]["level"] != -1,
+        and right.get("vial", {}).get("level", -1) != -1,
     ),
 }
 
