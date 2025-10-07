@@ -430,6 +430,63 @@
     'state': '0.59',
   })
 # ---
+# name: test_sensor_states[current][sensor.openweathermap_apparent_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.openweathermap_apparent_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Apparent temperature',
+    'platform': 'openweathermap',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'feels_like_temperature',
+    'unique_id': '12.34-56.78-feels_like_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensor_states[current][sensor.openweathermap_apparent_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by OpenWeatherMap',
+      'device_class': 'temperature',
+      'friendly_name': 'OpenWeatherMap Apparent temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.openweathermap_apparent_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.07',
+  })
+# ---
 # name: test_sensor_states[current][sensor.openweathermap_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -462,7 +519,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'clouds',
     'unique_id': '12.34-56.78-clouds',
     'unit_of_measurement': '%',
   })
@@ -488,7 +545,19 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'clear-night',
+        'cloudy',
+        'fog',
+        'hail',
+        'partlycloudy',
+        'pouring',
+        'rainy',
+        'snowy',
+        'sunny',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -506,14 +575,14 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Condition',
     'platform': 'openweathermap',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'condition',
     'unique_id': '12.34-56.78-condition',
     'unit_of_measurement': None,
   })
@@ -522,7 +591,19 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
+      'device_class': 'enum',
       'friendly_name': 'OpenWeatherMap Condition',
+      'options': list([
+        'clear-night',
+        'cloudy',
+        'fog',
+        'hail',
+        'partlycloudy',
+        'pouring',
+        'rainy',
+        'snowy',
+        'sunny',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_condition',
@@ -532,7 +613,7 @@
     'state': 'cloudy',
   })
 # ---
-# name: test_sensor_states[current][sensor.openweathermap_dew_point-entry]
+# name: test_sensor_states[current][sensor.openweathermap_dew_point_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -547,7 +628,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.openweathermap_dew_point',
+    'entity_id': 'sensor.openweathermap_dew_point_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -562,88 +643,31 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Dew Point',
+    'original_name': 'Dew point temperature',
     'platform': 'openweathermap',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'dew_point',
     'unique_id': '12.34-56.78-dew_point',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_states[current][sensor.openweathermap_dew_point-state]
+# name: test_sensor_states[current][sensor.openweathermap_dew_point_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'temperature',
-      'friendly_name': 'OpenWeatherMap Dew Point',
+      'friendly_name': 'OpenWeatherMap Dew point temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.openweathermap_dew_point',
+    'entity_id': 'sensor.openweathermap_dew_point_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.99',
-  })
-# ---
-# name: test_sensor_states[current][sensor.openweathermap_feels_like_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.openweathermap_feels_like_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Feels like temperature',
-    'platform': 'openweathermap',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '12.34-56.78-feels_like_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensor_states[current][sensor.openweathermap_feels_like_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by OpenWeatherMap',
-      'device_class': 'temperature',
-      'friendly_name': 'OpenWeatherMap Feels like temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.openweathermap_feels_like_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.07',
   })
 # ---
 # name: test_sensor_states[current][sensor.openweathermap_humidity-entry]
@@ -705,7 +729,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'None',
+        'Rain',
+        'Snow',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -723,14 +753,14 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Precipitation kind',
     'platform': 'openweathermap',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'precipitation_kind',
     'unique_id': '12.34-56.78-precipitation_kind',
     'unit_of_measurement': None,
   })
@@ -739,7 +769,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
+      'device_class': 'enum',
       'friendly_name': 'OpenWeatherMap Precipitation kind',
+      'options': list([
+        'None',
+        'Rain',
+        'Snow',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_precipitation_kind',
@@ -841,7 +877,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'rain',
     'unique_id': '12.34-56.78-rain',
     'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
@@ -898,7 +934,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'snow',
     'unique_id': '12.34-56.78-snow',
     'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
@@ -1004,12 +1040,12 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'UV Index',
+    'original_name': 'UV index',
     'platform': 'openweathermap',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'uv_index',
     'unique_id': '12.34-56.78-uv_index',
     'unit_of_measurement': 'UV index',
   })
@@ -1018,7 +1054,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
-      'friendly_name': 'OpenWeatherMap UV Index',
+      'friendly_name': 'OpenWeatherMap UV index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'UV index',
     }),
@@ -1065,7 +1101,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'visibility_distance',
     'unique_id': '12.34-56.78-visibility_distance',
     'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
   })
@@ -1117,7 +1153,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'weather',
     'unique_id': '12.34-56.78-weather',
     'unit_of_measurement': None,
   })
@@ -1161,12 +1197,12 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Weather Code',
+    'original_name': 'Weather code',
     'platform': 'openweathermap',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'weather_code',
     'unique_id': '12.34-56.78-weather_code',
     'unit_of_measurement': None,
   })
@@ -1175,7 +1211,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
-      'friendly_name': 'OpenWeatherMap Weather Code',
+      'friendly_name': 'OpenWeatherMap Weather code',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_weather_code',
@@ -1185,7 +1221,7 @@
     'state': '803',
   })
 # ---
-# name: test_sensor_states[current][sensor.openweathermap_wind_bearing-entry]
+# name: test_sensor_states[current][sensor.openweathermap_wind_direction-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1200,7 +1236,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.openweathermap_wind_bearing',
+    'entity_id': 'sensor.openweathermap_wind_direction',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1212,7 +1248,7 @@
     }),
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
-    'original_name': 'Wind bearing',
+    'original_name': 'Wind direction',
     'platform': 'openweathermap',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1222,24 +1258,24 @@
     'unit_of_measurement': '°',
   })
 # ---
-# name: test_sensor_states[current][sensor.openweathermap_wind_bearing-state]
+# name: test_sensor_states[current][sensor.openweathermap_wind_direction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'wind_direction',
-      'friendly_name': 'OpenWeatherMap Wind bearing',
+      'friendly_name': 'OpenWeatherMap Wind direction',
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
       'unit_of_measurement': '°',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.openweathermap_wind_bearing',
+    'entity_id': 'sensor.openweathermap_wind_direction',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '199',
   })
 # ---
-# name: test_sensor_states[current][sensor.openweathermap_wind_gust-entry]
+# name: test_sensor_states[current][sensor.openweathermap_wind_gust_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1254,7 +1290,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.openweathermap_wind_gust',
+    'entity_id': 'sensor.openweathermap_wind_gust_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1272,27 +1308,27 @@
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
-    'original_name': 'Wind gust',
+    'original_name': 'Wind gust speed',
     'platform': 'openweathermap',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'wind_gust',
     'unique_id': '12.34-56.78-wind_gust',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
-# name: test_sensor_states[current][sensor.openweathermap_wind_gust-state]
+# name: test_sensor_states[current][sensor.openweathermap_wind_gust_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'wind_speed',
-      'friendly_name': 'OpenWeatherMap Wind gust',
+      'friendly_name': 'OpenWeatherMap Wind gust speed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.openweathermap_wind_gust',
+    'entity_id': 'sensor.openweathermap_wind_gust_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1359,6 +1395,63 @@
     'state': '35.388',
   })
 # ---
+# name: test_sensor_states[v3.0][sensor.openweathermap_apparent_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.openweathermap_apparent_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Apparent temperature',
+    'platform': 'openweathermap',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'feels_like_temperature',
+    'unique_id': '12.34-56.78-feels_like_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensor_states[v3.0][sensor.openweathermap_apparent_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by OpenWeatherMap',
+      'device_class': 'temperature',
+      'friendly_name': 'OpenWeatherMap Apparent temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.openweathermap_apparent_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.07',
+  })
+# ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_cloud_coverage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1391,7 +1484,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'clouds',
     'unique_id': '12.34-56.78-clouds',
     'unit_of_measurement': '%',
   })
@@ -1417,7 +1510,19 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'clear-night',
+        'cloudy',
+        'fog',
+        'hail',
+        'partlycloudy',
+        'pouring',
+        'rainy',
+        'snowy',
+        'sunny',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1435,14 +1540,14 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Condition',
     'platform': 'openweathermap',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'condition',
     'unique_id': '12.34-56.78-condition',
     'unit_of_measurement': None,
   })
@@ -1451,7 +1556,19 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
+      'device_class': 'enum',
       'friendly_name': 'OpenWeatherMap Condition',
+      'options': list([
+        'clear-night',
+        'cloudy',
+        'fog',
+        'hail',
+        'partlycloudy',
+        'pouring',
+        'rainy',
+        'snowy',
+        'sunny',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_condition',
@@ -1461,7 +1578,7 @@
     'state': 'cloudy',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_dew_point-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_dew_point_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1476,7 +1593,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.openweathermap_dew_point',
+    'entity_id': 'sensor.openweathermap_dew_point_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1491,88 +1608,31 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Dew Point',
+    'original_name': 'Dew point temperature',
     'platform': 'openweathermap',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'dew_point',
     'unique_id': '12.34-56.78-dew_point',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_dew_point-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_dew_point_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'temperature',
-      'friendly_name': 'OpenWeatherMap Dew Point',
+      'friendly_name': 'OpenWeatherMap Dew point temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.openweathermap_dew_point',
+    'entity_id': 'sensor.openweathermap_dew_point_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.99',
-  })
-# ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_feels_like_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.openweathermap_feels_like_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Feels like temperature',
-    'platform': 'openweathermap',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': '12.34-56.78-feels_like_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_feels_like_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by OpenWeatherMap',
-      'device_class': 'temperature',
-      'friendly_name': 'OpenWeatherMap Feels like temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.openweathermap_feels_like_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.07',
   })
 # ---
 # name: test_sensor_states[v3.0][sensor.openweathermap_humidity-entry]
@@ -1634,7 +1694,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'None',
+        'Rain',
+        'Snow',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1652,14 +1718,14 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Precipitation kind',
     'platform': 'openweathermap',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'precipitation_kind',
     'unique_id': '12.34-56.78-precipitation_kind',
     'unit_of_measurement': None,
   })
@@ -1668,7 +1734,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
+      'device_class': 'enum',
       'friendly_name': 'OpenWeatherMap Precipitation kind',
+      'options': list([
+        'None',
+        'Rain',
+        'Snow',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_precipitation_kind',
@@ -1770,7 +1842,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'rain',
     'unique_id': '12.34-56.78-rain',
     'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
@@ -1827,7 +1899,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'snow',
     'unique_id': '12.34-56.78-snow',
     'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
@@ -1933,12 +2005,12 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'UV Index',
+    'original_name': 'UV index',
     'platform': 'openweathermap',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'uv_index',
     'unique_id': '12.34-56.78-uv_index',
     'unit_of_measurement': 'UV index',
   })
@@ -1947,7 +2019,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
-      'friendly_name': 'OpenWeatherMap UV Index',
+      'friendly_name': 'OpenWeatherMap UV index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'UV index',
     }),
@@ -1994,7 +2066,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'visibility_distance',
     'unique_id': '12.34-56.78-visibility_distance',
     'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
   })
@@ -2046,7 +2118,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'weather',
     'unique_id': '12.34-56.78-weather',
     'unit_of_measurement': None,
   })
@@ -2090,12 +2162,12 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Weather Code',
+    'original_name': 'Weather code',
     'platform': 'openweathermap',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'weather_code',
     'unique_id': '12.34-56.78-weather_code',
     'unit_of_measurement': None,
   })
@@ -2104,7 +2176,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
-      'friendly_name': 'OpenWeatherMap Weather Code',
+      'friendly_name': 'OpenWeatherMap Weather code',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_weather_code',
@@ -2114,7 +2186,7 @@
     'state': '803',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_wind_bearing-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_wind_direction-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2129,7 +2201,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.openweathermap_wind_bearing',
+    'entity_id': 'sensor.openweathermap_wind_direction',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2141,7 +2213,7 @@
     }),
     'original_device_class': <SensorDeviceClass.WIND_DIRECTION: 'wind_direction'>,
     'original_icon': None,
-    'original_name': 'Wind bearing',
+    'original_name': 'Wind direction',
     'platform': 'openweathermap',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2151,24 +2223,24 @@
     'unit_of_measurement': '°',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_wind_bearing-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_wind_direction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'wind_direction',
-      'friendly_name': 'OpenWeatherMap Wind bearing',
+      'friendly_name': 'OpenWeatherMap Wind direction',
       'state_class': <SensorStateClass.MEASUREMENT_ANGLE: 'measurement_angle'>,
       'unit_of_measurement': '°',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.openweathermap_wind_bearing',
+    'entity_id': 'sensor.openweathermap_wind_direction',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '199',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_wind_gust-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_wind_gust_speed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2183,7 +2255,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.openweathermap_wind_gust',
+    'entity_id': 'sensor.openweathermap_wind_gust_speed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2201,27 +2273,27 @@
     }),
     'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
     'original_icon': None,
-    'original_name': 'Wind gust',
+    'original_name': 'Wind gust speed',
     'platform': 'openweathermap',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'wind_gust',
     'unique_id': '12.34-56.78-wind_gust',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_wind_gust-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_wind_gust_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'wind_speed',
-      'friendly_name': 'OpenWeatherMap Wind gust',
+      'friendly_name': 'OpenWeatherMap Wind gust speed',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.openweathermap_wind_gust',
+    'entity_id': 'sensor.openweathermap_wind_gust_speed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
