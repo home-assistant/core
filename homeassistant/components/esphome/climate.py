@@ -141,7 +141,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
         static_info = self._static_info
-        feature_flags = static_info.feature_flags
+        feature_flags = static_info.supported_feature_flags_compat(self._api_version)
         self._attr_precision = self._get_precision()
         self._attr_hvac_modes = [
             _CLIMATE_MODES.from_esphome(mode) for mode in static_info.supported_modes
@@ -166,24 +166,14 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         self._attr_min_humidity = round(static_info.visual_min_humidity)
         self._attr_max_humidity = round(static_info.visual_max_humidity)
         features = ClimateEntityFeature(0)
-        if feature_flags:
-            # Use new, common feature_flags field
-            if feature_flags & ClimateFeature.SUPPORTS_TARGET_HUMIDITY:
-                features |= ClimateEntityFeature.TARGET_HUMIDITY
-            if feature_flags & ClimateFeature.REQUIRES_TWO_POINT_TARGET_TEMPERATURE:
-                features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            else:
-                features |= ClimateEntityFeature.TARGET_TEMPERATURE
-                if feature_flags & ClimateFeature.SUPPORTS_TWO_POINT_TARGET_TEMPERATURE:
-                    features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        if feature_flags & ClimateFeature.SUPPORTS_TARGET_HUMIDITY:
+            features |= ClimateEntityFeature.TARGET_HUMIDITY
+        if feature_flags & ClimateFeature.REQUIRES_TWO_POINT_TARGET_TEMPERATURE:
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         else:
-            # Use legacy, individual fields
-            if static_info.supports_target_humidity:
-                features |= ClimateEntityFeature.TARGET_HUMIDITY
-            if static_info.supports_two_point_target_temperature:
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE
+            if feature_flags & ClimateFeature.SUPPORTS_TWO_POINT_TARGET_TEMPERATURE:
                 features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            else:
-                features |= ClimateEntityFeature.TARGET_TEMPERATURE
         if self.preset_modes:
             features |= ClimateEntityFeature.PRESET_MODE
         if self.fan_modes:
@@ -220,8 +210,8 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         """Return current action."""
         # HA has no support feature field for hvac_action
         if (
-            not self._static_info.feature_flags & ClimateFeature.SUPPORTS_ACTION
-            and not self._static_info.supports_action
+            not self._static_info.supported_feature_flags_compat(self._api_version)
+            & ClimateFeature.SUPPORTS_ACTION
         ):
             return None
         return _CLIMATE_ACTIONS.from_esphome(self._state.action)
@@ -253,9 +243,8 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if (
-            not self._static_info.feature_flags
+            not self._static_info.supported_feature_flags_compat(self._api_version)
             & ClimateFeature.SUPPORTS_CURRENT_TEMPERATURE
-            and not self._static_info.supports_current_temperature
         ):
             return None
         return self._state.current_temperature
@@ -266,9 +255,8 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         """Return the current humidity."""
         if (
             (
-                not self._static_info.feature_flags
+                not self._static_info.supported_feature_flags_compat(self._api_version)
                 & ClimateFeature.SUPPORTS_CURRENT_HUMIDITY
-                and not self._static_info.supports_current_humidity
             )
             or (val := self._state.current_humidity) is None
             or not isfinite(val)
@@ -281,12 +269,11 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if (
-            not self._static_info.feature_flags
+            not self._static_info.supported_feature_flags_compat(self._api_version)
             & (
                 ClimateFeature.REQUIRES_TWO_POINT_TARGET_TEMPERATURE
                 | ClimateFeature.SUPPORTS_TWO_POINT_TARGET_TEMPERATURE
             )
-            and not self._static_info.supports_two_point_target_temperature
             and self.hvac_mode != HVACMode.AUTO
         ):
             return self._state.target_temperature
@@ -327,13 +314,11 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
                 cast(HVACMode, kwargs[ATTR_HVAC_MODE])
             )
         if ATTR_TEMPERATURE in kwargs:
-            if (
-                not self._static_info.feature_flags
-                & (
-                    ClimateFeature.REQUIRES_TWO_POINT_TARGET_TEMPERATURE
-                    | ClimateFeature.SUPPORTS_TWO_POINT_TARGET_TEMPERATURE
-                )
-                and not self._static_info.supports_two_point_target_temperature
+            if not self._static_info.supported_feature_flags_compat(
+                self._api_version
+            ) & (
+                ClimateFeature.REQUIRES_TWO_POINT_TARGET_TEMPERATURE
+                | ClimateFeature.SUPPORTS_TWO_POINT_TARGET_TEMPERATURE
             ):
                 data["target_temperature"] = kwargs[ATTR_TEMPERATURE]
             else:
