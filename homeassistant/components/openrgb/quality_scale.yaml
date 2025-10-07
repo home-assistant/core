@@ -17,7 +17,7 @@ rules:
   docs-removal-instructions: done
   entity-event-setup:
     status: exempt
-    comment: Integration does not receive custom events
+    comment: Integration does not explicitly subscribe to events
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
