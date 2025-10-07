@@ -13,7 +13,7 @@
       "disk_use_percent": {
         "default": "mdi:harddisk"
       },
-      "fan_rpm": {
+      "fan_speed": {
         "default": "mdi:fan"
       },
       "ipv4_address": {
