@@ -12,3 +12,10 @@ ACCOUNT_ROLE_MAPPING = {
     "ccAsset": "cc_asset",
     "cashWalletAsset": "cash_wallet_asset",
 }
+
+ACCOUNT_TYPE_ICONS = {
+    "expense": "mdi:cash-minus",
+    "asset": "mdi:account-cash",
+    "revenue": "mdi:cash-plus",
+    "liability": "mdi:hand-coin",
+}

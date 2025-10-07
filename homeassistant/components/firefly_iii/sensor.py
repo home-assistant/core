@@ -15,7 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ACCOUNT_ROLE_MAPPING
+from .const import ACCOUNT_ROLE_MAPPING, ACCOUNT_TYPE_ICONS
 from .coordinator import FireflyConfigEntry, FireflyDataUpdateCoordinator
 from .entity import FireflyAccountBaseEntity, FireflyCategoryBaseEntity
 
@@ -80,6 +80,10 @@ async def async_setup_entry(
 class FireflyAccountBalanceSensor(FireflyAccountBaseEntity, SensorEntity):
     """Account balance sensor."""
 
+    _attr_translation_key = "account_balance"
+    _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_state_class = SensorStateClass.TOTAL
+
     def __init__(
         self,
         coordinator: FireflyDataUpdateCoordinator,
@@ -89,7 +93,6 @@ class FireflyAccountBalanceSensor(FireflyAccountBaseEntity, SensorEntity):
         """Initialize the account balance sensor."""
         super().__init__(coordinator, description, account)
         self._account = account
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_account_{account.id}_{description.key}"
         self._attr_native_unit_of_measurement = (
             coordinator.data.primary_currency.attributes.code
         )
@@ -103,6 +106,10 @@ class FireflyAccountBalanceSensor(FireflyAccountBaseEntity, SensorEntity):
 class FireflyAccountRoleSensor(FireflyAccountBaseEntity, SensorEntity):
     """Account role diagnostic sensor."""
 
+    _attr_translation_key = "account_role"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = True
+
     def __init__(
         self,
         coordinator: FireflyDataUpdateCoordinator,
@@ -112,8 +119,6 @@ class FireflyAccountRoleSensor(FireflyAccountBaseEntity, SensorEntity):
         """Initialize the account role sensor."""
         super().__init__(coordinator, description, account)
         self._account = account
-        self._attr_icon = "mdi:account-circle"
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_account_{account.id}_{description.key}"
 
     @property
     def native_value(self) -> StateType:
@@ -130,6 +135,10 @@ class FireflyAccountRoleSensor(FireflyAccountBaseEntity, SensorEntity):
 class FireflyAccountTypeSensor(FireflyAccountBaseEntity, SensorEntity):
     """Account type diagnostic sensor."""
 
+    _attr_translation_key = "account_type"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = True
+
     def __init__(
         self,
         coordinator: FireflyDataUpdateCoordinator,
@@ -139,18 +148,11 @@ class FireflyAccountTypeSensor(FireflyAccountBaseEntity, SensorEntity):
         """Initialize the account type sensor."""
         super().__init__(coordinator, description, account)
         acc_type = account.attributes.type
-        if acc_type == "expense":
-            self._attr_icon = "mdi:cash-minus"
-        elif acc_type == "asset":
-            self._attr_icon = "mdi:account-cash"
-        elif acc_type == "revenue":
-            self._attr_icon = "mdi:cash-plus"
-        elif acc_type == "liability":
-            self._attr_icon = "mdi:hand-coin"
-        else:
-            self._attr_icon = "mdi:bank"
-
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_account_{account.id}_{description.key}"
+        self._attr_icon = (
+            ACCOUNT_TYPE_ICONS.get(acc_type, "mdi:bank")
+            if acc_type is not None
+            else "mdi:bank"
+        )
 
     @property
     def native_value(self) -> StateType:

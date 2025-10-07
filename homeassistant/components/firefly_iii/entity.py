@@ -14,14 +14,10 @@ from .const import DOMAIN, MANUFACTURER, NAME
 from .coordinator import FireflyDataUpdateCoordinator
 
 
-class FireflyCoordinatorEntity(CoordinatorEntity[FireflyDataUpdateCoordinator]):
-    """Base class for Firefly III coordinator entity."""
+class FireflyBaseEntity(CoordinatorEntity[FireflyDataUpdateCoordinator]):
+    """Base class for Firefly III entity."""
 
     _attr_has_entity_name = True
-
-
-class FireflyBaseEntity(FireflyCoordinatorEntity):
-    """Base class for Firefly III entity."""
 
     def __init__(
         self,
@@ -61,6 +57,7 @@ class FireflyAccountBaseEntity(FireflyBaseEntity):
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_account_{account.id}")
             },
         )
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_account_{account.id}_{entity_description.key}"
 
 
 class FireflyCategoryBaseEntity(FireflyBaseEntity):

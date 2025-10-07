@@ -76,7 +76,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:account-circle',
+    'original_icon': None,
     'original_name': 'Account Role',
     'platform': 'firefly_iii',
     'previous_unique_id': None,
@@ -91,7 +91,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Credit Card Account Role',
-      'icon': 'mdi:account-circle',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.credit_card_account_role',
@@ -280,7 +279,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:account-circle',
+    'original_icon': None,
     'original_name': 'Account Role',
     'platform': 'firefly_iii',
     'previous_unique_id': None,
@@ -295,7 +294,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'My checking account Account Role',
-      'icon': 'mdi:account-circle',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.my_checking_account_account_role',
@@ -431,7 +429,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:account-circle',
+    'original_icon': None,
     'original_name': 'Account Role',
     'platform': 'firefly_iii',
     'previous_unique_id': None,
@@ -446,7 +444,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Savings Account Account Role',
-      'icon': 'mdi:account-circle',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.savings_account_account_role',
