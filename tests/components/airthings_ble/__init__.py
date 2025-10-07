@@ -304,12 +304,13 @@ VOC_V3 = MockEntity(
 def create_entry(
     hass: HomeAssistant,
     service_info: BluetoothServiceInfoBleak,
+    device_info: AirthingsDevice,
 ) -> MockConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=service_info.address,
-        title="Airthings Wave Plus (123456)",
+        title=f"{device_info.name} ({device_info.identifier})",
     )
     entry.add_to_hass(hass)
     return entry
