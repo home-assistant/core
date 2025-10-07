@@ -1164,6 +1164,8 @@ class ObjectSelectorConfig(BaseSelectorConfig):
     label_field: str
     description_field: str
     translation_key: str
+    key_field: str
+    return_type: Literal["list", "object"]
 
 
 @SELECTORS.register("object")
@@ -1185,6 +1187,8 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
             vol.Optional("label_field"): str,
             vol.Optional("description_field"): str,
             vol.Optional("translation_key"): str,
+            vol.Optional("key_field"): str,
+            vol.Optional("return_type", default="list"): vol.Any("list", "object"),
         }
     )
 
