@@ -1,16 +1,33 @@
 """Fixtures for OpenRGB integration tests."""
 
 from collections.abc import Generator
+import importlib
+from types import SimpleNamespace
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import jsonpickle
 import pytest
 
 from homeassistant.components.openrgb.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
+
+
+def _process_openrgb_dump(dump: Any) -> Any:
+    """Reconstruct OpenRGB objects from dump."""
+    if isinstance(dump, dict):
+        # Reconstruct Enums
+        if "__enum__" in dump:
+            module_name, class_name = dump["__enum__"].rsplit(".", 1)
+            return getattr(importlib.import_module(module_name), class_name)(
+                dump["value"]
+            )
+        return SimpleNamespace(**{k: _process_openrgb_dump(v) for k, v in dump.items()})
+    if isinstance(dump, list):
+        return [_process_openrgb_dump(item) for item in dump]
+    return dump
 
 
 @pytest.fixture
@@ -40,12 +57,14 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_openrgb_device() -> MagicMock:
     """Return a mocked OpenRGB device."""
-    json = load_fixture("device_ene_dram.json", DOMAIN)
-    obj = jsonpickle.decode(json)
+    # Restore object from dump
+    device_obj = _process_openrgb_dump(
+        load_json_object_fixture("device_ene_dram.json", DOMAIN)
+    )
 
-    device = MagicMock(spec=obj)
-    for name, value in vars(obj).items():
-        setattr(device, name, value)
+    # Create mock from object
+    device = MagicMock(spec=device_obj)
+    device.configure_mock(**vars(device_obj))
 
     # Methods
     device.set_color = MagicMock()
