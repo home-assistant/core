@@ -203,27 +203,28 @@
       "plate": {
         "name": "Plate {plate_no}",
         "state": {
-          "power_step_0": "0",
-          "power_step_warm": "Warming",
-          "power_step_1": "1",
-          "power_step_2": "1\u2022",
-          "power_step_3": "2",
-          "power_step_4": "2\u2022",
-          "power_step_5": "3",
-          "power_step_6": "3\u2022",
-          "power_step_7": "4",
-          "power_step_8": "4\u2022",
-          "power_step_9": "5",
-          "power_step_10": "5\u2022",
-          "power_step_11": "6",
-          "power_step_12": "6\u2022",
-          "power_step_13": "7",
-          "power_step_14": "7\u2022",
-          "power_step_15": "8",
-          "power_step_16": "8\u2022",
-          "power_step_17": "9",
-          "power_step_18": "9\u2022",
-          "power_step_boost": "Boost"
+          "plate_step_0": "0",
+          "plate_step_warm": "Warming",
+          "plate_step_1": "1",
+          "plate_step_2": "1\u2022",
+          "plate_step_3": "2",
+          "plate_step_4": "2\u2022",
+          "plate_step_5": "3",
+          "plate_step_6": "3\u2022",
+          "plate_step_7": "4",
+          "plate_step_8": "4\u2022",
+          "plate_step_9": "5",
+          "plate_step_10": "5\u2022",
+          "plate_step_11": "6",
+          "plate_step_12": "6\u2022",
+          "plate_step_13": "7",
+          "plate_step_14": "7\u2022",
+          "plate_step_15": "8",
+          "plate_step_16": "8\u2022",
+          "plate_step_17": "9",
+          "plate_step_18": "9\u2022",
+          "plate_step_boost": "Boost",
+          "plate_step_boost_2": "Boost 2"
         }
       },
       "drying_step": {
@@ -290,6 +291,7 @@
           "not_running": "Not running",
           "pre_brewing": "Pre-brewing",
           "pre_dishwash": "Pre-cleaning",
+          "pre_heating": "Pre-heating",
           "pre_wash": "Pre-wash",
           "process_finished": "Process finished",
           "process_running": "Process running",
@@ -990,6 +992,18 @@
           "yom_tov": "Yom tov",
           "yorkshire_pudding": "Yorkshire pudding",
           "zander_fillet": "Zander (fillet)"
+        },
+        "state_attributes": {
+          "profile": {
+            "name": "Profile",
+            "state": {
+              "profile_1": "Profile 1",
+              "profile_2": "Profile 2",
+              "profile_3": "Profile 3",
+              "profile_4": "Profile 4",
+              "profile_5": "Profile 5"
+            }
+          }
         }
       },
       "spin_speed": {

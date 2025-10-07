@@ -7,8 +7,14 @@
       "battery_soc": {
         "default": "mdi:battery-charging-100"
       },
+      "battery_status": {
+        "default": "mdi:battery-alert"
+      },
       "battery_stored": {
-        "default": "mdi:battery"
+        "default": "mdi:battery-arrow-up"
+      },
+      "battery_consumed": {
+        "default": "mdi:battery-arrow-down"
       },
       "grid_current_l1": {
         "default": "mdi:current-ac"
@@ -50,7 +56,7 @@
         "default": "mdi:power-socket"
       },
       "meter_power": {
-        "default": "mdi:power-plug"
+        "default": "mdi:meter-electric"
       },
       "output_current_l1": {
         "default": "mdi:current-ac"
@@ -116,7 +122,7 @@
         "default": "mdi:home-lightning-bolt"
       },
       "monitoring_minute_grid_consumption": {
-        "default": "mdi:transmission-tower"
+        "default": "mdi:transmission-tower-import"
       },
       "monitoring_minute_grid_injection": {
         "default": "mdi:transmission-tower-export"
@@ -126,6 +132,54 @@
       },
       "monitoring_minute_solar_production": {
         "default": "mdi:solar-power"
+      },
+      "timeline_type_msg": {
+        "default": "mdi:check-circle",
+        "state": {
+          "com_lost": "mdi:lan-disconnect",
+          "warning_grid": "mdi:alert-circle",
+          "warning_pv": "mdi:alert-circle",
+          "warning_bat": "mdi:alert-circle",
+          "error_ond": "mdi:close-octagon",
+          "error_soft": "mdi:close-octagon",
+          "error_pv": "mdi:close-octagon",
+          "error_grid": "mdi:close-octagon",
+          "error_bat": "mdi:close-octagon",
+          "good_1": "mdi:check-circle",
+          "info_soft": "mdi:information-slab-circle",
+          "info_ond": "mdi:information-slab-circle",
+          "info_bat": "mdi:information-slab-circle",
+          "info_smartlo": "mdi:information-slab-circle"
+        }
+      },
+      "energy_pv": {
+        "default": "mdi:solar-power"
+      },
+      "energy_grid_injected": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "energy_grid_consumed": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "energy_building_consumption": {
+        "default": "mdi:home-lightning-bolt-outline"
+      },
+      "energy_battery_stored": {
+        "default": "mdi:battery-arrow-up-outline"
+      },
+      "energy_battery_consumed": {
+        "default": "mdi:battery-arrow-down-outline"
+      },
+      "forecast_cons_remaining_today": {
+        "default": "mdi:chart-line"
+      },
+      "forecast_prod_remaining_today": {
+        "default": "mdi:chart-line"
+      }
+    },
+    "select": {
+      "manager_inverter_mode": {
+        "default": "mdi:view-grid"
       }
     }
   }

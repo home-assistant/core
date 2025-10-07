@@ -32,7 +32,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HassJobType, HomeAssistant
 from homeassistant.generated.mqtt import MQTT
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -66,6 +70,78 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "configuration_url": "http://example.com",
 }
 
+MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_LOCAL_CODE = {
+    "4b06357ef8654e8d9c54cee5bb0e9391": {
+        "platform": "alarm_control_panel",
+        "name": "Alarm",
+        "entity_category": "config",
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{action}}",
+        "value_template": "{{ value_json.value }}",
+        "code": "1234",
+        "code_arm_required": True,
+        "code_disarm_required": True,
+        "code_trigger_required": True,
+        "payload_arm_away": "ARM_AWAY",
+        "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
+        "payload_arm_home": "ARM_HOME",
+        "payload_arm_night": "ARM_NIGHT",
+        "payload_arm_vacation": "ARM_VACATION",
+        "payload_trigger": "TRIGGER",
+        "supported_features": ["arm_home", "arm_away", "trigger"],
+        "retain": False,
+        "entity_picture": "https://example.com/4b06357ef8654e8d9c54cee5bb0e9391",
+    },
+}
+MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE = {
+    "4b06357ef8654e8d9c54cee5bb0e9392": {
+        "platform": "alarm_control_panel",
+        "name": "Alarm",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{action}}",
+        "value_template": "{{ value_json.value }}",
+        "code": "REMOTE_CODE",
+        "code_arm_required": True,
+        "code_disarm_required": True,
+        "code_trigger_required": True,
+        "payload_arm_away": "ARM_AWAY",
+        "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
+        "payload_arm_home": "ARM_HOME",
+        "payload_arm_night": "ARM_NIGHT",
+        "payload_arm_vacation": "ARM_VACATION",
+        "payload_trigger": "TRIGGER",
+        "supported_features": ["arm_home", "arm_away", "arm_custom_bypass"],
+        "retain": False,
+        "entity_picture": "https://example.com/4b06357ef8654e8d9c54cee5bb0e9392",
+    },
+}
+MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE_TEXT = {
+    "4b06357ef8654e8d9c54cee5bb0e9393": {
+        "platform": "alarm_control_panel",
+        "name": "Alarm",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{action}}",
+        "value_template": "{{ value_json.value }}",
+        "code": "REMOTE_CODE_TEXT",
+        "code_arm_required": True,
+        "code_disarm_required": True,
+        "code_trigger_required": True,
+        "payload_arm_away": "ARM_AWAY",
+        "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
+        "payload_arm_home": "ARM_HOME",
+        "payload_arm_night": "ARM_NIGHT",
+        "payload_arm_vacation": "ARM_VACATION",
+        "payload_trigger": "TRIGGER",
+        "supported_features": ["arm_home", "arm_away", "arm_vacation"],
+        "retain": False,
+        "entity_picture": "https://example.com/4b06357ef8654e8d9c54cee5bb0e9393",
+    },
+}
 MOCK_SUBENTRY_BINARY_SENSOR_COMPONENT = {
     "5b06357ef8654e8d9c54cee5bb0e939b": {
         "platform": "binary_sensor",
@@ -280,6 +356,72 @@ MOCK_SUBENTRY_FAN_COMPONENT = {
         "speed_range_min": 1,
     },
 }
+MOCK_SUBENTRY_IMAGE_COMPONENT_DATA = {
+    "24402bcbd5b64a54bc32695a5ef752bf": {
+        "platform": "image",
+        "name": "Merchandise",
+        "entity_category": None,
+        "image_topic": "test-topic",
+        "content_type": "image/jpeg",
+        "image_encoding": "b64",
+        "entity_picture": "https://example.com/24402bcbd5b64a54bc32695a5ef752bf",
+    },
+}
+MOCK_SUBENTRY_IMAGE_COMPONENT_URL = {
+    "326104eb58af48c9ab1f887cded499bb": {
+        "platform": "image",
+        "name": "Merchandise",
+        "entity_category": None,
+        "url_topic": "test-topic",
+        "url_template": "{{ value_json.value }}",
+        "entity_picture": "https://example.com/326104eb58af48c9ab1f887cded499bb",
+    },
+}
+MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT = {
+    "8131babc5e8d4f44b82e0761d39091a2": {
+        "platform": "light",
+        "name": "Basic light",
+        "on_command_type": "last",
+        "optimistic": True,
+        "payload_off": "OFF",
+        "payload_on": "ON",
+        "command_topic": "test-topic",
+        "entity_category": None,
+        "schema": "basic",
+        "state_topic": "test-topic",
+        "color_temp_kelvin": True,
+        "state_value_template": "{{ value_json.value }}",
+        "brightness_scale": 255,
+        "max_kelvin": 6535,
+        "min_kelvin": 2000,
+        "white_scale": 255,
+        "entity_picture": "https://example.com/8131babc5e8d4f44b82e0761d39091a2",
+    },
+}
+MOCK_SUBENTRY_LOCK_COMPONENT = {
+    "3faf1318016c46c5aea26707eeb6f100": {
+        "platform": "lock",
+        "name": "Lock",
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "value_template": "{{ value_json.value }}",
+        "code_format": "^\\d{4}$",
+        "payload_open": "OPEN",
+        "payload_lock": "LOCK",
+        "payload_unlock": "UNLOCK",
+        "payload_reset": "None",
+        "state_jammed": "JAMMED",
+        "state_locked": "LOCKED",
+        "state_locking": "LOCKING",
+        "state_unlocked": "UNLOCKED",
+        "state_unlocking": "UNLOCKING",
+        "retain": False,
+        "entity_category": None,
+        "entity_picture": "https://example.com/3faf1318016c46c5aea26707eeb6f100",
+        "optimistic": True,
+    },
+}
 MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
     "363a7ecad6be4a19b939a016ea93e994": {
         "platform": "notify",
@@ -311,7 +453,70 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME = {
         "retain": False,
     },
 }
-
+MOCK_SUBENTRY_NOTIFY_BAD_SCHEMA = {
+    "b10b531e15244425a74bb0abb1e9d2c6": {
+        "platform": "notify",
+        "name": "Test",
+        "command_topic": "bad#topic",
+    },
+}
+MOCK_SUBENTRY_NUMBER_COMPONENT_CUSTOM_UNIT = {
+    "f9261f6feed443e7b7d5f3fbe2a47413": {
+        "platform": "number",
+        "name": "Speed",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "min": 0.0,
+        "max": 10.0,
+        "step": 2.0,
+        "mode": "box",
+        "unit_of_measurement": "bla",
+        "value_template": "{{ value_json.value }}",
+        "payload_reset": "None",
+        "retain": False,
+        "entity_picture": "https://example.com/f9261f6feed443e7b7d5f3fbe2a47413",
+    },
+}
+MOCK_SUBENTRY_NUMBER_COMPONENT_DEVICE_CLASS_UNIT = {
+    "f9261f6feed443e7b7d5f3fbe2a47414": {
+        "platform": "number",
+        "name": "Speed",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "min": 0.0,
+        "max": 10.0,
+        "step": 2.0,
+        "mode": "slider",
+        "device_class": "carbon_monoxide",
+        "unit_of_measurement": "ppm",
+        "value_template": "{{ value_json.value }}",
+        "payload_reset": "None",
+        "retain": False,
+        "entity_picture": "https://example.com/f9261f6feed443e7b7d5f3fbe2a47414",
+    },
+}
+MOCK_SUBENTRY_NUMBER_COMPONENT_NO_UNIT = {
+    "f9261f6feed443e7b7d5f3fbe2a47414": {
+        "platform": "number",
+        "name": "Speed",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "min": 0.0,
+        "max": 10.0,
+        "step": 2.0,
+        "mode": "auto",
+        "value_template": "{{ value_json.value }}",
+        "payload_reset": "None",
+        "retain": False,
+        "entity_picture": "https://example.com/f9261f6feed443e7b7d5f3fbe2a47414",
+    },
+}
 MOCK_SUBENTRY_SENSOR_COMPONENT = {
     "e9261f6feed443e7b7d5f3fbe2a47412": {
         "platform": "sensor",
@@ -363,35 +568,6 @@ MOCK_SUBENTRY_SWITCH_COMPONENT = {
     },
 }
 
-MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT = {
-    "8131babc5e8d4f44b82e0761d39091a2": {
-        "platform": "light",
-        "name": "Basic light",
-        "on_command_type": "last",
-        "optimistic": True,
-        "payload_off": "OFF",
-        "payload_on": "ON",
-        "command_topic": "test-topic",
-        "entity_category": None,
-        "schema": "basic",
-        "state_topic": "test-topic",
-        "color_temp_kelvin": True,
-        "state_value_template": "{{ value_json.value }}",
-        "brightness_scale": 255,
-        "max_kelvin": 6535,
-        "min_kelvin": 2000,
-        "white_scale": 255,
-        "entity_picture": "https://example.com/8131babc5e8d4f44b82e0761d39091a2",
-    },
-}
-MOCK_SUBENTRY_NOTIFY_BAD_SCHEMA = {
-    "b10b531e15244425a74bb0abb1e9d2c6": {
-        "platform": "notify",
-        "name": "Test",
-        "command_topic": "bad#topic",
-    },
-}
-
 MOCK_SUBENTRY_AVAILABILITY_DATA = {
     "availability": {
         "availability_topic": "test/availability",
@@ -407,6 +583,7 @@ MOCK_SUBENTRY_DEVICE_DATA = {
     "hw_version": "2.1 rev a",
     "model": "Model XL",
     "model_id": "mn002",
+    "manufacturer": "Milk Masters",
     "configuration_url": "https://example.com",
 }
 
@@ -415,6 +592,18 @@ MOCK_NOTIFY_SUBENTRY_DATA_MULTI = {
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1 | MOCK_SUBENTRY_NOTIFY_COMPONENT2,
 } | MOCK_SUBENTRY_AVAILABILITY_DATA
 
+MOCK_ALARM_CONTROL_PANEL_LOCAL_CODE_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_LOCAL_CODE,
+}
+MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_TEXT_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
+    "components": MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE_TEXT,
+}
+MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
+    "components": MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE,
+}
 MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
     "components": MOCK_SUBENTRY_BINARY_SENSOR_COMPONENT,
@@ -443,6 +632,22 @@ MOCK_FAN_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_FAN_COMPONENT,
 }
+MOCK_IMAGE_SUBENTRY_DATA_IMAGE_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_IMAGE_COMPONENT_DATA,
+}
+MOCK_IMAGE_SUBENTRY_DATA_IMAGE_URL = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_IMAGE_COMPONENT_URL,
+}
+MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT,
+}
+MOCK_LOCK_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_LOCK_COMPONENT,
+}
 MOCK_NOTIFY_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1,
@@ -451,9 +656,17 @@ MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME,
 }
-MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE = {
+MOCK_NUMBER_SUBENTRY_DATA_CUSTOM_UNIT = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
-    "components": MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT,
+    "components": MOCK_SUBENTRY_NUMBER_COMPONENT_CUSTOM_UNIT,
+}
+MOCK_NUMBER_SUBENTRY_DATA_DEVICE_CLASS_UNIT = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_NUMBER_COMPONENT_DEVICE_CLASS_UNIT,
+}
+MOCK_NUMBER_SUBENTRY_DATA_NO_UNIT = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_NUMBER_COMPONENT_NO_UNIT,
 }
 MOCK_SENSOR_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
@@ -1415,13 +1628,14 @@ async def help_test_entity_device_info_with_identifier(
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
 
-    registry = dr.async_get(hass)
+    area_registry = ar.async_get(hass)
+    device_registry = dr.async_get(hass)
 
     data = json.dumps(config)
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device(identifiers={("mqtt", "helloworld")})
+    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is not None
     assert device.identifiers == {("mqtt", "helloworld")}
     assert device.manufacturer == "Whatever"
@@ -1430,7 +1644,7 @@ async def help_test_entity_device_info_with_identifier(
     assert device.model_id == "XYZ001"
     assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
-    assert device.suggested_area == "default_area"
+    assert device.area_id == area_registry.async_get_area_by_name("default_area").id
     assert device.configuration_url == "http://example.com"
 
 
@@ -1450,13 +1664,14 @@ async def help_test_entity_device_info_with_connection(
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_MAC)
     config["unique_id"] = "veryunique"
 
-    registry = dr.async_get(hass)
+    area_registry = ar.async_get(hass)
+    device_registry = dr.async_get(hass)
 
     data = json.dumps(config)
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device(
+    device = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12")}
     )
     assert device is not None
@@ -1467,7 +1682,7 @@ async def help_test_entity_device_info_with_connection(
     assert device.model_id == "XYZ001"
     assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
-    assert device.suggested_area == "default_area"
+    assert device.area_id == area_registry.async_get_area_by_name("default_area").id
     assert device.configuration_url == "http://example.com"
 
 

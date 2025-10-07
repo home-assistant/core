@@ -20,17 +20,29 @@ from homeassistant.components.number import (
 )
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration, register_device, register_entity
+from . import init_integration, patch_platforms, register_device, register_entity
 
 from tests.common import mock_restore_cache_with_extra_data
 
 DEVICE_BLOCK_ID = 4
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms([Platform.NUMBER]):
+        yield
 
 
 async def test_block_number_update(
@@ -319,7 +331,7 @@ async def test_rpc_device_virtual_number(
     assert state.attributes.get(ATTR_MODE) is mode
 
     assert (entry := entity_registry.async_get(entity_id))
-    assert entry.unique_id == "123456789ABC-number:203-number"
+    assert entry.unique_id == "123456789ABC-number:203-number_generic"
 
     monkeypatch.setitem(mock_rpc_device.status["number:203"], "value", 78.9)
     mock_rpc_device.mock_update()
@@ -340,6 +352,7 @@ async def test_rpc_device_virtual_number(
     assert state.state == "56.7"
 
 
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_rpc_remove_virtual_number_when_mode_label(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
@@ -367,7 +380,7 @@ async def test_rpc_remove_virtual_number_when_mode_label(
         hass,
         NUMBER_DOMAIN,
         "test_name_number_200",
-        "number:200-number",
+        "number:200-number_generic",
         config_entry,
         device_id=device_entry.id,
     )
@@ -391,7 +404,7 @@ async def test_rpc_remove_virtual_number_when_orphaned(
         hass,
         NUMBER_DOMAIN,
         "test_name_number_200",
-        "number:200-number",
+        "number:200-number_generic",
         config_entry,
         device_id=device_entry.id,
     )

@@ -10,7 +10,13 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.shelly.const import UPDATE_PERIOD_MULTIPLIER
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -19,14 +25,23 @@ from . import (
     init_integration,
     mock_rest_update,
     mutate_rpc_device_status,
+    patch_platforms,
     register_device,
     register_entity,
+    register_sub_device,
 )
 
 from tests.common import mock_restore_cache
 
 RELAY_BLOCK_ID = 0
 SENSOR_BLOCK_ID = 3
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms([Platform.BINARY_SENSOR]):
+        yield
 
 
 async def test_block_binary_sensor(
@@ -53,26 +68,24 @@ async def test_block_binary_sensor(
     assert entry.unique_id == "123456789ABC-relay_0-overpower"
 
 
-async def test_block_binary_sensor_extra_state_attr(
+async def test_block_binary_gas_sensor_creation(
     hass: HomeAssistant,
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     entity_registry: EntityRegistry,
 ) -> None:
-    """Test block binary sensor extra state attributes."""
+    """Test block binary gas sensor creation."""
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_gas"
     await init_integration(hass, 1)
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
-    assert state.attributes.get("detected") == "mild"
 
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "gas", "none")
     mock_block_device.mock_update()
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_OFF
-    assert state.attributes.get("detected") == "none"
 
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-sensor_0-gas"
@@ -427,7 +440,7 @@ async def test_rpc_device_virtual_binary_sensor(
     assert state.state == STATE_ON
 
     assert (entry := entity_registry.async_get(entity_id))
-    assert entry.unique_id == "123456789ABC-boolean:203-boolean"
+    assert entry.unique_id == "123456789ABC-boolean:203-boolean_generic"
 
     monkeypatch.setitem(mock_rpc_device.status["boolean:203"], "value", False)
     mock_rpc_device.mock_update()
@@ -436,6 +449,7 @@ async def test_rpc_device_virtual_binary_sensor(
     assert state.state == STATE_OFF
 
 
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
 async def test_rpc_remove_virtual_binary_sensor_when_mode_toggle(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
@@ -458,7 +472,7 @@ async def test_rpc_remove_virtual_binary_sensor_when_mode_toggle(
         hass,
         BINARY_SENSOR_DOMAIN,
         "test_name_boolean_200",
-        "boolean:200-boolean",
+        "boolean:200-boolean_generic",
         config_entry,
         device_id=device_entry.id,
     )
@@ -477,20 +491,41 @@ async def test_rpc_remove_virtual_binary_sensor_when_orphaned(
 ) -> None:
     """Check whether the virtual binary sensor will be removed if it has been removed from the device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
+
+    # create orphaned entity on main device
     device_entry = register_device(device_registry, config_entry)
-    entity_id = register_entity(
+    entity_id1 = register_entity(
         hass,
         BINARY_SENSOR_DOMAIN,
         "test_name_boolean_200",
-        "boolean:200-boolean",
+        "boolean:200-boolean_generic",
         config_entry,
         device_id=device_entry.id,
     )
 
+    # create orphaned entity on sub device
+    sub_device_entry = register_sub_device(
+        device_registry,
+        config_entry,
+        "boolean:201-boolean_generic",
+    )
+    entity_id2 = register_entity(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        "boolean_201",
+        "boolean:201-boolean_generic",
+        config_entry,
+        device_id=sub_device_entry.id,
+    )
+
+    assert entity_registry.async_get(entity_id1) is not None
+    assert entity_registry.async_get(entity_id2) is not None
+
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entity_registry.async_get(entity_id) is None
+    assert entity_registry.async_get(entity_id1) is None
+    assert entity_registry.async_get(entity_id2) is None
 
 
 async def test_blu_trv_binary_sensor_entity(
@@ -521,7 +556,7 @@ async def test_rpc_flood_entities(
     """Test RPC flood sensor entities."""
     await init_integration(hass, 4)
 
-    for entity in ("flood", "mute"):
+    for entity in ("flood", "mute", "cable_unplugged"):
         entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_kitchen_{entity}"
 
         state = hass.states.get(entity_id)
@@ -529,3 +564,109 @@ async def test_rpc_flood_entities(
 
         entry = entity_registry.async_get(entity_id)
         assert entry == snapshot(name=f"{entity_id}-entry")
+
+
+async def test_rpc_flood_cable_unplugged(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC flood cable unplugged entity."""
+    await init_integration(hass, 4)
+
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_kitchen_cable_unplugged"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    status = deepcopy(mock_rpc_device.status)
+    status["flood:0"]["errors"] = ["cable_unplugged"]
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+
+async def test_rpc_presence_component(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test RPC binary sensor entity for presence component."""
+    config = deepcopy(mock_rpc_device.config)
+    config["presence"] = {"enable": True}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["presence"] = {"num_objects": 2}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    mock_config_entry = await init_integration(hass, 4)
+
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_occupancy"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-presence-presence_num_objects"
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "presence", "num_objects", 0)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    config = deepcopy(mock_rpc_device.config)
+    config["presence"] = {"enable": False}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_rpc_presencezone_component(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test RPC binary sensor entity for presencezone component."""
+    config = deepcopy(mock_rpc_device.config)
+    config["presencezone:200"] = {"name": "Main zone", "enable": True}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["presencezone:200"] = {"value": True, "num_objects": 3}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    mock_config_entry = await init_integration(hass, 4)
+
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_main_zone_occupancy"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-presencezone:200-presencezone_state"
+
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "presencezone:200", "value", False
+    )
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    config = deepcopy(mock_rpc_device.config)
+    config["presencezone:200"] = {"enable": False}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE

@@ -16,3 +16,4 @@ TEST_DEVICE_INFO = DeviceInfo(
     hw_version="hw",
 )
 TEST_DEVICE_DATA = {"co2": 500.0, "Status": "OK"}
+TEST_BRIGHTNESS = 42

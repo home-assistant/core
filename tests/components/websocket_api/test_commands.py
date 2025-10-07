@@ -8,10 +8,13 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.components.device_automation import toggle_entity
+from homeassistant.components.group import DOMAIN as DOMAIN_GROUP
+from homeassistant.components.logger import DOMAIN as DOMAIN_LOGGER
 from homeassistant.components.websocket_api import const
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
@@ -34,7 +37,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util.json import json_loads
-from homeassistant.util.yaml.loader import parse_yaml
+from homeassistant.util.yaml.loader import JSON_TYPE, parse_yaml
 
 from tests.common import (
     MockConfigEntry,
@@ -671,7 +674,9 @@ async def test_get_states(
 
 
 async def test_get_services(
-    hass: HomeAssistant, websocket_client: MockHAClientWebSocket
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test get_services command."""
     assert ALL_SERVICE_DESCRIPTIONS_JSON_CACHE not in hass.data
@@ -686,16 +691,18 @@ async def test_get_services(
     assert msg == {"id": 2, "result": {}, "success": True, "type": "result"}
     assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is old_cache
 
-    # Load a service and check cache is updated
-    assert await async_setup_component(hass, "logger", {})
+    # Set up an integration that has services and check cache is updated
+    assert await async_setup_component(hass, DOMAIN_GROUP, {DOMAIN_GROUP: {}})
     await websocket_client.send_json_auto_id({"type": "get_services"})
     msg = await websocket_client.receive_json()
     assert msg == {
         "id": 3,
-        "result": {"logger": {"set_default_level": ANY, "set_level": ANY}},
+        "result": {DOMAIN_GROUP: ANY},
         "success": True,
         "type": "result",
     }
+    group_services = msg["result"][DOMAIN_GROUP]
+    assert group_services == snapshot
     assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is not old_cache
 
     # Check cache is reused
@@ -704,11 +711,69 @@ async def test_get_services(
     msg = await websocket_client.receive_json()
     assert msg == {
         "id": 4,
-        "result": {"logger": {"set_default_level": ANY, "set_level": ANY}},
+        "result": {DOMAIN_GROUP: group_services},
         "success": True,
         "type": "result",
     }
     assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is old_cache
+
+    # Set up an integration with legacy translations in services.yaml
+    def _load_services_file(integration: Integration) -> JSON_TYPE:
+        return {
+            "set_default_level": {
+                "description": "Translated description",
+                "fields": {
+                    "level": {
+                        "description": "Field description",
+                        "example": "Field example",
+                        "name": "Field name",
+                        "selector": {
+                            "select": {
+                                "options": [
+                                    "debug",
+                                    "info",
+                                    "warning",
+                                    "error",
+                                    "fatal",
+                                    "critical",
+                                ],
+                                "translation_key": "level",
+                            }
+                        },
+                    }
+                },
+                "name": "Translated name",
+            },
+            "set_level": None,
+        }
+
+    await async_setup_component(hass, DOMAIN_LOGGER, {DOMAIN_LOGGER: {}})
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.helpers.service._load_services_file",
+            side_effect=_load_services_file,
+        ),
+        patch(
+            "homeassistant.helpers.service.translation.async_get_translations",
+            return_value={},
+        ),
+    ):
+        await websocket_client.send_json_auto_id({"type": "get_services"})
+        msg = await websocket_client.receive_json()
+
+    assert msg == {
+        "id": 5,
+        "result": {
+            DOMAIN_LOGGER: ANY,
+            DOMAIN_GROUP: group_services,
+        },
+        "success": True,
+        "type": "result",
+    }
+    logger_services = msg["result"][DOMAIN_LOGGER]
+    assert logger_services == snapshot
 
 
 @patch("annotatedyaml.loader.load_yaml")
@@ -721,10 +786,10 @@ async def test_subscribe_conditions(
 ) -> None:
     """Test condition_platforms/subscribe command."""
     sun_condition_descriptions = """
-        sun: {}
+        _: {}
         """
     device_automation_condition_descriptions = """
-        device: {}
+        _device: {}
         """
 
     def _load_yaml(fname, secrets=None):
@@ -806,10 +871,10 @@ async def test_subscribe_triggers(
 ) -> None:
     """Test trigger_platforms/subscribe command."""
     sun_trigger_descriptions = """
-        sun: {}
+        _: {}
         """
     tag_trigger_descriptions = """
-        tag: {}
+        _: {}
         """
 
     def _load_yaml(fname, secrets=None):
@@ -1368,28 +1433,50 @@ async def test_subscribe_unsubscribe_entities(
     }
 
 
+@pytest.mark.parametrize("unserializable_states", [[], ["light.cannot_serialize"]])
 async def test_subscribe_unsubscribe_entities_specific_entities(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
     hass_admin_user: MockUser,
+    unserializable_states: list[str],
 ) -> None:
     """Test subscribe/unsubscribe entities with a list of entity ids."""
 
+    class CannotSerializeMe:
+        """Cannot serialize this."""
+
+        def __init__(self) -> None:
+            """Init cannot serialize this."""
+
+    for entity_id in unserializable_states:
+        hass.states.async_set(
+            entity_id,
+            "off",
+            {"color": "red", "cannot_serialize": CannotSerializeMe()},
+        )
+
     hass.states.async_set("light.permitted", "off", {"color": "red"})
-    hass.states.async_set("light.not_intrested", "off", {"color": "blue"})
+    hass.states.async_set("light.not_interested", "off", {"color": "blue"})
     original_state = hass.states.get("light.permitted")
     assert isinstance(original_state, State)
     hass_admin_user.groups = []
     hass_admin_user.mock_policy(
         {
             "entities": {
-                "entity_ids": {"light.permitted": True, "light.not_intrested": True}
+                "entity_ids": {
+                    "light.permitted": True,
+                    "light.not_interested": True,
+                    "light.cannot_serialize": True,
+                }
             }
         }
     )
 
     await websocket_client.send_json_auto_id(
-        {"type": "subscribe_entities", "entity_ids": ["light.permitted"]}
+        {
+            "type": "subscribe_entities",
+            "entity_ids": ["light.permitted", "light.cannot_serialize"],
+        }
     )
 
     msg = await websocket_client.receive_json()
@@ -1411,7 +1498,7 @@ async def test_subscribe_unsubscribe_entities_specific_entities(
             }
         }
     }
-    hass.states.async_set("light.not_intrested", "on", {"effect": "help"})
+    hass.states.async_set("light.not_interested", "on", {"effect": "help"})
     hass.states.async_set("light.not_permitted", "on")
     hass.states.async_set("light.permitted", "on", {"color": "blue"})
 
@@ -1432,12 +1519,28 @@ async def test_subscribe_unsubscribe_entities_specific_entities(
     }
 
 
+@pytest.mark.parametrize("unserializable_states", [[], ["light.cannot_serialize"]])
 async def test_subscribe_unsubscribe_entities_with_filter(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
     hass_admin_user: MockUser,
+    unserializable_states: list[str],
 ) -> None:
     """Test subscribe/unsubscribe entities with an entity filter."""
+
+    class CannotSerializeMe:
+        """Cannot serialize this."""
+
+        def __init__(self) -> None:
+            """Init cannot serialize this."""
+
+    for entity_id in unserializable_states:
+        hass.states.async_set(
+            entity_id,
+            "off",
+            {"color": "red", "cannot_serialize": CannotSerializeMe()},
+        )
+
     hass.states.async_set("switch.not_included", "off")
     hass.states.async_set("light.include", "off")
     await websocket_client.send_json_auto_id(
@@ -2242,14 +2345,21 @@ async def test_manifest_list(
     ]
 
 
+@pytest.mark.parametrize(
+    "integrations",
+    [
+        ["hue", "websocket_api"],
+        ["hue", "non_existing", "websocket_api"],
+    ],
+)
 async def test_manifest_list_specific_integrations(
-    hass: HomeAssistant, websocket_client
+    hass: HomeAssistant, websocket_client, integrations: list[str]
 ) -> None:
     """Test loading manifests for specific integrations."""
     websocket_api = await async_get_integration(hass, "websocket_api")
 
     await websocket_client.send_json_auto_id(
-        {"type": "manifest/list", "integrations": ["hue", "websocket_api"]}
+        {"type": "manifest/list", "integrations": integrations}
     )
     hue = await async_get_integration(hass, "hue")
 
@@ -2738,10 +2848,7 @@ async def test_validate_config_works(
                 "entity_id": "hello.world",
                 "state": "paulus",
             },
-            (
-                "Invalid condition \"non_existing\" specified {'condition': "
-                "'non_existing', 'entity_id': 'hello.world', 'state': 'paulus'}"
-            ),
+            'Invalid condition "non_existing" specified',
         ),
         # Raises HomeAssistantError
         (

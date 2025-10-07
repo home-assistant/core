@@ -289,16 +289,22 @@ class MotionTiltDevice(MotionPositionDevice):
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Set_angle, 0)
 
+        await self.async_request_position_till_stop()
+
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Set_angle, 180)
+
+        await self.async_request_position_till_stop()
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         angle = kwargs[ATTR_TILT_POSITION] * 180 / 100
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Set_angle, 180 - angle)
+
+        await self.async_request_position_till_stop()
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover."""
@@ -360,10 +366,14 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Open)
 
+        await self.async_request_position_till_stop()
+
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Close)
+
+        await self.async_request_position_till_stop()
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
@@ -379,6 +389,8 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
                 await self.hass.async_add_executor_job(
                     self._blind.Set_position, 100 - angle
                 )
+
+        await self.async_request_position_till_stop()
 
     async def async_set_absolute_position(self, **kwargs):
         """Move the cover to a specific absolute position (see TDBU)."""
@@ -397,6 +409,8 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
                 await self.hass.async_add_executor_job(
                     self._blind.Set_position, 100 - angle
                 )
+
+        await self.async_request_position_till_stop()
 
 
 class MotionTDBUDevice(MotionBaseDevice):

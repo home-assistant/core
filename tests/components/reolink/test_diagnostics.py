@@ -21,6 +21,8 @@ async def test_entry_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test Reolink diagnostics."""
+    reolink_host.wifi_connection.return_value = True
+
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)

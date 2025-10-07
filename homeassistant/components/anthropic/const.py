@@ -19,11 +19,8 @@ CONF_THINKING_BUDGET = "thinking_budget"
 RECOMMENDED_THINKING_BUDGET = 0
 MIN_THINKING_BUDGET = 1024
 
-THINKING_MODELS = [
-    "claude-3-7-sonnet-20250219",
-    "claude-3-7-sonnet-latest",
-    "claude-opus-4-20250514",
-    "claude-opus-4-0",
-    "claude-sonnet-4-20250514",
-    "claude-sonnet-4-0",
+NON_THINKING_MODELS = [
+    "claude-3-5",  # Both sonnet and haiku
+    "claude-3-opus",
+    "claude-3-haiku",
 ]

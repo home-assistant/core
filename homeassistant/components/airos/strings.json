@@ -2,6 +2,14 @@
   "config": {
     "flow_title": "Ubiquiti airOS device",
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::airos::config::step::user::data_description::password%]"
+        }
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -12,6 +20,18 @@
           "host": "IP address or hostname of the airOS device",
           "username": "Administrator username for the airOS device, normally 'ubnt'",
           "password": "Password configured through the UISP app or web interface"
+        },
+        "sections": {
+          "advanced_settings": {
+            "data": {
+              "ssl": "Use HTTPS",
+              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+            },
+            "data_description": {
+              "ssl": "Whether the connection should be encrypted (required for most devices)",
+              "verify_ssl": "Whether the certificate should be verified when using HTTPS. This should be off for self-signed certificates"
+            }
+          }
         }
       }
     },
@@ -22,10 +42,29 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "Re-authentication should be used for the same device not a new one"
     }
   },
   "entity": {
+    "binary_sensor": {
+      "port_forwarding": {
+        "name": "Port forwarding"
+      },
+      "dhcp_client": {
+        "name": "DHCP client"
+      },
+      "dhcp_server": {
+        "name": "DHCP server"
+      },
+      "dhcp6_server": {
+        "name": "DHCPv6 server"
+      },
+      "pppoe": {
+        "name": "PPPoE link"
+      }
+    },
     "sensor": {
       "host_cpuload": {
         "name": "CPU load"
@@ -42,13 +81,6 @@
       },
       "wireless_essid": {
         "name": "Wireless SSID"
-      },
-      "wireless_mode": {
-        "name": "Wireless mode",
-        "state": {
-          "ap_ptp": "Access point",
-          "sta_ptp": "Station"
-        }
       },
       "wireless_antenna_gain": {
         "name": "Antenna gain"
@@ -67,6 +99,26 @@
       },
       "wireless_remote_hostname": {
         "name": "Remote hostname"
+      },
+      "host_uptime": {
+        "name": "Uptime"
+      },
+      "wireless_distance": {
+        "name": "Wireless distance"
+      },
+      "wireless_role": {
+        "name": "Wireless role",
+        "state": {
+          "access_point": "Access point",
+          "station": "Station"
+        }
+      },
+      "wireless_mode": {
+        "name": "Wireless mode",
+        "state": {
+          "point_to_point": "Point-to-point",
+          "point_to_multipoint": "Point-to-multipoint"
+        }
       }
     }
   },

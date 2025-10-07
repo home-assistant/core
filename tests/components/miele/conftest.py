@@ -117,7 +117,7 @@ def mock_miele_client(
     """Mock a Miele client."""
 
     with patch(
-        "homeassistant.components.miele.AsyncConfigEntryAuth",
+        "homeassistant.components.miele.MieleAPI",
         autospec=True,
     ) as mock_client:
         client = mock_client.return_value

@@ -57,6 +57,7 @@ from .const import (
     COMPONENT_ID_PATTERN,
     CONF_COAP_PORT,
     CONF_GEN,
+    DEVICE_UNIT_MAP,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
@@ -401,7 +402,7 @@ def get_rpc_channel_name(device: RpcDevice, key: str) -> str | None:
     if key in device.config and key != "em:0":
         # workaround for Pro 3EM, we don't want to get name for em:0
         if component_name := device.config[key].get("name"):
-            if component in (*VIRTUAL_COMPONENTS, "script"):
+            if component in (*VIRTUAL_COMPONENTS, "presencezone", "script"):
                 return cast(str, component_name)
 
             return cast(str, component_name) if instances == 1 else None
@@ -473,6 +474,24 @@ def get_rpc_key_instances(
 def get_rpc_key_ids(keys_dict: dict[str, Any], key: str) -> list[int]:
     """Return list of key ids for RPC device from a dict."""
     return [int(k.split(":")[1]) for k in keys_dict if k.startswith(f"{key}:")]
+
+
+def get_rpc_key_by_role(keys_dict: dict[str, Any], role: str) -> str | None:
+    """Return key by role for RPC device from a dict."""
+    for key, value in keys_dict.items():
+        if value.get("role") == role:
+            return key
+    return None
+
+
+def get_rpc_role_by_key(keys_dict: dict[str, Any], key: str) -> str:
+    """Return role by key for RPC device from a dict."""
+    return cast(str, keys_dict[key].get("role", "generic"))
+
+
+def id_from_key(key: str) -> int:
+    """Return id from key."""
+    return int(key.split(":")[-1])
 
 
 def is_rpc_momentary_input(
@@ -551,8 +570,15 @@ def percentage_to_brightness(percentage: int) -> int:
 
 def mac_address_from_name(name: str) -> str | None:
     """Convert a name to a mac address."""
-    mac = name.partition(".")[0].partition("-")[-1]
-    return mac.upper() if len(mac) == 12 else None
+    base = name.split(".", 1)[0]
+    if "-" not in base:
+        return None
+
+    mac = base.rsplit("-", 1)[-1]
+    if len(mac) != 12 or not all(char in "0123456789abcdefABCDEF" for char in mac):
+        return None
+
+    return mac.upper()
 
 
 def get_release_url(gen: int, model: str, beta: bool) -> str | None:
@@ -629,11 +655,6 @@ def async_remove_shelly_rpc_entities(
             entity_reg.async_remove(entity_id)
 
 
-def is_rpc_thermostat_mode(ident: int, status: dict[str, Any]) -> bool:
-    """Return True if 'thermostat:<IDent>' is present in the status."""
-    return f"thermostat:{ident}" in status
-
-
 def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str]:
     """Return a list of virtual component IDs for a platform."""
     component = VIRTUAL_COMPONENTS_MAP.get(platform)
@@ -647,10 +668,29 @@ def get_virtual_component_ids(config: dict[str, Any], platform: str) -> list[str
         ids.extend(
             k
             for k, v in config.items()
-            if k.startswith(comp_type) and v["meta"]["ui"]["view"] in component["modes"]
+            if k.startswith(comp_type)
+            # default to button view if not set, workaround for Wall Display
+            and v.get("meta", {"ui": {"view": "button"}})["ui"]["view"]
+            in component["modes"]
         )
 
     return ids
+
+
+def is_view_for_platform(config: dict[str, Any], key: str, platform: str) -> bool:
+    """Return true if the virtual component view match the platform."""
+    component = VIRTUAL_COMPONENTS_MAP[platform]
+    view = config[key]["meta"]["ui"]["view"]
+    return view in component["modes"]
+
+
+def get_virtual_component_unit(config: dict[str, Any]) -> str | None:
+    """Return the unit of a virtual component.
+
+    If the unit is not set, the device sends an empty string
+    """
+    unit = config["meta"]["ui"]["unit"]
+    return DEVICE_UNIT_MAP.get(unit, unit) if unit else None
 
 
 @callback
@@ -667,25 +707,21 @@ def async_remove_orphaned_entities(
     entity_reg = er.async_get(hass)
     device_reg = dr.async_get(hass)
 
-    if not (
-        devices := device_reg.devices.get_devices_for_config_entry_id(config_entry_id)
-    ):
-        return
+    devices = device_reg.devices.get_devices_for_config_entry_id(config_entry_id)
+    for device in devices:
+        entities = er.async_entries_for_device(entity_reg, device.id, True)
+        for entity in entities:
+            if not entity.entity_id.startswith(platform):
+                continue
+            if key_suffix is not None and key_suffix not in entity.unique_id:
+                continue
+            # we are looking for the component ID, e.g. boolean:201, em1data:1
+            if not (match := COMPONENT_ID_PATTERN.search(entity.unique_id)):
+                continue
 
-    device_id = devices[0].id
-    entities = er.async_entries_for_device(entity_reg, device_id, True)
-    for entity in entities:
-        if not entity.entity_id.startswith(platform):
-            continue
-        if key_suffix is not None and key_suffix not in entity.unique_id:
-            continue
-        # we are looking for the component ID, e.g. boolean:201, em1data:1
-        if not (match := COMPONENT_ID_PATTERN.search(entity.unique_id)):
-            continue
-
-        key = match.group()
-        if key not in keys:
-            orphaned_entities.append(entity.unique_id.split("-", 1)[1])
+            key = match.group()
+            if key not in keys:
+                orphaned_entities.append(entity.unique_id.split("-", 1)[1])
 
     if orphaned_entities:
         async_remove_shelly_rpc_entities(hass, platform, mac, orphaned_entities)
@@ -801,7 +837,7 @@ def get_rpc_device_info(
 
 
 def get_blu_trv_device_info(
-    config: dict[str, Any], ble_addr: str, parent_mac: str
+    config: dict[str, Any], ble_addr: str, parent_mac: str, fw_ver: str | None
 ) -> DeviceInfo:
     """Return device info for RPC device."""
     model_id = config.get("local_name")
@@ -813,6 +849,7 @@ def get_blu_trv_device_info(
         model=BLU_TRV_MODEL_NAME.get(model_id) if model_id else None,
         model_id=config.get("local_name"),
         name=config["name"] or f"shellyblutrv-{ble_addr.replace(':', '')}",
+        sw_version=fw_ver,
     )
 
 
@@ -873,3 +910,64 @@ def remove_stale_blu_trv_devices(
 
         LOGGER.debug("Removing stale BLU TRV device %s", device.name)
         dev_reg.async_update_device(device.id, remove_config_entry_id=entry.entry_id)
+
+
+@callback
+def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove sub devices without entities."""
+    dev_reg = dr.async_get(hass)
+    entity_reg = er.async_get(hass)
+
+    devices = dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
+
+    for device in devices:
+        if not device.via_device_id:
+            # Device is not a sub-device, skip
+            continue
+
+        if er.async_entries_for_device(entity_reg, device.id, True):
+            # Device has entities, skip
+            continue
+
+        if any(identifier[0] == DOMAIN for identifier in device.identifiers):
+            LOGGER.debug("Removing empty sub-device %s", device.name)
+            dev_reg.async_update_device(
+                device.id, remove_config_entry_id=entry.entry_id
+            )
+
+
+def format_ble_addr(ble_addr: str) -> str:
+    """Format BLE address to use in unique_id."""
+    return ble_addr.replace(":", "").upper()
+
+
+@callback
+def async_migrate_rpc_virtual_components_unique_ids(
+    config: dict[str, Any], entity_entry: er.RegistryEntry
+) -> dict[str, Any] | None:
+    """Migrate RPC virtual components unique_ids to include role in the ID.
+
+    This is needed to support multiple components with the same key.
+    The old unique_id format is: {mac}-{key}-{component}
+    The new unique_id format is: {mac}-{key}-{component}_{role}
+    """
+    for component in VIRTUAL_COMPONENTS:
+        if entity_entry.unique_id.endswith(f"-{component!s}"):
+            key = entity_entry.unique_id.split("-")[-2]
+            if key not in config:
+                continue
+            role = get_rpc_role_by_key(config, key)
+            new_unique_id = f"{entity_entry.unique_id}_{role}"
+            LOGGER.debug(
+                "Migrating unique_id for %s entity from [%s] to [%s]",
+                entity_entry.entity_id,
+                entity_entry.unique_id,
+                new_unique_id,
+            )
+            return {
+                "new_unique_id": entity_entry.unique_id.replace(
+                    entity_entry.unique_id, new_unique_id
+                )
+            }
+
+    return None

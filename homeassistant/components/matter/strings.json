@@ -92,8 +92,17 @@
       "dishwasher_alarm_inflow": {
         "name": "Inflow alarm"
       },
-      "dishwasher_alarm_door": {
+      "alarm_door": {
         "name": "Door alarm"
+      },
+      "valve_fault_blocked": {
+        "name": "Valve blocked"
+      },
+      "valve_fault_general_fault": {
+        "name": "General fault"
+      },
+      "valve_fault_leaking": {
+        "name": "Valve leaking"
       }
     },
     "button": {
@@ -111,6 +120,9 @@
       },
       "reset_filter_condition": {
         "name": "Reset filter condition"
+      },
+      "self_test_request": {
+        "name": "Self-test"
       }
     },
     "climate": {
@@ -181,10 +193,13 @@
         "name": "Altitude above sea level"
       },
       "cook_time": {
-        "name": "Cook time"
+        "name": "Cooking time"
       },
       "pump_setpoint": {
         "name": "Setpoint"
+      },
+      "user_code_temporary_disable_time": {
+        "name": "User code temporary disable time"
       },
       "temperature_offset": {
         "name": "Temperature offset"
@@ -192,8 +207,8 @@
       "temperature_setpoint": {
         "name": "Temperature setpoint"
       },
-      "pir_occupied_to_unoccupied_delay": {
-        "name": "Occupied to unoccupied delay"
+      "hold_time": {
+        "name": "Hold time"
       },
       "auto_relock_timer": {
         "name": "Autorelock time"
@@ -203,6 +218,12 @@
       },
       "led_indicator_intensity_on": {
         "name": "LED on intensity"
+      },
+      "valve_configuration_and_control_default_open_duration": {
+        "name": "Default open duration"
+      },
+      "wrong_code_entry_limit": {
+        "name": "Wrong code limit"
       }
     },
     "light": {
@@ -288,6 +309,9 @@
     "sensor": {
       "activated_carbon_filter_condition": {
         "name": "Activated carbon filter condition"
+      },
+      "auto_close_time": {
+        "name": "Auto-close time"
       },
       "contamination_state": {
         "name": "Contamination state",
@@ -417,6 +441,9 @@
       "evse_soc": {
         "name": "State of charge"
       },
+      "nitrogen_dioxide": {
+        "name": "[%key:component::sensor::entity_component::nitrogen_dioxide::name%]"
+      },
       "pump_control_mode": {
         "name": "Control mode",
         "state": {
@@ -430,6 +457,15 @@
       },
       "pump_speed": {
         "name": "Rotation speed"
+      },
+      "eve_weather_trend": {
+        "name": "Weather trend",
+        "state": {
+          "cloudy": "Cloudy",
+          "rainy": "Rainy",
+          "sunny": "Sunny",
+          "stormy": "Stormy"
+        }
       },
       "evse_circuit_capacity": {
         "name": "Circuit capacity"
@@ -448,6 +484,27 @@
       },
       "window_covering_target_position": {
         "name": "Target opening position"
+      },
+      "active_current": {
+        "name": "Active current"
+      },
+      "apparent_current": {
+        "name": "Apparent current"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "reactive_current": {
+        "name": "Reactive current"
+      },
+      "rms_current": {
+        "name": "Effective current"
+      },
+      "rms_voltage": {
+        "name": "Effective voltage"
+      },
+      "voltage": {
+        "name": "Voltage"
       }
     },
     "switch": {
@@ -457,11 +514,17 @@
       "power": {
         "name": "Power"
       },
+      "speaker_mute": {
+        "name": "Mute"
+      },
       "child_lock": {
         "name": "Child lock"
       },
       "evse_charging_switch": {
         "name": "Enable charging"
+      },
+      "privacy_mode_button": {
+        "name": "Privacy mode button"
       }
     },
     "vacuum": {

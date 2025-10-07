@@ -1,5 +1,13 @@
 {
   "issues": {
+    "deprecated_object_id": {
+      "title": "Deprecated option object_id used",
+      "description": "Entity {entity_id} uses the `object_id` option which is deprecated. To fix the issue, replace the `object_id: {object_id}` option with `default_entity_id: {domain}.{object_id}` in your \"configuration.yaml\", and restart Home Assistant."
+    },
+    "deprecated_vacuum_battery_feature": {
+      "title": "Deprecated battery feature used",
+      "description": "Vacuum entity {entity_id} implements the battery feature which is deprecated. This will stop working in Home Assistant 2026.2. Implement a separate entity for the battery state instead. To fix the issue, remove the `battery` feature from the configured supported features, and restart Home Assistant."
+    },
     "invalid_platform_config": {
       "title": "Invalid config found for MQTT {domain} item",
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
@@ -157,13 +165,15 @@
             "name": "[%key:common::config_flow::data::name%]",
             "configuration_url": "Configuration URL",
             "model": "Model",
-            "model_id": "Model ID"
+            "model_id": "Model ID",
+            "manufacturer": "Manufacturer"
           },
           "data_description": {
             "name": "The name of the manually added MQTT device.",
             "configuration_url": "A link to the webpage that can manage the configuration of this device. Can be either a 'http://', 'https://' or an internal 'homeassistant://' URL.",
             "model": "E.g. 'Cleanmaster Pro'.",
-            "model_id": "E.g. '123NK2PRO'."
+            "model_id": "E.g. '123NK2PRO'.",
+            "manufacturer": "E.g. Cleanmaster Ltd."
           },
           "sections": {
             "advanced_settings": {
@@ -239,6 +249,7 @@
           "title": "Configure MQTT device \"{mqtt_device}\"",
           "description": "Please configure specific details for {platform} entity \"{entity}\":",
           "data": {
+            "alarm_control_panel_code_mode": "Alarm code validation mode",
             "climate_feature_action": "Current action support",
             "climate_feature_current_humidity": "Current humidity support",
             "climate_feature_current_temperature": "Current temperature support",
@@ -255,14 +266,17 @@
             "fan_feature_preset_modes": "Preset modes support",
             "fan_feature_oscillation": "Oscillation support",
             "fan_feature_direction": "Direction support",
+            "image_processing_mode": "Image processing mode",
             "options": "Add option",
             "schema": "Schema",
             "state_class": "State class",
             "suggested_display_precision": "Suggested display precision",
+            "supported_features": "Supported features",
             "temperature_unit": "Temperature unit",
             "unit_of_measurement": "Unit of measurement"
           },
           "data_description": {
+            "alarm_control_panel_code_mode": "Configures how the alarm control panel validates the code. A local code is configured with the entity and is validated by Home Assistant. A remote code is sent to the device and validated remotely. [Learn more.]({url}#code)",
             "climate_feature_action": "The climate supports reporting the current action.",
             "climate_feature_current_humidity": "The climate supports reporting the current humidity.",
             "climate_feature_current_temperature": "The climate supports reporting the current temperature.",
@@ -279,12 +293,14 @@
             "fan_feature_preset_modes": "The fan supports preset modes.",
             "fan_feature_oscillation": "The fan supports oscillation.",
             "fan_feature_direction": "The fan supports direction.",
+            "image_processing_mode": "Select how the image data is received.",
             "options": "Options for allowed sensor state values. The sensor’s Device class must be set to Enumeration. The 'Options' setting cannot be used together with State class or Unit of measurement.",
             "schema": "The schema to use. [Learn more.]({url}#comparison-of-light-mqtt-schemas)",
             "state_class": "The [State class](https://developers.home-assistant.io/docs/core/entity/sensor/#available-state-classes) of the sensor. [Learn more.]({url}#state_class)",
             "suggested_display_precision": "The number of decimals which should be used in the {platform} entity state after rounding. [Learn more.]({url}#suggested_display_precision)",
+            "supported_features": "The features that the entity supports.",
             "temperature_unit": "This determines the native unit of measurement the MQTT climate device works with.",
-            "unit_of_measurement": "Defines the unit of measurement of the sensor, if any."
+            "unit_of_measurement": "Defines the unit of measurement, if any."
           },
           "sections": {
             "advanced_settings": {
@@ -304,14 +320,25 @@
           "data": {
             "blue_template": "Blue template",
             "brightness_template": "Brightness template",
+            "code": "Alarm code",
+            "code_format": "Code format",
+            "code_arm_required": "Code arm required",
+            "code_disarm_required": "Code disarm required",
+            "code_trigger_required": "Code trigger required",
+            "color_temp_template": "Color temperature template",
             "command_template": "Command template",
             "command_topic": "Command topic",
             "command_off_template": "Command \"off\" template",
             "command_on_template": "Command \"on\" template",
-            "color_temp_template": "Color temperature template",
+            "content_type": "Content type",
             "force_update": "Force update",
             "green_template": "Green template",
+            "image_encoding": "Image encoding",
+            "image_topic": "Image topic",
             "last_reset_value_template": "Last reset value template",
+            "max": "Maximum",
+            "min": "Minimum",
+            "mode": "Mode",
             "modes": "Supported operation modes",
             "mode_command_topic": "Operation mode command topic",
             "mode_command_template": "Operation mode command template",
@@ -322,6 +349,7 @@
             "payload_off": "Payload \"off\"",
             "payload_on": "Payload \"on\"",
             "payload_press": "Payload \"press\"",
+            "payload_reset": "Payload \"reset\"",
             "qos": "QoS",
             "red_template": "Red template",
             "retain": "Retain",
@@ -330,20 +358,34 @@
             "state_template": "State template",
             "state_topic": "State topic",
             "state_value_template": "State value template",
+            "step": "Step",
             "supported_color_modes": "Supported color modes",
+            "url_template": "URL template",
+            "url_topic": "URL topic",
             "value_template": "Value template"
           },
           "data_description": {
             "blue_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract blue color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "brightness_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract brightness from the state payload value. Expected result of the template is an integer from 0-255 range.",
+            "code": "Specifies a code to enable or disable the alarm in the frontend. Note that this blocks sending MQTT message commands to the remote device if the code validation fails. [Learn more.]({url}#code)",
+            "code_format": "A regular expression to validate a supplied code when it is set during the action to open, lock or unlock the MQTT lock. [Learn more.]({url}#code_format)",
+            "code_arm_required": "If set, the code is required to arm the alarm. If not set, the code is not validated.",
+            "code_disarm_required": "If set, the code is required to disarm the alarm. If not set, the code is not validated.",
+            "code_trigger_required": "If set, the code is required to manually trigger the alarm. If not set, the code is not validated.",
+            "color_temp_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract color temperature in Kelvin from the state payload value. Expected result of the template is an integer.",
             "command_off_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) for \"off\" state changes. Available variables are: `state` and `transition`.",
             "command_on_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) for \"on\" state changes. Available variables: `state`, `brightness`, `color_temp`, `red`, `green`, `blue`, `hue`, `sat`, `flash`, `transition` and `effect`. Values `red`, `green`, `blue` and `brightness` are provided as integers from range 0-255. Value of `hue` is provided as float from range 0-360. Value of `sat` is provided as float from range 0-100. Value of `color_temp` is provided as integer representing Kelvin units.",
-            "command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be published at the command topic.",
+            "command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be published at the command topic. [Learn more.]({url}#command_template)",
             "command_topic": "The publishing topic that will be used to control the {platform} entity. [Learn more.]({url}#command_topic)",
-            "color_temp_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract color temperature in Kelvin from the state payload value. Expected result of the template is an integer.",
+            "content_type": "The content type or the image data that is received at the image topic.",
             "force_update": "Sends update events even if the value hasn’t changed. Useful if you want to have meaningful value graphs in history. [Learn more.]({url}#force_update)",
             "green_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract green color from the state payload value. Expected result of the template is an integer from 0-255 range.",
+            "image_encoding": "Select the encoding of the received image data",
+            "image_topic": "The MQTT topic subscribed to receive messages containing the image data. [Learn more.]({url}#image_topic)",
             "last_reset_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the last reset. When Last reset template is set, the State class option must be Total. [Learn more.]({url}#last_reset_value_template)",
+            "max": "Maximum value. [Learn more.]({url}#max)",
+            "min": "Minimum value. [Learn more.]({url}#min)",
+            "mode": "Control how the number should be displayed in the UI. [Learn more.]({url}#mode)",
             "modes": "A list of supported operation modes. [Learn more.]({url}#modes)",
             "mode_command_topic": "The MQTT topic to publish commands to change the climate operation mode. [Learn more.]({url}#mode_command_topic)",
             "mode_command_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to define the operation mode to be sent to the operation mode command topic. [Learn more.]({url}#mode_command_template)",
@@ -354,6 +396,7 @@
             "payload_off": "The payload that represents the \"off\" state.",
             "payload_on": "The payload that represents the \"on\" state.",
             "payload_press": "The payload to send when the button is triggered.",
+            "payload_reset": "The payload received at the state topic that resets the entity to an unknown state.",
             "qos": "The QoS value a {platform} entity should use.",
             "red_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract red color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "retain": "Select if values published by the {platform} entity should be retained at the MQTT broker.",
@@ -361,7 +404,10 @@
             "state_on": "The incoming payload that represents the \"on\" state. Use only when the value that represents \"on\" state in the state topic is different from value that should be sent to the command topic to turn the device on.",
             "state_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract state from the state payload value.",
             "state_topic": "The MQTT topic subscribed to receive {platform} state values. [Learn more.]({url}#state_topic)",
+            "step": "Step value. Smallest value 0.001.",
             "supported_color_modes": "A list of color modes supported by the light. Possible color modes are On/Off, Brightness, Color temperature, HS, XY, RGB, RGBW, RGBWW, White. Note that if On/Off or Brightness are used, that must be the only value in the list. [Learn more.]({url}#supported_color_modes)",
+            "url_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract an URL from the received URL topic payload value. [Learn more.]({url}#url_template)",
+            "url_topic": "The MQTT topic subscribed to receive messages containing the image URL. [Learn more.]({url}#url_topic)",
             "value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the {platform} entity value. [Learn more.]({url}#value_template)"
           },
           "sections": {
@@ -386,6 +432,27 @@
                 "min_kelvin": "The minimum color temperature in Kelvin.",
                 "off_delay": "For sensors that only send \"on\" state updates (like PIRs), this variable sets a delay in seconds after which the sensor’s state will be updated back to \"off\".",
                 "transition": "Enable the transition feature for this light"
+              }
+            },
+            "alarm_control_panel_payload_settings": {
+              "name": "Alarm control panel payload settings",
+              "data": {
+                "payload_arm_away": "Payload \"arm away\"",
+                "payload_arm_custom_bypass": "Payload \"arm custom bypass\"",
+                "payload_arm_disarm": "Payload \"disarm\"",
+                "payload_arm_home": "Payload \"arm home\"",
+                "payload_arm_night": "Payload \"arm night\"",
+                "payload_arm_vacation": "Payload \"arm vacation\"",
+                "payload_trigger": "Payload \"trigger alarm\""
+              },
+              "data_description": {
+                "payload_arm_away": "The payload sent when an \"arm away\" command is issued.",
+                "payload_arm_custom_bypass": "The payload sent when an \"arm custom bypass\" command is issued.",
+                "payload_arm_disarm": "The payload sent when a \"disarm\" command is issued.",
+                "payload_arm_home": "The payload sent when an \"arm home\" command is issued.",
+                "payload_arm_night": "The payload sent when an \"arm night\" command is issued.",
+                "payload_arm_vacation": "The payload sent when an \"arm vacation\" command is issued.",
+                "payload_trigger": "The payload sent when a \"trigger alarm\" command is issued."
               }
             },
             "climate_action_settings": {
@@ -592,6 +659,31 @@
                 "brightness_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the brightness value."
               }
             },
+            "lock_payload_settings": {
+              "name": "Lock payload settings",
+              "data": {
+                "payload_lock": "Payload \"lock\"",
+                "payload_open": "Payload \"open\"",
+                "payload_reset": "Payload \"reset\"",
+                "payload_unlock": "Payload \"unlock\"",
+                "state_jammed": "State \"jammed\"",
+                "state_locked": "State \"locked\"",
+                "state_locking": "State \"locking\"",
+                "state_unlocked": "State \"unlocked\"",
+                "state_unlocking": "State \"unlocking\""
+              },
+              "data_description": {
+                "payload_lock": "The payload sent when a \"lock\" command is issued.",
+                "payload_open": "The payload sent when an \"open\" command is issued. Set this payload if your lock supports the \"open\" action.",
+                "payload_reset": "The payload received at the state topic that resets the lock to an unknown state.",
+                "payload_unlock": "The payload sent when an \"unlock\" command is issued.",
+                "state_jammed": "The payload received at the state topic that represents the \"jammed\" state.",
+                "state_locked": "The payload received at the state topic that represents the \"locked\" state.",
+                "state_locking": "The payload received at the state topic that represents the \"locking\" state.",
+                "state_unlocked": "The payload received at the state topic that represents the \"unlocked\" state.",
+                "state_unlocking": "The payload received at the state topic that represents the \"unlocking\" state."
+              }
+            },
             "fan_direction_settings": {
               "name": "Direction settings",
               "data": {
@@ -601,7 +693,7 @@
                 "direction_value_template": "Direction value template"
               },
               "data_description": {
-                "direction_command_topic": "The MQTT topic to publish commands to change the fan direction payload, either `forward` or `reverse`. Use the direction command template to customize the payload. [Learn more.]({url}#direction_command_topic)",
+                "direction_command_topic": "The MQTT topic to publish commands to change the fan direction. The payload will be either `forward` or `reverse` and can be customized using the direction command template. [Learn more.]({url}#direction_command_topic)",
                 "direction_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the direction command topic. The template variable `value` will be either `forward` or `reverse`.",
                 "direction_state_topic": "The MQTT topic subscribed to receive fan direction state. Accepted state payloads are `forward` or `reverse`. [Learn more.]({url}#direction_state_topic)",
                 "direction_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract fan direction state value. The template should return either `forward` or `reverse`. When the template returns an empty string, the direction will be ignored."
@@ -907,6 +999,7 @@
         "fan_speed_range_max_must_be_greater_than_speed_range_min": "Speed range max must be greater than speed range min",
         "fan_preset_mode_reset_in_preset_modes_list": "Payload \"reset preset mode\" is not a valid as a preset mode",
         "invalid_input": "Invalid value",
+        "invalid_regular_expression": "Must be a valid regular expression",
         "invalid_subscribe_topic": "Invalid subscribe topic",
         "invalid_template": "Invalid template",
         "invalid_supported_color_modes": "Invalid supported color modes selection",
@@ -914,6 +1007,7 @@
         "invalid_uom_for_state_class": "The unit of measurement \"{unit_of_measurement}\" is not supported by the selected state class, please either remove the state class, select a state class which supports \"{unit_of_measurement}\", or pick a supported unit of measurement from the list",
         "invalid_url": "Invalid URL",
         "last_reset_not_with_state_class_total": "The last reset value template option should be used with state class 'Total' only",
+        "max_below_min": "Max value should be greater or equal to min value",
         "max_below_min_humidity": "Max humidity value should be greater than min humidity value",
         "max_below_min_kelvin": "Max Kelvin value should be greater than min Kelvin value",
         "max_below_min_temperature": "Max temperature value should be greater than min temperature value",
@@ -1038,6 +1132,23 @@
     }
   },
   "selector": {
+    "alarm_control_panel_code_mode": {
+      "options": {
+        "local_code": "Local code validation",
+        "remote_code": "Numeric remote code validation",
+        "remote_code_text": "Text remote code validation"
+      }
+    },
+    "alarm_control_panel_features": {
+      "options": {
+        "arm_away": "[%key:component::alarm_control_panel::services::alarm_arm_away::name%]",
+        "arm_custom_bypass": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::name%]",
+        "arm_home": "[%key:component::alarm_control_panel::services::alarm_arm_home::name%]",
+        "arm_night": "[%key:component::alarm_control_panel::services::alarm_arm_night::name%]",
+        "arm_vacation": "[%key:component::alarm_control_panel::services::alarm_arm_vacation::name%]",
+        "trigger": "[%key:component::alarm_control_panel::services::alarm_trigger::name%]"
+      }
+    },
     "climate_modes": {
       "options": {
         "off": "[%key:common::state::off%]",
@@ -1104,6 +1215,7 @@
     },
     "device_class_sensor": {
       "options": {
+        "absolute_humidity": "[%key:component::sensor::entity_component::absolute_humidity::name%]",
         "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
         "area": "[%key:component::sensor::entity_component::area::name%]",
         "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
@@ -1136,6 +1248,7 @@
         "ozone": "[%key:component::sensor::entity_component::ozone::name%]",
         "ph": "[%key:component::sensor::entity_component::ph::name%]",
         "pm1": "[%key:component::sensor::entity_component::pm1::name%]",
+        "pm4": "[%key:component::sensor::entity_component::pm4::name%]",
         "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
         "pm25": "[%key:component::sensor::entity_component::pm25::name%]",
         "power": "[%key:component::sensor::entity_component::power::name%]",
@@ -1143,6 +1256,7 @@
         "precipitation": "[%key:component::sensor::entity_component::precipitation::name%]",
         "precipitation_intensity": "[%key:component::sensor::entity_component::precipitation_intensity::name%]",
         "pressure": "[%key:component::sensor::entity_component::pressure::name%]",
+        "reactive_energy": "[%key:component::sensor::entity_component::reactive_energy::name%]",
         "reactive_power": "[%key:component::sensor::entity_component::reactive_power::name%]",
         "signal_strength": "[%key:component::sensor::entity_component::signal_strength::name%]",
         "sound_pressure": "[%key:component::sensor::entity_component::sound_pressure::name%]",
@@ -1174,11 +1288,30 @@
         "diagnostic": "Diagnostic"
       }
     },
+    "image_encoding": {
+      "options": {
+        "raw": "Raw data",
+        "b64": "Base64 encoding"
+      }
+    },
+    "image_processing_mode": {
+      "options": {
+        "image_data": "Image data is received",
+        "image_url": "Image URL is received"
+      }
+    },
     "light_schema": {
       "options": {
         "basic": "Default schema",
         "json": "JSON",
         "template": "Template"
+      }
+    },
+    "number_mode": {
+      "options": {
+        "auto": "[%key:component::number::entity_component::_::state_attributes::mode::state::auto%]",
+        "box": "[%key:component::number::entity_component::_::state_attributes::mode::state::box%]",
+        "slider": "[%key:component::number::entity_component::_::state_attributes::mode::state::slider%]"
       }
     },
     "on_command_type": {
@@ -1190,13 +1323,17 @@
     },
     "platform": {
       "options": {
+        "alarm_control_panel": "[%key:component::alarm_control_panel::title%]",
         "binary_sensor": "[%key:component::binary_sensor::title%]",
         "button": "[%key:component::button::title%]",
         "climate": "[%key:component::climate::title%]",
         "cover": "[%key:component::cover::title%]",
         "fan": "[%key:component::fan::title%]",
+        "image": "[%key:component::image::title%]",
         "light": "[%key:component::light::title%]",
+        "lock": "[%key:component::lock::title%]",
         "notify": "[%key:component::notify::title%]",
+        "number": "[%key:component::number::title%]",
         "sensor": "[%key:component::sensor::title%]",
         "switch": "[%key:component::switch::title%]"
       }
@@ -1284,7 +1421,7 @@
     }
   },
   "triggers": {
-    "mqtt": {
+    "_": {
       "name": "MQTT",
       "description": "When a specific message is received on a given MQTT topic.",
       "description_configured": "When an MQTT message has been received",
