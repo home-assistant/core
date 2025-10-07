@@ -223,6 +223,9 @@
           "up": "Up",
           "down": "Down"
         }
+      },
+      "dust_filter_alarm": {
+        "name": "Dust filter alarm threshold in hours"
       }
     },
     "sensor": {

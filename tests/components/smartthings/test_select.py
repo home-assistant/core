@@ -189,3 +189,31 @@ async def test_availability_at_start(
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get("select.dryer").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000003"])
+async def test_select_option_as_integer(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test selecting an option represented as an integer."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("select.clim_salon_dust_filter_alarm")
+    assert state.state == "500"
+    assert all(isinstance(option, str) for option in state.attributes[ATTR_OPTIONS])
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: "select.clim_salon_dust_filter_alarm", ATTR_OPTION: "300"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977",
+        Capability.SAMSUNG_CE_DUST_FILTER_ALARM,
+        Command.SET_ALARM_THRESHOLD,
+        MAIN,
+        argument=300,
+    )

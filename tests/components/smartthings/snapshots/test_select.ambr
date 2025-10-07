@@ -1,4 +1,126 @@
 # serializer version: 1
+# name: test_all_entities[da_ac_rac_000003][select.clim_salon_dust_filter_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '180',
+        '300',
+        '500',
+        '700',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.clim_salon_dust_filter_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dust filter alarm',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dust_filter_alarm',
+    'unique_id': '1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977_main_samsungce.dustFilterAlarm_alarmThreshold_alarmThreshold',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000003][select.clim_salon_dust_filter_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Clim Salon Dust filter alarm',
+      'options': list([
+        '180',
+        '300',
+        '500',
+        '700',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.clim_salon_dust_filter_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '500',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_01001][select.aire_dormitorio_principal_dust_filter_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '180',
+        '300',
+        '500',
+        '700',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.aire_dormitorio_principal_dust_filter_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Dust filter alarm',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dust_filter_alarm',
+    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main_samsungce.dustFilterAlarm_alarmThreshold_alarmThreshold',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_rac_01001][select.aire_dormitorio_principal_dust_filter_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Aire Dormitorio Principal Dust filter alarm',
+      'options': list([
+        '180',
+        '300',
+        '500',
+        '700',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.aire_dormitorio_principal_dust_filter_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '500',
+  })
+# ---
 # name: test_all_entities[da_ks_microwave_0101x][select.microwave_lamp-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
