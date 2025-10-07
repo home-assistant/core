@@ -425,7 +425,7 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
 
     @rpc_call
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on relay."""
+        """Turn on switch."""
         method = getattr(self.coordinator.device, self.entity_description.method_on)
 
         if TYPE_CHECKING:
@@ -436,7 +436,7 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
 
     @rpc_call
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off relay."""
+        """Turn off switch."""
         method = getattr(self.coordinator.device, self.entity_description.method_off)
 
         if TYPE_CHECKING:
