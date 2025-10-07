@@ -91,13 +91,10 @@ async def test_validate_input_exceptions(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.london_underground.config_flow.async_get_clientsession"
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_LINE: ["Bakerloo", "Central"]},
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_LINE: ["Bakerloo", "Central"]},
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == expected_error
