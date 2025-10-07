@@ -29,12 +29,12 @@ class OpenRGBMode(StrEnum):
     """OpenRGB modes."""
 
     OFF = "Off"
-    CUSTOM = "Custom"
-    DIRECT = "Direct"
     STATIC = "Static"
+    DIRECT = "Direct"
+    CUSTOM = "Custom"
 
 
-EFFECT_OFF_OPENRGB_MODES = {OpenRGBMode.STATIC, OpenRGBMode.DIRECT}
+EFFECT_OFF_OPENRGB_MODES = {OpenRGBMode.STATIC, OpenRGBMode.DIRECT, OpenRGBMode.CUSTOM}
 
 DEVICE_TYPE_ICONS: dict[DeviceType, str] = {
     DeviceType.MOTHERBOARD: "mdi:developer-board",
