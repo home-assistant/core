@@ -54,11 +54,10 @@ async def _validate_input(
         websession=new_websession,
         europe=(data[CONF_REGION] == SHARKIQ_REGION_EUROPE),
     )
-
     try:
         async with asyncio.timeout(15):
             LOGGER.debug("Initialize connection to Ayla networks API")
-            await ayla_api.async_sign_in()
+            await ayla_api.async_sign_in(True)
     except (TimeoutError, aiohttp.ClientError, TypeError) as error:
         LOGGER.error(error)
         raise CannotConnect(

@@ -38,7 +38,7 @@ async def async_connect_or_timeout(ayla_api: AylaApi) -> bool:
     try:
         async with asyncio.timeout(API_TIMEOUT):
             LOGGER.debug("Initialize connection to Ayla networks API")
-            await ayla_api.async_sign_in()
+            await ayla_api.async_sign_in(True)
     except SharkIqAuthError:
         LOGGER.error("Authentication error connecting to Shark IQ api")
         return False
