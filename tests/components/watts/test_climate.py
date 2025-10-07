@@ -80,7 +80,7 @@ async def test_climate_initialization(mock_thermostat_device) -> None:
     device_info = climate.device_info
     assert device_info is not None
     assert device_info["identifiers"] == {("watts", "thermostat_123")}
-    assert device_info["name"] == "Test Thermostat"
+    assert device_info["name"] == "Living Room Test Thermostat"
     assert device_info["manufacturer"] == "Watts"
     assert device_info["model"] == "Vision+ thermostat"
 

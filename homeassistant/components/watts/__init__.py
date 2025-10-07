@@ -63,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) 
         session=session,
     )
 
-    client = WattsVisionClient(auth)
+    client = WattsVisionClient(auth, session)
     coordinator = WattsVisionCoordinator(hass, client, entry)
 
     await coordinator.async_config_entry_first_refresh()

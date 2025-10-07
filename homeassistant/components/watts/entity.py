@@ -24,10 +24,13 @@ class WattsVisionEntity(CoordinatorEntity[WattsVisionCoordinator]):
         self._attr_unique_id = device_id
 
         if self.device:
-            self._attr_name = getattr(self.device, "device_name", None)
+            device_name = self.device.device_name
+            if hasattr(self.device, "room_name") and self.device.room_name:
+                device_name = f"{self.device.room_name} {device_name}"
+
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self.device_id)},
-                name=self.device.device_name,
+                name=device_name,
                 manufacturer="Watts",
                 model=f"Vision+ {self.device.device_type}",
             )
