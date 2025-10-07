@@ -669,7 +669,7 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
                 "label_field": "name",
                 "description_field": "percentage",
             },
-            (),
+            ("abc123",),
             (),
         ),
     ],
