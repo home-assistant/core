@@ -402,8 +402,8 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 66666,
-      'min_color_temp_kelvin': 15,
+      'max_mireds': 500,
+      'min_color_temp_kelvin': 2000,
       'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -450,8 +450,8 @@
       'friendly_name': 'Inovelli Light (6)',
       'hs_color': None,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 66666,
-      'min_color_temp_kelvin': 15,
+      'max_mireds': 500,
+      'min_color_temp_kelvin': 2000,
       'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
@@ -534,8 +534,8 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 66666,
-      'min_color_temp_kelvin': 15,
+      'max_mireds': 500,
+      'min_color_temp_kelvin': 2000,
       'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -582,8 +582,8 @@
       'friendly_name': 'Mock OnOff Light',
       'hs_color': None,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 66666,
-      'min_color_temp_kelvin': 15,
+      'max_mireds': 500,
+      'min_color_temp_kelvin': 2000,
       'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
@@ -609,8 +609,8 @@
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 66666,
-      'min_color_temp_kelvin': 15,
+      'max_mireds': 500,
+      'min_color_temp_kelvin': 2000,
       'min_mireds': 153,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -657,8 +657,8 @@
       'friendly_name': 'Mock Light',
       'hs_color': None,
       'max_color_temp_kelvin': 6535,
-      'max_mireds': 66666,
-      'min_color_temp_kelvin': 15,
+      'max_mireds': 500,
+      'min_color_temp_kelvin': 2000,
       'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
