@@ -90,21 +90,6 @@ def _base_schema(
     return vol.Schema(base_schema)
 
 
-FLOW_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_FLOW_TYPE): SelectSelector(
-            SelectSelectorConfig(
-                mode=SelectSelectorMode.LIST,
-                options=[
-                    "Discovered",
-                    "Manual",
-                ],
-            )
-        ),
-    }
-)
-
-
 class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Squeezebox."""
 
@@ -113,9 +98,8 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize an instance of the squeezebox config flow."""
         self.data_schema = _base_schema()
-        self.discovery_info: dict[str, Any] | None = None
+        self.discovery_info: dict[str, Any] | None = {}
         self.discovery_task: asyncio.Task | None = None
-        self.discovery_failed: bool = False
 
     @staticmethod
     @callback
@@ -123,10 +107,11 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
+    @callback
     async def _discover(self, uuid: str | None = None) -> None:
         """Discover an unconfigured LMS server."""
-        self.discovery_info = None
-        discovery_event = asyncio.Event()
+        _discovery_event = asyncio.Event()
+        _discovery_task: asyncio.Task | None = None
 
         def _discovery_callback(server: Server) -> None:
             if server.uuid:
@@ -139,18 +124,22 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_PORT: int(server.port),
                     "uuid": server.uuid,
                 }
-                _LOGGER.critical("Discovered server: %s", self.discovery_info)
-                discovery_event.set()
+                _LOGGER.critical("Discovered server: %s", server)
+                _discovery_event.set()
 
-        discovery_task = self.hass.async_create_task(
+        _discovery_task = self.hass.async_create_task(
             async_discover(_discovery_callback)
         )
 
-        await discovery_event.wait()
-        discovery_task.cancel()  # stop searching as soon as we find server
-
-        # update with suggested values from discovery
-        self.data_schema = _base_schema(self.discovery_info)
+        try:
+            async with asyncio.timeout(TIMEOUT):
+                await _discovery_event.wait()
+                _discovery_task.cancel()
+                # update with suggested values from discovery
+                self.data_schema = _base_schema(self.discovery_info)
+        except TimeoutError:
+            _discovery_task.cancel()
+            self.discovery_info = {}
 
     async def _validate_input(self, data: dict[str, Any]) -> str | None:
         """Validate the user input allows us to connect.
@@ -182,19 +171,6 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return None
 
-    async def discovery_start(self) -> None:
-        """Discovery Task wrapper."""
-        try:
-            async with asyncio.timeout(5):
-                await self._discover()
-                self.discovery_failed = False
-        except TimeoutError:
-            _LOGGER.debug("Discovery timed out")
-            self.discovery_failed = True
-        except asyncio.CancelledError:
-            _LOGGER.debug("Discovery cancelled")
-            self.discovery_failed = True
-
     async def async_step_flow_type(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -203,12 +179,18 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input:
             # update with host provided by user
+            if (
+                self.discovery_info.get(CONF_HOST)
+                and user_input[CONF_FLOW_TYPE] != "Manual"
+            ):
+                user_input[CONF_HOST] = self.discovery_info.get(CONF_HOST)
+                user_input[CONF_PORT] = self.discovery_info.get(CONF_PORT)
             self.data_schema = _base_schema(user_input)
             return await self.async_step_edit()
 
-        _LOGGER.warning("Discovery Info %s", self.discovery_info)
-
-        _discovered_name = "Discovered LMS: " + "Unknown"
+        _discovered_name = "Discovered LMS: " + self.discovery_info.get(
+            CONF_HOST, "None"
+        )
 
         return self.async_show_form(
             step_id="flow_type",
@@ -227,7 +209,9 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
                     }
                 ),
                 {
-                    CONF_FLOW_TYPE: "Manual" if errors else _discovered_name,
+                    CONF_FLOW_TYPE: "Manual"
+                    if not self.discovery_info
+                    else _discovered_name,
                 },
             ),
             errors=errors,
@@ -237,17 +221,24 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
+
         if user_input and CONF_HOST in user_input:
             # update with host provided by user
             self.data_schema = _base_schema(user_input)
             return await self.async_step_edit()
 
         if not self.discovery_task:
-            self.discovery_task = self.hass.async_create_task(self.discovery_start())
+            self.discovery_task = self.hass.async_create_task(self._discover())
 
         if self.discovery_task.done():
+            self.discovery_task.cancel()
             self.discovery_task = None
-            return self.async_show_progress_done(next_step_id="flow_type")
+            # Sleep to allow task cancellation to complete
+            await asyncio.sleep(0.1)
+            return self.async_show_progress_done(
+                next_step_id="flow_type" if self.discovery_info else "edit"
+            )
+
         return self.async_show_progress(
             step_id="user",
             progress_action="discover",
@@ -276,35 +267,37 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_integration_discovery(
-        self, discovery_info: dict[str, Any]
+        self, _discovery_info: dict[str, Any]
     ) -> ConfigFlowResult:
         """Handle discovery of a server."""
-        _LOGGER.debug("Reached server discovery flow with info: %s", discovery_info)
-        if "uuid" in discovery_info:
-            await self.async_set_unique_id(discovery_info.pop("uuid"))
+        _LOGGER.debug("Reached server discovery flow with info: %s", _discovery_info)
+        if "uuid" in _discovery_info:
+            await self.async_set_unique_id(_discovery_info.pop("uuid"))
             self._abort_if_unique_id_configured()
         else:
             # attempt to connect to server and determine uuid. will fail if
             # password required
-            error = await self._validate_input(discovery_info)
+            error = await self._validate_input(_discovery_info)
             if error:
                 await self._async_handle_discovery_without_unique_id()
 
         # update schema with suggested values from discovery
-        self.data_schema = _base_schema(discovery_info)
+        self.data_schema = _base_schema(_discovery_info)
 
-        self.context.update({"title_placeholders": {"host": discovery_info[CONF_HOST]}})
+        self.context.update(
+            {"title_placeholders": {"host": _discovery_info[CONF_HOST]}}
+        )
 
         return await self.async_step_edit()
 
     async def async_step_dhcp(
-        self, discovery_info: DhcpServiceInfo
+        self, _discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery of a Squeezebox player."""
         _LOGGER.debug(
-            "Reached dhcp discovery of a player with info: %s", discovery_info
+            "Reached dhcp discovery of a player with info: %s", _discovery_info
         )
-        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
+        await self.async_set_unique_id(format_mac(_discovery_info.macaddress))
         self._abort_if_unique_id_configured()
 
         _LOGGER.debug("Configuring dhcp player with unique id: %s", self.unique_id)

@@ -11,7 +11,7 @@
         "data": {
           "flow_type": "Configured discovered LMS or add manually?"
         },
-        "description": "You can ask the setup to configure a discover LMS if one was found, or enter details manually",
+        "description": "Setup can configure the discovered LMS, or you can enter new details manually",
         "title": "Lyrion Music Server"
       },
       "user": {
