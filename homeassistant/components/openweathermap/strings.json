@@ -64,7 +64,12 @@
         "name": "Snow"
       },
       "precipitation_kind": {
-        "name": "Precipitation kind"
+        "name": "Precipitation kind",
+        "state": {
+          "None": "None",
+          "Rain": "Rain",
+          "Snow": "Snow"
+        }
       },
       "uv_index": {
         "name": "[%key:component::weather::entity_component::_::state_attributes::uv_index::name%]"
@@ -73,7 +78,18 @@
         "name": "[%key:component::weather::entity_component::_::state_attributes::visibility::name%]"
       },
       "condition": {
-        "name": "Condition"
+        "name": "Condition",
+        "state": {
+          "clear-night": "[%key:component::weather::entity_component::_::state::clear-night%]",
+          "cloudy": "[%key:component::weather::entity_component::_::state::cloudy%]",
+          "fog": "[%key:component::weather::entity_component::_::state::fog%]",
+          "hail": "[%key:component::weather::entity_component::_::state::hail%]",
+          "partlycloudy": "[%key:component::weather::entity_component::_::state::partlycloudy%]",
+          "pouring": "[%key:component::weather::entity_component::_::state::pouring%]",
+          "rainy": "[%key:component::weather::entity_component::_::state::rainy%]",
+          "snowy": "[%key:component::weather::entity_component::_::state::snowy%]",
+          "sunny": "[%key:component::weather::entity_component::_::state::sunny%]"
+        }
       },
       "weather": {
         "name": "[%key:component::weather::title%]"
