@@ -12,22 +12,11 @@ from fluss_api import (
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.fluss.config_flow import (
-    STEP_USER_DATA_SCHEMA,
-    FlussConfigFlow,
-)
+from homeassistant.components.fluss.config_flow import STEP_USER_DATA_SCHEMA
 from homeassistant.components.fluss.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-
-@pytest.fixture
-def config_flow(hass: HomeAssistant) -> FlussConfigFlow:
-    """Fixture to create a FlussConfigFlow instance with hass."""
-    flow = FlussConfigFlow()
-    flow.hass = hass
-    return flow
 
 
 async def test_step_user(hass: HomeAssistant) -> None:
