@@ -17,7 +17,7 @@ from .homeassistant import (
 from .registry import QuirksRegistry
 
 __all__ = [
-    "QUIRKS_REGISTRY",
+    "TUYA_QUIRKS_REGISTRY",
     "QuirksRegistry",
     "TuyaCoverDefinition",
     "TuyaCoverDeviceClass",
