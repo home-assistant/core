@@ -162,7 +162,17 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key=ATTR_API_CONDITION,
         translation_key=ATTR_API_CONDITION,
         device_class=SensorDeviceClass.ENUM,
-        options=["clear-night", "cloudy", "fog", "hail", "partlycloudy", "pouring", "rainy", "snowy", "sunny"],
+        options=[
+            "clear-night",
+            "cloudy",
+            "fog",
+            "hail",
+            "partlycloudy",
+            "pouring",
+            "rainy",
+            "snowy",
+            "sunny",
+        ],
     ),
     SensorEntityDescription(
         key=ATTR_API_WEATHER_CODE,
