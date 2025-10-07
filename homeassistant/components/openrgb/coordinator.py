@@ -147,4 +147,4 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 return f"{device_name} {idx}"
 
         # Should never reach here, but just in case
-        return device_name
+        return device_name  # pragma: no cover

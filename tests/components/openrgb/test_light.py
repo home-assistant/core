@@ -596,7 +596,7 @@ async def test_light_availability(
     assert state
     assert state.state == STATE_ON
 
-    # Simulate device disconnection
+    # Simulate device being momentarily unplugged
     mock_openrgb_client.devices = []
 
     freezer.tick(SCAN_INTERVAL)
