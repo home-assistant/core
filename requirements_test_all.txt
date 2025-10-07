@@ -1399,7 +1399,7 @@ open-meteo==0.3.2
 
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
-openai==1.99.5
+openai==2.2.0
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
