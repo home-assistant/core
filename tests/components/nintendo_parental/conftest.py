@@ -4,7 +4,6 @@ from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pynintendoparental.device import Device
 import pytest
 
 from homeassistant.components.nintendo_parental.const import DOMAIN
@@ -22,18 +21,6 @@ def mock_config_entry() -> MockConfigEntry:
         data={"session_token": API_TOKEN},
         unique_id=ACCOUNT_ID,
     )
-
-
-@pytest.fixture
-def mock_nintendo_device() -> Device:
-    """Return a mocked device."""
-    mock = AsyncMock(spec=Device)
-    mock.device_id = "testdevid"
-    mock.name = "Home Assistant Test"
-    mock.extra = {"device": {"firmwareVersion": {"displayedVersion": "99.99.99"}}}
-    mock.limit_time = 120
-    mock.today_playing_time = 110
-    return mock
 
 
 @pytest.fixture
@@ -64,27 +51,6 @@ def mock_nintendo_authenticator() -> Generator[MagicMock]:
         type(mock_auth).complete_login = mock_auth.complete_login
         mock_auth_class.generate_login.return_value = mock_auth
         yield mock_auth
-
-
-@pytest.fixture
-def mock_nintendo_client(
-    mock_nintendo_device: Device,
-) -> Generator[AsyncMock]:
-    """Mock a Nintendo client."""
-    with (
-        patch(
-            "homeassistant.components.nintendo_parental.NintendoParental",
-            autospec=True,
-        ) as mock_client,
-        patch(
-            "homeassistant.components.nintendo_parental.config_flow.NintendoParental",
-            new=mock_client,
-        ),
-    ):
-        client = mock_client.return_value
-        client.update.return_value = True
-        client.devices.return_value = {"testdevid": mock_nintendo_device}
-        yield client
 
 
 @pytest.fixture
