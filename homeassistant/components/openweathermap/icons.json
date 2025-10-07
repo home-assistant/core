@@ -16,7 +16,7 @@
       "uv_index": {
         "default": "mdi:weather-sunny"
       },
-      "visibility": {
+      "visibility_distance": {
         "default": "mdi:eye"
       },
       "weather_code": {
