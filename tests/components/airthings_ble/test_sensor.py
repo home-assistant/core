@@ -33,8 +33,8 @@ async def test_migration_from_v1_to_v3_unique_id(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Verify that we can migrate from v1 (pre 2023.9.0) to the latest unique id format."""
-    entry = create_entry(hass)
-    device = create_device(entry, device_registry)
+    entry = create_entry(hass, WAVE_SERVICE_INFO)
+    device = create_device(entry, device_registry, WAVE_SERVICE_INFO)
 
     assert entry is not None
     assert device is not None
@@ -74,8 +74,8 @@ async def test_migration_from_v2_to_v3_unique_id(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Verify that we can migrate from v2 (introduced in 2023.9.0) to the latest unique id format."""
-    entry = create_entry(hass)
-    device = create_device(entry, device_registry)
+    entry = create_entry(hass, WAVE_SERVICE_INFO)
+    device = create_device(entry, device_registry, WAVE_SERVICE_INFO)
 
     assert entry is not None
     assert device is not None
@@ -115,8 +115,8 @@ async def test_migration_from_v1_and_v2_to_v3_unique_id(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test if migration works when we have both v1 (pre 2023.9.0) and v2 (introduced in 2023.9.0) unique ids."""
-    entry = create_entry(hass)
-    device = create_device(entry, device_registry)
+    entry = create_entry(hass, WAVE_SERVICE_INFO)
+    device = create_device(entry, device_registry, WAVE_SERVICE_INFO)
 
     assert entry is not None
     assert device is not None
@@ -165,8 +165,8 @@ async def test_migration_with_all_unique_ids(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test if migration works when we have all unique ids."""
-    entry = create_entry(hass)
-    device = create_device(entry, device_registry)
+    entry = create_entry(hass, WAVE_SERVICE_INFO)
+    device = create_device(entry, device_registry, WAVE_SERVICE_INFO)
 
     assert entry is not None
     assert device is not None

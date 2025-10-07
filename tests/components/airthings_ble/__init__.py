@@ -247,22 +247,29 @@ VOC_V3 = MockEntity(
 )
 
 
-def create_entry(hass: HomeAssistant) -> MockConfigEntry:
+def create_entry(
+    hass: HomeAssistant,
+    service_info: BluetoothServiceInfoBleak,
+) -> MockConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=WAVE_SERVICE_INFO.address,
+        unique_id=service_info.address,
         title="Airthings Wave Plus (123456)",
     )
     entry.add_to_hass(hass)
     return entry
 
 
-def create_device(entry: ConfigEntry, device_registry: DeviceRegistry):
+def create_device(
+    entry: ConfigEntry,
+    device_registry: DeviceRegistry,
+    service_info: BluetoothServiceInfoBleak,
+):
     """Create a device for the given entry."""
     return device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={(CONNECTION_BLUETOOTH, WAVE_SERVICE_INFO.address)},
+        connections={(CONNECTION_BLUETOOTH, service_info.address)},
         manufacturer="Airthings AS",
         name="Airthings Wave Plus (123456)",
         model="Wave Plus",
