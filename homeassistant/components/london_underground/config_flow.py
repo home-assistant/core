@@ -109,7 +109,7 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title="London Underground",
             data={},
-            options={CONF_LINE: user_input.get(CONF_LINE, DEFAULT_LINES)},
+            options={CONF_LINE: import_data.get(CONF_LINE, DEFAULT_LINES)},
         )
 
 
