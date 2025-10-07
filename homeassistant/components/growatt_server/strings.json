@@ -461,6 +461,20 @@
       "total_maximum_output": {
         "name": "Maximum power"
       }
+    },
+    "number": {
+      "charge_power_rate": {
+        "name": "Charge power rate"
+      },
+      "charge_stop_soc": {
+        "name": "Charge stop SOC"
+      },
+      "discharge_power_rate": {
+        "name": "Discharge power rate"
+      },
+      "discharge_stop_soc": {
+        "name": "Discharge stop SOC"
+      }
     }
   }
 }
