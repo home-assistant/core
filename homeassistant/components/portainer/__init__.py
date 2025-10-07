@@ -23,7 +23,7 @@ import homeassistant.helpers.entity_registry as er
 from .const import DOMAIN
 from .coordinator import PortainerCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SWITCH]
+_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SWITCH]
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 

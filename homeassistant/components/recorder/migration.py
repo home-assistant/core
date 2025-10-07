@@ -2490,7 +2490,7 @@ class BaseMigration(ABC):
         start_schema_version: int,
         migration_changes: dict[str, int],
     ) -> None:
-        """Initialize a new BaseRunTimeMigration.
+        """Initialize a new BaseMigration.
 
         :param initial_schema_version: The schema version the database was created with.
         :param start_schema_version: The schema version when starting the migration.
@@ -2964,7 +2964,12 @@ class EventIDPostMigration(BaseRunTimeMigration):
                     _drop_foreign_key_constraints(
                         session_maker, instance.engine, TABLE_STATES, "event_id"
                     )
-                except (InternalError, OperationalError):
+                except (InternalError, OperationalError) as err:
+                    _LOGGER.debug(
+                        "Could not drop foreign key constraint on states.event_id, "
+                        "will try again later",
+                        exc_info=err,
+                    )
                     fk_remove_ok = False
                 else:
                     fk_remove_ok = True
