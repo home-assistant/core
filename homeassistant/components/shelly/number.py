@@ -303,7 +303,8 @@ RPC_NUMBERS: Final = {
         native_unit_of_measurement=PERCENTAGE,
         method="cury_set",
         slot="left",
-        available=lambda status: status["left"]["vial"]["level"] != -1,
+        available=lambda status: (left := status["left"]) is not None
+        and left["vial"]["level"] != -1,
         entity_class=RpcCuryIntensityNumber,
     ),
     "right_slot_intensity": RpcNumberDescription(
@@ -318,7 +319,8 @@ RPC_NUMBERS: Final = {
         native_unit_of_measurement=PERCENTAGE,
         method="cury_set",
         slot="right",
-        available=lambda status: status["right"]["vial"]["level"] != -1,
+        available=lambda status: (right := status["right"]) is not None
+        and right["vial"]["level"] != -1,
         entity_class=RpcCuryIntensityNumber,
     ),
 }

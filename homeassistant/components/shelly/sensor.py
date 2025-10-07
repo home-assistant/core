@@ -1667,7 +1667,8 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        available=lambda status: status["left"]["vial"]["level"] != -1,
+        available=lambda status: (left := status["left"]) is not None
+        and left["vial"]["level"] != -1,
     ),
     "cury_left_perfume": RpcSensorDescription(
         key="cury",
@@ -1676,7 +1677,8 @@ RPC_SENSORS: Final = {
         translation_key="perfume_name",
         value=lambda status, _: status["left"]["vial"]["name"],
         entity_category=EntityCategory.DIAGNOSTIC,
-        available=lambda status: status["left"]["vial"]["level"] != -1,
+        available=lambda status: (left := status["left"]) is not None
+        and left["vial"]["level"] != -1,
     ),
     "cury_right_level": RpcSensorDescription(
         key="cury",
@@ -1687,7 +1689,8 @@ RPC_SENSORS: Final = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        available=lambda status: status["right"]["vial"]["level"] != -1,
+        available=lambda status: (right := status["right"]) is not None
+        and right["vial"]["level"] != -1,
     ),
     "cury_right_perfume": RpcSensorDescription(
         key="cury",
@@ -1696,7 +1699,8 @@ RPC_SENSORS: Final = {
         translation_key="perfume_name",
         value=lambda status, _: status["right"]["vial"]["name"],
         entity_category=EntityCategory.DIAGNOSTIC,
-        available=lambda status: status["right"]["vial"]["level"] != -1,
+        available=lambda status: (right := status["right"]) is not None
+        and right["vial"]["level"] != -1,
     ),
 }
 

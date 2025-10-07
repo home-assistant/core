@@ -240,7 +240,8 @@ RPC_SWITCHES = {
         method_off="cury_set",
         method_params_fn=lambda id, value: (id, "left", value),
         entity_registry_enabled_default=True,
-        available=lambda status: status["left"]["vial"]["level"] != -1,
+        available=lambda status: (left := status["left"]) is not None
+        and left["vial"]["level"] != -1,
     ),
     "cury_right": RpcSwitchDescription(
         key="cury",
@@ -252,7 +253,8 @@ RPC_SWITCHES = {
         method_off="cury_set",
         method_params_fn=lambda id, value: (id, "right", value),
         entity_registry_enabled_default=True,
-        available=lambda status: status["right"]["vial"]["level"] != -1,
+        available=lambda status: (right := status["right"]) is not None
+        and right["vial"]["level"] != -1,
     ),
 }
 
