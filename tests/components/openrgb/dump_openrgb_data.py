@@ -24,6 +24,7 @@ import sys
 
 import jsonpickle
 from jsonpickle import handlers
+from jsonpickle.pickler import Pickler
 from openrgb import OpenRGBClient
 from openrgb.network import NetworkClient
 
@@ -36,11 +37,24 @@ class NetworkClientHandler(handlers.BaseHandler):
         return
 
 
+class PrivateAttributeFilteringPickler(Pickler):
+    """Custom pickler that filters out private attributes."""
+
+    def _flatten_key_value_pair(self, k, v, data):
+        """Override to filter out private attributes."""
+        if isinstance(k, str) and k.startswith("_"):
+            return data
+        return super()._flatten_key_value_pair(k, v, data)
+
+
 # Register the handler to exclude NetworkClient objects
 handlers.register(NetworkClient, NetworkClientHandler)
 
 # Configure encoder to sort keys
 jsonpickle.set_encoder_options("json", sort_keys=True)
+
+# Create custom pickler that filters private attributes
+pickler = PrivateAttributeFilteringPickler(make_refs=False)
 
 # Parse address and port from command line or use defaults
 address = sys.argv[1] if len(sys.argv) > 1 else "127.0.0.1"
@@ -50,4 +64,4 @@ port = int(sys.argv[2]) if len(sys.argv) > 2 else 6742
 client = OpenRGBClient(address=address, port=port, name=os.path.basename(__file__))
 
 # Print the JSON to stdout
-print(jsonpickle.encode(client, make_refs=False, indent=2))  # noqa: T201
+print(jsonpickle.json.encode(pickler.flatten(client), indent=2))  # noqa: T201

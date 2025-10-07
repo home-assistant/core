@@ -1,36 +1,4 @@
 {
-  "_colors": [
-    {
-      "blue": 0,
-      "green": 0,
-      "py/object": "openrgb.utils.RGBColor",
-      "red": 255
-    },
-    {
-      "blue": 0,
-      "green": 0,
-      "py/object": "openrgb.utils.RGBColor",
-      "red": 255
-    },
-    {
-      "blue": 0,
-      "green": 0,
-      "py/object": "openrgb.utils.RGBColor",
-      "red": 255
-    },
-    {
-      "blue": 0,
-      "green": 0,
-      "py/object": "openrgb.utils.RGBColor",
-      "red": 255
-    },
-    {
-      "blue": 0,
-      "green": 0,
-      "py/object": "openrgb.utils.RGBColor",
-      "red": 255
-    }
-  ],
   "active_mode": 2,
   "colors": [
     {
@@ -623,14 +591,6 @@
   "id": 0,
   "leds": [
     {
-      "_colors": [
-        {
-          "blue": 0,
-          "green": 0,
-          "py/object": "openrgb.utils.RGBColor",
-          "red": 255
-        }
-      ],
       "colors": [
         {
           "blue": 0,
@@ -646,14 +606,6 @@
       "py/object": "openrgb.orgb.LED"
     },
     {
-      "_colors": [
-        {
-          "blue": 0,
-          "green": 0,
-          "py/object": "openrgb.utils.RGBColor",
-          "red": 255
-        }
-      ],
       "colors": [
         {
           "blue": 0,
@@ -669,14 +621,6 @@
       "py/object": "openrgb.orgb.LED"
     },
     {
-      "_colors": [
-        {
-          "blue": 0,
-          "green": 0,
-          "py/object": "openrgb.utils.RGBColor",
-          "red": 255
-        }
-      ],
       "colors": [
         {
           "blue": 0,
@@ -692,14 +636,6 @@
       "py/object": "openrgb.orgb.LED"
     },
     {
-      "_colors": [
-        {
-          "blue": 0,
-          "green": 0,
-          "py/object": "openrgb.utils.RGBColor",
-          "red": 255
-        }
-      ],
       "colors": [
         {
           "blue": 0,
@@ -715,14 +651,6 @@
       "py/object": "openrgb.orgb.LED"
     },
     {
-      "_colors": [
-        {
-          "blue": 0,
-          "green": 0,
-          "py/object": "openrgb.utils.RGBColor",
-          "red": 255
-        }
-      ],
       "colors": [
         {
           "blue": 0,
@@ -1149,38 +1077,6 @@
   },
   "zones": [
     {
-      "_colors": [
-        {
-          "blue": 0,
-          "green": 0,
-          "py/object": "openrgb.utils.RGBColor",
-          "red": 255
-        },
-        {
-          "blue": 0,
-          "green": 0,
-          "py/object": "openrgb.utils.RGBColor",
-          "red": 255
-        },
-        {
-          "blue": 0,
-          "green": 0,
-          "py/object": "openrgb.utils.RGBColor",
-          "red": 255
-        },
-        {
-          "blue": 0,
-          "green": 0,
-          "py/object": "openrgb.utils.RGBColor",
-          "red": 255
-        },
-        {
-          "blue": 0,
-          "green": 0,
-          "py/object": "openrgb.utils.RGBColor",
-          "red": 255
-        }
-      ],
       "colors": [
         {
           "blue": 0,
@@ -1218,14 +1114,6 @@
       "id": 0,
       "leds": [
         {
-          "_colors": [
-            {
-              "blue": 0,
-              "green": 0,
-              "py/object": "openrgb.utils.RGBColor",
-              "red": 255
-            }
-          ],
           "colors": [
             {
               "blue": 0,
@@ -1241,14 +1129,6 @@
           "py/object": "openrgb.orgb.LED"
         },
         {
-          "_colors": [
-            {
-              "blue": 0,
-              "green": 0,
-              "py/object": "openrgb.utils.RGBColor",
-              "red": 255
-            }
-          ],
           "colors": [
             {
               "blue": 0,
@@ -1264,14 +1144,6 @@
           "py/object": "openrgb.orgb.LED"
         },
         {
-          "_colors": [
-            {
-              "blue": 0,
-              "green": 0,
-              "py/object": "openrgb.utils.RGBColor",
-              "red": 255
-            }
-          ],
           "colors": [
             {
               "blue": 0,
@@ -1287,14 +1159,6 @@
           "py/object": "openrgb.orgb.LED"
         },
         {
-          "_colors": [
-            {
-              "blue": 0,
-              "green": 0,
-              "py/object": "openrgb.utils.RGBColor",
-              "red": 255
-            }
-          ],
           "colors": [
             {
               "blue": 0,
@@ -1310,14 +1174,6 @@
           "py/object": "openrgb.orgb.LED"
         },
         {
-          "_colors": [
-            {
-              "blue": 0,
-              "green": 0,
-              "py/object": "openrgb.utils.RGBColor",
-              "red": 255
-            }
-          ],
           "colors": [
             {
               "blue": 0,
