@@ -514,6 +514,14 @@
     "deprecated_battery_level": {
       "title": "Deprecated battery level option in {entity_name}",
       "description": "The template vacuum options `battery_level` and `battery_level_template` are being removed in 2026.8.\n\nPlease remove the `battery_level` or `battery_level_template` option from the YAML configuration for {entity_id} ({entity_name})."
+    },
+    "config_format_triggers": {
+      "title": "Orphaned template trigger option",
+      "description": "There is an trigger option in the template configuration that does not pair with a template domain.  This will be an configuration validation error in 2026.5.\n\n Please remove the orphaned trigger from the configuration.\n\n```\n{config}\n```"
+    },
+    "config_format_actions": {
+      "title": "Template actions option requires a trigger",
+      "description": "There is an actions option in the template configuration that does not pair with a trigger option.  This will be an configuration validation error in 2026.5.\n\n Please add a trigger to the configuration or remove the actions option from the configuration.\n\n```\n{config}\n```"
     }
   },
   "options": {
