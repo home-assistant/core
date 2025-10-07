@@ -54,29 +54,10 @@ def _base_schema(
 ) -> vol.Schema:
     """Generate base schema."""
     base_schema: dict[Any, Any] = {}
-    if discovery_info and CONF_HOST in discovery_info:
-        base_schema.update(
-            {
-                vol.Required(
-                    CONF_HOST,
-                    description={"suggested_value": discovery_info[CONF_HOST]},
-                ): str,
-            }
-        )
-    else:
+    if not discovery_info or CONF_HOST not in discovery_info:
         base_schema.update({vol.Required(CONF_HOST): str})
 
-    if discovery_info and CONF_PORT in discovery_info:
-        base_schema.update(
-            {
-                vol.Required(
-                    CONF_PORT,
-                    default=DEFAULT_PORT,
-                    description={"suggested_value": discovery_info[CONF_PORT]},
-                ): int,
-            }
-        )
-    else:
+    if not discovery_info or CONF_PORT not in discovery_info:
         base_schema.update({vol.Required(CONF_PORT, default=DEFAULT_PORT): int})
 
     base_schema.update(
@@ -124,7 +105,11 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_PORT: int(server.port),
                     "uuid": server.uuid,
                 }
-                _LOGGER.critical("Discovered server: %s", server)
+                _LOGGER.debug(
+                    "Discovered server: %s, creating discovery_info %s",
+                    server,
+                    self.discovery_info,
+                )
                 _discovery_event.set()
 
         _discovery_task = self.hass.async_create_task(
@@ -186,6 +171,8 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_HOST] = self.discovery_info.get(CONF_HOST)
                 user_input[CONF_PORT] = self.discovery_info.get(CONF_PORT)
             self.data_schema = _base_schema(user_input)
+            if user_input[CONF_FLOW_TYPE] != "Manual":
+                return await self.async_step_edit_discovered()
             return await self.async_step_edit()
 
         _discovered_name = "Discovered LMS: " + self.discovery_info.get(
@@ -243,7 +230,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             progress_action="discover",
             description_placeholders={
-                "status": "Attempting to discover an LMS server",
+                "status": "Attempting to discover a new LMS server",
                 "hint": "This may take upto 5 seconds.",
             },
             progress_task=self.discovery_task,
@@ -263,7 +250,38 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = error
 
         return self.async_show_form(
-            step_id="edit", data_schema=self.data_schema, errors=errors
+            step_id="edit",
+            description_placeholders={
+                "desc": "No new LMS was discovered.  Please enter connection information manually."
+                if not self.discovery_info
+                else ""
+            },
+            data_schema=self.data_schema,
+            errors=errors,
+        )
+
+    async def async_step_edit_discovered(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Edit a discovered or manually inputted server."""
+        errors = {}
+        if user_input:
+            user_input[CONF_HOST] = self.discovery_info[CONF_HOST]
+            user_input[CONF_PORT] = self.discovery_info[CONF_PORT]
+            error = await self._validate_input(user_input)
+            if not error:
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST], data=user_input
+                )
+            errors["base"] = error
+
+        return self.async_show_form(
+            step_id="edit_discovered",
+            description_placeholders={
+                "desc": f"LMS Host: {self.discovery_info[CONF_HOST]}, Port: {self.discovery_info[CONF_PORT]}"
+            },
+            data_schema=self.data_schema,
+            errors=errors,
         )
 
     async def async_step_integration_discovery(

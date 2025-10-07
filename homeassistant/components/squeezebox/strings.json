@@ -14,16 +14,9 @@
         "description": "Setup can configure the discovered LMS, or you can enter new details manually",
         "title": "Lyrion Music Server"
       },
-      "user": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        },
-        "data_description": {
-          "host": "The hostname or IP address of your Lyrion Music Server."
-        }
-      },
       "edit": {
         "title": "Edit connection information",
+        "description": "{desc}",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
@@ -34,6 +27,20 @@
         "data_description": {
           "host": "[%key:component::squeezebox::config::step::user::data_description::host%]",
           "port": "The web interface port on the LMS. The default is 9000.",
+          "username": "The username from LMS Advanced Security (if defined).",
+          "password": "The password from LMS Advanced Security (if defined).",
+          "https": "Connect to the LMS over HTTPS (requires reverse proxy)."
+        }
+      },
+      "edit_discovered": {
+        "title": "Edit connection information",
+        "description": "{desc}",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "https": "Connect over HTTPS (requires reverse proxy)"
+        },
+        "data_description": {
           "username": "The username from LMS Advanced Security (if defined).",
           "password": "The password from LMS Advanced Security (if defined).",
           "https": "Connect to the LMS over HTTPS (requires reverse proxy)."
