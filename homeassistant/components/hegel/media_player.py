@@ -318,19 +318,12 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             await self._client.send(COMMANDS["power_on"], expect_reply=False)
         except Exception as err:
             _LOGGER.warning("Failed to send power_on: %s", err)
-            return
-        # rely on push or poll to update actual state
-        self._state["power"] = True
-        self.async_write_ha_state()
 
     async def async_turn_off(self) -> None:
         try:
             await self._client.send(COMMANDS["power_off"], expect_reply=False)
         except Exception as err:
             _LOGGER.warning("Failed to send power_off: %s", err)
-            return
-        self._state["power"] = False
-        self.async_write_ha_state()
 
     async def async_set_volume_level(self, volume: float) -> None:
         vol = max(0.0, min(volume, 1.0))
@@ -339,10 +332,6 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             await self._client.send(COMMANDS["volume_set"](amp_vol), expect_reply=False)
         except Exception as err:
             _LOGGER.warning("Failed to set volume: %s", err)
-            return
-        # optimistic update — amplifier will send push reply soon
-        self._state["volume"] = vol
-        self.async_write_ha_state()
 
     async def async_mute_volume(self, mute: bool) -> None:
         try:
@@ -351,9 +340,6 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             )
         except Exception as err:
             _LOGGER.warning("Failed to set mute: %s", err)
-            return
-        self._state["mute"] = mute
-        self.async_write_ha_state()
 
     async def async_volume_up(self) -> None:
         try:
@@ -375,9 +361,6 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                 await self._client.send(COMMANDS["input_set"](idx), expect_reply=False)
             except Exception as err:
                 _LOGGER.warning("Failed to select source %s: %s", source, err)
-                return
-            self._state["input"] = idx
-            self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self):
         # Cancel background watcher and stop client
