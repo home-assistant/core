@@ -12,6 +12,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 
+
 async def test_numbers(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -68,7 +69,7 @@ async def test_numbers_no_target_temp(
         },
         "temperature": {
             "tool0": {"actual": 18.83136, "target": None},
-            "bed": {"actual": 25.5, "target": None}
+            "bed": {"actual": 25.5, "target": None},
         },
     }
     freezer.move_to(datetime(2020, 2, 20, 9, 10, 0))
