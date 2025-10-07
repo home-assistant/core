@@ -189,7 +189,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'vial_level',
     'unique_id': '123456789ABC-cury:0-cury_left_level',
     'unit_of_measurement': '%',
   })
@@ -239,7 +239,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'cury_perfume',
+    'translation_key': 'perfume_name',
     'unique_id': '123456789ABC-cury:0-cury_left_perfume',
     'unit_of_measurement': None,
   })
@@ -289,7 +289,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'vial_level',
     'unique_id': '123456789ABC-cury:0-cury_right_level',
     'unit_of_measurement': '%',
   })
@@ -339,7 +339,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'cury_perfume',
+    'translation_key': 'perfume_name',
     'unique_id': '123456789ABC-cury:0-cury_right_perfume',
     'unit_of_measurement': None,
   })

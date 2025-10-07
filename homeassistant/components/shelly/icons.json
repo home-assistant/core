@@ -23,9 +23,6 @@
       "charger_state": {
         "default": "mdi:ev-station"
       },
-      "cury_perfume": {
-        "default": "mdi:scent"
-      },
       "detected_objects": {
         "default": "mdi:account-group"
       },
@@ -41,6 +38,9 @@
       "operation": {
         "default": "mdi:cog-transfer"
       },
+      "perfume_name": {
+        "default": "mdi:scent"
+      },
       "self_test": {
         "default": "mdi:progress-wrench"
       },
@@ -55,6 +55,9 @@
       },
       "illuminance_level": {
         "default": "mdi:brightness-5"
+      },
+      "vial_level": {
+        "default": "mdi:bottle-tonic-outline"
       }
     },
     "switch": {
