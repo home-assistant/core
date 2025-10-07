@@ -28,9 +28,10 @@ def mock_hass() -> MagicMock:
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Mock config entry."""
+    """Return the default mocked config entry."""
     return MockConfigEntry(
         domain="fluss",
+        title="Fluss Integration",
         data={CONF_API_KEY: "test_api_key"},
         unique_id="test_unique_id",
     )
@@ -54,3 +55,15 @@ def mock_coordinator(
         coordinator = FlussDataUpdateCoordinator(hass, mock_config_entry)
         coordinator.async_config_entry_first_refresh = MagicMock()
         return coordinator
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api_client: MagicMock
+) -> MockConfigEntry:
+    """Set up the Fluss integration for testing."""
+    with patch("fluss_api.FlussApiClient", return_value=mock_api_client):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    return mock_config_entry
