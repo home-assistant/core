@@ -5,6 +5,7 @@ from __future__ import annotations
 from librehardwaremonitor_api.model import LibreHardwareMonitorSensorData
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -12,7 +13,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LibreHardwareMonitorCoordinator
 from .const import DOMAIN
-from .coordinator import LibreHardwareMonitorConfigEntry
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -23,14 +23,14 @@ STATE_MAX_VALUE = "max_value"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: LibreHardwareMonitorConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the LibreHardwareMonitor platform."""
     lhm_coordinator = config_entry.runtime_data
 
     async_add_entities(
-        LibreHardwareMonitorSensor(lhm_coordinator, config_entry, sensor_data)
+        LibreHardwareMonitorSensor(lhm_coordinator, config_entry.entry_id, sensor_data)
         for sensor_data in lhm_coordinator.data.sensor_data.values()
     )
 
@@ -46,7 +46,7 @@ class LibreHardwareMonitorSensor(
     def __init__(
         self,
         coordinator: LibreHardwareMonitorCoordinator,
-        config_entry: LibreHardwareMonitorConfigEntry,
+        entry_id: str,
         sensor_data: LibreHardwareMonitorSensorData,
     ) -> None:
         """Initialize an LibreHardwareMonitor sensor."""
@@ -59,15 +59,13 @@ class LibreHardwareMonitorSensor(
             STATE_MAX_VALUE: self._format_number_value(sensor_data.max),
         }
         self._attr_native_unit_of_measurement = sensor_data.unit
-        self._attr_unique_id: str = (
-            f"lhm_{config_entry.entry_id}_{sensor_data.sensor_id}"
-        )
+        self._attr_unique_id: str = f"lhm_{entry_id}_{sensor_data.sensor_id}"
 
         self._sensor_id: str = sensor_data.sensor_id
 
         # Hardware device
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{config_entry.entry_id}_{sensor_data.device_id}")},
+            identifiers={(DOMAIN, f"{entry_id}_{sensor_data.device_id}")},
             name=sensor_data.device_name,
             model=sensor_data.device_type,
         )

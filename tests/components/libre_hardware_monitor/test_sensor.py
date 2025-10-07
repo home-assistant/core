@@ -15,6 +15,7 @@ from librehardwaremonitor_api.model import (
     DeviceId,
     DeviceName,
     LibreHardwareMonitorData,
+    LibreHardwareMonitorSensorData,
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -26,7 +27,6 @@ from homeassistant.components.libre_hardware_monitor.const import (
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import init_integration
 
@@ -195,38 +195,102 @@ async def test_legacy_device_ids_are_updated(
     hass: HomeAssistant,
     mock_lhm_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that non-unique legacy device IDs are updated."""
+    # Manually create devices with legacy identifiers first
+    legacy_device_ids = ["amdcpu-0", "gpu-nvidia-0", "lpc-nct6687d-0"]
+
+    # Create devices with old identifiers (without entry_id prefix)
+    created_devices = []
+    for device_id in legacy_device_ids:
+        device = device_registry.async_get_or_create(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={(DOMAIN, device_id)},  # Old format without entry_id prefix
+            name=f"Test Device {device_id}",
+        )
+        created_devices.append(device)
+
+    # Verify devices were created with legacy identifiers
+    device_entries_before = dr.async_entries_for_config_entry(
+        registry=device_registry, config_entry_id=mock_config_entry.entry_id
+    )
+    assert {
+        next(iter(device.identifiers))[1] for device in device_entries_before
+    } == set(legacy_device_ids)
+
+    # Initialize integration - should trigger migration
     await init_integration(hass, mock_config_entry)
 
-    device_registry = dr.async_get(hass)
-    legacy_device_ids = ["amdcpu-0", "gpu-nvidia-0", "lpc-nct6687d-0"]
-    registered_device_ids = [
+    # Verify devices now have new identifiers with entry_id prefix
+    device_entries_after = dr.async_entries_for_config_entry(
+        registry=device_registry, config_entry_id=mock_config_entry.entry_id
+    )
+    expected_device_ids = [
         f"{mock_config_entry.entry_id}_{device_id}" for device_id in legacy_device_ids
     ]
+    assert {
+        next(iter(device.identifiers))[1] for device in device_entries_after
+    } == set(expected_device_ids)
 
-    for index, device_id in enumerate(registered_device_ids):
-        device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
-        device_registry.async_update_device(
-            device_id=device.id,
-            new_identifiers={(DOMAIN, legacy_device_ids[index])},
-        )
 
-    device_entries: list[DeviceEntry] = dr.async_entries_for_config_entry(
-        registry=dr.async_get(hass), config_entry_id=mock_config_entry.entry_id
-    )
-    assert {next(iter(device.identifiers))[1] for device in device_entries} == set(
-        legacy_device_ids
+async def test_unique_id_migration(
+    hass: HomeAssistant,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration of entities with old unique ID format."""
+    # Manually create entity with old unique ID format first
+    old_unique_id = "lhm-test-sensor-id"
+    entity_id = "sensor.test_device_test_sensor"
+
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        old_unique_id,
+        suggested_object_id="test_device_test_sensor",
+        config_entry=mock_config_entry,
     )
 
-    hass.config_entries.async_schedule_reload(mock_config_entry.entry_id)
+    # Verify entity exists with old unique ID
+    assert (
+        entity_registry.async_get_entity_id("sensor", DOMAIN, old_unique_id)
+        == entity_id
+    )
 
-    device_entries: list[DeviceEntry] = dr.async_entries_for_config_entry(
-        registry=dr.async_get(hass), config_entry_id=mock_config_entry.entry_id
+    # Create sensor data that matches the old entity
+    sensor_data = LibreHardwareMonitorSensorData(
+        sensor_id="test-sensor-id",
+        name="Test Sensor",
+        value="50.0",
+        unit="°C",
+        min="0.0",
+        max="100.0",
+        device_id="test-device",
+        device_name="Test Device",
+        device_type="Test",
     )
-    assert {next(iter(device.identifiers))[1] for device in device_entries} == set(
-        registered_device_ids
+
+    # Update mock data
+    updated_data = dict(mock_lhm_client.get_data.return_value.sensor_data)
+    updated_data["test-sensor-id"] = sensor_data
+
+    mock_lhm_client.get_data.return_value = replace(
+        mock_lhm_client.get_data.return_value,
+        sensor_data=MappingProxyType(updated_data),
     )
+
+    # Now initialize the integration - this should trigger the migration
+    await init_integration(hass, mock_config_entry)
+
+    # Verify entity now has new unique ID
+    new_unique_id = f"lhm_{mock_config_entry.entry_id}_test-sensor-id"
+    assert (
+        entity_registry.async_get_entity_id("sensor", DOMAIN, new_unique_id)
+        == entity_id
+    )
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, old_unique_id) is None
 
 
 async def test_integration_does_not_log_new_devices_on_first_refresh(
