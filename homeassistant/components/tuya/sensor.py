@@ -44,6 +44,8 @@ from .const import (
 )
 from .entity import TuyaEntity
 from .models import ComplexValue, ElectricityValue, EnumTypeData, IntegerTypeData
+from .xternal_tuya_quirks import TUYA_QUIRKS_REGISTRY
+from .xternal_tuya_quirks.sensor import CommonSensorType, TuyaSensorDefinition
 
 _WIND_DIRECTIONS = {
     "north": 0.0,
@@ -1624,6 +1626,26 @@ SENSORS[DeviceCategory.DGHSXJ] = SENSORS[DeviceCategory.SP]
 # Power Socket (duplicate of `kg`)
 SENSORS[DeviceCategory.PC] = SENSORS[DeviceCategory.KG]
 
+COMMON_SENSOR_DEFINITIONS: dict[CommonSensorType, TuyaSensorEntityDescription] = {
+    CommonSensorType.TIME_TOTAL: TuyaSensorEntityDescription(
+        key="tbc",
+        translation_key="last_operation_duration",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
+}
+
+
+def _create_quirk_description(
+    definition: TuyaSensorDefinition,
+) -> TuyaSensorEntityDescription:
+    common_definition = COMMON_SENSOR_DEFINITIONS[definition.sensor_type]
+    return TuyaSensorEntityDescription(
+        key=DPCode(definition.key),
+        translation_key=common_definition.translation_key,
+        device_class=common_definition.device_class,
+        entity_category=common_definition.entity_category,
+    )
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -1639,7 +1661,15 @@ async def async_setup_entry(
         entities: list[TuyaSensorEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if descriptions := SENSORS.get(device.category):
+            if quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device):
+                entities.extend(
+                    TuyaSensorEntity(
+                        device, manager, _create_quirk_description(definition)
+                    )
+                    for definition in quirk.sensor_definitions
+                    if definition.key in device.status
+                )
+            elif descriptions := SENSORS.get(device.category):
                 entities.extend(
                     TuyaSensorEntity(device, manager, description)
                     for description in descriptions

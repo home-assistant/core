@@ -13,6 +13,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
 from .entity import TuyaEntity
+from .xternal_tuya_quirks import TUYA_QUIRKS_REGISTRY
+from .xternal_tuya_quirks.select import CommonSelectType, TuyaSelectDefinition
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default instructions set of each category end up being a select.
@@ -342,6 +344,25 @@ SELECTS[DeviceCategory.DGHSXJ] = SELECTS[DeviceCategory.SP]
 # Power Socket (duplicate of `kg`)
 SELECTS[DeviceCategory.PC] = SELECTS[DeviceCategory.KG]
 
+COMMON_SELECT_DEFINITIONS: dict[CommonSelectType, SelectEntityDescription] = {
+    CommonSelectType.CONTROL_BACK_MODE: SelectEntityDescription(
+        key="tbc",
+        entity_category=EntityCategory.CONFIG,
+        translation_key="curtain_motor_mode",
+    )
+}
+
+
+def _create_quirk_description(
+    definition: TuyaSelectDefinition,
+) -> SelectEntityDescription:
+    common_definition = COMMON_SELECT_DEFINITIONS[definition.select_type]
+    return SelectEntityDescription(
+        key=DPCode(definition.key),
+        translation_key=common_definition.translation_key,
+        entity_category=common_definition.entity_category,
+    )
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -357,7 +378,15 @@ async def async_setup_entry(
         entities: list[TuyaSelectEntity] = []
         for device_id in device_ids:
             device = manager.device_map[device_id]
-            if descriptions := SELECTS.get(device.category):
+            if quirk := TUYA_QUIRKS_REGISTRY.get_quirk_for_device(device):
+                entities.extend(
+                    TuyaSelectEntity(
+                        device, manager, _create_quirk_description(definition)
+                    )
+                    for definition in quirk.select_definitions
+                    if definition.key in device.status
+                )
+            elif descriptions := SELECTS.get(device.category):
                 entities.extend(
                     TuyaSelectEntity(device, manager, description)
                     for description in descriptions
