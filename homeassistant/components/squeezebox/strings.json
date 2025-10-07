@@ -8,11 +8,12 @@
     "flow_title": "{host}",
     "step": {
       "flow_type": {
-        "data": {
-          "flow_type": "Configured discovered LMS or add manually?"
-        },
-        "description": "Setup can configure the discovered LMS, or you can enter new details manually",
-        "title": "Lyrion Music Server"
+        "description": "New LMS discovered at {host}",
+        "title": "Lyrion Music Server",
+        "menu_options": {
+          "edit": "Manually enter details of LMS",
+          "edit_discovered": "Configure discovered LMS"
+        }
       },
       "edit": {
         "title": "Edit connection information",

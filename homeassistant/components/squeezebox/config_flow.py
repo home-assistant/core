@@ -160,7 +160,6 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Choose manual or discover flow."""
-        errors: dict = {}
 
         if user_input:
             # update with host provided by user
@@ -175,33 +174,10 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_edit_discovered()
             return await self.async_step_edit()
 
-        _discovered_name = "Discovered LMS: " + self.discovery_info.get(
-            CONF_HOST, "None"
-        )
-
-        return self.async_show_form(
+        return self.async_show_menu(
             step_id="flow_type",
-            data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
-                    {
-                        vol.Required(CONF_FLOW_TYPE): SelectSelector(
-                            SelectSelectorConfig(
-                                mode=SelectSelectorMode.LIST,
-                                options=[
-                                    _discovered_name,
-                                    "Manual",
-                                ],
-                            )
-                        ),
-                    }
-                ),
-                {
-                    CONF_FLOW_TYPE: "Manual"
-                    if not self.discovery_info
-                    else _discovered_name,
-                },
-            ),
-            errors=errors,
+            description_placeholders={"host": self.discovery_info[CONF_HOST]},
+            menu_options=["edit_discovered", "edit"],
         )
 
     async def async_step_user(
@@ -240,6 +216,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Edit a discovered or manually inputted server."""
+
         errors = {}
         if user_input:
             error = await self._validate_input(user_input)
@@ -249,6 +226,8 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             errors["base"] = error
 
+        # self.discovery_info = None
+        self.data_schema = _base_schema()
         return self.async_show_form(
             step_id="edit",
             description_placeholders={
