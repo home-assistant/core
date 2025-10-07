@@ -1487,7 +1487,7 @@ prowlpy==1.0.2
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==7.0.0
+psutil==7.1.0
 
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
