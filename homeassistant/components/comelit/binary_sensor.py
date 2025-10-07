@@ -30,9 +30,7 @@ async def async_setup_entry(
 
     coordinator = cast(ComelitVedoSystem, config_entry.runtime_data)
 
-    def _add_new_entities(
-        new_devices: list[DeviceType], dev_type: str = "not_used"
-    ) -> None:
+    def _add_new_entities(new_devices: list[DeviceType], dev_type: str) -> None:
         """Add entities for new monitors."""
         entities = [
             ComelitVedoBinarySensorEntity(coordinator, device, config_entry.entry_id)
