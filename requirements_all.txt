@@ -384,7 +384,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.11.0
+aioshelly==13.12.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1183,7 +1183,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.81
+holidays==0.82
 
 # homeassistant.components.frontend
 home-assistant-frontend==20251001.0
@@ -1545,7 +1545,7 @@ nextcord==3.1.0
 nextdns==4.1.0
 
 # homeassistant.components.niko_home_control
-nhc==0.4.12
+nhc==0.6.1
 
 # homeassistant.components.nibe_heatpump
 nibe==2.19.0
@@ -1628,7 +1628,7 @@ open-meteo==0.3.2
 
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
-openai==1.99.5
+openai==2.2.0
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
@@ -1755,7 +1755,7 @@ proxmoxer==2.0.1
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
-psutil==7.0.0
+psutil==7.1.0
 
 # homeassistant.components.pulseaudio_loopback
 pulsectl==23.5.2
@@ -2135,7 +2135,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.1.1
+pylamarzocco==2.1.2
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2210,7 +2210,7 @@ pynetio==0.1.9.1
 pynina==0.3.6
 
 # homeassistant.components.nintendo_parental
-pynintendoparental==1.0.1
+pynintendoparental==1.1.1
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
