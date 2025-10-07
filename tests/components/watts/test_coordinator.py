@@ -155,14 +155,3 @@ async def test_async_update_data_success(coordinator, mock_client, mock_device) 
     mock_client.get_devices_report.assert_called_once_with([mock_device.device_id])
     assert coordinator._devices[mock_device.device_id] == updated_device
     assert result == {mock_device.device_id: updated_device}
-
-
-async def test_async_shutdown(coordinator, mock_device) -> None:
-    """Test coordinator shutdown."""
-    coordinator._devices = {mock_device.device_id: mock_device}
-    coordinator._is_initialized = True
-
-    await coordinator.async_shutdown()
-
-    assert coordinator._devices == {}
-    assert coordinator._is_initialized is False

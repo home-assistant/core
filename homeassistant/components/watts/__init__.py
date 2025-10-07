@@ -15,7 +15,6 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .coordinator import WattsVisionCoordinator
 
@@ -67,10 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) 
     client = WattsVisionClient(auth)
     coordinator = WattsVisionCoordinator(hass, client, entry)
 
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except UpdateFailed as err:
-        raise ConfigEntryNotReady("Failed to fetch initial data") from err
+    await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = WattsVisionRuntimeData(
         auth=auth,
@@ -87,14 +83,4 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: WattsVisionConfigEntry
 ) -> bool:
     """Unload a config entry."""
-
-    _LOGGER.debug("Unloading Watts Vision + integration")
-
-    unload_result = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if not unload_result:
-        _LOGGER.error("Failed to unload platforms for Watts Vision + integration")
-    else:
-        _LOGGER.debug("Successfully unloaded platforms for Watts Vision + integration")
-
-    return unload_result
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

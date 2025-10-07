@@ -17,7 +17,7 @@ from .const import DOMAIN, UPDATE_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 
-class WattsVisionCoordinator(DataUpdateCoordinator):
+class WattsVisionCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     """Class to fetch Watts Vision+ data."""
 
     def __init__(
@@ -86,12 +86,6 @@ class WattsVisionCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"API error during devices update: {err}") from err
         else:
             return self._devices
-
-    async def async_shutdown(self) -> None:
-        """Shutdown the coordinator and cleanup resources."""
-        self._devices.clear()
-        self._is_initialized = False
-        _LOGGER.debug("Coordinator resources cleaned up")
 
     @property
     def device_ids(self) -> list[str]:

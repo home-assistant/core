@@ -7,7 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/watts",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["visionpluspython==1.0.1"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["visionpluspython==1.0.1"]
 }

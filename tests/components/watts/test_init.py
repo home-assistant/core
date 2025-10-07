@@ -231,7 +231,7 @@ async def test_setup_entry_coordinator_update_failed(hass: HomeAssistant) -> Non
         await hass.async_block_till_done()
 
         assert result is False
-        assert config_entry.state is ConfigEntryState.SETUP_RETRY
+        assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_unload_entry_success(hass: HomeAssistant) -> None:

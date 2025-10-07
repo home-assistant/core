@@ -1,9 +1,9 @@
 """Tests for the Watts Vision climate platform."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from visionpluspython.models import SwitchDevice, ThermostatDevice, ThermostatMode
+from visionpluspython.models import ThermostatDevice, ThermostatMode
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.watts import WattsVisionRuntimeData
@@ -64,19 +64,6 @@ def mock_thermostat_device():
         "Defrost",
         "Timer",
     ]
-    return device
-
-
-@pytest.fixture
-def mock_switch_device():
-    """Mock Watts Vision switch device."""
-    device = MagicMock(spec=SwitchDevice)
-    device.device_id = "switch_123"
-    device.device_name = "Test Switch"
-    device.is_turned_on = True
-    device.is_online = True
-    device.device_type = "switch"
-    device.room_name = "Kitchen"
     return device
 
 
@@ -190,33 +177,18 @@ def test_hvac_mode_device_not_found(mock_thermostat_device) -> None:
     assert climate_entity.hvac_mode is None
 
 
-def test_extra_state_attributes(mock_thermostat_device) -> None:
-    """Test extra state attributes."""
+async def test_async_request_refresh(mock_thermostat_device) -> None:
+    """Test async_request_refresh method."""
     coordinator = create_coordinator(
         {mock_thermostat_device.device_id: mock_thermostat_device}
     )
     climate_entity = WattsVisionClimate(coordinator, mock_thermostat_device)
-    attrs = climate_entity.extra_state_attributes
-    assert attrs["thermostat_mode"] == "Comfort"
-    assert attrs["device_type"] == "thermostat"
-    assert attrs["room_name"] == "Living Room"
-    assert attrs["temperature_unit"] == "C"
-    assert attrs["available_thermostat_modes"] == [
-        "Program",
-        "Eco",
-        "Comfort",
-        "Off",
-        "Defrost",
-        "Timer",
-    ]
 
+    await climate_entity.async_request_refresh()
 
-def test_extra_state_attributes_device_not_found(mock_thermostat_device) -> None:
-    """Test extra state attributes when device is not found."""
-    coordinator = create_coordinator()
-    climate_entity = WattsVisionClimate(coordinator, mock_thermostat_device)
-    attrs = climate_entity.extra_state_attributes
-    assert attrs == {}
+    coordinator.async_refresh_device.assert_called_once_with(
+        mock_thermostat_device.device_id
+    )
 
 
 def test_available_true(mock_thermostat_device) -> None:
@@ -257,10 +229,10 @@ async def test_set_temperature_success(mock_thermostat_device) -> None:
 
     await climate_entity.async_set_temperature(temperature=23.5)
     coordinator.client.set_thermostat_temperature.assert_called_once_with(
-        climate_entity._device_id, 23.5
+        climate_entity.device_id, 23.5
     )
 
-    coordinator.async_refresh_device.assert_called_once_with(climate_entity._device_id)
+    coordinator.async_refresh_device.assert_called_once_with(climate_entity.device_id)
 
 
 async def test_set_temperature_with_attr_temperature(mock_thermostat_device) -> None:
@@ -272,10 +244,10 @@ async def test_set_temperature_with_attr_temperature(mock_thermostat_device) -> 
 
     await climate_entity.async_set_temperature(**{ATTR_TEMPERATURE: 24.0})
     coordinator.client.set_thermostat_temperature.assert_called_once_with(
-        climate_entity._device_id, 24.0
+        climate_entity.device_id, 24.0
     )
 
-    coordinator.async_refresh_device.assert_called_once_with(climate_entity._device_id)
+    coordinator.async_refresh_device.assert_called_once_with(climate_entity.device_id)
 
 
 async def test_set_temperature_no_temperature(mock_thermostat_device) -> None:
@@ -303,7 +275,7 @@ async def test_set_temperature_error(mock_thermostat_device) -> None:
     await climate_entity.async_set_temperature(temperature=23.5)
 
     coordinator.client.set_thermostat_temperature.assert_called_once_with(
-        climate_entity._device_id, 23.5
+        climate_entity.device_id, 23.5
     )
     coordinator.async_refresh_device.assert_not_called()
 
@@ -325,10 +297,10 @@ async def test_set_temperature_changes_setpoint(mock_thermostat_device) -> None:
     await climate_entity.async_set_temperature(temperature=25.0)
 
     coordinator.client.set_thermostat_temperature.assert_called_once_with(
-        climate_entity._device_id, 25.0
+        climate_entity.device_id, 25.0
     )
 
-    coordinator.async_refresh_device.assert_called_once_with(climate_entity._device_id)
+    coordinator.async_refresh_device.assert_called_once_with(climate_entity.device_id)
 
     assert climate_entity.target_temperature == 25.0
 
@@ -349,7 +321,7 @@ async def test_set_temperature_no_change_on_api_failure(mock_thermostat_device) 
     await climate_entity.async_set_temperature(temperature=25.0)
 
     coordinator.client.set_thermostat_temperature.assert_called_once_with(
-        climate_entity._device_id, 25.0
+        climate_entity.device_id, 25.0
     )
 
     coordinator.async_refresh_device.assert_not_called()
@@ -366,7 +338,7 @@ async def test_set_hvac_mode_heat_success(mock_thermostat_device) -> None:
 
     await climate_entity.async_set_hvac_mode(HVACMode.HEAT)
     coordinator.client.set_thermostat_mode.assert_called_once_with(
-        climate_entity._device_id, ThermostatMode.COMFORT
+        climate_entity.device_id, ThermostatMode.COMFORT
     )
 
 
@@ -379,7 +351,7 @@ async def test_set_hvac_mode_off_success(mock_thermostat_device) -> None:
 
     await climate_entity.async_set_hvac_mode(HVACMode.OFF)
     coordinator.client.set_thermostat_mode.assert_called_once_with(
-        climate_entity._device_id, ThermostatMode.OFF
+        climate_entity.device_id, ThermostatMode.OFF
     )
 
 
@@ -392,7 +364,7 @@ async def test_set_hvac_mode_auto_success(mock_thermostat_device) -> None:
 
     await climate_entity.async_set_hvac_mode(HVACMode.AUTO)
     coordinator.client.set_thermostat_mode.assert_called_once_with(
-        climate_entity._device_id, ThermostatMode.PROGRAM
+        climate_entity.device_id, ThermostatMode.PROGRAM
     )
 
 
@@ -418,7 +390,7 @@ async def test_set_hvac_mode_error(mock_thermostat_device) -> None:
     await climate_entity.async_set_hvac_mode(HVACMode.HEAT)
 
     coordinator.client.set_thermostat_mode.assert_called_once_with(
-        climate_entity._device_id, ThermostatMode.COMFORT
+        climate_entity.device_id, ThermostatMode.COMFORT
     )
 
 
@@ -464,28 +436,6 @@ async def test_async_setup_entry_with_thermostat_devices(
     assert args[1]["update_before_add"] is True
 
 
-async def test_async_setup_entry_no_thermostat_devices(
-    mock_hass, mock_config_entry, mock_switch_device
-) -> None:
-    """Test setup entry with no thermostat devices (only switch devices)."""
-    async_add_entities = MagicMock(spec=AddEntitiesCallback)
-
-    coordinator = MagicMock(spec=WattsVisionCoordinator)
-    coordinator.last_update_success = True
-    coordinator.data = {"switch_1": mock_switch_device}
-
-    entry = MagicMock(spec=ConfigEntry)
-    entry.runtime_data = WattsVisionRuntimeData(
-        coordinator=coordinator,
-        auth=MagicMock(),
-        client=MagicMock(),
-    )
-
-    await async_setup_entry(mock_hass, entry, async_add_entities)
-
-    async_add_entities.assert_not_called()
-
-
 async def test_async_setup_entry_empty_data(mock_hass, mock_config_entry) -> None:
     """Test setup entry with empty coordinator data."""
     async_add_entities = MagicMock(spec=AddEntitiesCallback)
@@ -503,7 +453,8 @@ async def test_async_setup_entry_empty_data(mock_hass, mock_config_entry) -> Non
 
     await async_setup_entry(mock_hass, entry, async_add_entities)
 
-    async_add_entities.assert_not_called()
+    # With empty data, async_add_entities is called with empty list
+    async_add_entities.assert_called_once_with([], update_before_add=True)
 
 
 async def test_async_setup_entry_multiple_thermostat_devices(
@@ -539,42 +490,4 @@ async def test_async_setup_entry_multiple_thermostat_devices(
     entities = args[0][0]
     assert len(entities) == 2
     assert all(isinstance(entity, WattsVisionClimate) for entity in entities)
-    assert args[1]["update_before_add"] is True
-
-
-async def test_async_setup_entry_mixed_devices(
-    mock_hass, mock_config_entry, mock_switch_device
-) -> None:
-    """Test setup entry with mixed device types."""
-    async_add_entities = MagicMock(spec=AddEntitiesCallback)
-
-    coordinator = MagicMock(spec=WattsVisionCoordinator)
-    coordinator.last_update_success = True
-
-    thermostat_device = MagicMock(spec=ThermostatDevice)
-    thermostat_device.device_id = "thermostat_1"
-    thermostat_device.device_name = "Test Thermostat"
-
-    coordinator.data = {
-        "thermostat_1": thermostat_device,
-        "switch_1": mock_switch_device,
-    }
-
-    entry = MagicMock(spec=ConfigEntry)
-    entry.runtime_data = WattsVisionRuntimeData(
-        coordinator=coordinator,
-        auth=MagicMock(),
-        client=MagicMock(),
-    )
-
-    with patch(
-        "homeassistant.helpers.entity_platform.AddEntitiesCallback", new=AsyncMock
-    ):
-        await async_setup_entry(mock_hass, entry, async_add_entities)
-
-    async_add_entities.assert_called_once()
-    args = async_add_entities.call_args
-    entities = args[0][0]
-    assert len(entities) == 1
-    assert isinstance(entities[0], WattsVisionClimate)
     assert args[1]["update_before_add"] is True

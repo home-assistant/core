@@ -214,7 +214,7 @@ async def test_unique_config_entry(
         title="Watts Vision +",
         data={"token": {"refresh_token": "mock-refresh-token"}},
         source=config_entries.SOURCE_USER,
-        unique_id="watts_vision_user123",
+        unique_id="user123",
         entry_id="test_entry",
         options={},
         discovery_keys={},
