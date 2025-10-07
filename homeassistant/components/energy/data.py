@@ -116,6 +116,10 @@ class WaterSourceType(TypedDict):
     # an EnergyCostSensor will be automatically created
     stat_cost: str | None
 
+    # An optional statistic_id identifying a device
+    # that includes this device's consumption in its total
+    included_in_stat: str | None
+
     # Used to generate costs if stat_cost is set to None
     entity_energy_price: str | None  # entity_id of an entity providing price ($/m³)
     number_energy_price: float | None  # Price for energy ($/m³)
