@@ -9,6 +9,7 @@ from airthings_ble import (
     AirthingsDevice,
     AirthingsDeviceType,
 )
+from bleak.backends.device import BLEDevice
 
 from homeassistant.components.airthings_ble.const import DOMAIN
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
@@ -32,7 +33,15 @@ def patch_async_setup_entry(return_value=True):
     )
 
 
-def patch_async_ble_device_from_address(return_value: BluetoothServiceInfoBleak | None):
+def patch_async_discovered_service_info(return_value: list[BluetoothServiceInfoBleak]):
+    """Patch async_discovered_service_info to return given list."""
+    return patch(
+        "homeassistant.components.bluetooth.async_discovered_service_info",
+        return_value=return_value,
+    )
+
+
+def patch_async_ble_device_from_address(return_value: BLEDevice | None):
     """Patch async ble device from address to return a given value."""
     return patch(
         "homeassistant.components.bluetooth.async_ble_device_from_address",
@@ -289,16 +298,6 @@ VOC_V2 = MockEntity(
 VOC_V3 = MockEntity(
     unique_id="cc:cc:cc:cc:cc:cc_voc",
     name="Airthings Wave Plus (123456) VOC",
-)
-
-WAVE_ENHANCE_SENSOR_LUX = MockEntity(
-    unique_id="Airthings Wave Enhance (123456)_lux",
-    name="Airthings Wave Enhance (123456) Lux",
-)
-
-WAVE_ENHANCE_SENSOR_AMBIENT_NOISE = MockEntity(
-    unique_id="Airthings Wave Enhance (123456)_ambient_noise",
-    name="Airthings Wave Enhance (123456) Ambient noise",
 )
 
 

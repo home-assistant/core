@@ -2,6 +2,8 @@
 
 import logging
 
+import pytest
+
 from homeassistant.components.airthings_ble.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -17,13 +19,14 @@ from . import (
     VOC_V3,
     WAVE_DEVICE_INFO,
     WAVE_ENHANCE_DEVICE_INFO,
-    WAVE_ENHANCE_SENSOR_AMBIENT_NOISE,
-    WAVE_ENHANCE_SENSOR_LUX,
     WAVE_ENHANCE_SERVICE_INFO,
     WAVE_SERVICE_INFO,
     create_device,
     create_entry,
+    patch_airthings_ble,
     patch_airthings_device_update,
+    patch_async_ble_device_from_address,
+    patch_async_discovered_service_info,
 )
 
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -221,28 +224,46 @@ async def test_migration_with_all_unique_ids(
     assert entity_registry.async_get(v3.entity_id).unique_id == VOC_V3.unique_id
 
 
-async def test_translation_strings(
+@pytest.mark.parametrize(
+    ("unique_suffix", "expected_sensor_name"),
+    [
+        ("lux", "Illuminance"),
+        ("noise", "Ambient noise"),
+    ],
+)
+async def test_translation_keys(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    unique_suffix: str,
+    expected_sensor_name: str,
 ) -> None:
-    """Test that all translation strings are present."""
-    entry = create_entry(hass, WAVE_SERVICE_INFO)
+    """Test that translated sensor names are correct."""
+    entry = create_entry(hass, WAVE_ENHANCE_SERVICE_INFO)
     device = create_device(
         entry, device_registry, WAVE_ENHANCE_SERVICE_INFO, WAVE_ENHANCE_DEVICE_INFO
     )
 
-    assert entry is not None
+    with (
+        patch_async_ble_device_from_address(WAVE_ENHANCE_SERVICE_INFO.device),
+        patch_async_discovered_service_info([WAVE_ENHANCE_SERVICE_INFO]),
+        patch_airthings_ble(WAVE_ENHANCE_DEVICE_INFO),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
     assert device is not None
     assert device.name == "Airthings Wave Enhance (123456)"
 
-    for sensor in (WAVE_ENHANCE_SENSOR_LUX, WAVE_ENHANCE_SENSOR_AMBIENT_NOISE):
-        entity_registry.async_get_or_create(
-            domain=DOMAIN,
-            platform=Platform.SENSOR,
-            unique_id=sensor.unique_id,
-            config_entry=entry,
-            device_id=device.id,
-        )
-        await hass.async_block_till_done()
-        assert hass.states.get(f"sensor.{sensor.entity_id}") is None
+    unique_id = f"{WAVE_ENHANCE_DEVICE_INFO.address}_{unique_suffix}"
+    entity_id = entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, unique_id)
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+
+    expected_value = WAVE_ENHANCE_DEVICE_INFO.sensors[unique_suffix]
+    assert state.state == str(expected_value)
+
+    expected_name = f"Airthings Wave Enhance (123456) {expected_sensor_name}"
+    assert state.attributes.get("friendly_name") == expected_name
