@@ -1,0 +1,1354 @@
+{
+  "_colors": [
+    {
+      "blue": 0,
+      "green": 0,
+      "py/object": "openrgb.utils.RGBColor",
+      "red": 255
+    },
+    {
+      "blue": 0,
+      "green": 0,
+      "py/object": "openrgb.utils.RGBColor",
+      "red": 255
+    },
+    {
+      "blue": 0,
+      "green": 0,
+      "py/object": "openrgb.utils.RGBColor",
+      "red": 255
+    },
+    {
+      "blue": 0,
+      "green": 0,
+      "py/object": "openrgb.utils.RGBColor",
+      "red": 255
+    },
+    {
+      "blue": 0,
+      "green": 0,
+      "py/object": "openrgb.utils.RGBColor",
+      "red": 255
+    }
+  ],
+  "active_mode": 2,
+  "colors": [
+    {
+      "blue": 0,
+      "green": 0,
+      "py/object": "openrgb.utils.RGBColor",
+      "red": 255
+    },
+    {
+      "blue": 0,
+      "green": 0,
+      "py/object": "openrgb.utils.RGBColor",
+      "red": 255
+    },
+    {
+      "blue": 0,
+      "green": 0,
+      "py/object": "openrgb.utils.RGBColor",
+      "red": 255
+    },
+    {
+      "blue": 0,
+      "green": 0,
+      "py/object": "openrgb.utils.RGBColor",
+      "red": 255
+    },
+    {
+      "blue": 0,
+      "green": 0,
+      "py/object": "openrgb.utils.RGBColor",
+      "red": 255
+    }
+  ],
+  "comms": null,
+  "data": {
+    "active_mode": 2,
+    "colors": [
+      {
+        "blue": 0,
+        "green": 0,
+        "py/object": "openrgb.utils.RGBColor",
+        "red": 255
+      },
+      {
+        "blue": 0,
+        "green": 0,
+        "py/object": "openrgb.utils.RGBColor",
+        "red": 255
+      },
+      {
+        "blue": 0,
+        "green": 0,
+        "py/object": "openrgb.utils.RGBColor",
+        "red": 255
+      },
+      {
+        "blue": 0,
+        "green": 0,
+        "py/object": "openrgb.utils.RGBColor",
+        "red": 255
+      },
+      {
+        "blue": 0,
+        "green": 0,
+        "py/object": "openrgb.utils.RGBColor",
+        "red": 255
+      }
+    ],
+    "device_type": {
+      "py/reduce": [
+        {
+          "py/type": "openrgb.utils.DeviceType"
+        },
+        {
+          "py/tuple": [1]
+        }
+      ]
+    },
+    "leds": [
+      {
+        "name": "DRAM LED 1",
+        "py/object": "openrgb.utils.LEDData",
+        "value": 0
+      },
+      {
+        "name": "DRAM LED 2",
+        "py/object": "openrgb.utils.LEDData",
+        "value": 1
+      },
+      {
+        "name": "DRAM LED 3",
+        "py/object": "openrgb.utils.LEDData",
+        "value": 2
+      },
+      {
+        "name": "DRAM LED 4",
+        "py/object": "openrgb.utils.LEDData",
+        "value": 3
+      },
+      {
+        "name": "DRAM LED 5",
+        "py/object": "openrgb.utils.LEDData",
+        "value": 4
+      }
+    ],
+    "metadata": {
+      "description": "ENE SMBus Device",
+      "location": "I2C: PIIX4, address 0x70",
+      "py/object": "openrgb.utils.MetaData",
+      "serial": "",
+      "vendor": "ENE",
+      "version": "DIMM_LED-0103"
+    },
+    "modes": [
+      {
+        "brightness": null,
+        "brightness_max": null,
+        "brightness_min": null,
+        "color_mode": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeColors"
+            },
+            {
+              "py/tuple": [1]
+            }
+          ]
+        },
+        "colors": null,
+        "colors_max": null,
+        "colors_min": null,
+        "direction": null,
+        "flags": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeFlags"
+            },
+            {
+              "py/tuple": [32]
+            }
+          ]
+        },
+        "id": 0,
+        "name": "Direct",
+        "py/object": "openrgb.utils.ModeData",
+        "speed": null,
+        "speed_max": null,
+        "speed_min": null,
+        "value": 65535
+      },
+      {
+        "brightness": null,
+        "brightness_max": null,
+        "brightness_min": null,
+        "color_mode": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeColors"
+            },
+            {
+              "py/tuple": [0]
+            }
+          ]
+        },
+        "colors": null,
+        "colors_max": null,
+        "colors_min": null,
+        "direction": null,
+        "flags": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeFlags"
+            },
+            {
+              "py/tuple": [0]
+            }
+          ]
+        },
+        "id": 1,
+        "name": "Off",
+        "py/object": "openrgb.utils.ModeData",
+        "speed": null,
+        "speed_max": null,
+        "speed_min": null,
+        "value": 0
+      },
+      {
+        "brightness": null,
+        "brightness_max": null,
+        "brightness_min": null,
+        "color_mode": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeColors"
+            },
+            {
+              "py/tuple": [1]
+            }
+          ]
+        },
+        "colors": null,
+        "colors_max": null,
+        "colors_min": null,
+        "direction": null,
+        "flags": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeFlags"
+            },
+            {
+              "py/tuple": [32]
+            }
+          ]
+        },
+        "id": 2,
+        "name": "Static",
+        "py/object": "openrgb.utils.ModeData",
+        "speed": null,
+        "speed_max": null,
+        "speed_min": null,
+        "value": 1
+      },
+      {
+        "brightness": null,
+        "brightness_max": null,
+        "brightness_min": null,
+        "color_mode": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeColors"
+            },
+            {
+              "py/tuple": [1]
+            }
+          ]
+        },
+        "colors": null,
+        "colors_max": null,
+        "colors_min": null,
+        "direction": null,
+        "flags": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeFlags"
+            },
+            {
+              "py/tuple": [161]
+            }
+          ]
+        },
+        "id": 3,
+        "name": "Breathing",
+        "py/object": "openrgb.utils.ModeData",
+        "speed": 2,
+        "speed_max": 0,
+        "speed_min": 4,
+        "value": 2
+      },
+      {
+        "brightness": null,
+        "brightness_max": null,
+        "brightness_min": null,
+        "color_mode": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeColors"
+            },
+            {
+              "py/tuple": [1]
+            }
+          ]
+        },
+        "colors": null,
+        "colors_max": null,
+        "colors_min": null,
+        "direction": null,
+        "flags": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeFlags"
+            },
+            {
+              "py/tuple": [33]
+            }
+          ]
+        },
+        "id": 4,
+        "name": "Flashing",
+        "py/object": "openrgb.utils.ModeData",
+        "speed": 2,
+        "speed_max": 0,
+        "speed_min": 4,
+        "value": 3
+      },
+      {
+        "brightness": null,
+        "brightness_max": null,
+        "brightness_min": null,
+        "color_mode": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeColors"
+            },
+            {
+              "py/tuple": [0]
+            }
+          ]
+        },
+        "colors": null,
+        "colors_max": null,
+        "colors_min": null,
+        "direction": null,
+        "flags": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeFlags"
+            },
+            {
+              "py/tuple": [1]
+            }
+          ]
+        },
+        "id": 5,
+        "name": "Spectrum Cycle",
+        "py/object": "openrgb.utils.ModeData",
+        "speed": 2,
+        "speed_max": 0,
+        "speed_min": 4,
+        "value": 4
+      },
+      {
+        "brightness": null,
+        "brightness_max": null,
+        "brightness_min": null,
+        "color_mode": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeColors"
+            },
+            {
+              "py/tuple": [0]
+            }
+          ]
+        },
+        "colors": null,
+        "colors_max": null,
+        "colors_min": null,
+        "direction": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeDirections"
+            },
+            {
+              "py/tuple": [0]
+            }
+          ]
+        },
+        "flags": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeFlags"
+            },
+            {
+              "py/tuple": [3]
+            }
+          ]
+        },
+        "id": 6,
+        "name": "Rainbow",
+        "py/object": "openrgb.utils.ModeData",
+        "speed": 2,
+        "speed_max": 0,
+        "speed_min": 4,
+        "value": 5
+      },
+      {
+        "brightness": null,
+        "brightness_max": null,
+        "brightness_min": null,
+        "color_mode": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeColors"
+            },
+            {
+              "py/tuple": [1]
+            }
+          ]
+        },
+        "colors": null,
+        "colors_max": null,
+        "colors_min": null,
+        "direction": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeDirections"
+            },
+            {
+              "py/tuple": [0]
+            }
+          ]
+        },
+        "flags": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeFlags"
+            },
+            {
+              "py/tuple": [163]
+            }
+          ]
+        },
+        "id": 7,
+        "name": "Chase Fade",
+        "py/object": "openrgb.utils.ModeData",
+        "speed": 2,
+        "speed_max": 0,
+        "speed_min": 4,
+        "value": 7
+      },
+      {
+        "brightness": null,
+        "brightness_max": null,
+        "brightness_min": null,
+        "color_mode": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeColors"
+            },
+            {
+              "py/tuple": [1]
+            }
+          ]
+        },
+        "colors": null,
+        "colors_max": null,
+        "colors_min": null,
+        "direction": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeDirections"
+            },
+            {
+              "py/tuple": [0]
+            }
+          ]
+        },
+        "flags": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeFlags"
+            },
+            {
+              "py/tuple": [163]
+            }
+          ]
+        },
+        "id": 8,
+        "name": "Chase",
+        "py/object": "openrgb.utils.ModeData",
+        "speed": 2,
+        "speed_max": 0,
+        "speed_min": 4,
+        "value": 9
+      },
+      {
+        "brightness": null,
+        "brightness_max": null,
+        "brightness_min": null,
+        "color_mode": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeColors"
+            },
+            {
+              "py/tuple": [0]
+            }
+          ]
+        },
+        "colors": null,
+        "colors_max": null,
+        "colors_min": null,
+        "direction": null,
+        "flags": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ModeFlags"
+            },
+            {
+              "py/tuple": [1]
+            }
+          ]
+        },
+        "id": 9,
+        "name": "Random Flicker",
+        "py/object": "openrgb.utils.ModeData",
+        "speed": 2,
+        "speed_max": 0,
+        "speed_min": 4,
+        "value": 13
+      }
+    ],
+    "name": "ENE DRAM",
+    "py/object": "openrgb.utils.ControllerData",
+    "zones": [
+      {
+        "colors": [
+          {
+            "blue": 0,
+            "green": 0,
+            "py/object": "openrgb.utils.RGBColor",
+            "red": 255
+          },
+          {
+            "blue": 0,
+            "green": 0,
+            "py/object": "openrgb.utils.RGBColor",
+            "red": 255
+          },
+          {
+            "blue": 0,
+            "green": 0,
+            "py/object": "openrgb.utils.RGBColor",
+            "red": 255
+          },
+          {
+            "blue": 0,
+            "green": 0,
+            "py/object": "openrgb.utils.RGBColor",
+            "red": 255
+          },
+          {
+            "blue": 0,
+            "green": 0,
+            "py/object": "openrgb.utils.RGBColor",
+            "red": 255
+          }
+        ],
+        "leds": [
+          {
+            "name": "DRAM LED 1",
+            "py/object": "openrgb.utils.LEDData",
+            "value": 0
+          },
+          {
+            "name": "DRAM LED 2",
+            "py/object": "openrgb.utils.LEDData",
+            "value": 1
+          },
+          {
+            "name": "DRAM LED 3",
+            "py/object": "openrgb.utils.LEDData",
+            "value": 2
+          },
+          {
+            "name": "DRAM LED 4",
+            "py/object": "openrgb.utils.LEDData",
+            "value": 3
+          },
+          {
+            "name": "DRAM LED 5",
+            "py/object": "openrgb.utils.LEDData",
+            "value": 4
+          }
+        ],
+        "leds_max": 5,
+        "leds_min": 5,
+        "mat_height": null,
+        "mat_width": null,
+        "matrix_map": null,
+        "name": "DRAM",
+        "num_leds": 5,
+        "py/object": "openrgb.utils.ZoneData",
+        "segments": [],
+        "start_idx": 0,
+        "zone_type": {
+          "py/reduce": [
+            {
+              "py/type": "openrgb.utils.ZoneType"
+            },
+            {
+              "py/tuple": [1]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "device_id": 0,
+  "id": 0,
+  "leds": [
+    {
+      "_colors": [
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        }
+      ],
+      "colors": [
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        }
+      ],
+      "comms": null,
+      "device_id": 0,
+      "id": 0,
+      "name": "DRAM LED 1",
+      "py/object": "openrgb.orgb.LED"
+    },
+    {
+      "_colors": [
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        }
+      ],
+      "colors": [
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        }
+      ],
+      "comms": null,
+      "device_id": 0,
+      "id": 1,
+      "name": "DRAM LED 2",
+      "py/object": "openrgb.orgb.LED"
+    },
+    {
+      "_colors": [
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        }
+      ],
+      "colors": [
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        }
+      ],
+      "comms": null,
+      "device_id": 0,
+      "id": 2,
+      "name": "DRAM LED 3",
+      "py/object": "openrgb.orgb.LED"
+    },
+    {
+      "_colors": [
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        }
+      ],
+      "colors": [
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        }
+      ],
+      "comms": null,
+      "device_id": 0,
+      "id": 3,
+      "name": "DRAM LED 4",
+      "py/object": "openrgb.orgb.LED"
+    },
+    {
+      "_colors": [
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        }
+      ],
+      "colors": [
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        }
+      ],
+      "comms": null,
+      "device_id": 0,
+      "id": 4,
+      "name": "DRAM LED 5",
+      "py/object": "openrgb.orgb.LED"
+    }
+  ],
+  "metadata": {
+    "description": "ENE SMBus Device",
+    "location": "I2C: PIIX4, address 0x70",
+    "py/object": "openrgb.utils.MetaData",
+    "serial": "",
+    "vendor": "ENE",
+    "version": "DIMM_LED-0103"
+  },
+  "modes": [
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeColors"
+          },
+          {
+            "py/tuple": [1]
+          }
+        ]
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": null,
+      "flags": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeFlags"
+          },
+          {
+            "py/tuple": [32]
+          }
+        ]
+      },
+      "id": 0,
+      "name": "Direct",
+      "py/object": "openrgb.utils.ModeData",
+      "speed": null,
+      "speed_max": null,
+      "speed_min": null,
+      "value": 65535
+    },
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeColors"
+          },
+          {
+            "py/tuple": [0]
+          }
+        ]
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": null,
+      "flags": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeFlags"
+          },
+          {
+            "py/tuple": [0]
+          }
+        ]
+      },
+      "id": 1,
+      "name": "Off",
+      "py/object": "openrgb.utils.ModeData",
+      "speed": null,
+      "speed_max": null,
+      "speed_min": null,
+      "value": 0
+    },
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeColors"
+          },
+          {
+            "py/tuple": [1]
+          }
+        ]
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": null,
+      "flags": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeFlags"
+          },
+          {
+            "py/tuple": [32]
+          }
+        ]
+      },
+      "id": 2,
+      "name": "Static",
+      "py/object": "openrgb.utils.ModeData",
+      "speed": null,
+      "speed_max": null,
+      "speed_min": null,
+      "value": 1
+    },
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeColors"
+          },
+          {
+            "py/tuple": [1]
+          }
+        ]
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": null,
+      "flags": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeFlags"
+          },
+          {
+            "py/tuple": [161]
+          }
+        ]
+      },
+      "id": 3,
+      "name": "Breathing",
+      "py/object": "openrgb.utils.ModeData",
+      "speed": 2,
+      "speed_max": 0,
+      "speed_min": 4,
+      "value": 2
+    },
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeColors"
+          },
+          {
+            "py/tuple": [1]
+          }
+        ]
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": null,
+      "flags": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeFlags"
+          },
+          {
+            "py/tuple": [33]
+          }
+        ]
+      },
+      "id": 4,
+      "name": "Flashing",
+      "py/object": "openrgb.utils.ModeData",
+      "speed": 2,
+      "speed_max": 0,
+      "speed_min": 4,
+      "value": 3
+    },
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeColors"
+          },
+          {
+            "py/tuple": [0]
+          }
+        ]
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": null,
+      "flags": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeFlags"
+          },
+          {
+            "py/tuple": [1]
+          }
+        ]
+      },
+      "id": 5,
+      "name": "Spectrum Cycle",
+      "py/object": "openrgb.utils.ModeData",
+      "speed": 2,
+      "speed_max": 0,
+      "speed_min": 4,
+      "value": 4
+    },
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeColors"
+          },
+          {
+            "py/tuple": [0]
+          }
+        ]
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeDirections"
+          },
+          {
+            "py/tuple": [0]
+          }
+        ]
+      },
+      "flags": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeFlags"
+          },
+          {
+            "py/tuple": [3]
+          }
+        ]
+      },
+      "id": 6,
+      "name": "Rainbow",
+      "py/object": "openrgb.utils.ModeData",
+      "speed": 2,
+      "speed_max": 0,
+      "speed_min": 4,
+      "value": 5
+    },
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeColors"
+          },
+          {
+            "py/tuple": [1]
+          }
+        ]
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeDirections"
+          },
+          {
+            "py/tuple": [0]
+          }
+        ]
+      },
+      "flags": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeFlags"
+          },
+          {
+            "py/tuple": [163]
+          }
+        ]
+      },
+      "id": 7,
+      "name": "Chase Fade",
+      "py/object": "openrgb.utils.ModeData",
+      "speed": 2,
+      "speed_max": 0,
+      "speed_min": 4,
+      "value": 7
+    },
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeColors"
+          },
+          {
+            "py/tuple": [1]
+          }
+        ]
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeDirections"
+          },
+          {
+            "py/tuple": [0]
+          }
+        ]
+      },
+      "flags": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeFlags"
+          },
+          {
+            "py/tuple": [163]
+          }
+        ]
+      },
+      "id": 8,
+      "name": "Chase",
+      "py/object": "openrgb.utils.ModeData",
+      "speed": 2,
+      "speed_max": 0,
+      "speed_min": 4,
+      "value": 9
+    },
+    {
+      "brightness": null,
+      "brightness_max": null,
+      "brightness_min": null,
+      "color_mode": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeColors"
+          },
+          {
+            "py/tuple": [0]
+          }
+        ]
+      },
+      "colors": null,
+      "colors_max": null,
+      "colors_min": null,
+      "direction": null,
+      "flags": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ModeFlags"
+          },
+          {
+            "py/tuple": [1]
+          }
+        ]
+      },
+      "id": 9,
+      "name": "Random Flicker",
+      "py/object": "openrgb.utils.ModeData",
+      "speed": 2,
+      "speed_max": 0,
+      "speed_min": 4,
+      "value": 13
+    }
+  ],
+  "name": "ENE DRAM",
+  "py/object": "openrgb.orgb.Device",
+  "type": {
+    "py/reduce": [
+      {
+        "py/type": "openrgb.utils.DeviceType"
+      },
+      {
+        "py/tuple": [1]
+      }
+    ]
+  },
+  "zones": [
+    {
+      "_colors": [
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        },
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        },
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        },
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        },
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        }
+      ],
+      "colors": [
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        },
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        },
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        },
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        },
+        {
+          "blue": 0,
+          "green": 0,
+          "py/object": "openrgb.utils.RGBColor",
+          "red": 255
+        }
+      ],
+      "comms": null,
+      "device_id": 0,
+      "id": 0,
+      "leds": [
+        {
+          "_colors": [
+            {
+              "blue": 0,
+              "green": 0,
+              "py/object": "openrgb.utils.RGBColor",
+              "red": 255
+            }
+          ],
+          "colors": [
+            {
+              "blue": 0,
+              "green": 0,
+              "py/object": "openrgb.utils.RGBColor",
+              "red": 255
+            }
+          ],
+          "comms": null,
+          "device_id": 0,
+          "id": 0,
+          "name": "DRAM LED 1",
+          "py/object": "openrgb.orgb.LED"
+        },
+        {
+          "_colors": [
+            {
+              "blue": 0,
+              "green": 0,
+              "py/object": "openrgb.utils.RGBColor",
+              "red": 255
+            }
+          ],
+          "colors": [
+            {
+              "blue": 0,
+              "green": 0,
+              "py/object": "openrgb.utils.RGBColor",
+              "red": 255
+            }
+          ],
+          "comms": null,
+          "device_id": 0,
+          "id": 1,
+          "name": "DRAM LED 2",
+          "py/object": "openrgb.orgb.LED"
+        },
+        {
+          "_colors": [
+            {
+              "blue": 0,
+              "green": 0,
+              "py/object": "openrgb.utils.RGBColor",
+              "red": 255
+            }
+          ],
+          "colors": [
+            {
+              "blue": 0,
+              "green": 0,
+              "py/object": "openrgb.utils.RGBColor",
+              "red": 255
+            }
+          ],
+          "comms": null,
+          "device_id": 0,
+          "id": 2,
+          "name": "DRAM LED 3",
+          "py/object": "openrgb.orgb.LED"
+        },
+        {
+          "_colors": [
+            {
+              "blue": 0,
+              "green": 0,
+              "py/object": "openrgb.utils.RGBColor",
+              "red": 255
+            }
+          ],
+          "colors": [
+            {
+              "blue": 0,
+              "green": 0,
+              "py/object": "openrgb.utils.RGBColor",
+              "red": 255
+            }
+          ],
+          "comms": null,
+          "device_id": 0,
+          "id": 3,
+          "name": "DRAM LED 4",
+          "py/object": "openrgb.orgb.LED"
+        },
+        {
+          "_colors": [
+            {
+              "blue": 0,
+              "green": 0,
+              "py/object": "openrgb.utils.RGBColor",
+              "red": 255
+            }
+          ],
+          "colors": [
+            {
+              "blue": 0,
+              "green": 0,
+              "py/object": "openrgb.utils.RGBColor",
+              "red": 255
+            }
+          ],
+          "comms": null,
+          "device_id": 0,
+          "id": 4,
+          "name": "DRAM LED 5",
+          "py/object": "openrgb.orgb.LED"
+        }
+      ],
+      "mat_height": null,
+      "mat_width": null,
+      "matrix_map": null,
+      "name": "DRAM",
+      "py/object": "openrgb.orgb.Zone",
+      "segments": [],
+      "type": {
+        "py/reduce": [
+          {
+            "py/type": "openrgb.utils.ZoneType"
+          },
+          {
+            "py/tuple": [1]
+          }
+        ]
+      }
+    }
+  ]
+}

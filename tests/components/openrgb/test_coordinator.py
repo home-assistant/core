@@ -26,7 +26,7 @@ async def test_reconnection_on_update_failure(
     await hass.async_block_till_done()
 
     # Verify initial state
-    state = hass.states.get("light.test_rgb_device")
+    state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_ON
 
@@ -53,7 +53,7 @@ async def test_reconnection_on_update_failure(
     assert mock_openrgb_client.update.call_count == 2
 
     # Verify that the light is still available after successful reconnect
-    state = hass.states.get("light.test_rgb_device")
+    state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_ON
 
@@ -72,7 +72,7 @@ async def test_reconnection_fails_second_attempt(
     await hass.async_block_till_done()
 
     # Verify initial state
-    state = hass.states.get("light.test_rgb_device")
+    state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_ON
 
@@ -96,7 +96,7 @@ async def test_reconnection_fails_second_attempt(
     await hass.async_block_till_done()
 
     # Verify that the light became unavailable after failed reconnection
-    state = hass.states.get("light.test_rgb_device")
+    state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
@@ -122,7 +122,7 @@ async def test_normal_update_without_errors(
     await hass.async_block_till_done()
 
     # Verify initial state
-    state = hass.states.get("light.test_rgb_device")
+    state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_ON
 
@@ -147,6 +147,6 @@ async def test_normal_update_without_errors(
     mock_openrgb_client.update.assert_called_once()
 
     # Verify that the light is still available
-    state = hass.states.get("light.test_rgb_device")
+    state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_ON

@@ -67,7 +67,7 @@ async def test_entities(
         identifiers={
             (
                 DOMAIN,
-                f"{mock_config_entry.entry_id}||LEDSTRIP||Test Vendor||Test LED Strip||TEST123||Test Location",
+                f"{mock_config_entry.entry_id}||DRAM||ENE||ENE SMBus Device||none||I2C: PIIX4, address 0x70",
             )
         }
     )
@@ -99,7 +99,7 @@ async def test_light_with_black_leds(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Verify light is off by color
-    state = hass.states.get("light.test_rgb_device")
+    state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_RGB_COLOR) is None
@@ -124,7 +124,7 @@ async def test_light_with_one_non_black_led(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Verify light is on with the non-black LED color
-    state = hass.states.get("light.test_rgb_device")
+    state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_RGB_COLOR) == (255, 0, 0)
@@ -148,7 +148,7 @@ async def test_light_with_non_color_mode(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Verify light is on with white color (default)
-    state = hass.states.get("light.test_rgb_device")
+    state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_RGB_COLOR) == DEFAULT_COLOR
@@ -173,7 +173,7 @@ async def test_turn_on_light(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Verify light is initially off
-    state = hass.states.get("light.test_rgb_device")
+    state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_OFF
 
@@ -181,7 +181,7 @@ async def test_turn_on_light(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_rgb_device"},
+        {ATTR_ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -203,7 +203,7 @@ async def test_turn_on_light_with_color(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_rgb_device",
+            ATTR_ENTITY_ID: "light.ene_dram",
             ATTR_RGB_COLOR: (0, 255, 0),  # Green
         },
         blocking=True,
@@ -223,7 +223,7 @@ async def test_turn_on_light_with_brightness(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_rgb_device",
+            ATTR_ENTITY_ID: "light.ene_dram",
             ATTR_BRIGHTNESS: 128,
         },
         blocking=True,
@@ -243,7 +243,7 @@ async def test_turn_on_light_with_effect(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_rgb_device",
+            ATTR_ENTITY_ID: "light.ene_dram",
             ATTR_EFFECT: "Rainbow",
         },
         blocking=True,
@@ -262,7 +262,7 @@ async def test_turn_on_light_with_effect_off(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_rgb_device",
+            ATTR_ENTITY_ID: "light.ene_dram",
             ATTR_EFFECT: EFFECT_OFF,
         },
         blocking=True,
@@ -291,7 +291,7 @@ async def test_turn_on_restores_previous_values(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Verify initial state
-    state = hass.states.get("light.test_rgb_device")
+    state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_ON
 
@@ -299,7 +299,7 @@ async def test_turn_on_restores_previous_values(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_rgb_device"},
+        {ATTR_ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -310,7 +310,7 @@ async def test_turn_on_restores_previous_values(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.test_rgb_device")
+    state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_OFF
     mock_openrgb_device.set_mode.assert_called_once_with(OpenRGBMode.OFF)
@@ -320,7 +320,7 @@ async def test_turn_on_restores_previous_values(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_rgb_device"},
+        {ATTR_ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -347,10 +347,10 @@ async def test_previous_values_updated_on_refresh(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Verify initial state
-    state = hass.states.get("light.test_rgb_device")
+    state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_RGB_COLOR) == (255, 0, 0)
+    assert state.attributes.get(ATTR_RGB_COLOR) == (255, 0, 0)  # Red
     assert state.attributes.get(ATTR_BRIGHTNESS) == 255
     assert state.attributes.get(ATTR_EFFECT) == EFFECT_OFF  # Direct mode
 
@@ -365,7 +365,7 @@ async def test_previous_values_updated_on_refresh(
     await hass.async_block_till_done()
 
     # Verify new state
-    state = hass.states.get("light.test_rgb_device")
+    state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_RGB_COLOR) == (0, 255, 0)  # Green
@@ -381,7 +381,7 @@ async def test_previous_values_updated_on_refresh(
     await hass.async_block_till_done()
 
     # Verify light is off
-    state = hass.states.get("light.test_rgb_device")
+    state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_OFF
 
@@ -389,7 +389,7 @@ async def test_previous_values_updated_on_refresh(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_rgb_device"},
+        {ATTR_ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -415,7 +415,7 @@ async def test_turn_on_with_non_color_effect_and_color_params(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.test_rgb_device",
+            ATTR_ENTITY_ID: "light.ene_dram",
             ATTR_EFFECT: "Rainbow",
             ATTR_RGB_COLOR: (255, 255, 0),  # Yellow
         },
@@ -435,7 +435,7 @@ async def test_turn_off_light(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_rgb_device"},
+        {ATTR_ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -464,7 +464,7 @@ async def test_turn_off_light_without_off_mode(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Verify light is initially on
-    state = hass.states.get("light.test_rgb_device")
+    state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_ON
 
@@ -472,7 +472,7 @@ async def test_turn_off_light_without_off_mode(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.test_rgb_device"},
+        {ATTR_ENTITY_ID: "light.ene_dram"},
         blocking=True,
     )
 
@@ -499,7 +499,7 @@ async def test_turn_on_light_with_color_exceptions(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {
-                ATTR_ENTITY_ID: "light.test_rgb_device",
+                ATTR_ENTITY_ID: "light.ene_dram",
                 ATTR_RGB_COLOR: (0, 255, 0),
             },
             blocking=True,
@@ -524,7 +524,7 @@ async def test_turn_on_light_with_mode_exceptions(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {
-                ATTR_ENTITY_ID: "light.test_rgb_device",
+                ATTR_ENTITY_ID: "light.ene_dram",
                 ATTR_EFFECT: "Rainbow",
             },
             blocking=True,
@@ -551,7 +551,7 @@ async def test_dynamic_device_addition(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Check that one light entity exists
-    state = hass.states.get("light.test_rgb_device")
+    state = hass.states.get("light.ene_dram")
     assert state
 
     # Add a second device
@@ -592,7 +592,7 @@ async def test_light_availability(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test light becomes unavailable when device is unplugged."""
-    state = hass.states.get("light.test_rgb_device")
+    state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_ON
 
@@ -605,7 +605,7 @@ async def test_light_availability(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    state = hass.states.get("light.test_rgb_device")
+    state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_UNAVAILABLE
 

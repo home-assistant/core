@@ -11,6 +11,7 @@ astroid==3.3.11
 coverage==7.10.6
 freezegun==1.5.2
 go2rtc-client==0.2.1
+jsonpickle==4.1.1
 license-expression==30.4.3
 mock-open==1.4.0
 mypy-dev==1.19.0a2
