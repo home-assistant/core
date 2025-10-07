@@ -32,8 +32,8 @@ def entity_config(request: pytest.FixtureRequest):
             "connected_topic": f"inels/connected/{MAC_ADDRESS}/{DT_07}/{UNIQUE_ID}",
             "status_topic": f"inels/status/{MAC_ADDRESS}/{DT_07}/{UNIQUE_ID}",
             "base_topic": f"{MAC_ADDRESS}/{DT_07}/{UNIQUE_ID}",
-            "switch_on_value": b"07\n01\n92\n09\n",
-            "switch_off_value": b"07\n00\n92\n09\n",
+            "switch_on_value": "07\n01\n92\n09\n",
+            "switch_off_value": "07\n00\n92\n09\n",
         },
         "relay": {
             "entity_type": "switch",
@@ -44,10 +44,10 @@ def entity_config(request: pytest.FixtureRequest):
             "connected_topic": f"inels/connected/{MAC_ADDRESS}/{DT_100}/{UNIQUE_ID}",
             "status_topic": f"inels/status/{MAC_ADDRESS}/{DT_100}/{UNIQUE_ID}",
             "base_topic": f"{MAC_ADDRESS}/{DT_100}/{UNIQUE_ID}",
-            "switch_on_value": b"07\n00\n0A\n28\n00\n",
-            "switch_off_value": b"06\n00\n0A\n28\n00\n",
+            "switch_on_value": "07\n00\n0A\n28\n00\n",
+            "switch_off_value": "06\n00\n0A\n28\n00\n",
             "alerts": {
-                "overflow": b"06\n00\n0A\n28\n01\n",
+                "overflow": "06\n00\n0A\n28\n01\n",
             },
         },
         "bit": {

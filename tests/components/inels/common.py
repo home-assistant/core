@@ -3,27 +3,21 @@
 # pyright: reportMissingImports=false
 try:
     from homeassistant.components import inels
-    from homeassistant.components.inels import config_flow
     from homeassistant.components.inels.const import DOMAIN
 
     from tests.common import MockConfigEntry
 except ImportError:
     from custom_components import inels
-    from custom_components.inels import config_flow
     from custom_components.inels.const import DOMAIN
     from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 
-from inelsmqtt.const import MQTT_TRANSPORT
-
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import Entity
 
 __all__ = [
     "MockConfigEntry",
-    "config_flow",
     "get_entity",
     "get_entity_id",
     "inels",
@@ -59,7 +53,7 @@ def set_mock_mqtt(
     last_value=None,
 ):
     """Set mock mqtt communication."""
-    gw_connected_value = b'{"status":true}' if gw_available else b'{"status":false}'
+    gw_connected_value = '{"status":true}' if gw_available else '{"status":false}'
     device_connected_value = (
         CONNECTED_INELS_VALUE if device_available else DISCONNECTED_INELS_VALUE
     )
@@ -91,14 +85,8 @@ async def old_entity_and_device_removal(
     )
 
     config_entry = MockConfigEntry(
+        data={},
         domain=DOMAIN,
-        data={
-            CONF_HOST: "127.0.0.1",
-            CONF_PORT: 1883,
-            CONF_USERNAME: "test",
-            CONF_PASSWORD: "pwd",
-            MQTT_TRANSPORT: "tcp",
-        },
         title="iNELS",
     )
     config_entry.add_to_hass(hass)

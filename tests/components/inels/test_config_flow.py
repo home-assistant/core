@@ -1,177 +1,143 @@
-"""Test config flow."""
+"""Test the iNELS config flow."""
 
-from unittest.mock import MagicMock, patch
-
-from inelsmqtt import InelsMqtt
-from inelsmqtt.const import MQTT_TRANSPORT
-import pytest
-
-from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_TYPE,
-    CONF_USERNAME,
-)
+from homeassistant.components.inels.const import DOMAIN, TITLE
+from homeassistant.components.mqtt import MQTT_CONNECTION_STATE
+from homeassistant.config_entries import SOURCE_MQTT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
-from . import HA_INELS_PATH
-from .common import DOMAIN, MockConfigEntry, config_flow, inels
-
-
-@pytest.fixture
-def default_config():
-    """Return default MQTT configuration for testing."""
-    return {
-        CONF_HOST: "127.0.0.1",
-        CONF_PORT: 1883,
-        CONF_USERNAME: "test",
-        CONF_PASSWORD: "pwd",
-        MQTT_TRANSPORT: "tcp",
-    }
+from tests.common import MockConfigEntry
+from tests.typing import MqttMockHAClient
 
 
-@pytest.fixture(autouse=True)
-def mock_is_available():
-    """Mock test_connection inside InelsMqtt."""
-    with patch(
-        "inelsmqtt.InelsMqtt.test_connection", return_value=None
-    ) as mock_available:
-        yield mock_available
-
-
-@pytest.fixture
-def mock_try_connection():
-    """Mock the try connection method."""
-    with patch(f"{HA_INELS_PATH}.config_flow.try_connection") as mock_try:
-        yield mock_try
-
-
-@pytest.fixture
-def mock_mqtt_client_test_connection():
-    """Mock mqtt client."""
-
-    def test_connection(self) -> None:
-        """Mock test_connection the method."""
-        return 6  # leads to unknown error
-
-    with patch.object(InelsMqtt, "test_connection", test_connection) as mock_try:
-        yield mock_try
-
-
-async def test_user_config_flow_finished_successfully(
-    hass: HomeAssistant, mock_try_connection, default_config
+async def test_mqtt_config_single_instance(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
 ) -> None:
-    """Test if we can finish config flow."""
-    mock_try_connection.return_value = None
+    """The MQTT test flow is aborted if an entry already exists."""
+
+    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_MQTT}
     )
 
-    assert result[CONF_TYPE] == FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        default_config,
+
+async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
+    """When an MQTT message is received on the discovery topic, it triggers a config flow."""
+    discovery_info = MqttServiceInfo(
+        topic="inels/status/MAC_ADDRESS/gw",
+        payload='{"CUType":"CU3-08M","Status":"Runfast","FW":"02.97.18"}',
+        qos=0,
+        retain=False,
+        subscribed_topic="inels/status/#",
+        timestamp=None,
     )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_MQTT}, data=discovery_info
+    )
+    assert result["type"] is FlowResultType.FORM
 
-    assert result[CONF_TYPE] == "create_entry"
-    assert result["result"].data == default_config
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert len(mock_try_connection.mock_calls) == 1
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == TITLE
+    assert result["result"].data == {}
 
 
-@pytest.mark.parametrize(
-    ("error_code", "expected_error"),
-    [
-        (1, "mqtt_version"),
-        (2, "forbidden_id"),
-        (3, "cannot_connect"),
-        (4, "invalid_auth"),
-        (5, "unauthorized"),
-        (6, "unknown"),
-    ],
-)
-async def test_user_config_flow_errors(
-    hass: HomeAssistant, mock_try_connection, error_code, expected_error, default_config
+async def test_mqtt_abort_invalid_topic(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
 ) -> None:
-    """Test the config flow."""
-    mock_try_connection.return_value = error_code
+    """Check MQTT flow aborts if discovery topic is invalid."""
+    discovery_info = MqttServiceInfo(
+        topic="inels/status/MAC_ADDRESS/wrong_topic",
+        payload='{"CUType":"CU3-08M","Status":"Runfast","FW":"02.97.18"}',
+        qos=0,
+        retain=False,
+        subscribed_topic="inels/status/#",
+        timestamp=None,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_MQTT}, data=discovery_info
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
+
+
+async def test_mqtt_abort_empty_payload(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
+    """Check MQTT flow aborts if discovery payload is empty."""
+    discovery_info = MqttServiceInfo(
+        topic="inels/status/MAC_ADDRESS/gw",
+        payload="",
+        qos=0,
+        retain=False,
+        subscribed_topic="inels/status/#",
+        timestamp=None,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_MQTT}, data=discovery_info
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
+
+
+async def test_user_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
+    """Test if the user can finish a config flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TITLE
+    assert result["result"].data == {}
+
+
+async def test_user_config_single_instance(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
+    """The user test flow is aborted if an entry already exists."""
+    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result[CONF_TYPE] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        default_config,
-    )
-
-    assert result[CONF_TYPE] == FlowResultType.FORM
-    assert result["errors"]["base"] == expected_error
-
-    assert len(mock_try_connection.mock_calls) == 1
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
 
 
-async def test_config_setup(
-    hass: HomeAssistant, mock_try_connection, mock_is_available, default_config
+async def test_user_setup_mqtt_not_connected(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
 ) -> None:
-    """Test configuration."""
-    mock_try_connection.return_value = None
+    """The user setup test flow is aborted when MQTT is not connected."""
+
+    mqtt_mock.connected = False
+    async_dispatcher_send(hass, MQTT_CONNECTION_STATE, False)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result[CONF_TYPE] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "mqtt_not_connected"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        default_config,
+
+async def test_user_setup_mqtt_not_configured(hass: HomeAssistant) -> None:
+    """The user setup test flow is aborted when MQTT is not configured."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result[CONF_TYPE] == "create_entry"
-    assert result["result"].data == default_config
-
-    mock_try_connection.assert_called_once_with(
-        hass, "127.0.0.1", 1883, "test", "pwd", "tcp"
-    )
-
-    assert len(mock_is_available.mock_calls) == 1
-
-
-async def test_async_unload_entry(hass: HomeAssistant, default_config) -> None:
-    """Test the MQTT client associated with the entry is properly cleaned up."""
-
-    mock_mqtt = MagicMock()
-    inels_data = inels.InelsData(mqtt=mock_mqtt, devices=[])
-
-    config_entry = MockConfigEntry(domain=DOMAIN, data=default_config)
-    config_entry.add_to_hass(hass)
-    config_entry.runtime_data = inels_data
-
-    with patch(
-        f"{HA_INELS_PATH}.async_unload_entry", wraps=inels.async_unload_entry
-    ) as mock_unload:
-        unload_ok = await inels.async_unload_entry(hass, config_entry)
-
-        assert unload_ok
-        mock_unload.assert_called_once_with(hass, config_entry)
-
-    mock_mqtt.unsubscribe_listeners.assert_called_once()
-    mock_mqtt.disconnect.assert_called_once()
-
-
-async def test_try_connection(mock_mqtt_client_test_connection, default_config) -> None:
-    """Test the try_connection function."""
-
-    assert (
-        config_flow.try_connection(None, **default_config) == 6
-    )  # checks that the correct value is propagated
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "mqtt_not_configured"
