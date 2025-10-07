@@ -362,6 +362,9 @@
       "tlx_wattage_input_4": {
         "name": "Input 4 wattage"
       },
+      "tlx_solar_generation_today": {
+        "name": "Solar energy today"
+      },
       "tlx_solar_generation_total": {
         "name": "Lifetime total solar energy"
       },
@@ -442,6 +445,78 @@
       },
       "tlx_statement_of_charge": {
         "name": "State of charge (SoC)"
+      },
+      "tlx_pac_to_local_load": {
+        "name": "Local load Power"
+      },
+      "tlx_pac_to_user_total": {
+        "name": "Import Power"
+      },
+      "tlx_pac_to_grid_total": {
+        "name": "Export Power"
+      },
+      "tlx_system_production_today": {
+        "name": "System production today"
+      },
+      "tlx_system_production_total": {
+        "name": "Lifetime system production"
+      },
+      "tlx_self_consumption_today": {
+        "name": "Self consumption today"
+      },
+      "tlx_self_consumption_total": {
+        "name": "Lifetime self consumption"
+      },
+      "tlx_import_from_grid_today": {
+        "name": "Import from grid today"
+      },
+      "tlx_import_from_grid_total": {
+        "name": "Lifetime import from grid"
+      },
+      "tlx_batteries_charged_from_grid_today": {
+        "name": "Batteries charged from grid today"
+      },
+      "tlx_batteries_charged_from_grid_total": {
+        "name": "Lifetime batteries charged from grid"
+      },
+      "tlx_p_system": {
+        "name": "System Power"
+      },
+      "tlx_p_self": {
+        "name": "Self Power"
+      },
+      "tlx_grid_voltage_r": {
+        "name": "Grid voltage R"
+      },
+      "tlx_grid_voltage_s": {
+        "name": "Grid voltage S"
+      },
+      "tlx_grid_voltage_t": {
+        "name": "Grid voltage T"
+      },
+      "tlx_grid_current_r": {
+        "name": "Grid current R"
+      },
+      "tlx_grid_current_s": {
+        "name": "Grid current S"
+      },
+      "tlx_grid_current_t": {
+        "name": "Grid current T"
+      },
+      "tlx_battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "tlx_battery_current": {
+        "name": "Battery current"
+      },
+      "tlx_battery_power": {
+        "name": "Battery power"
+      },
+      "tlx_load_power": {
+        "name": "Load power"
+      },
+      "tlx_grid_power": {
+        "name": "Grid power"
       },
       "total_money_today": {
         "name": "Total money today"
