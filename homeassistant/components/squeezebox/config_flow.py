@@ -32,7 +32,6 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
     CONF_BROWSE_LIMIT,
-    CONF_FLOW_TYPE,
     CONF_HTTPS,
     CONF_VOLUME_STEP,
     DEFAULT_BROWSE_LIMIT,
@@ -158,19 +157,6 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Choose manual or discover flow."""
 
-        if user_input:
-            # update with host provided by user
-            if (
-                self.discovery_info.get(CONF_HOST)
-                and user_input[CONF_FLOW_TYPE] != "Manual"
-            ):
-                user_input[CONF_HOST] = self.discovery_info.get(CONF_HOST)
-                user_input[CONF_PORT] = self.discovery_info.get(CONF_PORT)
-            self.data_schema = _base_schema(user_input)
-            if user_input[CONF_FLOW_TYPE] != "Manual":
-                return await self.async_step_edit_discovered()
-            return await self.async_step_edit()
-
         return self.async_show_menu(
             step_id="flow_type",
             description_placeholders={"host": self.discovery_info[CONF_HOST]},
@@ -240,6 +226,18 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Edit a discovered or manually inputted server."""
+
+        _server_data = {
+            CONF_HOST: self.discovery_info[CONF_HOST],
+            CONF_PORT: self.discovery_info[CONF_PORT],
+            CONF_HTTPS: False,
+        }
+
+        if not (await self._validate_input(_server_data)):
+            # Attempt to connect with default data successful
+            return self.async_create_entry(
+                title=_server_data[CONF_HOST], data=_server_data
+            )
         errors = {}
         if user_input:
             user_input[CONF_HOST] = self.discovery_info[CONF_HOST]
