@@ -463,17 +463,17 @@
       }
     },
     "number": {
-      "charge_power_rate": {
-        "name": "Charge power rate"
+      "battery_charge_power_limit": {
+        "name": "Battery charge power limit"
       },
-      "charge_stop_soc": {
-        "name": "Charge stop SOC"
+      "battery_charge_soc_limit": {
+        "name": "Battery charge SOC limit"
       },
-      "discharge_power_rate": {
-        "name": "Discharge power rate"
+      "battery_discharge_power_limit": {
+        "name": "Battery discharge power limit"
       },
-      "discharge_stop_soc": {
-        "name": "Discharge stop SOC"
+      "battery_discharge_soc_limit": {
+        "name": "Battery discharge SOC limit"
       }
     }
   }
