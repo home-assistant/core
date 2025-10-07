@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import re
 from datetime import timedelta
 from typing import Any
 
@@ -21,7 +20,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import COMMANDS, CONF_MODEL, DOMAIN, MODEL_INPUTS, SLOW_POLL_INTERVAL
-from .hegel_client import HegelClient
+from .hegel_client import HegelClient, HegelStateUpdate, parse_reply_message
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,31 +84,29 @@ async def async_setup_entry(
     }
 
 
-def _update_state_from_reply(state: dict[str, Any], reply: str, source: str = "reply"):
-    """Parse a single reply/push and update state dict."""
-    if reply.startswith("-p."):
-        state["power"] = reply.endswith(".1")
-        _LOGGER.debug("[%s] Power parse: %s -> %s", source, reply, state["power"])
-    elif reply.startswith("-v."):
-        m = re.findall(r"-v\.(\d+)", reply)
-        if m:
-            level = int(m[-1])
-            state["volume"] = max(0.0, min(1.0, level / 100.0))
-            _LOGGER.debug("[%s] Volume parse: %s -> %s", source, reply, state["volume"])
-    elif reply.startswith("-m."):
-        # -m.1 means muted, -m.0 unmuted
-        state["mute"] = "1" in reply and "0" not in reply
-        _LOGGER.debug("[%s] Mute parse: %s -> %s", source, reply, state["mute"])
-    elif reply.startswith("-i."):
-        inp = None
-        for n in range(1, 21):
-            if f".{n}" in reply:
-                inp = n
-        state["input"] = inp
-        _LOGGER.debug("[%s] Input parse: %s -> %s", source, reply, state["input"])
-    elif reply.startswith("-r.") or reply.startswith("-reset"):
-        _LOGGER.info("[%s] Reset/other message: %s", source, reply)
-        state["reset"] = reply
+def _apply_state_changes(
+    state: dict[str, Any], update: HegelStateUpdate, source: str = "reply"
+):
+    """Apply parsed changes to the state dictionary."""
+    if update.power is not None:
+        _LOGGER.debug("[%s] Power parse: %s", source, update.power)
+        state["power"] = update.power
+
+    if update.volume is not None:
+        _LOGGER.debug("[%s] Volume parse: %s", source, update.volume)
+        state["volume"] = update.volume
+
+    if update.mute is not None:
+        _LOGGER.debug("[%s] Mute parse: %s", source, update.mute)
+        state["mute"] = update.mute
+
+    if update.input is not None:
+        _LOGGER.debug("[%s] Input parse: %s", source, update.input)
+        state["input"] = update.input
+
+    if update.reset is not None:
+        _LOGGER.info("[%s] Reset/other message: %s", source, update.reset)
+        state["reset"] = update.reset
 
 
 class HegelSlowPollCoordinator(DataUpdateCoordinator):
@@ -129,21 +126,16 @@ class HegelSlowPollCoordinator(DataUpdateCoordinator):
         """Periodically poll the amplifier to keep state in sync as a fallback."""
         try:
             await self._client.ensure_connected(timeout=5.0)
-            responses = {}
             for key, cmd in {
                 "power": COMMANDS["power_query"],
                 "volume": COMMANDS["volume_query"],
                 "mute": COMMANDS["mute_query"],
                 "input": COMMANDS["input_query"],
             }.items():
-                # expect a reply for each
-                r = await self._client.send(cmd, expect_reply=True, timeout=3.0)
-                if r:
-                    responses[key] = r.strip()
-
-            # translate into the shared dict
-            for key, r in responses.items():
-                _update_state_from_reply(self._state, r, source="poll")
+                # client.send() now returns parsed changes directly
+                update = await self._client.send(cmd, expect_reply=True, timeout=3.0)
+                if update and update.has_changes():
+                    _apply_state_changes(self._state, update, source="poll")
             return self._state
         except Exception as err:
             _LOGGER.error("Slow poll failed: %s", err)
@@ -231,9 +223,11 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     async def _async_handle_push(self, msg: str) -> None:
         """Handle incoming push message from client (runs in event loop)."""
         try:
-            _update_state_from_reply(self._state, msg, source="push")
-            # notify HA
-            self.async_write_ha_state()
+            update = parse_reply_message(msg)
+            if update.has_changes():
+                _apply_state_changes(self._state, update, source="push")
+                # notify HA
+                self.async_write_ha_state()
         except Exception as err:
             _LOGGER.exception("Failed to handle push message: %s", err)
 
@@ -276,9 +270,11 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                 "input": COMMANDS["input_query"],
             }.items():
                 try:
-                    r = await self._client.send(cmd, expect_reply=True, timeout=3.0)
-                    if r:
-                        _update_state_from_reply(self._state, r, source="reconnect")
+                    update = await self._client.send(
+                        cmd, expect_reply=True, timeout=3.0
+                    )
+                    if update and update.has_changes():
+                        _apply_state_changes(self._state, update, source="reconnect")
                 except Exception as err:
                     _LOGGER.debug("Refresh command %s failed: %s", cmd, err)
             # update entity state

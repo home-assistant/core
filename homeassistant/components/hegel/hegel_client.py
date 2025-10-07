@@ -2,12 +2,70 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 from collections import deque
+from dataclasses import dataclass
 from typing import Optional, Callable
 
 _LOGGER = logging.getLogger(__name__)
 
 CR = "\r"
+
+
+@dataclass
+class HegelStateUpdate:
+    """Represents a state update from a Hegel device."""
+
+    power: Optional[bool] = None
+    volume: Optional[float] = None
+    mute: Optional[bool] = None
+    input: Optional[int] = None
+    reset: Optional[str] = None
+
+    def has_changes(self) -> bool:
+        """Check if this update contains any changes."""
+        return any(
+            [
+                self.power is not None,
+                self.volume is not None,
+                self.mute is not None,
+                self.input is not None,
+                self.reset is not None,
+            ]
+        )
+
+
+def parse_reply_message(reply: str) -> HegelStateUpdate:
+    """Parse a single reply/push message and return state changes.
+
+    Args:
+        reply: Raw reply string from the Hegel device
+
+    Returns:
+        HegelStateUpdate with parsed changes
+    """
+    update = HegelStateUpdate()
+
+    if reply.startswith("-p."):
+        update.power = reply.endswith(".1")
+    elif reply.startswith("-v."):
+        m = re.findall(r"-v\.(\d+)", reply)
+        if m:
+            level = int(m[-1])
+            update.volume = max(0.0, min(1.0, level / 100.0))
+    elif reply.startswith("-m."):
+        # -m.1 means muted, -m.0 unmuted
+        update.mute = "1" in reply and "0" not in reply
+    elif reply.startswith("-i."):
+        inp = None
+        for n in range(1, 21):
+            if f".{n}" in reply:
+                inp = n
+        update.input = inp
+    elif reply.startswith("-r.") or reply.startswith("-reset"):
+        update.reset = reply
+
+    return update
 
 
 class HegelClient:
@@ -68,11 +126,15 @@ class HegelClient:
 
     async def send(
         self, command: str, expect_reply: bool = True, timeout: float = 5.0
-    ) -> Optional[str]:
+    ) -> Optional[HegelStateUpdate]:
         """Send command and optionally wait for reply.
 
         Important: we only hold the _write_lock for writer access and pending append.
         Waiting for reply is done outside the lock to avoid deadlocks with the reader.
+
+        Returns:
+            If expect_reply=True: HegelStateUpdate with parsed state changes from the device response
+            If expect_reply=False: None
         """
         # normalize line ending: Hegel uses CR
         if not command.endswith(CR):
@@ -108,7 +170,9 @@ class HegelClient:
 
         # wait for future outside the write lock
         try:
-            return await asyncio.wait_for(fut, timeout=timeout)
+            raw_reply = await asyncio.wait_for(fut, timeout=timeout)
+            # Parse the raw reply into structured changes
+            return parse_reply_message(raw_reply)
         except asyncio.TimeoutError:
             _LOGGER.warning("Timeout waiting for reply to %s", command.strip())
             if not fut.done():
