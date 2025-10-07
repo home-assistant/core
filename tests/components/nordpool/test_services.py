@@ -94,6 +94,7 @@ async def test_service_call(
     [
         (NordPoolAuthenticationError, "authentication_error"),
         (NordPoolError, "connection_error"),
+        (TimeoutError, "connection_error"),
     ],
 )
 @pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")
