@@ -25,13 +25,27 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
+    # Collect processor data if available
+    processor_data = {}
+    if hasattr(coordinator, "_processors") and coordinator._processors:
+        processor = coordinator._processors[0]  # Get the first processor
+        if hasattr(processor, "data"):
+            processor_data = {
+                "entity_data": dict(processor.data.entity_data),
+                "entity_names": dict(processor.data.entity_names),
+                "devices": dict(processor.data.devices),
+            }
+
     return async_redact_data(
         {
             "entry": entry.as_dict(),
             "coordinator_data": {
                 "last_update_success": coordinator.last_update_success,
                 "available": coordinator.available,
+                "address": coordinator.address,
+                "mode": str(coordinator.mode),
             },
+            "processor_data": processor_data,
         },
         TO_REDACT,
     )
