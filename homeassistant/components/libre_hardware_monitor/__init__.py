@@ -33,7 +33,7 @@ async def async_migrate_entry(
         coordinator = LibreHardwareMonitorCoordinator(hass, config_entry)
         try:
             await coordinator.async_config_entry_first_refresh()
-        except Exception as err:
+        except (ConnectionError, TimeoutError, OSError) as err:
             _LOGGER.warning("Could not refresh coordinator during migration: %s", err)
             # Continue with migration even if refresh fails
 
@@ -49,6 +49,11 @@ async def async_migrate_entry(
                 old_unique_id = f"lhm-{sensor_data.sensor_id}"
                 new_unique_id = f"lhm_{config_entry.entry_id}_{sensor_data.sensor_id}"
 
+                _LOGGER.debug(
+                    "Checking for entity with old unique_id: %s",
+                    old_unique_id,
+                )
+
                 # Check if entity exists with old unique ID
                 if entity_id := entity_registry.async_get_entity_id(
                     DOMAIN, "sensor", old_unique_id
@@ -59,8 +64,12 @@ async def async_migrate_entry(
                         old_unique_id,
                         new_unique_id,
                     )
-                    entity_registry.async_update_entity(
-                        entity_id, new_unique_id=new_unique_id
+                    # Remove the old entity - Home Assistant will create a new one with the new unique_id
+                    entity_registry.async_remove(entity_id)
+                else:
+                    _LOGGER.debug(
+                        "No entity found with old unique_id: %s",
+                        old_unique_id,
                     )
 
         # Update config entry version

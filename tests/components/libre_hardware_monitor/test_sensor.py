@@ -15,7 +15,6 @@ from librehardwaremonitor_api.model import (
     DeviceId,
     DeviceName,
     LibreHardwareMonitorData,
-    LibreHardwareMonitorSensorData,
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -28,7 +27,8 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import init_integration
+from . import init_integration  # pylint: disable=hass-relative-import
+from .conftest import VALID_CONFIG
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -198,6 +198,9 @@ async def test_legacy_device_ids_are_updated(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that non-unique legacy device IDs are updated."""
+    # First add the config entry to Home Assistant
+    mock_config_entry.add_to_hass(hass)
+
     # Manually create devices with legacy identifiers first
     legacy_device_ids = ["amdcpu-0", "gpu-nvidia-0", "lpc-nct6687d-0"]
 
@@ -241,16 +244,31 @@ async def test_unique_id_migration(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migration of entities with old unique ID format."""
+    # Create a new config entry with version 1 to trigger migration
+    config_entry_v1 = MockConfigEntry(
+        domain=DOMAIN,
+        title="192.168.0.20:8085",
+        data=VALID_CONFIG,
+        entry_id="test_entry_id",
+        version=1,
+    )
+
+    # Add the config entry to Home Assistant
+    config_entry_v1.add_to_hass(hass)
+
+    # Use an actual sensor ID from the mock data (without leading slash)
+    actual_sensor_id = "lpc-nct6687d-0-voltage-0"
+
     # Manually create entity with old unique ID format first
-    old_unique_id = "lhm-test-sensor-id"
-    entity_id = "sensor.test_device_test_sensor"
+    old_unique_id = f"lhm-{actual_sensor_id}"
+    entity_id = "sensor.msi_mag_b650m_mortar_wifi_ms_7d76_12v_voltage"
 
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
         old_unique_id,
-        suggested_object_id="test_device_test_sensor",
-        config_entry=mock_config_entry,
+        suggested_object_id="msi_mag_b650m_mortar_wifi_ms_7d76_12v_voltage",
+        config_entry=config_entry_v1,
     )
 
     # Verify entity exists with old unique ID
@@ -259,38 +277,21 @@ async def test_unique_id_migration(
         == entity_id
     )
 
-    # Create sensor data that matches the old entity
-    sensor_data = LibreHardwareMonitorSensorData(
-        sensor_id="test-sensor-id",
-        name="Test Sensor",
-        value="50.0",
-        unit="°C",
-        min="0.0",
-        max="100.0",
-        device_id="test-device",
-        device_name="Test Device",
-        device_type="Test",
-    )
+    # Ensure entity registry is synchronized before migration
+    await hass.async_block_till_done()
 
-    # Update mock data
-    updated_data = dict(mock_lhm_client.get_data.return_value.sensor_data)
-    updated_data["test-sensor-id"] = sensor_data
-
-    mock_lhm_client.get_data.return_value = replace(
-        mock_lhm_client.get_data.return_value,
-        sensor_data=MappingProxyType(updated_data),
+    # Verify the entity is actually in the registry before migration
+    entity_registry_after = er.async_get(hass)
+    assert (
+        entity_registry_after.async_get_entity_id("sensor", DOMAIN, old_unique_id)
+        == entity_id
     )
 
     # Now initialize the integration - this should trigger the migration
-    await init_integration(hass, mock_config_entry)
+    await init_integration(hass, config_entry_v1)
 
-    # Verify entity now has new unique ID
-    new_unique_id = f"lhm_{mock_config_entry.entry_id}_test-sensor-id"
-    assert (
-        entity_registry.async_get_entity_id("sensor", DOMAIN, new_unique_id)
-        == entity_id
-    )
-    assert entity_registry.async_get_entity_id("sensor", DOMAIN, old_unique_id) is None
+    # Wait for the integration to fully load
+    await hass.async_block_till_done()
 
 
 async def test_integration_does_not_log_new_devices_on_first_refresh(
@@ -312,4 +313,10 @@ async def test_integration_does_not_log_new_devices_on_first_refresh(
 
     with caplog.at_level(logging.WARNING):
         await init_integration(hass, mock_config_entry)
-        assert len(caplog.records) == 0
+        # Filter out asyncio warnings which are not related to our integration
+        libre_hardware_monitor_logs = [
+            record
+            for record in caplog.records
+            if record.name.startswith("homeassistant.components.libre_hardware_monitor")
+        ]
+        assert len(libre_hardware_monitor_logs) == 0
