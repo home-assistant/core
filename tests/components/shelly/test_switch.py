@@ -876,7 +876,7 @@ async def test_cury_switch_entity(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    mock_rpc_device.cury_set.assert_called_once_with(0, slot="left", value=False)
+    mock_rpc_device.cury_set.assert_called_once_with(0, "left", False)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -885,4 +885,4 @@ async def test_cury_switch_entity(
         blocking=True,
     )
     mock_rpc_device.mock_update()
-    mock_rpc_device.cury_set.assert_called_with(0, slot="right", value=True)
+    mock_rpc_device.cury_set.assert_called_with(0, "right", True)
