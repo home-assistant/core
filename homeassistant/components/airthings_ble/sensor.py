@@ -123,6 +123,7 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
     ),
     "noise": SensorEntityDescription(
         key="noise",
+        translation_key="ambient_noise",
         device_class=SensorDeviceClass.SOUND_PRESSURE,
         native_unit_of_measurement=UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
         state_class=SensorStateClass.MEASUREMENT,
