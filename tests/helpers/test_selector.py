@@ -672,6 +672,26 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
             (),
             (),
         ),
+        (
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {}},
+                    },
+                },
+                "multiple": False,
+                "label_field": "name",
+                "description_field": "percentage",
+                "key_field": "name",
+                "return_type": "object",
+            },
+            (),
+            (),
+        ),
     ],
     [],
 )
