@@ -8,7 +8,7 @@ from zwave_js_server.event import Event
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
 from homeassistant.components.zwave_js.const import ATTR_VALUE
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -69,6 +69,10 @@ async def test_basic(
     attributes = state.attributes
     assert attributes[ATTR_EVENT_TYPE] == "Basic event value"
     assert attributes[ATTR_VALUE] == 255
+    assert (
+        attributes[ATTR_FRIENDLY_NAME]
+        == "honeywell_in_wall_smart_fan_control Event value"
+    )
 
 
 async def test_central_scene(
@@ -131,6 +135,7 @@ async def test_central_scene(
     attributes = state.attributes
     assert attributes[ATTR_EVENT_TYPE] == "KeyReleased"
     assert attributes[ATTR_VALUE] == 1
+    assert attributes[ATTR_FRIENDLY_NAME] == "Node 51 Scene 002"
 
     # Try invalid value
     event = Event(
@@ -181,3 +186,4 @@ async def test_central_scene(
     attributes = state.attributes
     assert attributes[ATTR_EVENT_TYPE] == "KeyReleased"
     assert attributes[ATTR_VALUE] == 1
+    assert attributes[ATTR_FRIENDLY_NAME] == "Node 51 Scene 002"
