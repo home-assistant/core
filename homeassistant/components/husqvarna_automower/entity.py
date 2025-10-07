@@ -143,7 +143,7 @@ class WorkAreaAvailableEntity(AutomowerControlEntity):
             manufacturer="Husqvarna",
             name=self.work_area_attributes.name,
             suggested_area="Garden",
-            via_device={(DOMAIN, mower_id)}
+            via_device=(DOMAIN, mower_id)
         )
 
     @property
