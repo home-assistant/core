@@ -130,9 +130,9 @@ class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
         await super().async_added_to_hass()
 
         if (state := await self.async_get_last_state()) is not None:
-            if state.state in (STATE_CLOSED):
+            if state.state == STATE_CLOSED:
                 self._last_action = STATE_COVER.index(STATE_CLOSING)
-            if state.state in (STATE_OPEN):
+            if state.state == STATE_OPEN:
                 self._last_action = STATE_COVER.index(STATE_OPENING)
 
             self._attr_is_closed = state.state == STATE_CLOSED
