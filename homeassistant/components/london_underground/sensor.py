@@ -65,10 +65,6 @@ async def async_setup_platform(
         )
         return
 
-    _LOGGER.warning(
-        "Loading London Underground via platform (YAML) config is deprecated; The configuration"
-        " has been migrated to a config entry and can be safely removed"
-    )
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
