@@ -239,10 +239,10 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SequenceBaseSensor(
-    CoordinatorEntity[SequenceDataUpdateCoordinator], SensorEntity
-):
+class SequenceBaseSensor(CoordinatorEntity, SensorEntity):
     """Base class for Sequence sensors."""
+
+    coordinator: SequenceDataUpdateCoordinator
 
     def __init__(
         self,
@@ -621,7 +621,7 @@ class CashFlowSensor(SequenceBaseSensor):
         if self.account_type and "liability" in self.account_type.lower():
             return "liabilities"
         if self.account_type and "external" in self.account_type.lower():
-            return "externalAccounts"
+            return "external_accounts"
         return "accounts"
 
     @property

@@ -25,6 +25,7 @@ from .api import (
     SequenceConnectionError,
 )
 from .const import (
+    ACCOUNT_TYPE_ACCOUNT,
     CONF_ACCESS_TOKEN,
     CONF_INVESTMENT_ACCOUNTS,
     CONF_LIABILITY_ACCOUNTS,
@@ -181,7 +182,7 @@ class SequenceOptionsFlow(OptionsFlow):
             # Get all "Account" type accounts (external accounts)
             all_accounts = accounts_data.get("data", {}).get("accounts", [])
             external_accounts = [
-                acc for acc in all_accounts if acc.get("type") == "Account"
+                acc for acc in all_accounts if acc.get("type") == ACCOUNT_TYPE_ACCOUNT
             ]
 
             # Create choices for multi-select

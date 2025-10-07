@@ -28,7 +28,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class SequenceDataUpdateCoordinator(TimestampDataUpdateCoordinator[dict[str, Any]]):
+class SequenceDataUpdateCoordinator(TimestampDataUpdateCoordinator):
     """Class to manage fetching data from the Sequence API."""
 
     def __init__(
