@@ -157,6 +157,54 @@
     'state': '0',
   })
 # ---
+# name: test_cury_sensor_entity[sensor.test_name_left_slot_fragrance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_name_left_slot_fragrance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Left slot fragrance',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'fragrance_name',
+    'unique_id': '123456789ABC-cury:0-cury_left_fragrance',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cury_sensor_entity[sensor.test_name_left_slot_fragrance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test name Left slot fragrance',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_name_left_slot_fragrance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Forest Dream',
+  })
+# ---
 # name: test_cury_sensor_entity[sensor.test_name_left_slot_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -209,7 +257,7 @@
     'state': '27',
   })
 # ---
-# name: test_cury_sensor_entity[sensor.test_name_left_slot_perfume-entry]
+# name: test_cury_sensor_entity[sensor.test_name_right_slot_fragrance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -222,7 +270,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_name_left_slot_perfume',
+    'entity_id': 'sensor.test_name_right_slot_fragrance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -234,27 +282,27 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Left slot perfume',
+    'original_name': 'Right slot fragrance',
     'platform': 'shelly',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'perfume_name',
-    'unique_id': '123456789ABC-cury:0-cury_left_perfume',
+    'translation_key': 'fragrance_name',
+    'unique_id': '123456789ABC-cury:0-cury_right_fragrance',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_cury_sensor_entity[sensor.test_name_left_slot_perfume-state]
+# name: test_cury_sensor_entity[sensor.test_name_right_slot_fragrance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Left slot perfume',
+      'friendly_name': 'Test name Right slot fragrance',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_name_left_slot_perfume',
+    'entity_id': 'sensor.test_name_right_slot_fragrance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Forest Dream',
+    'state': 'Velvet Rose',
   })
 # ---
 # name: test_cury_sensor_entity[sensor.test_name_right_slot_level-entry]
@@ -307,54 +355,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '84',
-  })
-# ---
-# name: test_cury_sensor_entity[sensor.test_name_right_slot_perfume-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_name_right_slot_perfume',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Right slot perfume',
-    'platform': 'shelly',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'perfume_name',
-    'unique_id': '123456789ABC-cury:0-cury_right_perfume',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_cury_sensor_entity[sensor.test_name_right_slot_perfume-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test name Right slot perfume',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_name_right_slot_perfume',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Velvet Rose',
   })
 # ---
 # name: test_rpc_shelly_ev_sensors[sensor.test_name_charger_state-entry]

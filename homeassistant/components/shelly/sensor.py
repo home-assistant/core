@@ -1670,11 +1670,11 @@ RPC_SENSORS: Final = {
         available=lambda status: (left := status["left"]) is not None
         and left["vial"]["level"] != -1,
     ),
-    "cury_left_perfume": RpcSensorDescription(
+    "cury_left_fragrance": RpcSensorDescription(
         key="cury",
         sub_key="slots",
-        name="Left slot perfume",
-        translation_key="perfume_name",
+        name="Left slot fragrance",
+        translation_key="fragrance_name",
         value=lambda status, _: status["left"]["vial"]["name"],
         entity_category=EntityCategory.DIAGNOSTIC,
         available=lambda status: (left := status["left"]) is not None
@@ -1692,11 +1692,11 @@ RPC_SENSORS: Final = {
         available=lambda status: (right := status["right"]) is not None
         and right["vial"]["level"] != -1,
     ),
-    "cury_right_perfume": RpcSensorDescription(
+    "cury_right_fragrance": RpcSensorDescription(
         key="cury",
         sub_key="slots",
-        name="Right slot perfume",
-        translation_key="perfume_name",
+        name="Right slot fragrance",
+        translation_key="fragrance_name",
         value=lambda status, _: status["right"]["vial"]["name"],
         entity_category=EntityCategory.DIAGNOSTIC,
         available=lambda status: (right := status["right"]) is not None

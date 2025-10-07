@@ -1982,8 +1982,8 @@ async def test_cury_sensor_entity(
     for entity in (
         "left_slot_level",
         "right_slot_level",
-        "left_slot_perfume",
-        "right_slot_perfume",
+        "left_slot_fragrance",
+        "right_slot_fragrance",
     ):
         entity_id = f"{SENSOR_DOMAIN}.test_name_{entity}"
 
