@@ -293,7 +293,6 @@ def _normalize_states(
             fstates[0][1].attributes.get(ATTR_DEVICE_CLASS),
             state_unit,
         )
-        _LOGGER.warning("Unit class for %s is %s", entity_id, unit_class)
     else:
         # We have seen this sensor before, use the unit from metadata
         statistics_unit = old_metadata["unit_of_measurement"]
