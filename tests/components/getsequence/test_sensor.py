@@ -44,11 +44,11 @@ async def test_sensor_setup(hass: HomeAssistant, mock_sequence_data) -> None:
     enabled_sensors = [
         # Main aggregate sensors (always enabled)
         "sensor.sequence_account_net_balance",
-        "sensor.sequence_account_pods_total",
-        "sensor.sequence_account_liabilities_total",
-        "sensor.sequence_account_investments_total",
-        "sensor.sequence_account_income_sources_total",
-        "sensor.sequence_account_external_total",
+        "sensor.sequence_account_pods_total_balance",
+        "sensor.sequence_account_liabilities_total_balance",
+        "sensor.sequence_account_investments_total_balance",
+        "sensor.sequence_account_income_sources_total_balance",
+        "sensor.sequence_account_external_total_balance",
         "sensor.sequence_account_data_age",
         # Only daily net balance utility meter is enabled by default
         "sensor.sequence_account_cash_flow_daily",
@@ -108,18 +108,16 @@ async def test_sensor_attributes(hass: HomeAssistant, mock_sequence_data) -> Non
 
     # Check pod sensor attributes with new naming
     state = hass.states.get("sensor.test_pod_1_balance")
-    assert state.attributes["pod_id"] == "5579244"
-    assert state.attributes["pod_name"] == "Test Pod 1"
+    assert state.attributes["account_id"] == "5579244"
+    assert state.attributes["account_name"] == "Test Pod 1"
     assert state.attributes["account_type"] == "Pod"
 
     # Check net balance attributes with updated totals
     state = hass.states.get("sensor.sequence_account_net_balance")
     assert state.attributes["pod_count"] == 2
     assert state.attributes["income_source_count"] == 2
-    assert state.attributes["pod_balance"] == 1500.0  # 1000 + 500
-    # Note: income_source_balance attribute might not exist, so check if available
-    if "income_source_balance" in state.attributes:
-        assert state.attributes["income_source_balance"] == 3500.0  # 2000 + 1500
+    assert state.attributes["description"] == "Total balance across all accounts"
+    assert state.attributes["balance_source"] == "total_balance"
 
     # Check external account sensor (should remain External type when uncategorized)
     state = hass.states.get("sensor.external_bank_external_balance")
@@ -128,14 +126,14 @@ async def test_sensor_attributes(hass: HomeAssistant, mock_sequence_data) -> Non
     assert state.attributes["account_type"] == "External"
 
     # Check that liability and investment totals include native accounts
-    state = hass.states.get("sensor.sequence_account_liabilities_total")
+    state = hass.states.get("sensor.sequence_account_liabilities_total_balance")
     assert state.state == "-850.0"  # Credit Card
 
-    state = hass.states.get("sensor.sequence_account_investments_total")
+    state = hass.states.get("sensor.sequence_account_investments_total_balance")
     assert state.state == "50000.0"  # 401k Account
 
     # Check external total includes uncategorized external accounts
-    state = hass.states.get("sensor.sequence_account_external_total")
+    state = hass.states.get("sensor.sequence_account_external_total_balance")
     # External Bank (1500) + Mortgage Account (-250000) + Brokerage Account (75000) = -173500
     assert state.state == "-173500.0"
 
@@ -161,7 +159,7 @@ async def test_utility_meter_functionality(hass: HomeAssistant) -> None:
 
         # Initial state - the only enabled utility meter should be net balance daily
         state = hass.states.get("sensor.sequence_account_cash_flow_daily")
-        assert state.state == "0.0"
+        assert state.state == "0.0"  # Should start at 0.0 after establishing baseline
 
         # Enable a disabled utility meter for testing
         entity_registry = er.async_get(hass)
@@ -231,9 +229,15 @@ async def test_external_account_categorization(hass: HomeAssistant) -> None:
 
         # Check that categorized accounts are included in correct totals
         # Debug: Check what the actual values are
-        liability_state = hass.states.get("sensor.sequence_account_liabilities_total")
-        investment_state = hass.states.get("sensor.sequence_account_investments_total")
-        external_state = hass.states.get("sensor.sequence_account_external_total")
+        liability_state = hass.states.get(
+            "sensor.sequence_account_liabilities_total_balance"
+        )
+        investment_state = hass.states.get(
+            "sensor.sequence_account_investments_total_balance"
+        )
+        external_state = hass.states.get(
+            "sensor.sequence_account_external_total_balance"
+        )
 
         # First verify the basic functionality works
         assert liability_state is not None
@@ -286,9 +290,9 @@ async def test_error_handling_in_sensors(hass: HomeAssistant) -> None:
         assert state.state == "unknown"  # Balance is None when error occurs
         assert state.attributes["balance_error"] == "Connection timeout"
 
-        # Pods total should only include available pods
-        state = hass.states.get("sensor.sequence_account_pods_total")
-        assert float(state.state) == 1000.0  # Only Test Pod 1
+    # Pods total should only include available pods
+    state = hass.states.get("sensor.sequence_account_pods_total_balance")
+    assert float(state.state) == 1000.0  # Only Test Pod 1
 
 
 async def test_individual_utility_meters_creation(hass: HomeAssistant) -> None:
@@ -372,7 +376,7 @@ async def test_utility_meter_state_class_and_attributes(hass: HomeAssistant) -> 
         # Check aggregate utility meter attributes (enabled by default)
         state = hass.states.get("sensor.sequence_account_cash_flow_daily")
         assert state is not None
-        assert state.attributes["state_class"] == "total_increasing"
+        assert state.attributes["state_class"] == "total"
         assert state.attributes["unit_of_measurement"] == "$"
         assert "period" in state.attributes
         assert state.attributes["period"] == "daily"
@@ -391,7 +395,7 @@ async def test_utility_meter_state_class_and_attributes(hass: HomeAssistant) -> 
         # Check individual utility meter attributes
         state = hass.states.get("sensor.income_account_1_income_source_cash_flow_daily")
         assert state is not None
-        assert state.attributes["state_class"] == "total_increasing"
+        assert state.attributes["state_class"] == "total"
         assert state.attributes["account_type"] == "Income Source"
         assert state.attributes["period"] == "daily"
         assert "account_id" in state.attributes

@@ -18,18 +18,40 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ACCOUNT_TYPE_INCOME_SOURCE,
-    ACCOUNT_TYPE_INVESTMENT,
-    ACCOUNT_TYPE_LIABILITY,
-    ACCOUNT_TYPE_POD,
-    DOMAIN,
-    MANUFACTURER,
-    MODEL,
-)
+from .const import DOMAIN, MANUFACTURER, MODEL
 from .coordinator import SequenceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def create_device_info(
+    identifiers: set[tuple[str, str]],
+    name: str,
+    manufacturer: str = MANUFACTURER,
+    model: str = MODEL,
+    entry_id: str | None = None,
+) -> DeviceInfo:
+    """Create device info for sensors."""
+    device_info = DeviceInfo(
+        identifiers=identifiers,
+        name=name,
+        manufacturer=manufacturer,
+        model=model,
+    )
+    if entry_id:
+        device_info["via_device"] = (DOMAIN, entry_id)
+    return device_info
+
+
+def create_main_device_info(config_entry: ConfigEntry) -> DeviceInfo:
+    """Create device info for the main Sequence account."""
+    return DeviceInfo(
+        identifiers={(DOMAIN, config_entry.unique_id or config_entry.entry_id)},
+        name="Sequence Account",
+        manufacturer=MANUFACTURER,
+        model=MODEL,
+        sw_version="1.0",
+    )
 
 
 async def async_setup_entry(
@@ -42,124 +64,177 @@ async def async_setup_entry(
 
     entities: list[SensorEntity] = []
 
-    # First add account-level aggregate sensors (creates main account device)
-    entities.extend(
-        [
-            NetBalanceSensor(coordinator, config_entry),
-            PodTotalSensor(coordinator, config_entry),
-            LiabilityTotalSensor(coordinator, config_entry),
-            InvestmentTotalSensor(coordinator, config_entry),
-            IncomeSourceTotalSensor(coordinator, config_entry),
-            ExternalTotalSensor(coordinator, config_entry),
-            DataAgeSensor(coordinator, config_entry),
-            CashFlowDailySensor(coordinator, config_entry),
-            CashFlowWeeklySensor(coordinator, config_entry),
-            CashFlowMonthlySensor(coordinator, config_entry),
-            CashFlowYearlySensor(coordinator, config_entry),
-        ]
-    )
+    # 1. AGGREGATE ACCOUNT SENSORS (Net balance and account type totals)
 
-    # Add individual pod balance sensors (each pod as a separate device)
-    entities.extend(
-        [
-            PodBalanceSensor(coordinator, config_entry, pod)
-            for pod in coordinator.data.get("pods", [])
-        ]
-    )
-
-    # Add per-pod cash flow sensors
-    entities.extend(
-        [
-            PodCashFlowDailySensor(coordinator, config_entry, pod)
-            for pod in coordinator.data.get("pods", [])
-        ]
-    )
-
-    # Add individual income source utility meters (disabled by default)
-    for income_source in coordinator.data.get("income_sources", []):
-        entities.extend(
-            [
-                IncomeSourceIndividualCashFlowDailySensor(
-                    coordinator, config_entry, income_source
-                ),
-                IncomeSourceIndividualCashFlowWeeklySensor(
-                    coordinator, config_entry, income_source
-                ),
-                IncomeSourceIndividualCashFlowMonthlySensor(
-                    coordinator, config_entry, income_source
-                ),
-                IncomeSourceIndividualCashFlowYearlySensor(
-                    coordinator, config_entry, income_source
-                ),
-            ]
+    # Net balance across all accounts
+    entities.append(
+        AggregateAccountSensor(
+            coordinator,
+            config_entry,
+            "total_balance",
+            ["pods", "income_sources"],
+            "Net Balance",
+            None,
+            "Total balance across all accounts",
         )
+    )
 
-    # Add individual external account utility meters (disabled by default)
-    for external in coordinator.data.get("external_accounts", []):
-        entities.extend(
-            [
-                ExternalIndividualCashFlowDailySensor(
-                    coordinator, config_entry, external
-                ),
-                ExternalIndividualCashFlowWeeklySensor(
-                    coordinator, config_entry, external
-                ),
-                ExternalIndividualCashFlowMonthlySensor(
-                    coordinator, config_entry, external
-                ),
-                ExternalIndividualCashFlowYearlySensor(
-                    coordinator, config_entry, external
-                ),
-            ]
+    # Account type totals
+    total_configs = [
+        ("pods", "pod_balance", "pods", "Pods"),
+        ("liabilities", "liability_balance", "liabilities", "Liabilities"),
+        ("investments", "investment_balance", "investments", "Investments"),
+        ("income_sources", "income_source_balance", "income_sources", "Income Sources"),
+        ("external", "uncategorized_external_balance", "external_accounts", "External"),
+    ]
+
+    entities.extend(
+        AggregateAccountSensor(
+            coordinator,
+            config_entry,
+            balance_key,
+            [data_key],
+            f"{display_name} Total",
+            account_type,
+            f"Total balance for {display_name.lower()} accounts",
         )
+        for account_type, balance_key, data_key, display_name in total_configs
+    )
 
-    # Add individual sensors for other account types as separate devices
+    # 2. INDIVIDUAL ACCOUNT SENSORS (Balance sensors for each account)
+
+    # Pod balance sensors (each gets its own device)
+    entities.extend(
+        AccountSensor(
+            coordinator,
+            config_entry,
+            pod,
+            "Pod",
+            "pods",
+            ["balance", "amountInDollars"],
+        )
+        for pod in coordinator.data.get("pods", [])
+    )
+
+    # Income source balance sensors
+    entities.extend(
+        AccountSensor(
+            coordinator,
+            config_entry,
+            income_source,
+            "Income Source",
+            "income_sources",
+            ["balance", "amountInDollars"],
+        )
+        for income_source in coordinator.data.get("income_sources", [])
+    )
+
+    # External account balance sensors
+    entities.extend(
+        AccountSensor(
+            coordinator,
+            config_entry,
+            external,
+            "External",
+            "external_accounts",
+            ["balance", "amountInDollars"],
+        )
+        for external in coordinator.data.get("external_accounts", [])
+    )
+
+    # 3. CASH FLOW SENSORS (Net, aggregate, and individual)
+
+    # Net cash flow sensors (enabled by default for daily)
+    cash_flow_periods = ["daily", "weekly", "monthly", "yearly"]
     entities.extend(
         [
-            AccountBalanceSensor(
-                coordinator, config_entry, income_source, ACCOUNT_TYPE_INCOME_SOURCE
+            CashFlowSensor(
+                coordinator,
+                config_entry,
+                period,
+                "net",
+                enabled_by_default=(period == "daily"),
+            )
+            for period in cash_flow_periods
+        ]
+    )
+
+    # Aggregate cash flow sensors for each account type (disabled by default)
+    aggregate_cash_flow_configs = [
+        ("pod_balance", "Pods"),
+        ("income_source_balance", "Income Sources"),
+        ("uncategorized_external_balance", "External"),
+    ]
+
+    entities.extend(
+        [
+            CashFlowSensor(
+                coordinator,
+                config_entry,
+                period,
+                "aggregate",
+                account_type=account_type,
+                balance_source=balance_source,
+                enabled_by_default=False,
+            )
+            for balance_source, account_type in aggregate_cash_flow_configs
+            for period in cash_flow_periods
+        ]
+    )
+
+    # Individual cash flow sensors for pods (disabled by default)
+    entities.extend(
+        [
+            CashFlowSensor(
+                coordinator,
+                config_entry,
+                period,
+                "individual",
+                account_data=pod,
+                account_type="Pod",
+                enabled_by_default=False,
+            )
+            for pod in coordinator.data.get("pods", [])
+            for period in cash_flow_periods
+        ]
+    )
+
+    # Individual cash flow sensors for income sources (disabled by default)
+    entities.extend(
+        [
+            CashFlowSensor(
+                coordinator,
+                config_entry,
+                period,
+                "individual",
+                account_data=income_source,
+                account_type="Income Source",
+                enabled_by_default=False,
             )
             for income_source in coordinator.data.get("income_sources", [])
+            for period in cash_flow_periods
         ]
     )
 
-    # Add external account sensors (including configured liabilities/investments)
+    # Individual cash flow sensors for external accounts (disabled by default)
     entities.extend(
         [
-            AccountBalanceSensor(coordinator, config_entry, external, "External")
+            CashFlowSensor(
+                coordinator,
+                config_entry,
+                period,
+                "individual",
+                account_data=external,
+                account_type="External",
+                enabled_by_default=False,
+            )
             for external in coordinator.data.get("external_accounts", [])
+            for period in cash_flow_periods
         ]
     )
 
-    # Add utility meters for Income Sources (disabled by default)
-    entities.extend(
-        [
-            IncomeSourceCashFlowDailySensor(coordinator, config_entry),
-            IncomeSourceCashFlowWeeklySensor(coordinator, config_entry),
-            IncomeSourceCashFlowMonthlySensor(coordinator, config_entry),
-            IncomeSourceCashFlowYearlySensor(coordinator, config_entry),
-        ]
-    )
-
-    # Add utility meters for Pods (disabled by default)
-    entities.extend(
-        [
-            PodsCashFlowDailySensor(coordinator, config_entry),
-            PodsCashFlowWeeklySensor(coordinator, config_entry),
-            PodsCashFlowMonthlySensor(coordinator, config_entry),
-            PodsCashFlowYearlySensor(coordinator, config_entry),
-        ]
-    )
-
-    # Add utility meters for External accounts (disabled by default)
-    entities.extend(
-        [
-            ExternalCashFlowDailySensor(coordinator, config_entry),
-            ExternalCashFlowWeeklySensor(coordinator, config_entry),
-            ExternalCashFlowMonthlySensor(coordinator, config_entry),
-            ExternalCashFlowYearlySensor(coordinator, config_entry),
-        ]
-    )
+    # 4. DATA AGE SENSOR (Last updated tracking)
+    entities.append(DataAgeSensor(coordinator, config_entry))
 
     async_add_entities(entities)
 
@@ -182,34 +257,68 @@ class SequenceBaseSensor(
         self._attr_state_class = SensorStateClass.TOTAL
 
 
-class PodBalanceSensor(SequenceBaseSensor):
-    """Sensor for individual pod balance (creates its own device)."""
+class AccountSensor(SequenceBaseSensor):
+    """Unified sensor for individual account balances (pods and other account types)."""
 
     def __init__(
         self,
         coordinator: SequenceDataUpdateCoordinator,
         config_entry: ConfigEntry,
-        pod_data: dict[str, Any],
+        account_data: dict[str, Any],
+        account_type: str,
+        data_source_key: str,
+        balance_path: list[str] | None = None,
     ) -> None:
-        """Initialize the pod sensor."""
-        super().__init__(coordinator, config_entry)
-        self.pod_data = pod_data
-        self.pod_id = str(pod_data["id"])
-        self.pod_name = pod_data["name"]
+        """Initialize the account sensor.
 
-        # Remove "Sequence" prefix from entity name
+        Args:
+            coordinator: Data coordinator
+            config_entry: Config entry
+            account_data: Account data dict with id, name
+            account_type: Type like "Pod", "Income Source", "External Account", etc.
+            data_source_key: Key in coordinator.data to find accounts (e.g., "pods", "incomeSources")
+            balance_path: Path to balance value in account data (e.g., ["balance", "amountInDollars"])
+        """
+        super().__init__(coordinator, config_entry)
+        self.account_data = account_data
+        self.account_id = str(account_data["id"])
+        self.account_name = account_data["name"]
+        self.account_type = account_type
+        self.data_source_key = data_source_key
+        self.balance_path = balance_path or ["balance", "amountInDollars"]
+
+        # Create unique identifier and device info
+        type_key = account_type.lower().replace(" ", "_")
         self._attr_name = "Balance"
-        self._attr_unique_id = f"{config_entry.entry_id}_pod_{self.pod_id}_balance"
+        self._attr_unique_id = (
+            f"{config_entry.entry_id}_{type_key}_{self.account_id}_balance"
+        )
         self._attr_has_entity_name = True
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return device information for this pod."""
+        """Return device information for this account."""
+        type_key = self.account_type.lower().replace(" ", "_")
+
+        # Pods get their own standalone devices, others are under main device
+        if self.account_type.lower() == "pod":
+            return DeviceInfo(
+                identifiers={(DOMAIN, f"pod_{self.account_id}")},
+                name=self.account_name,
+                manufacturer=MANUFACTURER,
+                model="Pod Account",
+                sw_version="1.0",
+                via_device=(
+                    DOMAIN,
+                    self.config_entry.unique_id or self.config_entry.entry_id,
+                ),
+            )
+
         return DeviceInfo(
-            identifiers={(DOMAIN, f"pod_{self.pod_id}")},
-            name=self.pod_name,
+            identifiers={(DOMAIN, f"{type_key}_{self.account_id}")},
+            name=f"{self.account_name} ({self.account_type})",
             manufacturer=MANUFACTURER,
-            model="Pod Account",
+            model=f"{self.account_type} Account",
             sw_version="1.0",
             via_device=(
                 DOMAIN,
@@ -219,34 +328,57 @@ class PodBalanceSensor(SequenceBaseSensor):
 
     @property
     def native_value(self) -> float | None:
-        """Return the balance of the pod."""
-        # Find current pod data in coordinator
-        for pod in self.coordinator.data.get("pods", []):
-            if str(pod["id"]) == self.pod_id:
-                balance_info = pod.get("balance", {})
-                if balance_info.get("error") is None:
-                    return balance_info.get("amountInDollars")
-                _LOGGER.warning(
-                    "Error getting balance for pod %s: %s",
-                    self.pod_name,
-                    balance_info.get("error"),
-                )
-                return None
+        """Return the balance of the account."""
+        # Find current account data in coordinator
+        accounts = self.coordinator.data.get(self.data_source_key, [])
+        for account in accounts:
+            if str(account["id"]) == self.account_id:
+                # Navigate to balance value using path
+                current = account
+                for key in self.balance_path:
+                    if isinstance(current, dict) and key in current:
+                        current = current[key]
+                    else:
+                        return None
+
+                # For pods, check for errors in balance
+                if self.account_type.lower() == "pod" and "balance" in account:
+                    balance_info = account["balance"]
+                    if balance_info.get("error") is not None:
+                        _LOGGER.warning(
+                            "Error getting balance for %s %s: %s",
+                            self.account_type.lower(),
+                            self.account_name,
+                            balance_info.get("error"),
+                        )
+                        return None
+
+                return current if isinstance(current, (int, float)) else None
         return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes."""
-        # Find current pod data in coordinator
-        for pod in self.coordinator.data.get("pods", []):
-            if str(pod["id"]) == self.pod_id:
-                balance_info = pod.get("balance", {})
-                return {
-                    "pod_id": self.pod_id,
-                    "pod_name": self.pod_name,
-                    "account_type": ACCOUNT_TYPE_POD,
-                    "balance_error": balance_info.get("error"),
+        # Find current account data in coordinator
+        accounts = self.coordinator.data.get(self.data_source_key, [])
+        for account in accounts:
+            if str(account["id"]) == self.account_id:
+                attrs = {
+                    "account_id": self.account_id,
+                    "account_name": self.account_name,
+                    "account_type": self.account_type,
                 }
+
+                # Add pod-specific or account-specific attributes
+                if self.account_type.lower() == "pod" and "balance" in account:
+                    balance_info = account["balance"]
+                    attrs["balance_error"] = balance_info.get("error")
+
+                # Add raw balance data if available
+                if "balance" in account:
+                    attrs["raw_balance_data"] = account["balance"]
+
+                return attrs
         return {}
 
     @property
@@ -255,547 +387,269 @@ class PodBalanceSensor(SequenceBaseSensor):
         if not self.coordinator.last_update_success:
             return False
 
-        # Check if this pod still exists in the data
-        for pod in self.coordinator.data.get("pods", []):
-            if str(pod["id"]) == self.pod_id:
-                return True
-        return False
+        # Check if this account still exists in the data
+        accounts = self.coordinator.data.get(self.data_source_key, [])
+        return any(str(account["id"]) == self.account_id for account in accounts)
 
 
-class NetBalanceSensor(SequenceBaseSensor):
-    """Sensor for net balance across all accounts (under main account device)."""
+class AggregateAccountSensor(SequenceBaseSensor):
+    """Unified sensor for aggregate balances across account types."""
 
     def __init__(
         self,
         coordinator: SequenceDataUpdateCoordinator,
         config_entry: ConfigEntry,
+        balance_key: str,
+        data_sources: list[str] | None = None,
+        display_name: str = "Total",
+        account_type: str | None = None,
+        description: str | None = None,
     ) -> None:
-        """Initialize the net balance sensor."""
+        """Initialize the aggregate account sensor.
+
+        Args:
+            coordinator: Data coordinator
+            config_entry: Config entry
+            balance_key: Key in coordinator.data for the balance value
+            data_sources: List of data source keys for extra attributes (e.g., ["pods", "incomeSources"])
+            display_name: Display name for the sensor (e.g., "Pod Total", "Net Balance")
+            account_type: Account type for unique ID (e.g., "pod", "income_source", None for net)
+            description: Additional description for attributes
+        """
         super().__init__(coordinator, config_entry)
-        self._attr_name = "Net Balance"
-        self._attr_unique_id = f"{config_entry.entry_id}_net_balance"
+        self.balance_key = balance_key
+        self.data_sources = data_sources or []
+        self.display_name = display_name
+        self.account_type = account_type
+        self.description = description
+
+        # Create unique identifier based on account type or "net" for net balance
+        type_key = account_type.lower() if account_type else "net"
+        self._attr_name = (
+            f"{display_name} Balance"
+            if "balance" not in display_name.lower()
+            else display_name
+        )
+        self._attr_unique_id = f"{config_entry.entry_id}_{type_key}_total"
         self._attr_has_entity_name = True
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
+        return create_main_device_info(self.config_entry)
 
     @property
     def native_value(self) -> float | None:
-        """Return the total balance across all accounts."""
+        """Return the aggregate balance."""
+        return self.coordinator.data.get(self.balance_key)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra state attributes."""
+        attrs: dict[str, Any] = {}
+
+        # Add account counts for each data source
+        for data_source in self.data_sources:
+            accounts = self.coordinator.data.get(data_source, [])
+            source_name = data_source.rstrip("s")  # Remove trailing 's' for singular
+            attrs[f"{source_name}_count"] = len(accounts)
+
+        # Add account type if specified
+        if self.account_type:
+            attrs["account_type"] = self.account_type
+
+        # Add description if specified
+        if self.description:
+            attrs["description"] = self.description
+
+        # Add balance key for debugging
+        attrs["balance_source"] = self.balance_key
+
+        return attrs
+
+
+class CashFlowSensor(SequenceBaseSensor):
+    """Unified sensor for cash flow tracking across different scopes and periods."""
+
+    def __init__(
+        self,
+        coordinator: SequenceDataUpdateCoordinator,
+        config_entry: ConfigEntry,
+        period: str,
+        scope: str = "aggregate",  # "aggregate", "individual", "net"
+        account_data: dict[str, Any] | None = None,
+        account_type: str | None = None,
+        balance_source: str | None = None,
+        enabled_by_default: bool = False,
+    ) -> None:
+        """Initialize the cash flow sensor.
+
+        Args:
+            coordinator: Data coordinator
+            config_entry: Config entry
+            period: Period for cash flow tracking (daily, weekly, monthly, yearly)
+            scope: Scope of tracking ("aggregate", "individual", "net")
+            account_data: Account data for individual scope (pod data, etc.)
+            account_type: Account type for aggregate scope ("Pod", "Income Source", etc.)
+            balance_source: Source key for balance data in coordinator
+            enabled_by_default: Whether sensor is enabled by default
+        """
+        super().__init__(coordinator, config_entry)
+        self._period = period
+        self._scope = scope
+        self.account_data = account_data
+        self.account_type = account_type
+        self._balance_source = balance_source
+        self._previous_balance: float | None = None
+        self._flow_total: float = 0.0
+
+        # Set up names and IDs based on scope
+        if scope == "individual" and account_data:
+            self.account_id = str(account_data["id"])
+            self.account_name = account_data["name"]
+            self._attr_name = f"Cash Flow {period.title()}"
+            self._attr_unique_id = f"{config_entry.entry_id}_{self._get_scope_key()}_{self.account_id}_cash_flow_{period}"
+        elif scope == "aggregate" and account_type:
+            type_key = account_type.lower().replace(" ", "_")
+            self._attr_name = f"{account_type} Cash Flow {period.title()}"
+            self._attr_unique_id = (
+                f"{config_entry.entry_id}_{type_key}_cash_flow_{period}"
+            )
+        else:  # net scope
+            self._attr_name = f"Cash Flow {period.title()}"
+            self._attr_unique_id = f"{config_entry.entry_id}_cash_flow_{period}"
+
+        self._attr_has_entity_name = True
+        self._attr_device_class = None
+        self._attr_state_class = SensorStateClass.TOTAL
+        self._attr_entity_registry_enabled_default = enabled_by_default
+
+    def _get_scope_key(self) -> str:
+        """Get scope key for unique ID."""
+        if self._scope == "individual" and self.account_type:
+            return self.account_type.lower().replace(" ", "_")
+        return self._scope
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information based on scope."""
+        if self._scope == "individual" and self.account_data:
+            # Individual accounts get their own devices
+            account_id = str(self.account_data["id"])
+            account_name = self.account_data["name"]
+            if self.account_type and self.account_type.lower() == "pod":
+                return DeviceInfo(
+                    identifiers={(DOMAIN, f"pod_{account_id}")},
+                    name=account_name,
+                    manufacturer=MANUFACTURER,
+                    model="Pod Account",
+                    sw_version="1.0",
+                    via_device=(
+                        DOMAIN,
+                        self.config_entry.unique_id or self.config_entry.entry_id,
+                    ),
+                )
+            # Other individual account types
+            type_key = (
+                self.account_type.lower().replace(" ", "_")
+                if self.account_type
+                else "account"
+            )
+            return DeviceInfo(
+                identifiers={(DOMAIN, f"{type_key}_{account_id}")},
+                name=f"{account_name} ({self.account_type})"
+                if self.account_type
+                else account_name,
+                manufacturer=MANUFACTURER,
+                model=f"{self.account_type} Account"
+                if self.account_type
+                else "Account",
+                sw_version="1.0",
+                via_device=(
+                    DOMAIN,
+                    self.config_entry.unique_id or self.config_entry.entry_id,
+                ),
+            )
+
+        # For aggregate and net scope, use main device
+        return create_main_device_info(self.config_entry)
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the cash flow for this period."""
+        current_balance = self._get_current_balance()
+        if current_balance is None:
+            return None
+
+        # Calculate flow based on balance change
+        if self._previous_balance is not None:
+            flow_change = current_balance - self._previous_balance
+            self._flow_total += flow_change
+
+        self._previous_balance = current_balance
+        return self._flow_total
+
+    def _get_current_balance(self) -> float | None:
+        """Get current balance based on scope."""
+        if self._scope == "individual" and self.account_data:
+            # Find current account data in coordinator
+            data_source = self._get_data_source()
+            accounts = self.coordinator.data.get(data_source, [])
+            for account in accounts:
+                if str(account["id"]) == self.account_id:
+                    if self.account_type and self.account_type.lower() == "pod":
+                        balance_info = account.get("balance", {})
+                        if balance_info.get("error") is None:
+                            return balance_info.get("amountInDollars")
+                    else:
+                        return account.get("balance")
+            return None
+
+        if self._scope == "aggregate" and self._balance_source:
+            # Use specified balance source for aggregate
+            return self.coordinator.data.get(self._balance_source)
+
+        # Net scope uses total balance
         return self.coordinator.data.get("total_balance")
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        pods = self.coordinator.data.get("pods", [])
-        income_sources = self.coordinator.data.get("income_sources", [])
-
-        return {
-            "pod_count": len(pods),
-            "income_source_count": len(income_sources),
-            "pod_balance": self.coordinator.data.get("pod_balance"),
-            "account_breakdown": {
-                pod["name"]: pod.get("balance", {}).get("amountInDollars")
-                for pod in pods
-                if pod.get("balance", {}).get("error") is None
-            },
-        }
-
-
-class PodTotalSensor(SequenceBaseSensor):
-    """Sensor for total balance across all pods only (under main account device)."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the pod total sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "Pods Total"
-        self._attr_unique_id = f"{config_entry.entry_id}_pods_total"
-        self._attr_has_entity_name = True
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the total balance across all pods."""
-        return self.coordinator.data.get("pod_balance")
+    def _get_data_source(self) -> str:
+        """Get data source key based on account type."""
+        if self.account_type and self.account_type.lower() == "pod":
+            return "pods"
+        if self.account_type and "income" in self.account_type.lower():
+            return "income_sources"
+        if self.account_type and "liability" in self.account_type.lower():
+            return "liabilities"
+        if self.account_type and "external" in self.account_type.lower():
+            return "externalAccounts"
+        return "accounts"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes."""
-        pods = self.coordinator.data.get("pods", [])
-
-        return {
-            "pod_count": len(pods),
-            "pod_breakdown": {
-                pod["name"]: pod.get("balance", {}).get("amountInDollars")
-                for pod in pods
-                if pod.get("balance", {}).get("error") is None
-            },
+        attrs = {
+            "period": self._period,
+            "scope": self._scope,
+            "previous_balance": self._previous_balance,
         }
 
+        if self._scope == "individual" and self.account_data:
+            attrs.update(
+                {
+                    "account_id": self.account_id,
+                    "account_name": self.account_name,
+                    "account_type": self.account_type,
+                }
+            )
+        elif self._scope == "aggregate" and self.account_type:
+            attrs.update(
+                {
+                    "account_type": self.account_type,
+                    "balance_source": self._balance_source,
+                }
+            )
 
-class CashFlowDailySensor(SequenceBaseSensor):
-    """Sensor for tracking daily cash flow (utility meter style)."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the cash flow daily sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "Cash Flow Daily"
-        self._attr_unique_id = f"{config_entry.entry_id}_cash_flow_daily"
-        self._attr_has_entity_name = True
-        # For cash flow tracking, don't use device class monetary
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._daily_flow: float = 0.0
-        # Only net cash flow is enabled by default
-        self._attr_entity_registry_enabled_default = True
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return daily cumulative positive cash flow."""
-        current_balance = self.coordinator.data.get("total_balance")
-
-        if current_balance is None:
-            return None
-
-        # For cash flow tracking, we only track positive increases
-        # This emulates a utility meter for financial inflows
-        if self._previous_balance is not None:
-            change = current_balance - self._previous_balance
-            if change > 0:  # Only track positive cash flow
-                self._daily_flow += change
-
-        self._previous_balance = current_balance
-        return self._daily_flow
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "period": "daily",
-            "source": "net_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class CashFlowWeeklySensor(SequenceBaseSensor):
-    """Sensor for tracking weekly cash flow (utility meter style)."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the cash flow weekly sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "Cash Flow Weekly"
-        self._attr_unique_id = f"{config_entry.entry_id}_cash_flow_weekly"
-        self._attr_has_entity_name = True
-        # For cash flow tracking, don't use device class monetary
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._weekly_flow: float = 0.0
-        # Disabled by default
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return weekly cumulative positive cash flow."""
-        current_balance = self.coordinator.data.get("total_balance")
-
-        if current_balance is None:
-            return None
-
-        # For cash flow tracking, we only track positive increases
-        if self._previous_balance is not None:
-            change = current_balance - self._previous_balance
-            if change > 0:  # Only track positive cash flow
-                self._weekly_flow += change
-
-        self._previous_balance = current_balance
-        return self._weekly_flow
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "period": "weekly",
-            "source": "net_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class CashFlowMonthlySensor(SequenceBaseSensor):
-    """Sensor for tracking monthly cash flow (utility meter style)."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the cash flow monthly sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "Cash Flow Monthly"
-        self._attr_unique_id = f"{config_entry.entry_id}_cash_flow_monthly"
-        self._attr_has_entity_name = True
-        # For cash flow tracking, don't use device class monetary
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._monthly_flow: float = 0.0
-        # Disabled by default
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return monthly cumulative positive cash flow."""
-        current_balance = self.coordinator.data.get("total_balance")
-
-        if current_balance is None:
-            return None
-
-        # For cash flow tracking, we only track positive increases
-        if self._previous_balance is not None:
-            change = current_balance - self._previous_balance
-            if change > 0:  # Only track positive cash flow
-                self._monthly_flow += change
-
-        self._previous_balance = current_balance
-        return self._monthly_flow
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "period": "monthly",
-            "source": "net_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class CashFlowYearlySensor(SequenceBaseSensor):
-    """Sensor for tracking yearly cash flow (utility meter style)."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the cash flow yearly sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "Cash Flow Yearly"
-        self._attr_unique_id = f"{config_entry.entry_id}_cash_flow_yearly"
-        self._attr_has_entity_name = True
-        # For cash flow tracking, don't use device class monetary
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._yearly_flow: float = 0.0
-        # Disabled by default
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return yearly cumulative positive cash flow."""
-        current_balance = self.coordinator.data.get("total_balance")
-
-        if current_balance is None:
-            return None
-
-        # For cash flow tracking, we only track positive increases
-        if self._previous_balance is not None:
-            change = current_balance - self._previous_balance
-            if change > 0:  # Only track positive cash flow
-                self._yearly_flow += change
-
-        self._previous_balance = current_balance
-        return self._yearly_flow
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "period": "yearly",
-            "source": "net_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class LiabilityTotalSensor(SequenceBaseSensor):
-    """Sensor for total balance across all liability accounts."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the liability total sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "Liabilities Total"
-        self._attr_unique_id = f"{config_entry.entry_id}_liabilities_total"
-        self._attr_has_entity_name = True
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the total balance across all liability accounts."""
-        return self.coordinator.data.get("liability_balance")
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        liabilities = self.coordinator.data.get("liabilities", [])
-
-        return {
-            "liability_count": len(liabilities),
-            "liability_breakdown": {
-                liability["name"]: liability.get("balance", {}).get("amountInDollars")
-                for liability in liabilities
-                if liability.get("balance", {}).get("error") is None
-            },
-        }
-
-
-class InvestmentTotalSensor(SequenceBaseSensor):
-    """Sensor for total balance across all investment accounts."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the investment total sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "Investments Total"
-        self._attr_unique_id = f"{config_entry.entry_id}_investments_total"
-        self._attr_has_entity_name = True
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the total balance across all investment accounts."""
-        return self.coordinator.data.get("investment_balance")
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        investments = self.coordinator.data.get("investments", [])
-
-        return {
-            "investment_count": len(investments),
-            "investment_breakdown": {
-                investment["name"]: investment.get("balance", {}).get("amountInDollars")
-                for investment in investments
-                if investment.get("balance", {}).get("error") is None
-            },
-        }
-
-
-class IncomeSourceTotalSensor(SequenceBaseSensor):
-    """Sensor for total balance across all income source accounts."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the income source total sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "Income Sources Total"
-        self._attr_unique_id = f"{config_entry.entry_id}_income_sources_total"
-        self._attr_has_entity_name = True
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the total balance across all income source accounts."""
-        return self.coordinator.data.get("income_source_balance")
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        income_sources = self.coordinator.data.get("income_sources", [])
-
-        return {
-            "income_source_count": len(income_sources),
-            "income_source_breakdown": {
-                source["name"]: source.get("balance", {}).get("amountInDollars")
-                for source in income_sources
-                if source.get("balance", {}).get("error") is None
-            },
-        }
-
-
-class ExternalTotalSensor(SequenceBaseSensor):
-    """Sensor for total balance across uncategorized external accounts."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the external total sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "External Total"
-        self._attr_unique_id = f"{config_entry.entry_id}_external_total"
-        self._attr_has_entity_name = True
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the total balance across uncategorized external accounts."""
-        return self.coordinator.data.get("uncategorized_external_balance")
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        uncategorized_external = self.coordinator.data.get(
-            "uncategorized_external_accounts", []
-        )
-
-        return {
-            "external_count": len(uncategorized_external),
-            "external_breakdown": {
-                account["name"]: account.get("balance", {}).get("amountInDollars")
-                for account in uncategorized_external
-                if account.get("balance", {}).get("error") is None
-            },
-        }
+        return attrs
 
 
 class DataAgeSensor(SequenceBaseSensor):
@@ -848,1547 +702,4 @@ class DataAgeSensor(SequenceBaseSensor):
             if self.coordinator.update_interval
             else None,
             "last_update_success": self.coordinator.last_update_success,
-        }
-
-
-class PodCashFlowDailySensor(SequenceBaseSensor):
-    """Sensor for tracking daily cash flow for individual pods."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-        pod_data: dict[str, Any],
-    ) -> None:
-        """Initialize the pod cash flow daily sensor."""
-        super().__init__(coordinator, config_entry)
-        self.pod_data = pod_data
-        self.pod_id = str(pod_data["id"])
-        self.pod_name = pod_data["name"]
-
-        self._attr_name = "Cash Flow Daily"
-        self._attr_unique_id = (
-            f"{config_entry.entry_id}_pod_{self.pod_id}_cash_flow_daily"
-        )
-        self._attr_has_entity_name = True
-        # For cash flow tracking, don't use device class monetary
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._daily_flow: float = 0.0
-        # Disabled by default
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for this pod."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"pod_{self.pod_id}")},
-            name=self.pod_name,
-            manufacturer=MANUFACTURER,
-            model="Pod Account",
-            sw_version="1.0",
-            via_device=(
-                DOMAIN,
-                self.config_entry.unique_id or self.config_entry.entry_id,
-            ),
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return daily cumulative positive cash flow for this pod."""
-        # Find current pod data in coordinator
-        for pod in self.coordinator.data.get("pods", []):
-            if str(pod["id"]) == self.pod_id:
-                balance_info = pod.get("balance", {})
-                if balance_info.get("error") is not None:
-                    return None
-
-                current_balance = balance_info.get("amountInDollars")
-                if current_balance is None:
-                    return None
-
-                # For cash flow tracking, we only track positive increases
-                if self._previous_balance is not None:
-                    change = current_balance - self._previous_balance
-                    if change > 0:  # Only track positive cash flow
-                        self._daily_flow += change
-
-                self._previous_balance = current_balance
-                return self._daily_flow
-
-        return None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "pod_id": self.pod_id,
-            "pod_name": self.pod_name,
-            "period": "daily",
-            "source": "pod_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-    @property
-    def available(self) -> bool:
-        """Return if the sensor is available."""
-        if not self.coordinator.last_update_success:
-            return False
-
-        # Check if this pod still exists in the data
-        for pod in self.coordinator.data.get("pods", []):
-            if str(pod["id"]) == self.pod_id:
-                return True
-        return False
-
-
-class AccountBalanceSensor(SequenceBaseSensor):
-    """Sensor for individual account balance (non-pod accounts)."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-        account_data: dict[str, Any],
-        account_type: str,
-    ) -> None:
-        """Initialize the account sensor."""
-        super().__init__(coordinator, config_entry)
-        self.account_data = account_data
-        self.account_id = str(account_data["id"])
-        self.account_name = account_data["name"]
-        self.account_type = account_type
-
-        # Remove "Sequence" prefix from entity name
-        self._attr_name = "Balance"
-        self._attr_unique_id = f"{config_entry.entry_id}_{account_type.lower().replace(' ', '_')}_{self.account_id}_balance"
-        self._attr_has_entity_name = True
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for this account."""
-        return DeviceInfo(
-            identifiers={
-                (
-                    DOMAIN,
-                    f"{self.account_type.lower().replace(' ', '_')}_{self.account_id}",
-                )
-            },
-            name=f"{self.account_name} ({self.account_type})",
-            manufacturer=MANUFACTURER,
-            model=f"{self.account_type} Account",
-            sw_version="1.0",
-            via_device=(
-                DOMAIN,
-                self.config_entry.unique_id or self.config_entry.entry_id,
-            ),
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the balance of the account."""
-        # Find current account data in coordinator based on type
-        account_list_key = {
-            ACCOUNT_TYPE_LIABILITY: "liabilities",
-            ACCOUNT_TYPE_INVESTMENT: "investments",
-            ACCOUNT_TYPE_INCOME_SOURCE: "income_sources",
-            "External": "external_accounts",
-        }.get(self.account_type, "external_accounts")
-
-        for account in self.coordinator.data.get(account_list_key, []):
-            if str(account["id"]) == self.account_id:
-                balance_info = account.get("balance", {})
-                if balance_info.get("error") is None:
-                    return balance_info.get("amountInDollars")
-                _LOGGER.warning(
-                    "Error getting balance for %s %s: %s",
-                    self.account_type,
-                    self.account_name,
-                    balance_info.get("error"),
-                )
-                return None
-        return None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        # Find current account data in coordinator
-        account_list_key = {
-            ACCOUNT_TYPE_LIABILITY: "liabilities",
-            ACCOUNT_TYPE_INVESTMENT: "investments",
-            ACCOUNT_TYPE_INCOME_SOURCE: "income_sources",
-            "External": "external_accounts",
-        }.get(self.account_type, "external_accounts")
-
-        for account in self.coordinator.data.get(account_list_key, []):
-            if str(account["id"]) == self.account_id:
-                balance_info = account.get("balance", {})
-                return {
-                    "account_id": self.account_id,
-                    "account_name": self.account_name,
-                    "account_type": self.account_type,
-                    "balance_error": balance_info.get("error"),
-                }
-        return {}
-
-    @property
-    def available(self) -> bool:
-        """Return if the sensor is available."""
-        if not self.coordinator.last_update_success:
-            return False
-
-        # Check if this account still exists in the data
-        account_list_key = {
-            ACCOUNT_TYPE_LIABILITY: "liabilities",
-            ACCOUNT_TYPE_INVESTMENT: "investments",
-            ACCOUNT_TYPE_INCOME_SOURCE: "income_sources",
-            "External": "external_accounts",
-        }.get(self.account_type, "external_accounts")
-
-        for account in self.coordinator.data.get(account_list_key, []):
-            if str(account["id"]) == self.account_id:
-                return True
-        return False
-
-
-class IncomeSourceCashFlowDailySensor(SequenceBaseSensor):
-    """Sensor for tracking daily cash flow for income sources."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the income source cash flow daily sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "Income Sources Cash Flow Daily"
-        self._attr_unique_id = f"{config_entry.entry_id}_income_sources_cash_flow_daily"
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._daily_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return daily cumulative positive cash flow for income sources."""
-        current_balance = self.coordinator.data.get("income_source_balance")
-
-        if current_balance is None:
-            return None
-
-        if self._previous_balance is not None:
-            change = current_balance - self._previous_balance
-            if change > 0:
-                self._daily_flow += change
-
-        self._previous_balance = current_balance
-        return self._daily_flow
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "period": "daily",
-            "source": "income_source_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class IncomeSourceCashFlowWeeklySensor(SequenceBaseSensor):
-    """Sensor for tracking weekly cash flow for income sources."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the income source cash flow weekly sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "Income Sources Cash Flow Weekly"
-        self._attr_unique_id = (
-            f"{config_entry.entry_id}_income_sources_cash_flow_weekly"
-        )
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._weekly_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return weekly cumulative positive cash flow for income sources."""
-        current_balance = self.coordinator.data.get("income_source_balance")
-
-        if current_balance is None:
-            return None
-
-        if self._previous_balance is not None:
-            change = current_balance - self._previous_balance
-            if change > 0:
-                self._weekly_flow += change
-
-        self._previous_balance = current_balance
-        return self._weekly_flow
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "period": "weekly",
-            "source": "income_source_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class IncomeSourceCashFlowMonthlySensor(SequenceBaseSensor):
-    """Sensor for tracking monthly cash flow for income sources."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the income source cash flow monthly sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "Income Sources Cash Flow Monthly"
-        self._attr_unique_id = (
-            f"{config_entry.entry_id}_income_sources_cash_flow_monthly"
-        )
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._monthly_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return monthly cumulative positive cash flow for income sources."""
-        current_balance = self.coordinator.data.get("income_source_balance")
-
-        if current_balance is None:
-            return None
-
-        if self._previous_balance is not None:
-            change = current_balance - self._previous_balance
-            if change > 0:
-                self._monthly_flow += change
-
-        self._previous_balance = current_balance
-        return self._monthly_flow
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "period": "monthly",
-            "source": "income_source_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class IncomeSourceCashFlowYearlySensor(SequenceBaseSensor):
-    """Sensor for tracking yearly cash flow for income sources."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the income source cash flow yearly sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "Income Sources Cash Flow Yearly"
-        self._attr_unique_id = (
-            f"{config_entry.entry_id}_income_sources_cash_flow_yearly"
-        )
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._yearly_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return yearly cumulative positive cash flow for income sources."""
-        current_balance = self.coordinator.data.get("income_source_balance")
-
-        if current_balance is None:
-            return None
-
-        if self._previous_balance is not None:
-            change = current_balance - self._previous_balance
-            if change > 0:
-                self._yearly_flow += change
-
-        self._previous_balance = current_balance
-        return self._yearly_flow
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "period": "yearly",
-            "source": "income_source_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class PodsCashFlowDailySensor(SequenceBaseSensor):
-    """Sensor for tracking daily cash flow for all pods combined."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the pods cash flow daily sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "Pods Cash Flow Daily"
-        self._attr_unique_id = f"{config_entry.entry_id}_pods_cash_flow_daily"
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._daily_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return daily cumulative positive cash flow for all pods."""
-        current_balance = self.coordinator.data.get("pod_balance")
-
-        if current_balance is None:
-            return None
-
-        if self._previous_balance is not None:
-            change = current_balance - self._previous_balance
-            if change > 0:
-                self._daily_flow += change
-
-        self._previous_balance = current_balance
-        return self._daily_flow
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "period": "daily",
-            "source": "pod_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class PodsCashFlowWeeklySensor(SequenceBaseSensor):
-    """Sensor for tracking weekly cash flow for all pods combined."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the pods cash flow weekly sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "Pods Cash Flow Weekly"
-        self._attr_unique_id = f"{config_entry.entry_id}_pods_cash_flow_weekly"
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._weekly_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return weekly cumulative positive cash flow for all pods."""
-        current_balance = self.coordinator.data.get("pod_balance")
-
-        if current_balance is None:
-            return None
-
-        if self._previous_balance is not None:
-            change = current_balance - self._previous_balance
-            if change > 0:
-                self._weekly_flow += change
-
-        self._previous_balance = current_balance
-        return self._weekly_flow
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "period": "weekly",
-            "source": "pod_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class PodsCashFlowMonthlySensor(SequenceBaseSensor):
-    """Sensor for tracking monthly cash flow for all pods combined."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the pods cash flow monthly sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "Pods Cash Flow Monthly"
-        self._attr_unique_id = f"{config_entry.entry_id}_pods_cash_flow_monthly"
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._monthly_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return monthly cumulative positive cash flow for all pods."""
-        current_balance = self.coordinator.data.get("pod_balance")
-
-        if current_balance is None:
-            return None
-
-        if self._previous_balance is not None:
-            change = current_balance - self._previous_balance
-            if change > 0:
-                self._monthly_flow += change
-
-        self._previous_balance = current_balance
-        return self._monthly_flow
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "period": "monthly",
-            "source": "pod_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class PodsCashFlowYearlySensor(SequenceBaseSensor):
-    """Sensor for tracking yearly cash flow for all pods combined."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the pods cash flow yearly sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "Pods Cash Flow Yearly"
-        self._attr_unique_id = f"{config_entry.entry_id}_pods_cash_flow_yearly"
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._yearly_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return yearly cumulative positive cash flow for all pods."""
-        current_balance = self.coordinator.data.get("pod_balance")
-
-        if current_balance is None:
-            return None
-
-        if self._previous_balance is not None:
-            change = current_balance - self._previous_balance
-            if change > 0:
-                self._yearly_flow += change
-
-        self._previous_balance = current_balance
-        return self._yearly_flow
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "period": "yearly",
-            "source": "pod_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-# Individual Income Source Utility Meters (disabled by default)
-class IncomeSourceIndividualCashFlowDailySensor(SequenceBaseSensor):
-    """Sensor for tracking daily cash flow for individual income sources."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-        income_source_data: dict[str, Any],
-    ) -> None:
-        """Initialize the income source cash flow daily sensor."""
-        super().__init__(coordinator, config_entry)
-        self.income_source_data = income_source_data
-        self.account_id = str(income_source_data["id"])
-        self.account_name = income_source_data["name"]
-
-        self._attr_name = "Cash Flow Daily"
-        self._attr_unique_id = (
-            f"{config_entry.entry_id}_income_source_{self.account_id}_cash_flow_daily"
-        )
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._daily_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for this income source."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"income_source_{self.account_id}")},
-            name=f"{self.account_name} (Income Source)",
-            manufacturer=MANUFACTURER,
-            model="Income Source Account",
-            sw_version="1.0",
-            via_device=(
-                DOMAIN,
-                self.config_entry.unique_id or self.config_entry.entry_id,
-            ),
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return daily cumulative positive cash flow for this income source."""
-        for income_source in self.coordinator.data.get("income_sources", []):
-            if str(income_source["id"]) == self.account_id:
-                balance_info = income_source.get("balance", {})
-                if balance_info.get("error") is not None:
-                    return None
-
-                current_balance = balance_info.get("amountInDollars")
-                if current_balance is None:
-                    return None
-
-                if self._previous_balance is not None:
-                    change = current_balance - self._previous_balance
-                    if change > 0:
-                        self._daily_flow += change
-
-                self._previous_balance = current_balance
-                return self._daily_flow
-
-        return None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "account_id": self.account_id,
-            "account_name": self.account_name,
-            "account_type": "Income Source",
-            "period": "daily",
-            "source": "income_source_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class IncomeSourceIndividualCashFlowWeeklySensor(SequenceBaseSensor):
-    """Sensor for tracking weekly cash flow for individual income sources."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-        income_source_data: dict[str, Any],
-    ) -> None:
-        """Initialize the income source cash flow weekly sensor."""
-        super().__init__(coordinator, config_entry)
-        self.income_source_data = income_source_data
-        self.account_id = str(income_source_data["id"])
-        self.account_name = income_source_data["name"]
-
-        self._attr_name = "Cash Flow Weekly"
-        self._attr_unique_id = (
-            f"{config_entry.entry_id}_income_source_{self.account_id}_cash_flow_weekly"
-        )
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._weekly_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for this income source."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"income_source_{self.account_id}")},
-            name=f"{self.account_name} (Income Source)",
-            manufacturer=MANUFACTURER,
-            model="Income Source Account",
-            sw_version="1.0",
-            via_device=(
-                DOMAIN,
-                self.config_entry.unique_id or self.config_entry.entry_id,
-            ),
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return weekly cumulative positive cash flow for this income source."""
-        for income_source in self.coordinator.data.get("income_sources", []):
-            if str(income_source["id"]) == self.account_id:
-                balance_info = income_source.get("balance", {})
-                if balance_info.get("error") is not None:
-                    return None
-
-                current_balance = balance_info.get("amountInDollars")
-                if current_balance is None:
-                    return None
-
-                if self._previous_balance is not None:
-                    change = current_balance - self._previous_balance
-                    if change > 0:
-                        self._weekly_flow += change
-
-                self._previous_balance = current_balance
-                return self._weekly_flow
-
-        return None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "account_id": self.account_id,
-            "account_name": self.account_name,
-            "account_type": "Income Source",
-            "period": "weekly",
-            "source": "income_source_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class IncomeSourceIndividualCashFlowMonthlySensor(SequenceBaseSensor):
-    """Sensor for tracking monthly cash flow for individual income sources."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-        income_source_data: dict[str, Any],
-    ) -> None:
-        """Initialize the income source cash flow monthly sensor."""
-        super().__init__(coordinator, config_entry)
-        self.income_source_data = income_source_data
-        self.account_id = str(income_source_data["id"])
-        self.account_name = income_source_data["name"]
-
-        self._attr_name = "Cash Flow Monthly"
-        self._attr_unique_id = (
-            f"{config_entry.entry_id}_income_source_{self.account_id}_cash_flow_monthly"
-        )
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._monthly_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for this income source."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"income_source_{self.account_id}")},
-            name=f"{self.account_name} (Income Source)",
-            manufacturer=MANUFACTURER,
-            model="Income Source Account",
-            sw_version="1.0",
-            via_device=(
-                DOMAIN,
-                self.config_entry.unique_id or self.config_entry.entry_id,
-            ),
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return monthly cumulative positive cash flow for this income source."""
-        for income_source in self.coordinator.data.get("income_sources", []):
-            if str(income_source["id"]) == self.account_id:
-                balance_info = income_source.get("balance", {})
-                if balance_info.get("error") is not None:
-                    return None
-
-                current_balance = balance_info.get("amountInDollars")
-                if current_balance is None:
-                    return None
-
-                if self._previous_balance is not None:
-                    change = current_balance - self._previous_balance
-                    if change > 0:
-                        self._monthly_flow += change
-
-                self._previous_balance = current_balance
-                return self._monthly_flow
-
-        return None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "account_id": self.account_id,
-            "account_name": self.account_name,
-            "account_type": "Income Source",
-            "period": "monthly",
-            "source": "income_source_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class IncomeSourceIndividualCashFlowYearlySensor(SequenceBaseSensor):
-    """Sensor for tracking yearly cash flow for individual income sources."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-        income_source_data: dict[str, Any],
-    ) -> None:
-        """Initialize the income source cash flow yearly sensor."""
-        super().__init__(coordinator, config_entry)
-        self.income_source_data = income_source_data
-        self.account_id = str(income_source_data["id"])
-        self.account_name = income_source_data["name"]
-
-        self._attr_name = "Cash Flow Yearly"
-        self._attr_unique_id = (
-            f"{config_entry.entry_id}_income_source_{self.account_id}_cash_flow_yearly"
-        )
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._yearly_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for this income source."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"income_source_{self.account_id}")},
-            name=f"{self.account_name} (Income Source)",
-            manufacturer=MANUFACTURER,
-            model="Income Source Account",
-            sw_version="1.0",
-            via_device=(
-                DOMAIN,
-                self.config_entry.unique_id or self.config_entry.entry_id,
-            ),
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return yearly cumulative positive cash flow for this income source."""
-        for income_source in self.coordinator.data.get("income_sources", []):
-            if str(income_source["id"]) == self.account_id:
-                balance_info = income_source.get("balance", {})
-                if balance_info.get("error") is not None:
-                    return None
-
-                current_balance = balance_info.get("amountInDollars")
-                if current_balance is None:
-                    return None
-
-                if self._previous_balance is not None:
-                    change = current_balance - self._previous_balance
-                    if change > 0:
-                        self._yearly_flow += change
-
-                self._previous_balance = current_balance
-                return self._yearly_flow
-
-        return None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "account_id": self.account_id,
-            "account_name": self.account_name,
-            "account_type": "Income Source",
-            "period": "yearly",
-            "source": "income_source_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-# Individual External Account Utility Meters (disabled by default)
-class ExternalIndividualCashFlowDailySensor(SequenceBaseSensor):
-    """Sensor for tracking daily cash flow for individual external accounts."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-        external_data: dict[str, Any],
-    ) -> None:
-        """Initialize the external cash flow daily sensor."""
-        super().__init__(coordinator, config_entry)
-        self.external_data = external_data
-        self.account_id = str(external_data["id"])
-        self.account_name = external_data["name"]
-
-        self._attr_name = "Cash Flow Daily"
-        self._attr_unique_id = (
-            f"{config_entry.entry_id}_external_{self.account_id}_cash_flow_daily"
-        )
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._daily_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for this external account."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"external_{self.account_id}")},
-            name=f"{self.account_name} (External)",
-            manufacturer=MANUFACTURER,
-            model="External Account",
-            sw_version="1.0",
-            via_device=(
-                DOMAIN,
-                self.config_entry.unique_id or self.config_entry.entry_id,
-            ),
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return daily cumulative positive cash flow for this external account."""
-        for external in self.coordinator.data.get("external_accounts", []):
-            if str(external["id"]) == self.account_id:
-                balance_info = external.get("balance", {})
-                if balance_info.get("error") is not None:
-                    return None
-
-                current_balance = balance_info.get("amountInDollars")
-                if current_balance is None:
-                    return None
-
-                if self._previous_balance is not None:
-                    change = current_balance - self._previous_balance
-                    if change > 0:
-                        self._daily_flow += change
-
-                self._previous_balance = current_balance
-                return self._daily_flow
-
-        return None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "account_id": self.account_id,
-            "account_name": self.account_name,
-            "account_type": "External",
-            "period": "daily",
-            "source": "external_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class ExternalIndividualCashFlowWeeklySensor(SequenceBaseSensor):
-    """Sensor for tracking weekly cash flow for individual external accounts."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-        external_data: dict[str, Any],
-    ) -> None:
-        """Initialize the external cash flow weekly sensor."""
-        super().__init__(coordinator, config_entry)
-        self.external_data = external_data
-        self.account_id = str(external_data["id"])
-        self.account_name = external_data["name"]
-
-        self._attr_name = "Cash Flow Weekly"
-        self._attr_unique_id = (
-            f"{config_entry.entry_id}_external_{self.account_id}_cash_flow_weekly"
-        )
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._weekly_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for this external account."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"external_{self.account_id}")},
-            name=f"{self.account_name} (External)",
-            manufacturer=MANUFACTURER,
-            model="External Account",
-            sw_version="1.0",
-            via_device=(
-                DOMAIN,
-                self.config_entry.unique_id or self.config_entry.entry_id,
-            ),
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return weekly cumulative positive cash flow for this external account."""
-        for external in self.coordinator.data.get("external_accounts", []):
-            if str(external["id"]) == self.account_id:
-                balance_info = external.get("balance", {})
-                if balance_info.get("error") is not None:
-                    return None
-
-                current_balance = balance_info.get("amountInDollars")
-                if current_balance is None:
-                    return None
-
-                if self._previous_balance is not None:
-                    change = current_balance - self._previous_balance
-                    if change > 0:
-                        self._weekly_flow += change
-
-                self._previous_balance = current_balance
-                return self._weekly_flow
-
-        return None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "account_id": self.account_id,
-            "account_name": self.account_name,
-            "account_type": "External",
-            "period": "weekly",
-            "source": "external_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class ExternalIndividualCashFlowMonthlySensor(SequenceBaseSensor):
-    """Sensor for tracking monthly cash flow for individual external accounts."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-        external_data: dict[str, Any],
-    ) -> None:
-        """Initialize the external cash flow monthly sensor."""
-        super().__init__(coordinator, config_entry)
-        self.external_data = external_data
-        self.account_id = str(external_data["id"])
-        self.account_name = external_data["name"]
-
-        self._attr_name = "Cash Flow Monthly"
-        self._attr_unique_id = (
-            f"{config_entry.entry_id}_external_{self.account_id}_cash_flow_monthly"
-        )
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._monthly_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for this external account."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"external_{self.account_id}")},
-            name=f"{self.account_name} (External)",
-            manufacturer=MANUFACTURER,
-            model="External Account",
-            sw_version="1.0",
-            via_device=(
-                DOMAIN,
-                self.config_entry.unique_id or self.config_entry.entry_id,
-            ),
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return monthly cumulative positive cash flow for this external account."""
-        for external in self.coordinator.data.get("external_accounts", []):
-            if str(external["id"]) == self.account_id:
-                balance_info = external.get("balance", {})
-                if balance_info.get("error") is not None:
-                    return None
-
-                current_balance = balance_info.get("amountInDollars")
-                if current_balance is None:
-                    return None
-
-                if self._previous_balance is not None:
-                    change = current_balance - self._previous_balance
-                    if change > 0:
-                        self._monthly_flow += change
-
-                self._previous_balance = current_balance
-                return self._monthly_flow
-
-        return None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "account_id": self.account_id,
-            "account_name": self.account_name,
-            "account_type": "External",
-            "period": "monthly",
-            "source": "external_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class ExternalIndividualCashFlowYearlySensor(SequenceBaseSensor):
-    """Sensor for tracking yearly cash flow for individual external accounts."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-        external_data: dict[str, Any],
-    ) -> None:
-        """Initialize the external cash flow yearly sensor."""
-        super().__init__(coordinator, config_entry)
-        self.external_data = external_data
-        self.account_id = str(external_data["id"])
-        self.account_name = external_data["name"]
-
-        self._attr_name = "Cash Flow Yearly"
-        self._attr_unique_id = (
-            f"{config_entry.entry_id}_external_{self.account_id}_cash_flow_yearly"
-        )
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._yearly_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for this external account."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, f"external_{self.account_id}")},
-            name=f"{self.account_name} (External)",
-            manufacturer=MANUFACTURER,
-            model="External Account",
-            sw_version="1.0",
-            via_device=(
-                DOMAIN,
-                self.config_entry.unique_id or self.config_entry.entry_id,
-            ),
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return yearly cumulative positive cash flow for this external account."""
-        for external in self.coordinator.data.get("external_accounts", []):
-            if str(external["id"]) == self.account_id:
-                balance_info = external.get("balance", {})
-                if balance_info.get("error") is not None:
-                    return None
-
-                current_balance = balance_info.get("amountInDollars")
-                if current_balance is None:
-                    return None
-
-                if self._previous_balance is not None:
-                    change = current_balance - self._previous_balance
-                    if change > 0:
-                        self._yearly_flow += change
-
-                self._previous_balance = current_balance
-                return self._yearly_flow
-
-        return None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "account_id": self.account_id,
-            "account_name": self.account_name,
-            "account_type": "External",
-            "period": "yearly",
-            "source": "external_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-# Aggregate External Cash Flow Sensors (disabled by default)
-class ExternalCashFlowDailySensor(SequenceBaseSensor):
-    """Sensor for tracking daily cash flow for external total."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the external cash flow daily sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "External Cash Flow Daily"
-        self._attr_unique_id = f"{config_entry.entry_id}_external_cash_flow_daily"
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._daily_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return daily cumulative positive cash flow for external total."""
-        current_balance = self.coordinator.data.get("uncategorized_external_balance")
-
-        if current_balance is None:
-            return None
-
-        if self._previous_balance is not None:
-            change = current_balance - self._previous_balance
-            if change > 0:
-                self._daily_flow += change
-
-        self._previous_balance = current_balance
-        return self._daily_flow
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "period": "daily",
-            "source": "uncategorized_external_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class ExternalCashFlowWeeklySensor(SequenceBaseSensor):
-    """Sensor for tracking weekly cash flow for external total."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the external cash flow weekly sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "External Cash Flow Weekly"
-        self._attr_unique_id = f"{config_entry.entry_id}_external_cash_flow_weekly"
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._weekly_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return weekly cumulative positive cash flow for external total."""
-        current_balance = self.coordinator.data.get("uncategorized_external_balance")
-
-        if current_balance is None:
-            return None
-
-        if self._previous_balance is not None:
-            change = current_balance - self._previous_balance
-            if change > 0:
-                self._weekly_flow += change
-
-        self._previous_balance = current_balance
-        return self._weekly_flow
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "period": "weekly",
-            "source": "uncategorized_external_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class ExternalCashFlowMonthlySensor(SequenceBaseSensor):
-    """Sensor for tracking monthly cash flow for external total."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the external cash flow monthly sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "External Cash Flow Monthly"
-        self._attr_unique_id = f"{config_entry.entry_id}_external_cash_flow_monthly"
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._monthly_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return monthly cumulative positive cash flow for external total."""
-        current_balance = self.coordinator.data.get("uncategorized_external_balance")
-
-        if current_balance is None:
-            return None
-
-        if self._previous_balance is not None:
-            change = current_balance - self._previous_balance
-            if change > 0:
-                self._monthly_flow += change
-
-        self._previous_balance = current_balance
-        return self._monthly_flow
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "period": "monthly",
-            "source": "uncategorized_external_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
-        }
-
-
-class ExternalCashFlowYearlySensor(SequenceBaseSensor):
-    """Sensor for tracking yearly cash flow for external total."""
-
-    def __init__(
-        self,
-        coordinator: SequenceDataUpdateCoordinator,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the external cash flow yearly sensor."""
-        super().__init__(coordinator, config_entry)
-        self._attr_name = "External Cash Flow Yearly"
-        self._attr_unique_id = f"{config_entry.entry_id}_external_cash_flow_yearly"
-        self._attr_has_entity_name = True
-        self._attr_device_class = None
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._previous_balance: float | None = None
-        self._yearly_flow: float = 0.0
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information for the main account."""
-        return DeviceInfo(
-            identifiers={
-                (DOMAIN, self.config_entry.unique_id or self.config_entry.entry_id)
-            },
-            name="Sequence Account",
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version="1.0",
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return yearly cumulative positive cash flow for external total."""
-        current_balance = self.coordinator.data.get("uncategorized_external_balance")
-
-        if current_balance is None:
-            return None
-
-        if self._previous_balance is not None:
-            change = current_balance - self._previous_balance
-            if change > 0:
-                self._yearly_flow += change
-
-        self._previous_balance = current_balance
-        return self._yearly_flow
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return {
-            "period": "yearly",
-            "source": "uncategorized_external_balance",
-            "unit_of_measurement": CURRENCY_DOLLAR,
-            "last_balance": self._previous_balance,
         }
