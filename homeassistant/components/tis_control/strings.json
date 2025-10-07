@@ -19,6 +19,7 @@
       "invalid_port": "The port is invalid. It must be a number between 1 and 65535."
     },
     "abort": {
+      "already_configured": "This TIS Control bridge is already configured.",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }

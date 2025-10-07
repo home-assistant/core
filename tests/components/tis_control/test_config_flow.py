@@ -82,6 +82,42 @@ async def test_valid_port(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_duplicate_entry(hass: HomeAssistant) -> None:
+    """Test that the flow is aborted when an entry with the same port already exists."""
+    # Step 1: Create the first successful entry.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.tis_control.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PORT: 6000},
+        )
+        await hass.async_block_till_done()
+
+    # Verify the first entry was created.
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+
+    # Step 2: Try to create a second entry with the same port.
+    result3 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
+        user_input={CONF_PORT: 6000},
+    )
+    await hass.async_block_till_done()
+
+    # Verify that the second flow is aborted.
+    assert result4["type"] == FlowResultType.ABORT
+    assert result4["reason"] == "already_configured"
+
+
 async def test_validate_port() -> None:
     """Test the validate_port method directly."""
     config_flow = TISConfigFlow()
