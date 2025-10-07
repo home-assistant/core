@@ -106,7 +106,11 @@ class LondonUndergroundConfigFlow(ConfigFlow, domain=DOMAIN):
                 "London Overground was removed from the configuration as the line has been divided and renamed"
             )
             lines.remove("London Overground")
-        return await self.async_step_user({CONF_LINE: lines})
+        return self.async_create_entry(
+            title="London Underground",
+            data={},
+            options={CONF_LINE: user_input.get(CONF_LINE, DEFAULT_LINES)},
+        )
 
 
 class LondonUndergroundOptionsFlow(OptionsFlowWithReload):
