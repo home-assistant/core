@@ -84,11 +84,14 @@ PROCESS_TYPES: tuple[SysMonitorBinarySensorEntityDescription, ...] = (
 BINARY_SENSOR_TYPES: tuple[SysMonitorBinarySensorEntityDescription, ...] = (
     SysMonitorBinarySensorEntityDescription(
         key="battery_plugged",
-        value_fn=lambda entity: entity.coordinator.data.battery.power_plugged
-        if entity.coordinator.data.battery
-        else None,
+        value_fn=(
+            lambda entity: entity.coordinator.data.battery.power_plugged
+            if entity.coordinator.data.battery
+            else None
+        ),
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         add_to_update=lambda entity: ("battery", ""),
+        entity_registry_enabled_default=False,
     ),
 )
 
