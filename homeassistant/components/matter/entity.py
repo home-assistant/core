@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from enum import IntEnum
+from enum import StrEnum
 import functools
 import logging
 from typing import TYPE_CHECKING, Any, Concatenate, cast
@@ -65,12 +65,12 @@ class MatterEntityLabeling(EntityDescription):
 
     # Where to place the Tag or Label text in the entity name.
     # Can be "rename", "append", "ignore". Append by default.
-    class LabelPlacement(IntEnum):
+    class LabelPlacement(StrEnum):
         """Enum for label placement options."""
 
-        APPEND = 1
-        IGNORE = 2
-        RENAME = 3
+        APPEND = "append"
+        IGNORE = "ignore"
+        RENAME = "rename"
 
     label_placement: LabelPlacement = LabelPlacement.APPEND
 
