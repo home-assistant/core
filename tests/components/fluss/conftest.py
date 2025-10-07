@@ -15,18 +15,6 @@ from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture
-def mock_hass() -> MagicMock:
-    """Mock Hass Environment."""
-    hass = MagicMock(spec=HomeAssistant)
-    hass.config_entries = MagicMock()
-    hass.config_entries.async_forward_entry_setups = MagicMock()
-    hass.config_entries.async_forward_entry_unload = MagicMock()
-    hass.config_entries.async_unload_platforms = MagicMock()
-    hass.data = {}
-    return hass
-
-
-@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
