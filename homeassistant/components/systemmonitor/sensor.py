@@ -303,8 +303,8 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda entity: round(
-            entity.coordinator.data.memory.available / 1024**2, 1
+        value_fn=(
+            lambda entity: round(entity.coordinator.data.memory.available / 1024**2, 1)
         ),
         add_to_update=lambda entity: ("memory", ""),
     ),
