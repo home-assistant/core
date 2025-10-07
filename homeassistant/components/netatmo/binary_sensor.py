@@ -40,7 +40,7 @@ from .entity import NetatmoModuleEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-def process_opening_status_string(status: StateType) -> bool | None:
+def process_opening_status_string(status: StateType) -> StateType | None:
     """Process opening status and return bool."""
     _LOGGER.debug(
         "Translated opening status: %s",
@@ -65,7 +65,7 @@ def process_opening_status_string(status: StateType) -> bool | None:
     return None
 
 
-def process_opening_status(module: Module, netatmo_name: str) -> bool | None:
+def process_opening_status(module: Module, netatmo_name: str) -> StateType | None:
     """Process opening Module status and return bool."""
     status = getattr(module, netatmo_name)
     value = process_opening_status_string(status)
@@ -105,7 +105,7 @@ def process_opening_category_string(
     return None
 
 
-def get_opening_category(netatmo_device: NetatmoDevice) -> str | None:
+def get_opening_category(netatmo_device: NetatmoDevice) -> StateType | None:
     """Helper function to get opening category from Netatmo API raw data."""
 
     # First, get the unique ID of the device we are processing.
@@ -115,7 +115,7 @@ def get_opening_category(netatmo_device: NetatmoDevice) -> str | None:
     raw_data = netatmo_device.data_handler.account.raw_data
 
     # Initialize category as None
-    category: str | None = None
+    category: StateType = None
 
     # Iterate through each home in the raw data.
     for home in raw_data["homes"]:
@@ -145,7 +145,7 @@ def get_opening_category(netatmo_device: NetatmoDevice) -> str | None:
 
 def process_opening_category(netatmo_device: NetatmoDevice) -> BinarySensorDeviceClass:
     """Helper function to map Netatmo device opening category to Home Assistant device class."""
-    category: str | None = get_opening_category(netatmo_device)
+    category: StateType = get_opening_category(netatmo_device)
     module_binary_sensor_class: BinarySensorDeviceClass | None = (
         process_opening_category_string(category)
     )
@@ -192,7 +192,8 @@ class NetatmoBinarySensorEntityDescription(BinarySensorEntityDescription):
     device_class_fn: Callable[[NetatmoDevice], BinarySensorDeviceClass] | None = None
     netatmo_name: str  # The name used by Netatmo API for this sensor
     feature_name: str | None = None  # The feature key in the Module's features set
-    value_fn: Callable[[Module, str], bool | None] | None = None
+    value_fn: Callable[[StateType], StateType] = lambda x: x
+    device_value_fn: Callable[[Module, str], StateType] | None = None
 
 
 NETATMO_BINARY_SENSOR_DESCRIPTIONS: Final[
@@ -219,7 +220,7 @@ OPENING_BINARY_SENSOR_DESCRIPTIONS: Final[
         device_class=BinarySensorDeviceClass.OPENING,
         netatmo_name="status",
         feature_name="status",
-        value_fn=process_opening_status,
+        device_value_fn=process_opening_status,
         device_class_fn=process_opening_category,
     ),
 ]
@@ -388,20 +389,26 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         """Entity created."""
         await super().async_added_to_hass()
 
-        for event_type in (
-            EVENT_TYPE_CAMERA_DISCONNECTION,
-            EVENT_TYPE_DOOR_TAG_BIG_MOVE,
-            EVENT_TYPE_DOOR_TAG_SMALL_MOVE,
-            EVENT_TYPE_MODULE_CONNECT,
-            EVENT_TYPE_MODULE_DISCONNECT,
-        ):
-            self.async_on_remove(
-                async_dispatcher_connect(
-                    self.hass,
-                    f"signal-{DOMAIN}-webhook-{event_type}",
-                    self.handle_event,
+        if self.device.device_type == "NACamDoorTag":
+            for event_type in (
+                EVENT_TYPE_CAMERA_DISCONNECTION,
+                EVENT_TYPE_DOOR_TAG_BIG_MOVE,
+                EVENT_TYPE_DOOR_TAG_SMALL_MOVE,
+                EVENT_TYPE_MODULE_CONNECT,
+                EVENT_TYPE_MODULE_DISCONNECT,
+            ):
+                _LOGGER.debug(
+                    "Subscribing to event %s for module %s",
+                    event_type,
+                    self.device.name,
                 )
-            )
+                self.async_on_remove(
+                    async_dispatcher_connect(
+                        self.hass,
+                        f"signal-{DOMAIN}-webhook-{event_type}",
+                        self.handle_event,
+                    )
+                )
 
         self.hass.data[DOMAIN][DATA_DEVICE_IDS][self.device.entity_id] = (
             self.device.name
@@ -415,7 +422,8 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        value = None
+        value: StateType = None
+        raw_value: StateType = None
         module = self.device
 
         if not module:
@@ -427,12 +435,13 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
             self.async_write_ha_state()
             return
 
-        raw_value = getattr(module, self.entity_description.netatmo_name, None)
-        value = None
+        raw_value = cast(
+            StateType, getattr(module, self.entity_description.netatmo_name, None)
+        )
 
         if raw_value is not None:
-            if self.entity_description.value_fn is None:
-                value = cast(bool, raw_value)
+            if self.entity_description.device_value_fn is None:
+                value = self.entity_description.value_fn(raw_value)
 
                 _LOGGER.debug(
                     "%s (%s) translated from '%s' to '%s' for module '%s'",
@@ -443,7 +452,7 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
                     module.name,
                 )
             else:
-                value = self.entity_description.value_fn(
+                value = self.entity_description.device_value_fn(
                     module, self.entity_description.netatmo_name
                 )
         else:
@@ -466,7 +475,7 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
             self._attr_is_on = False
         else:
             self._attr_available = True
-            self._attr_is_on = value
+            self._attr_is_on = cast(bool, value)
 
         self.async_write_ha_state()
 
@@ -483,6 +492,10 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
             _LOGGER.debug("Event %s has no module ID, returning", event_type)
             return
 
+        if not data.get("device_id"):
+            _LOGGER.debug("Event %s has no device ID, returning", event_type)
+            return
+
         if not data.get("home_id"):
             _LOGGER.debug(
                 "Event %s for module %s has no home ID, returning",
@@ -491,78 +504,85 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
             )
             return
 
-        if (
-            data["home_id"] == self.home.entity_id
-            and data["module_id"] == self.device.entity_id
-        ):
-            if event_type in [
-                EVENT_TYPE_DOOR_TAG_SMALL_MOVE,
-                EVENT_TYPE_DOOR_TAG_BIG_MOVE,
-            ]:
-                if self.entity_description.key == "opening":
+        if self.device.device_type == "NACamDoorTag":
+            # Door tag related events
+            if (
+                data["home_id"] == self.home.entity_id
+                and data["module_id"] == self.device.entity_id
+            ):
+                # Event for this module
+                if event_type in [
+                    EVENT_TYPE_DOOR_TAG_SMALL_MOVE,
+                    EVENT_TYPE_DOOR_TAG_BIG_MOVE,
+                ]:
+                    # Movement events for opening sensor only
+                    if self.entity_description.key == "opening":
+                        _LOGGER.debug(
+                            "Module %s has detected door tag move event",
+                            data["module_id"],
+                        )
+
+                        if not self._attr_is_on:
+                            self._attr_is_on = True
+                            _LOGGER.debug(
+                                "Toggling %s sensor state to open", self.device.name
+                            )
+                            self.async_write_ha_state()
+
+                elif event_type in [EVENT_TYPE_MODULE_DISCONNECT]:
+                    # Disconnection of module
                     _LOGGER.debug(
-                        "Module %s has detected door tag move event",
+                        "Module %s has detected disconnect event",
                         data["module_id"],
                     )
 
-                    if not self._attr_is_on:
-                        self._attr_is_on = True
+                    if self._attr_is_on or self.available:
+                        if self.entity_description.key == "reachable":
+                            self._attr_is_on = False
+                        else:
+                            self._attr_is_on = None
+                        self._attr_available = False
                         _LOGGER.debug(
-                            "Toggling %s sensor state to open", self.device.name
+                            "Toggling %s sensor state to unavailable", self.device.name
                         )
                         self.async_write_ha_state()
+                elif event_type in [EVENT_TYPE_MODULE_CONNECT]:
+                    # Connection of module
+                    _LOGGER.debug(
+                        "Module %s has detected connect event",
+                        data["module_id"],
+                    )
 
-            elif event_type in [EVENT_TYPE_MODULE_DISCONNECT]:
-                _LOGGER.debug(
-                    "Module %s has detected disconnect event",
-                    data["module_id"],
-                )
+                    if not self.available:
+                        if self.entity_description.key == "reachable":
+                            self._attr_is_on = True
+                        else:
+                            self._attr_is_on = None
+                        self._attr_available = True
+                        self.async_write_ha_state()
+                else:
+                    _LOGGER.debug(
+                        "Binary sensor %s has received unexpected event as type %s",
+                        data["module_id"],
+                        event_type,
+                    )
+            elif (
+                data["home_id"] == self.home.entity_id
+                and data["device_id"] == self.device.bridge
+            ):
+                # Event for the bridge of this module
+                if event_type in [EVENT_TYPE_CAMERA_DISCONNECTION]:
+                    _LOGGER.debug(
+                        "Bridge (camera) %s has disconnect event",
+                        data["device_id"],
+                    )
 
-                if self._attr_is_on or self.available:
-                    if self.entity_description.key == "reachable":
+                    if self._attr_is_on or self.available:
                         self._attr_is_on = False
-                    else:
-                        self._attr_is_on = None
-                    self._attr_available = False
-                    _LOGGER.debug(
-                        "Toggling %s sensor state to unavailable", self.device.name
-                    )
-                    self.async_write_ha_state()
-            elif event_type in [EVENT_TYPE_MODULE_CONNECT]:
-                _LOGGER.debug(
-                    "Module %s has detected connect event",
-                    data["module_id"],
-                )
-
-                if not self.available:
-                    if self.entity_description.key == "reachable":
-                        self._attr_is_on = True
-                    else:
-                        self._attr_is_on = None
-                    self._attr_available = True
-                    self.async_write_ha_state()
-            else:
-                _LOGGER.debug(
-                    "Binary sensor %s has received unexpected event as type %s",
-                    data["module_id"],
-                    event_type,
-                )
-        elif (
-            data["home_id"] == self.home.entity_id
-            and data["device_id"] == self.device.bridge
-        ):
-            if event_type in [EVENT_TYPE_CAMERA_DISCONNECTION]:
-                _LOGGER.debug(
-                    "Bridge (camera) %s has disconnect event",
-                    data["device_id"],
-                )
-
-                if self._attr_is_on or self.available:
-                    self._attr_is_on = False
-                    self._attr_available = False
-                    _LOGGER.debug(
-                        "Toggling %s sensor state to unavailable", self.device.name
-                    )
-                    self.async_write_ha_state()
-            self.async_write_ha_state()
+                        self._attr_available = False
+                        _LOGGER.debug(
+                            "Toggling %s sensor state to unavailable", self.device.name
+                        )
+                        self.async_write_ha_state()
+                self.async_write_ha_state()
             return
