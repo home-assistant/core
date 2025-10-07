@@ -1785,7 +1785,7 @@ async def test_unit_conversion_priority_suggested_unit_change_2(
             UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
             0,
         ),
-        (SensorDeviceClass.CONDUCTIVITY, UnitOfConductivity.MICROSIEMENS, 1),
+        +(SensorDeviceClass.CONDUCTIVITY, UnitOfConductivity.MICROSIEMENS_PER_CM, 1),
         (SensorDeviceClass.CURRENT, UnitOfElectricCurrent.MILLIAMPERE, 0),
         (SensorDeviceClass.DATA_RATE, UnitOfDataRate.KILOBITS_PER_SECOND, 0),
         (SensorDeviceClass.DATA_SIZE, UnitOfInformation.KILOBITS, 0),
