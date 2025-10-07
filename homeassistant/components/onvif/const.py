@@ -1,9 +1,10 @@
-"""Constants for the onvif component."""
+"""Constants and read-only mappings for the ONVIF component."""
 
 import asyncio
 from collections.abc import Mapping
 from enum import Enum
 import logging
+from types import MappingProxyType
 from typing import Literal
 
 import aiohttp
@@ -46,16 +47,22 @@ GET_CAPABILITIES_EXCEPTIONS = (
     TransportError,
 )
 
-# Literals
-MoveMode = Literal[
-    "AbsoluteMove", "ContinuousMove", "GotoPreset", "RelativeMove", "Stop"
-]
 
-ABSOLUTE_MOVE: MoveMode = "AbsoluteMove"
-CONTINUOUS_MOVE: MoveMode = "ContinuousMove"
-GOTOPRESET_MOVE: MoveMode = "GotoPreset"
-RELATIVE_MOVE: MoveMode = "RelativeMove"
-STOP_MOVE: MoveMode = "Stop"
+class MoveMode(str, Enum):
+    """Supported ONVIF PTZ movement modes."""
+
+    ABSOLUTE = "AbsoluteMove"
+    CONTINUOUS = "ContinuousMove"
+    GOTOPRESET = "GotoPreset"
+    RELATIVE = "RelativeMove"
+    STOP = "Stop"
+
+
+ABSOLUTE_MOVE: MoveMode = MoveMode.ABSOLUTE
+CONTINUOUS_MOVE: MoveMode = MoveMode.CONTINUOUS
+GOTOPRESET_MOVE: MoveMode = MoveMode.GOTOPRESET
+RELATIVE_MOVE: MoveMode = MoveMode.RELATIVE
+STOP_MOVE: MoveMode = MoveMode.STOP
 
 
 class MoveModeRequirement(str, Enum):
@@ -63,22 +70,39 @@ class MoveModeRequirement(str, Enum):
 
     AXES = "axes"
     SPEED = "speed"
-    CONTINUOUS_DURATION = "duration"
+    CONTINUOUS_DURATION = "continuous_duration"
     DISTANCE = "distance"
-    PRESETS = "presets"
+    PRESET = "preset"
 
 
-MODE_REQUIREMENTS: dict[MoveMode, set[MoveModeRequirement]] = {
-    CONTINUOUS_MOVE: {
-        MoveModeRequirement.AXES,
-        MoveModeRequirement.SPEED,
-        MoveModeRequirement.CONTINUOUS_DURATION,
-    },
-    RELATIVE_MOVE: {MoveModeRequirement.AXES, MoveModeRequirement.DISTANCE},
-    ABSOLUTE_MOVE: {MoveModeRequirement.AXES},
-    GOTOPRESET_MOVE: {MoveModeRequirement.PRESETS},
-    STOP_MOVE: set(),
-}
+MOVE_MODE_REQUIREMENTS: Mapping[MoveMode, frozenset[MoveModeRequirement]] = (
+    MappingProxyType(
+        {
+            MoveMode.CONTINUOUS: frozenset(
+                {
+                    MoveModeRequirement.AXES,
+                    MoveModeRequirement.SPEED,
+                    MoveModeRequirement.CONTINUOUS_DURATION,
+                }
+            ),
+            MoveMode.RELATIVE: frozenset(
+                {MoveModeRequirement.AXES, MoveModeRequirement.DISTANCE}
+            ),
+            MoveMode.ABSOLUTE: frozenset({MoveModeRequirement.AXES}),
+            MoveMode.GOTOPRESET: frozenset({MoveModeRequirement.PRESET}),
+            MoveMode.STOP: frozenset(),
+        }
+    )
+)
+
+MOVE_MODE_REQUIREMENTS_ERROR_MESSAGES: Mapping[MoveModeRequirement, str] = (
+    MappingProxyType(
+        {
+            MoveModeRequirement.AXES: "at least one of pan/tilt/zoom",
+        }
+    )
+)
+
 
 PanDir = Literal["LEFT", "RIGHT"]
 TiltDir = Literal["UP", "DOWN"]

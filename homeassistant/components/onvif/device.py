@@ -29,17 +29,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    ABSOLUTE_MOVE,
     CONF_ENABLE_WEBHOOKS,
-    CONTINUOUS_MOVE,
     DEFAULT_ENABLE_WEBHOOKS,
     GET_CAPABILITIES_EXCEPTIONS,
-    GOTOPRESET_MOVE,
     LOGGER,
-    MODE_REQUIREMENTS,
+    MOVE_MODE_REQUIREMENTS,
+    MOVE_MODE_REQUIREMENTS_ERROR_MESSAGES,
     PAN_FACTOR,
-    RELATIVE_MOVE,
-    STOP_MOVE,
     TILT_FACTOR,
     ZOOM_FACTOR,
     MoveMode,
@@ -50,6 +46,22 @@ from .const import (
 )
 from .event import EventManager
 from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
+
+
+class MissingMoveRequirementError(Exception):
+    """Raised when a movement mode cannot be performed due to missing params."""
+
+    def __init__(self, move_mode: MoveMode, missing: set[MoveModeRequirement]) -> None:
+        """Initialize a MissingMoveRequirementError."""
+
+        self.move_mode: MoveMode = move_mode
+        self.missing = frozenset(missing)
+        readable = [
+            MOVE_MODE_REQUIREMENTS_ERROR_MESSAGES.get(m, m.name.lower())
+            for m in self.missing
+        ]
+        message = f"Cannot perform {move_mode.value}: missing {', '.join(readable)}"
+        super().__init__(message)
 
 
 class ONVIFDevice:
@@ -505,7 +517,7 @@ class ONVIFDevice:
         """
         if direction is None or scale is None:
             return None
-        return factor_map.get(direction, 0.0) * float(scale)
+        return factor_map.get(direction, 0.0) * scale
 
     @staticmethod
     def _supports_move_mode(move_mode: MoveMode, profile: Profile) -> bool:
@@ -517,11 +529,11 @@ class ONVIFDevice:
         if not caps:
             return False
         return (
-            (move_mode == CONTINUOUS_MOVE and caps.continuous)
-            or (move_mode == RELATIVE_MOVE and caps.relative)
-            or (move_mode == ABSOLUTE_MOVE and caps.absolute)
-            or (move_mode == GOTOPRESET_MOVE and bool(caps.presets))
-            or (move_mode == STOP_MOVE)
+            (move_mode == MoveMode.CONTINUOUS and caps.continuous)
+            or (move_mode == MoveMode.RELATIVE and caps.relative)
+            or (move_mode == MoveMode.ABSOLUTE and caps.absolute)
+            or (move_mode == MoveMode.GOTOPRESET and bool(caps.presets))
+            or (move_mode == MoveMode.STOP)
         )
 
     @staticmethod
@@ -535,7 +547,7 @@ class ONVIFDevice:
         speed: float | None,
         continuous_duration: float | None,
         preset: str | None,
-    ) -> str | None:
+    ) -> None:
         """Validate inputs against per-mode requirements.
 
         Rules:
@@ -545,39 +557,38 @@ class ONVIFDevice:
         - DISTANCE: required for modes that need a magnitude (Relative/Absolute).
         - PRESETS: required for GotoPreset.
 
-        Returns:
-        Error message if something is missing, otherwise None.
         """
 
-        reqs = MODE_REQUIREMENTS.get(move_mode, set())
-        missing: list[str] = []
+        reqs: frozenset[MoveModeRequirement] = MOVE_MODE_REQUIREMENTS.get(
+            move_mode, frozenset()
+        )
+        missing: set[MoveModeRequirement] = set()
 
         if MoveModeRequirement.AXES in reqs and (
             pan is None and tilt is None and zoom is None
         ):
-            missing.append("at least one axis (pan/tilt/zoom)")
+            missing.add(MoveModeRequirement.AXES)
         if MoveModeRequirement.SPEED in reqs and speed is None:
-            missing.append("speed")
+            missing.add(MoveModeRequirement.SPEED)
         if (
             MoveModeRequirement.CONTINUOUS_DURATION in reqs
             and continuous_duration is None
         ):
-            missing.append("continuous duration")
+            missing.add(MoveModeRequirement.CONTINUOUS_DURATION)
         if MoveModeRequirement.DISTANCE in reqs and distance is None:
-            missing.append("distance")
-        if MoveModeRequirement.PRESETS in reqs and not preset:
-            missing.append("preset")
+            missing.add(MoveModeRequirement.DISTANCE)
+        if MoveModeRequirement.PRESET in reqs and not preset:
+            missing.add(MoveModeRequirement.PRESET)
 
         if missing:
-            return f"{move_mode} requires: {', '.join(missing)}"
-        return None
+            raise MissingMoveRequirementError(move_mode, missing)
 
     async def async_perform_ptz(
         self,
         profile: Profile,
-        move_mode: MoveMode,
         distance: float | None = None,
         speed: float | None = None,
+        move_mode: MoveMode = MoveMode.STOP,
         continuous_duration: float | None = None,
         preset: str | None = None,
         pan: PanDir | None = None,
@@ -602,30 +613,31 @@ class ONVIFDevice:
             return
 
         if not self._supports_move_mode(move_mode, profile):
-            LOGGER.warning("%s, not supported (device='%s')", move_mode, self.name)
+            LOGGER.warning("%s not supported (device='%s')", move_mode.value, self.name)
             return
 
-        err = self._check_move_mode_required_params(
-            move_mode,
-            pan=pan,
-            tilt=tilt,
-            zoom=zoom,
-            distance=distance,
-            speed=speed,
-            continuous_duration=continuous_duration,
-            preset=preset,
-        )
-        if err:
-            LOGGER.warning("%s (device='%s')", err, self.name)
+        try:
+            self._check_move_mode_required_params(
+                move_mode,
+                pan=pan,
+                tilt=tilt,
+                zoom=zoom,
+                distance=distance,
+                speed=speed,
+                continuous_duration=continuous_duration,
+                preset=preset,
+            )
+        except MissingMoveRequirementError as e:
+            LOGGER.warning("%s (device='%s')", e, self.name)
             return
 
         ptz_service = await self.device.create_ptz_service()
 
         try:
-            req = ptz_service.create_type(move_mode)
+            req = ptz_service.create_type(move_mode.value)
             req.ProfileToken = profile.token
 
-            if move_mode == CONTINUOUS_MOVE:
+            if move_mode == MoveMode.CONTINUOUS:
                 vx = self._apply_dir(pan, PAN_FACTOR, speed)
                 vy = self._apply_dir(tilt, TILT_FACTOR, speed)
                 vz = self._apply_dir(zoom, ZOOM_FACTOR, speed)
@@ -641,14 +653,14 @@ class ONVIFDevice:
                 await ptz_service.ContinuousMove(req)
 
                 # Stop after the requested duration. Guard against None just in case.
-                await asyncio.sleep(float(continuous_duration or 0.0))
+                await asyncio.sleep(continuous_duration or 0.0)
                 req = ptz_service.create_type("Stop")
                 req.ProfileToken = profile.token
                 req.PanTilt = True
                 req.Zoom = True
                 await ptz_service.Stop(req)
 
-            elif move_mode == RELATIVE_MOVE:
+            elif move_mode == MoveMode.RELATIVE:
                 dx = self._apply_dir(pan, PAN_FACTOR, distance)
                 dy = self._apply_dir(tilt, TILT_FACTOR, distance)
                 dz = self._apply_dir(zoom, ZOOM_FACTOR, distance)
@@ -656,12 +668,12 @@ class ONVIFDevice:
                 translation = {}
                 if dx is not None or dy is not None:
                     translation["PanTilt"] = {
-                        "x": float(dx or 0.0),
-                        "y": float(dy or 0.0),
+                        "x": dx or 0.0,
+                        "y": dy or 0.0,
                     }
 
                 if dz is not None:
-                    translation["Zoom"] = {"x": float(dz)}
+                    translation["Zoom"] = {"x": dz}
 
                 req.Translation = translation
 
@@ -673,7 +685,7 @@ class ONVIFDevice:
 
                 await ptz_service.RelativeMove(req)
 
-            elif move_mode == ABSOLUTE_MOVE:
+            elif move_mode == MoveMode.ABSOLUTE:
                 # NOTE:
                 # At the moment, the same position (using distance as normalized coordinates) is currently reused for all selected axes (pan/tilt/zoom).
                 # You cannot specify independent absolute positions per axis. This artificially couples pan and tilt
@@ -690,12 +702,12 @@ class ONVIFDevice:
                 position = {}
                 if dx is not None or dy is not None:
                     position["PanTilt"] = {
-                        "x": float(dx or 0.0),
-                        "y": float(dy or 0.0),
+                        "x": dx or 0.0,
+                        "y": dy or 0.0,
                     }
 
                 if dz is not None:
-                    position["Zoom"] = {"x": float(dz)}
+                    position["Zoom"] = {"x": dz}
 
                 req.Position = position
 
@@ -704,8 +716,8 @@ class ONVIFDevice:
                         k: dict.fromkeys(v.keys(), speed) for k, v in position.items()
                     }
                 await ptz_service.AbsoluteMove(req)
-            elif move_mode == GOTOPRESET_MOVE:
-                presets: list[str] = list(getattr(profile.ptz, "presets", []) or [])
+            elif move_mode == MoveMode.GOTOPRESET:
+                presets: list[str] = getattr(profile.ptz, "presets", [])
                 if preset not in presets:
                     LOGGER.warning(
                         (
@@ -725,7 +737,7 @@ class ONVIFDevice:
                         "Zoom": {"x": speed},
                     }
                 await ptz_service.GotoPreset(req)
-            elif move_mode == STOP_MOVE:
+            elif move_mode == MoveMode.STOP:
                 req.PanTilt = True
                 req.Zoom = True
                 await ptz_service.Stop(req)

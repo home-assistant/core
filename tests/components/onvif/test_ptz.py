@@ -14,18 +14,16 @@ import pytest
 
 from homeassistant.components.onvif import ONVIFDevice
 from homeassistant.components.onvif.const import (
-    ABSOLUTE_MOVE,
-    CONTINUOUS_MOVE,
     DIR_DOWN,
     DIR_LEFT,
     DIR_RIGHT,
     DIR_UP,
-    GOTOPRESET_MOVE,
-    RELATIVE_MOVE,
-    STOP_MOVE,
     ZOOM_IN,
     ZOOM_OUT,
+    MoveMode,
+    MoveModeRequirement,
 )
+from homeassistant.components.onvif.device import MissingMoveRequirementError
 from homeassistant.components.onvif.models import PTZ as PTZCaps
 from homeassistant.core import HomeAssistant
 
@@ -92,7 +90,7 @@ async def test_continuous_move_builds_velocity_and_stops(
 
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=CONTINUOUS_MOVE,
+        move_mode=MoveMode.CONTINUOUS,
         speed=0.5,
         continuous_duration=0.1,
         pan=DIR_RIGHT,
@@ -125,7 +123,7 @@ async def test_continuous_move_only_tilt_builds_y_axis(
 
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=CONTINUOUS_MOVE,
+        move_mode=MoveMode.CONTINUOUS,
         speed=0.4,
         continuous_duration=0.05,
         tilt=DIR_UP,
@@ -147,7 +145,7 @@ async def test_relative_move_pan_only(
 
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=RELATIVE_MOVE,
+        move_mode=MoveMode.RELATIVE,
         distance=0.2,
         speed=0.7,
         pan=DIR_LEFT,
@@ -173,7 +171,7 @@ async def test_relative_move_zoom_only(
 
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=RELATIVE_MOVE,
+        move_mode=MoveMode.RELATIVE,
         distance=0.1,
         speed=0.5,
         zoom=ZOOM_OUT,
@@ -197,7 +195,7 @@ async def test_relative_move_speed_only_for_present_axes(
 
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=RELATIVE_MOVE,
+        move_mode=MoveMode.RELATIVE,
         distance=0.25,
         speed=0.9,
         pan=DIR_RIGHT,
@@ -218,10 +216,9 @@ async def test_requirements_missing_distance_on_relative_blocks(
     """Test RelativeMove blocks call if distance is missing."""
     device, _ = ptz_device_and_camera
     apply_ptz_capabilities(device, relative=True, continuous=False, absolute=False)
-
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=RELATIVE_MOVE,
+        move_mode=MoveMode.RELATIVE,
         pan=DIR_LEFT,
     )
     mock_ptz_service.RelativeMove.assert_not_called()
@@ -237,7 +234,7 @@ async def test_absolute_move_uses_position(
 
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=ABSOLUTE_MOVE,
+        move_mode=MoveMode.ABSOLUTE,
         distance=0.3,
         speed=0.8,
         pan=DIR_RIGHT,
@@ -263,7 +260,7 @@ async def test_absolute_move_zoom_only_builds_zoom_node(
 
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=ABSOLUTE_MOVE,
+        move_mode=MoveMode.ABSOLUTE,
         distance=0.6,
         speed=0.2,
         zoom=ZOOM_IN,
@@ -285,7 +282,7 @@ async def test_requirements_missing_axes_on_absolute_blocks(
 
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=ABSOLUTE_MOVE,
+        move_mode=MoveMode.ABSOLUTE,
         distance=0.3,
         speed=0.1,
     )
@@ -304,7 +301,7 @@ async def test_goto_preset_validates(
 
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=GOTOPRESET_MOVE,
+        move_mode=MoveMode.GOTOPRESET,
         preset="42",
         speed=0.4,
     )
@@ -312,7 +309,7 @@ async def test_goto_preset_validates(
 
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=GOTOPRESET_MOVE,
+        move_mode=MoveMode.GOTOPRESET,
         preset="2",
         speed=0.4,
     )
@@ -334,7 +331,7 @@ async def test_requirements_missing_preset_on_goto_blocks(
 
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=GOTOPRESET_MOVE,
+        move_mode=MoveMode.GOTOPRESET,
         speed=0.3,
     )
     mock_ptz_service.GotoPreset.assert_not_called()
@@ -351,7 +348,7 @@ async def test_stop_move_sets_flags_and_calls_stop(
 
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=STOP_MOVE,
+        move_mode=MoveMode.STOP,
     )
 
     mock_ptz_service.Stop.assert_awaited_once()
@@ -370,7 +367,7 @@ async def test_ptz_capability_disabled_skips_everything(
 
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=RELATIVE_MOVE,
+        move_mode=MoveMode.RELATIVE,
         distance=0.1,
         pan=DIR_RIGHT,
     )
@@ -394,7 +391,7 @@ async def test_move_mode_requirement_validation_blocks_calls(
     # RelativeMove no axes
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=RELATIVE_MOVE,
+        move_mode=MoveMode.RELATIVE,
         distance=0.1,
     )
     mock_ptz_service.RelativeMove.assert_not_awaited()
@@ -402,7 +399,7 @@ async def test_move_mode_requirement_validation_blocks_calls(
     # ContinuousMove no speed
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=CONTINUOUS_MOVE,
+        move_mode=MoveMode.CONTINUOUS,
         continuous_duration=0.1,
         pan=DIR_RIGHT,
     )
@@ -411,7 +408,7 @@ async def test_move_mode_requirement_validation_blocks_calls(
     # ContinuousMove no continuous_duration
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=CONTINUOUS_MOVE,
+        move_mode=MoveMode.CONTINUOUS,
         speed=0.1,
         pan=DIR_RIGHT,
     )
@@ -420,7 +417,7 @@ async def test_move_mode_requirement_validation_blocks_calls(
     # ContinuousMove no requirements
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=CONTINUOUS_MOVE,
+        move_mode=MoveMode.CONTINUOUS,
     )
     mock_ptz_service.ContinuousMove.assert_not_awaited()
 
@@ -437,7 +434,7 @@ async def test_unsupported_mode_skips(
 
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=CONTINUOUS_MOVE,
+        move_mode=MoveMode.CONTINUOUS,
         speed=0.5,
         continuous_duration=0.1,
         pan=DIR_RIGHT,
@@ -446,7 +443,7 @@ async def test_unsupported_mode_skips(
 
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=RELATIVE_MOVE,
+        move_mode=MoveMode.RELATIVE,
         distance=0.1,
         pan=DIR_RIGHT,
     )
@@ -454,7 +451,7 @@ async def test_unsupported_mode_skips(
 
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=ABSOLUTE_MOVE,
+        move_mode=MoveMode.ABSOLUTE,
         distance=0.3,
         pan=DIR_RIGHT,
     )
@@ -462,7 +459,7 @@ async def test_unsupported_mode_skips(
 
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=GOTOPRESET_MOVE,
+        move_mode=MoveMode.GOTOPRESET,
         preset="1",
         speed=0.4,
     )
@@ -483,7 +480,7 @@ async def test_onvif_error_is_caught_and_does_not_raise(
 
     await device.async_perform_ptz(
         profile=device.profiles[0],
-        move_mode=CONTINUOUS_MOVE,
+        move_mode=MoveMode.CONTINUOUS,
         speed=0.4,
         continuous_duration=0.05,
         pan=DIR_RIGHT,
@@ -491,3 +488,122 @@ async def test_onvif_error_is_caught_and_does_not_raise(
 
     mock_ptz_service.ContinuousMove.assert_awaited_once()
     mock_ptz_service.Stop.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("move_mode", "kwargs", "expected_missing"),
+    [
+        # CONTINUOUS
+        (
+            MoveMode.CONTINUOUS,
+            {
+                "pan": None,
+                "tilt": None,
+                "zoom": None,
+                "speed": 0.2,
+                "continuous_duration": 0.1,
+                "distance": None,
+                "preset": None,
+            },
+            {MoveModeRequirement.AXES},
+        ),
+        (
+            MoveMode.CONTINUOUS,
+            {
+                "pan": "RIGHT",
+                "tilt": None,
+                "zoom": None,
+                "speed": None,
+                "continuous_duration": 0.1,
+                "distance": None,
+                "preset": None,
+            },
+            {MoveModeRequirement.SPEED},
+        ),
+        (
+            MoveMode.CONTINUOUS,
+            {
+                "pan": "RIGHT",
+                "tilt": None,
+                "zoom": None,
+                "speed": 0.2,
+                "continuous_duration": None,
+                "distance": None,
+                "preset": None,
+            },
+            {MoveModeRequirement.CONTINUOUS_DURATION},
+        ),
+        # RELATIVE
+        (
+            MoveMode.RELATIVE,
+            {
+                "pan": None,
+                "tilt": None,
+                "zoom": None,
+                "speed": None,
+                "continuous_duration": None,
+                "distance": 0.1,
+                "preset": None,
+            },
+            {MoveModeRequirement.AXES},
+        ),
+        (
+            MoveMode.RELATIVE,
+            {
+                "pan": "RIGHT",
+                "tilt": None,
+                "zoom": None,
+                "speed": None,
+                "continuous_duration": None,
+                "distance": None,
+                "preset": None,
+            },
+            {MoveModeRequirement.DISTANCE},
+        ),
+        # ABSOLUTE
+        (
+            MoveMode.ABSOLUTE,
+            {
+                "pan": None,
+                "tilt": None,
+                "zoom": None,
+                "speed": None,
+                "continuous_duration": None,
+                "distance": 0.5,
+                "preset": None,
+            },
+            {MoveModeRequirement.AXES},
+        ),
+        # GOTOPRESET
+        (
+            MoveMode.GOTOPRESET,
+            {
+                "pan": None,
+                "tilt": None,
+                "zoom": None,
+                "speed": None,
+                "continuous_duration": None,
+                "distance": None,
+                "preset": None,
+            },
+            {MoveModeRequirement.PRESET},
+        ),
+    ],
+)
+async def test_validator_raises_with_correct_missing(
+    ptz_device_and_camera, move_mode, kwargs, expected_missing
+) -> None:
+    """The validator must raise MissingMoveRequirementError with the correct missing requirements set."""
+    device, _ = ptz_device_and_camera
+
+    with pytest.raises(MissingMoveRequirementError) as excinfo:
+        device._check_move_mode_required_params(move_mode, **kwargs)
+
+    err = excinfo.value
+    assert err.move_mode == move_mode
+    assert expected_missing.issubset(err.missing)
+    msg = str(err).lower()
+    for req in expected_missing:
+        key = req.name.lower()
+        assert key in msg or "pan/tilt/zoom" in msg
