@@ -25,6 +25,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
 )
@@ -36,6 +37,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from . import (
     init_integration,
     inject_rpc_device_event,
+    mutate_rpc_device_status,
     patch_platforms,
     register_device,
     register_entity,
@@ -886,3 +888,57 @@ async def test_cury_switch_entity(
     )
     mock_rpc_device.mock_update()
     mock_rpc_device.cury_set.assert_called_with(0, "right", True)
+
+
+async def test_cury_switch_availability(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test availability of switch entities for cury component."""
+    slots = {
+        "left": {
+            "intensity": 70,
+            "on": True,
+            "vial": {"level": 27, "name": "Forest Dream"},
+        },
+        "right": {
+            "intensity": 70,
+            "on": False,
+            "vial": {"level": 84, "name": "Velvet Rose"},
+        },
+    }
+    status = {"cury:0": {"id": 0, "slots": slots}}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    await init_integration(hass, 3)
+
+    entity_id = f"{SWITCH_DOMAIN}.test_name_left_slot"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    slots["left"]["vial"]["level"] = -1
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cury:0", "slots", slots)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+    slots["left"] = None
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cury:0", "slots", slots)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNAVAILABLE
+
+    slots["left"] = {
+        "intensity": 70,
+        "on": True,
+        "vial": {"level": 27, "name": "Forest Dream"},
+    }
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "cury:0", "slots", slots)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
