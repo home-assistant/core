@@ -48,6 +48,10 @@ def mock_nintendo_authenticator() -> Generator[MagicMock]:
             "homeassistant.components.nintendo_parental.config_flow.Authenticator",
             new=mock_auth_class,
         ),
+        patch(
+            "homeassistant.components.nintendo_parental.coordinator.NintendoParental.update",
+            return_value=None,
+        ),
     ):
         mock_auth = MagicMock()
         mock_auth._id_token = API_TOKEN
