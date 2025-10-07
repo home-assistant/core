@@ -122,8 +122,8 @@ class RpcNumber(ShellyRpcAttributeEntity, NumberEntity):
         await method(self._id, value)
 
 
-class RpcCureIntensityNumber(RpcNumber):
-    """Represent a RPC Cure Intensity entity."""
+class RpcCuryIntensityNumber(RpcNumber):
+    """Represent a RPC Cury Intensity entity."""
 
     @rpc_call
     async def async_set_native_value(self, value: float) -> None:
@@ -304,7 +304,7 @@ RPC_NUMBERS: Final = {
         method="cury_set",
         slot="left",
         available=lambda status: status["left"]["vial"]["level"] != -1,
-        entity_class=RpcCureIntensityNumber,
+        entity_class=RpcCuryIntensityNumber,
     ),
     "right_slot_intensity": RpcNumberDescription(
         key="cury",
@@ -319,7 +319,7 @@ RPC_NUMBERS: Final = {
         method="cury_set",
         slot="right",
         available=lambda status: status["right"]["vial"]["level"] != -1,
-        entity_class=RpcCureIntensityNumber,
+        entity_class=RpcCuryIntensityNumber,
     ),
 }
 
