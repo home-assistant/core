@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pyuptimerobot import UptimeRobotMonitor
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -13,6 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import UptimeRobotConfigEntry
 from .entity import UptimeRobotEntity
+from .utils import new_device_listener
 
 SENSORS_INFO = {
     0: "pause",
@@ -34,38 +37,32 @@ async def async_setup_entry(
     """Set up the UptimeRobot sensors."""
     coordinator = entry.runtime_data
 
-    known_devices: set[int] = set()
-
-    def _check_device() -> None:
-        entities: list[UptimeRobotSensor] = []
-        for monitor in coordinator.data:
-            if monitor.id in known_devices:
-                continue
-            known_devices.add(monitor.id)
-            entities.append(
-                UptimeRobotSensor(
-                    coordinator,
-                    SensorEntityDescription(
-                        key=str(monitor.id),
-                        entity_category=EntityCategory.DIAGNOSTIC,
-                        device_class=SensorDeviceClass.ENUM,
-                        options=[
-                            "down",
-                            "not_checked_yet",
-                            "pause",
-                            "seems_down",
-                            "up",
-                        ],
-                        translation_key="monitor_status",
-                    ),
-                    monitor=monitor,
-                )
+    def _add_new_entities(new_monitors: list[UptimeRobotMonitor]) -> None:
+        """Add entities for new monitors."""
+        entities = [
+            UptimeRobotSensor(
+                coordinator,
+                SensorEntityDescription(
+                    key=str(monitor.id),
+                    entity_category=EntityCategory.DIAGNOSTIC,
+                    device_class=SensorDeviceClass.ENUM,
+                    options=[
+                        "down",
+                        "not_checked_yet",
+                        "pause",
+                        "seems_down",
+                        "up",
+                    ],
+                    translation_key="monitor_status",
+                ),
+                monitor=monitor,
             )
+            for monitor in new_monitors
+        ]
         if entities:
             async_add_entities(entities)
 
-    _check_device()
-    entry.async_on_unload(coordinator.async_add_listener(_check_device))
+    entry.async_on_unload(new_device_listener(coordinator, _add_new_entities))
 
 
 class UptimeRobotSensor(UptimeRobotEntity, SensorEntity):
