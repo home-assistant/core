@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Final
 from .generated.entity_platforms import EntityPlatforms
 from .helpers.deprecation import (
     DeprecatedConstantEnum,
-    EnumWithDeprecatedMembers,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
@@ -704,35 +703,13 @@ class UnitOfMass(StrEnum):
     STONES = "st"
 
 
-class UnitOfConductivity(
-    StrEnum,
-    metaclass=EnumWithDeprecatedMembers,
-    deprecated={
-        "SIEMENS": ("UnitOfConductivity.SIEMENS_PER_CM", "2025.11.0"),
-        "MICROSIEMENS": ("UnitOfConductivity.MICROSIEMENS_PER_CM", "2025.11.0"),
-        "MILLISIEMENS": ("UnitOfConductivity.MILLISIEMENS_PER_CM", "2025.11.0"),
-    },
-):
+class UnitOfConductivity(StrEnum):
     """Conductivity units."""
 
     SIEMENS_PER_CM = "S/cm"
     MICROSIEMENS_PER_CM = "μS/cm"
     MILLISIEMENS_PER_CM = "mS/cm"
 
-    # Deprecated aliases
-    SIEMENS = "S/cm"
-    """Deprecated: Please use UnitOfConductivity.SIEMENS_PER_CM"""
-    MICROSIEMENS = "μS/cm"
-    """Deprecated: Please use UnitOfConductivity.MICROSIEMENS_PER_CM"""
-    MILLISIEMENS = "mS/cm"
-    """Deprecated: Please use UnitOfConductivity.MILLISIEMENS_PER_CM"""
-
-
-_DEPRECATED_CONDUCTIVITY: Final = DeprecatedConstantEnum(
-    UnitOfConductivity.MICROSIEMENS_PER_CM,
-    "2025.11",
-)
-"""Deprecated: please use UnitOfConductivity.MICROSIEMENS_PER_CM"""
 
 # Light units
 LIGHT_LUX: Final = "lx"
