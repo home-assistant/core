@@ -10,8 +10,6 @@ from homeassistant.components.airpatrol.climate import (
     HA_TO_AP_SWING_MODES,
 )
 from homeassistant.components.climate import (
-    ATTR_CURRENT_HUMIDITY,
-    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
     ATTR_HVAC_MODE,
@@ -39,16 +37,19 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import SnapshotAssertion, async_fire_time_changed
+from tests.common import SnapshotAssertion, async_fire_time_changed, snapshot_platform
 
 
 async def test_async_setup_entry_adds_entities(
     hass: HomeAssistant,
     load_integration,
     mock_airpatrol_client,
+    entity_registry: er.EntityRegistry,
     get_data,
     snapshot: SnapshotAssertion,
+    mock_config_entry,
 ) -> None:
     """Test async_setup_entry creates and adds AirPatrolClimate entities that have climate data."""
     unit_with_climate = get_data(unit_id="unit1", name="Unit 1")
@@ -59,8 +60,12 @@ async def test_async_setup_entry_adds_entities(
     ]
     await load_integration()
 
-    assert hass.states.get("climate.unit_1") == snapshot
-    assert hass.states.get("climate.unit_2") == snapshot
+    await snapshot_platform(
+        hass,
+        entity_registry,
+        snapshot,
+        mock_config_entry.entry_id,
+    )
 
 
 async def test_climate_entity_initialization(
@@ -392,25 +397,3 @@ async def test_climate_swing_mode_invalid(
 
     state = hass.states.get("climate.living_room")
     assert state.attributes[ATTR_SWING_MODE] is None
-
-
-async def test_climate_current_temperature(
-    hass: HomeAssistant,
-    load_integration,
-    mock_airpatrol_client,
-) -> None:
-    """Test current_temperature returns correct float value."""
-    await load_integration()
-
-    state = hass.states.get("climate.living_room")
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.5
-
-
-async def test_climate_current_humidity(
-    hass: HomeAssistant, load_integration, mock_airpatrol_client
-) -> None:
-    """Test current_humidity returns correct float value."""
-    await load_integration()
-
-    state = hass.states.get("climate.living_room")
-    assert state.attributes[ATTR_CURRENT_HUMIDITY] == 45.0

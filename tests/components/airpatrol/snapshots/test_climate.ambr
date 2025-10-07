@@ -1,5 +1,57 @@
 # serializer version: 1
-# name: test_async_setup_entry_adds_entities
+# name: test_async_setup_entry_adds_entities[climate.unit_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'low',
+        'high',
+        'auto',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 30.0,
+      'min_temp': 16.0,
+      'swing_modes': list([
+        'on',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.unit_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'airpatrol',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 425>,
+    'translation_key': None,
+    'unique_id': 'test_user_id-unit1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_async_setup_entry_adds_entities[climate.unit_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_humidity': 45.0,
@@ -33,7 +85,4 @@
     'last_updated': <ANY>,
     'state': 'cool',
   })
-# ---
-# name: test_async_setup_entry_adds_entities.1
-  None
 # ---

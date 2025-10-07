@@ -50,14 +50,14 @@ async def validate_api(
         api = await AirPatrolAPI.authenticate(
             session, user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
         )
-        access_token = api.get_access_token()
-        unique_id = api.get_unique_id()
     except AirPatrolAuthenticationError:
         errors["base"] = "invalid_auth"
     except AirPatrolError:
         errors["base"] = "cannot_connect"
-    except Exception:  # noqa: BLE001
-        errors["base"] = "unknown"
+    else:
+        access_token = api.get_access_token()
+        unique_id = api.get_unique_id()
+
     return (access_token, unique_id, errors)
 
 

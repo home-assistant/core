@@ -117,7 +117,6 @@ async def test_async_step_reauth_confirm_another_account_failure(
     [
         (AirPatrolError("fail"), "cannot_connect"),
         (AirPatrolAuthenticationError("fail"), "invalid_auth"),
-        (Exception("fail"), "unknown"),
     ],
 )
 async def test_user_flow_error(

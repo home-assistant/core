@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: Integration does not register custom actions.
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -27,9 +25,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: Integration does not provide custom actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -52,9 +48,7 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices:
-    status: exempt
-    comment: Integration discovers devices only during initial setup, no dynamic addition needed.
+  dynamic-devices: todo
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: todo

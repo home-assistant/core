@@ -46,8 +46,7 @@ async def test_update_data_refresh_token_success(
 
     assert mock_airpatrol_client.get_data.call_count == 2
 
-    state: State | None = hass.states.get("climate.living_room")
-    assert state
+    assert hass.states.get("climate.living_room")
 
 
 async def test_update_data_auth_failure(
