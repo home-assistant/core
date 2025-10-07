@@ -37,6 +37,9 @@
     }
   },
   "exceptions": {
+    "error_setting_temperature": {
+      "message": "Error setting target {tool} temperature"
+    },
     "missing_client": {
       "message": "No client for device ID: {device_id}"
     }

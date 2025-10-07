@@ -128,7 +128,13 @@ class OctoPrintTemperatureNumber(
             elif is_extruder(self._api_tool):
                 await self._client.set_tool_temperature(self._api_tool, int(value))
         except Exception as err:
-            raise HomeAssistantError(f"Error setting target {self._api_tool} temperature") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_setting_temperature",
+                translation_placeholders={
+                    "tool": self._api_tool,
+                },
+            ) from err
 
         # Request coordinator update to reflect the change
         await self.coordinator.async_request_refresh()
