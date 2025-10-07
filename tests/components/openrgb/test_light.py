@@ -1,6 +1,7 @@
 """Tests for the OpenRGB light platform."""
 
 from collections.abc import Generator
+import copy
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -618,39 +619,14 @@ async def test_duplicate_device_names(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that devices with duplicate names get numeric suffixes."""
-    device1 = MagicMock()
+    device1 = copy.deepcopy(mock_openrgb_device)
     device1.id = 3  # Should get suffix "1"
-    device1.name = "ENE DRAM"
-    device1.type = MagicMock()
-    device1.type.name = "DRAM"
-    device1.metadata = MagicMock()
-    device1.metadata.vendor = "ENE"
-    device1.metadata.description = "ENE SMBus Device"
-    device1.metadata.serial = None
     device1.metadata.location = "I2C: PIIX4, address 0x71"
-    device1.metadata.version = "DIMM_LED-0103"
-    device1.active_mode = 0
-    device1.modes = mock_openrgb_device.modes
-    device1.colors = [RGBColor(255, 0, 0)]  # Red
-    device1.set_color = MagicMock()
-    device1.set_mode = MagicMock()
 
-    device2 = MagicMock()
+    # Create a true copy of the first device for device2 to ensure they are separate instances
+    device2 = copy.deepcopy(mock_openrgb_device)
     device2.id = 4  # Should get suffix "2"
-    device2.name = "ENE DRAM"
-    device2.type = MagicMock()
-    device2.type.name = "DRAM"
-    device2.metadata = MagicMock()
-    device2.metadata.vendor = "ENE"
-    device2.metadata.description = "ENE SMBus Device"
-    device2.metadata.serial = None
     device2.metadata.location = "I2C: PIIX4, address 0x72"
-    device2.metadata.version = "DIMM_LED-0103"
-    device2.active_mode = 0
-    device2.modes = mock_openrgb_device.modes
-    device2.colors = [RGBColor(0, 255, 0)]  # Green
-    device2.set_color = MagicMock()
-    device2.set_mode = MagicMock()
 
     mock_openrgb_client.devices = [device1, device2]
     mock_config_entry.add_to_hass(hass)
