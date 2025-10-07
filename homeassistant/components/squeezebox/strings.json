@@ -26,7 +26,7 @@
           "https": "Connect over HTTPS (requires reverse proxy)"
         },
         "data_description": {
-          "host": "[%key:component::squeezebox::config::step::user::data_description::host%]",
+          "host": "The IP address or hostname of the LMS.",
           "port": "The web interface port on the LMS. The default is 9000.",
           "username": "The username from LMS Advanced Security (if defined).",
           "password": "The password from LMS Advanced Security (if defined).",
