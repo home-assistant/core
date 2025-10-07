@@ -23,6 +23,7 @@ DEVICE_MOCKS = [
     "cl_ebt12ypvexnixvtf",  # https://github.com/tuya/tuya-home-assistant/issues/754
     "cl_g1cp07dsqnbdbbki",  # https://github.com/home-assistant/core/issues/139966
     "cl_lfkr93x0ukp5gaia",  # https://github.com/home-assistant/core/issues/152826
+    "cl_n3xgr5pdmpinictg",  # https://github.com/home-assistant/core/issues/153537
     "cl_qqdxfdht",  # https://github.com/orgs/home-assistant/discussions/539
     "cl_rD7uqAAgQOpSA2Rx",  # https://github.com/home-assistant/core/issues/139966
     "cl_zah67ekd",  # https://github.com/home-assistant/core/issues/71242
