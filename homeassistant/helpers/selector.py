@@ -1194,6 +1194,21 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
+
+        if "fields" not in self.config:
+            # Return any object if no fields are defined
+            return data  # type: ignore[unreachable]
+
+        if not isinstance(data, (list, dict)):
+            raise vol.Invalid("Value should be a dict or a list of dicts")
+
+        for _d in data:
+            for field, field_data in self.config["fields"].items():
+                if field_data.get("required") and field not in _d:
+                    raise vol.Invalid(f"Field {field} is required")
+
+        if isinstance(data, list) and not self.config["multiple"]:
+            raise vol.Invalid("Value should not be a list")
         return data
 
 

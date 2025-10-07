@@ -653,7 +653,7 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
     [
-        ({}, ("abc123",), ()),
+        ({"multiple": False}, ("abc123", None), ("kalle")),
         (
             {
                 "fields": {
@@ -669,8 +669,14 @@ def test_action_selector_schema(schema, valid_selections, invalid_selections) ->
                 "label_field": "name",
                 "description_field": "percentage",
             },
-            ("abc123",),
-            (),
+            (
+                [
+                    {"name": "abc123", "percentage": 3},
+                    {"name": "def987", "percentage": 5},
+                ],
+                [{"name": "abc123"}],
+            ),
+            ("abc123", None, [{"name": "abc123", "percentage": "nope"}]),
         ),
     ],
     [],
