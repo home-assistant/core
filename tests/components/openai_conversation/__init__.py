@@ -157,6 +157,7 @@ def create_function_tool_call_item(
         ResponseFunctionCallArgumentsDoneEvent(
             arguments="".join(arguments),
             item_id=id,
+            name=name,
             output_index=output_index,
             sequence_number=0,
             type="response.function_call_arguments.done",

@@ -487,7 +487,7 @@ class OpenAIBaseLLMEntity(Entity):
 
         if options.get(CONF_WEB_SEARCH):
             web_search = WebSearchToolParam(
-                type="web_search_preview",
+                type="web_search",
                 search_context_size=options.get(
                     CONF_WEB_SEARCH_CONTEXT_SIZE, RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE
                 ),
