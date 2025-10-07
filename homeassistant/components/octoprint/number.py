@@ -7,10 +7,11 @@ from typing import cast
 
 from pyoctoprintapi import OctoprintClient, OctoprintPrinterInfo
 
-from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -86,7 +87,7 @@ class OctoPrintTemperatureNumber(
     _attr_native_max_value = 300
     _attr_native_step = 1
     _attr_mode = NumberMode.BOX
-    _attr_icon = "mdi:thermometer"
+    _attr_device_class = NumberDeviceClass.TEMPERATURE
 
     def __init__(
         self,
@@ -114,14 +115,9 @@ class OctoPrintTemperatureNumber(
             for tool in self.coordinator.data["printer"].temperatures
             if tool.name == self._api_tool and tool.target_temp is not None
         ]:
-            return round(tool.target_temp, 2)
+            return tool.target_temp
 
         return None
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.last_update_success and self._client
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the target temperature."""
@@ -131,9 +127,8 @@ class OctoPrintTemperatureNumber(
                 await self._client.set_bed_temperature(int(value))
             elif is_extruder(self._api_tool):
                 await self._client.set_tool_temperature(self._api_tool, int(value))
-        except ApiError as err:
-            _LOGGER.error("Error setting target temperature: %s", err)
-            return
+        except Exception as err:
+            raise HomeAssistantError(f"Error setting target {self._api_tool} temperature") from err
 
         # Request coordinator update to reflect the change
         await self.coordinator.async_request_refresh()
