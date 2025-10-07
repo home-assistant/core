@@ -30,8 +30,9 @@ def config_flow(hass: HomeAssistant) -> FlussConfigFlow:
     return flow
 
 
-async def test_step_user_initial_form(hass: HomeAssistant) -> None:
-    """Test initial form display when no user input is provided."""
+async def test_step_user(hass: HomeAssistant) -> None:
+    """Test user step, including initial form and successful configuration."""
+    # Test initial form display when no user input is provided
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )
@@ -41,11 +42,8 @@ async def test_step_user_initial_form(hass: HomeAssistant) -> None:
     assert result["data_schema"] is STEP_USER_DATA_SCHEMA
     assert result["errors"] == {}
 
-
-async def test_step_user_success(hass: HomeAssistant) -> None:
-    """Test successful user step."""
+    # Test successful configuration with valid user input
     user_input: dict[str, Any] = {CONF_API_KEY: "valid_api_key"}
-
     with patch("fluss_api.FlussApiClient") as mock_client:
         mock_client.return_value = None
         result = await hass.config_entries.flow.async_init(
@@ -55,8 +53,6 @@ async def test_step_user_success(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My Fluss+ Devices"
     assert result["data"] == user_input
-
-
 
 
 @pytest.mark.parametrize(
