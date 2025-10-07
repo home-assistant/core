@@ -1,0 +1,24 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'coordinator_data': dict({
+      'available': True,
+      'last_update_success': True,
+    }),
+    'entry': dict({
+      'data': dict({
+      }),
+      'disabled_by': None,
+      'domain': 'sensirion_ble',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'bluetooth',
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+  })
+# ---
