@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_SLEEP_PERIOD
+from .const import CONF_SLEEP_PERIOD, MODEL_FRANKEVER_WATER_VALVE
 from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -270,12 +270,21 @@ RPC_SENSORS: Final = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "boolean": RpcBinarySensorDescription(
+    "boolean_generic": RpcBinarySensorDescription(
         key="boolean",
         sub_key="value",
         removal_condition=lambda config, _status, key: not is_view_for_platform(
             config, key, BINARY_SENSOR_PLATFORM
         ),
+        role="generic",
+    ),
+    "boolean_has_power": RpcBinarySensorDescription(
+        key="boolean",
+        sub_key="value",
+        device_class=BinarySensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        role="has_power",
+        models={MODEL_FRANKEVER_WATER_VALVE},
     ),
     "calibration": RpcBinarySensorDescription(
         key="blutrv",

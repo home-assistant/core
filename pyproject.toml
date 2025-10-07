@@ -28,7 +28,7 @@ dependencies = [
   # change behavior based on presence of supervisor. Deprecated with #127228
   # Lib can be removed with 2025.11
   "aiohasupervisor==0.3.3",
-  "aiohttp==3.12.15",
+  "aiohttp==3.13.0",
   "aiohttp_cors==0.8.1",
   "aiohttp-fast-zlib==0.3.0",
   "aiohttp-asyncmdnsresolver==0.1.1",
