@@ -141,8 +141,6 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_API_PRECIPITATION_KIND,
         translation_key=ATTR_API_PRECIPITATION_KIND,
-        device_class=SensorDeviceClass.ENUM,
-        options=["None", "Rain", "Snow"],
     ),
     SensorEntityDescription(
         key=ATTR_API_UV_INDEX,
