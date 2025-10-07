@@ -179,6 +179,13 @@ CAPABILITY_TO_SENSORS: dict[
             is_on_key="open",
         )
     },
+    Capability.GAS_DETECTOR: {
+        Attribute.GAS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.GAS,
+            device_class=BinarySensorDeviceClass.GAS,
+            is_on_key="detected",
+        )
+    },
 }
 
 

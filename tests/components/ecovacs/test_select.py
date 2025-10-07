@@ -3,6 +3,7 @@
 from deebot_client.command import Command
 from deebot_client.commands.json import SetWaterInfo
 from deebot_client.event_bus import EventBus
+from deebot_client.events.map import CachedMapInfoEvent, MajorMapEvent, Map
 from deebot_client.events.water_info import WaterAmount, WaterAmountEvent
 from deebot_client.events.work_mode import WorkMode, WorkModeEvent
 import pytest
@@ -36,6 +37,15 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
     """Notify events."""
     event_bus.notify(WaterAmountEvent(WaterAmount.ULTRAHIGH))
     event_bus.notify(WorkModeEvent(WorkMode.VACUUM))
+    event_bus.notify(
+        CachedMapInfoEvent(
+            {
+                Map(id="1", name="", using=False, built=False),
+                Map(id="2", name="Map 2", using=True, built=True),
+            }
+        )
+    )
+    event_bus.notify(MajorMapEvent("2", [], requested=False))
     await block_till_done(hass, event_bus)
 
 
@@ -47,12 +57,21 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
             "yna5x1",
             [
                 "select.ozmo_950_water_flow_level",
+                "select.ozmo_950_active_map",
+            ],
+        ),
+        (
+            "qhe2o2",
+            [
+                "select.dusty_water_flow_level",
+                "select.dusty_active_map",
             ],
         ),
         (
             "n0vyif",
             [
                 "select.x8_pro_omni_work_mode",
+                "select.x8_pro_omni_active_map",
             ],
         ),
     ],

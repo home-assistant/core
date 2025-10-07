@@ -6,6 +6,7 @@ import time
 from unittest.mock import call, patch
 
 import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 from grpc import RpcError
 import pytest
 
@@ -14,9 +15,8 @@ from homeassistant.components.google_assistant_sdk import DOMAIN
 from homeassistant.components.google_assistant_sdk.const import SUPPORTED_LANGUAGE_CODES
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
 
 from .conftest import ComponentSetup, ExpectedCredentials
 
@@ -36,20 +36,26 @@ async def fetch_api_url(hass_client, url):
 async def test_setup_success(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
 ) -> None:
-    """Test successful setup and unload."""
+    """Test successful setup, unload, and re-setup."""
+    # Initial setup
     await setup_integration()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.services.has_service(DOMAIN, "send_text_command")
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state is ConfigEntryState.LOADED
-
-    await hass.config_entries.async_unload(entries[0].entry_id)
+    # Unload the entry
+    await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-
     assert not hass.data.get(DOMAIN)
-    assert entries[0].state is ConfigEntryState.NOT_LOADED
-    assert not hass.services.async_services().get(DOMAIN, {})
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert hass.services.has_service(DOMAIN, "send_text_command")
+
+    # Re-setup the entry
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert hass.services.has_service(DOMAIN, "send_text_command")
 
 
 @pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
@@ -57,6 +63,7 @@ async def test_expired_token_refresh_success(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test expired token is refreshed."""
 
@@ -72,11 +79,9 @@ async def test_expired_token_refresh_success(
 
     await setup_integration()
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state is ConfigEntryState.LOADED
-    assert entries[0].data["token"]["access_token"] == "updated-access-token"
-    assert entries[0].data["token"]["expires_in"] == 3600
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.data["token"]["access_token"] == "updated-access-token"
+    assert config_entry.data["token"]["expires_in"] == 3600
 
 
 @pytest.mark.parametrize(
@@ -101,6 +106,7 @@ async def test_expired_token_refresh_failure(
     aioclient_mock: AiohttpClientMocker,
     status: http.HTTPStatus,
     expected_state: ConfigEntryState,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test failure while refreshing token with a transient error."""
 
@@ -112,8 +118,7 @@ async def test_expired_token_refresh_failure(
     await setup_integration()
 
     # Verify a transient failure has occurred
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert entries[0].state is expected_state
+    assert config_entry.state is expected_state
 
 
 @pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
@@ -121,6 +126,7 @@ async def test_setup_client_error(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test setup handling aiohttp.ClientError."""
     aioclient_mock.post(
@@ -130,32 +136,38 @@ async def test_setup_client_error(
 
     await setup_integration()
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            DOMAIN, "send_text_command", {"command": "some command"}, blocking=True
+        )
+    assert exc.value.translation_key == "entry_not_loaded"
 
 
 @pytest.mark.parametrize(
-    ("configured_language_code", "expected_language_code"),
-    [("", "en-US"), ("en-US", "en-US"), ("es-ES", "es-ES")],
+    ("options", "expected_language_code"),
+    [
+        ({}, "en-US"),
+        ({"language_code": "en-US"}, "en-US"),
+        ({"language_code": "es-ES"}, "es-ES"),
+    ],
     ids=["default", "english", "spanish"],
 )
 async def test_send_text_command(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    configured_language_code: str,
+    options: dict[str, str],
     expected_language_code: str,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test service call send_text_command calls TextAssistant."""
     await setup_integration()
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state is ConfigEntryState.LOADED
-    if configured_language_code:
-        hass.config_entries.async_update_entry(
-            entries[0], options={"language_code": configured_language_code}
-        )
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    hass.config_entries.async_update_entry(config_entry, options=options)
+    await hass.async_block_till_done()
 
     command = "turn on home assistant unsupported device"
     with patch(
@@ -177,13 +189,12 @@ async def test_send_text_command(
 async def test_send_text_commands(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test service call send_text_command calls TextAssistant."""
     await setup_integration()
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0].state is ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     command1 = "open the garage door"
     command2 = "1234"
@@ -229,17 +240,15 @@ async def test_send_text_command_expired_token_refresh_failure(
     aioclient_mock: AiohttpClientMocker,
     status: http.HTTPStatus,
     requires_reauth: ConfigEntryState,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test failure refreshing token in send_text_command."""
     await async_setup_component(hass, "homeassistant", {})
     await setup_integration()
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    entry = entries[0]
-    assert entry.state is ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
-    entry.data["token"]["expires_at"] = time.time() - 3600
+    config_entry.data["token"]["expires_at"] = time.time() - 3600
     aioclient_mock.post(
         "https://oauth2.googleapis.com/token",
         status=status,
@@ -253,7 +262,7 @@ async def test_send_text_command_expired_token_refresh_failure(
             blocking=True,
         )
 
-    assert any(entry.async_get_active_flows(hass, {"reauth"})) == requires_reauth
+    assert any(config_entry.async_get_active_flows(hass, {"reauth"})) == requires_reauth
 
 
 async def test_send_text_command_grpc_error(
@@ -284,6 +293,7 @@ async def test_send_text_command_media_player(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     hass_client: ClientSessionGenerator,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test send_text_command with media_player."""
     await setup_integration()
@@ -348,7 +358,8 @@ async def test_send_text_command_media_player(
     assert status == http.HTTPStatus.NOT_FOUND
 
     # Assert that both audio responses can still be served before the 5 minutes expiration
-    async_fire_time_changed(hass, utcnow() + timedelta(minutes=4))
+    freezer.tick(timedelta(minutes=4, seconds=59))
+    async_fire_time_changed(hass)
     status, response = await fetch_api_url(hass_client, audio_url1)
     assert status == http.HTTPStatus.OK
     assert response == audio_response1
@@ -357,10 +368,11 @@ async def test_send_text_command_media_player(
     assert response == audio_response2
 
     # Assert that they cannot be served after the 5 minutes expiration
-    async_fire_time_changed(hass, utcnow() + timedelta(minutes=6))
-    status, response = await fetch_api_url(hass_client, audio_url1)
+    freezer.tick(timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    status, _ = await fetch_api_url(hass_client, audio_url1)
     assert status == http.HTTPStatus.NOT_FOUND
-    status, response = await fetch_api_url(hass_client, audio_url2)
+    status, _ = await fetch_api_url(hass_client, audio_url2)
     assert status == http.HTTPStatus.NOT_FOUND
 
 
@@ -375,12 +387,9 @@ async def test_conversation_agent(
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    entry = entries[0]
-    assert entry.state is ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
-    agent = conversation.get_agent_manager(hass).async_get_agent(entry.entry_id)
+    agent = conversation.get_agent_manager(hass).async_get_agent(config_entry.entry_id)
     assert agent.supported_languages == SUPPORTED_LANGUAGE_CODES
 
     text1 = "tell me a joke"
@@ -414,10 +423,7 @@ async def test_conversation_agent_refresh_token(
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    entry = entries[0]
-    assert entry.state is ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     text1 = "tell me a joke"
     text2 = "tell me another one"
@@ -429,7 +435,7 @@ async def test_conversation_agent_refresh_token(
         )
 
         # Expire the token between requests
-        entry.data["token"]["expires_at"] = time.time() - 3600
+        config_entry.data["token"]["expires_at"] = time.time() - 3600
         updated_access_token = "updated-access-token"
         aioclient_mock.post(
             "https://oauth2.googleapis.com/token",
@@ -466,10 +472,7 @@ async def test_conversation_agent_language_changed(
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    entry = entries[0]
-    assert entry.state is ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     text1 = "tell me a joke"
     text2 = "cuéntame un chiste"

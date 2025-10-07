@@ -12,16 +12,14 @@
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "language": "[%key:common::config_flow::data::language%]",
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "location": "[%key:common::config_flow::data::location%]",
           "mode": "[%key:common::config_flow::data::mode%]",
           "name": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
           "api_key": "API key for the OpenWeatherMap integration",
           "language": "Language for the OpenWeatherMap content",
-          "latitude": "Latitude of the location",
-          "longitude": "Longitude of the location",
+          "location": "Location to get the weather data for",
           "mode": "Mode for the OpenWeatherMap API",
           "name": "Name for this OpenWeatherMap location"
         },

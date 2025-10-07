@@ -7,7 +7,7 @@
   "iot_class": "local_polling",
   "loggers": ["pyenphase"],
   "quality_scale": "platinum",
-  "requirements": ["pyenphase==2.3.0"],
+  "requirements": ["pyenphase==2.4.0"],
   "zeroconf": [
     {
       "type": "_enphase-envoy._tcp.local."

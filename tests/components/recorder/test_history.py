@@ -51,7 +51,7 @@ def multiple_start_time_chunk_sizes(
     to call _generate_significant_states_with_session_stmt multiple times.
     """
     with patch(
-        "homeassistant.components.recorder.history.modern.MAX_IDS_FOR_INDEXED_GROUP_BY",
+        "homeassistant.components.recorder.history.MAX_IDS_FOR_INDEXED_GROUP_BY",
         ids_for_start_time_chunk_sizes,
     ):
         yield

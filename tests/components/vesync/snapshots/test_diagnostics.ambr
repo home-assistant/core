@@ -53,7 +53,6 @@
         'device_status': 'on',
         'device_type': 'Classic200S',
         'display': 'Method',
-        'displayJSON': 'Method',
         'enabled': 'Method',
         'features': list([
           'night_light',
@@ -173,7 +172,6 @@
     'device_status': 'on',
     'device_type': 'fan',
     'display': 'Method',
-    'displayJSON': 'Method',
     'enabled': 'Method',
     'fan_levels': 'Method',
     'features': 'Method',
@@ -252,7 +250,7 @@
               'friendly_name': 'Test Fan',
               'preset_modes': list([
               ]),
-              'supported_features': 57,
+              'supported_features': 59,
             }),
             'entity_id': 'fan.test_fan',
             'last_changed': str,

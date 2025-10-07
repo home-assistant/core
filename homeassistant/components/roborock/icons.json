@@ -52,6 +52,12 @@
       "total_cleaning_time": {
         "default": "mdi:history"
       },
+      "cleaning_brush_time_left": {
+        "default": "mdi:brush"
+      },
+      "strainer_time_left": {
+        "default": "mdi:filter-variant"
+      },
       "status": {
         "default": "mdi:information-outline"
       },

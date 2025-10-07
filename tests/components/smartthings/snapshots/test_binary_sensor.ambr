@@ -1,4 +1,102 @@
 # serializer version: 1
+# name: test_all_entities[aeotec_ms6][binary_sensor.parent_s_bedroom_sensor_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.parent_s_bedroom_sensor_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Motion',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00f9233e-fdaa-4020-99d4-e0073e53996a_main_motionSensor_motion_motion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[aeotec_ms6][binary_sensor.parent_s_bedroom_sensor_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'motion',
+      'friendly_name': "Parent's Bedroom Sensor Motion",
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.parent_s_bedroom_sensor_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[aeotec_ms6][binary_sensor.parent_s_bedroom_sensor_tamper-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.parent_s_bedroom_sensor_tamper',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
+    'original_icon': None,
+    'original_name': 'Tamper',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00f9233e-fdaa-4020-99d4-e0073e53996a_main_tamperAlert_tamper_tamper',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[aeotec_ms6][binary_sensor.parent_s_bedroom_sensor_tamper-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'tamper',
+      'friendly_name': "Parent's Bedroom Sensor Tamper",
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.parent_s_bedroom_sensor_tamper',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[c2c_arlo_pro_3_switch][binary_sensor.2nd_floor_hallway_motion-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2566,6 +2664,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.child_bedroom_presence',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[gas_detector][binary_sensor.gas_detector_gas-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.gas_detector_gas',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.GAS: 'gas'>,
+    'original_icon': None,
+    'original_name': 'Gas',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'd830b46f-f094-4560-b8c3-7690032fdb4c_main_gasDetector_gas_gas',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[gas_detector][binary_sensor.gas_detector_gas-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'gas',
+      'friendly_name': 'Gas Detector Gas',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gas_detector_gas',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

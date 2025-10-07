@@ -4,7 +4,11 @@ from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate
 
-from aiocomelit import ComelitSerialBridgeObject
+from aiocomelit.api import (
+    ComelitSerialBridgeObject,
+    ComelitVedoAreaObject,
+    ComelitVedoZoneObject,
+)
 from aiocomelit.exceptions import CannotAuthenticate, CannotConnect, CannotRetrieveData
 from aiohttp import ClientSession, CookieJar
 
@@ -19,7 +23,10 @@ from homeassistant.helpers import (
 )
 
 from .const import _LOGGER, DOMAIN
+from .coordinator import ComelitBaseCoordinator
 from .entity import ComelitBridgeBaseEntity
+
+DeviceType = ComelitSerialBridgeObject | ComelitVedoAreaObject | ComelitVedoZoneObject
 
 
 async def async_client_session(hass: HomeAssistant) -> ClientSession:
@@ -113,3 +120,41 @@ def bridge_api_call[_T: ComelitBridgeBaseEntity, **_P](
             self.coordinator.config_entry.async_start_reauth(self.hass)
 
     return cmd_wrapper
+
+
+def new_device_listener(
+    coordinator: ComelitBaseCoordinator,
+    new_devices_callback: Callable[
+        [
+            list[
+                ComelitSerialBridgeObject
+                | ComelitVedoAreaObject
+                | ComelitVedoZoneObject
+            ],
+            str,
+        ],
+        None,
+    ],
+    data_type: str,
+) -> Callable[[], None]:
+    """Subscribe to coordinator updates to check for new devices."""
+    known_devices: set[int] = set()
+
+    def _check_devices() -> None:
+        """Check for new devices and call callback with any new monitors."""
+        if not coordinator.data:
+            return
+
+        new_devices: list[DeviceType] = []
+        for _id in coordinator.data[data_type]:
+            if _id not in known_devices:
+                known_devices.add(_id)
+                new_devices.append(coordinator.data[data_type][_id])
+
+        if new_devices:
+            new_devices_callback(new_devices, data_type)
+
+    # Check for devices immediately
+    _check_devices()
+
+    return coordinator.async_add_listener(_check_devices)

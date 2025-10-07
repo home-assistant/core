@@ -38,6 +38,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -47,6 +48,7 @@ from . import (
     get_entity,
     init_integration,
     mutate_rpc_device_status,
+    patch_platforms,
     register_device,
     register_entity,
 )
@@ -55,6 +57,13 @@ from .conftest import mock_white_light_set_state
 RELAY_BLOCK_ID = 0
 LIGHT_BLOCK_ID = 2
 SHELLY_PLUS_RGBW_CHANNELS = 4
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms([Platform.LIGHT]):
+        yield
 
 
 async def test_block_device_rgbw_bulb(

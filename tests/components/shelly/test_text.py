@@ -13,13 +13,20 @@ from homeassistant.components.text import (
     SERVICE_SET_VALUE,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import init_integration, register_device, register_entity
+from . import init_integration, patch_platforms, register_device, register_entity
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms([Platform.TEXT]):
+        yield
 
 
 @pytest.mark.parametrize(
@@ -55,7 +62,7 @@ async def test_rpc_device_virtual_text(
     assert state.state == "lorem ipsum"
 
     assert (entry := entity_registry.async_get(entity_id))
-    assert entry.unique_id == "123456789ABC-text:203-text"
+    assert entry.unique_id == "123456789ABC-text:203-text_generic"
 
     monkeypatch.setitem(mock_rpc_device.status["text:203"], "value", "dolor sit amet")
     mock_rpc_device.mock_update()
@@ -100,7 +107,7 @@ async def test_rpc_remove_virtual_text_when_mode_label(
         hass,
         TEXT_PLATFORM,
         "test_name_text_200",
-        "text:200-text",
+        "text:200-text_generic",
         config_entry,
         device_id=device_entry.id,
     )
@@ -124,7 +131,7 @@ async def test_rpc_remove_virtual_text_when_orphaned(
         hass,
         TEXT_PLATFORM,
         "test_name_text_200",
-        "text:200-text",
+        "text:200-text_generic",
         config_entry,
         device_id=device_entry.id,
     )

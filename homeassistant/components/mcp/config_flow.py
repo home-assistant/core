@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
@@ -23,7 +24,13 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 
 from . import async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
-from .const import CONF_ACCESS_TOKEN, CONF_AUTHORIZATION_URL, CONF_TOKEN_URL, DOMAIN
+from .const import (
+    CONF_ACCESS_TOKEN,
+    CONF_AUTHORIZATION_URL,
+    CONF_SCOPE,
+    CONF_TOKEN_URL,
+    DOMAIN,
+)
 from .coordinator import TokenManager, mcp_client
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,9 +48,17 @@ MCP_DISCOVERY_HEADERS = {
 }
 
 
+@dataclass
+class OAuthConfig:
+    """Class to hold OAuth configuration."""
+
+    authorization_server: AuthorizationServer
+    scopes: list[str] | None = None
+
+
 async def async_discover_oauth_config(
     hass: HomeAssistant, mcp_server_url: str
-) -> AuthorizationServer:
+) -> OAuthConfig:
     """Discover the OAuth configuration for the MCP server.
 
     This implements the functionality in the MCP spec for discovery. If the MCP server URL
@@ -65,9 +80,11 @@ async def async_discover_oauth_config(
     except httpx.HTTPStatusError as error:
         if error.response.status_code == 404:
             _LOGGER.info("Authorization Server Metadata not found, using default paths")
-            return AuthorizationServer(
-                authorize_url=str(parsed_url.with_path("/authorize")),
-                token_url=str(parsed_url.with_path("/token")),
+            return OAuthConfig(
+                authorization_server=AuthorizationServer(
+                    authorize_url=str(parsed_url.with_path("/authorize")),
+                    token_url=str(parsed_url.with_path("/token")),
+                )
             )
         raise CannotConnect from error
     except httpx.HTTPError as error:
@@ -81,9 +98,15 @@ async def async_discover_oauth_config(
         authorize_url = str(parsed_url.with_path(authorize_url))
     if token_url.startswith("/"):
         token_url = str(parsed_url.with_path(token_url))
-    return AuthorizationServer(
-        authorize_url=authorize_url,
-        token_url=token_url,
+    # We have no way to know the minimum set of scopes needed, so request
+    # all of them and let the user limit during the authorization step.
+    scopes = data.get("scopes_supported")
+    return OAuthConfig(
+        authorization_server=AuthorizationServer(
+            authorize_url=authorize_url,
+            token_url=token_url,
+        ),
+        scopes=scopes,
     )
 
 
@@ -130,6 +153,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Initialize the config flow."""
         super().__init__()
         self.data: dict[str, Any] = {}
+        self.oauth_config: OAuthConfig | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -170,7 +194,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         to find the OAuth medata then run the OAuth authentication flow.
         """
         try:
-            authorization_server = await async_discover_oauth_config(
+            oauth_config = await async_discover_oauth_config(
                 self.hass, self.data[CONF_URL]
             )
         except TimeoutConnectError:
@@ -181,11 +205,13 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
         else:
-            _LOGGER.info("OAuth configuration: %s", authorization_server)
+            _LOGGER.info("OAuth configuration: %s", oauth_config)
+            self.oauth_config = oauth_config
             self.data.update(
                 {
-                    CONF_AUTHORIZATION_URL: authorization_server.authorize_url,
-                    CONF_TOKEN_URL: authorization_server.token_url,
+                    CONF_AUTHORIZATION_URL: oauth_config.authorization_server.authorize_url,
+                    CONF_TOKEN_URL: oauth_config.authorization_server.token_url,
+                    CONF_SCOPE: oauth_config.scopes,
                 }
             )
             return await self.async_step_credentials_choice()
@@ -196,6 +222,15 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self.data[CONF_AUTHORIZATION_URL],
             self.data[CONF_TOKEN_URL],
         )
+
+    @property
+    def extra_authorize_data(self) -> dict:
+        """Extra data that needs to be appended to the authorize url."""
+        data = {}
+        if self.data and (scopes := self.data[CONF_SCOPE]) is not None:
+            data[CONF_SCOPE] = " ".join(scopes)
+        data.update(super().extra_authorize_data)
+        return data
 
     async def async_step_credentials_choice(
         self, user_input: dict[str, Any] | None = None

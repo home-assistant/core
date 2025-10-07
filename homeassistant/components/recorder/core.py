@@ -56,7 +56,6 @@ from .const import (
     DEFAULT_MAX_BIND_VARS,
     DOMAIN,
     KEEPALIVE_TIME,
-    LAST_REPORTED_SCHEMA_VERSION,
     MARIADB_PYMYSQL_URL_PREFIX,
     MARIADB_URL_PREFIX,
     MAX_QUEUE_BACKLOG_MIN_VALUE,
@@ -806,6 +805,10 @@ class Recorder(threading.Thread):
 
         # Catch up with missed statistics
         self._schedule_compile_missing_statistics()
+
+        # Kick off live migrations
+        migration.migrate_data_live(self, self.get_session, schema_status)
+
         _LOGGER.debug("Recorder processing the queue")
         self._adjust_lru_size()
         self.hass.add_job(self._async_set_recorder_ready_migration_done)
@@ -821,8 +824,6 @@ class Recorder(threading.Thread):
             # herd of queries to find the statistics meta data if
             # there are a lot of statistics graphs on the frontend.
             self.statistics_meta_manager.load(session)
-
-        migration.migrate_data_live(self, self.get_session, schema_status)
 
         # We must only set the db ready after we have set the table managers
         # to active if there is no data to migrate.
@@ -1224,7 +1225,7 @@ class Recorder(threading.Thread):
         if (
             pending_last_reported
             := self.states_manager.get_pending_last_reported_timestamp()
-        ) and self.schema_version >= LAST_REPORTED_SCHEMA_VERSION:
+        ):
             with session.no_autoflush:
                 session.execute(
                     update(States),

@@ -460,6 +460,63 @@ MOCK_SUBENTRY_NOTIFY_BAD_SCHEMA = {
         "command_topic": "bad#topic",
     },
 }
+MOCK_SUBENTRY_NUMBER_COMPONENT_CUSTOM_UNIT = {
+    "f9261f6feed443e7b7d5f3fbe2a47413": {
+        "platform": "number",
+        "name": "Speed",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "min": 0.0,
+        "max": 10.0,
+        "step": 2.0,
+        "mode": "box",
+        "unit_of_measurement": "bla",
+        "value_template": "{{ value_json.value }}",
+        "payload_reset": "None",
+        "retain": False,
+        "entity_picture": "https://example.com/f9261f6feed443e7b7d5f3fbe2a47413",
+    },
+}
+MOCK_SUBENTRY_NUMBER_COMPONENT_DEVICE_CLASS_UNIT = {
+    "f9261f6feed443e7b7d5f3fbe2a47414": {
+        "platform": "number",
+        "name": "Speed",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "min": 0.0,
+        "max": 10.0,
+        "step": 2.0,
+        "mode": "slider",
+        "device_class": "carbon_monoxide",
+        "unit_of_measurement": "ppm",
+        "value_template": "{{ value_json.value }}",
+        "payload_reset": "None",
+        "retain": False,
+        "entity_picture": "https://example.com/f9261f6feed443e7b7d5f3fbe2a47414",
+    },
+}
+MOCK_SUBENTRY_NUMBER_COMPONENT_NO_UNIT = {
+    "f9261f6feed443e7b7d5f3fbe2a47414": {
+        "platform": "number",
+        "name": "Speed",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "min": 0.0,
+        "max": 10.0,
+        "step": 2.0,
+        "mode": "auto",
+        "value_template": "{{ value_json.value }}",
+        "payload_reset": "None",
+        "retain": False,
+        "entity_picture": "https://example.com/f9261f6feed443e7b7d5f3fbe2a47414",
+    },
+}
 MOCK_SUBENTRY_SENSOR_COMPONENT = {
     "e9261f6feed443e7b7d5f3fbe2a47412": {
         "platform": "sensor",
@@ -526,6 +583,7 @@ MOCK_SUBENTRY_DEVICE_DATA = {
     "hw_version": "2.1 rev a",
     "model": "Model XL",
     "model_id": "mn002",
+    "manufacturer": "Milk Masters",
     "configuration_url": "https://example.com",
 }
 
@@ -597,6 +655,18 @@ MOCK_NOTIFY_SUBENTRY_DATA_SINGLE = {
 MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME,
+}
+MOCK_NUMBER_SUBENTRY_DATA_CUSTOM_UNIT = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_NUMBER_COMPONENT_CUSTOM_UNIT,
+}
+MOCK_NUMBER_SUBENTRY_DATA_DEVICE_CLASS_UNIT = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_NUMBER_COMPONENT_DEVICE_CLASS_UNIT,
+}
+MOCK_NUMBER_SUBENTRY_DATA_NO_UNIT = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_NUMBER_COMPONENT_NO_UNIT,
 }
 MOCK_SENSOR_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},

@@ -156,7 +156,7 @@ async def async_setup_entry(
                     for description in SENSOR_TYPES
                 ]
             )
-        async_add_entities(entities, True)
+        async_add_entities(entities)
 
     _async_add_kraken_sensors(config_entry.options[CONF_TRACKED_ASSET_PAIRS])
 
