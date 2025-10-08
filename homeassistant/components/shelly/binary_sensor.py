@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import CONF_SLEEP_PERIOD
+from .const import CONF_SLEEP_PERIOD, MODEL_FRANKEVER_WATER_VALVE
 from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -270,12 +270,21 @@ RPC_SENSORS: Final = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "boolean": RpcBinarySensorDescription(
+    "boolean_generic": RpcBinarySensorDescription(
         key="boolean",
         sub_key="value",
         removal_condition=lambda config, _status, key: not is_view_for_platform(
             config, key, BINARY_SENSOR_PLATFORM
         ),
+        role="generic",
+    ),
+    "boolean_has_power": RpcBinarySensorDescription(
+        key="boolean",
+        sub_key="value",
+        device_class=BinarySensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        role="has_power",
+        models={MODEL_FRANKEVER_WATER_VALVE},
     ),
     "calibration": RpcBinarySensorDescription(
         key="blutrv",
@@ -298,6 +307,17 @@ RPC_SENSORS: Final = {
         name="Mute",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    "flood_cable_unplugged": RpcBinarySensorDescription(
+        key="flood",
+        sub_key="errors",
+        value=lambda status, _: False
+        if status is None
+        else "cable_unplugged" in status,
+        name="Cable unplugged",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        supported=lambda status: status.get("alarm") is not None,
+    ),
     "presence_num_objects": RpcBinarySensorDescription(
         key="presence",
         sub_key="num_objects",
@@ -308,7 +328,7 @@ RPC_SENSORS: Final = {
     ),
     "presencezone_state": RpcBinarySensorDescription(
         key="presencezone",
-        sub_key="state",
+        sub_key="value",
         name="Occupancy",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
         entity_class=RpcPresenceBinarySensor,

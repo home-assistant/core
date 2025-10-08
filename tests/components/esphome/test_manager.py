@@ -1455,6 +1455,37 @@ async def test_no_reauth_wrong_mac(
     )
 
 
+async def test_auth_error_during_on_connect_triggers_reauth(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+) -> None:
+    """Test that InvalidAuthAPIError during on_connect triggers reauth."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="11:22:33:44:55:aa",
+        data={
+            CONF_HOST: "test.local",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "wrong_password",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    mock_client.device_info_and_list_entities = AsyncMock(
+        side_effect=InvalidAuthAPIError("Invalid password!")
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
+    assert mock_client.disconnect.call_count >= 1
+
+
 async def test_entry_missing_unique_id(
     hass: HomeAssistant,
     mock_client: APIClient,
