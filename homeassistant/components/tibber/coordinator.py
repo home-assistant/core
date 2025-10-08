@@ -24,6 +24,7 @@ from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import EnergyConverter
 
 from .const import DOMAIN
 
@@ -70,15 +71,29 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
     async def _insert_statistics(self) -> None:
         """Insert Tibber statistics."""
         for home in self._tibber_connection.get_homes():
-            sensors: list[tuple[str, bool, str]] = []
+            sensors: list[tuple[str, bool, str, str | None]] = []
             if home.hourly_consumption_data:
-                sensors.append(("consumption", False, UnitOfEnergy.KILO_WATT_HOUR))
-                sensors.append(("totalCost", False, home.currency))
+                sensors.append(
+                    (
+                        "consumption",
+                        False,
+                        UnitOfEnergy.KILO_WATT_HOUR,
+                        EnergyConverter.UNIT_CLASS,
+                    )
+                )
+                sensors.append(("totalCost", False, home.currency, None))
             if home.hourly_production_data:
-                sensors.append(("production", True, UnitOfEnergy.KILO_WATT_HOUR))
-                sensors.append(("profit", True, home.currency))
+                sensors.append(
+                    (
+                        "production",
+                        True,
+                        UnitOfEnergy.KILO_WATT_HOUR,
+                        EnergyConverter.UNIT_CLASS,
+                    )
+                )
+                sensors.append(("profit", True, home.currency, None))
 
-            for sensor_type, is_production, unit in sensors:
+            for sensor_type, is_production, unit_class, unit in sensors:
                 statistic_id = (
                     f"{DOMAIN}:energy_"
                     f"{sensor_type.lower()}_"
@@ -168,6 +183,7 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                     name=f"{home.name} {sensor_type}",
                     source=DOMAIN,
                     statistic_id=statistic_id,
+                    unit_class=unit_class,
                     unit_of_measurement=unit,
                 )
                 async_add_external_statistics(self.hass, metadata, statistics)
