@@ -13,6 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.template import Template
 
+from .conftest import async_setup_component
+
 
 @pytest.mark.parametrize(
     "config",
@@ -97,6 +99,120 @@ async def test_invalid_default_entity_id(
     }
     with pytest.raises(vol.Invalid):
         CONFIG_SECTION_SCHEMA(config)
+
+
+@pytest.mark.parametrize(
+    ("config", "expected_error"),
+    [
+        (
+            {
+                "trigger": {"trigger": "event", "event_type": "my_event"},
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "unique_id": "test",
+                    "name": "test",
+                    "auto_off": "00:00:01",
+                },
+            },
+            None,
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "name": "test",
+                },
+            },
+            None,
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: name: Template Binary Sensor",
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "name": "test",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: name: test",
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "unique_id": "test_unique_id",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: unique_id: test_unique_id",
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "name": "test",
+                    "unique_id": "test_unique_id",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: name: test",
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "default_entity_id": "binary_sensor.test_entity_id",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: default_entity_id: binary_sensor.test_entity_id",
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "name": "test",
+                    "unique_id": "test_unique_id",
+                    "default_entity_id": "binary_sensor.test_entity_id",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: name: test",
+        ),
+        (
+            {
+                "binary_sensor": {
+                    "state": "{{ states('binary_sensor.test') }}",
+                    "unique_id": "test_unique_id",
+                    "default_entity_id": "binary_sensor.test_entity_id",
+                    "auto_off": "00:00:01",
+                },
+            },
+            "The auto_off option for template binary sensor: default_entity_id: binary_sensor.test_entity_id",
+        ),
+    ],
+)
+async def test_invalid_binary_sensor_schema_with_auto_off(
+    hass: HomeAssistant,
+    config: dict,
+    expected_error: str | None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config schemas create issue and log warning."""
+
+    await async_setup_component(hass, "template", {"template": [config]})
+
+    assert (
+        expected_error is None and "ERROR" not in caplog.text
+    ) or expected_error in caplog.text
 
 
 @pytest.mark.parametrize(
