@@ -54,6 +54,7 @@ from .const import (
     ATTR_FILE_ID,
     ATTR_FILE_MIME_TYPE,
     ATTR_FILE_NAME,
+    ATTR_FILE_SIZE,
     ATTR_FROM_FIRST,
     ATTR_FROM_LAST,
     ATTR_KEYBOARD,
@@ -200,6 +201,7 @@ class BaseTelegramBot:
             return {
                 ATTR_FILE_ID: photos[-1].file_id,
                 ATTR_FILE_MIME_TYPE: "image/jpeg",  # telegram always uses jpeg for photos
+                ATTR_FILE_SIZE: photos[-1].file_size,
             }
         return {
             k: getattr(message.effective_attachment, v)
@@ -207,6 +209,7 @@ class BaseTelegramBot:
                 (ATTR_FILE_ID, "file_id"),
                 (ATTR_FILE_NAME, "file_name"),
                 (ATTR_FILE_MIME_TYPE, "mime_type"),
+                (ATTR_FILE_SIZE, "file_size"),
             )
             if hasattr(message.effective_attachment, v)
         }
