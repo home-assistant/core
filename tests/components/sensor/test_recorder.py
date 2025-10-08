@@ -3278,7 +3278,7 @@ async def test_list_statistic_ids_unsupported(
         (None, "m³", "m3", "volume", 13.050847, -10, 30),
         # Can't yet convert carbon_monoxide
         ("carbon_monoxide", "ppm", "mg/m³", "unitless", 13.050847, -10, 30),
-        ("carbon_monoxide", "mg/m³", "ppm", "carbon_monoxide", 13.050847, -10, 30),
+        ("carbon_monoxide", "mg/m³", "ppm", "concentration", 13.050847, -10, 30),
     ],
 )
 async def test_compile_hourly_statistics_changing_units_1(
