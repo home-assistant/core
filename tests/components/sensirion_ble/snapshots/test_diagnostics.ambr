@@ -22,30 +22,5 @@
       'unique_id': '**REDACTED**',
       'version': 1,
     }),
-    'processor_data': dict({
-      'devices': dict({
-        None: dict({
-          'identifiers': set({
-            tuple([
-              'sensirion_ble',
-              '84E3',
-            ]),
-          }),
-          'manufacturer': 'Sensirion',
-          'model': 'MyCO2',
-          'name': 'MyCO2 84E3',
-        }),
-      }),
-      'entity_data': dict({
-        'carbon_dioxide___': 724,
-        'humidity___': 27.8,
-        'temperature___': 20.1,
-      }),
-      'entity_names': dict({
-        'carbon_dioxide___': 'Carbon dioxide',
-        'humidity___': 'Humidity',
-        'temperature___': 'Temperature',
-      }),
-    }),
   })
 # ---
