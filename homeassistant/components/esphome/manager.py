@@ -591,7 +591,7 @@ class ESPHomeManager:
         # is connected to the ESPHome device and do not have to guess
         # if its a broken connection or Z-Wave controller or a not
         # yet provisioned controller.
-        zwave_home_id: int = UNPACK_UINT32_BE(request.data)[0]
+        zwave_home_id: int = UNPACK_UINT32_BE(request.data[0:4])[0]
         assert self.entry_data.device_info is not None
         self.entry_data.async_create_zwave_js_flow(
             self.hass, self.entry_data.device_info, zwave_home_id
