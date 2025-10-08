@@ -26,9 +26,6 @@
       "detected_objects": {
         "default": "mdi:account-group"
       },
-      "fragrance_name": {
-        "default": "mdi:scent"
-      },
       "gas_concentration": {
         "default": "mdi:gauge"
       },
@@ -52,6 +49,9 @@
       },
       "valve_status": {
         "default": "mdi:valve"
+      },
+      "vial_name": {
+        "default": "mdi:scent"
       },
       "illuminance_level": {
         "default": "mdi:brightness-5"
