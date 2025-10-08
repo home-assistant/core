@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pynintendoparental.authenticator import Authenticator
+from pynintendoparental import Authenticator
 from pynintendoparental.exceptions import (
     InvalidOAuthConfigurationException,
     InvalidSessionTokenException,
