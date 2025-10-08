@@ -367,13 +367,13 @@ class ESPHomeManager:
             vol.Invalid,
             HomeAssistantError,
         ) as ex:
-            await self._send_service_call_response(
+            self._send_service_call_response(
                 call_id, success=False, error_message=str(ex), response_data=b""
             )
 
         else:
             # Send success response back to ESPHome
-            await self._send_service_call_response(
+            self._send_service_call_response(
                 call_id=call_id,
                 success=True,
                 error_message="",
@@ -389,11 +389,11 @@ class ESPHomeManager:
                 domain, service_name, service_data, blocking=True
             )
         except (ServiceNotFound, ServiceValidationError, vol.Invalid) as ex:
-            await self._send_service_call_response(call_id, False, str(ex), b"")
+            self._send_service_call_response(call_id, False, str(ex), b"")
         else:
-            await self._send_service_call_response(call_id, True, "", b"")
+            self._send_service_call_response(call_id, True, "", b"")
 
-    async def _send_service_call_response(
+    def _send_service_call_response(
         self,
         call_id: int,
         success: bool,
@@ -407,7 +407,7 @@ class ESPHomeManager:
             success,
             error_message,
         )
-        await self.cli.send_homeassistant_action_response(
+        self.cli.send_homeassistant_action_response(
             call_id,
             success,
             error_message,
