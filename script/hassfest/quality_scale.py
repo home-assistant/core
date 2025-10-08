@@ -240,7 +240,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "cisco_ios",
     "cisco_mobility_express",
     "cisco_webex_teams",
-    "citybikes",
     "clementine",
     "clickatell",
     "clicksend",
