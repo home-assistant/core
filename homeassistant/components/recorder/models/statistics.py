@@ -71,6 +71,7 @@ class StatisticMetaData(TypedDict):
     source: str
     statistic_id: str
     unit_class: str | None
+    """Specifies the unit conversion class to use, if applicable."""
     unit_of_measurement: str | None
 
 

@@ -407,6 +407,8 @@ async def ws_update_statistics_metadata(
 ) -> None:
     """Update statistics metadata for a statistic_id.
 
+    The unit_class specifies which unit conversion class to use, if applicable.
+
     Only the normalized unit of measurement can be updated.
     """
     done_event = asyncio.Event()
@@ -562,7 +564,10 @@ async def ws_adjust_sum_statistics(
 def ws_import_statistics(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Import statistics."""
+    """Import statistics.
+
+    The unit_class specifies which unit conversion class to use, if applicable.
+    """
     metadata = msg["metadata"]
     # The WS command will be changed in a follow up PR
     metadata["mean_type"] = (
