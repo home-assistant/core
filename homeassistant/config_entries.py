@@ -3215,7 +3215,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Finish config flow and create a config entry."""
         if self.source in {SOURCE_REAUTH, SOURCE_RECONFIGURE}:
             raise HomeAssistantError(
-                "Creates a new entry in a '{self.source}' flow, "
+                f"Creates a new entry in a '{self.source}' flow, "
                 "when it is expected to update an existing entry and abort"
             )
 
