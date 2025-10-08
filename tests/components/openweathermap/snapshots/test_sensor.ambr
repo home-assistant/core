@@ -545,19 +545,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'clear-night',
-        'cloudy',
-        'fog',
-        'hail',
-        'partlycloudy',
-        'pouring',
-        'rainy',
-        'snowy',
-        'sunny',
-      ]),
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -575,7 +563,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Condition',
     'platform': 'openweathermap',
@@ -591,19 +579,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
-      'device_class': 'enum',
       'friendly_name': 'OpenWeatherMap Condition',
-      'options': list([
-        'clear-night',
-        'cloudy',
-        'fog',
-        'hail',
-        'partlycloudy',
-        'pouring',
-        'rainy',
-        'snowy',
-        'sunny',
-      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_condition',
@@ -830,7 +806,7 @@
     'state': '1000',
   })
 # ---
-# name: test_sensor_states[current][sensor.openweathermap_rain-entry]
+# name: test_sensor_states[current][sensor.openweathermap_rain_intensity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -845,7 +821,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.openweathermap_rain',
+    'entity_id': 'sensor.openweathermap_rain_intensity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -860,7 +836,7 @@
     }),
     'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
-    'original_name': 'Rain',
+    'original_name': 'Rain intensity',
     'platform': 'openweathermap',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -870,24 +846,24 @@
     'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
-# name: test_sensor_states[current][sensor.openweathermap_rain-state]
+# name: test_sensor_states[current][sensor.openweathermap_rain_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'precipitation_intensity',
-      'friendly_name': 'OpenWeatherMap Rain',
+      'friendly_name': 'OpenWeatherMap Rain intensity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.openweathermap_rain',
+    'entity_id': 'sensor.openweathermap_rain_intensity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.21',
   })
 # ---
-# name: test_sensor_states[current][sensor.openweathermap_snow-entry]
+# name: test_sensor_states[current][sensor.openweathermap_snow_intensity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -902,7 +878,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.openweathermap_snow',
+    'entity_id': 'sensor.openweathermap_snow_intensity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -917,7 +893,7 @@
     }),
     'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
-    'original_name': 'Snow',
+    'original_name': 'Snow intensity',
     'platform': 'openweathermap',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -927,17 +903,17 @@
     'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
-# name: test_sensor_states[current][sensor.openweathermap_snow-state]
+# name: test_sensor_states[current][sensor.openweathermap_snow_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'precipitation_intensity',
-      'friendly_name': 'OpenWeatherMap Snow',
+      'friendly_name': 'OpenWeatherMap Snow intensity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.openweathermap_snow',
+    'entity_id': 'sensor.openweathermap_snow_intensity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1498,19 +1474,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'clear-night',
-        'cloudy',
-        'fog',
-        'hail',
-        'partlycloudy',
-        'pouring',
-        'rainy',
-        'snowy',
-        'sunny',
-      ]),
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1528,7 +1492,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Condition',
     'platform': 'openweathermap',
@@ -1544,19 +1508,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
-      'device_class': 'enum',
       'friendly_name': 'OpenWeatherMap Condition',
-      'options': list([
-        'clear-night',
-        'cloudy',
-        'fog',
-        'hail',
-        'partlycloudy',
-        'pouring',
-        'rainy',
-        'snowy',
-        'sunny',
-      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_condition',
@@ -1783,7 +1735,7 @@
     'state': '1000',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_rain-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_rain_intensity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1798,7 +1750,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.openweathermap_rain',
+    'entity_id': 'sensor.openweathermap_rain_intensity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1813,7 +1765,7 @@
     }),
     'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
-    'original_name': 'Rain',
+    'original_name': 'Rain intensity',
     'platform': 'openweathermap',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1823,24 +1775,24 @@
     'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_rain-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_rain_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'precipitation_intensity',
-      'friendly_name': 'OpenWeatherMap Rain',
+      'friendly_name': 'OpenWeatherMap Rain intensity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.openweathermap_rain',
+    'entity_id': 'sensor.openweathermap_rain_intensity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.21',
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_snow-entry]
+# name: test_sensor_states[v3.0][sensor.openweathermap_snow_intensity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1855,7 +1807,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.openweathermap_snow',
+    'entity_id': 'sensor.openweathermap_snow_intensity',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1870,7 +1822,7 @@
     }),
     'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
     'original_icon': None,
-    'original_name': 'Snow',
+    'original_name': 'Snow intensity',
     'platform': 'openweathermap',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1880,17 +1832,17 @@
     'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
   })
 # ---
-# name: test_sensor_states[v3.0][sensor.openweathermap_snow-state]
+# name: test_sensor_states[v3.0][sensor.openweathermap_snow_intensity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by OpenWeatherMap',
       'device_class': 'precipitation_intensity',
-      'friendly_name': 'OpenWeatherMap Snow',
+      'friendly_name': 'OpenWeatherMap Snow intensity',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.openweathermap_snow',
+    'entity_id': 'sensor.openweathermap_snow_intensity',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
