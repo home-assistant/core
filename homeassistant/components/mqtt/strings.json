@@ -1456,6 +1456,12 @@
     "mqtt_not_setup_cannot_subscribe": {
       "message": "Cannot subscribe to topic \"{topic}\", make sure MQTT is set up correctly."
     },
+    "mqtt_not_setup_cannot_wait_for_subscribe": {
+      "message": "Cannot wait for subscription to topic \"{topic}\" and QoS {qos}, make sure MQTT is set up correctly."
+    },
+    "mqtt_not_setup_cannot_find_subscription": {
+      "message": "Cannot find subscription to topic \"{topic}\" and QoS {qos}, make sure the subscription is successful."
+    },
     "mqtt_not_setup_cannot_publish": {
       "message": "Cannot publish to topic \"{topic}\", make sure MQTT is set up correctly."
     },

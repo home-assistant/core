@@ -40,6 +40,7 @@ from homeassistant.util.async_ import create_eager_task
 from . import debug_info, discovery
 from .client import (
     MQTT,
+    async_await_subscription,
     async_publish,
     async_subscribe,
     async_subscribe_internal,
@@ -159,6 +160,7 @@ __all__ = [
     "PublishPayloadType",
     "ReceiveMessage",
     "SetupPhases",
+    "async_await_subscription",
     "async_check_config_schema",
     "async_create_certificate_temp_files",
     "async_forward_entry_setup_and_setup_discovery",

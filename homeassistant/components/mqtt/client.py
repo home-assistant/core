@@ -38,7 +38,10 @@ from homeassistant.core import (
     get_hassjob_callable_job_type,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
@@ -71,6 +74,7 @@ from .const import (
     DEFAULT_WS_PATH,
     DOMAIN,
     MQTT_CONNECTION_STATE,
+    MQTT_PROCESSED_SUBSCRIPTIONS,
     PROTOCOL_5,
     PROTOCOL_31,
     TRANSPORT_WEBSOCKETS,
@@ -109,6 +113,7 @@ INITIAL_SUBSCRIBE_COOLDOWN = 0.5
 SUBSCRIBE_COOLDOWN = 0.1
 UNSUBSCRIBE_COOLDOWN = 0.1
 TIMEOUT_ACK = 10
+SUBSCRIBE_TIMEOUT = 10
 RECONNECT_INTERVAL_SECONDS = 10
 
 MAX_WILDCARD_SUBSCRIBES_PER_CALL = 1
@@ -184,6 +189,64 @@ async def async_publish(
     )
 
 
+async def async_await_subscription(
+    hass: HomeAssistant,
+    topic: str,
+    qos: int = DEFAULT_QOS,
+) -> None:
+    """Wait for an MQTT subscription to be completed."""
+    subscription_complete: asyncio.Future[None]
+
+    async def _sync_mqtt_subscribe(subscriptions: list[tuple[str, int]]) -> None:
+        if (topic, qos) not in subscriptions:
+            return
+        subscription_complete.set_result(None)
+
+    def _async_timeout_subscribe() -> None:
+        if not subscription_complete.done():
+            subscription_complete.set_exception(TimeoutError)
+
+    try:
+        mqtt_data = hass.data[DATA_MQTT]
+    except KeyError as exc:
+        raise HomeAssistantError(
+            f"Cannot wait for subscription to topic '{topic}' QoS {qos}, "
+            "make sure MQTT is set up correctly",
+            translation_key="mqtt_not_setup_cannot_wait_for_subscribe",
+            translation_domain=DOMAIN,
+            translation_placeholders={"topic": topic, "qos": str(qos)},
+        ) from exc
+    client = mqtt_data.client
+
+    if not client.is_active_subscription(topic):
+        raise HomeAssistantError(
+            f"Cannot find subscription to topic '{topic}' and QoS {qos}, "
+            "make sure the subscription is successful",
+            translation_key="mqtt_not_setup_cannot_find_subscription",
+            translation_domain=DOMAIN,
+            translation_placeholders={"topic": topic, "qos": str(qos)},
+        )
+    if not client.is_pending_subscription(topic):
+        # Existing non pending subscription are assumed to be completed already
+        return
+
+    subscription_complete = hass.loop.create_future()
+    dispatcher = async_dispatcher_connect(
+        hass, MQTT_PROCESSED_SUBSCRIPTIONS, _sync_mqtt_subscribe
+    )
+    try:
+        hass.loop.call_later(SUBSCRIBE_TIMEOUT, _async_timeout_subscribe)
+        await subscription_complete
+    except TimeoutError as exc:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="subscribe_timeout",
+        ) from exc
+    finally:
+        dispatcher()
+    return
+
+
 @bind_hass
 async def async_subscribe(
     hass: HomeAssistant,
@@ -191,11 +254,47 @@ async def async_subscribe(
     msg_callback: Callable[[ReceiveMessage], Coroutine[Any, Any, None] | None],
     qos: int = DEFAULT_QOS,
     encoding: str | None = DEFAULT_ENCODING,
+    wait: bool = False,
 ) -> CALLBACK_TYPE:
     """Subscribe to an MQTT topic.
 
     Call the return value to unsubscribe.
     """
+    subscription_complete: asyncio.Future[None]
+
+    async def _sync_mqtt_subscribe(subscriptions: list[tuple[str, int]]) -> None:
+        if (topic, qos) not in subscriptions:
+            return
+        subscription_complete.set_result(None)
+
+    def _async_timeout_subscribe() -> None:
+        if not subscription_complete.done():
+            subscription_complete.set_exception(TimeoutError)
+
+    if (
+        wait
+        and DATA_MQTT in hass.data
+        and not hass.data[DATA_MQTT].client.is_active_subscription(topic)
+    ):
+        subscription_complete = hass.loop.create_future()
+        dispatcher = async_dispatcher_connect(
+            hass, MQTT_PROCESSED_SUBSCRIPTIONS, _sync_mqtt_subscribe
+        )
+        subscribe_callback = async_subscribe_internal(
+            hass, topic, msg_callback, qos, encoding
+        )
+        try:
+            hass.loop.call_later(SUBSCRIBE_TIMEOUT, _async_timeout_subscribe)
+            await subscription_complete
+        except TimeoutError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="subscribe_timeout",
+            ) from exc
+        finally:
+            dispatcher()
+        return subscribe_callback
+
     return async_subscribe_internal(hass, topic, msg_callback, qos, encoding)
 
 
@@ -640,11 +739,15 @@ class MQTT:
         if fileno > -1:
             self.loop.remove_writer(sock)
 
-    def _is_active_subscription(self, topic: str) -> bool:
+    def is_active_subscription(self, topic: str) -> bool:
         """Check if a topic has an active subscription."""
         return topic in self._simple_subscriptions or any(
             other.topic == topic for other in self._wildcard_subscriptions
         )
+
+    def is_pending_subscription(self, topic: str) -> bool:
+        """Check if a topic has a pending subscription."""
+        return topic in self._pending_subscriptions
 
     async def async_publish(
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
@@ -899,7 +1002,7 @@ class MQTT:
     @callback
     def _async_unsubscribe(self, topic: str) -> None:
         """Unsubscribe from a topic."""
-        if self._is_active_subscription(topic):
+        if self.is_active_subscription(topic):
             if self._max_qos[topic] == 0:
                 return
             subs = self._matching_subscriptions(topic)
@@ -963,6 +1066,7 @@ class MQTT:
             self._last_subscribe = time.monotonic()
 
             await self._async_wait_for_mid_or_raise(mid, result)
+            async_dispatcher_send(self.hass, MQTT_PROCESSED_SUBSCRIPTIONS, chunk_list)
 
     async def _async_perform_unsubscribes(self) -> None:
         """Perform pending MQTT client unsubscribes."""

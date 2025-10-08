@@ -373,6 +373,7 @@ DOMAIN = "mqtt"
 LOGGER = logging.getLogger(__package__)
 
 MQTT_CONNECTION_STATE = "mqtt_connection_state"
+MQTT_PROCESSED_SUBSCRIPTIONS = "mqtt_processed_subscriptions"
 
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"
