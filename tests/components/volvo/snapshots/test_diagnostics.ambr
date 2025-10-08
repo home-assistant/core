@@ -1,0 +1,535 @@
+# serializer version: 1
+# name: test_entry_diagnostics[xc40_electric_2024]
+  dict({
+    'Volvo fast interval coordinator': dict({
+      'centralLock': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:20:20.570000+00:00',
+        'unit': None,
+        'value': 'LOCKED',
+      }),
+      'frontLeftDoor': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:20:20.570000+00:00',
+        'unit': None,
+        'value': 'CLOSED',
+      }),
+      'frontLeftWindow': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:28:12.202000+00:00',
+        'unit': None,
+        'value': 'CLOSED',
+      }),
+      'frontRightDoor': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:20:20.570000+00:00',
+        'unit': None,
+        'value': 'CLOSED',
+      }),
+      'frontRightWindow': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:28:12.202000+00:00',
+        'unit': None,
+        'value': 'CLOSED',
+      }),
+      'hood': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:20:20.570000+00:00',
+        'unit': None,
+        'value': 'CLOSED',
+      }),
+      'rearLeftDoor': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:20:20.570000+00:00',
+        'unit': None,
+        'value': 'CLOSED',
+      }),
+      'rearLeftWindow': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:28:12.202000+00:00',
+        'unit': None,
+        'value': 'CLOSED',
+      }),
+      'rearRightDoor': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:20:20.570000+00:00',
+        'unit': None,
+        'value': 'CLOSED',
+      }),
+      'rearRightWindow': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:28:12.202000+00:00',
+        'unit': None,
+        'value': 'CLOSED',
+      }),
+      'sunroof': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:28:12.202000+00:00',
+        'unit': None,
+        'value': 'UNSPECIFIED',
+      }),
+      'tailgate': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:20:20.570000+00:00',
+        'unit': None,
+        'value': 'CLOSED',
+      }),
+      'tankLid': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:20:20.570000+00:00',
+        'unit': None,
+        'value': 'CLOSED',
+      }),
+    }),
+    'Volvo medium interval coordinator': dict({
+      'batteryChargeLevel': dict({
+        'extra_data': dict({
+          'updated_at': '2025-07-02T08:51:23Z',
+        }),
+        'status': 'OK',
+        'timestamp': None,
+        'unit': 'percentage',
+        'value': 53,
+      }),
+      'chargerConnectionStatus': dict({
+        'extra_data': dict({
+          'updated_at': '2025-07-02T08:51:23Z',
+        }),
+        'status': 'OK',
+        'timestamp': None,
+        'unit': None,
+        'value': 'CONNECTED',
+      }),
+      'chargerPowerStatus': dict({
+        'extra_data': dict({
+          'updated_at': '2025-07-02T08:51:23Z',
+        }),
+        'status': 'OK',
+        'timestamp': None,
+        'unit': None,
+        'value': 'PROVIDING_POWER',
+      }),
+      'chargingCurrentLimit': dict({
+        'extra_data': dict({
+          'updated_at': '2024-03-05T08:38:44Z',
+        }),
+        'status': 'OK',
+        'timestamp': None,
+        'unit': 'ampere',
+        'value': 32,
+      }),
+      'chargingPower': dict({
+        'extra_data': dict({
+          'updated_at': '2025-07-02T08:51:23Z',
+        }),
+        'status': 'OK',
+        'timestamp': None,
+        'unit': 'watts',
+        'value': 1386,
+      }),
+      'chargingStatus': dict({
+        'extra_data': dict({
+          'updated_at': '2025-07-02T08:51:23Z',
+        }),
+        'status': 'OK',
+        'timestamp': None,
+        'unit': None,
+        'value': 'CHARGING',
+      }),
+      'chargingType': dict({
+        'extra_data': dict({
+          'updated_at': '2025-07-02T08:51:23Z',
+        }),
+        'status': 'OK',
+        'timestamp': None,
+        'unit': None,
+        'value': 'AC',
+      }),
+      'electricRange': dict({
+        'extra_data': dict({
+          'updated_at': '2025-07-02T08:51:23Z',
+        }),
+        'status': 'OK',
+        'timestamp': None,
+        'unit': 'mi',
+        'value': 150,
+      }),
+      'estimatedChargingTimeToTargetBatteryChargeLevel': dict({
+        'extra_data': dict({
+          'updated_at': '2025-07-02T08:51:23Z',
+        }),
+        'status': 'OK',
+        'timestamp': None,
+        'unit': 'minutes',
+        'value': 1440,
+      }),
+      'targetBatteryChargeLevel': dict({
+        'extra_data': dict({
+          'updated_at': '2024-09-22T09:40:12Z',
+        }),
+        'status': 'OK',
+        'timestamp': None,
+        'unit': 'percentage',
+        'value': 90,
+      }),
+    }),
+    'Volvo slow interval coordinator': dict({
+      'availabilityStatus': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:32:26.169000+00:00',
+        'unit': None,
+        'value': 'AVAILABLE',
+      }),
+    }),
+    'Volvo very slow interval coordinator': dict({
+      'averageEnergyConsumption': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:53:44.785000+00:00',
+        'unit': 'kWh/100km',
+        'value': 22.6,
+      }),
+      'averageSpeed': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': 'km/h',
+        'value': 53,
+      }),
+      'averageSpeedAutomatic': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': 'km/h',
+        'value': 26,
+      }),
+      'battery_capacity_kwh': dict({
+        'extra_data': dict({
+        }),
+        'value': 81.608,
+      }),
+      'brakeFluidLevelWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'brakeLightCenterWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'brakeLightLeftWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'brakeLightRightWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'daytimeRunningLightLeftWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'daytimeRunningLightRightWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'distanceToEmptyBattery': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:30:08.338000+00:00',
+        'unit': 'km',
+        'value': 250,
+      }),
+      'distanceToService': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': 'km',
+        'value': 29000,
+      }),
+      'engineCoolantLevelWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'engineHoursToService': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': 'h',
+        'value': 1266,
+      }),
+      'fogLightFrontWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'fogLightRearWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'frontLeft': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'UNSPECIFIED',
+      }),
+      'frontRight': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'UNSPECIFIED',
+      }),
+      'hazardLightsWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'UNSPECIFIED',
+      }),
+      'highBeamLeftWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'highBeamRightWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'lowBeamLeftWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'lowBeamRightWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'odometer': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': 'km',
+        'value': 30000,
+      }),
+      'oilLevelWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'positionLightFrontLeftWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'positionLightFrontRightWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'positionLightRearLeftWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'positionLightRearRightWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'rearLeft': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'UNSPECIFIED',
+      }),
+      'rearRight': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'UNSPECIFIED',
+      }),
+      'registrationPlateLightWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'reverseLightsWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'UNSPECIFIED',
+      }),
+      'serviceWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'sideMarkLightsWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'timeToService': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': 'months',
+        'value': 23,
+      }),
+      'tripMeterAutomatic': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': 'km',
+        'value': 18.2,
+      }),
+      'tripMeterManual': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': 'km',
+        'value': 3822.9,
+      }),
+      'turnIndicationFrontLeftWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'turnIndicationFrontRightWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'turnIndicationRearLeftWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'turnIndicationRearRightWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+      'washerFluidLevelWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
+      }),
+    }),
+    'entry_data': dict({
+      'api_key': '**REDACTED**',
+      'auth_implementation': 'volvo',
+      'token': dict({
+        'access_token': '**REDACTED**',
+        'expires_at': 1759919745.7328658,
+        'expires_in': 60,
+        'refresh_token': '**REDACTED**',
+        'token_type': 'Bearer',
+      }),
+      'vin': '**REDACTED**',
+    }),
+    'vehicle': dict({
+      'battery_capacity_kwh': 81.608,
+      'description': dict({
+        'extra_data': dict({
+        }),
+        'model': 'XC40',
+        'steering': 'LEFT',
+        'upholstery': 'null',
+      }),
+      'external_colour': 'Silver Dawn',
+      'extra_data': dict({
+      }),
+      'fuel_type': 'ELECTRIC',
+      'gearbox': 'AUTOMATIC',
+      'images': dict({
+        'exterior_image_url': 'https://cas.volvocars.com/image/dynamic/MY24_0000/123/exterior-v4/_/default.png?market=se&client=public-api-engineering&angle=1&bg=00000000&w=1920',
+        'extra_data': dict({
+        }),
+        'internal_image_url': 'https://cas.volvocars.com/image/dynamic/MY24_0000/123/interior-v4/_/default.jpg?market=se&client=public-api-engineering&angle=0&w=1920',
+      }),
+      'model_year': 2024,
+      'vin': '**REDACTED**',
+    }),
+  })
+# ---
