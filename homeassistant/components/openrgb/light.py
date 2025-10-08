@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from openrgb.orgb import Device
@@ -89,6 +90,8 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
     _previous_brightness: int | None = None
     _previous_rgb_color: tuple[int, int, int] | None = None
     _previous_mode: str | None = None
+
+    _update_events: list[asyncio.Event] = []
 
     def __init__(self, coordinator: OpenRGBCoordinator, device_key: str) -> None:
         """Initialize the OpenRGB light."""
@@ -231,6 +234,11 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             self._update_attrs()
         super()._handle_coordinator_update()
 
+        # Signal that the update has completed for all waiting events
+        for event in self._update_events:
+            event.set()
+        self._update_events.clear()
+
     @property
     def available(self) -> bool:
         """Return if the light is available."""
@@ -240,6 +248,13 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
     def device(self) -> Device:
         """Return the OpenRGB device."""
         return self.coordinator.data[self.device_key]
+
+    async def _async_refresh_data(self) -> None:
+        """Request a data refresh from the coordinator and wait for it to complete."""
+        update_event = asyncio.Event()
+        self._update_events.append(update_event)
+        await self.coordinator.async_request_refresh()
+        await update_event.wait()
 
     async def _async_apply_color(
         self, rgb_color: tuple[int, int, int], brightness: int
@@ -381,7 +396,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
 
             await self._async_apply_color(color, brightness)
 
-        await self.coordinator.async_request_refresh()
+        await self._async_refresh_data()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
@@ -391,7 +406,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             # If the device does not support Off mode, set color to black
             await self._async_apply_color(OFF_COLOR, 0)
 
-        await self.coordinator.async_request_refresh()
+        await self._async_refresh_data()
 
 
 def check_if_mode_supports_color(mode: ModeData) -> bool:
