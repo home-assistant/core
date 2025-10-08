@@ -76,8 +76,8 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize an instance of the squeezebox config flow."""
         self.discovery_task: asyncio.Task | None = None
-        self.discovered_servers: list[dict[str, Any]] | None = []
-        self.chosen_server: dict[str, Any] | None = {}
+        self.discovered_servers: list[dict[str, Any]] = []
+        self.chosen_server: dict[str, Any] = {}
 
     @staticmethod
     @callback
@@ -85,14 +85,12 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
-    @callback
     async def _discover(self, uuid: str | None = None) -> None:
         """Discover an unconfigured LMS server."""
-        _discovery_event = asyncio.Event()
         _discovery_task: asyncio.Task | None = None
-        _discovery_info: dict[str, Any] | None = {}
 
         def _discovery_callback(server: Server) -> None:
+            _discovery_info: dict[str, Any] | None = {}
             if server.uuid:
                 # ignore already configured uuids
                 for entry in self._async_current_entries():
@@ -116,14 +114,10 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
             async_discover(_discovery_callback)
         )
 
-        try:
-            async with asyncio.timeout(TIMEOUT):
-                await _discovery_event.wait()
+        await asyncio.sleep(TIMEOUT)
 
-        except TimeoutError:
-            _LOGGER.debug("Discovered Servers %s", self.discovered_servers)
-        finally:
-            _discovery_task.cancel()
+        _LOGGER.debug("Discovered Servers %s", self.discovered_servers)
+        _discovery_task.cancel()
 
     async def _validate_input(self, data: dict[str, Any]) -> str | None:
         """Validate the user input allows us to connect.
