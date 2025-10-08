@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections import Counter, defaultdict
+from collections import defaultdict
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 import logging
@@ -189,16 +189,10 @@ class PlenticoreUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         )
         # data ids to poll
         self._fetch: dict[str, list[str]] = defaultdict(list)
-        # counter for registered data ids to avoid duplicate fetches
-        self._registered_entities = Counter[tuple[str, str]]()
         self._plenticore = plenticore
 
     def start_fetch_data(self, module_id: str, data_id: str) -> CALLBACK_TYPE:
         """Start fetching the given data (module-id and data-id)."""
-        self._registered_entities[(module_id, data_id)] += 1
-        if self._registered_entities[(module_id, data_id)] > 1:
-            return lambda: None
-
         self._fetch[module_id].append(data_id)
 
         # Force an update of all data. Multiple refresh calls
@@ -210,10 +204,6 @@ class PlenticoreUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
     def stop_fetch_data(self, module_id: str, data_id: str) -> None:
         """Stop fetching the given data (module-id and data-id)."""
-        self._registered_entities[(module_id, data_id)] -= 1
-        if self._registered_entities[(module_id, data_id)] > 0:
-            return
-
         self._fetch[module_id].remove(data_id)
 
 
@@ -247,14 +237,23 @@ class SettingDataUpdateCoordinator(
     """Implementation of PlenticoreUpdateCoordinator for settings data."""
 
     async def _async_update_data(self) -> Mapping[str, Mapping[str, str]]:
-        client = self._plenticore.client
-
-        if not self._fetch or client is None:
+        if (client := self._plenticore.client) is None:
             return {}
 
-        _LOGGER.debug("Fetching %s for %s", self.name, self._fetch)
+        fetch = defaultdict(set)
 
-        return await client.get_setting_values(self._fetch)
+        for module_id, data_ids in self._fetch.items():
+            fetch[module_id].update(data_ids)
+
+        for module_id, data_id in self.async_contexts():
+            fetch[module_id].add(data_id)
+
+        if not fetch:
+            return {}
+
+        _LOGGER.debug("Fetching %s for %s", self.name, fetch)
+
+        return await client.get_setting_values(fetch)
 
 
 class PlenticoreSelectUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):

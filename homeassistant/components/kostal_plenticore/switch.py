@@ -335,7 +335,7 @@ class PlenticoreShadowMgmtSwitch(
         device_info: DeviceInfo,
     ) -> None:
         """Create a new Switch Entity for Plenticore shadow management."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, context=(self.MODULE_ID, self.SHADOW_DATA_ID))
 
         self._mask: Final = 1 << dc_string
 
@@ -361,18 +361,6 @@ class PlenticoreShadowMgmtSwitch(
             and self.MODULE_ID in self.coordinator.data
             and self.SHADOW_DATA_ID in self.coordinator.data[self.MODULE_ID]
         )
-
-    async def async_added_to_hass(self) -> None:
-        """Register this entity on the Update Coordinator."""
-        await super().async_added_to_hass()
-        self.async_on_remove(
-            self.coordinator.start_fetch_data(self.MODULE_ID, self.SHADOW_DATA_ID)
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unregister this entity from the Update Coordinator."""
-        self.coordinator.stop_fetch_data(self.MODULE_ID, self.SHADOW_DATA_ID)
-        await super().async_will_remove_from_hass()
 
     def _get_shadow_mgmt_value(self) -> int:
         """Return the current shadow management value for all strings as integer."""
