@@ -1,0 +1,25 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'api_key': '**REDACTED**',
+      'platform': 'webhooks',
+      'proxy_url': None,
+      'trusted_networks': list([
+        '127.0.0.1/32',
+      ]),
+      'url': 'https://**redacted**/',
+    }),
+    'options': dict({
+      'parse_mode': 'markdown',
+    }),
+    'subentries': list([
+      dict({
+        'chat_id': '**REDACTED**',
+      }),
+      dict({
+        'chat_id': '**REDACTED**',
+      }),
+    ]),
+  })
+# ---
