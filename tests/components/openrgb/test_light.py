@@ -11,14 +11,16 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
     ATTR_EFFECT,
     ATTR_RGB_COLOR,
+    ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
     EFFECT_OFF,
+    ColorMode,
     LightEntityFeature,
 )
 from homeassistant.components.openrgb.const import (
-    DEFAULT_BRIGHTNESS,
     DEFAULT_COLOR,
     DOMAIN,
     OFF_COLOR,
@@ -130,6 +132,8 @@ async def test_light_with_one_non_black_led(
     state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.RGB
+    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.RGB]
     assert state.attributes.get(ATTR_RGB_COLOR) == (255, 0, 0)
     assert state.attributes.get(ATTR_BRIGHTNESS) == 255
 
@@ -150,14 +154,16 @@ async def test_light_with_non_color_mode(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    # Verify light is on with white color (default)
+    # Verify light is on with ON/OFF mode
     state = hass.states.get("light.ene_dram")
     assert state
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == LightEntityFeature.EFFECT
     assert state.attributes.get(ATTR_EFFECT) == "Rainbow"
-    assert state.attributes.get(ATTR_RGB_COLOR) == DEFAULT_COLOR
-    assert state.attributes.get(ATTR_BRIGHTNESS) == DEFAULT_BRIGHTNESS
+    assert state.attributes.get(ATTR_COLOR_MODE) == ColorMode.ONOFF
+    assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.ONOFF]
+    assert state.attributes.get(ATTR_RGB_COLOR) is None
+    assert state.attributes.get(ATTR_BRIGHTNESS) is None
 
 
 @pytest.mark.usefixtures("mock_openrgb_client")

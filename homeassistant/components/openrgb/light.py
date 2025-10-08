@@ -67,8 +67,6 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
 
     _attr_has_entity_name = True
     _attr_name = None  # Use the device name
-    _attr_color_mode = ColorMode.RGB
-    _attr_supported_color_modes = {ColorMode.RGB}
 
     _mode: str | None = None
 
@@ -149,6 +147,7 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         else:
             mode_supports_colors = check_if_mode_supports_color(mode_data)
 
+        color_mode = None
         rgb_color = None
         brightness = None
         on_by_color = True
@@ -173,10 +172,20 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
                 rgb_color = color_hs_to_RGB(hsv_color[0], hsv_color[1])
                 brightness = round(255.0 * (hsv_color[2] / 100.0))
 
-        elif mode is not None:
-            # If the current mode is not Off and does not support color, show as white at full brightness
-            rgb_color = DEFAULT_COLOR
-            brightness = DEFAULT_BRIGHTNESS
+        elif mode is None:
+            # If mode is Off, retain previous color mode to avoid changing the UI
+            color_mode = self._attr_color_mode
+        else:
+            # If the current mode is not Off and does not support color, change to ON/OFF mode
+            color_mode = ColorMode.ONOFF
+
+        if not on_by_color:
+            # If Off by color, retain previous color mode to avoid changing the UI
+            color_mode = self._attr_color_mode
+
+        if color_mode is None:
+            # If color mode is still None, default to RGB
+            color_mode = ColorMode.RGB
 
         if self._attr_brightness is not None and self._attr_brightness != brightness:
             self._previous_brightness = self._attr_brightness
@@ -185,6 +194,8 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
         if self._mode is not None and self._mode != mode:
             self._previous_mode = self._mode
 
+        self._attr_color_mode = color_mode
+        self._attr_supported_color_modes = {color_mode}
         self._attr_rgb_color = rgb_color
         self._attr_brightness = brightness
         if not self._supports_effects or mode is None:
