@@ -348,3 +348,36 @@ async def test_setup_firmware_update_in_progress(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_firmware_update_in_progress_prevents_silabs_warning(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+) -> None:
+    """Test firmware update in progress prevents silabs firmware warning on setup failure."""
+    await async_setup_component(hass, "homeassistant_hardware", {})
+
+    config_entry.add_to_hass(hass)
+    device_path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+
+    async_register_firmware_update_in_progress(hass, device_path, "skyconnect")
+
+    # Make ZHA setup fail
+    with (
+        patch.object(
+            mock_zigpy_connect,
+            "startup",
+            side_effect=Exception("Setup failed"),
+        ),
+        patch(
+            "homeassistant.components.zha.repairs.wrong_silabs_firmware.warn_on_wrong_silabs_firmware"
+        ) as mock_check_firmware,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # ZHA will try to reload again
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    # But it did not try to check if the wrong firmware is installed
+    assert mock_check_firmware.call_count == 0
