@@ -229,12 +229,29 @@ async def test_turn_on_light(
     )
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("mock_openrgb_client")
 async def test_turn_on_light_with_color(
     hass: HomeAssistant,
     mock_openrgb_device: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test turning on the light with color."""
+    # Start with color Red at half brightness
+    mock_openrgb_device.colors = [RGBColor(128, 0, 0), RGBColor(128, 0, 0)]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Verify initial state
+    state = hass.states.get("light.ene_dram")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_RGB_COLOR) == (255, 0, 0)  # Red
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 128
+
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -245,16 +262,33 @@ async def test_turn_on_light_with_color(
         blocking=True,
     )
 
-    # Check that set_color was called with green color with full brightness as it was not specified
-    mock_openrgb_device.set_color.assert_called_once_with(RGBColor(0, 255, 0), True)
+    # Check that set_color was called with Green color scaled with half brightness
+    mock_openrgb_device.set_color.assert_called_once_with(RGBColor(0, 128, 0), True)
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("mock_openrgb_client")
 async def test_turn_on_light_with_brightness(
     hass: HomeAssistant,
     mock_openrgb_device: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test turning on the light with brightness."""
+    # Start with color Red at full brightness
+    mock_openrgb_device.colors = [RGBColor(255, 0, 0), RGBColor(255, 0, 0)]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Verify initial state
+    state = hass.states.get("light.ene_dram")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_RGB_COLOR) == (255, 0, 0)  # Red
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 255
+
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -265,8 +299,8 @@ async def test_turn_on_light_with_brightness(
         blocking=True,
     )
 
-    # Check that set_color was called with default white color scaled by brightness
-    mock_openrgb_device.set_color.assert_called_once_with(RGBColor(128, 128, 128), True)
+    # Check that set_color was called with Red color scaled with half brightness
+    mock_openrgb_device.set_color.assert_called_once_with(RGBColor(128, 0, 0), True)
 
 
 @pytest.mark.usefixtures("init_integration")

@@ -337,8 +337,8 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
                 # Restore previous brightness when turning on
                 brightness = self._previous_brightness
             if brightness is None:
-                # Use default brightness if still None
-                brightness = DEFAULT_BRIGHTNESS
+                # Retain current brightness or use default if still None
+                brightness = self._attr_brightness or DEFAULT_BRIGHTNESS
 
             color = None
             if ATTR_RGB_COLOR in kwargs:
@@ -347,8 +347,8 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
                 # Restore previous color when turning on
                 color = self._previous_rgb_color
             if color is None:
-                # Use default color if still None
-                color = DEFAULT_COLOR
+                # Retain current color or use default if still None
+                color = self._attr_rgb_color or DEFAULT_COLOR
 
             await self._async_apply_color(color, brightness)
 
