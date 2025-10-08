@@ -12,6 +12,8 @@ from homeassistant.components.climate import (
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.config_entries import ConfigEntryState
@@ -180,3 +182,71 @@ async def test_air_conditioner_no_last_state(
     assert state.state == "fan_only"
     assert state.attributes[ATTR_FAN_MODE] == "auto"
     assert state.attributes[ATTR_TEMPERATURE] == 21
+
+
+async def test_air_conditioner_turn_off(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test the climate.turn_off service."""
+    mock_list_devices.return_value = [
+        Remote(
+            deviceId="ac-device-id-1",
+            deviceName="climate-1",
+            remoteType="DIY Air Conditioner",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    entity_id = "climate.climate_1"
+    assert hass.states.get(entity_id).state == "fan_only"
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        mock_send_command.assert_called_once()
+        assert "21,4,1,off" in str(mock_send_command.call_args)
+
+    assert hass.states.get(entity_id).state == "off"
+
+
+async def test_air_conditioner_turn_on(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test the climate.turn_on service."""
+    mock_list_devices.return_value = [
+        Remote(
+            deviceId="ac-device-id-1",
+            deviceName="climate-1",
+            remoteType="DIY Air Conditioner",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    entity_id = "climate.climate_1"
+
+    hass.states.async_set(entity_id, "off", {})
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "off"
+
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        mock_send_command.assert_called_once()
+        assert "21,4,1,on" in str(mock_send_command.call_args)
+
+    assert hass.states.get(entity_id).state == "fan_only"
