@@ -260,7 +260,7 @@ class TriggerConfig:
 class TriggerActionType(Protocol):
     """Protocol type for trigger action callback."""
 
-    async def __call__(
+    def __call__(
         self,
         run_variables: dict[str, Any],
         context: Context | None = None,
