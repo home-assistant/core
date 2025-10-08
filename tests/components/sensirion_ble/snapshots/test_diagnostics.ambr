@@ -37,14 +37,14 @@
         }),
       }),
       'entity_data': dict({
-        PassiveBluetoothEntityKey(key='carbon_dioxide', device_id=None): 724,
-        PassiveBluetoothEntityKey(key='humidity', device_id=None): 27.8,
-        PassiveBluetoothEntityKey(key='temperature', device_id=None): 20.1,
+        'carbon_dioxide___': 724,
+        'humidity___': 27.8,
+        'temperature___': 20.1,
       }),
       'entity_names': dict({
-        PassiveBluetoothEntityKey(key='carbon_dioxide', device_id=None): 'Carbon dioxide',
-        PassiveBluetoothEntityKey(key='humidity', device_id=None): 'Humidity',
-        PassiveBluetoothEntityKey(key='temperature', device_id=None): 'Temperature',
+        'carbon_dioxide___': 'Carbon dioxide',
+        'humidity___': 'Humidity',
+        'temperature___': 'Temperature',
       }),
     }),
   })

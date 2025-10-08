@@ -28,9 +28,27 @@ async def async_get_config_entry_diagnostics(
     if hasattr(coordinator, "_processors") and coordinator._processors:
         processor = coordinator._processors[0]  # Get the first processor
         if hasattr(processor, "data"):
+            # Convert PassiveBluetoothEntityKey objects to strings for JSON serialization
+            entity_data = {}
+            entity_names = {}
+            
+            for key, value in processor.data.entity_data.items():
+                if hasattr(key, 'to_string'):
+                    str_key = key.to_string()
+                else:
+                    str_key = str(key)
+                entity_data[str_key] = value
+            
+            for key, value in processor.data.entity_names.items():
+                if hasattr(key, 'to_string'):
+                    str_key = key.to_string()
+                else:
+                    str_key = str(key)
+                entity_names[str_key] = value
+            
             processor_data = {
-                "entity_data": dict(processor.data.entity_data),
-                "entity_names": dict(processor.data.entity_names),
+                "entity_data": entity_data,
+                "entity_names": entity_names,
                 "devices": dict(processor.data.devices),
             }
 
